@@ -119,3 +119,4 @@ public sealed class GlobalOperationStatus
         Changed?.Invoke(this, EventArgs.Empty);
 }
 
+
