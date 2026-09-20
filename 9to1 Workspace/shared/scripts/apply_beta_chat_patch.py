@@ -186,7 +186,7 @@ def patch_chat_session() -> None:
 
         if (!check.IsCompatible)
         {
-            execution.Fail("Capability check failed", string.Join("; ", check.Missing.Select(item => item.Reason)));
+            execution.Fail("Capability check failed", check.Message);
             execution.Changed -= PublishExecution;
             yield return ChatStreamEvent.Preflight(check);
             yield break;
@@ -240,7 +240,7 @@ def patch_chat_session() -> None:
     text = text[:early_start] + new_early + text[system_start:]
 
     helper_start = text.index(
-        "    private ToolAvailabilityPlan CreateAvailabilityPlan(",
+        "    private static WorkspaceToolResult UnavailableToolResult(",
         system_start,
     )
     helpers = r'''    private static HashSet<ToolCapability> CapabilitiesFromActivePlugins(
@@ -426,8 +426,8 @@ def patch_chat_session() -> None:
 
     send_text = replace_once(
         send_text,
-        "        else\n        {\n            await foreach",
-        "        else\n"
+        "        if (!canUseTools)\n        {\n            await foreach",
+        "        if (!canUseTools)\n"
         "        {\n"
         "            var firstChunk = true;\n"
         "            await foreach",
@@ -496,17 +496,9 @@ def patch_chat_view_model() -> None:
     )
     text, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL)
     if count != 1 and "AutoSwitchCompatibleModels" in text:
-        lines = text.splitlines(keepends=True)
-        auto_index = next(i for i, line in enumerate(lines) if "AutoSwitchCompatibleModels" in line)
-        start = next(
-            i for i in range(auto_index, -1, -1)
-            if "var check = _preflight.Evaluate" in lines[i]
+        raise RuntimeError(
+            "ChatPageViewModel temporary fallback: expected one auto-switch block"
         )
-        end = next(
-            i for i in range(auto_index + 1, len(lines))
-            if "var model = SelectedModel ??" in lines[i]
-        )
-        text = "".join(lines[:start] + lines[end:])
 
     text = text.replace(
         'Status = $"{(IsAgentPluginActive ? SelectedAgent?.Name : "Default") ?? "Default"} is working…";',
@@ -545,4 +537,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
