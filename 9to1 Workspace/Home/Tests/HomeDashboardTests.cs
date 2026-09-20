@@ -1,4 +1,4 @@
-using Haven.UI;
+using NineToOne.Cui.Markup;
 using HavenOS.Home;
 using Xunit;
 
@@ -77,7 +77,7 @@ public sealed class HomeDashboardTests
     }
 
     [Fact]
-    public async Task CUI_renders_all_sections_and_routes_keyboard_intent_to_the_domain()
+    public async Task CUI_loads_the_authored_surface_and_routes_typed_intent_to_the_domain()
     {
         var backend = new FakePackageBackend(AvailableInventory(), new HomePackageOperationResult(
             new HomeOperationStatus(HomeOperationState.Succeeded, "Backend confirmed two updates."),
@@ -86,40 +86,19 @@ public sealed class HomeDashboardTests
         var controller = new HomeCuiController(dashboard);
 
         await controller.RefreshAsync();
-        controller.Scene.Root.ValidateUniqueNames();
-
+        Assert.Equal("Home.cui", Path.GetFileName(controller.Surface.Document.SourceName));
         Assert.All(
-            new[]
-            {
-                "Home.Cui.Catalog",
-                "Home.Cui.InstalledApps",
-                "Home.Cui.Updates",
-                "Home.Cui.Settings",
-                "Home.Cui.Runtime",
-            },
-            name => Assert.Contains(controller.Scene.Root.DescendantsAndSelf(), element => element.Name == name));
-        Assert.True(controller.Scene.InstallAllButton.GetValue(HavenProperties.Enabled));
-
-        var layout = new HavenLayoutEngine();
-        layout.Layout(
-            controller.Scene.Root,
-            new HavenSize(1280, 800),
-            HavenPlatform.Linux,
-            new HomeCuiMeasureContext());
-        var commands = new HavenSceneRenderer().Render(controller.Scene.Root);
-        Assert.NotEmpty(commands);
-        Assert.True(controller.Scene.UpdatesPanel.Bounds.Width > 0);
-
-        var input = new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None);
-        Assert.True(controller.Scene.InstallAllButton.KeyDown(input));
-        Assert.True(controller.Scene.InstallAllButton.KeyUp(input));
-        Assert.True(controller.Scene.TryDequeueAction(out var action));
+            new[] { "catalog", "installed", "updates", "settings", "runtime" },
+            id => Assert.Contains(Descendants(controller.Surface.Document.Root), element => element.Attributes.TryGetValue("id", out var value) && value == id));
+        Assert.True(controller.Surface.CanInstallAll);
+        Assert.True(controller.Surface.RequestInstallAll());
+        Assert.True(controller.Surface.TryDequeueAction(out var action));
 
         var installed = await controller.ExecuteAsync(action);
 
         Assert.Equal(HomeOperationState.Succeeded, installed.LastOperation.State);
-        Assert.False(controller.Scene.InstallAllButton.GetValue(HavenProperties.Enabled));
-        Assert.Contains("Succeeded", controller.Scene.OperationStatus.Content, StringComparison.Ordinal);
+        Assert.False(controller.Surface.CanInstallAll);
+        Assert.Contains("Succeeded", controller.Surface.OperationStatus, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -130,11 +109,9 @@ public sealed class HomeDashboardTests
 
         controller.ShowCurrent();
 
-        Assert.False(controller.Scene.InstallAllButton.GetValue(HavenProperties.Enabled));
-        Assert.Contains(
-            controller.Scene.UpdatesItems.Children.OfType<Haven.UI.Components.Text>(),
-            text => text.Content.Contains("not configured", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains("not configured", controller.Scene.OperationStatus.Content, StringComparison.OrdinalIgnoreCase);
+        Assert.False(controller.Surface.CanInstallAll);
+        Assert.False(controller.Surface.RequestInstallAll());
+        Assert.Contains("not configured", controller.Surface.OperationStatus, StringComparison.OrdinalIgnoreCase);
     }
 
     private static HomePackageInventory AvailableInventory(IReadOnlyList<HomeUpdate>? updates = null) => new(
@@ -186,17 +163,11 @@ public sealed class HomeDashboardTests
         }
     }
 
-    private sealed class HomeCuiMeasureContext : IHavenMeasureContext
+    private static IEnumerable<CuiElement> Descendants(CuiElement root)
     {
-        public HavenSize MeasureLeaf(HavenElement element, HavenSize available) => element switch
-        {
-            Haven.UI.Components.Text text => new HavenSize(
-                Math.Min(available.Width, Math.Max(24, text.Content.Length * 8)),
-                Math.Min(available.Height, 28)),
-            Haven.UI.Components.Button button => new HavenSize(
-                Math.Min(available.Width, Math.Max(120, button.Content.Length * 9 + 36)),
-                Math.Min(available.Height, 48)),
-            _ => new HavenSize(Math.Min(available.Width, 48), Math.Min(available.Height, 48)),
-        };
+        yield return root;
+        foreach (var child in root.Children)
+        foreach (var descendant in Descendants(child))
+            yield return descendant;
     }
 }

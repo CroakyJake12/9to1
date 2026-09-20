@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "providerId": "llamacpp",
   "displayName": "llama.cpp",
   "isLocal": true,
@@ -17,8 +17,16 @@
     "GET /health",
     "GET /v1/provider",
     "GET /v1/models",
+    "GET /v1/slots",
+    "GET /v1/tools",
+    "GET /v1/permissions/requests",
+    "GET /v1/permissions/events",
     "POST /v1/models/{id}/load",
     "POST /v1/models/{id}/unload",
+    "POST /v1/slots/{slot}/context",
+    "POST /v1/slots/{slot}/tools/{tool_id}",
+    "POST /v1/slots/{slot}/permissions",
+    "POST /v1/permissions/{request_id}/resolve",
     "POST /v1/chat/completions",
     "POST /v1/requests/{request_id}/cancel"
   ],
@@ -38,13 +46,35 @@
     "retirement": "deferred until compatibility and performance evidence supports migration"
   },
   "runtime": {
-    "topology": "single-broker-owned-worker",
+    "topology": "single-broker-owned-slot-workers",
     "perAppServers": false,
+    "defaultMaxModelSlots": 8,
+    "workerConcurrency": "one generation per loaded slot",
     "cancellation": {
       "primary": "upstream-resumable-stream-delete",
       "transportFallback": "before-worker-response-or-control-failure",
       "workerCompletionConfirmed": false,
       "evidence": "pinned-upstream-source-and-model-free-integration"
     }
+  },
+  "embeddingApi": {
+    "start": "Dulche.Start(port)",
+    "loadModel": "Dulche.LoadModel(model, slot, context)",
+    "modelHandle": "Dulche.Model(modelId)",
+    "setContext": "Dulche.Model(modelId).SetContext(context)",
+    "blankSlot": "next available slot",
+    "blankContext": "broker default context",
+    "contextApplication": "after the current turn completes"
+  },
+  "tools": {
+    "owner": "Dulche",
+    "registered": [
+      "dulche.run_command",
+      "dulche.run_code"
+    ],
+    "modelRuntimeAccess": "permission requests only",
+    "approvalEvents": "GET /v1/permissions/events",
+    "approvalTimeoutSeconds": 10,
+    "timeoutFallback": "ask_user"
   }
 }

@@ -1,0 +1,19 @@
+<Cui>
+  <Page id="home" title="Home">
+    <Navigation aria-label="Home sections">
+      <NavigationItem id="catalog" label="Apps" />
+      <NavigationItem id="installed" label="Installed" />
+      <NavigationItem id="updates" label="Updates" />
+      <NavigationItem id="settings" label="Settings" />
+      <NavigationItem id="runtime" label="Local models and voice" />
+    </Navigation>
+    <Section id="catalog" binding="Catalog" />
+    <Section id="installed" binding="InstalledApps" />
+    <Section id="updates" binding="Updates">
+      <Button id="install-all" action="InstallAllUpdates" enabled-binding="CanInstallAll">Install all updates</Button>
+    </Section>
+    <Section id="settings" binding="Settings" />
+    <Section id="runtime" binding="Runtime" />
+    <Status binding="OperationStatus" />
+  </Page>
+</Cui>

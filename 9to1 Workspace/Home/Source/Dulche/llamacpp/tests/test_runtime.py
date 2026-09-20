@@ -171,6 +171,7 @@ class RequestAndWorkerTests(unittest.TestCase):
 
 
 class BoundaryTests(unittest.TestCase):
+    @unittest.skipUnless(broker.HAS_UNIX_SOCKETS, "requires Unix-domain socket support")
     def test_broker_can_bind_unix_socket_with_private_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             socket_path = pathlib.Path(tmp) / "broker.sock"
@@ -182,6 +183,7 @@ class BoundaryTests(unittest.TestCase):
                 server.server_close()
                 socket_path.unlink(missing_ok=True)
 
+    @unittest.skipUnless(broker.HAS_UNIX_SOCKETS, "requires Unix-domain socket support")
     def test_broker_replaces_only_a_stale_socket(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             socket_path = pathlib.Path(tmp) / "broker.sock"
@@ -195,6 +197,7 @@ class BoundaryTests(unittest.TestCase):
                 server.server_close()
                 socket_path.unlink(missing_ok=True)
 
+    @unittest.skipUnless(broker.HAS_UNIX_SOCKETS, "requires Unix-domain socket support")
     def test_broker_refuses_to_unlink_live_socket(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             socket_path = pathlib.Path(tmp) / "broker.sock"
@@ -207,6 +210,7 @@ class BoundaryTests(unittest.TestCase):
                 first.server_close()
                 socket_path.unlink(missing_ok=True)
 
+    @unittest.skipUnless(broker.HAS_UNIX_SOCKETS, "requires Unix-domain socket support")
     def test_broker_refuses_to_replace_regular_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             socket_path = pathlib.Path(tmp) / "broker.sock"
@@ -238,9 +242,12 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual("llamacpp:<model-id>", contract["modelKeys"]["format"])
         self.assertEqual("ollama", contract["modelKeys"]["legacyUnqualifiedProvider"])
         self.assertFalse(contract["modelLifecycle"]["brokerCanWriteModelStore"])
-        self.assertEqual("single-broker-owned-worker", contract["runtime"]["topology"])
+        self.assertEqual(2, contract["schemaVersion"])
+        self.assertEqual("single-broker-owned-slot-workers", contract["runtime"]["topology"])
         self.assertFalse(contract["runtime"]["perAppServers"])
         self.assertEqual("upstream-resumable-stream-delete", contract["runtime"]["cancellation"]["primary"])
+        self.assertEqual("Dulche.Start(port)", contract["embeddingApi"]["start"])
+        self.assertEqual("permission requests only", contract["tools"]["modelRuntimeAccess"])
 
 
 if __name__ == "__main__":

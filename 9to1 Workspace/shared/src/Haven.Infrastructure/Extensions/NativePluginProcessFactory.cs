@@ -50,6 +50,9 @@ internal sealed class NativePluginProcess(InstalledExtensionPackage package) : I
         start.Environment.Clear();
         start.Environment["PATH"] = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
         start.Environment["DOTNET_ROOT"] = Environment.GetEnvironmentVariable("DOTNET_ROOT") ?? string.Empty;
+        var temporaryDirectory = Path.GetTempPath();
+        start.Environment["TEMP"] = temporaryDirectory;
+        start.Environment["TMP"] = temporaryDirectory;
         start.Environment["HAVEN_PLUGIN_ID"] = package.Manifest.PackageId;
         start.Environment["HAVEN_PLUGIN_PERMISSIONS"] = ((int)package.GrantedPermissions).ToString(System.Globalization.CultureInfo.InvariantCulture);
         using var process = Process.Start(start) ?? throw new InvalidOperationException("Plugin process could not be started.");

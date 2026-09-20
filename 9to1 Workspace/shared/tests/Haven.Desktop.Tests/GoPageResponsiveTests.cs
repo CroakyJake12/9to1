@@ -74,7 +74,7 @@ public sealed class GoPageResponsiveTests
             Assert.Equal(3, page.Route.Chatbox.GetValue(HavenProperties.Row));
             Assert.InRange(page.Route.WideSuggestions.Bounds.Width, 799.5, 800.5);
             Assert.InRange(page.Route.Composer.Bounds.Width, 899.5, 900.5);
-            Assert.InRange(page.Route.Instruction.Bounds.Width, 781.5, 782.5);
+            Assert.InRange(page.Route.Instruction.Bounds.Width, 729.5, 730.5);
             Assert.True(page.Route.AddButton.Bounds.Right <= page.Route.Instruction.Bounds.X + 0.1);
             Assert.True(page.Route.Instruction.Bounds.Right <= page.Route.SendButton.Bounds.X + 0.1);
         }

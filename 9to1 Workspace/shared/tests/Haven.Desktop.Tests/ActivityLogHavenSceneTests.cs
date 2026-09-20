@@ -49,8 +49,10 @@ public sealed class ActivityLogHavenSceneTests
         scene.SetItems([new ActivityLogRow("One", "Chat", DateTimeOffset.UtcNow)]);
 
         scene.Search.Text = "  one  ";
-        scene.Refresh.Invoke();
-        scene.ItemButtons[0].Invoke();
+        Assert.True(scene.Refresh.KeyDown(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+        Assert.True(scene.Refresh.KeyUp(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+        Assert.True(scene.ItemButtons[0].KeyDown(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+        Assert.True(scene.ItemButtons[0].KeyUp(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
         scene.Refresh.SetState(HavenElementState.Hover, true);
         scene.Refresh.SetState(HavenElementState.Pressed, true);
         scene.Refresh.SetState(HavenElementState.Pressed, false);
@@ -61,6 +63,10 @@ public sealed class ActivityLogHavenSceneTests
         Assert.Equal("ActivityLog.List.Item0", item);
         Assert.Equal(
         [
+            "ActivityLog.Actions.Refresh.Press",
+            "ActivityLog.Actions.Refresh.Release",
+            "ActivityLog.List.Item0.Press",
+            "ActivityLog.List.Item0.Release",
             "ActivityLog.Actions.Refresh.Hover",
             "ActivityLog.Actions.Refresh.Press",
             "ActivityLog.Actions.Refresh.Release",

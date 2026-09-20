@@ -71,6 +71,24 @@ class WorkerLeaseTests(unittest.TestCase):
             self.assertIsNone(worker._lease)
             self.assertIsNone(worker.model)
 
+    def test_context_change_reloads_before_the_next_turn(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            worker_socket = pathlib.Path(tmp) / "worker.sock"
+            worker_socket.touch()
+            worker = broker.Worker(worker_socket=worker_socket)
+            manifest = self._manifest("current")
+            process = mock.Mock()
+            process.poll.return_value = None
+            worker._model = manifest
+            worker._process = process
+            worker.set_context(2048)
+
+            with mock.patch.object(worker, "load") as load:
+                worker.begin_turn()
+
+            load.assert_called_once_with(manifest, 2048, force=True)
+            worker.end_turn()
+
 
 if __name__ == "__main__":
     unittest.main()

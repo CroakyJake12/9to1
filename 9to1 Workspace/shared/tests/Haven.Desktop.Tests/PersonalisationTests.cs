@@ -19,6 +19,7 @@ namespace Haven.Desktop.Tests;
 /// asserted against literal pre-theme values because it must remain the
 /// untouched visual baseline.
 /// </summary>
+[Collection("HavenPersonalisation")]
 public sealed class PersonalisationTests
 {
     [AvaloniaFact]

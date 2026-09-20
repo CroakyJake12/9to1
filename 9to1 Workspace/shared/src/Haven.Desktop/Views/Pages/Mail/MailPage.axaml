@@ -21,7 +21,7 @@
       </StackPanel>
 
       <Grid Grid.Column="1" ColumnDefinitions="*,Auto,Auto" MaxWidth="650" Margin="24,0">
-        <TextBox Grid.Column="0" Text="{Binding SearchText, Mode=TwoWay}" Watermark="Search mail"/>
+        <TextBox Grid.Column="0" Text="{Binding SearchText, Mode=TwoWay}" PlaceholderText="Search mail"/>
         <Button Grid.Column="1" Content="Search" Command="{Binding SearchCommand}" Margin="8,0,0,0"/>
         <Button Grid.Column="2" Content="Refresh" Command="{Binding RefreshCommand}" Margin="8,0,0,0"/>
       </Grid>
@@ -223,12 +223,12 @@
             </StackPanel>
             <Button Grid.Column="1" Content="×" Click="OnCloseComposeClick"/>
           </Grid>
-          <TextBox Grid.Row="1" Text="{Binding ComposeTo, Mode=TwoWay}" TextChanged="OnComposeTextChanged" Watermark="To (separate recipients with ; )" Margin="0,10,0,0"/>
+          <TextBox Grid.Row="1" Text="{Binding ComposeTo, Mode=TwoWay}" TextChanged="OnComposeTextChanged" PlaceholderText="To (separate recipients with ; )" Margin="0,10,0,0"/>
           <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,8,0,0">
-            <TextBox Grid.Column="0" Text="{Binding ComposeCc, Mode=TwoWay}" TextChanged="OnComposeTextChanged" Watermark="Cc" Margin="0,0,4,0"/>
-            <TextBox Grid.Column="1" Text="{Binding ComposeBcc, Mode=TwoWay}" TextChanged="OnComposeTextChanged" Watermark="Bcc" Margin="4,0,0,0"/>
+            <TextBox Grid.Column="0" Text="{Binding ComposeCc, Mode=TwoWay}" TextChanged="OnComposeTextChanged" PlaceholderText="Cc" Margin="0,0,4,0"/>
+            <TextBox Grid.Column="1" Text="{Binding ComposeBcc, Mode=TwoWay}" TextChanged="OnComposeTextChanged" PlaceholderText="Bcc" Margin="4,0,0,0"/>
           </Grid>
-          <TextBox Grid.Row="3" Text="{Binding ComposeSubject, Mode=TwoWay}" TextChanged="OnComposeTextChanged" Watermark="Subject" Margin="0,8,0,0"/>
+          <TextBox Grid.Row="3" Text="{Binding ComposeSubject, Mode=TwoWay}" TextChanged="OnComposeTextChanged" PlaceholderText="Subject" Margin="0,8,0,0"/>
           <Border Grid.Row="4" Margin="0,8,0,0" CornerRadius="12" ClipToBounds="True" BorderThickness="1" BorderBrush="{DynamicResource HavenBorderBrush}">
             <controls:MailRichTextEditor x:Name="ComposeEditor"/>
           </Border>
@@ -277,7 +277,7 @@
         <Border HorizontalAlignment="Center" VerticalAlignment="Center" Width="420" MaxWidth="420" Padding="20" CornerRadius="18" Background="{DynamicResource HavenPanelBrush}">
           <StackPanel Spacing="12">
             <TextBlock Text="{Binding FolderEditorTitle}" FontSize="21" FontWeight="SemiBold"/>
-            <TextBox Text="{Binding FolderName, Mode=TwoWay}" Watermark="Name"/>
+            <TextBox Text="{Binding FolderName, Mode=TwoWay}" PlaceholderText="Name"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
               <Button Content="Cancel" Command="{Binding CloseFolderEditorCommand}"/>
               <Button Content="Save" Command="{Binding SaveFolderCommand}" Padding="18,8"/>

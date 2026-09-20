@@ -72,6 +72,7 @@ internal sealed partial class ChatHavenScene : IDisposable
         Instruction = Chatbox.GetComponent<Input>("Instruction");
         AddButton = Chatbox.GetComponent<HavenButton>("AddMenu");
         SendButton = Chatbox.GetComponent<HavenButton>("Send");
+        Chatbox.GetComponent<HavenButton>("ChatSettings").Accessibility.AccessibleName = "Manage chat response settings";
         SendIcon = Chatbox.GetComponent<Icon>("SendIcon");
         Messages = (DynamicUIRuntime)Root.DescendantsAndSelf().Single(element => element.Name == "Messages");
         EmptyState = Root.DescendantsAndSelf().Single(element => element.Name == "EmptyState");
