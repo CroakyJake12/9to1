@@ -24,6 +24,7 @@ public sealed partial class MainWindow : Window
     {
         _preferences = preferences;
         InitializeComponent();
+        Title = DesktopProductIdentity.DisplayName;
         DataContextChanged += (_, _) =>
         {
             if (DataContext is MainView shell)

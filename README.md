@@ -35,7 +35,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command packag
 powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command verify
 ```
 
-The package and full verification commands intentionally fail while required package artifacts, hosts, runtime smoke environments, and complete CUI migration are absent. They do not report placeholder success.
+`package-windows` produces a self-contained `win-x64` developer-preview executable. `package-linux` cross-publishes `linux-x64` and produces a developer-preview `.deb` without requiring a Linux builder. Outputs are under `artifacts/developer-preview/` and are explicitly non-distributable legacy-host test artifacts, not CUI, Dulche, Linux-runtime, or release verification. `verify` still fails while the required hosts, runtime smoke environments, notices, and CUI migration are absent.
 
 ## Licensing And Provenance
 

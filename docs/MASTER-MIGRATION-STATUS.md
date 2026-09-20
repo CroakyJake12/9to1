@@ -24,7 +24,7 @@ Last audited: 2026-09-20. This ledger records evidence, not intent. `VERIFIED` r
 | Picture / Wave / Motion | PARTIAL | None | Active AXAML exists in Picture | Not re-audited | Not re-audited | No / No | No | Not re-audited | UNFINISHED | Media | CUI replacement, engines, packages, and parity absent |
 | Connectors | PRESENT | N/A | N/A | Existing connector source | Not re-audited | N/A | N/A | Infrastructure suite: 368 passed | UNFINISHED | Connectors | Trust/provider audit and validation incomplete |
 | Android | PRESENT | Legacy HUI | No | Android host/services | No CUI integration | Android only / N/A | APK source only | No current validation | UNFINISHED | Android | HUI runtime remains, generated files tracked, CUI migration absent |
-| OS preload / releases | PARTIAL | N/A | N/A | Hash-locked copy-only manifest | Dulche artifact entry only | Linux image unverified / N/A | No package bytes | Metadata validation passes | UNFINISHED | Release | No `.deb` artifacts, image, VM boot, install, or launcher evidence |
+| OS preload / releases | PARTIAL | N/A | N/A | Hash-locked copy-only manifest; local developer-preview package scripts | Dulche artifact entry only | Linux image unverified / Windows developer executable build only | Developer-preview outputs excluded from release cohort | Metadata validation passes; preview build must run locally | UNFINISHED | Release | No release-admitted `.deb` artifacts, image, VM boot, Linux install, or launcher evidence |
 
 ## Reference Evidence
 
@@ -41,8 +41,8 @@ Last audited: 2026-09-20. This ledger records evidence, not intent. `VERIFIED` r
 | --- | --- |
 | `powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command build` | PASS. CUI, Home, and the shared Release solution built with 0 warnings and 0 errors. |
 | `powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command test` | PASS. CUI 4/4, Home 6/6, and shared solution 1,824/1,824. |
-| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command package-linux` | BLOCKED. `9to1 OS/artifacts/packages` is absent. |
-| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command package-windows` | BLOCKED. No shared-CUI Windows package pipeline or runtime evidence exists. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command package-windows` | PASS for a local-only self-contained `9-1.exe` legacy-host developer preview; it remained running for a bounded Windows startup smoke, then was stopped. This is not CUI or release evidence. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/9to1.ps1 -Command package-linux` | PASS for a local-only `linux-x64` publish and structurally validated `9-1-legacy-desktop-preview_*.deb`. The package was not installed or run on Linux. |
 | `git diff --check` | PASS. |
 | Generated-file audit | PASS for tracked known Python bytecode, `obj-hui`, and `obj-apk` paths: 0 remain. |
 

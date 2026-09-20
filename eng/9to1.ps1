@@ -12,6 +12,7 @@ $cuiProject = Join-Path $root 'framework\CUI\src\NineToOne.Cui.Markup.csproj'
 $cuiTests = Join-Path $root 'framework\CUI\tests\NineToOne.Cui.Markup.Tests.csproj'
 $homeProject = Join-Path $root '9to1 Workspace\Home\HavenOS.Home.csproj'
 $homeTests = Join-Path $root '9to1 Workspace\Home\Tests\HavenOS.Home.Tests.csproj'
+$previewPackager = Join-Path $root 'eng\package-developer-preview.ps1'
 
 function Invoke-DotNet {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
@@ -43,15 +44,16 @@ switch ($Command) {
         Invoke-VerifiedTestSuites
     }
     'package-linux' {
-        $validator = Join-Path $root '9to1 OS\release\tests\validate-package-preload.ps1'
-        & powershell -NoProfile -ExecutionPolicy Bypass -File $validator -RequireArtifacts
+        & $previewPackager -Target linux
         if ($LASTEXITCODE -ne 0) {
-            throw 'Linux package metadata or artifacts are unavailable.'
+            throw 'Linux developer-preview packaging failed.'
         }
-        throw 'Linux packaging is blocked: the repository has no complete standalone app artifact set or image-runtime evidence.'
     }
     'package-windows' {
-        throw 'Windows packaging is blocked: no shared-CUI Windows package pipeline or runtime evidence exists.'
+        & $previewPackager -Target windows
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Windows developer-preview packaging failed.'
+        }
     }
     'verify' {
         Invoke-VerifiedTestSuites
