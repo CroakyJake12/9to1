@@ -40,12 +40,12 @@
     <Using Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Haven.Core/Haven.Core.csproj" />
-    <ProjectReference Include="../Haven.Application/Haven.Application.csproj" />
-    <ProjectReference Include="../Haven.Infrastructure/Haven.Infrastructure.csproj" />
-    <ProjectReference Include="../Haven.Browser/Haven.Browser.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj" />
     <!-- The linked desktop source includes the Avalonia backend/host for platform-neutral Haven.UI. -->
-    <ProjectReference Include="../Haven.UI/Haven.UI.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
     <ProjectReference Include="../Haven.Android.Hui/Haven.Android.Hui.csproj" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
     <PackageReference Include="Avalonia" />
@@ -60,30 +60,30 @@
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../9to1 Workspace/shared/src/Haven.Desktop/**/*.cs" Exclude="../Haven.Desktop/bin/**;../Haven.Desktop/bin-*/**;../Haven.Desktop/obj/**;../Haven.Desktop/obj-*/**;../Haven.Desktop/Program.cs;../Haven.Desktop/MainWindow.axaml.cs;../Haven.Desktop/MainWindow.DeveloperTools.cs;../Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs;../Haven.Desktop/Services/WindowsGraphicsCaptureService.cs;../Haven.Desktop/Services/ComputerUseOverlayCoordinator.cs;../Haven.Desktop/Services/DesktopFloatingActivityHost.cs" LinkBase="SharedDesktop" />
-    <AvaloniaXaml Include="../Haven.Desktop/App.axaml" Link="App.axaml">
+    <Compile Include="../../../9to1 Workspace/shared/src/Haven.Desktop/**/*.cs" Exclude="../../../9to1 Workspace/shared/src/Haven.Desktop/bin/**;../../../9to1 Workspace/shared/src/Haven.Desktop/bin-*/**;../../../9to1 Workspace/shared/src/Haven.Desktop/obj/**;../../../9to1 Workspace/shared/src/Haven.Desktop/obj-*/**;../../../9to1 Workspace/shared/src/Haven.Desktop/Program.cs;../../../9to1 Workspace/shared/src/Haven.Desktop/MainWindow.axaml.cs;../../../9to1 Workspace/shared/src/Haven.Desktop/MainWindow.DeveloperTools.cs;../../../9to1 Workspace/shared/src/Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs;../../../9to1 Workspace/shared/src/Haven.Desktop/Services/WindowsGraphicsCaptureService.cs;../../../9to1 Workspace/shared/src/Haven.Desktop/Services/ComputerUseOverlayCoordinator.cs;../../../9to1 Workspace/shared/src/Haven.Desktop/Services/DesktopFloatingActivityHost.cs" LinkBase="SharedDesktop" />
+    <AvaloniaXaml Include="../../../9to1 Workspace/shared/src/Haven.Desktop/App.axaml" Link="App.axaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </AvaloniaXaml>
 
-    <AvaloniaResource Include="../Haven.Desktop/Assets/**/*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" />
-    <AndroidAsset Include="../Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Medium.ttf" Link="fonts/Montserrat-Medium.ttf" />
-    <AndroidAsset Include="../Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-SemiBold.ttf" Link="fonts/Montserrat-SemiBold.ttf" />
-    <AndroidAsset Include="../Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-ExtraBold.ttf" Link="fonts/Montserrat-ExtraBold.ttf" />
-    <AvaloniaXaml Include="../Haven.Desktop/Styles/**/*.axaml" Link="Styles/%(RecursiveDir)%(Filename)%(Extension)">
+    <AvaloniaResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/**/*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-Medium.ttf" Link="fonts/Montserrat-Medium.ttf" />
+    <AndroidAsset Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-SemiBold.ttf" Link="fonts/Montserrat-SemiBold.ttf" />
+    <AndroidAsset Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/MontserratStatic/Montserrat-ExtraBold.ttf" Link="fonts/Montserrat-ExtraBold.ttf" />
+    <AvaloniaXaml Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Styles/**/*.axaml" Link="Styles/%(RecursiveDir)%(Filename)%(Extension)">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </AvaloniaXaml>
 
-    <AvaloniaXaml Include="../Haven.Desktop/Controls/**/*.axaml" Link="Controls/%(RecursiveDir)%(Filename)%(Extension)">
+    <AvaloniaXaml Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Controls/**/*.axaml" Link="Controls/%(RecursiveDir)%(Filename)%(Extension)">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </AvaloniaXaml>
-    <AvaloniaXaml Include="../Haven.Desktop/Views/**/*.axaml" Exclude="../Haven.Desktop/MainWindow.axaml" Link="Views/%(RecursiveDir)%(Filename)%(Extension)">
+    <AvaloniaXaml Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Views/**/*.axaml" Exclude="../../../9to1 Workspace/shared/src/Haven.Desktop/MainWindow.axaml" Link="Views/%(RecursiveDir)%(Filename)%(Extension)">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </AvaloniaXaml>
-    <AvaloniaXaml Include="../Haven.Desktop/Interface/**/*.axaml" Link="Interface/%(RecursiveDir)%(Filename)%(Extension)">
+    <AvaloniaXaml Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Interface/**/*.axaml" Link="Interface/%(RecursiveDir)%(Filename)%(Extension)">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </AvaloniaXaml>

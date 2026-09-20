@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../HUI/Platform/CakeOS.Platform.csproj" />
+    <ProjectReference Include="../../HUI/Platform/CakeOS.Platform.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj" />
   </ItemGroup>
 
