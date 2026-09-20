@@ -32,7 +32,7 @@ def regex_once(text: str, pattern: str, replacement: str, label: str) -> str:
 
 
 def patch_chat_session() -> None:
-    file, text = read("src/Haven.Application/ChatSessionService.cs")
+    file, text = read("src/Haven.Application/Chat/ChatSessionService.cs")
 
     if "ChatModelInventoryCache? modelInventory = null" not in text:
         text = replace_once(
@@ -518,7 +518,7 @@ def patch_chat_view_model() -> None:
 
 
 def patch_tracker_cleanup() -> None:
-    file, text = read("src/Haven.Application/ChatExecutionTracker.cs")
+    file, text = read("src/Haven.Application/Chat/ChatExecutionTracker.cs")
     old = (
         "    public ValueTask DisposeAsync()\n"
         "    {\n"

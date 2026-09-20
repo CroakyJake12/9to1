@@ -204,7 +204,7 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual("do not delete", socket_path.read_text(encoding="utf-8"))
 
     def test_systemd_unit_keeps_network_privilege_and_resource_boundary(self) -> None:
-        unit = (REPOSITORY / "packaging/systemd/user/haven-inference-broker.service").read_text(encoding="utf-8")
+        unit = (REPOSITORY / "9to1 OS/packaging/systemd/user/haven-inference-broker.service").read_text(encoding="utf-8")
         required = (
             "RuntimeDirectory=haven",
             "RuntimeDirectoryMode=0700",

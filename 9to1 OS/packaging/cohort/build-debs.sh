@@ -31,7 +31,7 @@ EOF
 build_data() {
   local dir="$OUT/work/havenos-data"
   mkdir -p "$dir/usr/lib/havenos/data" "$dir/usr/bin"
-  cp -a "$ROOT/apps/Data/." "$dir/usr/lib/havenos/data/"
+  cp -a "$ROOT/../9to1 Workspace/Data/." "$dir/usr/lib/havenos/data/"
   cat > "$dir/usr/bin/haven-data-calc-worker" <<'EOF'
 #!/bin/sh
 set -eu
@@ -49,7 +49,7 @@ build_present() {
   test -n "${PRESENT_BUILD_DIR:-}" || { echo "PRESENT_BUILD_DIR is required" >&2; exit 1; }
   test -x "$PRESENT_BUILD_DIR/cakeos-present-worker" || { echo "Present worker binary is missing" >&2; exit 1; }
   cp "$PRESENT_BUILD_DIR/cakeos-present-worker" "$dir/usr/lib/havenos/present-engine/"
-  cp -a "$ROOT/apps/present-engine/README.md" "$dir/usr/lib/havenos/present-engine/"
+  cp -a "$ROOT/../9to1 Workspace/Present/present-engine/README.md" "$dir/usr/lib/havenos/present-engine/"
   cat > "$dir/usr/bin/cakeos-present-worker" <<'EOF'
 #!/bin/sh
 set -eu

@@ -15,7 +15,7 @@ command -v cargo >/dev/null || { echo "cargo is required for RNote build" >&2; e
 # Build RNote from source if publish dir doesn't exist
 if [[ ! -x "$publish/cakeos-canvas-rnote" ]]; then
   echo "Building RNote from source..."
-  cd "$root/apps/canvas/rnote-poc"
+  cd "$root/../9to1 Workspace/Canvas/rnote-poc"
   cargo build --release
   mkdir -p "$publish"
   cp "target/release/cakeos-canvas-rnote" "$publish/"
@@ -26,8 +26,8 @@ fi
 # Stage the Rnote native shared library alongside the managed host so
 # DllImport("cakeos_canvas_rnote_poc") resolves at runtime.
 echo "Building Canvas Rnote native library from source..."
-cargo build --release --manifest-path "$root/apps/canvas/rnote-poc/Cargo.toml"
-native_lib="$root/apps/canvas/rnote-poc/target/release/libcakeos_canvas_rnote_poc.so"
+cargo build --release --manifest-path "$root/../9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
+native_lib="$root/../9to1 Workspace/Canvas/rnote-poc/target/release/libcakeos_canvas_rnote_poc.so"
 [[ -f "$native_lib" ]] || { echo "Expected Rnote native library at $native_lib" >&2; exit 2; }
 cp "$native_lib" "$publish/"
 

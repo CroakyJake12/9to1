@@ -13,7 +13,7 @@ sys.path.insert(0, str(RUNTIME))
 class PackagingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.manifest_path = REPOSITORY / "packaging/llamacpp/package-manifest.json"
+        cls.manifest_path = REPOSITORY / "9to1 OS/packaging/llamacpp/package-manifest.json"
         cls.manifest = json.loads(cls.manifest_path.read_text(encoding="utf-8"))
 
     def test_package_is_model_free_and_does_not_auto_enable_service(self) -> None:
@@ -28,7 +28,7 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual("v0.4.0", upstream["tag"])
         self.assertEqual("5266f24da75dc449bd56cbed7addb9c8e4a6a73e", upstream["commit"])
         self.assertEqual("MIT", upstream["license"])
-        license_file = REPOSITORY / "runtime/llamacpp/licenses/llama.cpp-LICENSE"
+        license_file = RUNTIME / "licenses/llama.cpp-LICENSE"
         text = license_file.read_text(encoding="utf-8")
         self.assertIn("Copyright (c) 2023-2026 The ggml authors", text)
         self.assertIn("permission notice shall be included", text)
@@ -38,7 +38,7 @@ class PackagingTests(unittest.TestCase):
         self.assertTrue({"python3", "libc6", "libstdc++6", "libgcc-s1", "libgomp1"}.issubset(dependencies))
 
     def test_builder_has_no_package_install_or_service_enable_step(self) -> None:
-        builder = (REPOSITORY / "packaging/llamacpp/build-deb.sh").read_text(encoding="utf-8")
+        builder = (REPOSITORY / "9to1 OS/packaging/llamacpp/build-deb.sh").read_text(encoding="utf-8")
         self.assertNotIn("dpkg -i", builder)
         self.assertNotIn("apt install", builder)
         self.assertNotIn("systemctl enable", builder)
@@ -46,9 +46,9 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("libgcc-s1", builder)
 
     def test_builder_normalizes_debian_archive_root_mode(self) -> None:
-        builder = (REPOSITORY / "packaging/llamacpp/build-deb.sh").read_text(encoding="utf-8")
+        builder = (REPOSITORY / "9to1 OS/packaging/llamacpp/build-deb.sh").read_text(encoding="utf-8")
         self.assertIn('chmod 0755 "$STAGE"', builder)
-        verifier = (REPOSITORY / "packaging/llamacpp/verify-installable-deb.sh").read_text(encoding="utf-8")
+        verifier = (REPOSITORY / "9to1 OS/packaging/llamacpp/verify-installable-deb.sh").read_text(encoding="utf-8")
         self.assertIn('drwxr-xr-x', verifier)
         self.assertIn('Package root directory must be mode 0755', verifier)
 

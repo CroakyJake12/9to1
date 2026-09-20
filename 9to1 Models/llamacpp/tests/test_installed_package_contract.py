@@ -7,7 +7,7 @@ RUNTIME = pathlib.Path(__file__).resolve().parents[1]
 REPO = RUNTIME.parents[1]
 WORKFLOW = (REPO / ".github/workflows/llamacpp-slice0.yml").read_text(encoding="utf-8")
 PROOF = (RUNTIME / "tests/real_runtime_proof.py").read_text(encoding="utf-8")
-VERIFIER = (REPO / "packaging/llamacpp/verify-installable-deb.sh").read_text(encoding="utf-8")
+VERIFIER = (REPO / "9to1 OS/packaging/llamacpp/verify-installable-deb.sh").read_text(encoding="utf-8")
 
 
 class InstalledPackageProofContractTests(unittest.TestCase):
@@ -61,13 +61,13 @@ class InstalledPackageProofContractTests(unittest.TestCase):
         self.assertIn('HAVEN_MODELCTL_EXECUTABLE: /usr/bin/haven-modelctl', section)
         self.assertIn('HAVEN_BROKER_SCRIPT: /usr/lib/haven/inference/broker.py', section)
         self.assertIn('HAVEN_LLAMA_SERVER: /usr/lib/haven/llama.cpp/llama-server', section)
-        self.assertIn('/usr/bin/python3 cakeos/runtime/llamacpp/tests/real_runtime_proof.py', section)
+        self.assertIn('/usr/bin/python3 "cakeos/9to1 Models/llamacpp/tests/real_runtime_proof.py"', section)
         self.assertNotIn('apt-get', section)
 
     def test_installed_job_verifies_model_before_running_and_uploads_no_model(self) -> None:
         section = WORKFLOW.split('installed-package-runtime-proof:', 1)[1]
         verify_index = section.index('sha256sum -c -')
-        proof_index = section.index('/usr/bin/python3 cakeos/runtime/llamacpp/tests/real_runtime_proof.py')
+        proof_index = section.index('/usr/bin/python3 "cakeos/9to1 Models/llamacpp/tests/real_runtime_proof.py"')
         self.assertLess(verify_index, proof_index)
         self.assertIn('name: haven-llamacpp-installed-package-proof', section)
         upload_section = section.split('name: haven-llamacpp-installed-package-proof', 1)[1]
@@ -83,7 +83,7 @@ class InstalledPackageProofContractTests(unittest.TestCase):
         self.assertIn('haven-inference-broker.service', section)
 
     def test_verifier_shell_syntax_is_checked_in_ci(self) -> None:
-        self.assertIn('sh -n packaging/llamacpp/verify-installable-deb.sh', WORKFLOW)
+        self.assertIn('sh -n "9to1 OS/packaging/llamacpp/verify-installable-deb.sh"', WORKFLOW)
 
 
 if __name__ == "__main__":

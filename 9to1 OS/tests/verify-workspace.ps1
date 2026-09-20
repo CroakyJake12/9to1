@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $lock = Get-Content -LiteralPath (Join-Path $root 'havenos.lock') -Raw | ConvertFrom-Json
-$required = @('platform/gnome-shell', 'platform/mutter', 'platform/ubuntu/manifests/apt-sources.list', 'platform/ubuntu/image/live-build/auto/config', 'HUI', 'apps', 'compatibility/wine', 'compatibility/android', 'image/build-live-iso.sh', 'tooling/HavenOS.Studio/HavenOS.Studio.csproj', 'vm/havenos-dev.json')
+$required = @('platform/gnome-shell', 'platform/mutter', 'platform/ubuntu/manifests/apt-sources.list', 'platform/ubuntu/image/live-build/auto/config', 'HUI', 'apps', 'compatibility/wine', 'compatibility/android', 'image/build-live-iso.sh', '../9to1 Workspace/Studio/HavenOS.Studio/HavenOS.Studio.csproj', 'vm/havenos-dev.json')
 $missing = $required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $root $_)) }
 if ($missing) { throw "Missing required HavenOS paths: $($missing -join ', ')" }
 if ($lock.ubuntu.baseDesktopIso.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Ubuntu ISO provenance hash is invalid.' }

@@ -54,14 +54,14 @@ mkdir -p \
 
 install -m 0755 "$REPO_ROOT/packaging/bin/haven-modelctl" "$STAGE/usr/bin/haven-modelctl"
 for file in broker.py gguf.py model_lease.py modelctl.py backend_matrix.py hardware_probe.py budget.py benchmark.py; do
-  install -m 0644 "$REPO_ROOT/runtime/llamacpp/$file" "$STAGE/usr/lib/haven/inference/$file"
+  install -m 0644 "$REPO_ROOT/../9to1 Models/llamacpp/$file" "$STAGE/usr/lib/haven/inference/$file"
 done
-install -m 0644 "$REPO_ROOT/runtime/llamacpp/provider-contract.json" "$STAGE/usr/lib/haven/inference/provider-contract.json"
-install -m 0644 "$REPO_ROOT/runtime/llamacpp/backend-matrix.json" "$STAGE/usr/lib/haven/inference/backend-matrix.json"
+install -m 0644 "$REPO_ROOT/../9to1 Models/llamacpp/provider-contract.json" "$STAGE/usr/lib/haven/inference/provider-contract.json"
+install -m 0644 "$REPO_ROOT/../9to1 Models/llamacpp/backend-matrix.json" "$STAGE/usr/lib/haven/inference/backend-matrix.json"
 install -m 0755 "$BINARY" "$STAGE/usr/lib/haven/llama.cpp/llama-server"
 install -m 0644 "$REPO_ROOT/packaging/systemd/user/haven-inference-broker.service" "$STAGE/usr/lib/systemd/user/haven-inference-broker.service"
-install -m 0644 "$REPO_ROOT/runtime/llamacpp/licenses/llama.cpp-LICENSE" "$STAGE/usr/share/doc/$PACKAGE/llama.cpp-LICENSE"
-install -m 0644 "$REPO_ROOT/runtime/llamacpp/upstream.lock.json" "$STAGE/usr/share/doc/$PACKAGE/upstream.lock.json"
+install -m 0644 "$REPO_ROOT/../9to1 Models/llamacpp/licenses/llama.cpp-LICENSE" "$STAGE/usr/share/doc/$PACKAGE/llama.cpp-LICENSE"
+install -m 0644 "$REPO_ROOT/../9to1 Models/llamacpp/upstream.lock.json" "$STAGE/usr/share/doc/$PACKAGE/upstream.lock.json"
 
 INSTALLED_SIZE=$(du -sk "$STAGE/usr" | awk '{print $1}')
 cat > "$STAGE/DEBIAN/control" <<EOF

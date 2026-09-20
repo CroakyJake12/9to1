@@ -12,7 +12,7 @@ class HuiProviderContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.hui = json.loads(
-            (REPOSITORY / "HUI/llamacpp-provider.json").read_text(encoding="utf-8")
+            (REPOSITORY / "9to1 OS/HUI/llamacpp-provider.json").read_text(encoding="utf-8")
         )
         cls.runtime = json.loads(
             (RUNTIME / "provider-contract.json").read_text(encoding="utf-8")

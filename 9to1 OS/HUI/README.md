@@ -20,5 +20,5 @@ execution remains unproven until an approved local GGUF is loaded by the
 runtime.
 
 The authoritative runtime details remain in
-`runtime/llamacpp/provider-contract.json`; this file only defines the HUI
+`../9to1 Models/llamacpp/provider-contract.json`; this file only defines the HUI
 adapter surface.

@@ -20,8 +20,8 @@ command -v cargo >/dev/null || { echo "cargo is required for RNote build" >&2; e
 # Stage the shared Rnote native library at the publish root so
 # DllImport("cakeos_canvas_rnote_poc") resolves at runtime.
 echo "Building Boards shared Rnote native library from source..."
-cargo build --release --manifest-path "$root/apps/canvas/rnote-poc/Cargo.toml"
-native_lib="$root/apps/canvas/rnote-poc/target/release/libcakeos_canvas_rnote_poc.so"
+cargo build --release --manifest-path "$root/../9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
+native_lib="$root/../9to1 Workspace/Canvas/rnote-poc/target/release/libcakeos_canvas_rnote_poc.so"
 [[ -f "$native_lib" ]] || { echo "Expected Rnote native library at $native_lib" >&2; exit 2; }
 cp "$native_lib" "$publish/"
 
