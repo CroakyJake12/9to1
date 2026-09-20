@@ -1,0 +1,110 @@
+{
+  "productId": "haven.terminal",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "haven-terminal-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Terminal",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-terminal",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-terminal",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-terminal",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/terminal",
+      "handler": "HavenTerminalApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.terminal.launch",
+      "displayName": "Launch Terminal App",
+      "description": "Ability to launch the Haven Terminal application",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.terminal.shell",
+      "displayName": "Shell Access",
+      "description": "Provide shell access via terminal emulator",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    },
+    {
+      "dependencyId": "dotnet-sdk",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=8.0"
+    },
+    {
+      "dependencyId": "vte-2.91",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=0.72"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": false,
+    "requiresState": true,
+    "requiresData": false,
+    "customPaths": ["/home/haven/.config/haven-terminal", "/home/haven/.local/share/haven-terminal"]
+  },
+  "permissions": {
+    "requiredGrants": ["files.read", "files.write", "process.exec"],
+    "optionalGrants": ["network.access"]
+  },
+  "providers": [],
+  "offlineRequirement": "Required",
+  "smokeTest": {
+    "command": "haven-terminal --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T15:40:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-terminal-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

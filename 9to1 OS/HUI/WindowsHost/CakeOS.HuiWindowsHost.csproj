@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>cakeos-hui-windows-preview</AssemblyName>
+    <RootNamespace>CakeOS.HuiWindowsHost</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Platform\CakeOS.Platform.csproj" />
+    <ProjectReference Include="..\vendor\Haven.UI\Haven.UI.csproj" />
+    <ProjectReference Include="..\HuiRenderer\CakeOS.Hui.Renderer.csproj" />
+    <ProjectReference Include="..\CanvasApp\CakeOS.Canvas.App.csproj" />
+    <ProjectReference Include="..\..\..\9to1 Workspace\Boards\contract\CakeOS.Apps.Boards.Contract.csproj" />
+    <ProjectReference Include="..\..\..\9to1 Workspace\Boards\hui\CakeOS.Apps.Boards.Hui.csproj" />
+    <PackageReference Include="Avalonia" Version="12.0.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.1" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.17" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,93 @@
+{
+  "productId": "haven.welcome",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "cb15dcd1b57c39bc1ac9aaf73891ca4369cd9684",
+    "branch": "main",
+    "tag": "haven-welcome-0.1.0"
+  },
+  "donor": {
+    "name": "HavenAI Welcome",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-welcome",
+    "version": "0.1.0",
+    "hashSha256": "cc9f9c256b797245f8ce053e39186bf6fe52d7d1790de4234ee8b6a8f78267cf",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-welcome",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-welcome",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/welcome",
+      "handler": "HavenWelcomeApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.welcome.launch",
+      "displayName": "Launch Welcome App",
+      "description": "Ability to launch the Haven Welcome application",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": false,
+    "requiresCache": false,
+    "requiresState": false,
+    "requiresData": false,
+    "customPaths": []
+  },
+  "permissions": {
+    "requiredGrants": [],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "NotRequired",
+  "smokeTest": {
+    "command": "haven-welcome --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-12T12:00:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-welcome-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}

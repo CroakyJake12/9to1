@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+lb config noauto \
+  --mode ubuntu \
+  --distribution resolute \
+  --architectures amd64 \
+  --archive-areas "main restricted universe multiverse" \
+  --debian-installer live \
+  --bootappend-live "boot=live components hostname=havenos username=haven"

@@ -1,0 +1,83 @@
+name: Book4Edge16 Generic ARM64 QEMU Smoke
+
+# Generic ARM64 boot smoke ONLY (handover section 29).
+# Runs on a Linux ARM64 runner with qemu-system-aarch64 "virt" + EDK2.
+# "virt" is NOT Galaxy Book4 Edge hardware. A green run proves the generic
+# ARM64 boot chain can progress; it NEVER proves Book4 Edge boot.
+# Evidence classes stay separate: GENERIC-ARM64-BOOT vs REAL-BOOK4EDGE-HARDWARE.
+
+on:
+  workflow_dispatch:
+    inputs:
+      iso_run_id:
+        description: 'Image workflow RUN ID holding cakeos-book4edge16-arm64-iso'
+        required: true
+        default: '35026220197'
+      boot_wait_seconds:
+        description: 'Seconds to let the VM run before screendump'
+        required: false
+        default: '360'
+      ref:
+        description: 'Git ref for scripts (this branch)'
+        required: false
+        default: 'emergency/book4edge-nondisruptive-tests'
+
+jobs:
+  qemu-smoke:
+    name: Generic ARM64 QEMU boot smoke
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout scripts
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+          submodules: false
+
+      - name: Install QEMU + EDK2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            qemu-system-arm qemu-efi-aarch64 socat netpbm
+
+      - name: Download Candidate ISO artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p work/dl
+          gh run download "${{ github.event.inputs.iso_run_id }}" \
+            --repo CroakyJake12/CakeOS \
+            --name cakeos-book4edge16-arm64-iso \
+            --dir work/dl
+          ls -R work/dl
+          # gh run download already extracts artifact files; handle a zip too.
+          if compgen -G 'work/dl/*.zip' > /dev/null; then
+            mkdir -p work/iso
+            unzip -j 'work/dl/*.zip' -d work/iso
+          fi
+          ISO=$(find work -maxdepth 3 -name '*.iso' | head -n 1)
+          test -n "$ISO" || { echo "No ISO found in artifact" >&2; exit 1; }
+          echo "ISO_PATH=$ISO" >> "$GITHUB_ENV"
+
+      - name: Boot under QEMU virt (serial + VNC screendump)
+        run: |
+          bash tooling/book4edge/qemu-arm64-smoke.sh "$ISO_PATH" work/qemu \
+            "${{ github.event.inputs.boot_wait_seconds }}"
+          cat work/qemu/qemu-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload boot evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: book4edge16-qemu-smoke
+          path: |
+            work/qemu/qemu-report.md
+            work/qemu/serial.log
+            work/qemu/screen.ppm
+            work/qemu/screen.png
+            work/qemu/qemu.log
+          if-no-files-found: warn

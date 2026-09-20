@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Boards</AssemblyName>
+    <RootNamespace>Haven.Applications.Boards</RootNamespace>
+    <HavenUiProjectPath>$(MSBuildThisFileDirectory)..\..\..\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\hui\CakeOS.Apps.Boards.Hui.csproj" />
+    <ProjectReference Include="..\..\..\HUI\LinuxHost\CakeOS.HuiLinuxHost.csproj" />
+  </ItemGroup>
+</Project>

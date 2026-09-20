@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>cakeos-hui-preview</AssemblyName>
+    <RootNamespace>CakeOS.HuiPreview</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\vendor\Haven.UI\Haven.UI.csproj" />
+  </ItemGroup>
+</Project>

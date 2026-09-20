@@ -1,0 +1,122 @@
+name: Component packaging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "release/**"
+    paths:
+      - "apps/**"
+      - "compatibility/wine/**"
+      - "packaging/**"
+      - ".github/workflows/component-packaging.yml"
+
+jobs:
+  canvas-rnote:
+    name: Canvas/Rnote Debian package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout authoritative Canvas/Rnote head
+        uses: actions/checkout@v4
+        with:
+          ref: integration/canvas-rnote-hui-preview
+          fetch-depth: 1
+          submodules: false
+
+      - name: Set up .NET and Rust
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: dtolnay/rust-toolchain@1.92.0
+
+      - name: Install native build and package tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config libglib2.0-dev libcairo2-dev \
+            libpango1.0-dev librsvg2-dev dpkg-dev jq xvfb
+
+      - name: Build and test Canvas/Rnote native boundary
+        run: |
+          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
+          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
+          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+
+      - name: Build the HUI host containing the Canvas adapter
+        run: |
+          command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
+          bash HUI/build-linux-host.sh
+          mkdir -p artifacts/hui-preview/publish
+          cp artifacts/hui-linux-host/publish/cakeos-hui-linux-preview \
+            artifacts/hui-preview/publish/cakeos-hui-preview
+          chmod 0755 artifacts/hui-preview/publish/cakeos-hui-preview
+
+      - name: Build deterministic Debian package
+        env:
+          CAKEOS_HUI_PREVIEW_VERSION: 0.1.0+canvas-rnote.${{ github.run_number }}
+          SOURCE_DATE_EPOCH: 0
+        run: |
+          bash packaging/haven-hui-preview/build-deb.sh
+          package="artifacts/packages/haven-hui-preview_0.1.0+canvas-rnote.${GITHUB_RUN_NUMBER}_amd64.deb"
+          dpkg-deb --info "$package" | tee artifacts/packages/package-metadata.txt
+          dpkg-deb --contents "$package" | tee artifacts/packages/package-files.txt
+          sha256sum "$package" | tee artifacts/packages/package.sha256
+
+      - name: Install and smoke-test package
+        run: |
+          package=$(find artifacts/packages -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -n "$package"
+          package_name=$(dpkg-deb --field "$package" Package)
+          sudo apt-get install -y "./$package"
+          test -x /usr/bin/cakeos-hui-preview
+          dpkg-query -W -f='${Status}\n' "$package_name" | grep -q 'install ok installed'
+          set +e
+          xvfb-run -a timeout 5s env CAKEOS_HUI_PREVIEW_AUTO_EXIT_MS=1000 \
+            cakeos-hui-preview > artifacts/packages/runtime.log 2>&1
+          status=$?
+          set -e
+          test "$status" = 0 -o "$status" = 1 -o "$status" = 124
+
+      - name: Upload package and immutable metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-canvas-rnote-debian-${{ github.run_number }}
+          path: artifacts/packages/
+          if-no-files-found: error
+
+  boards-appflowy:
+    name: Boards/AppFlowy packaging contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout authoritative Boards head
+        uses: actions/checkout@v4
+        with:
+          ref: boards-appflowy-foundation
+          fetch-depth: 1
+          submodules: false
+
+      - name: Emit finite blocker record
+        run: |
+          mkdir -p artifacts/boards
+          cat > artifacts/boards/BLOCKED.md <<'EOF'
+          STATUS: UNKNOWN/BLOCKED
+          The authoritative Boards head contains HUI and contract class libraries plus a Flutter proof harness,
+          but no launchable Linux Boards host/process. The packaging contract intentionally refuses to package
+          source-only libraries or the Flutter proof harness. Required seam: a shared CakeOS HUI Linux host/root
+          injection entry point that composes HavenBoardsHuiSession and exposes a stable executable.
+          No image configuration or second renderer is introduced by this workflow.
+          EOF
+
+      - name: Upload blocker record
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-boards-appflowy-blocked-${{ github.run_number }}
+          path: artifacts/boards/BLOCKED.md
+          if-no-files-found: error

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "workspace": "HavenOS",
+  "ubuntu": {
+    "classification": "tracked-upstream",
+    "release": "26.04.1 LTS",
+    "codename": "resolute",
+    "baseDesktopIso": {
+      "url": "https://releases.ubuntu.com/26.04.1/ubuntu-26.04.1-desktop-amd64.iso",
+      "sha256": "601e30fbf5d97759367c632e2c33630665039b7e2158fd068403da3ccf1bda1f"
+    },
+    "aptSources": "platform/ubuntu/manifests/apt-sources.list"
+  },
+  "components": {
+    "gnome-shell": {
+      "classification": "haven-maintained-fork",
+      "path": "platform/gnome-shell",
+      "fork": "https://github.com/CroakyJake12/gnome-shell.git",
+      "upstream": "https://github.com/GNOME/gnome-shell.git",
+      "revision": "1d66bb011e56b1759a65eb8d3e9f194c92523baa"
+    },
+    "mutter": {
+      "classification": "haven-maintained-fork",
+      "path": "platform/mutter",
+      "fork": "https://github.com/CroakyJake12/mutter.git",
+      "upstream": "https://github.com/GNOME/mutter.git",
+      "revision": "90d032ae67645cfa1f78159e45b626ce479ba358"
+    },
+    "HUI": {
+      "classification": "haven-native",
+      "path": "HUI",
+      "migrationDonor": {
+        "repository": "CroakyJake12/CakeAI",
+        "revision": "7c021082565b3e0ef9110bc4a1287ca3cc2c1fbb",
+        "sourcePath": "src/Haven.UI"
+      }
+    },
+    "apps": {
+      "classification": "haven-native",
+      "path": "apps",
+      "migrationDonor": "CroakyJake12/HavenAI"
+    },
+    "local-inference-runtime": {
+      "classification": "haven-native",
+      "path": "runtime/llamacpp",
+      "upstream": "https://github.com/ggml-org/llama.cpp.git",
+      "upstreamRevision": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e"
+    }
+  }
+}

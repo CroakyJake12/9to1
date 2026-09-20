@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CakeOS.Hui.Renderer</RootNamespace>
+    <AssemblyName>CakeOS.Hui.Renderer</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\vendor\Haven.UI\Haven.UI.csproj" />
+    <PackageReference Include="Avalonia" Version="12.0.1" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.17" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\theme\tokens.json">
+      <LogicalName>CakeOS.Hui.Renderer.haven-tokens.json</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

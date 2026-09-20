@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "purpose": "ci-real-inference-proof-only",
+  "repository": "unsloth/SmolLM2-135M-Instruct-GGUF",
+  "revision": "8637628433dc3df4a2d363adc89e4c3917f299dc",
+  "filename": "SmolLM2-135M-Instruct-Q4_K_M.gguf",
+  "downloadUrl": "https://huggingface.co/unsloth/SmolLM2-135M-Instruct-GGUF/resolve/8637628433dc3df4a2d363adc89e4c3917f299dc/SmolLM2-135M-Instruct-Q4_K_M.gguf?download=true",
+  "size": 105454144,
+  "sha256": "ed5fa30c487b282ec156c29062f1222e5c20875a944ac98289dbd242e947f747",
+  "license": "Apache-2.0",
+  "providerKey": "llamacpp:ci-smollm2-135m",
+  "expectedCapabilities": [
+    "chat"
+  ],
+  "sourceModelLicenseEvidence": {
+    "repository": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "license": "Apache-2.0",
+    "revision": "83212e1e2b3cfd6958f3707877bb878945dea8ee",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/blob/83212e1e2b3cfd6958f3707877bb878945dea8ee/LICENSE"
+  },
+  "distributionPolicy": {
+    "commitModel": false,
+    "packageModel": false,
+    "uploadModelArtifact": false,
+    "runnerRetention": "delete-after-proof"
+  }
+}

@@ -1,0 +1,33 @@
+# System Map
+
+Entry points for the major production systems. "Start reading" names the file
+that best explains the design.
+
+| System | Owns / does | Start reading | Key collaborators |
+|---|---|---|---|
+| Shell & launch routing | Window shell, tabs, `LaunchAppAsync` route table, contextual actions | `src/Haven.Desktop/Interface/Shell/MainView.axaml.cs`, `HavenAppRoutePolicy` | Mode registry, TopRail, page factories |
+| HavenUI framework | `.hui` markup, scene tree, layout, draw commands, input, animations | `src/Haven.UI/Markup/HavenMarkupParser.cs`, `Rendering/HavenSceneRenderer.cs`, README in project | Backend bridge (Desktop) |
+| HUI↔Avalonia backend | Renders scenes into an Avalonia control; resolves images/fonts/tokens | `src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs` | `HavenAvaloniaThemeResolver`, `HavenDesktopImageResolver`, `HavenUiFont` |
+| Prefabs & DynamicUI | Reusable `.hui` components with code-behind; data-driven list rows | `src/Haven.UI/Components/Prefab/Prefab.cs`, `Components/DynamicUI/DynamicUI.cs`; examples in `src/Haven.Desktop/Prefabs`, `DynamicUI` | Scene pages (Chat, Imagine, Studio) |
+| Themes & personalisation | 5 themes × 4 appearances, accent override, fonts, avatars | `src/Haven.Desktop/HavenUI/Tokens/HavenThemeCatalog.cs`, `Controls/SurfacePaletteCatalog.cs`, `Services/UserPreferencesService.cs` | `HavenUiResourceApplier`, Settings scene |
+| Tidal background | Surface-following animated gradient backdrop | `src/Haven.Desktop/Controls/TidalBackground.*` | SurfacePaletteCatalog per surface |
+| Chat | Conversation streaming, tools, attachments; HUI transcript via DynamicUI | `src/Haven.Desktop/Views/Pages/Chat/NewChatPage*.cs`, `ChatHavenScene.cs` | Application chat orchestration, Ollama client |
+| Browser | Embedded browsing, safety policies, private profiles | `src/Haven.Desktop/Views/Pages/Browser/BrowserPage.axaml.cs` (+ scene), `src/Haven.Browser` | Infrastructure WebView integration |
+| Documents (Write/Data/Canvas/Present) | App workspaces hosted by HUI scenes; Write has an experimental platform-neutral document-engine boundary for a future Linux LibreOfficeKit helper | `src/Haven.Desktop/Views/Pages/{Write,Data,Canvas,Present}`, `docs/architecture/write-libreoffice-engine.md` | Core document models, `IWriteDocumentEngine` |
+| Automations & scheduler | Scheduled actions, worker leases | `src/Haven.Application/Automations/*` | AutomationWorker host process |
+| GenUI (generated UI) | Model-generated surfaces from validated contracts | `src/Haven.Core/GenerativeUi/*`, `src/Haven.Desktop/HavenUI/GenerativeUi/*` | GenUI rules (`docs/GENUI_RULES.md`) |
+| Projector (Android display) | Phone-as-display experiences, execution parity | `src/Haven.Application/Projector/ProjectorExperienceCatalog.cs`, `src/Haven.Android/Projector/*` | GenUI instance store |
+| Mesh (device sharing) | Discovery + trusted-peer sync | `src/Haven.Application/Mesh/MeshCoordinator.*.cs` | Security rules |
+| Model runtime | Ollama discovery/wake, model registry, residency | `src/Haven.Infrastructure` Ollama clients; `OllamaWakeService` | Preferences (`AutoWakeOllama`, `AlwaysLoaded`) |
+| Persistence | Forward-only SQLite migrations, repositories | `src/Haven.Infrastructure` SQLite services | `docs/ARCHITECTURE_RULES.md` |
+| Model governance | Fallback order, per-model personality/nicknames (null nickname = inherit shared), permission policy; fallback switches publish `ExecutionActionType.ModelFallback` events | `src/Haven.Application/ModelGovernance/ModelGovernance.cs`, `src/Haven.Infrastructure/Providers/ResilientProviderRoutingModelClient.cs` | Versioned settings (`models.*`), `ChatSessionService`, Settings governance |
+| Actions & plan approval | Default-provider cascade (explicit → attached App → approved plan → project/space → user default incl. Always Ask → sole available → ask), suggested-action heuristics, `<haven-plan>` Follow/Tweak/Reject artifacts | `src/Haven.Application/Actions/ProviderResolution.cs`, `src/Haven.Core/Models/ActionConcepts.cs` | Chat orchestration, planner |
+| Agentic safety | SQLite-backed checkpoints (Git-independent), restore-plan replay, undo-last-action, agent.md/AGENTS.md discovery with depth cap and root-first merge | `src/Haven.Application/Safety/CheckpointService.cs`, `src/Haven.Application/Safety/AgentInstructions.cs`, `src/Haven.Infrastructure/Workspace/WorkspaceCheckpointRestore.cs` | Workspace versions, Action Graph |
+| Extension tool runtimes | Native-plugin capabilities (`native-plugin:{package}:{capability}`) and MCP tools execute inside the shared tool loop; MCP connection management in Settings | `src/Haven.Application/Extensions/PluginToolRuntime.cs`, `src/Haven.Application/ExternalConnections/McpToolRuntime.cs`, `src/Haven.Infrastructure/ExternalConnections/McpConnectionClient.cs` | `ChatSessionService`, Settings connections |
+| Evaluation & judging | Side-by-side dual-model runs (Compare/Critique) and LLM-as-judge scoring that returns null instead of a fabricated score | `src/Haven.Application/DualModel/DualModelService.cs`, `src/Haven.Application/Evaluation/JudgeService.cs` | Testing Labs adapter `src/Haven.Desktop/Services/TrainingJudgeAdapter.cs` |
+| Context & memory | Persisted per-conversation context cards (compact summaries protected); Learn Me injection capped by personality Memory References level | `src/Haven.Application/Knowledge/MemoryInjection.cs`; context entries in `ConversationRepository` | Haven Library storage |
+| Maps app | Switchable OSM stack: raster tiles + Nominatim geocoding + OSRM routing under mandatory provider terms (attribution, UA, ≥7-day cache, viewport-only fetch, HTTPS; Nominatim ≤1 req/s) | `src/Haven.Desktop/Views/Pages/Maps/*`, `src/Haven.Infrastructure/Maps/OpenStreetMapService.cs`, `OsmRasterTileSource.cs`, `OsrmRoutingService.cs` | `IMapService`, `ITileSource`, `MapsAttribution` |
+| Updates | Source-aware orchestration: Store-managed installs never download binaries; direct installs stage packages pending restart and say so | `src/Haven.Infrastructure/Updates/UpdateOrchestrator.cs` | `IUpdateProvider` implementations, versioned settings (`updates.preferences.v1`) |
+| Spaces | Built-in persona workspaces (General/Study/Shopping/Research/Agent) routed onto Chat/Tasks storage by kind | `src/Haven.Application/Spaces/SpaceRegistry.cs`, `src/Haven.Desktop/Services/SpaceLaunchPolicy.cs` | Versioned settings, launch routing |
+
+When adding a system: register it here with one line and a start-reading path.

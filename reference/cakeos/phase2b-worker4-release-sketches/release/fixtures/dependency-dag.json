@@ -1,0 +1,337 @@
+﻿{
+    "generatedAt":  "2026-09-14T16:59:11.3036359Z",
+    "edges":  [
+                  {
+                      "from":  "haven.welcome",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.shell",
+                      "to":  "gnome-shell",
+                      "versionConstraint":  "\u003e=46.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.shell",
+                      "to":  "mutter",
+                      "versionConstraint":  "\u003e=46.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "havenos.studio",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "havenos.studio",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "llamacpp.provider",
+                      "to":  "libc6",
+                      "versionConstraint":  "\u003e=2.38",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "llamacpp.provider",
+                      "to":  "libstdc++6",
+                      "versionConstraint":  "\u003e=13",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.notifications",
+                      "to":  "haven.shell",
+                      "versionConstraint":  "\u003e=0.1.0",
+                      "kind":  "RequiredProduct"
+                  },
+                  {
+                      "from":  "haven.notifications",
+                      "to":  "libglib2.0-0",
+                      "versionConstraint":  "\u003e=2.78",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.settings",
+                      "to":  "libglib2.0-0",
+                      "versionConstraint":  "\u003e=2.78",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.plan",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.plan",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.present",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.present",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.present",
+                      "to":  "cakeos.present",
+                      "versionConstraint":  "\u003e=0.1.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.terminal",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.terminal",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.terminal",
+                      "to":  "vte-2.91",
+                      "versionConstraint":  "\u003e=0.72",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wave",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wave",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wave",
+                      "to":  "libpulse0",
+                      "versionConstraint":  "\u003e=16.1",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wine",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wine",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wine",
+                      "to":  "wine",
+                      "versionConstraint":  "\u003e=9.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.wine",
+                      "to":  "wine64",
+                      "versionConstraint":  "\u003e=9.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.write",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.write",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.write",
+                      "to":  "cakeos.present",
+                      "versionConstraint":  "\u003e=0.1.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.data",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.data",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.data",
+                      "to":  "duckdb",
+                      "versionConstraint":  "\u003e=1.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.dev",
+                      "to":  "zenity",
+                      "versionConstraint":  "\u003e=3.44",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "haven.dev",
+                      "to":  "dotnet-sdk",
+                      "versionConstraint":  "\u003e=8.0",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "cakeos.go-router",
+                      "to":  "libglib2.0-0",
+                      "versionConstraint":  "\u003e=2.78",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "cakeos.launcher",
+                      "to":  "haven.shell",
+                      "versionConstraint":  "\u003e=0.1.0",
+                      "kind":  "RequiredProduct"
+                  },
+                  {
+                      "from":  "cakeos.launcher",
+                      "to":  "libglib2.0-0",
+                      "versionConstraint":  "\u003e=2.78",
+                      "kind":  "RequiredPackage"
+                  },
+                  {
+                      "from":  "cakeos.model-picker",
+                      "to":  "cakeos.go-router",
+                      "versionConstraint":  "\u003e=0.1.0",
+                      "kind":  "RequiredProduct"
+                  },
+                  {
+                      "from":  "cakeos.model-picker",
+                      "to":  "libglib2.0-0",
+                      "versionConstraint":  "\u003e=2.78",
+                      "kind":  "RequiredPackage"
+                  }
+              ],
+    "nodes":  {
+                  "haven.settings":  {
+                                         "provenanceState":  "Blocked",
+                                         "productId":  "haven.settings",
+                                         "imageInclusionState":  "NotApplicable",
+                                         "productType":  "Service"
+                                     },
+                  "haven.dev":  {
+                                    "provenanceState":  "Ready",
+                                    "productId":  "haven.dev",
+                                    "imageInclusionState":  "Included",
+                                    "productType":  "App"
+                                },
+                  "cakeos.launcher":  {
+                                          "provenanceState":  "Ready",
+                                          "productId":  "cakeos.launcher",
+                                          "imageInclusionState":  "Included",
+                                          "productType":  "BackgroundComponent"
+                                      },
+                  "haven.welcome":  {
+                                        "provenanceState":  "Ready",
+                                        "productId":  "haven.welcome",
+                                        "imageInclusionState":  "Included",
+                                        "productType":  "App"
+                                    },
+                  "haven.wave":  {
+                                     "provenanceState":  "Ready",
+                                     "productId":  "haven.wave",
+                                     "imageInclusionState":  "Included",
+                                     "productType":  "App"
+                                 },
+                  "llamacpp.provider":  {
+                                            "provenanceState":  "Ready",
+                                            "productId":  "llamacpp.provider",
+                                            "imageInclusionState":  "Pending",
+                                            "productType":  "Provider"
+                                        },
+                  "haven.terminal":  {
+                                         "provenanceState":  "Ready",
+                                         "productId":  "haven.terminal",
+                                         "imageInclusionState":  "Included",
+                                         "productType":  "App"
+                                     },
+                  "haven.shell":  {
+                                      "provenanceState":  "Ready",
+                                      "productId":  "haven.shell",
+                                      "imageInclusionState":  "Included",
+                                      "productType":  "SystemSurface"
+                                  },
+                  "haven.wine":  {
+                                     "provenanceState":  "Ready",
+                                     "productId":  "haven.wine",
+                                     "imageInclusionState":  "Included",
+                                     "productType":  "App"
+                                 },
+                  "havenos.studio":  {
+                                         "provenanceState":  "Ready",
+                                         "productId":  "havenos.studio",
+                                         "imageInclusionState":  "Included",
+                                         "productType":  "App"
+                                     },
+                  "haven.notifications":  {
+                                              "provenanceState":  "Partial",
+                                              "productId":  "haven.notifications",
+                                              "imageInclusionState":  "Excluded",
+                                              "productType":  "BackgroundComponent"
+                                          },
+                  "haven.write":  {
+                                      "provenanceState":  "Ready",
+                                      "productId":  "haven.write",
+                                      "imageInclusionState":  "Included",
+                                      "productType":  "App"
+                                  },
+                  "haven.data":  {
+                                     "provenanceState":  "Ready",
+                                     "productId":  "haven.data",
+                                     "imageInclusionState":  "Included",
+                                     "productType":  "App"
+                                 },
+                  "haven.plan":  {
+                                     "provenanceState":  "Ready",
+                                     "productId":  "haven.plan",
+                                     "imageInclusionState":  "Included",
+                                     "productType":  "App"
+                                 },
+                  "cakeos.model-picker":  {
+                                              "provenanceState":  "Ready",
+                                              "productId":  "cakeos.model-picker",
+                                              "imageInclusionState":  "Included",
+                                              "productType":  "BackgroundComponent"
+                                          },
+                  "cakeos.go-router":  {
+                                           "provenanceState":  "Ready",
+                                           "productId":  "cakeos.go-router",
+                                           "imageInclusionState":  "Included",
+                                           "productType":  "BackgroundComponent"
+                                       },
+                  "haven.present":  {
+                                        "provenanceState":  "Ready",
+                                        "productId":  "haven.present",
+                                        "imageInclusionState":  "Included",
+                                        "productType":  "App"
+                                    }
+              }
+}

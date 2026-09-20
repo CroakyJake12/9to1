@@ -1,0 +1,6 @@
+[submodule "platform/gnome-shell"]
+	path = platform/gnome-shell
+	url = https://github.com/CroakyJake12/gnome-shell.git
+[submodule "platform/mutter"]
+	path = platform/mutter
+	url = https://github.com/CroakyJake12/mutter.git

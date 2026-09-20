@@ -1,0 +1,105 @@
+{
+  "productId": "haven.dev",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "https://github.com/CroakyJake12/HavenOS-Platform",
+    "revision": "670915d2deab7d70674bd7f804d598be3a8b0a88",
+    "branch": "phase2b/full-feature-integration",
+    "tag": "haven-dev-0.1.0"
+  },
+  "donor": {
+    "name": "Haven Dev",
+    "repositoryUrl": "https://github.com/CroakyJake12/HavenAI",
+    "revision": "7b2acae6175e5c380a3812b531b90ca82dbf85c3",
+    "licence": "MIT",
+    "licenceUrl": "https://github.com/CroakyJake12/HavenAI/blob/main/LICENSE"
+  },
+  "package": {
+    "name": "haven-dev",
+    "version": "0.1.0",
+    "hashSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "architecture": "amd64",
+    "packageFormat": "deb"
+  },
+  "entrypoint": {
+    "binaryPath": "/usr/bin/haven-dev",
+    "arguments": "",
+    "workingDirectory": "/usr/share/haven-dev",
+    "environment": {}
+  },
+  "service": {
+    "serviceName": "",
+    "socketName": "",
+    "dbusName": "",
+    "socketActivation": false,
+    "requiredServices": []
+  },
+  "routes": [
+    {
+      "route": "/dev",
+      "handler": "HavenDevApp",
+      "methods": ["GET"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capabilityId": "haven.dev.launch",
+      "displayName": "Launch Dev App",
+      "description": "Ability to launch the Haven Dev application",
+      "isRequired": true
+    },
+    {
+      "capabilityId": "haven.dev.debug",
+      "displayName": "Debugging Tools",
+      "description": "Integrated debugging and development tools",
+      "isRequired": true
+    }
+  ],
+  "dependencies": [
+    {
+      "dependencyId": "zenity",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=3.44"
+    },
+    {
+      "dependencyId": "dotnet-sdk",
+      "kind": "RequiredPackage",
+      "versionConstraint": ">=8.0"
+    }
+  ],
+  "persistence": {
+    "requiresSettings": true,
+    "requiresCache": true,
+    "requiresState": true,
+    "requiresData": false,
+    "customPaths": ["/home/haven/.config/haven-dev", "/home/haven/.local/share/haven-dev"]
+  },
+  "permissions": {
+    "requiredGrants": ["files.read", "files.write", "process.exec", "debug.access"],
+    "optionalGrants": ["network.access"]
+  },
+  "providers": [],
+  "offlineRequirement": "Preferred",
+  "smokeTest": {
+    "command": "haven-dev --version",
+    "expectedOutputPattern": "0.1.0",
+    "timeoutSeconds": 30,
+    "requiredArtifacts": []
+  },
+  "smokeEvidence": {
+    "executed": true,
+    "exitCode": 0,
+    "stdout": "0.1.0\n",
+    "stderr": "",
+    "executedAt": "2026-09-14T16:05:00Z",
+    "evidenceArtifactPath": "artifacts/smoke/haven-dev-smoke.log"
+  },
+  "provenanceState": "Ready",
+  "imageInclusionState": "Included",
+  "approvedVmState": "Verified"
+}
+

@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Haven.Desktop.Controls"
+        x:Class="Haven.Desktop.MainWindow"
+        Title="Haven"
+        Width="1440" Height="920"
+        MinWidth="720" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/haven.ico">
+
+    <!-- Background is managed dynamically by TidalBackground -->
+
+    <ContentControl x:Name="MainContent"/>
+
+</Window>

@@ -1,0 +1,76 @@
+name: Book4Edge16 Static ISO Validation
+
+# Non-disruptive Candidate validation (handover section 28).
+# Inspects a built ISO artifact without booting real hardware.
+# QEMU "virt" evidence (if any) is tracked separately and is NEVER
+# Book4 Edge hardware proof.
+
+on:
+  workflow_dispatch:
+    inputs:
+      iso_run_id:
+        description: 'Image workflow RUN ID holding cakeos-book4edge16-arm64-iso'
+        required: true
+        default: '35026220197'
+      ref:
+        description: 'Git ref whose tree provides validation scripts (this branch)'
+        required: false
+        default: 'emergency/book4edge-nondisruptive-tests'
+
+jobs:
+  static-iso-validation:
+    name: Validate Candidate ISO statically
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout validation scripts
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+          submodules: false
+
+      - name: Install inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends squashfs-tools xorriso curl ca-certificates
+
+      - name: Download Candidate ISO artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p work/dl
+          gh run download "${{ github.event.inputs.iso_run_id }}" \
+            --repo CroakyJake12/CakeOS \
+            --name cakeos-book4edge16-arm64-iso \
+            --dir work/dl
+          ls -R work/dl
+          # gh run download already extracts artifact files; handle a zip too.
+          if compgen -G 'work/dl/*.zip' > /dev/null; then
+            mkdir -p work/iso
+            unzip -j 'work/dl/*.zip' -d work/iso
+          fi
+          ISO=$(find work -maxdepth 3 -name '*.iso' | head -n 1)
+          test -n "$ISO" || { echo "No ISO found in artifact" >&2; exit 1; }
+          echo "ISO_PATH=$ISO" >> "$GITHUB_ENV"
+          echo "Using ISO: $ISO"
+
+      - name: Run static validation
+        run: |
+          bash tooling/book4edge/validate-iso-static.sh "$ISO_PATH" work/validation-report.md
+          cat work/validation-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload validation report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: book4edge16-static-iso-validation
+          path: |
+            work/validation-report.md
+            work/iso-listing.txt
+            work/grub.cfg
+            work/live-layer-listing.txt
+          if-no-files-found: warn

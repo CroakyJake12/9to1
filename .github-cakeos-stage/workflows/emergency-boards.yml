@@ -1,0 +1,98 @@
+name: Emergency Boards Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch or SHA)'
+        required: true
+        default: 'emergency/preview-0.1'
+
+jobs:
+  boards-real-package:
+    name: Build real Boards package (AppFlowy + Rnote + CakeUI)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout emergency branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+          submodules: false
+
+      - name: Set up .NET, Rust, Flutter
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: dtolnay/rust-toolchain@1.92.0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install native build and package tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config libglib2.0-dev libcairo2-dev \
+            libpango1.0-dev librsvg2-dev dpkg-dev jq xvfb \
+            clang libgtk-4-dev libadwaita-1-dev \
+            ninja-build liblzma-dev
+
+      - name: Build and test Canvas/Rnote native boundary (shared ink)
+        run: |
+          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
+          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
+          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+
+      - name: Build Boards HUI host
+        run: |
+          command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
+          bash HUI/build-linux-host.sh
+          mkdir -p artifacts/boards-host/publish
+          cp artifacts/hui-linux-host/publish/cakeos-hui-linux-preview \
+            artifacts/boards-host/publish/cakeos-boards
+          chmod 0755 artifacts/boards-host/publish/cakeos-boards
+
+      - name: Build AppFlowy Flutter Linux
+        run: |
+          cd apps/Boards/appflowy_poc
+          flutter pub get
+          flutter build linux --release
+
+      - name: Build genuine Boards .deb
+        env:
+          CAKEOS_BOARDS_VERSION: 0.1.0+boards.${{ github.run_number }}
+          SOURCE_DATE_EPOCH: 0
+        run: |
+          bash packaging/boards-appflowy/build-deb.sh
+          package="artifacts/packages/cakeos-boards_0.1.0+boards.${GITHUB_RUN_NUMBER}_amd64.deb"
+          dpkg-deb --info "$package" | tee artifacts/packages/package-metadata.txt
+          dpkg-deb --contents "$package" | tee artifacts/packages/package-files.txt
+          sha256sum "$package" | tee artifacts/packages/package.sha256
+
+      - name: Install and smoke-test Boards package
+        run: |
+          package=$(find artifacts/packages -maxdepth 1 -type f -name 'cakeos-boards_*.deb' -print -quit)
+          test -n "$package"
+          package_name=$(dpkg-deb --field "$package" Package)
+          sudo apt-get install -y "./$package"
+          test -x /usr/bin/cakeos-boards
+          dpkg-query -W -f='${Status}\n' "$package_name" | grep -q 'install ok installed'
+          set +e
+          xvfb-run -a timeout 10s env CAKEOS_HUI_PREVIEW_AUTO_EXIT_MS=2000 \
+            cakeos-boards > artifacts/packages/runtime.log 2>&1
+          status=$?
+          set -e
+          test "$status" = 0 -o "$status" = 1 -o "$status" = 124
+
+      - name: Upload Boards package and metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-boards-debian-${{ github.run_number }}
+          path: artifacts/packages/
+          if-no-files-found: error

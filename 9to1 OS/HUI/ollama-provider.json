@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "providerId": "ollama",
+  "displayName": "Ollama",
+  "kind": "local",
+  "isLocal": true,
+  "transport": {
+    "type": "http",
+    "baseUrl": "http://localhost:11434",
+    "networkRequired": true
+  },
+  "discovery": {
+    "probe": {
+      "method": "GET",
+      "path": "/api/tags"
+    },
+    "health": {
+      "method": "GET",
+      "path": "/api/version"
+    },
+    "accepted": {
+      "providerId": "ollama",
+      "isLocal": true,
+      "transport": "http"
+    },
+    "unavailable": {
+      "retryable": true,
+      "meaning": "Ollama service is not running or not accessible at the configured endpoint."
+    }
+  },
+  "modelKeys": {
+    "qualified": "ollama:<model-id>",
+    "legacyUnqualifiedProvider": "ollama",
+    "unqualifiedResolution": "ollama"
+  },
+  "status": {
+    "provider": "GET /api/version",
+    "health": "GET /api/version",
+    "models": "GET /api/tags",
+    "readyWhen": "health.version exists",
+    "modelStates": [
+      "installed",
+      "running"
+    ],
+    "brokerReadOnlyModelStore": false
+  },
+  "execution": {
+    "endpoint": "POST /api/chat",
+    "requiredRequestId": false,
+    "streaming": true,
+    "cancelEndpoint": "POST /api/chat",
+    "loadEndpoint": "POST /api/pull",
+    "unloadEndpoint": "DELETE /api/delete"
+  },
+  "evidenceBoundaries": {
+    "providerDiscovery": "Contract tests only until a live Ollama endpoint is available.",
+    "providerStatus": "Contract and model-free integration tests only.",
+    "modelExecution": "Not proven by this contract; requires an approved Ollama model and running service."
+  }
+}

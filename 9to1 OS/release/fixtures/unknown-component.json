@@ -1,0 +1,49 @@
+{
+  "productId": "haven.unknown",
+  "productType": "App",
+  "registryIdentity": {
+    "registryId": "cakeos.shared-app-registry",
+    "registrySchemaVersion": 1
+  },
+  "sourceRepository": {
+    "url": "",
+    "revision": ""
+  },
+  "donor": {
+    "name": "",
+    "repositoryUrl": "",
+    "revision": "",
+    "licence": ""
+  },
+  "package": {
+    "name": "",
+    "version": "",
+    "hashSha256": ""
+  },
+  "entrypoint": {
+    "binaryPath": ""
+  },
+  "service": {},
+  "routes": [],
+  "capabilities": [],
+  "dependencies": [],
+  "persistence": {
+    "requiresSettings": false,
+    "requiresCache": false,
+    "requiresState": false,
+    "requiresData": false
+  },
+  "permissions": {
+    "requiredGrants": [],
+    "optionalGrants": []
+  },
+  "providers": [],
+  "offlineRequirement": "NotRequired",
+  "smokeTest": {
+    "command": ""
+  },
+  "smokeEvidence": null,
+  "provenanceState": "Unknown",
+  "imageInclusionState": "NotApplicable",
+  "approvedVmState": "NotTested"
+}

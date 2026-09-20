@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    CakeOS-owned shared HUI components (LAGUNA WORKER 4).
+
+    Generic, renderer-neutral controls staged BESIDE the pinned donor so a
+    donor re-stage (HUI/stage-donor.ps1 wipes HUI/vendor/Haven.UI) can never
+    delete them. Types keep the Haven.UI.Components namespace so Canvas
+    (Worker 2) and Boards (Worker 3) consume one vocabulary; no Avalonia
+    reference is allowed here — app -> HUI -> renderer stays intact.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../vendor/Haven.UI/Haven.UI.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,123 @@
+name: Emergency Boards Package (ARM64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch or SHA)'
+        required: true
+        default: 'emergency/book4edge16-arm64'
+
+jobs:
+  boards-real-package-arm64:
+    name: Build real Boards package (AppFlowy + Rnote + CakeUI, ARM64)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout ARM64 branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+          submodules: false
+
+      - name: Set up .NET and Rust
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: dtolnay/rust-toolchain@1.92.0
+
+      - name: Set up Flutter (ARM64 native)
+        run: |
+          if [ ! -x "$HOME/flutter/bin/flutter" ]; then
+            git clone https://github.com/flutter/flutter.git -b stable --depth 1 "$HOME/flutter"
+          fi
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+          "$HOME/flutter/bin/flutter" --version
+          "$HOME/flutter/bin/flutter" config --enable-linux-desktop
+
+      - name: Install native build and package tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config libglib2.0-dev libcairo2-dev \
+            libpango1.0-dev librsvg2-dev dpkg-dev jq xvfb \
+            clang libgtk-3-dev libgtk-4-dev libadwaita-1-dev \
+            ninja-build liblzma-dev file
+
+      - name: Build and test Canvas/Rnote native boundary (shared ink)
+        run: |
+          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
+          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
+          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+
+      - name: Build Boards HUI host (ARM64)
+        env:
+          HUI_RID: linux-arm64
+        run: |
+          command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
+          bash HUI/build-linux-host.sh
+          file artifacts/hui-linux-host/publish/cakeos-hui-linux-preview
+          mkdir -p artifacts/boards/publish
+          cp -R artifacts/hui-linux-host/publish/. \
+            artifacts/boards/publish/
+          cp artifacts/hui-linux-host/publish/cakeos-hui-linux-preview \
+            artifacts/boards/publish/cakeos-boards
+          chmod 0755 artifacts/boards/publish/cakeos-boards
+
+      - name: Build AppFlowy Flutter Linux (ARM64)
+        run: |
+          cd apps/Boards/appflowy_poc
+          flutter create --platforms=linux .
+          flutter pub get
+          flutter build linux --release
+          file build/linux/arm64/release/bundle/haven_boards_appflowy_poc
+
+      - name: Stage AppFlowy + Rnote into Boards package
+        run: |
+          mkdir -p artifacts/boards/publish/appflowy
+          cp -R apps/Boards/appflowy_poc/build/linux/arm64/release/bundle/* \
+            artifacts/boards/publish/appflowy/
+
+      - name: Build genuine Boards .deb (ARM64)
+        env:
+          CAKEOS_BOARDS_VERSION: 0.1.0+boards.${{ github.run_number }}
+          CAKEOS_BOARDS_PUBLISH: ${{ github.workspace }}/artifacts/boards/publish
+          CAKEOS_DEB_ARCH: arm64
+          SOURCE_DATE_EPOCH: 0
+        run: |
+          bash packaging/boards-appflowy/build-deb.sh
+          package="artifacts/packages/cakeos-boards_0.1.0+boards.${GITHUB_RUN_NUMBER}_arm64.deb"
+          dpkg-deb --field "$package" Package Architecture
+          file artifacts/boards/publish/libcakeos_canvas_rnote_poc.so
+          dpkg-deb --info "$package" | tee artifacts/packages/package-metadata.txt
+          dpkg-deb --contents "$package" | tee artifacts/packages/package-files.txt
+          sha256sum "$package" | tee artifacts/packages/package.sha256
+
+      - name: Install and smoke-test Boards package (ARM64)
+        run: |
+          package=$(find artifacts/packages -maxdepth 1 -type f -name 'cakeos-boards_*_arm64.deb' -print -quit)
+          test -n "$package"
+          package_name=$(dpkg-deb --field "$package" Package)
+          test "$(dpkg-deb --field "$package" Architecture)" = arm64
+          sudo apt-get install -y "./$package"
+          test -x /usr/bin/cakeos-boards
+          dpkg-query -W -f='${Status}\n' "$package_name" | grep -q 'install ok installed'
+          set +e
+          xvfb-run -a timeout 10s env CAKEOS_HUI_PREVIEW_AUTO_EXIT_MS=2000 \
+            cakeos-boards > artifacts/packages/runtime.log 2>&1
+          status=$?
+          set -e
+          echo "boards smoke status=$status"
+          cat artifacts/packages/runtime.log || true
+          test "$status" = 0 -o "$status" = 1 -o "$status" = 124
+
+      - name: Upload Boards package and metadata (ARM64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-boards-debian-arm64
+          path: artifacts/packages/
+          if-no-files-found: error

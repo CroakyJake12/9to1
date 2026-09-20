@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://havenos.platform/schemas/convergence-matrix-v1.json",
+  "title": "HavenOS Convergence Matrix",
+  "description": "Evidence-derived convergence matrix/dashboard from REAL evidence. Distinguishes states from image readiness.",
+  "type": "object",
+  "required": ["releaseId", "generatedAt", "productStates", "totalProducts", "convergedProducts", "partialProducts", "blockedProducts", "unknownProducts"],
+  "properties": {
+    "releaseId": { "type": "string", "minLength": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "productStates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["productId", "productType", "provenanceState", "imageInclusionState", "approvedVmState", "offlineRequirementMet", "smokeTestPassed"],
+        "properties": {
+          "productId": { "type": "string", "minLength": 1 },
+          "productType": { "type": "string", "enum": ["App", "SystemSurface", "BackgroundComponent", "Provider", "Service"] },
+          "provenanceState": { "type": "string", "enum": ["Unknown", "Partial", "Blocked", "Ready"] },
+          "imageInclusionState": { "type": "string", "enum": ["NotApplicable", "Excluded", "Pending", "Included"] },
+          "approvedVmState": { "type": "string", "enum": ["NotTested", "Failed", "Partial", "Verified"] },
+          "offlineRequirementMet": { "type": "boolean" },
+          "smokeTestPassed": { "type": "boolean" },
+          "blockingReason": { "type": "string" },
+          "isConverged": { "type": "boolean" }
+        }
+      }
+    },
+    "totalProducts": { "type": "integer", "minimum": 0 },
+    "convergedProducts": { "type": "integer", "minimum": 0 },
+    "partialProducts": { "type": "integer", "minimum": 0 },
+    "blockedProducts": { "type": "integer", "minimum": 0 },
+    "unknownProducts": { "type": "integer", "minimum": 0 },
+    "convergencePercentage": { "type": "number", "minimum": 0, "maximum": 100 }
+  },
+  "additionalProperties": false
+}

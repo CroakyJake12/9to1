@@ -1,0 +1,12 @@
+{
+  "id": "example-model-q4",
+  "displayName": "Example Model Q4",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "size": 0,
+  "blob": "00/00000000000000000000000000000000000000000000000000000000000000.gguf",
+  "license": "MODEL-LICENSE-SPDX-OR-POLICY-ID",
+  "source": "https://example.invalid/model-card",
+  "ggufVersions": [2, 3],
+  "capabilities": ["chat"],
+  "redistribution": "review-required"
+}

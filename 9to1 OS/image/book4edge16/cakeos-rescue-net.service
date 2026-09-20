@@ -1,0 +1,12 @@
+[Unit]
+Description=CakeOS rescue network report and diagnostics
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/cakeos/cakeos-rescue-boot.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

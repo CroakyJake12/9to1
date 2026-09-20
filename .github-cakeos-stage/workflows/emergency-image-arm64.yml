@@ -1,0 +1,225 @@
+name: Emergency Book4Edge16 Image (ARM64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch or SHA)'
+        required: true
+        default: 'emergency/book4edge16-arm64'
+      canvas_run_id:
+        description: 'Canvas ARM64 workflow RUN ID (not artifact ID)'
+        required: false
+        default: '35018713590'
+      boards_run_id:
+        description: 'Boards ARM64 workflow RUN ID (not artifact ID)'
+        required: false
+        default: '35018713472'
+      dtb_url:
+        description: 'Optional 16-inch DTB URL to integrate'
+        required: false
+        default: ''
+
+jobs:
+  image-arm64:
+    name: Assemble Book4Edge16 ARM64 image
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout ARM64 branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+          submodules: false
+
+      - name: Free disk and install image tools
+        run: |
+          df -h /
+          docker system prune -af || true
+          sudo rm -rf /usr/share/dotnet /opt/hostedtoolcache /usr/local/lib/android || true
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends squashfs-tools xorriso curl ca-certificates
+          df -h /
+
+      - name: Download CakeOS ARM64 packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p artifacts/dl-canvas artifacts/dl-boards artifacts/cakeos-arm64
+          gh run download "${{ github.event.inputs.canvas_run_id }}" \
+            --repo CroakyJake12/CakeOS \
+            --name cakeos-canvas-rnote-debian-arm64 \
+            --dir artifacts/dl-canvas
+          gh run download "${{ github.event.inputs.boards_run_id }}" \
+            --repo CroakyJake12/CakeOS \
+            --name cakeos-boards-debian-arm64 \
+            --dir artifacts/dl-boards
+          cp artifacts/dl-canvas/*.deb artifacts/dl-boards/*.deb artifacts/cakeos-arm64/
+          ls -l artifacts/cakeos-arm64
+      - name: Verify package architectures
+        run: |
+          ls -l artifacts/cakeos-arm64
+          for deb in artifacts/cakeos-arm64/*.deb; do
+            echo "== $deb"
+            dpkg-deb --field "$deb" Package Version Architecture
+          done
+
+      - name: Fetch Ubuntu Concept ARM64 base ISO
+        run: |
+          mkdir -p work
+          base=""
+          for url in \
+            "https://people.canonical.com/~platform/images/ubuntu-concept/plucky-desktop-arm64+x1e-20250827.iso" \
+            "https://people.canonical.com/~platform/images/ubuntu-concept/plucky-desktop-arm64+x1e.iso" \
+            "https://cdimage.ubuntu.com/ubuntu/releases/25.10/release/ubuntu-25.10-desktop-arm64.iso"; do
+            echo "Trying $url"
+            if curl -fSL --retry 3 -o work/base.iso "$url"; then
+              base="$url"
+              break
+            fi
+            rm -f work/base.iso
+          done
+          test -n "$base" || { echo "No base ISO URL worked" >&2; exit 1; }
+          echo "$base" | tee work/base-iso-url.txt
+          ls -l work/base.iso
+
+      - name: Extract live layers (targeted)
+        run: |
+          mkdir -p work/parts
+          xorriso -osirrox on -indev work/base.iso \
+            -extract /casper/minimal.squashfs work/parts/minimal.squashfs \
+            -extract /casper/minimal.standard.squashfs work/parts/minimal.standard.squashfs \
+            -extract /casper/minimal.standard.live.squashfs work/parts/minimal.standard.live.squashfs \
+            -extract /casper/minimal.standard.live.manifest work/parts/minimal.standard.live.manifest \
+            -extract /boot/grub/grub.cfg work/grub.cfg \
+            -extract /md5sum.txt work/md5sum.txt
+          ls -l work/parts work/grub.cfg work/md5sum.txt
+          df -h /
+
+      - name: Merge layers with overlayfs
+        run: |
+          W="$GITHUB_WORKSPACE/work"
+          sudo unsquashfs -d "$W/base0" "$W/parts/minimal.squashfs"
+          sudo unsquashfs -d "$W/base1" "$W/parts/minimal.standard.squashfs"
+          sudo unsquashfs -d "$W/top" "$W/parts/minimal.standard.live.squashfs"
+          rm -f "$W"/parts/*.squashfs
+          mkdir -p "$W/merged" "$W/ovwork"
+          sudo mount -t overlay overlay \
+            -o "lowerdir=$W/base0:$W/base1,upperdir=$W/top,workdir=$W/ovwork" \
+            "$W/merged"
+          ls "$W/merged/usr/bin/env" "$W/merged/bin/sh" || ls "$W/merged/usr/bin/sh"
+          df -h /
+
+      - name: Install CakeOS packages into merged rootfs
+        run: |
+          W="$GITHUB_WORKSPACE/work"
+          sudo mkdir -p "$W/merged/tmp/cakeos"
+          sudo cp /etc/resolv.conf "$W/merged/etc/resolv.conf"
+          sudo cp artifacts/cakeos-arm64/*.deb "$W/merged/tmp/cakeos/"
+          sudo mkdir -p "$W/merged/usr/libexec/cakeos"
+          sudo cp image/book4edge16/cakeos-diagnostics.sh "$W/merged/usr/libexec/cakeos/cakeos-diagnostics"
+          sudo chmod 0755 "$W/merged/usr/libexec/cakeos/cakeos-diagnostics"
+          sudo ln -sf /usr/libexec/cakeos/cakeos-diagnostics "$W/merged/usr/bin/cakeos-diagnostics"
+          sudo mount --bind /dev "$W/merged/dev"
+          sudo mount --bind /proc "$W/merged/proc"
+          sudo mount --bind /sys "$W/merged/sys"
+          sudo mount --bind /dev/pts "$W/merged/dev/pts"
+          cleanup() {
+            sudo umount "$W/merged/dev/pts" || true
+            sudo umount "$W/merged/sys" || true
+            sudo umount "$W/merged/proc" || true
+            sudo umount "$W/merged/dev" || true
+          }
+          trap cleanup EXIT
+          sudo chroot "$W/merged" /bin/bash -c 'env DEBIAN_FRONTEND=noninteractive apt-get install -y /tmp/cakeos/*.deb'
+          sudo chroot "$W/merged" env DEBIAN_FRONTEND=noninteractive apt-get update
+          sudo chroot "$W/merged" env DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server evtest libinput-tools v4l-utils
+          sudo cp image/book4edge16/cakeos-rescue-boot.sh "$W/merged/usr/libexec/cakeos/cakeos-rescue-boot.sh"
+          sudo chmod 0755 "$W/merged/usr/libexec/cakeos/cakeos-rescue-boot.sh"
+          sudo cp image/book4edge16/cakeos-rescue-net.service "$W/merged/etc/systemd/system/cakeos-rescue-net.service"
+          sudo chroot "$W/merged" systemctl enable ssh cakeos-rescue-net.service
+          sudo chroot "$W/merged" env DEBIAN_FRONTEND=noninteractive apt-get install -y ubuntu-x1e-settings hwe-qcom-x1e-meta qcom-firmware-extract || echo "WARNING: Concept X1E packages unavailable on this base"
+          sudo chroot "$W/merged" dpkg-query -W -f='${Package}\t${Version}\n' 'cakeos-*' | sudo tee "$W/cakeos-versions.txt" > /dev/null
+          cat "$W/cakeos-versions.txt"
+          sudo rm -rf "$W/merged/tmp/cakeos"
+          cleanup
+          trap - EXIT
+          sudo umount "$W/merged" || true
+
+      - name: Rebuild live layer, grub, md5sums
+        env:
+          DTB_URL: ${{ github.event.inputs.dtb_url }}
+        run: |
+          W="$GITHUB_WORKSPACE/work"
+          sudo mksquashfs "$W/top" "$W/live-new.squashfs" -comp xz -b 1M -noappend
+          (cat "$W/parts/minimal.standard.live.manifest"; cat "$W/cakeos-versions.txt") | sudo tee "$W/live-new.manifest" > /dev/null
+          printf "%s" "$(sudo du -sx --block-size=1 "$W/top" | cut -f1)" | sudo tee "$W/live-new.size" > /dev/null
+          sudo rm -rf "$W/base0" "$W/base1" "$W/top" "$W/merged" "$W/ovwork"
+          df -h /
+          cp work/grub.cfg work/grub-new.cfg
+          chmod u+w work/grub-new.cfg
+          ls -l work/grub.cfg work/grub-new.cfg
+          if [ -n "$DTB_URL" ]; then
+            mkdir -p work/dtbs/qcom
+            curl -fSL --retry 3 -o work/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb "$DTB_URL"
+            cat image/book4edge16/grub-cakeos.cfg | sudo tee -a work/grub-new.cfg > /dev/null
+            echo "DTB integrated from $DTB_URL"
+          else
+            echo "WARNING: no DTB URL provided" | tee work/CakeOS-DTB-MISSING.txt
+            sudo tee -a work/grub-new.cfg > /dev/null <<'EOF'
+
+          menuentry "CakeOS Emergency (Book4 Edge 16\" ARM64, no DTB override)" {
+              set gfxpayload=keep
+              linux /casper/vmlinuz clk_ignore_unused pd_ignore_unused quiet splash ---
+              initrd /casper/initrd
+          }
+          EOF
+          fi
+          grep -n "CakeOS Emergency" work/grub-new.cfg
+          grep -v -e 'casper/minimal.standard.live.squashfs$' -e 'casper/minimal.standard.live.manifest$' -e 'casper/minimal.standard.live.size$' -e 'boot/grub/grub.cfg$' work/md5sum.txt > work/md5sum-new.txt
+          (cd work && md5sum live-new.squashfs | awk '{print $1"  ./casper/minimal.standard.live.squashfs"}' >> md5sum-new.txt)
+          (cd work && md5sum live-new.manifest | awk '{print $1"  ./casper/minimal.standard.live.manifest"}' >> md5sum-new.txt)
+          (cd work && md5sum live-new.size | awk '{print $1"  ./casper/minimal.standard.live.size"}' >> md5sum-new.txt)
+          (cd work && md5sum grub-new.cfg | awk '{print $1"  ./boot/grub/grub.cfg"}' >> md5sum-new.txt)
+          if [ -f work/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb ]; then
+            (cd work && md5sum dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb | awk '{print $1"  ./casper/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb"}' >> md5sum-new.txt)
+          fi
+          sort -k2 work/md5sum-new.txt -o work/md5sum-new.txt
+
+      - name: Rebuild ISO preserving base boot chain
+        run: |
+          MAPS="-map work/live-new.squashfs /casper/minimal.standard.live.squashfs"
+          MAPS="$MAPS -map work/live-new.manifest /casper/minimal.standard.live.manifest"
+          MAPS="$MAPS -map work/live-new.size /casper/minimal.standard.live.size"
+          MAPS="$MAPS -map work/grub-new.cfg /boot/grub/grub.cfg"
+          MAPS="$MAPS -map work/md5sum-new.txt /md5sum.txt"
+          if [ -f work/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb ]; then
+            # shellcheck disable=SC2086
+            xorriso -indev work/base.iso -outdev work/cakeos-book4edge16-arm64.iso \
+              $MAPS \
+              -map work/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb /casper/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb \
+              -boot_image any replay
+          else
+            # shellcheck disable=SC2086
+            xorriso -indev work/base.iso -outdev work/cakeos-book4edge16-arm64.iso \
+              $MAPS \
+              -map work/CakeOS-DTB-MISSING.txt /CakeOS-DTB-MISSING.txt \
+              -boot_image any replay
+          fi
+          ls -l work/cakeos-book4edge16-arm64.iso
+          sha256sum work/cakeos-book4edge16-arm64.iso | tee work/cakeos-book4edge16-arm64.iso.sha256
+          cat work/base-iso-url.txt work/cakeos-book4edge16-arm64.iso.sha256 | tee work/image-provenance.txt
+
+      - name: Upload Book4Edge16 image
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-book4edge16-arm64-iso
+          path: |
+            work/cakeos-book4edge16-arm64.iso
+            work/cakeos-book4edge16-arm64.iso.sha256
+            work/image-provenance.txt
+          if-no-files-found: error

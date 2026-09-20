@@ -1,0 +1,258 @@
+name: Haven Data first slice
+
+on:
+  push:
+    branches:
+      - data-calc-duckdb-first-slice
+    paths:
+      - 'apps/Data/**'
+      - '.github/workflows/data-first-slice.yml'
+  pull_request:
+    paths:
+      - 'apps/Data/**'
+      - '.github/workflows/data-first-slice.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build and worker integration (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - ubuntu-26.04
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Data app contracts
+        run: dotnet build apps/Data/App/HavenOS.Data.App.csproj -c Release --nologo
+
+      - name: Run Data contract smoke checks
+        run: dotnet run --project apps/Data/Tests/HavenOS.Data.Smoke.csproj -c Release
+
+      - name: Install disposable Calc/UNO test runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-calc-nogui python3-uno python3-venv
+
+      - name: Create isolated Python test environment
+        run: |
+          /usr/bin/python3 -m venv --system-site-packages .data-venv
+          .data-venv/bin/python -m pip install --disable-pip-version-check --no-cache-dir duckdb==1.5.5
+          .data-venv/bin/python -c "import duckdb, uno; print('duckdb', duckdb.__version__, 'uno ok')"
+
+      - name: Record exact runtime package provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence_dir="$RUNNER_TEMP/haven-data-package-evidence"
+          mkdir -p "$evidence_dir"
+
+          is_installed() {
+            dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -qx 'install ok installed'
+          }
+
+          runtime_packages=(libreoffice-calc-nogui libreoffice-common python3-uno)
+          core_packages=()
+          for candidate in libreoffice-core-nogui libreoffice-core; do
+            if is_installed "$candidate"; then
+              core_packages+=("$candidate")
+            fi
+          done
+          if [[ "${#core_packages[@]}" -eq 0 ]]; then
+            echo 'FAIL: neither libreoffice-core-nogui nor libreoffice-core is installed' >&2
+            exit 1
+          fi
+          runtime_packages+=("${core_packages[@]}")
+
+          for required in libreoffice-calc-nogui libreoffice-common python3-uno; do
+            if ! is_installed "$required"; then
+              echo "FAIL: required Data runtime package is not installed: $required" >&2
+              exit 1
+            fi
+          done
+
+          dpkg-query -W -f='${binary:Package}\t${Version}\t${Architecture}\n' \
+            "${runtime_packages[@]}" | sort | tee "$evidence_dir/apt-packages.txt"
+
+          .data-venv/bin/python - <<'PY' | tee "$evidence_dir/duckdb-metadata.txt"
+          from importlib import metadata
+          from pathlib import Path
+          import duckdb
+
+          distribution = metadata.distribution('duckdb')
+          if distribution.version != '1.5.5':
+              raise SystemExit(f'FAIL: expected DuckDB 1.5.5, got {distribution.version}')
+          if duckdb.__version__ != '1.5.5':
+              raise SystemExit(f'FAIL: imported DuckDB version mismatch: {duckdb.__version__}')
+
+          package_metadata = distribution.metadata
+          print('Name:', package_metadata.get('Name', 'unknown'))
+          print('Version:', distribution.version)
+          print('Requires-Python:', package_metadata.get('Requires-Python', 'unknown'))
+          print('License-Expression:', package_metadata.get('License-Expression', 'unspecified'))
+          print('License:', package_metadata.get('License', 'unspecified'))
+          requirements = distribution.requires or []
+          if requirements:
+              for requirement in requirements:
+                  print('Requires-Dist:', requirement)
+          else:
+              print('Requires-Dist: none')
+
+          native_files = [
+              Path(distribution.locate_file(item)).resolve()
+              for item in (distribution.files or ())
+              if str(item).endswith(('.so', '.pyd'))
+          ]
+          if not native_files:
+              raise SystemExit('FAIL: installed DuckDB distribution has no native extension payload')
+          for native_file in native_files:
+              if not native_file.is_file():
+                  raise SystemExit(f'FAIL: DuckDB native payload is missing: {native_file}')
+              print('Native-Payload:', native_file)
+          PY
+
+          .data-venv/bin/python -m pip download \
+            --disable-pip-version-check \
+            --no-cache-dir \
+            --no-deps \
+            --only-binary=:all: \
+            --dest "$evidence_dir" \
+            duckdb==1.5.5
+
+          mapfile -t duckdb_wheels < <(find "$evidence_dir" -maxdepth 1 -type f -name 'duckdb-1.5.5-*.whl' -print)
+          if [[ "${#duckdb_wheels[@]}" -ne 1 ]]; then
+            echo "FAIL: expected exactly one DuckDB 1.5.5 wheel, found ${#duckdb_wheels[@]}" >&2
+            exit 1
+          fi
+          sha256sum "${duckdb_wheels[0]}" | tee "$evidence_dir/duckdb-wheel.sha256"
+
+          {
+            echo '### Haven Data package provenance'
+            echo
+            echo "- Runner: \`${{ matrix.os }}\`."
+            echo '- Apt runtime packages:'
+            echo '```text'
+            cat "$evidence_dir/apt-packages.txt"
+            echo '```'
+            echo '- DuckDB installed distribution metadata:'
+            echo '```text'
+            cat "$evidence_dir/duckdb-metadata.txt"
+            echo '```'
+            echo '- DuckDB binary wheel SHA-256:'
+            echo '```text'
+            cat "$evidence_dir/duckdb-wheel.sha256"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Compile worker Python
+        run: |
+          .data-venv/bin/python -m py_compile apps/Data/workers/calc_worker.py
+          .data-venv/bin/python -m py_compile apps/Data/workers/duckdb_worker.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_workers.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_duckdb_publish.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_formula_corpus.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_structure.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_named_ranges.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_validation.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_sort.py
+          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_filter.py
+
+      - name: Run worker integration checks
+        env:
+          HAVEN_DATA_DUCKDB_MEMORY_LIMIT: 512MB
+          HAVEN_DATA_DUCKDB_THREADS: '2'
+        run: |
+          .data-venv/bin/python apps/Data/Tests/test_workers.py
+          .data-venv/bin/python apps/Data/Tests/test_duckdb_publish.py
+          .data-venv/bin/python apps/Data/Tests/test_calc_formula_corpus.py
+          .data-venv/bin/python apps/Data/Tests/test_calc_structure.py
+          .data-venv/bin/python apps/Data/Tests/test_calc_named_ranges.py
+          .data-venv/bin/python apps/Data/Tests/test_calc_validation.py
+          .data-venv/bin/python apps/Data/Tests/test_calc_sort.py
+          .data-venv/bin/python apps/Data/Tests/test_calc_filter.py
+
+      - name: Run .NET-to-worker integration checks
+        env:
+          HAVEN_DATA_PYTHON: ${{ github.workspace }}/.data-venv/bin/python
+          HAVEN_DATA_DUCKDB_MEMORY_LIMIT: 512MB
+          HAVEN_DATA_DUCKDB_THREADS: '2'
+        run: |
+          dotnet run --project apps/Data/Tests/HavenOS.Data.Runtime.csproj -c Release
+          dotnet run --project apps/Data/Tests/HavenOS.Data.Validation.Runtime.csproj -c Release
+          dotnet run --project apps/Data/Tests/HavenOS.Data.Sort.Runtime.csproj -c Release
+          dotnet run --project apps/Data/Tests/HavenOS.Data.Filter.Runtime.csproj -c Release
+
+  hui-contract:
+    name: Data HUI contract integration (accepted platform reference)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out Data branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: false
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install narrow HUI/Data runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends jq libreoffice-calc-nogui python3-uno
+
+      - name: Stage exact accepted HUI platform contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ref="$(tr -d '[:space:]' < apps/Data/Hui/hui-platform-reference.txt)"
+          test "$ref" = "2a578502c31973fbefa3b3f82efa22d7ad11db53"
+          platform="$RUNNER_TEMP/cakeos-hui-platform"
+          git fetch --no-tags --depth=1 origin "$ref"
+          git worktree add --detach "$platform" "$ref"
+          test "$(git -C "$platform" rev-parse HEAD)" = "$ref"
+          bash "$platform/HUI/stage-donor.sh"
+          donor="$(jq -r '.components.HUI.migrationDonor.revision' "$platform/havenos.lock")"
+          test "$donor" = "7c021082565b3e0ef9110bc4a1287ca3cc2c1fbb"
+          test "$(cat "$platform/HUI/vendor/.donor-revision")" = "$donor"
+          test -f "$platform/HUI/vendor/Haven.UI/Haven.UI.csproj"
+          echo "HUI_PLATFORM_REF=$ref" >> "$GITHUB_ENV"
+          echo "HAVEN_UI_PROJECT=$platform/HUI/vendor/Haven.UI/Haven.UI.csproj" >> "$GITHUB_ENV"
+          echo "Accepted HUI platform: $ref"
+          echo "Pinned Haven.UI donor: $donor"
+
+      - name: Prove accepted HUI platform smoke contract
+        run: dotnet run --project "$RUNNER_TEMP/cakeos-hui-platform/HUI/Preview/CakeOS.HuiPreview.csproj" -c Release
+
+      - name: Enforce thin Data HUI adapter boundary
+        run: |
+          test -z "$(grep -RIn --include='*.cs' '^using Avalonia' apps/Data/Hui || true)"
+          test -z "$(grep -RIn --include='*.cs' 'com\.sun\.star\|\buno\.' apps/Data/Hui || true)"
+          test -z "$(grep -n '<PackageReference' apps/Data/Hui/HavenOS.Data.Hui.csproj || true)"
+
+      - name: Build Data HUI adapter against accepted contract
+        run: dotnet build apps/Data/Hui/HavenOS.Data.Hui.csproj -c Release --nologo -p:HavenUiProject="$HAVEN_UI_PROJECT"
+
+      - name: Run Data HUI edit sort save-reopen integration
+        env:
+          HAVEN_DATA_PYTHON: /usr/bin/python3
+        run: dotnet run --project apps/Data/Tests/HavenOS.Data.Hui.Runtime.csproj -c Release -p:HavenUiProject="$HAVEN_UI_PROJECT"

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-label="Haven wallpaper">
+  <!-- Haven-native wallpaper source, Worker C B6. Hand-authored. No donor binary copied. -->
+  <!-- Palette matches HUI/theme/tokens.json: bg #0F1A1E, surface #16262C, accent #3ED598. -->
+  <defs>
+    <linearGradient id="haven-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F1A1E"/>
+      <stop offset="1" stop-color="#16262C"/>
+    </linearGradient>
+    <radialGradient id="haven-glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#3ED598" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#3ED598" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#haven-bg)"/>
+  <rect width="1920" height="1080" fill="url(#haven-glow)"/>
+  <circle cx="960" cy="454" r="150" fill="none" stroke="#3ED598" stroke-width="10" opacity="0.9"/>
+  <circle cx="960" cy="454" r="104" fill="none" stroke="#EAF4F1" stroke-width="4" opacity="0.55"/>
+  <rect x="952" y="372" width="16" height="164" rx="8" fill="#EAF4F1" opacity="0.9"/>
+</svg>

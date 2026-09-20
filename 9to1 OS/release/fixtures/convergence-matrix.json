@@ -1,0 +1,78 @@
+{
+  "releaseId": "havenos-2026.09-alpha",
+  "generatedAt": "2026-09-12T12:30:00Z",
+  "productStates": [
+    {
+      "productId": "haven.welcome",
+      "productType": "App",
+      "provenanceState": "Ready",
+      "imageInclusionState": "Included",
+      "approvedVmState": "Verified",
+      "offlineRequirementMet": true,
+      "smokeTestPassed": true,
+      "blockingReason": null,
+      "isConverged": true
+    },
+    {
+      "productId": "haven.shell",
+      "productType": "SystemSurface",
+      "provenanceState": "Ready",
+      "imageInclusionState": "Included",
+      "approvedVmState": "Verified",
+      "offlineRequirementMet": true,
+      "smokeTestPassed": true,
+      "blockingReason": null,
+      "isConverged": true
+    },
+    {
+      "productId": "havenos.studio",
+      "productType": "App",
+      "provenanceState": "Ready",
+      "imageInclusionState": "Included",
+      "approvedVmState": "Verified",
+      "offlineRequirementMet": true,
+      "smokeTestPassed": true,
+      "blockingReason": null,
+      "isConverged": true
+    },
+    {
+      "productId": "llamacpp.provider",
+      "productType": "Provider",
+      "provenanceState": "Ready",
+      "imageInclusionState": "Pending",
+      "approvedVmState": "Partial",
+      "offlineRequirementMet": true,
+      "smokeTestPassed": true,
+      "blockingReason": null,
+      "isConverged": false
+    },
+    {
+      "productId": "haven.notifications",
+      "productType": "BackgroundComponent",
+      "provenanceState": "Partial",
+      "imageInclusionState": "Excluded",
+      "approvedVmState": "NotTested",
+      "offlineRequirementMet": true,
+      "smokeTestPassed": true,
+      "blockingReason": null,
+      "isConverged": false
+    },
+    {
+      "productId": "haven.settings",
+      "productType": "Service",
+      "provenanceState": "Blocked",
+      "imageInclusionState": "NotApplicable",
+      "approvedVmState": "Failed",
+      "offlineRequirementMet": false,
+      "smokeTestPassed": false,
+      "blockingReason": "Provenance incomplete",
+      "isConverged": false
+    }
+  ],
+  "totalProducts": 6,
+  "convergedProducts": 3,
+  "partialProducts": 2,
+  "blockedProducts": 1,
+  "unknownProducts": 0,
+  "convergencePercentage": 50.0
+}

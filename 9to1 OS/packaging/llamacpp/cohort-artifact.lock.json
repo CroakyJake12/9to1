@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "cohort": "havenos-backend-preview",
+  "purpose": "Immutable package inputs for backend cohort staging; verification only.",
+  "artifacts": [
+    {
+      "id": "llamacpp-runtime",
+      "source": {
+        "repository": "CroakyJake12/CakeOS",
+        "ref": "main",
+        "revision": "11be1b700022095e4b598768b5286adfe966f85a"
+      },
+      "workflow": {
+        "runId": 10031771129,
+        "artifactId": 10031771129,
+        "artifactName": "haven-llamacpp-runtime-amd64"
+      },
+      "package": {
+        "filename": "haven-llamacpp-runtime_0.4.0+haven0.1_amd64.deb",
+        "sha256": "13ea16e4ffa92d1e4b2f31a1a32ba00dc8802ec9077733d7db96a68dad92142d",
+        "architecture": "amd64",
+        "dependencies": [
+          "python3",
+          "libc6",
+          "libstdc++6",
+          "libgcc-s1",
+          "libgomp1"
+        ],
+        "launcher": "/usr/bin/haven-modelctl",
+        "stagePath": "/usr/lib/haven"
+      },
+      "distribution": {
+        "containsModels": false,
+        "modelDownload": false,
+        "rebuildRequired": false
+      }
+    },
+    {
+      "id": "hui-linux-graphical-preview",
+      "source": {
+        "repository": "CroakyJake12/CakeOS",
+        "ref": "platform/hui-linux-graphical-preview",
+        "revision": "2a578502c31973fbefa3b3f82efa22d7ad11db53"
+      },
+      "workflow": {
+        "runId": 34157071097,
+        "artifactId": 10031358716,
+        "artifactName": "hui-linux-graphical-package"
+      },
+      "package": {
+        "filename": "haven-hui-preview_0.1.0+git2a578502c319_amd64.deb",
+        "sha256": "104f8ff3929b8b0e1c90673804d7cfbe79a31ea5c2763dc040246a7ead53575a",
+        "architecture": "amd64",
+        "dependencies": [
+          "libc6",
+          "libgcc-s1",
+          "libstdc++6",
+          "zlib1g"
+        ],
+        "launcher": "/usr/bin/cakeos-hui-preview",
+        "stagePath": "/usr/lib/cakeos/hui-preview"
+      },
+      "distribution": {
+        "containsModels": false,
+        "modelDownload": false,
+        "rebuildRequired": false
+      }
+    }
+  ]
+}

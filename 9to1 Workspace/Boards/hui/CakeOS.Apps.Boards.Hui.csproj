@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CakeOS.Apps.Boards.Hui</RootNamespace>
+    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
+  </PropertyGroup>
+
+  <Target Name="RequireRealHavenUi" BeforeTargets="ResolveProjectReferences">
+    <Error Condition="'$(HavenUiProjectPath)' == ''"
+           Text="A real Haven.UI project is required. Set /p:HavenUiProjectPath=&lt;path-to-Haven.UI.csproj&gt; until the shared CakeOS HUI runtime lands under HUI/Haven.UI." />
+    <Error Condition="'$(HavenUiProjectPath)' != '' and !Exists('$(HavenUiProjectPath)')"
+           Text="HavenUiProjectPath does not exist: $(HavenUiProjectPath)" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="../contract/CakeOS.Apps.Boards.Contract.csproj" />
+    <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
+  </ItemGroup>
+</Project>

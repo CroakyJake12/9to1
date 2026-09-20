@@ -1,0 +1,420 @@
+name: llama.cpp Slice 0
+
+on:
+  pull_request:
+    paths:
+      - 'runtime/llamacpp/**'
+      - 'HUI/**'
+      - 'packaging/systemd/user/haven-inference-broker.service'
+      - 'packaging/bin/haven-modelctl'
+      - 'packaging/llamacpp/**'
+      - '.github/workflows/llamacpp-slice0.yml'
+      - 'havenos.lock'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Python sources
+        run: python -m compileall -q runtime/llamacpp
+      - name: Run unit and model-free integration tests
+        run: python -m unittest discover -s runtime/llamacpp/tests -v
+      - name: Check pinned provenance and build policy
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lock = json.loads(Path('runtime/llamacpp/upstream.lock.json').read_text())
+          assert lock['tag'] == 'v0.4.0'
+          assert lock['commit'] == '5266f24da75dc449bd56cbed7addb9c8e4a6a73e'
+          assert lock['build']['target'] == 'llama-server'
+          flags = set(lock['build']['cmake'])
+          for required in {
+              '-DBUILD_SHARED_LIBS=OFF',
+              '-DLLAMA_BUILD_UI=OFF',
+              '-DLLAMA_USE_PREBUILT_UI=OFF',
+              '-DLLAMA_OPENSSL=OFF',
+              '-DLLAMA_SUBPROCESS=OFF',
+              '-DGGML_NATIVE=OFF',
+              '-DGGML_RPC=OFF',
+              '-DGGML_CUDA=OFF',
+              '-DGGML_HIP=OFF',
+              '-DGGML_VULKAN=OFF',
+              '-DGGML_SYCL=OFF',
+              '-DGGML_OPENCL=OFF',
+              '-DGGML_OPENVINO=OFF',
+          }:
+              assert required in flags, required
+          PY
+      - name: Validate shell recipe syntax
+        run: sh -n runtime/llamacpp/build-cpu.sh
+      - name: Validate model-manager wrapper syntax
+        run: sh -n packaging/bin/haven-modelctl
+      - name: Validate Debian package builder syntax
+        run: sh -n packaging/llamacpp/build-deb.sh
+      - name: Validate installable Debian verifier syntax
+        run: sh -n packaging/llamacpp/verify-installable-deb.sh
+
+  build-pinned-llamacpp-cpu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout CakeOS runtime branch
+        uses: actions/checkout@v4
+        with:
+          path: cakeos
+          fetch-depth: 0
+      - name: Determine whether pinned build inputs changed
+        id: build_scope
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          elif git -C cakeos diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+              runtime/llamacpp/build-cpu.sh \
+              runtime/llamacpp/upstream.lock.json; then
+            echo 'required=false' >> "$GITHUB_OUTPUT"
+            echo 'Pinned llama.cpp build inputs are unchanged; reusing the base branch build evidence.'
+          else
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout pinned upstream llama.cpp
+        if: steps.build_scope.outputs.required == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ggml-org/llama.cpp
+          ref: 5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+          path: llama-src
+          fetch-depth: 1
+      - name: Verify exact upstream commit
+        if: steps.build_scope.outputs.required == 'true'
+        run: test "$(git -C llama-src rev-parse HEAD)" = '5266f24da75dc449bd56cbed7addb9c8e4a6a73e'
+      - name: Build and smoke-test CPU runtime
+        if: steps.build_scope.outputs.required == 'true'
+        env:
+          LLAMA_SOURCE: ${{ github.workspace }}/llama-src
+          LLAMA_BUILD_DIR: ${{ github.workspace }}/llama-build
+          LLAMA_BUILD_PARALLEL: '2'
+        run: sh cakeos/runtime/llamacpp/build-cpu.sh
+      - name: Record binary provenance
+        if: steps.build_scope.outputs.required == 'true'
+        run: |
+          test -x llama-build/bin/llama-server
+          llama-build/bin/llama-server --version
+          sha256sum llama-build/bin/llama-server
+          ldd llama-build/bin/llama-server || true
+
+  package-runtime-amd64:
+    runs-on: ubuntu-latest
+    outputs:
+      package_required: ${{ steps.package_scope.outputs.required }}
+    steps:
+      - name: Checkout CakeOS packaging branch
+        uses: actions/checkout@v4
+        with:
+          path: cakeos
+          fetch-depth: 0
+      - name: Determine whether package inputs changed
+        id: package_scope
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          elif git -C cakeos diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+              .github/workflows/llamacpp-slice0.yml \
+              packaging/bin/haven-modelctl \
+              packaging/systemd/user/haven-inference-broker.service \
+              packaging/llamacpp \
+              runtime/llamacpp/broker.py \
+              runtime/llamacpp/gguf.py \
+              runtime/llamacpp/model_lease.py \
+              runtime/llamacpp/modelctl.py \
+              runtime/llamacpp/provider-contract.json \
+              runtime/llamacpp/backend-matrix.json \
+              runtime/llamacpp/backend_matrix.py \
+              runtime/llamacpp/hardware_probe.py \
+              runtime/llamacpp/budget.py \
+              runtime/llamacpp/benchmark.py \
+              runtime/llamacpp/upstream.lock.json \
+              runtime/llamacpp/build-cpu.sh \
+              runtime/llamacpp/licenses/llama.cpp-LICENSE; then
+            echo 'required=false' >> "$GITHUB_OUTPUT"
+            echo 'Package inputs are unchanged; reusing base-branch package evidence.'
+          else
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checkout pinned upstream llama.cpp
+        if: steps.package_scope.outputs.required == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ggml-org/llama.cpp
+          ref: 5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+          path: llama-src
+          fetch-depth: 1
+      - name: Verify committed upstream MIT notice is exact
+        if: steps.package_scope.outputs.required == 'true'
+        run: cmp cakeos/runtime/llamacpp/licenses/llama.cpp-LICENSE llama-src/LICENSE
+      - name: Build pinned CPU server for package
+        if: steps.package_scope.outputs.required == 'true'
+        env:
+          LLAMA_SOURCE: ${{ github.workspace }}/llama-src
+          LLAMA_BUILD_DIR: ${{ github.workspace }}/llama-package-build
+          LLAMA_BUILD_PARALLEL: '2'
+        run: sh cakeos/runtime/llamacpp/build-cpu.sh
+      - name: Build model-free Debian package
+        if: steps.package_scope.outputs.required == 'true'
+        env:
+          LLAMA_SERVER_BINARY: ${{ github.workspace }}/llama-package-build/bin/llama-server
+          HAVEN_PACKAGE_OUTPUT_DIR: ${{ github.workspace }}/package-out
+        run: sh cakeos/packaging/llamacpp/build-deb.sh
+      - name: Inspect package without installing it
+        if: steps.package_scope.outputs.required == 'true'
+        shell: bash
+        run: |
+          deb=$(find package-out -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -n "$deb"
+          sh cakeos/packaging/llamacpp/verify-installable-deb.sh "$deb"
+          test "$(dpkg-deb --field "$deb" Package)" = 'haven-llamacpp-runtime'
+          test "$(dpkg-deb --field "$deb" Architecture)" = 'amd64'
+          dpkg-deb --contents "$deb" | tee package-out/contents.txt
+          if grep -E '/models/|\.gguf($| )' package-out/contents.txt; then
+            echo 'Package contains forbidden model data.' >&2
+            exit 1
+          fi
+          mkdir extracted
+          dpkg-deb --extract "$deb" extracted
+          cmp cakeos/runtime/llamacpp/licenses/llama.cpp-LICENSE extracted/usr/share/doc/haven-llamacpp-runtime/llama.cpp-LICENSE
+          python3 -m compileall -q extracted/usr/lib/haven/inference
+          extracted/usr/lib/haven/llama.cpp/llama-server --version
+          cat "$deb.sha256"
+      - name: Upload package evidence artifact
+        if: steps.package_scope.outputs.required == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: haven-llamacpp-runtime-amd64
+          path: |
+            package-out/*.deb
+            package-out/*.sha256
+            package-out/contents.txt
+          if-no-files-found: error
+          retention-days: 14
+
+  real-cpu-inference-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout CakeOS proof branch
+        uses: actions/checkout@v4
+        with:
+          path: cakeos
+          fetch-depth: 0
+      - name: Determine whether real-runtime proof inputs changed
+        id: proof_scope
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          elif git -C cakeos diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+              .github/workflows/llamacpp-slice0.yml \
+              runtime/llamacpp/test-model.lock.json \
+              runtime/llamacpp/tests/real_runtime_proof.py \
+              runtime/llamacpp/broker.py \
+              runtime/llamacpp/modelctl.py \
+              runtime/llamacpp/model_lease.py \
+              runtime/llamacpp/gguf.py \
+              runtime/llamacpp/build-cpu.sh \
+              runtime/llamacpp/upstream.lock.json; then
+            echo 'required=false' >> "$GITHUB_OUTPUT"
+            echo 'Real-runtime proof inputs are unchanged; reusing base-branch runtime evidence.'
+          else
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.proof_scope.outputs.required == 'true'
+        with:
+          python-version: '3.12'
+      - name: Checkout pinned upstream llama.cpp
+        if: steps.proof_scope.outputs.required == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ggml-org/llama.cpp
+          ref: 5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+          path: llama-real-src
+          fetch-depth: 1
+      - name: Verify exact upstream commit
+        if: steps.proof_scope.outputs.required == 'true'
+        run: test "$(git -C llama-real-src rev-parse HEAD)" = '5266f24da75dc449bd56cbed7addb9c8e4a6a73e'
+      - name: Build pinned CPU server for real-runtime proof
+        if: steps.proof_scope.outputs.required == 'true'
+        env:
+          LLAMA_SOURCE: ${{ github.workspace }}/llama-real-src
+          LLAMA_BUILD_DIR: ${{ github.workspace }}/llama-real-build
+          LLAMA_BUILD_PARALLEL: '2'
+        run: sh cakeos/runtime/llamacpp/build-cpu.sh
+      - name: Download and independently verify pinned CI model
+        if: steps.proof_scope.outputs.required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+          URL=$(python -c "import json; print(json.load(open('cakeos/runtime/llamacpp/test-model.lock.json'))['downloadUrl'])")
+          EXPECTED_SIZE=$(python -c "import json; print(json.load(open('cakeos/runtime/llamacpp/test-model.lock.json'))['size'])")
+          EXPECTED_SHA=$(python -c "import json; print(json.load(open('cakeos/runtime/llamacpp/test-model.lock.json'))['sha256'])")
+          curl --fail --location --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 --output "$MODEL_PATH" "$URL"
+          test "$(stat -c '%s' "$MODEL_PATH")" = "$EXPECTED_SIZE"
+          printf '%s  %s\n' "$EXPECTED_SHA" "$MODEL_PATH" | sha256sum -c -
+      - name: Run real model through modelctl, broker, and pinned llama-server
+        if: steps.proof_scope.outputs.required == 'true'
+        env:
+          HAVEN_REAL_MODEL_PATH: ${{ runner.temp }}/SmolLM2-135M-Instruct-Q4_K_M.gguf
+          HAVEN_LLAMA_SERVER: ${{ github.workspace }}/llama-real-build/bin/llama-server
+          HAVEN_RUNTIME_PROOF_OUTPUT: ${{ github.workspace }}/real-runtime-evidence.json
+        run: python cakeos/runtime/llamacpp/tests/real_runtime_proof.py
+      - name: Validate prompt-free proof evidence
+        if: steps.proof_scope.outputs.required == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('real-runtime-evidence.json').read_text())
+          checks = value['checks']
+          assert all(checks.values()), checks
+          assert value['runtimeSurface']['kind'] == 'source-tree'
+          assert value['runtimeSurface']['systemdManaged'] is False
+          assert value['claimBoundaries']['approvedVmRuntimeProven'] is False
+          assert value['claimBoundaries']['gpuRuntimeProven'] is False
+          assert value['claimBoundaries']['productionModelBenchmarked'] is False
+          assert value['claimBoundaries']['modelPackagedOrUploaded'] is False
+          assert value['claimBoundaries']['systemdManagedRuntimeProven'] is False
+          serialized = json.dumps(value).lower()
+          assert 'reply with one word' not in serialized
+          assert 'generatedtext' not in serialized
+          PY
+      - name: Upload real-runtime evidence only
+        if: steps.proof_scope.outputs.required == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: haven-llamacpp-real-cpu-proof
+          path: real-runtime-evidence.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Delete CI model bytes
+        if: always()
+        shell: bash
+        run: |
+          MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+          rm -f "$MODEL_PATH"
+
+  installed-package-runtime-proof:
+    runs-on: ubuntu-latest
+    needs: package-runtime-amd64
+    if: ${{ needs['package-runtime-amd64'].outputs.package_required == 'true' }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout CakeOS proof harness
+        uses: actions/checkout@v4
+        with:
+          path: cakeos
+      - name: Download same-run package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: haven-llamacpp-runtime-amd64
+          path: installed-package-artifact
+      - name: Verify checksum and install package on ephemeral runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEB=$(find installed-package-artifact -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -n "$DEB"
+          SHA_FILE="$DEB.sha256"
+          test -f "$SHA_FILE"
+          (cd "$(dirname "$DEB")" && sha256sum -c "$(basename "$SHA_FILE")")
+          sh cakeos/packaging/llamacpp/verify-installable-deb.sh "$DEB"
+          test "$(dpkg-deb --field "$DEB" Package)" = 'haven-llamacpp-runtime'
+          test "$(dpkg-deb --field "$DEB" Architecture)" = 'amd64'
+          sudo dpkg -i "$DEB"
+          test "$(dpkg-query -W -f='${Status}' haven-llamacpp-runtime)" = 'install ok installed'
+          test -x /usr/bin/haven-modelctl
+          test -f /usr/lib/haven/inference/broker.py
+          test -x /usr/lib/haven/llama.cpp/llama-server
+          test -f /usr/lib/systemd/user/haven-inference-broker.service
+          grep -F '"--offline"' /usr/lib/haven/inference/broker.py
+          /usr/lib/haven/llama.cpp/llama-server --version
+          test ! -e /var/lib/dpkg/info/haven-llamacpp-runtime.postinst
+          if [[ -d "$HOME/.config/systemd/user" ]] && find "$HOME/.config/systemd/user" -type l -name 'haven-inference-broker.service' -print -quit | grep -q .; then
+            echo 'Package unexpectedly enabled the user service.' >&2
+            exit 1
+          fi
+      - name: Download and independently verify pinned CI model
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+          URL=$(/usr/bin/python3 -c "import json; print(json.load(open('cakeos/runtime/llamacpp/test-model.lock.json'))['downloadUrl'])")
+          EXPECTED_SIZE=$(/usr/bin/python3 -c "import json; print(json.load(open('cakeos/runtime/llamacpp/test-model.lock.json'))['size'])")
+          EXPECTED_SHA=$(/usr/bin/python3 -c "import json; print(json.load(open('cakeos/runtime/llamacpp/test-model.lock.json'))['sha256'])")
+          curl --fail --location --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 --output "$MODEL_PATH" "$URL"
+          test "$(stat -c '%s' "$MODEL_PATH")" = "$EXPECTED_SIZE"
+          printf '%s  %s\n' "$EXPECTED_SHA" "$MODEL_PATH" | sha256sum -c -
+      - name: Run real model through installed package paths
+        env:
+          HAVEN_PROOF_SURFACE: installed-package
+          HAVEN_REAL_MODEL_PATH: ${{ runner.temp }}/SmolLM2-135M-Instruct-Q4_K_M.gguf
+          HAVEN_MODELCTL_EXECUTABLE: /usr/bin/haven-modelctl
+          HAVEN_BROKER_SCRIPT: /usr/lib/haven/inference/broker.py
+          HAVEN_LLAMA_SERVER: /usr/lib/haven/llama.cpp/llama-server
+          HAVEN_RUNTIME_PROOF_OUTPUT: ${{ github.workspace }}/installed-package-runtime-evidence.json
+        run: /usr/bin/python3 cakeos/runtime/llamacpp/tests/real_runtime_proof.py
+      - name: Validate installed-package proof evidence
+        run: |
+          /usr/bin/python3 - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('installed-package-runtime-evidence.json').read_text())
+          assert value['proofType'] == 'installed-package-real-model-cpu-inference-ci'
+          assert all(value['checks'].values()), value['checks']
+          surface = value['runtimeSurface']
+          assert surface['kind'] == 'installed-package'
+          assert surface['installedPackagePathsVerified'] is True
+          assert surface['pathsOwnedByPackage'] is True
+          assert surface['package'] == 'haven-llamacpp-runtime'
+          assert surface['systemdManaged'] is False
+          assert value['claimBoundaries']['approvedVmRuntimeProven'] is False
+          assert value['claimBoundaries']['gpuRuntimeProven'] is False
+          assert value['claimBoundaries']['productionModelBenchmarked'] is False
+          assert value['claimBoundaries']['modelPackagedOrUploaded'] is False
+          assert value['claimBoundaries']['systemdManagedRuntimeProven'] is False
+          serialized = json.dumps(value).lower()
+          assert 'reply with one word' not in serialized
+          assert 'generatedtext' not in serialized
+          PY
+      - name: Upload installed-package evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: haven-llamacpp-installed-package-proof
+          path: installed-package-runtime-evidence.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove CI model and installed package
+        if: always()
+        shell: bash
+        run: |
+          MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+          rm -f "$MODEL_PATH"
+          sudo dpkg -r haven-llamacpp-runtime || true

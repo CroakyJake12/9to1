@@ -1,0 +1,64 @@
+name: Present geometry probe
+
+on:
+  pull_request:
+    paths:
+      - "apps/present-engine/tests/geometry_probe.cpp"
+      - "apps/present-engine/CMakeLists.txt"
+      - ".github/workflows/present-geometry-probe.yml"
+  push:
+    branches:
+      - "migration/present-libreoffice-foundation"
+    paths:
+      - "apps/present-engine/tests/geometry_probe.cpp"
+      - "apps/present-engine/CMakeLists.txt"
+      - ".github/workflows/present-geometry-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  geometry-26-04:
+    name: Ubuntu 26.04 object geometry probe
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out CakeOS
+        uses: actions/checkout@v4
+
+      - name: Install no-GUI LibreOfficeKit dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libreofficekit-dev \
+            libreoffice-impress-nogui \
+            nlohmann-json3-dev
+
+      - name: Configure
+        run: cmake -S apps/present-engine -B build/present-engine -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build geometry probe with warnings as errors
+        run: cmake --build build/present-engine --target cakeos-present-geometry-probe --parallel 2
+
+      - name: Create and normalize geometry fixture
+        run: |
+          python3 apps/present-engine/tests/make_reorder_fixture.py /tmp/cakeos-present-geometry-source.odp
+          mkdir -p /tmp/cakeos-present-geometry-normalized
+          /usr/lib/libreoffice/program/soffice \
+            --headless \
+            --convert-to odp \
+            --outdir /tmp/cakeos-present-geometry-normalized \
+            /tmp/cakeos-present-geometry-source.odp
+          test -s /tmp/cakeos-present-geometry-normalized/cakeos-present-geometry-source.odp
+
+      - name: Probe snapshot-ref object geometry
+        run: |
+          build/present-engine/cakeos-present-geometry-probe \
+            /tmp/cakeos-present-geometry-normalized/cakeos-present-geometry-source.odp | tee /tmp/present-geometry.log
+          grep -q '^object_geometry=passed$' /tmp/present-geometry.log
+          grep -q '^object_ref=slide:0/object:0$' /tmp/present-geometry.log
+
+      - name: Record runtime version
+        if: always()
+        run: /usr/lib/libreoffice/program/soffice --version || true

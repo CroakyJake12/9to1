@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "providerId": "llamacpp",
+  "displayName": "llama.cpp",
+  "kind": "local",
+  "transport": {
+    "type": "http-over-unix",
+    "socket": "$XDG_RUNTIME_DIR/haven/inference.sock",
+    "networkRequired": false
+  },
+  "discovery": {
+    "probe": {
+      "method": "GET",
+      "path": "/v1/provider"
+    },
+    "health": {
+      "method": "GET",
+      "path": "/health"
+    },
+    "accepted": {
+      "providerId": "llamacpp",
+      "isLocal": true,
+      "transport": "http-over-unix"
+    },
+    "unavailable": {
+      "retryable": true,
+      "meaning": "The local broker is not running or its socket is unavailable."
+    }
+  },
+  "modelKeys": {
+    "qualified": "llamacpp:<model-id>",
+    "legacyUnqualifiedProvider": "ollama",
+    "unqualifiedResolution": "ollama"
+  },
+  "status": {
+    "provider": "GET /v1/provider",
+    "health": "GET /health",
+    "models": "GET /v1/models",
+    "readyWhen": "health.status == 'ok' and models[].loaded == true",
+    "modelStates": [
+      "installed",
+      "loaded"
+    ],
+    "brokerReadOnlyModelStore": true
+  },
+  "execution": {
+    "endpoint": "POST /v1/chat/completions",
+    "requiredRequestId": true,
+    "streaming": true,
+    "cancelEndpoint": "POST /v1/requests/{request_id}/cancel",
+    "loadEndpoint": "POST /v1/models/{id}/load",
+    "unloadEndpoint": "POST /v1/models/{id}/unload"
+  },
+  "evidenceBoundaries": {
+    "providerDiscovery": "Contract and repository tests only until HUI supplies a live socket.",
+    "providerStatus": "Contract and model-free broker integration tests only.",
+    "modelExecution": "Not proven by this contract; requires an approved local GGUF and a running pinned llama-server."
+  },
+  "runtimeContract": "../runtime/llamacpp/provider-contract.json"
+}

@@ -1,0 +1,25 @@
+name: haven_boards_appflowy_poc
+description: Bounded AppFlowy Board proof harness for the Haven Boards migration.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+flutter:
+  uses-material-design: true
+
+dependencies:
+  flutter:
+    sdk: flutter
+  appflowy_board:
+    git:
+      url: https://github.com/AppFlowy-IO/appflowy-board.git
+      ref: 804d7898ac0becabf73e45527baf5d5c573cd6bb
+  ffi: 2.1.3
+  flutter_svg: 2.0.17
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

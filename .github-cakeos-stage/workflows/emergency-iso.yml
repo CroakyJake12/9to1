@@ -1,0 +1,101 @@
+name: Emergency ISO Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch or SHA)'
+        required: true
+        default: 'emergency/preview-0.1'
+      canvas_run_id:
+        description: 'Canvas workflow run ID to download artifact from'
+        required: false
+      boards_run_id:
+        description: 'Boards workflow run ID to download artifact from'
+        required: false
+
+jobs:
+  build-emergency-iso:
+    name: Build Emergency Preview ISO
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout emergency branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 1
+          submodules: false
+
+      - name: Download Canvas package artifact
+        if: github.event.inputs.canvas_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: cakeos-canvas-rnote-debian-${{ github.event.inputs.canvas_run_id }}
+          path: artifacts/packages
+          repository: CroakyJake12/CakeOS
+          run-id: ${{ github.event.inputs.canvas_run_id }}
+
+      - name: Download Boards package artifact
+        if: github.event.inputs.boards_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: cakeos-boards-debian-${{ github.event.inputs.boards_run_id }}
+          path: artifacts/packages
+          repository: CroakyJake12/CakeOS
+          run-id: ${{ github.event.inputs.boards_run_id }}
+
+      - name: Download llama.cpp runtime artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: haven-llamacpp-runtime-amd64
+          path: artifacts/packages
+          repository: CroakyJake12/CakeOS
+          run-id: 10031771129
+
+      - name: Download HUI preview artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hui-linux-graphical-package
+          path: artifacts/packages
+          repository: CroakyJake12/CakeOS
+          run-id: 10031358716
+
+      - name: Install live-build and tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            live-build jq dpkg-dev
+
+      - name: Verify package hashes
+        run: |
+          cd artifacts/packages
+          for deb in *.deb; do
+            if [ -f "$deb.sha256" ]; then
+              sha256sum -c "$deb.sha256" || exit 1
+            fi
+          done
+          ls -la *.deb
+
+      - name: Build Emergency Preview ISO
+        env:
+          HAVENOS_DEB_DIR: ${{ github.workspace }}/artifacts/packages
+        run: |
+          bash image/build-live-iso.sh
+
+      - name: Verify ISO
+        run: |
+          iso=$(find artifacts -maxdepth 1 -type f -name '*.iso' -print -quit)
+          test -n "$iso"
+          sha256sum "$iso" | tee "$iso.sha256"
+
+      - name: Upload Emergency ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: cakeos-emergency-preview-0.1
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30

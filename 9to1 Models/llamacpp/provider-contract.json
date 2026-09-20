@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "providerId": "llamacpp",
+  "displayName": "llama.cpp",
+  "isLocal": true,
+  "transport": {
+    "type": "http-over-unix",
+    "defaultSocket": "$XDG_RUNTIME_DIR/haven/inference.sock",
+    "networkRequired": false
+  },
+  "modelKeys": {
+    "format": "llamacpp:<model-id>",
+    "legacyUnqualifiedProvider": "ollama",
+    "rationale": "Preserve existing unqualified Ollama model names while adding llama.cpp as a first-class local provider."
+  },
+  "endpoints": [
+    "GET /health",
+    "GET /v1/provider",
+    "GET /v1/models",
+    "POST /v1/models/{id}/load",
+    "POST /v1/models/{id}/unload",
+    "POST /v1/chat/completions",
+    "POST /v1/requests/{request_id}/cancel"
+  ],
+  "modelLifecycle": {
+    "brokerCanWriteModelStore": false,
+    "downloadInBroker": false,
+    "deletionInBroker": false,
+    "manager": "haven-modelctl",
+    "managerNetworkRequired": false,
+    "mutationSynchronization": "exclusive store flock plus exclusive per-model flock",
+    "loadedWorkerLease": "shared per-model flock held for worker lifetime",
+    "managementBoundary": "Explicit user-action model manager owns verified local import, replace/update, and deletion."
+  },
+  "coexistence": {
+    "ollamaProcessOwnership": "external",
+    "ollamaProxying": false,
+    "retirement": "deferred until compatibility and performance evidence supports migration"
+  }
+}

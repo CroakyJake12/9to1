@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CakeOS.Canvas.App</RootNamespace>
+    <AssemblyName>CakeOS.Canvas.App</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\vendor\Haven.UI\Haven.UI.csproj" />
+    <ProjectReference Include="..\HuiRenderer\CakeOS.Hui.Renderer.csproj" />
+  </ItemGroup>
+</Project>

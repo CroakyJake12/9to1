@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "cohort": [
+    {
+      "component": "llama.cpp runtime",
+      "state": "READY",
+      "stage": "cohort",
+      "repository": "CroakyJake12/CakeOS",
+      "workflow": "llamacpp-slice0.yml",
+      "artifactId": "10031771129",
+      "digest": "13ea16e4ffa92d1e4b2f31a1a32ba00dc8802ec9077733d7db96a68dad92142d",
+      "debFile": "haven-llamacpp-runtime_0.4.0+haven0.1_amd64.deb",
+      "sha256": "13ea16e4ffa92d1e4b2f31a1a32ba00dc8802ec9077733d7db96a68dad92142d",
+      "architecture": "amd64",
+      "dependencies": "python3, libc6, libstdc++6, libgcc-s1, libgomp1",
+      "launcher": "/usr/bin/haven-modelctl",
+      "installSmoke": "verified in authoritative handoff",
+      "runtimeSmoke": "verified in authoritative handoff",
+      "stagePath": "artifacts/packages"
+    },
+    {
+      "component": "HUI runtime",
+      "state": "READY",
+      "stage": "cohort",
+      "repository": "CroakyJake12/CakeOS",
+      "workflow": "hui-linux-graphical-preview.yml",
+      "artifactId": "10031358716",
+      "digest": "104f8ff3929b8b0e1c90673804d7cfbe79a31ea5c2763dc040246a7ead53575a",
+      "debFile": "haven-hui-preview_0.1.0+git2a578502c319_amd64.deb",
+      "sha256": "104f8ff3929b8b0e1c90673804d7cfbe79a31ea5c2763dc040246a7ead53575a",
+      "architecture": "amd64",
+      "dependencies": "libc6, libgcc-s1, libstdc++6, zlib1g",
+      "launcher": "/usr/bin/cakeos-hui-preview",
+      "installSmoke": "verified in authoritative handoff",
+      "runtimeSmoke": "verified in authoritative handoff",
+      "stagePath": "artifacts/packages"
+    },
+    {
+      "component": "Write",
+      "state": "BLOCKED",
+      "stage": "",
+      "repository": "UNKNOWN",
+      "workflow": "UNKNOWN",
+      "artifactId": "UNKNOWN",
+      "digest": "UNKNOWN",
+      "debFile": "UNKNOWN",
+      "sha256": "UNKNOWN",
+      "architecture": "UNKNOWN",
+      "dependencies": "UNKNOWN",
+      "launcher": "UNKNOWN",
+      "installSmoke": "UNKNOWN",
+      "runtimeSmoke": "UNKNOWN",
+      "stagePath": "NOT STAGED"
+    }
+  ]
+}

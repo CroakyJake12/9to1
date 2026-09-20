@@ -1,0 +1,11 @@
+{
+  "uuid": "haven-shell@havenos",
+  "name": "Haven Shell",
+  "description": "HavenOS system shell treatment: Haven top-bar indicator and panel styling. Fail-closed, no session override, no wallpaper dependency.",
+  "shell-version": [
+    "50",
+    "51"
+  ],
+  "version": 1,
+  "url": "https://github.com/CroakyJake12/HavenOS"
+}

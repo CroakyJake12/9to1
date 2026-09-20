@@ -1,0 +1,12 @@
+artifacts/**
+!artifacts/.gitkeep
+.cache/
+.mkosi/
+build/
+cache/
+**/bin/
+**/obj/
+*.iso
+*.qcow2
+*.vdi
+*.ova

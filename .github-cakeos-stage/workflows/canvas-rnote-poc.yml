@@ -1,0 +1,93 @@
+name: Canvas Rnote PoC
+
+on:
+  push:
+    branches:
+      - migration/canvas-rnote-poc
+    paths:
+      - 'apps/canvas/rnote-poc/**'
+      - '.github/workflows/canvas-rnote-poc.yml'
+  pull_request:
+    paths:
+      - 'apps/canvas/rnote-poc/**'
+      - '.github/workflows/canvas-rnote-poc.yml'
+
+jobs:
+  headless-rnote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.92
+        uses: dtolnay/rust-toolchain@1.92.0
+
+      - name: Install native core dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            pkg-config \
+            libglib2.0-dev \
+            libcairo2-dev \
+            libpango1.0-dev \
+            librsvg2-dev
+
+      - name: Generate lockfile
+        run: cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
+
+      - name: Reject GTK and Libadwaita in core dependency graph
+        shell: bash
+        run: |
+          cargo tree --manifest-path apps/canvas/rnote-poc/Cargo.toml | tee /tmp/canvas-rnote-tree.txt
+          if grep -E '(^|[[:space:]])(gtk4|libadwaita)[[:space:]]' /tmp/canvas-rnote-tree.txt; then
+            echo 'Headless Canvas core unexpectedly depends on GTK4 or Libadwaita.' >&2
+            exit 1
+          fi
+
+      - name: Build native C ABI library
+        shell: bash
+        run: |
+          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
+          test -f apps/canvas/rnote-poc/target/debug/libcakeos_canvas_rnote_poc.so
+
+      - name: Test headless pressure/save/reload/export round trip
+        shell: bash
+        run: |
+          set +e
+          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose -- --nocapture 2>&1 | tee /tmp/canvas-rnote-test.log
+          status=${PIPESTATUS[0]}
+          {
+            echo '## Rnote boundary test diagnostics'
+            echo '```text'
+            tail -n 120 /tmp/canvas-rnote-test.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -ne 0 ]; then
+            failure_line="$(grep -E 'panicked at|assertion .* failed|assertion.*failed|error:' /tmp/canvas-rnote-test.log | tail -n 1 || true)"
+            echo "::error title=Rnote boundary round-trip failed::${failure_line:-See job summary for cargo test output}"
+          fi
+          exit "$status"
+
+      - name: Upload native bridge artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-rnote-native-bridge
+          path: |
+            apps/canvas/rnote-poc/target/debug/libcakeos_canvas_rnote_poc.so
+            apps/canvas/rnote-poc/include/cakeos_canvas.h
+          if-no-files-found: error
+
+      - name: Upload boundary test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canvas-rnote-test-log
+          path: |
+            /tmp/canvas-rnote-test.log
+            apps/canvas/rnote-poc/Cargo.lock
+          if-no-files-found: error

@@ -1,0 +1,14 @@
+# Ubuntu desktop and session foundation.
+ubuntu-desktop-minimal
+gnome-shell
+mutter
+gdm3
+network-manager
+pipewire
+wireplumber
+systemd
+
+# Real image tooling and package validation are installed only in the Linux builder.
+live-build
+debootstrap
+dpkg-dev

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "tag": "v0.4.0",
+    "commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e"
+  },
+  "approvedVm": {
+    "config": "vm/havenos-dev.json",
+    "name": "HavenOS Ubuntu 26.04.1 Dev",
+    "uuid": "1c55da8e-b74d-43ae-894b-521f7a64c11e",
+    "snapshotUuid": "f25b7456-c562-4ba4-9798-5814ee17fe25",
+    "hardwareInspection": {
+      "status": "not-run",
+      "reason": "No hardware probe has been executed inside the preserved approved VM during repository-only implementation. GPU exposure and effective RAM limits remain unknown."
+    },
+    "safeBaseline": "cpu"
+  },
+  "policy": {
+    "remoteRpc": "disabled",
+    "automaticGpuEnablement": false,
+    "rule": "Hardware detection creates candidates only. A backend is not supported, benchmarked, or runtime-proven until its evidence fields say so."
+  },
+  "backends": [
+    {
+      "id": "cpu",
+      "priority": 1,
+      "cmakeOption": "GGML_CPU",
+      "hardware": ["linux-x86_64", "linux-aarch64"],
+      "notes": "Mandatory fallback and approved-VM first target.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 CPU build options inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": true, "scope": "Linux x86_64 llama-server CPU build", "reference": "https://github.com/CroakyJake12/CakeOS/actions/runs/34145121326"},
+        "tested": {"value": true, "scope": "binary --version smoke plus Haven repository tests; no model inference", "reference": "https://github.com/CroakyJake12/CakeOS/actions/runs/34145121326"},
+        "runtimeProven": {"value": false, "scope": "No approved GGUF loaded in the approved VM", "reference": null},
+        "benchmarked": {"value": false, "scope": "No model performance run", "reference": null}
+      }
+    },
+    {
+      "id": "cuda",
+      "priority": 1,
+      "cmakeOption": "GGML_CUDA",
+      "hardware": ["nvidia-gpu"],
+      "notes": "Primary future NVIDIA native-host backend; requires a separately validated driver/toolkit/package boundary.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 CUDA build option inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": false, "scope": "Not built by Haven", "reference": null},
+        "tested": {"value": false, "scope": "Not tested by Haven", "reference": null},
+        "runtimeProven": {"value": false, "scope": "No Haven runtime proof", "reference": null},
+        "benchmarked": {"value": false, "scope": "No Haven benchmark", "reference": null}
+      }
+    },
+    {
+      "id": "hip",
+      "priority": 2,
+      "cmakeOption": "GGML_HIP",
+      "hardware": ["amd-gpu"],
+      "notes": "Primary future AMD ROCm/HIP candidate.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 HIP build option inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": false, "scope": "Not built by Haven", "reference": null},
+        "tested": {"value": false, "scope": "Not tested by Haven", "reference": null},
+        "runtimeProven": {"value": false, "scope": "No Haven runtime proof", "reference": null},
+        "benchmarked": {"value": false, "scope": "No Haven benchmark", "reference": null}
+      }
+    },
+    {
+      "id": "vulkan",
+      "priority": 2,
+      "cmakeOption": "GGML_VULKAN",
+      "hardware": ["nvidia-gpu", "amd-gpu", "intel-gpu"],
+      "notes": "Cross-vendor Linux candidate; must be compared against vendor-native backends rather than assumed faster.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 Vulkan build option inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": false, "scope": "Not built by Haven", "reference": null},
+        "tested": {"value": false, "scope": "Not tested by Haven", "reference": null},
+        "runtimeProven": {"value": false, "scope": "No Haven runtime proof", "reference": null},
+        "benchmarked": {"value": false, "scope": "No Haven benchmark", "reference": null}
+      }
+    },
+    {
+      "id": "sycl",
+      "priority": 2,
+      "cmakeOption": "GGML_SYCL",
+      "hardware": ["intel-gpu"],
+      "notes": "Intel-oriented future accelerator candidate; toolchain/runtime prerequisites must be validated separately.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 SYCL build option inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": false, "scope": "Not built by Haven", "reference": null},
+        "tested": {"value": false, "scope": "Not tested by Haven", "reference": null},
+        "runtimeProven": {"value": false, "scope": "No Haven runtime proof", "reference": null},
+        "benchmarked": {"value": false, "scope": "No Haven benchmark", "reference": null}
+      }
+    },
+    {
+      "id": "opencl",
+      "priority": 3,
+      "cmakeOption": "GGML_OPENCL",
+      "hardware": ["gpu-or-opencl-accelerator"],
+      "notes": "Deferred compatibility backend; not a default selection target.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 OpenCL build option inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": false, "scope": "Not built by Haven", "reference": null},
+        "tested": {"value": false, "scope": "Not tested by Haven", "reference": null},
+        "runtimeProven": {"value": false, "scope": "No Haven runtime proof", "reference": null},
+        "benchmarked": {"value": false, "scope": "No Haven benchmark", "reference": null}
+      }
+    },
+    {
+      "id": "openvino",
+      "priority": 3,
+      "cmakeOption": "GGML_OPENVINO",
+      "hardware": ["intel-cpu-or-accelerator"],
+      "notes": "Deferred Intel runtime candidate; requires separate packaging and model coverage evidence.",
+      "evidence": {
+        "inspected": {"value": true, "scope": "v0.4.0 OpenVINO build option inspected", "reference": "https://github.com/ggml-org/llama.cpp/blob/v0.4.0/ggml/CMakeLists.txt"},
+        "built": {"value": false, "scope": "Not built by Haven", "reference": null},
+        "tested": {"value": false, "scope": "Not tested by Haven", "reference": null},
+        "runtimeProven": {"value": false, "scope": "No Haven runtime proof", "reference": null},
+        "benchmarked": {"value": false, "scope": "No Haven benchmark", "reference": null}
+      }
+    }
+  ]
+}

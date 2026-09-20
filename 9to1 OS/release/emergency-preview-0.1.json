@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "cakeos-emergency-preview-0.1",
+  "version": "0.1.0",
+  "preparedFromBaseRevision": "289c8e84f4e9bcdc6a08a281bc8a9cb98b94b31b",
+  "releaseState": "BLOCKED",
+  "scope": "Release-preparation control only. This manifest neither builds an ISO nor asserts package, image, or VM execution evidence.",
+  "inclusionCriteria": {
+    "candidateState": "CANDIDATE",
+    "requiredPackageFields": [
+      "packageName",
+      "fileName",
+      "sha256",
+      "architecture"
+    ],
+    "requiredRuntimeFields": [
+      "entrypoint",
+      "dependencies"
+    ],
+    "requiredEvidence": [
+      "immutableArtifactLock",
+      "releaseStagingRecord"
+    ],
+    "canvasBoardsRequiredEvidence": [
+      "dedicatedPackage",
+      "sha256",
+      "extractedEntrypoint",
+      "dependencyControl",
+      "installOrRuntimeSmoke"
+    ],
+    "forbiddenPackageNames": [
+      "havenos-data",
+      "havenos-present",
+      "havenos-wine-compat"
+    ]
+  },
+  "liveBuildInput": {
+    "buildScript": "image/build-live-iso.sh",
+    "configuration": "platform/ubuntu/image/live-build/auto/config",
+    "packageList": "platform/ubuntu/image/live-build/config/package-lists/havenos.list.chroot",
+    "packageDirectory": "artifacts/packages",
+    "state": "BLOCKED",
+    "blockingReason": "The live-build input accepts real local .deb files only; this checkout contains no candidate .deb files or release ISO."
+  },
+  "candidatePackageGraph": [
+    {
+      "id": "haven-hui-preview",
+      "assemblyOrder": 10,
+      "state": "CANDIDATE",
+      "packageName": "haven-hui-preview",
+      "fileName": "haven-hui-preview_0.1.0+git2a578502c319_amd64.deb",
+      "sha256": "104f8ff3929b8b0e1c90673804d7cfbe79a31ea5c2763dc040246a7ead53575a",
+      "architecture": "amd64",
+      "entrypoint": "/usr/bin/cakeos-hui-preview",
+      "dependencies": [
+        "libc6",
+        "libgcc-s1",
+        "libstdc++6",
+        "zlib1g"
+      ],
+      "source": {
+        "repository": "CroakyJake12/CakeOS",
+        "ref": "platform/hui-linux-graphical-preview",
+        "revision": "2a578502c31973fbefa3b3f82efa22d7ad11db53",
+        "workflowArtifactId": "10031358716"
+      },
+      "evidenceFiles": [
+        "packaging/llamacpp/cohort-artifact.lock.json",
+        "platform/ubuntu/release-staging.json"
+      ]
+    },
+    {
+      "id": "haven-llamacpp-runtime",
+      "assemblyOrder": 20,
+      "state": "CANDIDATE",
+      "packageName": "haven-llamacpp-runtime",
+      "fileName": "haven-llamacpp-runtime_0.4.0+haven0.1_amd64.deb",
+      "sha256": "13ea16e4ffa92d1e4b2f31a1a32ba00dc8802ec9077733d7db96a68dad92142d",
+      "architecture": "amd64",
+      "entrypoint": "/usr/bin/haven-modelctl",
+      "dependencies": [
+        "python3",
+        "libc6",
+        "libstdc++6",
+        "libgcc-s1",
+        "libgomp1"
+      ],
+      "source": {
+        "repository": "CroakyJake12/CakeOS",
+        "ref": "main",
+        "revision": "11be1b700022095e4b598768b5286adfe966f85a",
+        "workflowArtifactId": "10031771129"
+      },
+      "evidenceFiles": [
+        "packaging/llamacpp/cohort-artifact.lock.json",
+        "platform/ubuntu/release-staging.json",
+        "packaging/llamacpp/package-manifest.json"
+      ]
+    }
+  ],
+  "canvasBoardsEvidence": [
+    {
+      "componentId": "cakeos-canvas-rnote",
+      "state": "BLOCKED",
+      "evidenceFiles": [
+        "packaging/canvas-rnote/build-deb.sh",
+        ".github/workflows/component-packaging.yml"
+      ],
+      "missingRequiredEvidence": [
+        "dedicatedPackage",
+        "sha256",
+        "extractedEntrypoint",
+        "dependencyControl",
+        "installOrRuntimeSmoke"
+      ],
+      "blockingReason": "The builder requires a cakeos-canvas-rnote host that is not present. The existing workflow packages a HUI preview, not a pinned standalone Canvas package."
+    },
+    {
+      "componentId": "cakeos-boards",
+      "state": "BLOCKED",
+      "evidenceFiles": [
+        "packaging/boards-appflowy/build-deb.sh",
+        ".github/workflows/component-packaging.yml"
+      ],
+      "missingRequiredEvidence": [
+        "dedicatedPackage",
+        "sha256",
+        "extractedEntrypoint",
+        "dependencyControl",
+        "installOrRuntimeSmoke"
+      ],
+      "blockingReason": "The authoritative Boards workflow records that no launchable Linux Boards host/process exists and refuses to package its libraries or proof harness."
+    }
+  ],
+  "excludedComponents": [
+    {
+      "componentId": "haven-welcome",
+      "state": "EXCLUDED",
+      "evidenceFiles": [
+        "packaging/build-haven-welcome-deb.sh",
+        "apps/haven-welcome/haven-welcome.desktop"
+      ],
+      "missingAdmissionEvidence": [
+        "immutablePackage",
+        "sha256",
+        "extractedEntrypoint",
+        "dependencyControl"
+      ],
+      "blockingReason": "A package builder and desktop registration exist, but no built package or immutable package record exists in this checkout."
+    },
+    {
+      "componentId": "havenos-shell",
+      "state": "EXCLUDED",
+      "evidenceFiles": [
+        "packaging/build-havenos-shell-deb.sh",
+        "platform/haven-shell/extension/metadata.json",
+        "platform/haven-shell/session/haven-wayland.desktop"
+      ],
+      "missingAdmissionEvidence": [
+        "immutablePackage",
+        "sha256",
+        "extractedEntrypoint",
+        "dependencyControl"
+      ],
+      "blockingReason": "Shell source, session registration, and a package builder exist, but there is no immutable shell package or package-content evidence."
+    },
+    {
+      "componentId": "havenos-studio",
+      "state": "EXCLUDED",
+      "evidenceFiles": [
+        "packaging/build-havenos-studio-deb.sh",
+        "tooling/HavenOS.Studio/HavenOS.Studio.csproj"
+      ],
+      "missingAdmissionEvidence": [
+        "publishedOutput",
+        "immutablePackage",
+        "sha256",
+        "extractedEntrypoint",
+        "dependencyControl"
+      ],
+      "blockingReason": "Studio source and a package builder exist, but the required published output and a hash-pinned package are absent."
+    },
+    {
+      "componentId": "havenos-data",
+      "state": "EXCLUDED",
+      "evidenceFiles": [
+        "packaging/cohort/build-debs.sh",
+        "apps/COMPONENT-RELEASE-EVIDENCE.md"
+      ],
+      "missingAdmissionEvidence": [
+        "immutablePackage",
+        "sha256",
+        "desktopOrServiceEntrypointEvidence",
+        "dependencyControl"
+      ],
+      "blockingReason": "Worker 2 cohort builder output is not an approved immutable package input and is explicitly prohibited from this release graph."
+    },
+    {
+      "componentId": "havenos-present",
+      "state": "EXCLUDED",
+      "evidenceFiles": [
+        "packaging/cohort/build-debs.sh",
+        "apps/COMPONENT-RELEASE-EVIDENCE.md"
+      ],
+      "missingAdmissionEvidence": [
+        "immutablePackage",
+        "sha256",
+        "desktopOrServiceEntrypointEvidence",
+        "dependencyControl"
+      ],
+      "blockingReason": "Worker 2 cohort builder output is not an approved immutable package input and is explicitly prohibited from this release graph."
+    },
+    {
+      "componentId": "havenos-wine-compat",
+      "state": "EXCLUDED",
+      "evidenceFiles": [
+        "packaging/cohort/build-debs.sh",
+        "apps/COMPONENT-RELEASE-EVIDENCE.md"
+      ],
+      "missingAdmissionEvidence": [
+        "immutablePackage",
+        "sha256",
+        "desktopOrServiceEntrypointEvidence",
+        "dependencyControl"
+      ],
+      "blockingReason": "Worker 2 cohort builder output is not an approved immutable package input and is explicitly prohibited from this release graph."
+    },
+    {
+      "componentId": "write",
+      "state": "BLOCKED",
+      "evidenceFiles": [
+        "apps/COMPONENT-RELEASE-EVIDENCE.md"
+      ],
+      "missingAdmissionEvidence": [
+        "authoritativeImplementation",
+        "package",
+        "sha256",
+        "entrypoint",
+        "dependencies"
+      ],
+      "blockingReason": "No authoritative Write implementation, package, launcher, or handoff artifact was recovered."
+    }
+  ],
+  "cohortAssembly": {
+    "inputDirectory": "artifacts/packages",
+    "outputDirectory": "artifacts/emergency-preview-0.1-cohort",
+    "copyMode": "copy-only",
+    "ordering": "assemblyOrder ascending, then packageName ordinal",
+    "cohortManifest": "cohort-manifest.json",
+    "checksums": "SHA256SUMS",
+    "networkAllowed": false,
+    "buildAllowed": false,
+    "installAllowed": false,
+    "vmMutationAllowed": false
+  },
+  "blockers": [
+    "Neither candidate .deb is present under artifacts/packages, so the candidate graph cannot be assembled or passed to live-build.",
+    "No release ISO, boot evidence, installation evidence, launcher smoke, or approved VM evidence is present in this checkout.",
+    "Canvas/Rnote and Boards/AppFlowy do not have the dedicated package, hash, launchable entrypoint, dependency-control, and smoke evidence required for admission.",
+    "Shell, Welcome, and Studio have source or builders but no immutable package evidence.",
+    "Worker 2 cohort scripts are excluded by policy and are not release packages."
+  ]
+}

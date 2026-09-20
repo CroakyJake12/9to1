@@ -1,0 +1,223 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hui="using:Haven.Desktop.HavenUI.Components"
+             xmlns:controls="using:Haven.Desktop.Controls"
+             x:Class="Haven.Desktop.Views.Pages.Call.CallPage"
+             Loaded="OnLoaded">
+
+  <hui:HavenAdaptiveSurface Padding="24">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+
+      <!-- Row 0: Header -->
+      <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <controls:HavenIcon IconKey="call" Width="24" Height="24" Foreground="{DynamicResource HavenAccentBrush}"/>
+            <TextBlock Text="Haven Call" FontSize="24" FontWeight="SemiBold"/>
+          </StackPanel>
+          <TextBlock Text="A private local voice conversation with your Ollama model"
+                     Foreground="{DynamicResource HavenMutedBrush}"/>
+        </StackPanel>
+        <hui:HavenAdaptiveSurface Grid.Column="1" Background="{DynamicResource HavenPanel2Brush}"
+                BorderBrush="{DynamicResource HavenLineBrush}" BorderThickness="1"
+                CornerRadius="999" Padding="12,6" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Ellipse x:Name="StateDot" Width="8" Height="8" Fill="{DynamicResource HavenAccentBrush}"/>
+            <TextBlock x:Name="StateLabel" FontWeight="SemiBold" FontSize="12" Text="Idle"/>
+          </StackPanel>
+        </hui:HavenAdaptiveSurface>
+      </Grid>
+
+      <!-- Row 1: Main content -->
+      <Grid Grid.Row="1" ColumnDefinitions="320,*" ColumnSpacing="18">
+
+        <!-- Left: Setup panel -->
+        <ScrollViewer Grid.Column="0">
+          <StackPanel Spacing="14">
+            <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanel2Brush}"
+                    BorderBrush="{DynamicResource HavenLineBrush}" BorderThickness="1"
+                    CornerRadius="14" Padding="16">
+              <StackPanel Spacing="12">
+                <TextBlock Text="Call setup" FontSize="16" FontWeight="SemiBold"/>
+
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Ollama model" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="ModelCombo" IsEnabled="True" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Conversation mode" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="InputModeCombo" IsEnabled="True"/>
+                </StackPanel>
+
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Voice Profile" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="VoiceProfileCombo" IsEnabled="True"/>
+                  <TextBlock x:Name="VoiceProfileDescription" TextWrapping="Wrap" FontSize="10"
+                             Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                    <hui:HavenButton x:Name="NewVoiceProfileButton" Content="New" />
+                    <hui:HavenButton x:Name="EditVoiceProfileButton" Grid.Column="1" Content="Edit" />
+                    <hui:HavenButton x:Name="DeleteVoiceProfileButton" Grid.Column="2" Content="Delete" Classes="danger" />
+                  </Grid>
+                  <hui:HavenAdaptiveSurface x:Name="VoiceProfileEditor" IsVisible="False"
+                                            Background="{DynamicResource HavenBackgroundSecondaryBrush}"
+                                            Padding="10">
+                    <StackPanel Spacing="7">
+                      <hui:HavenTextInput x:Name="VoiceProfileNameBox" PlaceholderText="Profile name" />
+                      <hui:HavenMultilineInput x:Name="VoiceProfileDescriptionBox" PlaceholderText="Description" MinHeight="48" />
+                      <hui:HavenMultilineInput x:Name="VoiceProfileInstructionsBox" PlaceholderText="Voice instructions" MinHeight="90" />
+                      <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                        <hui:HavenButton x:Name="SaveVoiceProfileButton" Content="Save" Classes="accent" />
+                        <hui:HavenButton x:Name="CancelVoiceProfileButton" Content="Cancel" Grid.Column="1" />
+                      </Grid>
+                    </StackPanel>
+                  </hui:HavenAdaptiveSurface>
+                </StackPanel>
+
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Microphone" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="InputDeviceCombo" IsEnabled="True"/>
+                  <TextBlock x:Name="SpeechInputStatus" TextWrapping="Wrap" FontSize="11"
+                             Foreground="{DynamicResource HavenMutedBrush}" Text="Checking..."/>
+                </StackPanel>
+
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Speech model" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="SpeechModelCombo" IsEnabled="True"/>
+                  <TextBlock x:Name="SpeechModelStatus" FontSize="11"
+                             Foreground="{DynamicResource HavenMutedBrush}" Text="Choose a model"/>
+                  <StackPanel x:Name="SpeechModelSetup" Spacing="7" IsVisible="False">
+                    <hui:HavenProgressBar x:Name="SpeechDownloadProgress" IsVisible="False" Value="0" Maximum="100"/>
+                    <hui:HavenButton x:Name="DownloadSpeechButton" Content="Download model"
+                            Classes="secondary" HorizontalAlignment="Stretch"/>
+                  </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="5">
+                  <TextBlock Text="Voice" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="VoiceCombo" IsEnabled="True"/>
+                  <TextBlock x:Name="VoiceDescription" TextWrapping="Wrap" FontSize="10"
+                             Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenButton x:Name="PreviewVoiceButton" Content="Preview selected voice"
+                          Classes="secondary" HorizontalAlignment="Stretch"/>
+                  <hui:HavenCheckBox x:Name="SpeechOutputCheck" Content="Speak Haven responses" IsChecked="True" IsEnabled="True"/>
+                  <TextBlock x:Name="SpeechOutputStatus" TextWrapping="Wrap" FontSize="11"
+                             Foreground="{DynamicResource HavenMutedBrush}" Text="Checking..."/>
+                </StackPanel>
+
+                <hui:HavenButton x:Name="StartCallButton" Content="Start local call"
+                        Classes="primary" HorizontalAlignment="Stretch"/>
+                <hui:HavenButton x:Name="ExportTranscriptButton" Content="Export transcript"
+                        Classes="secondary" HorizontalAlignment="Stretch" IsEnabled="False"/>
+              </StackPanel>
+            </hui:HavenAdaptiveSurface>
+
+            <hui:HavenAdaptiveSurface Background="{DynamicResource HavenPanel2Brush}"
+                    BorderBrush="{DynamicResource HavenLineBrush}" BorderThickness="1"
+                    CornerRadius="14" Padding="14">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Privacy" FontWeight="SemiBold"/>
+                <TextBlock Text="Audio and screen frames stay in memory only. Voice modes may also keep text transient for the current call; modes that retain a transcript store text and call metadata, never raw media."
+                           TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                <TextBlock x:Name="ScreenShareStatus" TextWrapping="Wrap" FontSize="11"
+                           Foreground="{DynamicResource HavenMutedBrush}" Text="Checking..."/>
+              </StackPanel>
+            </hui:HavenAdaptiveSurface>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- Right: Live transcript -->
+        <hui:HavenAdaptiveSurface Grid.Column="1" Background="{DynamicResource HavenPanel2Brush}"
+                BorderBrush="{DynamicResource HavenLineBrush}" BorderThickness="1"
+                CornerRadius="14">
+          <Grid RowDefinitions="Auto,*,Auto">
+
+            <!-- Transcript header -->
+            <hui:HavenAdaptiveSurface Grid.Row="0" Padding="18,14" BorderBrush="{DynamicResource HavenLineBrush}"
+                    BorderThickness="0,0,0,1">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="Live transcript" FontSize="16" FontWeight="SemiBold"/>
+                  <TextBlock x:Name="TranscriptStatus" TextWrapping="Wrap" FontSize="12"
+                             Foreground="{DynamicResource HavenMutedBrush}" Text="Ready to call"/>
+                  <hui:HavenAdaptiveSurface x:Name="VoiceReactionPanel" IsVisible="False"
+                          Margin="0,6,0,0" Padding="9,5" CornerRadius="8"
+                          Background="{DynamicResource HavenAccentSoftBrush}"
+                          AutomationProperties.Name="Live Voice reaction">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <TextBlock x:Name="VoiceModeStatus" FontSize="11" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource HavenAccentBrush}"/>
+                      <TextBlock Text="·" FontSize="11" Foreground="{DynamicResource HavenMutedBrush}"/>
+                      <TextBlock x:Name="VoiceReactionStatus" FontSize="11" TextWrapping="Wrap"
+                                 Foreground="{DynamicResource HavenMutedBrush}"/>
+                    </StackPanel>
+                  </hui:HavenAdaptiveSurface>
+                </StackPanel>
+                <hui:HavenButton Grid.Column="1" x:Name="InterruptButton" Content="Interrupt"
+                        Classes="subtle" VerticalAlignment="Center" IsEnabled="False"/>
+              </Grid>
+            </hui:HavenAdaptiveSurface>
+
+            <!-- Empty state / Transcript -->
+            <Grid Grid.Row="1">
+              <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="9">
+                <hui:HavenAdaptiveSurface Width="72" Height="72" CornerRadius="36"
+                        Background="{DynamicResource HavenAccentSoftBrush}">
+                  <controls:HavenIcon IconKey="call" Width="32" Height="32"
+                            Foreground="{DynamicResource HavenAccentBrush}" HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                </hui:HavenAdaptiveSurface>
+                <TextBlock Text="Start a call, then speak or type below" FontWeight="SemiBold"/>
+                <TextBlock Text="Typed transcript mode works even when optional audio components are unavailable."
+                           FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+              </StackPanel>
+
+              <ScrollViewer x:Name="TranscriptScroller" Padding="18" IsVisible="False">
+                <StackPanel x:Name="TranscriptPanel" Spacing="14"/>
+              </ScrollViewer>
+            </Grid>
+
+            <!-- Text input -->
+            <hui:HavenAdaptiveSurface Grid.Row="2" Padding="16" BorderBrush="{DynamicResource HavenLineBrush}"
+                    BorderThickness="0,1,0,0">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <hui:HavenTextInput x:Name="TranscriptInput" Grid.Column="0"
+                         PlaceholderText="Type a message during the call..."
+                         IsEnabled="False"/>
+                <hui:HavenButton Grid.Column="1" x:Name="SendTranscriptButton" Content="Send"
+                        Classes="send" IsEnabled="False"
+                        Padding="16,0" CornerRadius="18"/>
+              </Grid>
+            </hui:HavenAdaptiveSurface>
+
+          </Grid>
+        </hui:HavenAdaptiveSurface>
+
+      </Grid>
+
+      <!-- Row 2: Waveform + Controls -->
+      <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="12" VerticalAlignment="Bottom">
+        <Grid x:Name="WaveformGrid" ColumnDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*" ColumnSpacing="3">
+        </Grid>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <hui:HavenButton x:Name="MuteButton" Classes="icon" ToolTip.Tip="Mute">
+            <controls:HavenIcon IconKey="mic" Width="18" Height="18"/>
+          </hui:HavenButton>
+          <hui:HavenButton x:Name="PushToTalkButton" Classes="icon" ToolTip.Tip="Hold to talk">
+            <controls:HavenIcon IconKey="phone" Width="18" Height="18"/>
+          </hui:HavenButton>
+          <hui:HavenButton x:Name="PauseButton" Classes="icon" ToolTip.Tip="Pause" IsEnabled="False">
+            <controls:HavenIcon IconKey="pause" Width="18" Height="18"/>
+          </hui:HavenButton>
+          <hui:HavenButton x:Name="EndCallButton" Classes="stop" Width="44" Height="36"
+                  ToolTip.Tip="End call" IsEnabled="False">
+            <controls:HavenIcon IconKey="phone-off" Width="18" Height="18"/>
+          </hui:HavenButton>
+        </StackPanel>
+      </Grid>
+
+    </Grid>
+  </hui:HavenAdaptiveSurface>
+
+</UserControl>

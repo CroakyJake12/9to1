@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "package": "haven-llamacpp-runtime",
+  "version": "0.4.0+haven0.1",
+  "architecture": "amd64",
+  "containsModels": false,
+  "autoEnableUserService": false,
+  "runtimeDependencies": ["python3", "libc6", "libstdc++6", "libgcc-s1", "libgomp1"],
+  "upstream": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "tag": "v0.4.0",
+    "commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+    "license": "MIT",
+    "licenseFile": "/usr/share/doc/haven-llamacpp-runtime/llama.cpp-LICENSE"
+  },
+  "binaryVerification": {
+    "versionContains": "0.4.0",
+    "commitContains": "5266f24"
+  },
+  "installedPaths": [
+    "/usr/bin/haven-modelctl",
+    "/usr/lib/haven/inference/broker.py",
+    "/usr/lib/haven/inference/gguf.py",
+    "/usr/lib/haven/inference/model_lease.py",
+    "/usr/lib/haven/inference/modelctl.py",
+    "/usr/lib/haven/inference/provider-contract.json",
+    "/usr/lib/haven/inference/backend-matrix.json",
+    "/usr/lib/haven/inference/backend_matrix.py",
+    "/usr/lib/haven/inference/hardware_probe.py",
+    "/usr/lib/haven/inference/budget.py",
+    "/usr/lib/haven/inference/benchmark.py",
+    "/usr/lib/haven/llama.cpp/llama-server",
+    "/usr/lib/systemd/user/haven-inference-broker.service",
+    "/usr/share/doc/haven-llamacpp-runtime/llama.cpp-LICENSE",
+    "/usr/share/doc/haven-llamacpp-runtime/upstream.lock.json"
+  ]
+}
