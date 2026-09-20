@@ -56,5 +56,5 @@
     "providerStatus": "Contract and model-free broker integration tests only.",
     "modelExecution": "Not proven by this contract; requires an approved local GGUF and a running pinned llama-server."
   },
-  "runtimeContract": "../../9to1 Models/llamacpp/provider-contract.json"
+  "runtimeContract": "../../9to1 Workspace/Home/Source/Dulche/llamacpp/provider-contract.json"
 }

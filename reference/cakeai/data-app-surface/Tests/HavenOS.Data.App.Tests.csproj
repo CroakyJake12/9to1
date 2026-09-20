@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\App\HavenOS.Data.App.csproj" />
-    <ProjectReference Include="..\..\shared\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>

@@ -5,7 +5,7 @@ import pathlib
 import unittest
 
 RUNTIME = pathlib.Path(__file__).resolve().parents[1]
-REPOSITORY = RUNTIME.parents[1]
+REPOSITORY = RUNTIME.parents[4]
 
 
 class HuiProviderContractTests(unittest.TestCase):

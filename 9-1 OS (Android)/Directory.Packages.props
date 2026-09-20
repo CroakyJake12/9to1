@@ -1,6 +1,6 @@
 <Project>
-  <!-- 9to1: central package management for the Android tree, importing the same
-       version sets CakeAI applied by traversal (Workspace root + shared src level). -->
-  <Import Project="../9to1 Workspace/Directory.Packages.props" />
+  <!-- 9to1: central package management for the Android tree. This imports the
+       shared src-level version set (a superset of the Workspace root set, and
+       the same layering CakeAI applied to src/ projects by traversal). -->
   <Import Project="../9to1 Workspace/shared/src/Directory.Packages.props" />
 </Project>

@@ -6,7 +6,7 @@ import sys
 import unittest
 
 RUNTIME = pathlib.Path(__file__).resolve().parents[1]
-REPOSITORY = RUNTIME.parents[1]
+REPOSITORY = RUNTIME.parents[4]
 sys.path.insert(0, str(RUNTIME))
 
 

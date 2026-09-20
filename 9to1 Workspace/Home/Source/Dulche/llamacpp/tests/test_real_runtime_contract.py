@@ -5,7 +5,7 @@ import pathlib
 import unittest
 
 RUNTIME = pathlib.Path(__file__).resolve().parents[1]
-REPO = RUNTIME.parents[1]
+REPO = RUNTIME.parents[4]
 LOCK = json.loads((RUNTIME / "test-model.lock.json").read_text(encoding="utf-8"))
 WORKFLOW = (REPO / ".github/workflows/llamacpp-slice0.yml").read_text(encoding="utf-8")
 PROOF = (RUNTIME / "tests/real_runtime_proof.py").read_text(encoding="utf-8")
@@ -47,7 +47,7 @@ class RealRuntimeProofContractTests(unittest.TestCase):
 
     def test_workflow_verifies_model_before_proof_and_never_uploads_gguf(self) -> None:
         verify_index = WORKFLOW.index("sha256sum -c -")
-        proof_index = WORKFLOW.index('run: python "cakeos/9to1 Models/llamacpp/tests/real_runtime_proof.py"')
+        proof_index = WORKFLOW.index('run: python "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/tests/real_runtime_proof.py"')
         self.assertLess(verify_index, proof_index)
         self.assertIn("stat -c '%s'", WORKFLOW)
         self.assertIn("rm -f \"$MODEL_PATH\"", WORKFLOW)

@@ -3,7 +3,7 @@ name: llama.cpp Slice 0
 on:
   pull_request:
     paths:
-      - "9to1 Models/llamacpp/**"
+      - "9to1 Workspace/Home/Source/Dulche/llamacpp/**"
       - "9to1 OS/HUI/**"
       - "9to1 OS/packaging/systemd/user/haven-inference-broker.service"
       - "9to1 OS/packaging/bin/haven-modelctl"
@@ -24,15 +24,15 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile Python sources
-        run: python -m compileall -q "9to1 Models/llamacpp"
+        run: python -m compileall -q "9to1 Workspace/Home/Source/Dulche/llamacpp"
       - name: Run unit and model-free integration tests
-        run: python -m unittest discover -s "9to1 Models/llamacpp/tests" -v
+        run: python -m unittest discover -s "9to1 Workspace/Home/Source/Dulche/llamacpp/tests" -v
       - name: Check pinned provenance and build policy
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          lock = json.loads(Path("9to1 Models/llamacpp/upstream.lock.json").read_text())
+          lock = json.loads(Path("9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json").read_text())
           assert lock['tag'] == 'v0.4.0'
           assert lock['commit'] == '5266f24da75dc449bd56cbed7addb9c8e4a6a73e'
           assert lock['build']['target'] == 'llama-server'
@@ -55,7 +55,7 @@ jobs:
               assert required in flags, required
           PY
       - name: Validate shell recipe syntax
-        run: sh -n "9to1 Models/llamacpp/build-cpu.sh"
+        run: sh -n "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh"
       - name: Validate model-manager wrapper syntax
         run: sh -n "9to1 OS/packaging/bin/haven-modelctl"
       - name: Validate Debian package builder syntax
@@ -81,8 +81,8 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo 'required=true' >> "$GITHUB_OUTPUT"
           elif git -C cakeos diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
-              "9to1 Models/llamacpp/build-cpu.sh" \
-              "9to1 Models/llamacpp/upstream.lock.json;" then
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json;" then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo 'Pinned llama.cpp build inputs are unchanged; reusing the base branch build evidence.'
           else
@@ -105,7 +105,7 @@ jobs:
           LLAMA_SOURCE: ${{ github.workspace }}/llama-src
           LLAMA_BUILD_DIR: ${{ github.workspace }}/llama-build
           LLAMA_BUILD_PARALLEL: '2'
-        run: sh "cakeos/9to1 Models/llamacpp/build-cpu.sh"
+        run: sh "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh"
       - name: Record binary provenance
         if: steps.build_scope.outputs.required == 'true'
         run: |
@@ -138,19 +138,19 @@ jobs:
               "9to1 OS/packaging/bin/haven-modelctl" \
               "9to1 OS/packaging/systemd/user/haven-inference-broker.service" \
               "9to1 OS/packaging/llamacpp" \
-              "9to1 Models/llamacpp/broker.py" \
-              "9to1 Models/llamacpp/gguf.py" \
-              "9to1 Models/llamacpp/model_lease.py" \
-              "9to1 Models/llamacpp/modelctl.py" \
-              "9to1 Models/llamacpp/provider-contract.json" \
-              "9to1 Models/llamacpp/backend-matrix.json" \
-              "9to1 Models/llamacpp/backend_matrix.py" \
-              "9to1 Models/llamacpp/hardware_probe.py" \
-              "9to1 Models/llamacpp/budget.py" \
-              "9to1 Models/llamacpp/benchmark.py" \
-              "9to1 Models/llamacpp/upstream.lock.json" \
-              "9to1 Models/llamacpp/build-cpu.sh" \
-              "9to1 Models/llamacpp/licenses/llama.cpp-LICENSE;" then
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/broker.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/gguf.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/model_lease.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/modelctl.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/provider-contract.json" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/backend-matrix.json" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/backend_matrix.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/hardware_probe.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/budget.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/licenses/llama.cpp-LICENSE;" then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo 'Package inputs are unchanged; reusing base-branch package evidence.'
           else
@@ -166,14 +166,14 @@ jobs:
           fetch-depth: 1
       - name: Verify committed upstream MIT notice is exact
         if: steps.package_scope.outputs.required == 'true'
-        run: cmp "cakeos/9to1 Models/llamacpp/licenses/llama.cpp-LICENSE" llama-src/LICENSE
+        run: cmp "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/licenses/llama.cpp-LICENSE" llama-src/LICENSE
       - name: Build pinned CPU server for package
         if: steps.package_scope.outputs.required == 'true'
         env:
           LLAMA_SOURCE: ${{ github.workspace }}/llama-src
           LLAMA_BUILD_DIR: ${{ github.workspace }}/llama-package-build
           LLAMA_BUILD_PARALLEL: '2'
-        run: sh "cakeos/9to1 Models/llamacpp/build-cpu.sh"
+        run: sh "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh"
       - name: Build model-free Debian package
         if: steps.package_scope.outputs.required == 'true'
         env:
@@ -196,7 +196,7 @@ jobs:
           fi
           mkdir extracted
           dpkg-deb --extract "$deb" extracted
-          cmp "cakeos/9to1 Models/llamacpp/licenses/llama.cpp-LICENSE" extracted/usr/share/doc/haven-llamacpp-runtime/llama.cpp-LICENSE
+          cmp "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/licenses/llama.cpp-LICENSE" extracted/usr/share/doc/haven-llamacpp-runtime/llama.cpp-LICENSE
           python3 -m compileall -q extracted/usr/lib/haven/inference
           extracted/usr/lib/haven/llama.cpp/llama-server --version
           cat "$deb.sha256"
@@ -232,14 +232,14 @@ jobs:
             echo 'required=true' >> "$GITHUB_OUTPUT"
           elif git -C cakeos diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
               .github/workflows/llamacpp-slice0.yml \
-              "9to1 Models/llamacpp/test-model.lock.json" \
-              "9to1 Models/llamacpp/tests/real_runtime_proof.py" \
-              "9to1 Models/llamacpp/broker.py" \
-              "9to1 Models/llamacpp/modelctl.py" \
-              "9to1 Models/llamacpp/model_lease.py" \
-              "9to1 Models/llamacpp/gguf.py" \
-              "9to1 Models/llamacpp/build-cpu.sh" \
-              "9to1 Models/llamacpp/upstream.lock.json;" then
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/tests/real_runtime_proof.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/broker.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/modelctl.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/model_lease.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/gguf.py" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh" \
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json;" then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo 'Real-runtime proof inputs are unchanged; reusing base-branch runtime evidence.'
           else
@@ -266,16 +266,16 @@ jobs:
           LLAMA_SOURCE: ${{ github.workspace }}/llama-real-src
           LLAMA_BUILD_DIR: ${{ github.workspace }}/llama-real-build
           LLAMA_BUILD_PARALLEL: '2'
-        run: sh "cakeos/9to1 Models/llamacpp/build-cpu.sh"
+        run: sh "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh"
       - name: Download and independently verify pinned CI model
         if: steps.proof_scope.outputs.required == 'true'
         shell: bash
         run: |
           set -euo pipefail
           MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
-          URL=$(python -c "import json; print(json.load(open("cakeos/9to1 Models/llamacpp/test-model.lock.json"))['downloadUrl'])")
-          EXPECTED_SIZE=$(python -c "import json; print(json.load(open("cakeos/9to1 Models/llamacpp/test-model.lock.json"))['size'])")
-          EXPECTED_SHA=$(python -c "import json; print(json.load(open("cakeos/9to1 Models/llamacpp/test-model.lock.json"))['sha256'])")
+          URL=$(python -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['downloadUrl'])")
+          EXPECTED_SIZE=$(python -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['size'])")
+          EXPECTED_SHA=$(python -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['sha256'])")
           curl --fail --location --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 --output "$MODEL_PATH" "$URL"
           test "$(stat -c '%s' "$MODEL_PATH")" = "$EXPECTED_SIZE"
           printf '%s  %s\n' "$EXPECTED_SHA" "$MODEL_PATH" | sha256sum -c -
@@ -285,7 +285,7 @@ jobs:
           HAVEN_REAL_MODEL_PATH: ${{ runner.temp }}/SmolLM2-135M-Instruct-Q4_K_M.gguf
           HAVEN_LLAMA_SERVER: ${{ github.workspace }}/llama-real-build/bin/llama-server
           HAVEN_RUNTIME_PROOF_OUTPUT: ${{ github.workspace }}/real-runtime-evidence.json
-        run: python "cakeos/9to1 Models/llamacpp/tests/real_runtime_proof.py"
+        run: python "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/tests/real_runtime_proof.py"
       - name: Validate prompt-free proof evidence
         if: steps.proof_scope.outputs.required == 'true'
         run: |
@@ -366,9 +366,9 @@ jobs:
         run: |
           set -euo pipefail
           MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
-          URL=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Models/llamacpp/test-model.lock.json"))['downloadUrl'])")
-          EXPECTED_SIZE=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Models/llamacpp/test-model.lock.json"))['size'])")
-          EXPECTED_SHA=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Models/llamacpp/test-model.lock.json"))['sha256'])")
+          URL=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['downloadUrl'])")
+          EXPECTED_SIZE=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['size'])")
+          EXPECTED_SHA=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['sha256'])")
           curl --fail --location --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 --output "$MODEL_PATH" "$URL"
           test "$(stat -c '%s' "$MODEL_PATH")" = "$EXPECTED_SIZE"
           printf '%s  %s\n' "$EXPECTED_SHA" "$MODEL_PATH" | sha256sum -c -
@@ -380,7 +380,7 @@ jobs:
           HAVEN_BROKER_SCRIPT: /usr/lib/haven/inference/broker.py
           HAVEN_LLAMA_SERVER: /usr/lib/haven/llama.cpp/llama-server
           HAVEN_RUNTIME_PROOF_OUTPUT: ${{ github.workspace }}/installed-package-runtime-evidence.json
-        run: /usr/bin/python3 "cakeos/9to1 Models/llamacpp/tests/real_runtime_proof.py"
+        run: /usr/bin/python3 "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/tests/real_runtime_proof.py"
       - name: Validate installed-package proof evidence
         run: |
           /usr/bin/python3 - <<'PY'

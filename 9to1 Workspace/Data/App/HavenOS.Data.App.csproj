@@ -6,8 +6,4 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>HavenOS.Apps.Data</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\shared\src\Haven.Core\Haven.Core.csproj" />
-    <ProjectReference Include="..\..\shared\src\Haven.Application\Haven.Application.csproj" />
-  </ItemGroup>
 </Project>

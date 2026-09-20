@@ -12,7 +12,7 @@ import unittest
 from unittest import mock
 
 RUNTIME = pathlib.Path(__file__).resolve().parents[1]
-REPOSITORY = RUNTIME.parents[1]
+REPOSITORY = RUNTIME.parents[4]
 sys.path.insert(0, str(RUNTIME))
 
 import broker  # noqa: E402
