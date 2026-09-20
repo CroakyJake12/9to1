@@ -60,7 +60,7 @@
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="../Haven.Desktop/**/*.cs" Exclude="../Haven.Desktop/bin/**;../Haven.Desktop/bin-*/**;../Haven.Desktop/obj/**;../Haven.Desktop/obj-*/**;../Haven.Desktop/Program.cs;../Haven.Desktop/MainWindow.axaml.cs;../Haven.Desktop/MainWindow.DeveloperTools.cs;../Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs;../Haven.Desktop/Services/WindowsGraphicsCaptureService.cs;../Haven.Desktop/Services/ComputerUseOverlayCoordinator.cs;../Haven.Desktop/Services/DesktopFloatingActivityHost.cs" LinkBase="SharedDesktop" />
+    <Compile Include="../../../9to1 Workspace/shared/src/Haven.Desktop/**/*.cs" Exclude="../Haven.Desktop/bin/**;../Haven.Desktop/bin-*/**;../Haven.Desktop/obj/**;../Haven.Desktop/obj-*/**;../Haven.Desktop/Program.cs;../Haven.Desktop/MainWindow.axaml.cs;../Haven.Desktop/MainWindow.DeveloperTools.cs;../Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs;../Haven.Desktop/Services/WindowsGraphicsCaptureService.cs;../Haven.Desktop/Services/ComputerUseOverlayCoordinator.cs;../Haven.Desktop/Services/DesktopFloatingActivityHost.cs" LinkBase="SharedDesktop" />
     <AvaloniaXaml Include="../Haven.Desktop/App.axaml" Link="App.axaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
