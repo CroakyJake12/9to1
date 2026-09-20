@@ -1,0 +1,26 @@
+# 9to1 monorepo — merged from CakeOS + CakeAI (see docs/CONSOLIDATION.md).
+# CakeOS section:
+artifacts/**
+!artifacts/.gitkeep
+.cache/
+.mkosi/
+build/
+cache/
+**/bin/
+**/obj/
+*.iso
+*.qcow2
+*.vdi
+*.ova
+# CakeAI section:
+.vs/
+TestResults/
+*.user
+*.suo
+haven-build.log
+9to1 OS/artifacts/**
+!9to1 OS/artifacts/.gitkeep
+# Monorepo additions:
+*.trx
+*.apk
+*.aab

@@ -3,12 +3,12 @@ name: Validate Haven Write LibreOffice PoC
 on:
   pull_request:
     paths:
-      - 'src/Haven.Application/Write/**'
-      - 'src/Haven.Infrastructure/Write/LibreOffice/**'
-      - 'tests/Haven.Infrastructure.Tests/LibreOfficeWriteEngineOptionsTests.cs'
-      - 'eng/linux/write-libreoffice-poc/**'
-      - 'docs/architecture/write-libreoffice-engine.md'
-      - 'docs/architecture/system-map.md'
+      - "9to1 Workspace/shared/src/Haven.Application/Write/**"
+      - "9to1 Workspace/shared/src/Haven.Infrastructure/Write/LibreOffice/**"
+      - "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/LibreOfficeWriteEngineOptionsTests.cs"
+      - "9to1 Workspace/Write/write-libreoffice-poc/**"
+      - "9to1 Workspace/shared/docs/architecture/write-libreoffice-engine.md"
+      - "9to1 Workspace/shared/docs/architecture/system-map.md"
       - '.github/workflows/validate-write-libreoffice-poc.yml'
   workflow_dispatch:
 
@@ -64,14 +64,14 @@ jobs:
           fi
 
       - name: Restore focused .NET test project
-        run: dotnet restore tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj
+        run: dotnet restore "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj"
 
       - name: Build focused .NET test project
-        run: dotnet build tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj -c Release --no-restore
+        run: dotnet build "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj" -c Release --no-restore
 
       - name: Run LibreOffice engine configuration tests
         run: >-
-          dotnet test tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj
+          dotnet test "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj"
           -c Release
           --no-build
           --filter 'FullyQualifiedName~LibreOfficeWriteEngineOptionsTests'
@@ -87,15 +87,15 @@ jobs:
               -std=c++20 \
               -Wall -Wextra -Wpedantic -Werror \
               -I/usr/include \
-              "eng/linux/write-libreoffice-poc/${probe}.cxx" \
+              "9to1 Workspace/Write/write-libreoffice-poc/${probe}.cxx" \
               -ldl \
               -o "artifacts/write-libreoffice-poc/${probe}"
             chmod 0755 "artifacts/write-libreoffice-poc/${probe}"
             ldd "artifacts/write-libreoffice-poc/${probe}"
           done
-          cp eng/linux/write-libreoffice-poc/verify-semantic-odt.py \
+          cp "9to1 Workspace/Write/write-libreoffice-poc/verify-semantic-odt.py" \
             artifacts/write-libreoffice-poc/verify-semantic-odt.py
-          cp eng/linux/write-libreoffice-poc/run-ipc-probe.sh \
+          cp "9to1 Workspace/Write/write-libreoffice-poc/run-ipc-probe.sh" \
             artifacts/write-libreoffice-poc/run-ipc-probe.sh
           chmod 0755 artifacts/write-libreoffice-poc/run-ipc-probe.sh
 
@@ -151,7 +151,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash eng/linux/write-libreoffice-poc/run-probe.sh \
+          bash "9to1 Workspace/Write/write-libreoffice-poc/run-probe.sh" \
             /tmp/haven-write-fixture.odt \
             /tmp/haven-write-roundtrip.odt
           test -s /tmp/haven-write-roundtrip.odt
@@ -177,7 +177,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash eng/linux/write-libreoffice-poc/run-semantic-probe.sh \
+          bash "9to1 Workspace/Write/write-libreoffice-poc/run-semantic-probe.sh" \
             /tmp/haven-write-fixture.odt \
             /tmp/haven-write-semantic-roundtrip.odt
           test -s /tmp/haven-write-semantic-roundtrip.odt
@@ -186,7 +186,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 eng/linux/write-libreoffice-poc/verify-semantic-odt.py \
+          python3 "9to1 Workspace/Write/write-libreoffice-poc/verify-semantic-odt.py" \
             /tmp/haven-write-semantic-roundtrip.odt
 
       - name: Execute isolated helper IPC proof
@@ -200,7 +200,7 @@ jobs:
           ENGINE_BINARY="$PWD/artifacts/write-libreoffice-poc/haven_write_engine_poc" \
           CLIENT_BINARY="$PWD/artifacts/write-libreoffice-poc/haven_write_engine_client" \
           IPC_WORK_DIR=/tmp/haven-write-engine-ipc-poc \
-            bash eng/linux/write-libreoffice-poc/run-ipc-probe.sh \
+            bash "9to1 Workspace/Write/write-libreoffice-poc/run-ipc-probe.sh" \
               "$io_root/source.odt" \
               "$io_root/roundtrip.odt" \
               "$io_root"
@@ -209,7 +209,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 eng/linux/write-libreoffice-poc/verify-semantic-odt.py \
+          python3 "9to1 Workspace/Write/write-libreoffice-poc/verify-semantic-odt.py" \
             /tmp/haven-write-ipc-io/roundtrip.odt \
             HAVEN_WRITE_LOK_IPC_PROOF_20260907
 

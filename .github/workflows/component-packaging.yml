@@ -4,11 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "release/**"
+      - "9to1 OS/release/**"
     paths:
-      - "apps/**"
-      - "compatibility/wine/**"
-      - "packaging/**"
+      - "9to1 OS/apps/**"
+      - "9to1 Workspace/Boards/**"
+      - "9to1 Workspace/Canvas/**"
+      - "9to1 Workspace/Data/**"
+      - "9to1 Workspace/Present/**"
+      - "9to1 OS/compatibility/wine/**"
+      - "9to1 OS/packaging/**"
       - ".github/workflows/component-packaging.yml"
 
 jobs:
@@ -23,7 +27,7 @@ jobs:
       - name: Checkout authoritative Canvas/Rnote head
         uses: actions/checkout@v4
         with:
-          ref: integration/canvas-rnote-hui-preview
+          ref: main
           fetch-depth: 1
           submodules: false
 
@@ -42,14 +46,14 @@ jobs:
 
       - name: Build and test Canvas/Rnote native boundary
         run: |
-          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
-          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
-          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+          cargo generate-lockfile --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
+          cargo build --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --lib --verbose
+          cargo test --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --all-targets --verbose
 
       - name: Build the HUI host containing the Canvas adapter
         run: |
           command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
-          bash HUI/build-linux-host.sh
+          bash "9to1 OS/HUI/build-linux-host.sh"
           mkdir -p artifacts/hui-preview/publish
           cp artifacts/hui-linux-host/publish/cakeos-hui-linux-preview \
             artifacts/hui-preview/publish/cakeos-hui-preview
@@ -60,7 +64,7 @@ jobs:
           CAKEOS_HUI_PREVIEW_VERSION: 0.1.0+canvas-rnote.${{ github.run_number }}
           SOURCE_DATE_EPOCH: 0
         run: |
-          bash packaging/haven-hui-preview/build-deb.sh
+          bash "9to1 OS/packaging/haven-hui-preview/build-deb.sh"
           package="artifacts/packages/haven-hui-preview_0.1.0+canvas-rnote.${GITHUB_RUN_NUMBER}_amd64.deb"
           dpkg-deb --info "$package" | tee artifacts/packages/package-metadata.txt
           dpkg-deb --contents "$package" | tee artifacts/packages/package-files.txt

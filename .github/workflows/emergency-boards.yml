@@ -6,7 +6,7 @@ on:
       ref:
         description: 'Git ref to build (branch or SHA)'
         required: true
-        default: 'emergency/preview-0.1'
+        default: 'main'
 
 jobs:
   boards-real-package:
@@ -45,14 +45,14 @@ jobs:
 
       - name: Build and test Canvas/Rnote native boundary (shared ink)
         run: |
-          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
-          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
-          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+          cargo generate-lockfile --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
+          cargo build --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --lib --verbose
+          cargo test --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --all-targets --verbose
 
       - name: Build Boards HUI host
         run: |
           command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
-          bash HUI/build-linux-host.sh
+          bash "9to1 OS/HUI/build-linux-host.sh"
           mkdir -p artifacts/boards-host/publish
           cp artifacts/hui-linux-host/publish/cakeos-hui-linux-preview \
             artifacts/boards-host/publish/cakeos-boards
@@ -60,7 +60,7 @@ jobs:
 
       - name: Build AppFlowy Flutter Linux
         run: |
-          cd apps/Boards/appflowy_poc
+          cd "9to1 Workspace/Boards/appflowy_poc"
           flutter pub get
           flutter build linux --release
 
@@ -69,7 +69,7 @@ jobs:
           CAKEOS_BOARDS_VERSION: 0.1.0+boards.${{ github.run_number }}
           SOURCE_DATE_EPOCH: 0
         run: |
-          bash packaging/boards-appflowy/build-deb.sh
+          bash "9to1 OS/packaging/boards-appflowy/build-deb.sh"
           package="artifacts/packages/cakeos-boards_0.1.0+boards.${GITHUB_RUN_NUMBER}_amd64.deb"
           dpkg-deb --info "$package" | tee artifacts/packages/package-metadata.txt
           dpkg-deb --contents "$package" | tee artifacts/packages/package-files.txt

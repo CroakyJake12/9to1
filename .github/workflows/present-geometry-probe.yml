@@ -3,15 +3,15 @@ name: Present geometry probe
 on:
   pull_request:
     paths:
-      - "apps/present-engine/tests/geometry_probe.cpp"
-      - "apps/present-engine/CMakeLists.txt"
+      - "9to1 Workspace/Present/present-engine/tests/geometry_probe.cpp"
+      - "9to1 Workspace/Present/present-engine/CMakeLists.txt"
       - ".github/workflows/present-geometry-probe.yml"
   push:
     branches:
-      - "migration/present-libreoffice-foundation"
+      - "main"
     paths:
-      - "apps/present-engine/tests/geometry_probe.cpp"
-      - "apps/present-engine/CMakeLists.txt"
+      - "9to1 Workspace/Present/present-engine/tests/geometry_probe.cpp"
+      - "9to1 Workspace/Present/present-engine/CMakeLists.txt"
       - ".github/workflows/present-geometry-probe.yml"
 
 permissions:
@@ -36,14 +36,14 @@ jobs:
             nlohmann-json3-dev
 
       - name: Configure
-        run: cmake -S apps/present-engine -B build/present-engine -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S "9to1 Workspace/Present/present-engine" -B build/present-engine -DCMAKE_BUILD_TYPE=Release
 
       - name: Build geometry probe with warnings as errors
         run: cmake --build build/present-engine --target cakeos-present-geometry-probe --parallel 2
 
       - name: Create and normalize geometry fixture
         run: |
-          python3 apps/present-engine/tests/make_reorder_fixture.py /tmp/cakeos-present-geometry-source.odp
+          python3 "9to1 Workspace/Present/present-engine/tests/make_reorder_fixture.py" /tmp/cakeos-present-geometry-source.odp
           mkdir -p /tmp/cakeos-present-geometry-normalized
           /usr/lib/libreoffice/program/soffice \
             --headless \

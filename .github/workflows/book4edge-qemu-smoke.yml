@@ -20,7 +20,7 @@ on:
       ref:
         description: 'Git ref for scripts (this branch)'
         required: false
-        default: 'emergency/book4edge-nondisruptive-tests'
+        default: 'main'
 
 jobs:
   qemu-smoke:
@@ -65,7 +65,7 @@ jobs:
 
       - name: Boot under QEMU virt (serial + VNC screendump)
         run: |
-          bash tooling/book4edge/qemu-arm64-smoke.sh "$ISO_PATH" work/qemu \
+          bash "9to1 OS/tooling/book4edge/qemu-arm64-smoke.sh" "$ISO_PATH" work/qemu \
             "${{ github.event.inputs.boot_wait_seconds }}"
           cat work/qemu/qemu-report.md >> "$GITHUB_STEP_SUMMARY"
 

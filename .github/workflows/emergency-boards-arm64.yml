@@ -6,7 +6,7 @@ on:
       ref:
         description: 'Git ref to build (branch or SHA)'
         required: true
-        default: 'emergency/book4edge16-arm64'
+        default: 'main'
 
 jobs:
   boards-real-package-arm64:
@@ -50,16 +50,16 @@ jobs:
 
       - name: Build and test Canvas/Rnote native boundary (shared ink)
         run: |
-          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
-          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
-          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+          cargo generate-lockfile --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
+          cargo build --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --lib --verbose
+          cargo test --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --all-targets --verbose
 
       - name: Build Boards HUI host (ARM64)
         env:
           HUI_RID: linux-arm64
         run: |
           command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
-          bash HUI/build-linux-host.sh
+          bash "9to1 OS/HUI/build-linux-host.sh"
           file artifacts/hui-linux-host/publish/cakeos-hui-linux-preview
           mkdir -p artifacts/boards/publish
           cp -R artifacts/hui-linux-host/publish/. \
@@ -70,16 +70,16 @@ jobs:
 
       - name: Build AppFlowy Flutter Linux (ARM64)
         run: |
-          cd apps/Boards/appflowy_poc
+          cd "9to1 Workspace/Boards/appflowy_poc"
           flutter create --platforms=linux .
           flutter pub get
           flutter build linux --release
-          file build/linux/arm64/release/bundle/haven_boards_appflowy_poc
+          file build/linux/arm64/"9to1 OS/release/bundle/haven_boards_appflowy_poc"
 
       - name: Stage AppFlowy + Rnote into Boards package
         run: |
           mkdir -p artifacts/boards/publish/appflowy
-          cp -R apps/Boards/appflowy_poc/build/linux/arm64/release/bundle/* \
+          cp -R "9to1 Workspace/Boards/appflowy_poc/build/linux/arm64/release/bundle/*" \
             artifacts/boards/publish/appflowy/
 
       - name: Build genuine Boards .deb (ARM64)
@@ -89,7 +89,7 @@ jobs:
           CAKEOS_DEB_ARCH: arm64
           SOURCE_DATE_EPOCH: 0
         run: |
-          bash packaging/boards-appflowy/build-deb.sh
+          bash "9to1 OS/packaging/boards-appflowy/build-deb.sh"
           package="artifacts/packages/cakeos-boards_0.1.0+boards.${GITHUB_RUN_NUMBER}_arm64.deb"
           dpkg-deb --field "$package" Package Architecture
           file artifacts/boards/publish/libcakeos_canvas_rnote_poc.so

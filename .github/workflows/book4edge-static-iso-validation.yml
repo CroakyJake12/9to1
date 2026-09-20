@@ -15,7 +15,7 @@ on:
       ref:
         description: 'Git ref whose tree provides validation scripts (this branch)'
         required: false
-        default: 'emergency/book4edge-nondisruptive-tests'
+        default: 'main'
 
 jobs:
   static-iso-validation:
@@ -60,7 +60,7 @@ jobs:
 
       - name: Run static validation
         run: |
-          bash tooling/book4edge/validate-iso-static.sh "$ISO_PATH" work/validation-report.md
+          bash "9to1 OS/tooling/book4edge/validate-iso-static.sh" "$ISO_PATH" work/validation-report.md
           cat work/validation-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload validation report

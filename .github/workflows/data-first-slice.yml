@@ -3,13 +3,13 @@ name: Haven Data first slice
 on:
   push:
     branches:
-      - data-calc-duckdb-first-slice
+      - main
     paths:
-      - 'apps/Data/**'
+      - "9to1 Workspace/Data/**"
       - '.github/workflows/data-first-slice.yml'
   pull_request:
     paths:
-      - 'apps/Data/**'
+      - "9to1 Workspace/Data/**"
       - '.github/workflows/data-first-slice.yml'
   workflow_dispatch:
 
@@ -38,10 +38,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Build Data app contracts
-        run: dotnet build apps/Data/App/HavenOS.Data.App.csproj -c Release --nologo
+        run: dotnet build "9to1 Workspace/Data/App/HavenOS.Data.App.csproj" -c Release --nologo
 
       - name: Run Data contract smoke checks
-        run: dotnet run --project apps/Data/Tests/HavenOS.Data.Smoke.csproj -c Release
+        run: dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Smoke.csproj" -c Release
 
       - name: Install disposable Calc/UNO test runtime
         run: |
@@ -160,30 +160,30 @@ jobs:
 
       - name: Compile worker Python
         run: |
-          .data-venv/bin/python -m py_compile apps/Data/workers/calc_worker.py
-          .data-venv/bin/python -m py_compile apps/Data/workers/duckdb_worker.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_workers.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_duckdb_publish.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_formula_corpus.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_structure.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_named_ranges.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_validation.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_sort.py
-          .data-venv/bin/python -m py_compile apps/Data/Tests/test_calc_filter.py
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/workers/calc_worker.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/workers/duckdb_worker.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_workers.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_duckdb_publish.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_calc_formula_corpus.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_calc_structure.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_calc_named_ranges.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_calc_validation.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_calc_sort.py"
+          .data-venv/bin/python -m py_compile "9to1 Workspace/Data/Tests/test_calc_filter.py"
 
       - name: Run worker integration checks
         env:
           HAVEN_DATA_DUCKDB_MEMORY_LIMIT: 512MB
           HAVEN_DATA_DUCKDB_THREADS: '2'
         run: |
-          .data-venv/bin/python apps/Data/Tests/test_workers.py
-          .data-venv/bin/python apps/Data/Tests/test_duckdb_publish.py
-          .data-venv/bin/python apps/Data/Tests/test_calc_formula_corpus.py
-          .data-venv/bin/python apps/Data/Tests/test_calc_structure.py
-          .data-venv/bin/python apps/Data/Tests/test_calc_named_ranges.py
-          .data-venv/bin/python apps/Data/Tests/test_calc_validation.py
-          .data-venv/bin/python apps/Data/Tests/test_calc_sort.py
-          .data-venv/bin/python apps/Data/Tests/test_calc_filter.py
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_workers.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_duckdb_publish.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_calc_formula_corpus.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_calc_structure.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_calc_named_ranges.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_calc_validation.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_calc_sort.py"
+          .data-venv/bin/python "9to1 Workspace/Data/Tests/test_calc_filter.py"
 
       - name: Run .NET-to-worker integration checks
         env:
@@ -191,10 +191,10 @@ jobs:
           HAVEN_DATA_DUCKDB_MEMORY_LIMIT: 512MB
           HAVEN_DATA_DUCKDB_THREADS: '2'
         run: |
-          dotnet run --project apps/Data/Tests/HavenOS.Data.Runtime.csproj -c Release
-          dotnet run --project apps/Data/Tests/HavenOS.Data.Validation.Runtime.csproj -c Release
-          dotnet run --project apps/Data/Tests/HavenOS.Data.Sort.Runtime.csproj -c Release
-          dotnet run --project apps/Data/Tests/HavenOS.Data.Filter.Runtime.csproj -c Release
+          dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Runtime.csproj" -c Release
+          dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Validation.Runtime.csproj" -c Release
+          dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Sort.Runtime.csproj" -c Release
+          dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Filter.Runtime.csproj" -c Release
 
   hui-contract:
     name: Data HUI contract integration (accepted platform reference)
@@ -215,7 +215,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install narrow HUI/Data runtime dependencies
+      - name: Install narrow "9to1 OS/HUI/Data" runtime dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends jq libreoffice-calc-nogui python3-uno
@@ -224,7 +224,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ref="$(tr -d '[:space:]' < apps/Data/Hui/hui-platform-reference.txt)"
+          ref="$(tr -d '[:space:]' < "9to1 Workspace/Data/Hui/hui-platform-reference.txt)"
           test "$ref" = "2a578502c31973fbefa3b3f82efa22d7ad11db53"
           platform="$RUNNER_TEMP/cakeos-hui-platform"
           git fetch --no-tags --depth=1 origin "$ref"
@@ -241,18 +241,18 @@ jobs:
           echo "Pinned Haven.UI donor: $donor"
 
       - name: Prove accepted HUI platform smoke contract
-        run: dotnet run --project "$RUNNER_TEMP/cakeos-hui-platform/HUI/Preview/CakeOS.HuiPreview.csproj" -c Release
+        run: dotnet run --project "$RUNNER_TEMP/cakeos-hui-platform/"HUI/Preview/CakeOS.HuiPreview.csproj" -c Release
 
       - name: Enforce thin Data HUI adapter boundary
         run: |
-          test -z "$(grep -RIn --include='*.cs' '^using Avalonia' apps/Data/Hui || true)"
-          test -z "$(grep -RIn --include='*.cs' 'com\.sun\.star\|\buno\.' apps/Data/Hui || true)"
-          test -z "$(grep -n '<PackageReference' apps/Data/Hui/HavenOS.Data.Hui.csproj || true)"
+          test -z "$(grep -RIn --include='*.cs' '^using Avalonia' "9to1 Workspace/Data/Hui" || true)"
+          test -z "$(grep -RIn --include='*.cs' 'com\.sun\.star\|\buno\.' "9to1 Workspace/Data/Hui" || true)"
+          test -z "$(grep -n '<PackageReference' "9to1 Workspace/Data/Hui/HavenOS.Data.Hui.csproj" || true)"
 
       - name: Build Data HUI adapter against accepted contract
-        run: dotnet build apps/Data/Hui/HavenOS.Data.Hui.csproj -c Release --nologo -p:HavenUiProject="$HAVEN_UI_PROJECT"
+        run: dotnet build "9to1 Workspace/Data/Hui/HavenOS.Data.Hui.csproj" -c Release --nologo -p:HavenUiProject="$HAVEN_UI_PROJECT"
 
       - name: Run Data HUI edit sort save-reopen integration
         env:
           HAVEN_DATA_PYTHON: /usr/bin/python3
-        run: dotnet run --project apps/Data/Tests/HavenOS.Data.Hui.Runtime.csproj -c Release -p:HavenUiProject="$HAVEN_UI_PROJECT"
+        run: dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Hui.Runtime.csproj" -c Release -p:HavenUiProject="$HAVEN_UI_PROJECT"

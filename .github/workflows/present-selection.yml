@@ -3,13 +3,13 @@ name: Present selection
 on:
   pull_request:
     paths:
-      - "apps/present-engine/**"
+      - "9to1 Workspace/Present/present-engine/**"
       - ".github/workflows/present-selection.yml"
   push:
     branches:
-      - "migration/present-libreoffice-foundation"
+      - "main"
     paths:
-      - "apps/present-engine/**"
+      - "9to1 Workspace/Present/present-engine/**"
       - ".github/workflows/present-selection.yml"
 
 permissions:
@@ -34,14 +34,14 @@ jobs:
             nlohmann-json3-dev
 
       - name: Configure
-        run: cmake -S apps/present-engine -B build/present-engine -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S "9to1 Workspace/Present/present-engine" -B build/present-engine -DCMAKE_BUILD_TYPE=Release
 
       - name: Build worker with warnings as errors
         run: cmake --build build/present-engine --target cakeos-present-worker --parallel 2
 
       - name: Create and normalize selection fixture
         run: |
-          python3 apps/present-engine/tests/make_reorder_fixture.py /tmp/cakeos-present-selection-source.odp
+          python3 "9to1 Workspace/Present/present-engine/tests/make_reorder_fixture.py" /tmp/cakeos-present-selection-source.odp
           mkdir -p /tmp/cakeos-present-selection-normalized
           /usr/lib/libreoffice/program/soffice \
             --headless \
@@ -53,7 +53,7 @@ jobs:
       - name: Run selection diagnostic
         run: |
           set +e
-          timeout 30s env PYTHONUNBUFFERED=1 python3 apps/present-engine/tests/worker_selection_smoke.py \
+          timeout 30s env PYTHONUNBUFFERED=1 python3 "9to1 Workspace/Present/present-engine/tests/worker_selection_smoke.py" \
             build/present-engine/cakeos-present-worker \
             /tmp/cakeos-present-selection-normalized/cakeos-present-selection-source.odp \
             /tmp/cakeos-present-selection-output.odp \

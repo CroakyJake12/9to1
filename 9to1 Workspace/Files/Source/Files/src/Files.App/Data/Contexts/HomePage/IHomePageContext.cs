@@ -1,0 +1,35 @@
+﻿// Copyright (c) Files Community
+// SPDX-License-Identifier: MPL-2.0
+
+using Microsoft.UI.Xaml.Controls.Primitives;
+
+namespace Files.App.Data.Contexts
+{
+	public interface IHomePageContext
+	{
+		/// <summary>
+		/// The last right clicked item
+		/// </summary>
+		WidgetCardItem? RightClickedItem { get; }
+
+		/// <summary>
+		/// The last opened widget's context menu instance
+		/// </summary>
+		FlyoutBase? ItemContextFlyoutMenu { get; }
+
+		/// <summary>
+		/// An list containing all the selected tagged items
+		/// </summary>
+		IReadOnlyList<WidgetFileTagCardItem> SelectedTaggedItems { get; }
+
+		/// <summary>
+		/// Tells whether any item has been right clicked
+		/// </summary>
+		bool IsAnyItemRightClicked { get; }
+
+		/// <summary>
+		/// Gets the instance of <see cref="IHomeFolder"/>.
+		/// </summary>
+		IHomeFolder HomeFolder { get; }
+	}
+}

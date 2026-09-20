@@ -25,16 +25,16 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore Haven.sln
+        run: dotnet restore "9to1 Workspace/shared/Haven.sln"
 
       - name: Build Debug
-        run: dotnet build Haven.sln -c Debug --no-restore
+        run: dotnet build "9to1 Workspace/shared/Haven.sln" -c Debug --no-restore
 
       - name: Test Debug
-        run: dotnet test Haven.sln -c Debug --no-build
+        run: dotnet test "9to1 Workspace/shared/Haven.sln" -c Debug --no-build
 
       - name: Build automation worker
-        run: dotnet build src/Haven.AutomationWorker/Haven.AutomationWorker.csproj -c Debug --no-restore
+        run: dotnet build "9to1 Workspace/shared/src/Haven.AutomationWorker/Haven.AutomationWorker.csproj" -c Debug --no-restore
 
       - name: Upload source snapshot
         if: always()

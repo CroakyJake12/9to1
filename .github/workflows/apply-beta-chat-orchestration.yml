@@ -2,9 +2,9 @@ name: Apply beta chat orchestration
 
 on:
   push:
-    branches: [gpt/new-haven-beta-pass]
+    branches: [main]
     paths:
-      - scripts/apply_beta_chat_patch.py
+      - "9to1 Workspace/shared/scripts/apply_beta_chat_patch.py"
       - .github/workflows/apply-beta-chat-orchestration.yml
   workflow_dispatch:
 
@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: gpt/new-haven-beta-pass
+          ref: main
           fetch-depth: 1
 
       - uses: actions/setup-python@v5
@@ -39,18 +39,18 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          $tracker = 'src/Haven.Application/ChatExecutionTracker.cs'
+          $tracker = "9to1 Workspace/shared/src/Haven.Application/Chat/ChatExecutionTracker.cs"
           $text = Get-Content $tracker -Raw
           $text = $text.Replace('return ValueTask.CompletedTask;', 'return default;')
           Set-Content $tracker $text -Encoding utf8
 
-          $cache = 'src/Haven.Application/ModelInventoryCache.cs'
+          $cache = "9to1 Workspace/shared/src/Haven.Application/Provider/ModelInventoryCache.cs"
           $text = Get-Content $cache -Raw
           $text = $text.Replace('!ReferenceEquals.Equals(_current, tracker)', '!ReferenceEquals(_current, tracker)')
           $text = $text.Replace('_current.Changed -= OnTrackerChanged;', '_current!.Changed -= OnTrackerChanged;')
           Set-Content $cache $text -Encoding utf8
 
-          $patch = 'scripts/apply_beta_chat_patch.py'
+          $patch = "9to1 Workspace/shared/scripts/apply_beta_chat_patch.py"
           $text = Get-Content $patch -Raw
           $text = $text.Replace(
             '    private static WorkspaceToolResult UnavailableToolResult(',
@@ -62,7 +62,7 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          python scripts/apply_beta_chat_patch.py 2>&1 |
+          python "9to1 Workspace/shared/scripts/apply_beta_chat_patch.py" 2>&1 |
             Tee-Object artifacts/beta-chat/PATCH.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -71,7 +71,7 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          dotnet restore Haven.sln 2>&1 |
+          dotnet restore "9to1 Workspace/shared/Haven.sln" 2>&1 |
             Tee-Object artifacts/beta-chat/RESTORE.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -80,7 +80,7 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          dotnet build Haven.sln -c Release --no-restore 2>&1 |
+          dotnet build "9to1 Workspace/shared/Haven.sln" -c Release --no-restore 2>&1 |
             Tee-Object artifacts/beta-chat/BUILD.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -89,7 +89,7 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
-          dotnet test Haven.sln -c Release --no-build 2>&1 |
+          dotnet test "9to1 Workspace/shared/Haven.sln" -c Release --no-build 2>&1 |
             Tee-Object artifacts/beta-chat/TEST.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -115,10 +115,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src tests scripts artifacts/beta-chat
+          git add "9to1 Workspace/shared/src" "9to1 Workspace/shared/tests" "9to1 Workspace/shared/scripts" artifacts/beta-chat
           if (-not (git diff --cached --quiet)) {
             git commit -m "Record beta Chat validation"
-            git push origin HEAD:gpt/new-haven-beta-pass
+            git push origin HEAD:main
           }
 
       - name: Fail when validation failed

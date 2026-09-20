@@ -6,7 +6,7 @@ on:
       ref:
         description: 'Git ref to build (branch or SHA)'
         required: true
-        default: 'emergency/book4edge16-arm64'
+        default: 'main'
 
 jobs:
   canvas-real-package-arm64:
@@ -39,16 +39,16 @@ jobs:
 
       - name: Build and test Canvas/Rnote native boundary
         run: |
-          cargo generate-lockfile --manifest-path apps/canvas/rnote-poc/Cargo.toml
-          cargo build --manifest-path apps/canvas/rnote-poc/Cargo.toml --lib --verbose
-          cargo test --manifest-path apps/canvas/rnote-poc/Cargo.toml --all-targets --verbose
+          cargo generate-lockfile --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml"
+          cargo build --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --lib --verbose
+          cargo test --manifest-path "9to1 Workspace/Canvas/rnote-poc/Cargo.toml" --all-targets --verbose
 
       - name: Build Canvas CakeUI host (ARM64)
         env:
           HUI_RID: linux-arm64
         run: |
           command -v jq || { sudo apt-get update; sudo apt-get install -y jq; }
-          bash HUI/build-linux-host.sh
+          bash "9to1 OS/HUI/build-linux-host.sh"
           file artifacts/hui-linux-host/publish/cakeos-hui-linux-preview
           mkdir -p artifacts/canvas-rnote/publish
           cp -R artifacts/hui-linux-host/publish/. \
@@ -64,7 +64,7 @@ jobs:
           CAKEOS_DEB_ARCH: arm64
           SOURCE_DATE_EPOCH: 0
         run: |
-          bash packaging/canvas-rnote/build-deb.sh
+          bash "9to1 OS/packaging/canvas-rnote/build-deb.sh"
           package="artifacts/packages/cakeos-canvas-rnote_0.1.0+canvas.${GITHUB_RUN_NUMBER}_arm64.deb"
           dpkg-deb --field "$package" Package Architecture
           file artifacts/canvas-rnote/publish/libcakeos_canvas_rnote_poc.so

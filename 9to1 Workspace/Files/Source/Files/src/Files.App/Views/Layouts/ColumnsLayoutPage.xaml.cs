@@ -1,0 +1,608 @@
+// Copyright (c) Files Community
+// Licensed under the MIT License.
+
+using CommunityToolkit.WinUI;
+using Files.App.Controls;
+using Files.App.ViewModels.Layouts;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using Windows.Storage;
+using static Files.App.Helpers.PathNormalization;
+
+namespace Files.App.Views.Layouts
+{
+	/// <summary>
+	/// Represents the browser page of Column View
+	/// </summary>
+	public sealed partial class ColumnsLayoutPage : BaseLayoutPage
+	{
+		// Properties
+
+		protected override ItemsControl ItemsControl => ColumnHost;
+
+		public string? OwnerPath { get; private set; }
+
+		public int FocusIndex { get; private set; }
+
+		// Constructor
+
+		public ColumnsLayoutPage() : base()
+		{
+			InitializeComponent();
+		}
+
+		// Methods
+
+		public void HandleSelectionChange(ColumnLayoutPage initiator)
+		{
+			foreach (var blade in ColumnHost.ActiveBlades.ToList())
+			{
+				var columnView = blade.FindDescendant<ColumnLayoutPage>();
+				if (columnView != null && columnView != initiator)
+					columnView.ClearSelectionIndicator();
+			}
+		}
+
+		protected override void HookEvents()
+		{
+		}
+
+		protected override void UnhookEvents()
+		{
+		}
+
+		protected override bool CanGetItemFromElement(object element)
+			=> false;
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		private void ColumnViewBase_ItemInvoked(object? sender, EventArgs e)
+		{
+			var column = sender as ColumnParam;
+			if (column?.ListView!.FindAscendant<ColumnsLayoutPage>() != this)
+				return;
+
+			var listView = column.ListView!;
+			var currentBlade = listView.FindAscendant<BladeItem>();
+			var nextBladeIndex = ColumnHost.ActiveBlades.IndexOf(currentBlade!) + 1;
+			var nextBlade = ColumnHost.ActiveBlades.ToList().ElementAtOrDefault(nextBladeIndex);
+			var arePathsDifferent = ((nextBlade?.Content as Frame)?.Content as IShellPage)?.ShellViewModel?.WorkingDirectory != column.NavPathParam;
+
+			if (nextBlade is null || arePathsDifferent)
+			{
+				DismissOtherBlades(listView);
+
+				var (frame, newblade) = CreateAndAddNewBlade();
+
+				frame.Navigate(typeof(ColumnShellPage), new ColumnParam
+				{
+					Column = ColumnHost.ActiveBlades.IndexOf(newblade),
+					NavPathParam = column.NavPathParam
+				});
+				var args = navigationArguments
+					?? throw new InvalidOperationException("The column navigation arguments are not available.");
+				args.NavPathParam = column.NavPathParam;
+				var tabArguments = ParentShellPageInstance?.TabBarItemParameter
+					?? throw new InvalidOperationException("The parent tab navigation arguments are not available.");
+				tabArguments.NavigationParameter = column.NavPathParam;
+			}
+		}
+
+		public void SetWidth(int index)
+		{
+			var activeBlades = ColumnHost.ActiveBlades;
+			if (index < 0 || activeBlades is null || index >= activeBlades.Count)
+				return;
+
+			var blade = activeBlades[index];
+			blade?.SetWidth();
+
+			ColumnHost.ScrollToEnd();
+		}
+
+		private void ContentChanged(IShellPage? shellPage)
+		{
+			if (ParentShellPageInstance is ModernShellPage parent)
+			{
+				// The column shell page and its navigation parameters can be unset mid-navigation; skip until a later change supplies them
+				if (shellPage?.TabBarItemParameter is not { } tabArguments)
+					return;
+
+				parent.RaiseContentChanged(shellPage, tabArguments);
+			}
+		}
+
+		protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
+		{
+			base.OnNavigatedTo(eventArgs);
+
+			var args = navigationArguments
+				?? throw new InvalidOperationException("The column navigation arguments are not available.");
+			var path = args.NavPathParam
+				?? throw new InvalidOperationException("The column navigation path is not available.");
+			var pathRoot = GetPathRoot(path);
+			var pathStack = new Stack<string>();
+
+			if (!string.IsNullOrEmpty(pathRoot))
+			{
+				var rootPathList = App.QuickAccessManager.Model.PinnedFolders.Select(NormalizePath)
+					.Concat(CloudDrivesManager.Drives.Select(x => NormalizePath(x.Path))).ToList()
+					.Concat(App.LibraryManager.Libraries.Select(x => NormalizePath(x.Path))).ToList();
+				rootPathList.Add(NormalizePath(pathRoot));
+
+				while (!rootPathList.Contains(NormalizePath(path)))
+				{
+					pathStack.Push(path);
+					path = GetParentDir(path);
+				}
+			}
+
+			OwnerPath = args.NavPathParam;
+			FocusIndex = pathStack.Count;
+
+			MainPageFrame.Navigated += Frame_Navigated;
+			MainPageFrame.Navigate(typeof(ColumnShellPage), new ColumnParam
+			{
+				Column = 0,
+				IsSearchResultPage = args.IsSearchResultPage,
+				SearchQuery = args.SearchQuery,
+				SearchPathParam = args.SearchPathParam,
+				NavPathParam = path,
+				SelectItems = path == args.NavPathParam ? args.SelectItems : null
+			});
+
+			var index = 0;
+			while (pathStack.TryPop(out path))
+			{
+				var (frame, _) = CreateAndAddNewBlade();
+
+				frame.Navigate(typeof(ColumnShellPage), new ColumnParam
+					{
+						Column = ++index,
+						NavPathParam = path,
+						SelectItems = path == args.NavPathParam ? args.SelectItems : null
+					});
+			}
+		}
+
+		protected override void InitializeCommandsViewModel()
+		{
+			var parentShellPage = ParentShellPageInstance
+				?? throw new InvalidOperationException("The parent shell page must be initialized before commands.");
+			CommandsViewModel = new BaseLayoutViewModel(parentShellPage, ItemManipulationModel);
+		}
+
+		protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+		{
+			base.OnNavigatingFrom(e);
+
+			Dispose();
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		[WinRT.DynamicWindowsRuntimeCast(typeof(UIElement))]
+		public override void Dispose()
+		{
+			base.Dispose();
+
+			var columnHostItems = ColumnHost.Items.OfType<BladeItem>().Select(blade => blade.Content as Frame).ToList();
+			foreach (var frame in columnHostItems)
+			{
+				// Unsubscribe all event handlers BEFORE disposing to prevent race conditions
+				if (frame?.Content is ColumnShellPage shPage)
+				{
+					shPage.ContentChanged -= ColumnViewBrowser_ContentChanged;
+					if (shPage.SlimContentPage is ColumnLayoutPage viewBase)
+					{
+						viewBase.ItemInvoked -= ColumnViewBase_ItemInvoked;
+						viewBase.ItemTapped -= ColumnViewBase_ItemTapped;
+						viewBase.KeyUp -= ColumnViewBase_KeyUp;
+					}
+				}
+
+				if (frame?.Content is UIElement element)
+					element.GotFocus -= ColumnViewBrowser_GotFocus;
+
+				// Dispose content AFTER unsubscribing all event handlers
+				if (frame?.Content is IDisposable disposable)
+					disposable.Dispose();
+			}
+
+			UnhookEvents();
+			CommandsViewModel?.Dispose();
+		}
+
+		private void DismissOtherBlades(ListView listView)
+		{
+			DismissOtherBlades(listView.FindAscendant<BladeItem>());
+		}
+
+		private void DismissOtherBlades(BladeItem? blade)
+		{
+			DismissOtherBlades(ColumnHost.ActiveBlades.IndexOf(blade!));
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		[WinRT.DynamicWindowsRuntimeCast(typeof(UIElement))]
+		public void DismissOtherBlades(int index)
+		{
+			if (index >= 0)
+			{
+				SafetyExtensions.IgnoreExceptions(() =>
+				{
+					while (ColumnHost.ActiveBlades.Count > index + 1)
+					{
+						var frame = ColumnHost.ActiveBlades[index + 1].Content as Frame;
+
+						// Unsubscribe event handlers BEFORE disposing to prevent race conditions
+						if ((frame?.Content as ColumnShellPage)?.SlimContentPage is ColumnLayoutPage columnLayout)
+						{
+							columnLayout.ItemInvoked -= ColumnViewBase_ItemInvoked;
+							columnLayout.ItemTapped -= ColumnViewBase_ItemTapped;
+							columnLayout.KeyUp -= ColumnViewBase_KeyUp;
+						}
+
+						var content = frame?.Content
+							?? throw new InvalidOperationException("The column blade does not contain a page.");
+						(content as UIElement
+							?? throw new InvalidOperationException("The column page is not a UI element."))
+							.GotFocus -= ColumnViewBrowser_GotFocus;
+						(content as ColumnShellPage
+							?? throw new InvalidOperationException("The column blade does not contain a shell page."))
+							.ContentChanged -= ColumnViewBrowser_ContentChanged;
+
+						// Dispose content AFTER unsubscribing event handlers
+						if (frame?.Content is IDisposable disposableContent)
+							disposableContent.Dispose();
+
+						ColumnHost.Items.RemoveAt(index + 1);
+						ColumnHost.ActiveBlades.RemoveAt(index + 1);
+					}
+
+					if ((ColumnHost.ActiveBlades[index].Content as Frame)?.Content is ColumnShellPage shellPage)
+					{
+						var shellViewModel = shellPage.GetRequiredShellViewModel();
+						var args = navigationArguments
+							?? throw new InvalidOperationException("The column navigation arguments are not available.");
+						args.NavPathParam = shellViewModel.WorkingDirectory;
+						var tabArguments = ParentShellPageInstance?.TabBarItemParameter
+							?? throw new InvalidOperationException("The parent tab navigation arguments are not available.");
+						tabArguments.NavigationParameter = shellViewModel.WorkingDirectory;
+					}
+				});
+			}
+
+			ContentChanged(ActiveColumnShellPage);
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		[WinRT.DynamicWindowsRuntimeCast(typeof(UIElement))]
+		private void Frame_Navigated(object sender, NavigationEventArgs e)
+		{
+			if (sender is not Frame frame)
+				return;
+
+			frame.Navigated -= Frame_Navigated;
+			(frame.Content as IShellPage
+				?? throw new InvalidOperationException("The column frame does not contain a shell page."))
+				.ContentChanged += ColumnViewBrowser_ContentChanged;
+			(frame.Content as UIElement
+				?? throw new InvalidOperationException("The column frame content is not a UI element."))
+				.GotFocus += ColumnViewBrowser_GotFocus;
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		private void ColumnViewBrowser_GotFocus(object sender, RoutedEventArgs e)
+		{
+			if (sender is not IShellPage shPage || shPage.IsCurrentInstance)
+				return;
+
+			var currentBlade = ColumnHost.ActiveBlades.ToList().Single(x => (x.Content as Frame)?.Content == sender);
+			currentBlade.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false });
+			if (ColumnHost.ActiveBlades is not null)
+			{
+				ColumnHost.ActiveBlades.ToList().ForEach(x =>
+				{
+					var shellPage = (x.Content as Frame)?.Content as ColumnShellPage;
+					(shellPage
+						?? throw new InvalidOperationException("A column blade does not contain a shell page."))
+						.IsCurrentInstance = false;
+				});
+			}
+
+			shPage.IsCurrentInstance = true;
+			ContentChanged(shPage);
+		}
+
+		private void ColumnViewBrowser_ContentChanged(object? sender, TabBarItemParameter e)
+		{
+			var c = sender as IShellPage;
+			var columnView = c?.SlimContentPage as ColumnLayoutPage;
+			if (columnView is not null)
+			{
+				columnView.ItemInvoked -= ColumnViewBase_ItemInvoked;
+				columnView.ItemInvoked += ColumnViewBase_ItemInvoked;
+				columnView.ItemTapped -= ColumnViewBase_ItemTapped;
+				columnView.ItemTapped += ColumnViewBase_ItemTapped;
+				columnView.KeyUp -= ColumnViewBase_KeyUp;
+				columnView.KeyUp += ColumnViewBase_KeyUp;
+			}
+
+			ContentChanged(c);
+		}
+
+		private void ColumnViewBase_KeyUp(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+		{
+			var shPage = ActiveColumnShellPage as ColumnShellPage;
+
+			// Skip rather than throw when the column's navigation parameters aren't ready during rapid key navigation
+			if (shPage?.SlimContentPage?.SelectedItem?.PrimaryItemAttribute is not StorageItemTypes.Folder &&
+				shPage?.ColumnParams is { } columnParams)
+				CloseUnnecessaryColumns(columnParams);
+		}
+
+		public void NavigateBack()
+		{
+			(ParentShellPageInstance as ModernShellPage)?.Back_Click();
+		}
+
+		public void NavigateForward()
+		{
+			(ParentShellPageInstance as ModernShellPage)?.Forward_Click();
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		public void NavigateUp()
+		{
+			if (ColumnHost.ActiveBlades?.Count > 1)
+				DismissOtherBlades(ColumnHost.ActiveBlades[ColumnHost.ActiveBlades.Count - 2]);
+			else
+			{
+				var workingDirectory = ((ColumnHost.ActiveBlades?.ToList().FirstOrDefault()?.Content as Frame)?.Content as ColumnShellPage)?.ShellViewModel?.WorkingDirectory;
+				if (workingDirectory is null || string.Equals(workingDirectory, GetPathRoot(workingDirectory), StringComparison.OrdinalIgnoreCase))
+					ParentShellPageInstance?.NavigateHome();
+				else
+					ParentShellPageInstance?.NavigateToPath(GetParentDir(workingDirectory));
+			}
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(ListViewItem))]
+		public void MoveFocusToPreviousBlade(int currentBladeIndex)
+		{
+			if (currentBladeIndex <= 0)
+				return;
+
+			DismissOtherBlades(currentBladeIndex);
+
+			var activeBlade = ColumnHost.ActiveBlades[currentBladeIndex - 1];
+			FocusIndex = currentBladeIndex - 1;
+
+			var activeBladeColumnViewBase = RetrieveBladeColumnViewBase(activeBlade);
+			if (activeBladeColumnViewBase?.FileList is null)
+			{
+				activeBlade.Focus(FocusState.Programmatic);
+				return;
+			}
+
+			var fileList = activeBladeColumnViewBase.FileList;
+			if (fileList.SelectedItem is not null &&
+				fileList.ContainerFromItem(fileList.SelectedItem) is ListViewItem container)
+				container.Focus(FocusState.Programmatic);
+			else
+				fileList.Focus(FocusState.Programmatic);
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		[WinRT.DynamicWindowsRuntimeCast(typeof(ListViewItem))]
+		public void MoveFocusToNextBlade(int currentBladeIndex)
+		{
+			if (currentBladeIndex >= ColumnHost.ActiveBlades.Count)
+				return;
+
+			var activeBlade = ColumnHost.ActiveBlades[currentBladeIndex];
+			var next = RetrieveBladeColumnViewBase(activeBlade);
+			if (next?.FileList is null)
+				return;
+
+			FocusIndex = currentBladeIndex;
+
+			// Promote the next blade to IsCurrentInstance synchronously. ColumnViewBrowser_GotFocus
+			// would normally do this, but it runs after KeyUp — and KeyUp's ColumnViewBase_KeyUp
+			// would otherwise see the old blade as active, find its selection cleared by
+			// HandleSelectionChange below, and call CloseUnnecessaryColumns → DismissOtherBlades
+			// which tears down the blade we are about to focus into.
+			foreach (var blade in ColumnHost.ActiveBlades)
+			{
+				if ((blade.Content as Frame)?.Content is ColumnShellPage shell)
+					shell.IsCurrentInstance = blade == activeBlade;
+			}
+
+			next.FileList.SelectedIndex = 0;
+
+			// BladeItem.Focus falls through to the title-bar tab strip; focus the inner ListViewItem.
+			if (next.FileList.ContainerFromIndex(0) is ListViewItem firstContainer)
+				firstContainer.Focus(FocusState.Programmatic);
+			else
+				next.FileList.Focus(FocusState.Programmatic);
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		private ColumnLayoutPage? RetrieveBladeColumnViewBase(BladeItem blade)
+		{
+			if (blade.Content is not Frame activeBladeFrame ||
+				activeBladeFrame.Content is not ColumnShellPage activeBladePage)
+				return null;
+
+			return activeBladePage.SlimContentPage as ColumnLayoutPage;
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		public void SetSelectedPathOrNavigate(string navigationPath, Type? sourcePageType, NavigationArguments? navArgs = null)
+		{
+			if (navArgs is not null && navArgs.IsSearchResultPage)
+			{
+				navArgs.AssociatedTabInstance = ParentShellPageInstance;
+				ParentShellPageInstance?.NavigateToPath(navArgs.SearchPathParam, typeof(DetailsLayoutPage), navArgs);
+				return;
+			}
+
+			var destPath = navArgs is not null ? navArgs.NavPathParam : navigationPath;
+			var columnPath = ((ColumnHost.ActiveBlades.ToList().LastOrDefault()?.Content as Frame)?.Content as ColumnShellPage)?.ShellViewModel?.WorkingDirectory;
+			var columnFirstPath = ((ColumnHost.ActiveBlades.ToList().FirstOrDefault()?.Content as Frame)?.Content as ColumnShellPage)?.ShellViewModel?.WorkingDirectory;
+
+			if (string.IsNullOrEmpty(destPath) || string.IsNullOrEmpty(columnPath) || string.IsNullOrEmpty(columnFirstPath))
+			{
+				ParentShellPageInstance?.NavigateToPath(navigationPath, sourcePageType, navArgs);
+				return;
+			}
+
+			var destComponents = StorageFileExtensions.GetDirectoryPathComponents(destPath);
+			var (lastCommonItemIndex, relativeIndex) = GetLastCommonAndRelativeIndex(destComponents, columnPath, columnFirstPath);
+			if (relativeIndex < 0 || destComponents.Count - (lastCommonItemIndex + 1) > 1) // Going above parent or too deep down
+			{
+				ParentShellPageInstance?.NavigateToPath(navigationPath, sourcePageType, navArgs);
+			}
+			else
+			{
+				DismissOtherBlades(relativeIndex);
+
+				for (int ii = lastCommonItemIndex + 1; ii < destComponents.Count; ii++)
+				{
+					var (frame, newblade) = CreateAndAddNewBlade();
+
+					var columnParam = new ColumnParam
+					{
+						Column = ColumnHost.ActiveBlades.IndexOf(newblade),
+						NavPathParam = destComponents[ii].Path
+					};
+
+					if (navArgs is not null)
+					{
+						columnParam.IsSearchResultPage = navArgs.IsSearchResultPage;
+						columnParam.SearchQuery = navArgs.SearchQuery;
+						columnParam.SearchPathParam = navArgs.SearchPathParam;
+					}
+
+					frame.Navigate(typeof(ColumnShellPage), columnParam);
+				}
+			}
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		public void SetSelectedPathOrNavigate(PathNavigationEventArgs e)
+		{
+			var itemPath = e.ItemPath
+				?? throw new InvalidOperationException("The navigation event does not contain a path.");
+
+			if (ColumnHost.ActiveBlades?.Count > 1)
+			{
+				foreach (var item in ColumnHost.ActiveBlades.ToList())
+				{
+					if ((item.Content as Frame)?.Content is ColumnShellPage { ShellViewModel.WorkingDirectory: { } workingDirectory } &&
+						NormalizePath(workingDirectory) == NormalizePath(itemPath))
+					{
+						DismissOtherBlades(item);
+						return;
+					}
+				}
+			}
+
+			if (ParentShellPageInstance is null)
+				return;
+
+			if (NormalizePath(ParentShellPageInstance.ShellViewModel?.WorkingDirectory) != NormalizePath(itemPath))
+				ParentShellPageInstance.NavigateToPath(itemPath);
+			else
+				DismissOtherBlades(0);
+		}
+
+		public IShellPage? ActiveColumnShellPage
+		{
+			[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+			get
+			{
+				if (ColumnHost.ActiveBlades?.Count > 0)
+				{
+					var shellPages = ColumnHost.ActiveBlades.ToList()
+						.Select(x => (x.Content as Frame)!.Content as IShellPage);
+					var activeInstance = shellPages.SingleOrDefault(x => x!.IsCurrentInstance);
+					return activeInstance ?? shellPages.Last();
+				}
+
+				return ParentShellPageInstance;
+			}
+		}
+
+		private void ColumnViewBase_ItemTapped(object? sender, EventArgs e)
+		{
+			var column = sender as ColumnParam;
+			if (column?.ListView!.FindAscendant<ColumnsLayoutPage>() != this ||
+				string.IsNullOrEmpty(column.NavPathParam))
+				return;
+
+			CloseUnnecessaryColumns(column);
+		}
+
+		[WinRT.DynamicWindowsRuntimeCast(typeof(Frame))]
+		private void CloseUnnecessaryColumns(ColumnParam column)
+		{
+			if (string.IsNullOrEmpty(column.NavPathParam))
+				return;
+
+			var relativeIndex = column.Column is not 0 ? column.Column : -1;
+
+			if (column.Source is not null)
+			{
+				for (var i = 0; i < ColumnHost.ActiveBlades.Count && relativeIndex is -1; i++)
+				{
+					var bladeColumn = ColumnHost.ActiveBlades[i].FindDescendant<ColumnLayoutPage>();
+					if (bladeColumn is not null && bladeColumn == column.Source)
+						relativeIndex = i;
+				}
+			}
+
+			if (relativeIndex is -1)
+			{
+				// Get the index of the blade with the same path as the requested
+				var blade = ColumnHost.ActiveBlades.ToList().FirstOrDefault(b =>
+					column.NavPathParam.Equals(((b.Content as Frame)?.Content as ColumnShellPage)?.ShellViewModel?.WorkingDirectory));
+
+				if (blade is not null)
+					relativeIndex = ColumnHost.ActiveBlades.IndexOf(blade);
+			}
+
+			if (relativeIndex >= 0)
+			{
+				ColumnHost.ActiveBlades[relativeIndex].FindDescendant<ColumnLayoutPage>()?.ClearOpenedFolderSelectionIndicator();
+				DismissOtherBlades(relativeIndex);
+			}
+		}
+
+		private (int, int) GetLastCommonAndRelativeIndex(List<PathBoxItem> destComponents, string columnPath, string columnFirstPath)
+		{
+			var columnComponents = StorageFileExtensions.GetDirectoryPathComponents(columnPath);
+			var columnFirstComponents = StorageFileExtensions.GetDirectoryPathComponents(columnFirstPath);
+
+			var lastCommonItemIndex = columnComponents
+				.Select((value, index) => new { value, index })
+				.LastOrDefault(x => x.index < destComponents.Count && x.value.Path == destComponents[x.index].Path)?.index ?? -1;
+
+			var relativeIndex = lastCommonItemIndex - (columnFirstComponents.Count - 1);
+
+			return (lastCommonItemIndex, relativeIndex);
+		}
+
+		private (Frame, BladeItem) CreateAndAddNewBlade()
+		{
+			var frame = new Frame();
+			frame.Navigated += Frame_Navigated;
+			var newblade = new BladeItem()
+			{
+				Content = frame
+			};
+
+			ColumnHost.Items.Add(newblade);
+			return (frame, newblade);
+		}
+	}
+}

@@ -6,7 +6,7 @@ on:
       ref:
         description: 'Git ref to build (branch or SHA)'
         required: true
-        default: 'emergency/book4edge16-arm64'
+        default: 'main'
       canvas_run_id:
         description: 'Canvas ARM64 workflow RUN ID (not artifact ID)'
         required: false
@@ -75,7 +75,7 @@ jobs:
           for url in \
             "https://people.canonical.com/~platform/images/ubuntu-concept/plucky-desktop-arm64+x1e-20250827.iso" \
             "https://people.canonical.com/~platform/images/ubuntu-concept/plucky-desktop-arm64+x1e.iso" \
-            "https://cdimage.ubuntu.com/ubuntu/releases/25.10/release/ubuntu-25.10-desktop-arm64.iso"; do
+            "https://cdimage.ubuntu.com/ubuntu/releases/25.10/"9to1 OS/release/ubuntu-25.10-desktop-arm64.iso"; do
             echo "Trying $url"
             if curl -fSL --retry 3 -o work/base.iso "$url"; then
               base="$url"
@@ -121,7 +121,7 @@ jobs:
           sudo cp /etc/resolv.conf "$W/merged/etc/resolv.conf"
           sudo cp artifacts/cakeos-arm64/*.deb "$W/merged/tmp/cakeos/"
           sudo mkdir -p "$W/merged/usr/libexec/cakeos"
-          sudo cp image/book4edge16/cakeos-diagnostics.sh "$W/merged/usr/libexec/cakeos/cakeos-diagnostics"
+          sudo cp "9to1 OS/image/book4edge16/cakeos-diagnostics.sh" "$W/merged/usr/libexec/cakeos/cakeos-diagnostics"
           sudo chmod 0755 "$W/merged/usr/libexec/cakeos/cakeos-diagnostics"
           sudo ln -sf /usr/libexec/cakeos/cakeos-diagnostics "$W/merged/usr/bin/cakeos-diagnostics"
           sudo mount --bind /dev "$W/merged/dev"
@@ -138,9 +138,9 @@ jobs:
           sudo chroot "$W/merged" /bin/bash -c 'env DEBIAN_FRONTEND=noninteractive apt-get install -y /tmp/cakeos/*.deb'
           sudo chroot "$W/merged" env DEBIAN_FRONTEND=noninteractive apt-get update
           sudo chroot "$W/merged" env DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-server evtest libinput-tools v4l-utils
-          sudo cp image/book4edge16/cakeos-rescue-boot.sh "$W/merged/usr/libexec/cakeos/cakeos-rescue-boot.sh"
+          sudo cp "9to1 OS/image/book4edge16/cakeos-rescue-boot.sh" "$W/merged/usr/libexec/cakeos/cakeos-rescue-boot.sh"
           sudo chmod 0755 "$W/merged/usr/libexec/cakeos/cakeos-rescue-boot.sh"
-          sudo cp image/book4edge16/cakeos-rescue-net.service "$W/merged/etc/systemd/system/cakeos-rescue-net.service"
+          sudo cp "9to1 OS/image/book4edge16/cakeos-rescue-net.service" "$W/merged/etc/systemd/system/cakeos-rescue-net.service"
           sudo chroot "$W/merged" systemctl enable ssh cakeos-rescue-net.service
           sudo chroot "$W/merged" env DEBIAN_FRONTEND=noninteractive apt-get install -y ubuntu-x1e-settings hwe-qcom-x1e-meta qcom-firmware-extract || echo "WARNING: Concept X1E packages unavailable on this base"
           sudo chroot "$W/merged" dpkg-query -W -f='${Package}\t${Version}\n' 'cakeos-*' | sudo tee "$W/cakeos-versions.txt" > /dev/null
@@ -166,7 +166,7 @@ jobs:
           if [ -n "$DTB_URL" ]; then
             mkdir -p work/dtbs/qcom
             curl -fSL --retry 3 -o work/dtbs/qcom/x1e80100-samsung-galaxy-book4-edge.dtb "$DTB_URL"
-            cat image/book4edge16/grub-cakeos.cfg | sudo tee -a work/grub-new.cfg > /dev/null
+            cat "9to1 OS/image/book4edge16/grub-cakeos.cfg" | sudo tee -a work/grub-new.cfg > /dev/null
             echo "DTB integrated from $DTB_URL"
           else
             echo "WARNING: no DTB URL provided" | tee work/CakeOS-DTB-MISSING.txt

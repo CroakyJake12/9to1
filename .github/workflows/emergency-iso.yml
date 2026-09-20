@@ -6,7 +6,7 @@ on:
       ref:
         description: 'Git ref to build (branch or SHA)'
         required: true
-        default: 'emergency/preview-0.1'
+        default: 'main'
       canvas_run_id:
         description: 'Canvas workflow run ID to download artifact from'
         required: false
@@ -84,7 +84,7 @@ jobs:
         env:
           HAVENOS_DEB_DIR: ${{ github.workspace }}/artifacts/packages
         run: |
-          bash image/build-live-iso.sh
+          bash "9to1 OS/image/build-live-iso.sh"
 
       - name: Verify ISO
         run: |

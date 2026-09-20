@@ -3,13 +3,13 @@ name: Present engine
 on:
   pull_request:
     paths:
-      - "apps/present-engine/**"
+      - "9to1 Workspace/Present/present-engine/**"
       - ".github/workflows/present-engine.yml"
   push:
     branches:
-      - "migration/present-libreoffice-foundation"
+      - "main"
     paths:
-      - "apps/present-engine/**"
+      - "9to1 Workspace/Present/present-engine/**"
       - ".github/workflows/present-engine.yml"
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
             nlohmann-json3-dev
 
       - name: Configure
-        run: cmake -S apps/present-engine -B build/present-engine -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S "9to1 Workspace/Present/present-engine" -B build/present-engine -DCMAKE_BUILD_TYPE=Release
 
       - name: Build with warnings as errors
         run: cmake --build build/present-engine --parallel 2
@@ -66,7 +66,7 @@ jobs:
             nlohmann-json3-dev
 
       - name: Configure
-        run: cmake -S apps/present-engine -B build/present-engine -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S "9to1 Workspace/Present/present-engine" -B build/present-engine -DCMAKE_BUILD_TYPE=Release
 
       - name: Build with warnings as errors
         run: cmake --build build/present-engine --parallel 2
@@ -76,8 +76,8 @@ jobs:
 
       - name: Create deterministic ODP fixtures
         run: |
-          python3 apps/present-engine/tests/make_smoke_fixture.py /tmp/cakeos-present-source.odp
-          python3 apps/present-engine/tests/make_reorder_fixture.py /tmp/cakeos-present-reorder-source.odp
+          python3 "9to1 Workspace/Present/present-engine/tests/make_smoke_fixture.py" /tmp/cakeos-present-source.odp
+          python3 "9to1 Workspace/Present/present-engine/tests/make_reorder_fixture.py" /tmp/cakeos-present-reorder-source.odp
 
       - name: Normalize fixtures through LibreOffice Impress
         run: |
@@ -199,7 +199,7 @@ jobs:
           rm -f \
             /tmp/cakeos-present-worker-output.odp \
             /tmp/cakeos-present-worker-output-reordered.odp
-          python3 apps/present-engine/tests/worker_protocol_smoke.py \
+          python3 "9to1 Workspace/Present/present-engine/tests/worker_protocol_smoke.py" \
             build/present-engine/cakeos-present-worker \
             /tmp/cakeos-present-normalized/cakeos-present-source.odp \
             /tmp/cakeos-present-worker-output.odp \
@@ -214,7 +214,7 @@ jobs:
           grep -q '^worker_slide_order=Beta,Gamma,Alpha$' /tmp/present-worker.log
           grep -q '^worker_saved_slides=2$' /tmp/present-worker.log
 
-          python3 apps/present-engine/tests/worker_text_smoke.py \
+          python3 "9to1 Workspace/Present/present-engine/tests/worker_text_smoke.py" \
             build/present-engine/cakeos-present-worker \
             /tmp/cakeos-present-normalized/cakeos-present-reorder-source.odp \
             /tmp/cakeos-present-worker-text | tee /tmp/present-worker-text.log

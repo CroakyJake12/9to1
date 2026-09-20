@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "apps/Data/**"
-      - "apps/present-engine/**"
-      - "compatibility/wine/**"
-      - "packaging/cohort/**"
+      - "9to1 Workspace/Data/**"
+      - "9to1 Workspace/Present/present-engine/**"
+      - "9to1 OS/compatibility/wine/**"
+      - "9to1 OS/packaging/cohort/**"
       - ".github/workflows/cohort-packages.yml"
 
 permissions:
@@ -26,13 +26,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y dpkg-dev python3 python3-uno libreoffice-calc-nogui libreoffice-impress-nogui libreofficekit-dev nlohmann-json3-dev bubblewrap systemd
       - name: Build Data release source
-        run: dotnet build apps/Data/App/HavenOS.Data.App.csproj -c Release --nologo
+        run: dotnet build "9to1 Workspace/Data/App/HavenOS.Data.App.csproj" -c Release --nologo
       - name: Build Present worker
-        run: cmake -S apps/present-engine -B build/present -DCMAKE_BUILD_TYPE=Release && cmake --build build/present --parallel
+        run: cmake -S "9to1 Workspace/Present/present-engine" -B build/present -DCMAKE_BUILD_TYPE=Release && cmake --build build/present --parallel
       - name: Build cohort Debian artifacts
-        run: VERSION="0.1.${GITHUB_RUN_NUMBER}" PRESENT_BUILD_DIR="$PWD/build/present" bash packaging/cohort/build-debs.sh artifacts/cohort
+        run: VERSION="0.1.${GITHUB_RUN_NUMBER}" PRESENT_BUILD_DIR="$PWD/build/present" bash "9to1 OS/packaging/cohort/build-debs.sh" artifacts/cohort
       - name: Verify clean extraction and runtime contracts
-        run: bash packaging/cohort/verify-debs.sh artifacts/cohort
+        run: bash "9to1 OS/packaging/cohort/verify-debs.sh" artifacts/cohort
       - name: Upload immutable cohort
         id: upload
         uses: actions/upload-artifact@v4

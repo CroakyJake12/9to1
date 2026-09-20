@@ -10,16 +10,16 @@ on:
       - ".github/scripts/haven-android-smoke.sh"
       - "global.json"
       - "NuGet.Config"
-      - "Directory.Build.props"
-      - "Directory.Build.targets"
-      - "Directory.Packages.props"
-      - "src/Haven.Android/**"
-      - "src/Haven.Application/**"
-      - "src/Haven.Browser/**"
-      - "src/Haven.Core/**"
-      - "src/Haven.Desktop/**"
-      - "src/Haven.Infrastructure/**"
-      - "src/Haven.UI/**"
+      - "9to1 Workspace/Directory.Build.props"
+      - "9to1 Workspace/Directory.Build.targets"
+      - "9to1 Workspace/Directory.Packages.props"
+      - "9-1 OS (Android)/src/Haven.Android/**"
+      - "9to1 Workspace/shared/src/Haven.Application/**"
+      - "9to1 Workspace/shared/src/Haven.Browser/**"
+      - "9to1 Workspace/shared/src/Haven.Core/**"
+      - "9to1 Workspace/shared/src/Haven.Desktop/**"
+      - "9to1 Workspace/shared/src/Haven.Infrastructure/**"
+      - "9to1 Workspace/shared/src/Haven.UI/**"
 
 permissions:
   contents: read
@@ -93,13 +93,13 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          dotnet restore src/Haven.Android/Haven.Android.csproj 2>&1 | tee artifacts/android/restore.log
+          dotnet restore "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" 2>&1 | tee artifacts/android/restore.log
 
       - name: Compile Android head
         shell: bash
         run: |
           set +e
-          dotnet build src/Haven.Android/Haven.Android.csproj \
+          dotnet build "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" \
             -c Debug \
             --no-restore \
             -p:ApplicationVersion="$APP_VERSION" \
@@ -122,7 +122,7 @@ jobs:
         run: |
           set -euo pipefail
           read -r -a signing_args <<< "$SIGNING_ARGS"
-          dotnet publish src/Haven.Android/Haven.Android.csproj \
+          dotnet publish "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" \
             -c Debug \
             -f net10.0-android \
             --no-restore \
@@ -135,7 +135,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t apks < <(find src/Haven.Android/bin/Debug/net10.0-android -type f -name '*.apk' | sort)
+          mapfile -t apks < <(find "9-1 OS (Android)/src/Haven.Android/bin/Debug/net10.0-android" -type f -name '*.apk' | sort)
           test "${#apks[@]}" -gt 0
           for apk in "${apks[@]}"; do
             cp "$apk" "artifacts/android/$(basename "$apk")"
@@ -224,7 +224,7 @@ jobs:
             -camera-back none
             -camera-front none
             -no-snapshot-save
-          script: sh .github/scripts/haven-android-smoke.sh
+          script: sh ".github/scripts/haven-android-smoke.sh"
 
       - name: Upload emulator smoke evidence
         if: always()

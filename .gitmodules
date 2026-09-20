@@ -1,0 +1,6 @@
+[submodule "9to1 OS/platform/gnome-shell"]
+	path = 9to1 OS/platform/gnome-shell
+	url = https://github.com/CroakyJake12/gnome-shell.git
+[submodule "9to1 OS/platform/mutter"]
+	path = 9to1 OS/platform/mutter
+	url = https://github.com/CroakyJake12/mutter.git

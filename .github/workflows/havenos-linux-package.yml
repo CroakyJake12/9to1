@@ -8,20 +8,20 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - havenos-main
+      - main
     paths:
-      - 'Directory.Build.props'
-      - 'src/**'
-      - 'eng/publish-haven-linux.sh'
+      - "9to1 Workspace/Directory.Build.props"
+      - "9to1 Workspace/shared/src/**"
+      - "9to1 Workspace/shared/eng/publish-haven-linux.sh"
       - '.github/workflows/havenos-linux-package.yml'
   push:
     branches:
-      - havenos-main
-      - 'havenos/worker/os-linux-packaging-runtime-20260830'
+      - main
+      
     paths:
-      - 'Directory.Build.props'
-      - 'src/**'
-      - 'eng/publish-haven-linux.sh'
+      - "9to1 Workspace/Directory.Build.props"
+      - "9to1 Workspace/shared/src/**"
+      - "9to1 Workspace/shared/eng/publish-haven-linux.sh"
       - '.github/workflows/havenos-linux-package.yml'
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
 
       - name: Publish and package Haven for Linux
         shell: bash
-        run: bash eng/publish-haven-linux.sh
+        run: bash "9to1 Workspace/shared/eng/publish-haven-linux.sh"
 
       - name: Verify packaged publish artifacts
         shell: bash

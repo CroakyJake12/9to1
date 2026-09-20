@@ -1,0 +1,171 @@
+// Copyright (c) Files Community
+// Licensed under the MIT License.
+
+using Microsoft.Extensions.Logging;
+using Microsoft.UI.Dispatching;
+
+namespace Files.App.ViewModels.Properties
+{
+	internal sealed class LibraryProperties : BaseProperties
+	{
+		public LibraryItem Library { get; private set; }
+
+		public LibraryProperties(SelectedItemsPropertiesViewModel viewModel, CancellationTokenSource tokenSource,
+			DispatcherQueue coreDispatcher, LibraryItem item, IShellPage instance)
+			: base(viewModel, tokenSource, coreDispatcher, instance)
+		{
+			Library = item;
+
+			GetBaseProperties();
+			ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+		}
+
+		public void UpdateLibrary(LibraryItem library)
+		{
+			Library = library;
+			GetBaseProperties();
+			_ = GetSpecialPropertiesAsync();
+		}
+
+		public override void GetBaseProperties()
+		{
+			if (Library is not null)
+			{
+				ViewModel.ItemName = Library.Name;
+				ViewModel.OriginalItemName = Library.Name;
+				ViewModel.ItemType = Library.ItemType;
+				ViewModel.LoadCustomIcon = Library.LoadCustomIcon;
+				ViewModel.CustomIconSource = Library.CustomIconSource;
+				ViewModel.LoadFileIcon = Library.LoadFileIcon;
+				ViewModel.ContainsFilesOrFolders = false;
+			}
+		}
+
+		public async override Task GetSpecialPropertiesAsync()
+		{
+			var libraryPath = Library.GetRequiredPath();
+			var fileAttributes = Win32Helper.GetFileAttributes(libraryPath);
+			ViewModel.IsReadOnly = fileAttributes.HasFlag(System.IO.FileAttributes.ReadOnly);
+			ViewModel.IsHidden = fileAttributes.HasFlag(System.IO.FileAttributes.Hidden);
+			ViewModel.CanCompressContent = false;
+
+			var result = await FileThumbnailHelper.GetIconAsync(
+				libraryPath,
+				Constants.ShellIconSizes.ExtraLarge,
+				true,
+				IconOptions.None);
+
+			if (result is not null)
+			{
+				ViewModel.IconData = result;
+				ViewModel.LoadCustomIcon = false;
+				ViewModel.LoadFileIcon = true;
+			}
+
+			var shellViewModel = AppInstance.GetRequiredShellViewModel();
+
+			BaseStorageFile? libraryFile = Library.ItemPath is null ? null : (await shellViewModel.GetFileFromPathAsync(Library.ItemPath)).Result;
+			if (libraryFile is not null)
+			{
+				ViewModel.ItemCreatedTimestampReal = libraryFile.DateCreated;
+				if (libraryFile.Properties is not null)
+				{
+					await GetOtherPropertiesAsync(libraryFile.Properties);
+				}
+			}
+
+			var storageFolders = new List<BaseStorageFolder>();
+			if (Library.Folders is not null)
+			{
+				try
+				{
+					foreach (var path in Library.Folders)
+					{
+						var folder = (await shellViewModel.GetFolderFromPathAsync(path)).Result
+							?? throw new InvalidOperationException($"The library folder '{path}' could not be opened.");
+						if (!string.IsNullOrEmpty(folder.Path))
+						{
+							storageFolders.Add(folder);
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					App.Logger.LogWarning(ex, ex.Message);
+				}
+			}
+
+			if (storageFolders.Count > 0)
+			{
+				ViewModel.ContainsFilesOrFolders = true;
+				ViewModel.LocationsCount = storageFolders.Count;
+				await GetLibrarySizeAsync(storageFolders, TokenSource.Token);
+			}
+			else
+			{
+				ViewModel.FilesAndFoldersCountString = Strings.LibraryNoLocations_Text.GetLocalizedResource();
+			}
+		}
+
+		private async Task GetLibrarySizeAsync(List<BaseStorageFolder> storageFolders, CancellationToken token)
+		{
+			ViewModel.ItemSizeVisibility = true;
+			ViewModel.ItemSizeProgressVisibility = true;
+			ViewModel.ItemSizeOnDiskProgressVisibility = true;
+
+			try
+			{
+				long librarySize = 0;
+				long librarySizeOnDisk = 0;
+				foreach (var folder in storageFolders)
+				{
+					var foldersSize = await Task.Run(async () => await CalculateFolderSizeAsync(folder.Path, token));
+					librarySize += foldersSize.size;
+					librarySizeOnDisk += foldersSize.sizeOnDisk;
+				}
+				ViewModel.ItemSizeBytes = librarySize;
+				ViewModel.ItemSize = librarySize.ToLongSizeString();
+				ViewModel.ItemSizeOnDiskBytes = librarySize;
+				ViewModel.ItemSizeOnDisk = librarySize.ToLongSizeString();
+			}
+			catch (Exception ex)
+			{
+				App.Logger.LogWarning(ex, ex.Message);
+			}
+
+			ViewModel.ItemSizeProgressVisibility = false;
+			ViewModel.ItemSizeOnDiskProgressVisibility = false;
+
+			SetItemsCountString();
+		}
+
+		private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			var libraryPath = Library.GetRequiredPath();
+			switch (e.PropertyName)
+			{
+				case "IsReadOnly":
+					if (ViewModel.IsReadOnly is not null)
+					{
+						if ((bool)ViewModel.IsReadOnly)
+							Win32Helper.SetFileAttribute(libraryPath, System.IO.FileAttributes.ReadOnly);
+						else
+							Win32Helper.UnsetFileAttribute(libraryPath, System.IO.FileAttributes.ReadOnly);
+					}
+
+					break;
+
+				case "IsHidden":
+					if (ViewModel.IsHidden is not null)
+					{
+						if ((bool)ViewModel.IsHidden)
+							Win32Helper.SetFileAttribute(libraryPath, System.IO.FileAttributes.Hidden);
+						else
+							Win32Helper.UnsetFileAttribute(libraryPath, System.IO.FileAttributes.Hidden);
+					}
+
+					break;
+			}
+		}
+	}
+}

@@ -7,15 +7,15 @@ on:
     paths:
       - ".github/workflows/validate-android-pr.yml"
       - "global.json"
-      - "Directory.Build.props"
-      - "Directory.Packages.props"
-      - "src/Haven.Android/**"
-      - "src/Haven.Desktop/**"
-      - "src/Haven.UI/**"
-      - "src/Haven.Core/**"
-      - "src/Haven.Application/**"
-      - "src/Haven.Infrastructure/**"
-      - "src/Haven.Browser/**"
+      - "9to1 Workspace/Directory.Build.props"
+      - "9to1 Workspace/Directory.Packages.props"
+      - "9-1 OS (Android)/src/Haven.Android/**"
+      - "9to1 Workspace/shared/src/Haven.Desktop/**"
+      - "9to1 Workspace/shared/src/Haven.UI/**"
+      - "9to1 Workspace/shared/src/Haven.Core/**"
+      - "9to1 Workspace/shared/src/Haven.Application/**"
+      - "9to1 Workspace/shared/src/Haven.Infrastructure/**"
+      - "9to1 Workspace/shared/src/Haven.Browser/**"
 
 permissions:
   contents: read
@@ -51,13 +51,13 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p artifacts/android-pr
-          dotnet restore src/Haven.Android/Haven.Android.csproj 2>&1 | tee artifacts/android-pr/restore.log
+          dotnet restore "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" 2>&1 | tee artifacts/android-pr/restore.log
 
       - name: Compile Android head
         shell: bash
         run: |
           set -o pipefail
-          dotnet build src/Haven.Android/Haven.Android.csproj \
+          dotnet build "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" \
             -c Debug \
             -f net10.0-android \
             --no-restore 2>&1 | tee artifacts/android-pr/build.log
@@ -66,14 +66,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dotnet publish src/Haven.Android/Haven.Android.csproj \
+          dotnet publish "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" \
             -c Debug \
             -f net10.0-android \
             --no-restore \
             -p:AndroidPackageFormat=apk \
             -p:AndroidKeyStore=false 2>&1 | tee artifacts/android-pr/publish.log
 
-          mapfile -t apks < <(find src/Haven.Android/bin/Debug/net10.0-android -type f -name '*.apk' | sort)
+          mapfile -t apks < <(find "9-1 OS (Android)/src/Haven.Android/bin/Debug/net10.0-android" -type f -name '*.apk' | sort)
           test "${#apks[@]}" -gt 0
           for apk in "${apks[@]}"; do
             cp "$apk" "artifacts/android-pr/$(basename "$apk")"
