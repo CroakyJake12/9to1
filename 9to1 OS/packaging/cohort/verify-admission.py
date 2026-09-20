@@ -78,9 +78,18 @@ def main() -> int:
         ) != expected["package"]:
             fail(f"{artifact_id} package metadata changed")
 
-    for retired_builder in ("build-debs.sh", "verify-debs.sh"):
-        if (Path(__file__).parent / retired_builder).exists():
-            fail(f"source-only cohort builder remains: {retired_builder}")
+    retired_scripts = {
+        "build-debs.sh": "RETIRED_SOURCE_CARRIER_BUILDER",
+        "verify-debs.sh": "RETIRED_SOURCE_CARRIER_VERIFIER",
+    }
+    for retired_builder, marker in retired_scripts.items():
+        path = Path(__file__).parent / retired_builder
+        try:
+            contents = path.read_text(encoding="utf-8")
+        except OSError as error:
+            fail(f"cannot read retired source-carrier helper {retired_builder}: {error}")
+        if marker not in contents:
+            fail(f"source-carrier helper is not explicitly retired: {retired_builder}")
 
     print("Cohort admission metadata passed; verify package bytes before installation.")
     return 0

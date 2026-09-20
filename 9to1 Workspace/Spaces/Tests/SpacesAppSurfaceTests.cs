@@ -7,6 +7,86 @@ namespace HavenOS.Apps.Spaces.Tests;
 public sealed class SpacesAppSurfaceTests
 {
     [Fact]
+    public void Built_in_descriptors_have_independent_stable_scopes()
+    {
+        Assert.Collection(
+            SpacesModel.BuiltIns,
+            chat =>
+            {
+                Assert.Equal(SpacesDestinationKind.Chat, chat.Destination);
+                Assert.Equal("spaces.chat", chat.Scope.Key);
+                Assert.Null(chat.Scope.RegisteredSpaceId);
+            },
+            study =>
+            {
+                Assert.Equal(SpacesDestinationKind.Study, study.Destination);
+                Assert.Equal(SpaceRegistry.StudySpaceId, study.Scope.RegisteredSpaceId);
+            },
+            tasks =>
+            {
+                Assert.Equal(SpacesDestinationKind.Tasks, tasks.Destination);
+                Assert.Equal(SpaceRegistry.AgentSpaceId, tasks.Scope.RegisteredSpaceId);
+            });
+
+        Assert.Equal(3, SpacesModel.BuiltIns.Select(definition => definition.Scope.Key).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task Sidebar_includes_built_ins_and_independently_scoped_custom_spaces()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var model = new SpacesModel(registry);
+
+        var custom = await model.CreateCustomSpaceAsync("Recipes", "Keep dinner plans together.");
+        var sidebar = await model.GetSidebarDestinationsAsync();
+
+        Assert.Collection(
+            sidebar,
+            chat => Assert.Equal(SpacesDestinationKind.Chat, chat.Destination),
+            study => Assert.Equal(SpacesDestinationKind.Study, study.Destination),
+            tasks => Assert.Equal(SpacesDestinationKind.Tasks, tasks.Destination),
+            recipes =>
+            {
+                Assert.Equal(SpacesDestinationKind.Custom, recipes.Destination);
+                Assert.Equal("Recipes", recipes.Label);
+                Assert.Equal(custom.Scope, recipes.Scope);
+                Assert.Equal(custom.Scope.RegisteredSpaceId, recipes.Scope.RegisteredSpaceId);
+            });
+    }
+
+    [Fact]
+    public async Task Typed_open_actions_delegate_to_existing_app_surfaces()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var model = new SpacesModel(registry);
+        var host = new RecordingHost();
+        var actions = new SpacesNavigationActionHost(host);
+
+        await actions.ExecuteAsync(await model.CreateOpenActionAsync(SpaceScope.Chat));
+        Assert.Equal(HavenMode.Chat, host.Mode);
+        Assert.Null(host.Space);
+
+        await actions.ExecuteAsync(await model.CreateOpenActionAsync(SpaceScope.Study));
+        Assert.Equal(SpaceRegistry.StudySpaceId, host.Space!.Id);
+
+        var custom = await model.CreateCustomSpaceAsync("Writing");
+        await actions.ExecuteAsync(await model.CreateOpenActionAsync(custom.Scope));
+        Assert.Equal(custom.Scope.RegisteredSpaceId, host.Space!.Id);
+    }
+
+    [Fact]
+    public async Task Open_actions_reject_a_scope_that_does_not_match_its_registered_space()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var model = new SpacesModel(registry);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => model.CreateOpenActionAsync(SpaceScope.ForCustom(SpaceRegistry.StudySpaceId)));
+
+        Assert.Contains("does not match", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Navigation_exposes_the_bounded_Home_Chat_Study_Tasks_Research_order()
     {
         Assert.Equal(

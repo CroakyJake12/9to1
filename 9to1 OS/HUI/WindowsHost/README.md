@@ -1,4 +1,4 @@
-# CakeOS HUI Windows host (Book4 Edge evening lane)
+# CakeOS HUI Windows host
 
 Windows port of the HUI preview host. It runs the **real** Cake engines, not mocks:
 
@@ -7,6 +7,11 @@ Windows port of the HUI preview host. It runs the **real** Cake engines, not moc
   Avalonia + `Svg.Controls.Skia.Avalonia` — the same boundary the Linux host uses.
 - Layout/input/product code: shared `HUI/Platform` + vendored `Haven.UI` sources,
   unchanged. Layout passes `HavenPlatform.Windows`.
+- External CUI surfaces: application assemblies implement the shared,
+  platform-neutral `CakeOS.Platform.IHuiRootProvider` contract. The Windows host
+  adapts an `IHuiRootElement.NativeRoot` `Haven.UI.Components.Page` into its
+  existing `HuiAppSurface`, so the host has no app-level Windows UI project
+  references.
 
 ## Deltas from `HUI/LinuxHost` (deliberately small)
 
@@ -20,7 +25,8 @@ Windows port of the HUI preview host. It runs the **real** Cake engines, not moc
   off-Linux, so no privileged path can trigger on Windows.
 - Update history: `%LOCALAPPDATA%\CakeOS\windows-host\updates`.
 - Root-provider ABI: `cakeos.hui.windows-root-provider` v1
-  (`HUI/Platform/HuiWindowsHostAbi.cs`, additive — Linux contract untouched).
+  (`HUI/Platform/HuiWindowsHostAbi.cs`, additive; the provider interface itself
+  is shared with Linux).
 - Touch keeps Linux parity: touch (and middle/right-drag) pans the Canvas
   viewport; pen and primary-mouse contact draw with the selected Rnote tool.
 
@@ -43,27 +49,19 @@ cargo build --release --manifest-path apps/canvas/rnote-poc/Cargo.toml
 dotnet publish HUI/WindowsHost/CakeOS.HuiWindowsHost.csproj -c Release -r win-arm64 --self-contained true -o artifacts\hui-windows-host\publish
 ```
 
-Boards needs the shared Haven.UI project path for the Boards HUI projection:
-
-```powershell
-dotnet publish HUI/WindowsHost/CakeOS.HuiWindowsHost.csproj -c Release -r win-arm64 --self-contained true `
-  -p:HavenUiProjectPath="$PWD\HUI\vendor\Haven.UI\Haven.UI.csproj" `
-  -o artifacts\hui-windows-host\publish
-```
-
 ## Run
 
 ```powershell
 # Canvas (real Rnote engine)
 $env:CAKEOS_HUI_CANVAS_PREVIEW = "1"
-$env:CAKEOS_HUI_BOARDS_PREVIEW = $null
 .\artifacts\hui-windows-host\publish\cakeos-hui-windows-preview.exe
 # headless smoke: CAKEOS_HUI_PREVIEW_SELF_TEST=1 + CAKEOS_HUI_PREVIEW_AUTO_EXIT_MS=8000
 
-# Boards (real contract session + HUI projection; store under Documents\CakeOS\Boards)
+# Application-owned CUI surface
 $env:CAKEOS_HUI_CANVAS_PREVIEW = $null
-$env:CAKEOS_HUI_BOARDS_PREVIEW = "1"
-.\artifacts\hui-windows-host\publish\cakeos-hui-windows-preview.exe
+.\artifacts\hui-windows-host\publish\cakeos-hui-windows-preview.exe `
+  --hui-root-provider-assembly C:\CakeOS\Apps\Application.dll `
+  --hui-root-provider-type CakeOS.Applications.ApplicationRootProvider
 ```
 
-Canvas and Boards modes are exclusive; Canvas takes precedence if both are set.
+Canvas takes precedence when `CAKEOS_HUI_CANVAS_PREVIEW=1`.

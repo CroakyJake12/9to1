@@ -36,8 +36,14 @@ modified here.
 
 ## Retired source-only builder
 
-The former `packaging/cohort/build-debs.sh` copied Data and Wine source trees
-and a Present worker into `.deb` archives, then `verify-debs.sh` checked only
-extraction and syntax. It did not install packages, launch an application, or
-provide Data's DuckDB binding. Those scripts are removed rather than allowing
-source-carrier archives to be represented as a functional cohort.
+`packaging/cohort/build-debs.sh` and `verify-debs.sh` are retained only as
+explicitly retired compatibility shims. They do not build, extract, or copy
+Data, Present, Wine, or any other application source. The former source-carrier
+flow copied Data and Wine source trees and a Present worker into `.deb` archives,
+then checked only extraction and syntax. It did not install packages, launch an
+application, or provide Data's DuckDB binding.
+
+Use `release/package-preload-manifest.json` to admit only hash-pinned,
+standalone Debian artifacts. `release/tests/validate-package-preload.ps1`
+validates the metadata mapping without requiring `dpkg-deb`, `live-build`, or
+package bytes.

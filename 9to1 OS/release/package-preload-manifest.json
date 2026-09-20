@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "cakeos-emergency-preview-0.1",
+  "version": "0.1.0",
+  "releaseState": "BLOCKED",
+  "purpose": "Copy hash-pinned standalone Debian artifacts into an image-input cohort without rebuilding, extracting, or copying application source.",
+  "artifactAvailability": "external-staging-required",
+  "preload": {
+    "mode": "copy-only",
+    "sourceDirectory": "artifacts/packages",
+    "outputDirectory": "artifacts/emergency-preview-0.1-cohort",
+    "networkAllowed": false,
+    "buildAllowed": false,
+    "installAllowed": false,
+    "vmMutationAllowed": false,
+    "licensePolicy": "preserve-artifact-bytes"
+  },
+  "imageBuilder": {
+    "script": "image/build-live-iso.sh",
+    "packageDirectoryEnvironment": "HAVENOS_DEB_DIR",
+    "destination": "platform/ubuntu/image/live-build/config/packages.chroot",
+    "state": "BLOCKED",
+    "blockingReason": "The checkout has no hash-verified standalone Debian artifacts to preload."
+  },
+  "packages": [
+    {
+      "id": "haven-hui-preview",
+      "assemblyOrder": 10,
+      "sourceType": "standalone-debian-artifact",
+      "packageName": "haven-hui-preview",
+      "fileName": "haven-hui-preview_0.1.0+git2a578502c319_amd64.deb",
+      "sha256": "104f8ff3929b8b0e1c90673804d7cfbe79a31ea5c2763dc040246a7ead53575a",
+      "architecture": "amd64",
+      "entrypoint": "/usr/bin/cakeos-hui-preview",
+      "dependencies": [
+        "libc6",
+        "libgcc-s1",
+        "libstdc++6",
+        "zlib1g"
+      ],
+      "source": {
+        "repository": "CroakyJake12/CakeOS",
+        "ref": "platform/hui-linux-graphical-preview",
+        "revision": "2a578502c31973fbefa3b3f82efa22d7ad11db53",
+        "workflowArtifactId": "10031358716",
+        "workflowArtifactName": "hui-linux-graphical-package"
+      },
+      "evidence": {
+        "immutableArtifactLock": "packaging/llamacpp/cohort-artifact.lock.json",
+        "releaseStagingRecord": "platform/ubuntu/release-staging.json",
+        "releaseCandidateGraph": "release/emergency-preview-0.1.json"
+      },
+      "licensePolicy": "preserve-artifact-bytes"
+    },
+    {
+      "id": "haven-llamacpp-runtime",
+      "assemblyOrder": 20,
+      "sourceType": "standalone-debian-artifact",
+      "packageName": "haven-llamacpp-runtime",
+      "fileName": "haven-llamacpp-runtime_0.4.0+haven0.1_amd64.deb",
+      "sha256": "13ea16e4ffa92d1e4b2f31a1a32ba00dc8802ec9077733d7db96a68dad92142d",
+      "architecture": "amd64",
+      "entrypoint": "/usr/bin/haven-modelctl",
+      "dependencies": [
+        "python3",
+        "libc6",
+        "libstdc++6",
+        "libgcc-s1",
+        "libgomp1"
+      ],
+      "source": {
+        "repository": "CroakyJake12/CakeOS",
+        "ref": "main",
+        "revision": "11be1b700022095e4b598768b5286adfe966f85a",
+        "workflowArtifactId": "10031771129",
+        "workflowArtifactName": "haven-llamacpp-runtime-amd64"
+      },
+      "evidence": {
+        "immutableArtifactLock": "packaging/llamacpp/cohort-artifact.lock.json",
+        "releaseStagingRecord": "platform/ubuntu/release-staging.json",
+        "releaseCandidateGraph": "release/emergency-preview-0.1.json"
+      },
+      "licensePolicy": "preserve-artifact-bytes"
+    }
+  ]
+}

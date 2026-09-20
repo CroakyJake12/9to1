@@ -149,11 +149,24 @@ class RequestAndWorkerTests(unittest.TestCase):
         self.assertNotIn("LD_PRELOAD", env)
         self.assertEqual("yes", env["KEEP_ME"])
 
-    def test_active_request_cancel_aborts_connection(self) -> None:
+    def test_active_request_prefers_upstream_stream_control_after_response_starts(self) -> None:
         connection = mock.Mock()
-        active = broker.ActiveRequest(connection)
-        active.cancel()
+        active = broker.ActiveRequest(connection, "request-1")
+        active.response_started.set()
+        with mock.patch.object(broker, "cancel_worker_stream", return_value=True):
+            cancellation = active.cancel()
         self.assertTrue(active.cancelled.is_set())
+        self.assertEqual("upstream-stream-delete", cancellation["mode"])
+        self.assertFalse(cancellation["transportFallback"])
+        connection.abort.assert_not_called()
+
+    def test_active_request_uses_transport_fallback_when_worker_control_fails(self) -> None:
+        connection = mock.Mock()
+        active = broker.ActiveRequest(connection, "request-1")
+        with mock.patch.object(broker, "cancel_worker_stream", return_value=False):
+            cancellation = active.cancel()
+        self.assertEqual("transport-close", cancellation["mode"])
+        self.assertTrue(cancellation["transportFallback"])
         connection.abort.assert_called_once_with()
 
 
@@ -225,6 +238,9 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual("llamacpp:<model-id>", contract["modelKeys"]["format"])
         self.assertEqual("ollama", contract["modelKeys"]["legacyUnqualifiedProvider"])
         self.assertFalse(contract["modelLifecycle"]["brokerCanWriteModelStore"])
+        self.assertEqual("single-broker-owned-worker", contract["runtime"]["topology"])
+        self.assertFalse(contract["runtime"]["perAppServers"])
+        self.assertEqual("upstream-resumable-stream-delete", contract["runtime"]["cancellation"]["primary"])
 
 
 if __name__ == "__main__":

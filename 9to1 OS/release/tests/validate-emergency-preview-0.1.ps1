@@ -63,6 +63,10 @@ if ($manifest.preparedFromBaseRevision -ne '289c8e84f4e9bcdc6a08a281bc8a9cb98b94
 if ($manifest.releaseState -ne 'BLOCKED') {
     throw 'The emergency release must remain blocked until package and image gates are satisfied.'
 }
+if ($manifest.packagePreloadManifest -ne 'release/package-preload-manifest.json') {
+    throw 'Emergency release must reference the package preload manifest.'
+}
+Require-RepoFiles @($manifest.packagePreloadManifest) 'Package preload manifest'
 
 $criteria = $manifest.inclusionCriteria
 if ($criteria.candidateState -ne 'CANDIDATE') {

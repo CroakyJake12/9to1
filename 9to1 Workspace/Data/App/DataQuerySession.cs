@@ -110,7 +110,7 @@ public sealed class DataQuerySession : IAsyncDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(workbookId);
         ArgumentNullException.ThrowIfNull(execution);
         ArgumentException.ThrowIfNullOrWhiteSpace(sheetName);
-        if (!_recentQueries.Contains(execution))
+        if (!_recentQueries.Any(candidate => ReferenceEquals(candidate, execution)))
             throw new InvalidOperationException("Only a successful query from the current open Data query session can be materialized.");
         if (execution.Result.Truncated)
             throw new InvalidOperationException("A truncated query preview cannot be materialized because it would silently create an incomplete sheet.");

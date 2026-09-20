@@ -8,12 +8,25 @@ import json
 import os
 import pathlib
 import socket
+import socketserver
+import threading
 import time
+import urllib.parse
 from typing import Any
 
 
-class UnixServer(http.server.HTTPServer):
+class UnixServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     address_family = socket.AF_UNIX
+    daemon_threads = True
+
+
+SESSIONS: dict[str, threading.Event] = {}
+SESSIONS_LOCK = threading.Lock()
+
+
+def session_for(conversation_id: str) -> threading.Event:
+    with SESSIONS_LOCK:
+        return SESSIONS.setdefault(conversation_id, threading.Event())
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -46,6 +59,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         content = ""
         if isinstance(messages, list) and messages and isinstance(messages[-1], dict):
             content = str(messages[-1].get("content", ""))
+        conversation_id = self.headers.get("X-Conversation-Id", "")
+        session = session_for(conversation_id) if conversation_id else None
 
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
@@ -54,9 +69,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.flush()
 
         if content == "__BLOCK_UNTIL_CANCELLED__":
-            # Deliberately provide headers but no body. The broker must be able to
-            # abort its private worker socket to unblock a pending read.
-            time.sleep(30)
+            ready_path = os.environ.get("HAVEN_FAKE_SESSION_READY", "")
+            if ready_path:
+                pathlib.Path(ready_path).write_text(conversation_id, encoding="utf-8")
+            if session is not None:
+                session.wait(30)
+            else:
+                time.sleep(30)
             return
 
         events = [
@@ -71,6 +90,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
             pass
+
+    def do_DELETE(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path != "/v1/stream":
+            self._json(404, {"error": "not_found"})
+            return
+        conversation_id = urllib.parse.parse_qs(parsed.query).get("conv_id", [""])[0]
+        with SESSIONS_LOCK:
+            session = SESSIONS.get(conversation_id)
+        if session is not None:
+            session.set()
+            proof_path = os.environ.get("HAVEN_FAKE_CANCEL_PROOF", "")
+            if proof_path:
+                pathlib.Path(proof_path).write_text(conversation_id, encoding="utf-8")
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
 
 def main() -> int:

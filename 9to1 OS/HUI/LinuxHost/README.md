@@ -7,11 +7,13 @@ The host consumes the platform-neutral `Haven.UI` source supplied explicitly thr
 ## External application launcher contract
 
 An application assembly provides one public, parameterless type implementing
-`CakeOS.Platform.IHuiRootProvider`. Its `CreateRoot(IServiceProvider)` result must implement
+the platform-neutral `CakeOS.Platform.IHuiRootProvider` contract. Its
+`CreateRoot(IServiceProvider)` result must implement
 `CakeOS.Platform.IHuiRootElement` and expose a `Haven.UI.Components.Page` as
-`NativeRoot`; the host rejects unsupported roots rather than opening an empty
-window. The provider implements the remaining lifecycle, theme, accessibility,
-and provider-injection members from the shared interface.
+`NativeRoot`. The host mounts that page in its existing `HuiAppSurface`; it
+rejects unsupported roots rather than opening an empty window. The provider
+implements the remaining lifecycle, theme, accessibility, and provider-injection
+members from the shared interface.
 
 ```csharp
 using CakeOS.Platform;

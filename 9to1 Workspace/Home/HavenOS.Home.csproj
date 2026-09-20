@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Home</AssemblyName>
+    <RootNamespace>HavenOS.Home</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
+  </PropertyGroup>
+
+  <Target Name="RequireHavenUi" BeforeTargets="ResolveProjectReferences">
+    <Error Condition="'$(HavenUiProjectPath)' == ''" Text="Haven.UI is required for the Home CUI surface. Set /p:HavenUiProjectPath=&lt;path-to-Haven.UI.csproj&gt;." />
+    <Error Condition="'$(HavenUiProjectPath)' != '' and !Exists('$(HavenUiProjectPath)')" Text="HavenUiProjectPath does not exist: $(HavenUiProjectPath)" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="Source\Home\HomeDashboard.cs" />
+    <Compile Include="Source\Home\HomeCuiScene.cs" />
+    <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
+  </ItemGroup>
+</Project>

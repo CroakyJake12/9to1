@@ -5,6 +5,7 @@
   "preparedFromBaseRevision": "289c8e84f4e9bcdc6a08a281bc8a9cb98b94b31b",
   "releaseState": "BLOCKED",
   "scope": "Release-preparation control only. This manifest neither builds an ISO nor asserts package, image, or VM execution evidence.",
+  "packagePreloadManifest": "release/package-preload-manifest.json",
   "inclusionCriteria": {
     "candidateState": "CANDIDATE",
     "requiredPackageFields": [
@@ -103,8 +104,7 @@
       "componentId": "cakeos-canvas-rnote",
       "state": "BLOCKED",
       "evidenceFiles": [
-        "packaging/canvas-rnote/build-deb.sh",
-        ".github/workflows/component-packaging.yml"
+        "packaging/canvas-rnote/build-deb.sh"
       ],
       "missingRequiredEvidence": [
         "dedicatedPackage",
@@ -113,14 +113,13 @@
         "dependencyControl",
         "installOrRuntimeSmoke"
       ],
-      "blockingReason": "The builder requires a cakeos-canvas-rnote host that is not present. The existing workflow packages a HUI preview, not a pinned standalone Canvas package."
+      "blockingReason": "The builder requires a cakeos-canvas-rnote host that is not present. No component-packaging workflow exists in this checkout to establish an alternate pinned standalone Canvas package."
     },
     {
       "componentId": "cakeos-boards",
       "state": "BLOCKED",
       "evidenceFiles": [
-        "packaging/boards-appflowy/build-deb.sh",
-        ".github/workflows/component-packaging.yml"
+        "packaging/boards-appflowy/build-deb.sh"
       ],
       "missingRequiredEvidence": [
         "dedicatedPackage",
@@ -129,7 +128,7 @@
         "dependencyControl",
         "installOrRuntimeSmoke"
       ],
-      "blockingReason": "The authoritative Boards workflow records that no launchable Linux Boards host/process exists and refuses to package its libraries or proof harness."
+      "blockingReason": "The current builder refuses to package libraries or a proof harness without a launchable Linux Boards host/process. No component-packaging workflow exists in this checkout to establish another package artifact."
     }
   ],
   "excludedComponents": [
@@ -168,8 +167,7 @@
       "componentId": "havenos-studio",
       "state": "EXCLUDED",
       "evidenceFiles": [
-        "packaging/build-havenos-studio-deb.sh",
-        "tooling/HavenOS.Studio/HavenOS.Studio.csproj"
+        "packaging/build-havenos-studio-deb.sh"
       ],
       "missingAdmissionEvidence": [
         "publishedOutput",
@@ -178,7 +176,7 @@
         "extractedEntrypoint",
         "dependencyControl"
       ],
-      "blockingReason": "Studio source and a package builder exist, but the required published output and a hash-pinned package are absent."
+      "blockingReason": "The package builder exists, but its cited tooling/HavenOS.Studio source mapping is absent from this checkout; the required published output and a hash-pinned package are also absent."
     },
     {
       "componentId": "havenos-data",

@@ -31,6 +31,8 @@ class BrokerIntegrationTests(unittest.TestCase):
         self.worker_socket = self.runtime_dir / "worker.sock"
         self.worker_home = self.runtime_dir / "worker-home"
         self.fake_server = RUNTIME / "tests/fake_llama_server.py"
+        self.fake_session_ready = root / "fake-session-ready"
+        self.fake_cancel_proof = root / "fake-cancel-proof"
 
         payload = b"GGUF" + struct.pack("<I", 3) + b"integration-payload"
         digest = hashlib.sha256(payload).hexdigest()
@@ -54,6 +56,10 @@ class BrokerIntegrationTests(unittest.TestCase):
         )
 
         self.stack = ExitStack()
+        self.stack.enter_context(mock.patch.dict("os.environ", {
+            "HAVEN_FAKE_SESSION_READY": str(self.fake_session_ready),
+            "HAVEN_FAKE_CANCEL_PROOF": str(self.fake_cancel_proof),
+        }))
         replacements = {
             "RUNTIME_DIR": self.runtime_dir,
             "DATA_HOME": self.data_home,
@@ -105,7 +111,16 @@ class BrokerIntegrationTests(unittest.TestCase):
     def test_spawn_health_load_stream_and_unload_are_wired_end_to_end(self) -> None:
         status, body = self._request("GET", "/health")
         self.assertEqual(200, status)
-        self.assertFalse(json.loads(body)["workerReady"])
+        health = json.loads(body)
+        self.assertFalse(health["workerReady"])
+        self.assertEqual("single-broker-owned-worker", health["runtime"]["topology"])
+        self.assertFalse(health["runtime"]["perAppServers"])
+
+        status, body = self._request("GET", "/v1/provider")
+        self.assertEqual(200, status)
+        provider_runtime = json.loads(body)["runtime"]
+        self.assertEqual("upstream-resumable-stream-delete", provider_runtime["cancellation"]["primary"])
+        self.assertFalse(provider_runtime["perAppServers"])
 
         self._load()
         self.assertTrue(self.worker_socket.exists())
@@ -155,15 +170,24 @@ class BrokerIntegrationTests(unittest.TestCase):
             time.sleep(0.01)
         self.assertTrue(active, "blocked request never became active")
 
+        while time.monotonic() < deadline and not self.fake_session_ready.exists():
+            time.sleep(0.01)
+        self.assertTrue(self.fake_session_ready.exists(), "worker never registered the resumable stream session")
+
         started = time.monotonic()
         status, body = self._request("POST", "/v1/requests/integration-cancel-1/cancel")
         self.assertEqual(202, status, body)
+        cancellation = json.loads(body)["cancellation"]
+        self.assertEqual("upstream-stream-delete", cancellation["mode"])
+        self.assertFalse(cancellation["transportFallback"])
+        self.assertFalse(cancellation["workerCompletionConfirmed"])
         chat_thread.join(timeout=2)
         self.assertFalse(chat_thread.is_alive(), "cancel did not unblock the broker stream")
         self.assertLess(time.monotonic() - started, 2.0)
         self.assertNotIn("error", outcome)
         with broker.ACTIVE_LOCK:
             self.assertNotIn("integration-cancel-1", broker.ACTIVE_REQUESTS)
+        self.assertEqual("integration-cancel-1", self.fake_cancel_proof.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

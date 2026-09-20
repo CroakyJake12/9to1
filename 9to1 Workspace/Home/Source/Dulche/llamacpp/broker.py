@@ -15,6 +15,7 @@ import json
 import os
 import pathlib
 import re
+import select
 import signal
 import socket
 import socketserver
@@ -205,11 +206,6 @@ class UnixHTTPConnection(http.client.HTTPConnection):
         sock.connect(self.unix_path)
         self.sock = sock
 
-    def duplicate_transport(self) -> socket.socket:
-        if self.sock is None:
-            raise BrokerError("cannot duplicate an unconnected worker transport")
-        return self.sock.dup()
-
     def abort(self) -> None:
         sock = self.sock
         if sock is not None:
@@ -218,6 +214,21 @@ class UnixHTTPConnection(http.client.HTTPConnection):
             except OSError:
                 pass
         self.close()
+
+
+def cancel_worker_stream(request_id: str) -> bool:
+    """Ask the pinned worker to cancel its resumable stream session."""
+    connection = UnixHTTPConnection(WORKER_SOCKET, timeout=5)
+    try:
+        query = urllib.parse.urlencode({"conv_id": request_id})
+        connection.request("DELETE", f"/v1/stream?{query}")
+        response = connection.getresponse()
+        response.read()
+        return 200 <= response.status < 300
+    except (OSError, http.client.HTTPException):
+        return False
+    finally:
+        connection.close()
 
 
 def build_worker_args(manifest: ModelManifest, model_path: pathlib.Path) -> list[str]:
@@ -369,35 +380,54 @@ class Worker:
 @dataclass
 class ActiveRequest:
     connection: UnixHTTPConnection | None
-    cancellation_transport: socket.socket | None = None
+    request_id: str
+    response_started: threading.Event = field(default_factory=threading.Event)
     cancelled: threading.Event = field(default_factory=threading.Event)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
-    def cancel(self) -> None:
+    def cancel(self) -> dict[str, bool | str]:
         self.cancelled.set()
         with self._lock:
             connection = self.connection
-            cancellation_transport = self.cancellation_transport
-        if cancellation_transport is not None:
-            try:
-                cancellation_transport.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-        if connection is not None:
+        control_accepted = cancel_worker_stream(self.request_id)
+        transport_fallback = not control_accepted or not self.response_started.is_set()
+        if transport_fallback and connection is not None:
             connection.abort()
+        return {
+            "mode": "upstream-stream-delete" if control_accepted else "transport-close",
+            "transportFallback": transport_fallback,
+            "workerCompletionConfirmed": False,
+        }
 
     def detach(self) -> None:
         with self._lock:
-            cancellation_transport = self.cancellation_transport
-            self.cancellation_transport = None
             self.connection = None
-        if cancellation_transport is not None:
-            cancellation_transport.close()
 
 
 WORKER = Worker()
 ACTIVE_REQUESTS: dict[str, ActiveRequest] = {}
 ACTIVE_LOCK = threading.Lock()
+
+
+def runtime_diagnostics() -> dict[str, Any]:
+    model = WORKER.model
+    with ACTIVE_LOCK:
+        active_request_count = len(ACTIVE_REQUESTS)
+    return {
+        "topology": "single-broker-owned-worker",
+        "perAppServers": False,
+        "worker": {
+            "ready": WORKER.ready,
+            "loadedModel": None if model is None else model.model_id,
+            "activeRequestCount": active_request_count,
+        },
+        "cancellation": {
+            "primary": "upstream-resumable-stream-delete",
+            "transportFallback": "before-worker-response-or-control-failure",
+            "workerCompletionConfirmed": False,
+            "evidence": "pinned-upstream-source-and-model-free-integration",
+        },
+    }
 
 
 class ThreadingUnixServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
@@ -460,7 +490,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         try:
             if self.path == "/health":
-                self._send_json(200, {"status": "ok", "provider": PROVIDER_ID, "workerReady": WORKER.ready})
+                runtime = runtime_diagnostics()
+                self._send_json(200, {
+                    "status": "ok",
+                    "provider": PROVIDER_ID,
+                    "workerReady": runtime["worker"]["ready"],
+                    "runtime": runtime,
+                })
                 return
             if self.path == "/v1/provider":
                 self._send_json(200, {
@@ -473,6 +509,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "contextLimit": CONTEXT_LIMIT,
                     "parallel": 1,
                     "modelStoreWritable": False,
+                    "runtime": {
+                        "topology": "single-broker-owned-worker",
+                        "perAppServers": False,
+                        "cancellation": {
+                            "primary": "upstream-resumable-stream-delete",
+                            "transportFallback": "before-worker-response-or-control-failure",
+                            "workerCompletionConfirmed": False,
+                        },
+                    },
                 })
                 return
             if self.path == "/v1/models":
@@ -526,8 +571,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if active is None:
                     self._send_json(404, {"error": "request_not_found"})
                 else:
-                    active.cancel()
-                    self._send_json(202, {"status": "cancelling", "requestId": request_id})
+                    cancellation = active.cancel()
+                    self._send_json(202, {"status": "cancelling", "requestId": request_id, "cancellation": cancellation})
                 return
             self._send_json(404, {"error": "not_found"})
         except (BrokerError, OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
@@ -543,7 +588,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         conn = UnixHTTPConnection(WORKER_SOCKET)
         conn.connect()
-        active = ActiveRequest(conn, conn.duplicate_transport())
+        active = ActiveRequest(conn, request_id)
         with ACTIVE_LOCK:
             if request_id in ACTIVE_REQUESTS:
                 active.detach()
@@ -557,11 +602,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send_json(409, {"error": "request_cancelled", "requestId": request_id})
                 return
             encoded = json.dumps(payload, separators=(",", ":")).encode("utf-8")
-            conn.request("POST", "/v1/chat/completions", body=encoded, headers={"Content-Type": "application/json"})
+            conn.request("POST", "/v1/chat/completions", body=encoded, headers={
+                "Content-Type": "application/json",
+                "X-Conversation-Id": request_id,
+            })
             if active.cancelled.is_set():
                 self._send_json(409, {"error": "request_cancelled", "requestId": request_id})
                 return
             response = conn.getresponse()
+            active.response_started.set()
             self.send_response(response.status)
             content_type = response.getheader("Content-Type", "text/event-stream")
             self.send_header("Content-Type", content_type)
@@ -570,12 +619,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             headers_sent = True
             while not active.cancelled.is_set():
+                if conn.sock is None:
+                    raise BrokerError("worker transport closed while streaming")
+                readable, _, _ = select.select((conn.sock,), (), (), 0.25)
+                if not readable:
+                    continue
                 chunk = response.read1(4096)
                 if not chunk:
                     break
                 self.wfile.write(chunk)
                 self.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError, OSError, http.client.HTTPException) as exc:
+        except (BrokenPipeError, ConnectionResetError, OSError, ValueError, http.client.HTTPException) as exc:
             requested_cancel = active.cancelled.is_set()
             active.cancel()
             if not headers_sent:

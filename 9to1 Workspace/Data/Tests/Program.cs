@@ -103,6 +103,17 @@ await using (var querySession = new DataQuerySession(querySpreadsheet, queryData
         "Query materialisation changed the result.");
     Assert(querySpreadsheet.MaterializedSheetCalls == 1, "Query materialisation did not use the typed spreadsheet operation exactly once.");
 
+    var recordedExecution = querySnapshot.RecentQueries[0];
+    var copiedExecution = new DataQueryExecution(
+        recordedExecution.Sql,
+        recordedExecution.MaxRows,
+        recordedExecution.Result,
+        recordedExecution.ExecutedAtUtc);
+    var copiedExecutionBlocked = false;
+    try { _ = await querySession.MaterializeAsync(queryWorkbook.Id, copiedExecution, "Copied Result"); }
+    catch (InvalidOperationException) { copiedExecutionBlocked = true; }
+    Assert(copiedExecutionBlocked, "Query materialisation accepted a copied execution instead of the current session execution instance.");
+
     var truncated = await querySession.ExecuteAsync("TRUNCATED PREVIEW", maxRows: 25);
     var refusedTruncated = false;
     try { _ = await querySession.MaterializeAsync(queryWorkbook.Id, truncated, "Incomplete"); }

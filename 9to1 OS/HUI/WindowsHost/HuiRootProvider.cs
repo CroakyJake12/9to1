@@ -1,25 +1,11 @@
 using System.Runtime.Loader;
 using CakeOS.Platform;
-using Haven.UI.Components;
 
 namespace CakeOS.HuiWindowsHost;
 
 /// <summary>
-/// Supplies an application-owned, platform-neutral HUI root to the Windows host.
+/// Resolves an application-owned root provider using the shared platform-neutral contract.
 /// </summary>
-public interface IHuiRootProvider
-{
-    HuiRootProviderAbi Abi { get; }
-    IRootElement CreateRoot(IServiceProvider services);
-    Task<HuiRootLifecycleState> InitializeAsync(IServiceProvider services, CancellationToken cancellationToken = default);
-    Task ActivateAsync(CancellationToken cancellationToken = default);
-    Task DeactivateAsync(CancellationToken cancellationToken = default);
-    Task<HuiRootLifecycleState> GetStateAsync(CancellationToken cancellationToken = default);
-    Task ApplyThemeTokensAsync(HuiThemeTokens tokens, CancellationToken cancellationToken = default);
-    Task ApplyAccessibilityStateAsync(HuiAccessibilityState state, CancellationToken cancellationToken = default);
-    Task<ProviderInjectionResult> InjectProvidersAsync(IReadOnlyCollection<ProviderDescriptor> providers, IReadOnlyCollection<ServiceDescriptor> services, CancellationToken cancellationToken = default);
-}
-
 public static class HuiRootProviderResolver
 {
     public const string AssemblyOption = "--hui-root-provider-assembly";

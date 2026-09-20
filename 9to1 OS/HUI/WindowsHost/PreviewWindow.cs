@@ -31,8 +31,29 @@ public sealed class PreviewWindow : Window
 
     public PreviewWindow(IRootElement? root)
     {
+        if (root is IHuiRootElement { NativeRoot: HuiPage page })
+        {
+            _theme = CakeTheme.Load();
+            var rootBackend = new HuiBackendServices(_theme, _ => null);
+            _surface = new HuiAppSurface(page,
+                new HuiSurfaceServices(rootBackend), HavenPlatform.Windows);
+
+            Title = "CakeOS HUI Windows";
+            Width = 960;
+            Height = 600;
+            MinWidth = 720;
+            MinHeight = 480;
+            Background = new SolidColorBrush(_theme.Resolve("Background"));
+            Content = _surface;
+            Closed += (_, _) => _surface.Dispose();
+            return;
+        }
+
         if (root is not null)
-            throw new NotSupportedException("The Windows HUI host cannot render an unadapted platform root.");
+        {
+            throw new NotSupportedException(
+                "The Windows HUI host requires an IHuiRootElement exposing a Haven.UI.Components.Page.");
+        }
 
         _theme = CakeTheme.Load();
         var scene = HuiDemoScene.Build(

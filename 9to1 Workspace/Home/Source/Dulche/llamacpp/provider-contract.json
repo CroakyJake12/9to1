@@ -36,5 +36,15 @@
     "ollamaProcessOwnership": "external",
     "ollamaProxying": false,
     "retirement": "deferred until compatibility and performance evidence supports migration"
+  },
+  "runtime": {
+    "topology": "single-broker-owned-worker",
+    "perAppServers": false,
+    "cancellation": {
+      "primary": "upstream-resumable-stream-delete",
+      "transportFallback": "before-worker-response-or-control-failure",
+      "workerCompletionConfirmed": false,
+      "evidence": "pinned-upstream-source-and-model-free-integration"
+    }
   }
 }
