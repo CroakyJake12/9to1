@@ -2,7 +2,7 @@
 
 ## Decision
 
-Dulche runs one broker-owned `llama-server` worker for the shared local runtime. It does not start a server per application. The broker starts the worker with `--parallel 1`, routes all HUI traffic through its private Unix socket, and reports this topology in `GET /health` under `runtime`.
+Dulche runs broker-owned `llama-server` workers for the shared local runtime, one per explicitly loaded model slot. It does not start a server per application. Each worker starts with `--parallel 1`, has its own private Unix socket, and serves CUI/provider traffic through the broker. `GET /health` reports the `single-broker-owned-slot-workers` topology and loaded slot diagnostics under `runtime`.
 
 For a chat request, the broker sends the validated Haven `request_id` to the pinned worker as `X-Conversation-Id`. Cancellation first calls the worker's `DELETE /v1/stream?conv_id=<request_id>` control route. This replaces the previous duplicated-socket shutdown used solely to unblock the proxy's blocking stream read.
 

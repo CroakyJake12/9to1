@@ -165,6 +165,7 @@ internal sealed class ActionsFlyoutFinalScene
 
         const int columns = 3;
         var rows = Math.Max(1, (int)Math.Ceiling(actions.Count / (double)columns));
+        section.SetValue(HavenProperties.MinHeight, HavenLength.Px(24d + 9d + rows * 72d));
         var grid = new Container
         {
             Name = $"{section.Name}.Grid",

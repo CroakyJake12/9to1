@@ -328,7 +328,7 @@ public sealed partial class ProjectIntelligenceService(IWorkspaceToolService pro
     /// Runs run git async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
     private Task<ProcessResult> RunGitAsync(string root, string arguments, TimeSpan timeout, CancellationToken cancellationToken) =>
-        processes.RunProcessAsync(new ProcessRequest("git.exe", arguments, root, timeout), cancellationToken);
+        processes.RunProcessAsync(new ProcessRequest("git", arguments, root, timeout), cancellationToken);
 
     /// <summary>
     /// Performs git text asynchronously so I/O does not block the caller's thread.

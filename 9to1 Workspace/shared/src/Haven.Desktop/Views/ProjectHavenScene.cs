@@ -157,6 +157,7 @@ internal sealed partial class ProjectHavenScene : IDisposable
         ContextButton.Accessibility.AccessibleName = "Show included project context";
         SendButton = Composer.GetComponent<HavenButton>("Send");
         SendButton.Accessibility.AccessibleName = "Start project chat";
+        Composer.GetComponent<HavenButton>("ChatSettings").Accessibility.AccessibleName = "Manage project chat response settings";
         WorkArea.Add(AssistantPanel);
 
         ToolDock = Vertical("Project.ToolDock", 6);

@@ -1,6 +1,6 @@
-# Haven llama.cpp runtime — staged implementation
+# Dulche llama.cpp runtime - staged implementation
 
-This directory implements the production boundary for local GGUF inference. It does **not** bundle a model, download a model, install packages, modify the approved VM, or expose llama.cpp directly to HUI.
+This directory implements the production boundary for local GGUF inference. It does **not** bundle a model, download a model, install packages, modify the approved VM, or expose llama.cpp directly to CUI applications.
 
 ## Evidence state
 
@@ -20,7 +20,7 @@ A successful binary build is not evidence that a model loaded, generated tokens,
 ## Boundary
 
 ```text
-HUI / provider registry
+CUI / provider clients
   |
   | Haven API over $XDG_RUNTIME_DIR/haven/inference.sock (0600)
   v
@@ -28,7 +28,7 @@ broker.py  [model store read-only]
   |
   | private Unix socket
   v
-llama-server (single model, no UI/logs/slots, parallel 1)
+llama-server (one model per Dulche slot, no UI/logs/slots, parallel 1)
   |
   v
 verified content-addressed GGUF
@@ -44,17 +44,42 @@ model store
 
 The systemd user service restricts the broker and its worker to `AF_UNIX`, denies network sockets, makes the home directory read-only, gives write access only to the runtime directory, and grants read-only access to the Haven model store. Model-store mutation therefore belongs to `haven-modelctl`, not the inference daemon.
 
-## HUI-facing API
+## Dulche API
 
 - `GET /health`
 - `GET /v1/provider`
 - `GET /v1/models`
+- `GET /v1/slots`
+- `GET /v1/tools`
+- `GET /v1/permissions/requests`
+- `GET /v1/permissions/events` (server-sent permission-request events for app frontends)
 - `POST /v1/models/{id}/load`
 - `POST /v1/models/{id}/unload`
+- `POST /v1/slots/{slot}/context`
+- `POST /v1/slots/{slot}/tools/{tool_id}`
+- `POST /v1/slots/{slot}/permissions`
+- `POST /v1/permissions/{request_id}/resolve`
 - `POST /v1/chat/completions` (streaming; requires a safe `request_id`)
 - `POST /v1/requests/{request_id}/cancel`
 
-The API is Haven-owned. Upstream llama-server endpoints are an internal implementation detail. `provider-contract.json` is the machine-readable coexistence contract for HUI/provider work.
+The embedding surface is intentionally small:
+
+```text
+Dulche.Start(port)
+Dulche.LoadModel(model, slot, context)
+Dulche.Model(modelId).SetContext(context)
+Dulche.OnPermissionRequested(listener)
+```
+
+`Dulche.Start()` uses port `9477` when the argument is blank and binds only to `127.0.0.1`. `Dulche.LoadModel` chooses the next free slot when `slot` is blank and uses the broker default context when `context` is blank. Loading a different model into an occupied slot stops that slot's current worker before starting its replacement. `SetContext` queues a replacement context and applies it only after the current turn has completed.
+
+The API is Dulche-owned. Upstream llama-server endpoints are an internal implementation detail. `provider-contract.json` is the machine-readable compatibility contract for provider clients.
+
+## Tool permissions
+
+Native tools are registered and executed only by Dulche. Applications do not implement parallel command or code executors. The initial tool set is `dulche.run_command`, which accepts an argument vector without a shell, and `dulche.run_code`, which runs Python with `-I` in a temporary working directory. Both have bounded output, bounded execution time, cancellation by process-tree termination, and require an explicit Dulche permission decision.
+
+Models have no runtime-management API. They can request an external permission through Dulche, which broadcasts it to in-process listeners and to CUI frontends over `GET /v1/permissions/events`. A frontend resolves the request through `POST /v1/permissions/{request_id}/resolve`. If no listener resolves it within 10 seconds, Dulche returns `ask_user`; it does not execute the tool or modify runtime settings. The temporary directory is an execution boundary, not a complete operating-system sandbox; OS sandboxing remains required before untrusted tool execution is runtime-proven.
 
 ## Ollama coexistence and migration
 
@@ -96,14 +121,16 @@ See `MODEL-LIFECYCLE.md` for crash consistency, permissions, and CLI semantics. 
 
 The first runtime is intentionally conservative:
 
-- one loaded model and one parallel generation slot;
+- up to `DULCHE_MAX_MODEL_SLOTS` loaded models (default 8), each with a private worker socket and home directory;
+- one parallel generation per loaded slot; loading a replacement model stops the existing slot worker first;
 - default context limit 8192 tokens, bounded to 512–131072 by the broker;
 - server Web UI and slots endpoint disabled;
 - upstream runtime logging disabled to avoid retaining prompts and to remove stderr-pipe backpressure;
 - server-side cache-RAM pool disabled for the first slice;
 - worker environment strips llama.cpp argument overrides, GGML overrides, proxy/token variables, and dynamic-loader injection variables;
 - one process-lifetime exclusive `flock` arbitrates broker ownership before stale-socket recovery, preventing concurrent starts from unlinking or replacing each other's socket;
-- cancellation uses the pinned worker's request-scoped resumable-stream DELETE route, with transport close retained only as the documented fallback.
+- cancellation uses the pinned worker's request-scoped resumable-stream DELETE route (primary) and actively shuts down the private worker connection so a blocked read cannot ignore a CUI cancel request; transport close is retained only as the documented fallback.
+
 
 These defaults are safety/resource baselines, not benchmark-derived optimal settings.
 

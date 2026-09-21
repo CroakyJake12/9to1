@@ -34,7 +34,7 @@ internal static class Program
         {
             ConfigureThreadPool();
             if (OperatingSystem.IsWindows())
-                SetCurrentProcessExplicitAppUserModelID("Haven.LocalAI.Desktop");
+                SetCurrentProcessExplicitAppUserModelID(DesktopProductIdentity.WindowsAppId);
             BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
@@ -123,4 +123,19 @@ internal static class Program
     /// </summary>
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int MessageBoxW(IntPtr owner, string text, string caption, uint type);
+}
+
+internal static class DesktopProductIdentity
+{
+    internal static string DisplayName { get; } = typeof(Program).Assembly
+        .GetCustomAttributes(typeof(System.Reflection.AssemblyTitleAttribute), inherit: false)
+        .OfType<System.Reflection.AssemblyTitleAttribute>()
+        .FirstOrDefault()?.Title ?? "Haven";
+
+    internal static string WindowsAppId { get; } = typeof(Program).Assembly
+        .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), inherit: false)
+        .OfType<System.Reflection.AssemblyMetadataAttribute>()
+        .FirstOrDefault(attribute => attribute.Key == "9to1.WindowsAppId")?.Value
+        ?? typeof(Program).Assembly.GetName().Name
+        ?? "Haven";
 }

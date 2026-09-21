@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
+[Parameter(Mandatory)]
     [ValidateSet('restore', 'build', 'test', 'verify', 'package-linux', 'package-windows')]
     [string]$Action,
 
@@ -132,4 +132,5 @@ try {
 }
 finally {
     Pop-Location
+
 }

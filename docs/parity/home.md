@@ -2,11 +2,11 @@
 
 ## Scope
 
-`9to1 Workspace/Home/` now contains a small, platform-neutral Home domain and a real Haven.UI CUI scene. Its snapshot separates catalog, installed-app, update, settings, and runtime/model/voice sections.
+`9to1 Workspace/Home/` contains a platform-neutral Home domain and an authored `UI/Home.cui` surface. Its snapshot separates catalog, installed-app, update, settings, and runtime/model/voice sections.
 
 ## CUI Dependency
 
-`HavenOS.Home.csproj` explicitly requires `9to1 OS/HUI/vendor/Haven.UI/Haven.UI.csproj` (or `HavenUiProjectPath`). The scene is CUI-ready and uses Haven.UI primitives directly; it is not registered in a desktop or Android shell because those integration points are outside this ownership boundary.
+`HavenOS.Home.csproj` explicitly requires `framework/CUI/src/NineToOne.Cui.Markup.csproj` (or `CuiMarkupProjectPath`). `HomeCuiSurface` loads the authored `.cui` document and exposes typed `InstallAllUpdates` intent. It has no HUI dependency and does not manually construct a visual tree.
 
 ## Backend Status
 
@@ -16,4 +16,4 @@ Settings and runtime/model/voice values are typed input snapshots. Their default
 
 ## Verification
 
-Focused tests cover unavailable backend behavior, backend refresh/install projection, failure reporting, all five CUI sections, and keyboard invocation of the typed install intent. Host registration, headed CUI rendering, Android launcher behavior, and a real package installation remain unvalidated because no package backend or Home host route is in this owned slice.
+Focused tests cover unavailable backend behavior, backend refresh/install projection, failure reporting, all five authored CUI sections, and typed install intent. The CUI loader is verified, but a CUI renderer/host does not yet exist, so headed rendering, accessibility interaction, Linux/Windows launch, Android launcher behavior, and real package installation remain UNFINISHED.

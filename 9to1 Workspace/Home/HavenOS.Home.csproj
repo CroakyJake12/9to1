@@ -3,17 +3,20 @@
     <AssemblyName>HavenOS.Home</AssemblyName>
     <RootNamespace>HavenOS.Home</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
+    <CuiMarkupProjectPath Condition="'$(CuiMarkupProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\framework\CUI\src\NineToOne.Cui.Markup.csproj')">$(MSBuildThisFileDirectory)..\..\framework\CUI\src\NineToOne.Cui.Markup.csproj</CuiMarkupProjectPath>
   </PropertyGroup>
 
-  <Target Name="RequireHavenUi" BeforeTargets="ResolveProjectReferences">
-    <Error Condition="'$(HavenUiProjectPath)' == ''" Text="Haven.UI is required for the Home CUI surface. Set /p:HavenUiProjectPath=&lt;path-to-Haven.UI.csproj&gt;." />
-    <Error Condition="'$(HavenUiProjectPath)' != '' and !Exists('$(HavenUiProjectPath)')" Text="HavenUiProjectPath does not exist: $(HavenUiProjectPath)" />
+  <Target Name="RequireCuiMarkup" BeforeTargets="ResolveProjectReferences">
+    <Error Condition="'$(CuiMarkupProjectPath)' == ''" Text="NineToOne.Cui.Markup is required for Home markup. Set /p:CuiMarkupProjectPath=&lt;path-to-NineToOne.Cui.Markup.csproj&gt;." />
+    <Error Condition="'$(CuiMarkupProjectPath)' != '' and !Exists('$(CuiMarkupProjectPath)')" Text="CuiMarkupProjectPath does not exist: $(CuiMarkupProjectPath)" />
   </Target>
 
   <ItemGroup>
     <Compile Include="Source\Home\HomeDashboard.cs" />
     <Compile Include="Source\Home\HomeCuiScene.cs" />
-    <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
+    <ProjectReference Include="$(CuiMarkupProjectPath)" Condition="'$(CuiMarkupProjectPath)' != '' and Exists('$(CuiMarkupProjectPath)')" />
+    <Content Include="UI\Home.cui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

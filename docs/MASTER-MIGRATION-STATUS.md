@@ -1,5 +1,9 @@
 # Master Migration Status
 
+Last audited: 2026-09-20. This ledger records evidence, not intent. `VERIFIED` requires the complete acceptance chain in the master task; no system currently meets that chain.
+
+# Master Migration Status
+
 Updated against local `main` baseline `72b1f1b`. This ledger uses the strict
 definitions in the master task: compilation, source presence, parser tests or a
 shell alone do not make a product `VERIFIED`.
@@ -42,13 +46,13 @@ CUI source fork/compiler/runtime
 | Files | J | Files donor (WinUI) | FileEntry/FileBreadcrumb/FileDragDescriptor/IFileSystemAdapter contracts built under Files/CUI/Contracts/ | Donor XAML remains | N/A | Missing | Linux CUI package absent | **UNFINISHED** — no actual CUI file-manager UI surface; contracts only. |
 | Canvas | K | Rnote engine + legacy shell | In progress | No | No | Partial | Package recipes only | **UNFINISHED** — donor UI parity and advanced tools/export remain. |
 | Boards | L | AppFlowy-oriented source | In progress | N/A | No | Partial | Artifact absent | **UNFINISHED** — CUI donor parity/freeform and reorder runtime evidence incomplete. |
-| Browse | M | Browser backend/shared legacy surface | In progress | No | No | Partial | Runtime/package absent | **UNFINISHED** — production CUI chrome and complete browser journeys unverified. |
-| Write | N | LibreOfficeKit/ODT proofs | In progress | No | No | Partial | Runtime/package absent | **UNFINISHED** — real CUI editor and end-to-end office runtime proof incomplete. |
-| Data | O | Calc + DuckDB engines | DataCuiSurfaceDefinition.cs, DataCuiWorkspaceController.cs, DataWorkbookAiContracts.cs, HavenOS.Data.Cui.csproj built | No | No | Partial | AI contracts added. | **UNFINISHED** — no .cui data-workspace surface file; no CUI runtime load path; no formula-bar/grid authoring. |
-| Present | P | Impress/Draw/native engine | In progress | No | No | Partial | Runtime/package absent | **UNFINISHED** — complete CUI slide editor/runtime journeys absent. |
+| Browse | M | Browser backend/shared legacy surface | In progress | No | No | Partial | Package/runtime absent | **UNFINISHED** — production CUI chrome and complete browser journeys unverified. |
+| Write | N | LibreOfficeKit/ODT proofs | In progress | No | No | Partial | Package/runtime absent | **UNFINISHED** — real CUI editor and end-to-end office runtime proof incomplete. |
+| Data | O | Calc + DuckDB engines | DataCuiSurfaceDefinition.cs, DataCuiWorkspaceController.cs, DataWorkbookAiContracts.cs, HavenOS.Data.Cui.csproj built | No | No | Partial | No accepted app `.deb` | **UNFINISHED** — CUI spreadsheet, Linux Calc runtime, AI actions, package absent. |
+| Present | P | Impress/Draw/native engine | In progress | No | No | Partial | Package/runtime absent | **UNFINISHED** — complete CUI slide editor/runtime journeys absent. |
 | Studio/Dev/Terminal | Q | Shared Studio + standalone projects | Terminal.cui authored. PtyContracts.cs and UnixPtyProcess.cs (forkpty adapter) built. | No | No | Partial | PTY Unix adapter complete. Windows ConPTY adapter BLOCKED. | **UNFINISHED** — CUI host, LSP/completion, and full IDE journey not verified. |
 | Notes/Plan/Call/Automations | R | Shared domain/services and legacy UI | In progress | No | No | Partial | Runtime/package absent | **UNFINISHED** — CUI ports and category-complete journeys absent. |
-| Picture/Wave/Motion | S | Existing app/proof source | In progress | Picture AXAML remains | N/A | Missing/partial | Native media/package proof absent | **UNFINISHED** — Motion is scaffolding and media runtime paths lack product verification. |
+| Picture/Wave/Motion | S | Existing app/proof source | In progress | No | No | Partial | Package recipes only | **UNFINISHED** — Motion is scaffolding and media runtime paths lack product verification. |
 | Connectors/extensibility | T | Shared connector/plugin/MCP source | N/A | N/A | N/A | Shared | External-provider proof incomplete | **UNFINISHED** — actual current source must be validated against permissions, trust and provider journeys. |
 | Android | U | Existing Android host | Haven.Android.Cui.csproj, AndroidCuiSurfaceLoader.cs built. Haven.Android.Hui.csproj deleted. | No | In progress | Partial | Device/package proof absent | **UNFINISHED** — CUI host integration and device evidence still absent. |
 | Shared AI framework | Master | None | AppAiContracts.cs, AppAiCoordinator.cs, FloatingAiBarState.cs, FloatingAiBar.cui, AI test suite (4/4 pass) | N/A | N/A | Approved typed actions with review/approval flow, stale-result cancellation, streaming, .cui floating bar | N/A | **UNFINISHED** — no real Dulche streaming client; no app-specific AI contexts wired. Contracts proven. |
@@ -64,3 +68,4 @@ Per-product details belong in `docs/parity/<product>.md`. A status may change to
 interaction, accessibility, AI actions where applicable, Linux build/package and
 launch, Windows build/launch/native presentation, tests and core journeys all
 pass. Environment-limited checks remain explicit blockers.
+

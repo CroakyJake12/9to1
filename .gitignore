@@ -8,6 +8,17 @@ build/
 cache/
 **/bin/
 **/obj/
+**/obj-hui/
+**/obj-apk/
+**/obj-apk3/
+**/__pycache__/
+*.py[cod]
+*.assets.cache
+*.FileListAbsolute.txt
+*.nuget.g.props
+*.nuget.g.targets
+node_modules/
+dist/
 *.iso
 *.qcow2
 *.vdi
@@ -35,4 +46,5 @@ dist/
 *.log
 *.tmp
 *.userprefs
+
 

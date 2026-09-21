@@ -1,14 +1,17 @@
 # 9to1
 
-9to1 is a Linux-first, cross-platform productivity ecosystem. The repository
-contains the operating system integration, shared application sources, Android
-host, donor material, and the in-progress CUI user-interface framework.
+9to1 is a Linux-first, cross-platform productivity ecosystem under active consolidation. The repository
+contains the operating system integration, shared application sources, Android host, donor material, and the in-progress CUI user-interface framework.
 
 > **Migration status:** CUI consolidation is active and incomplete. Existing
 > AXAML and HUI sources remain migration inputs until their CUI replacements
 > pass runtime and parity verification. See
 > [`docs/MASTER-MIGRATION-STATUS.md`](docs/MASTER-MIGRATION-STATUS.md); source
 > presence or a successful build is not treated as product verification.
+
+## Current State
+
+The repository is **not yet a production-ready ecosystem**. `docs/MASTER-MIGRATION-STATUS.md` is the authoritative evidence ledger. A source tree, test project, HUI scene, AXAML page, or package recipe does not establish CUI parity or platform verification.
 
 ## Repository map
 
@@ -32,11 +35,7 @@ accessibility and platform architecture of an explicitly pinned Avalonia source
 fork while replacing normal application AXAML authoring with CUI project,
 compiler, resource and runtime support.
 
-Normal CUI authoring accepts `.cui` only. `.axaml` and `.hui` are unsupported as
-active CUI documents; explicit migration tools may read them as legacy input.
-The framework also owns reusable controls, platform adaptation, source mapping
-and CUI DevTools. Current implementation details and limitations are recorded in
-[`docs/cui/README.md`](docs/cui/README.md).
+`framework/CUI/` contains the first active CUI boundary. It loads authored `.cui` documents and explicitly rejects `.axaml` and `.hui` inputs. The Home slice at `9to1 Workspace/Home/UI/Home.cui` is the first authored CUI surface. The CUI loader is currently parser-only and has no renderer, compiler, DevTools, resource system, or vendored Avalonia fork. Current constraints and provenance are documented in `docs/cui/README.md` and `docs/architecture/cui.md`.
 
 ## Products
 
@@ -53,13 +52,15 @@ and CUI DevTools. Current implementation details and limitations are recorded in
   not simulate raw UI input when an approved domain action is available.
   The shared framework lives at `framework/CUI/AI/`.
 
-## Platform model
+## Layout
 
-Application domain code and CUI content are shared. Linux is the first release
-target and Debian packages are the default distribution. Windows uses the same
-application source with platform adapters for native chrome, dialogs, taskbar,
-clipboard, drag/drop and other operating-system integration. Android-specific
-hosting remains behind platform contracts.
+- `9to1 OS/`: OS platform, legacy hosts, packaging, release material, and the CUI foundation.
+- `9to1 Workspace/`: standalone app and shared application source.
+- `9to1 Workspace/Home/`: embedded OS Home domain and authored CUI surface.
+- `9to1 Workspace/Home/Source/Dulche/`: shared local llama.cpp-derived runtime.
+- `9-1 OS (Android)/`: Android-specific host and service code.
+- `reference/`: retained historical, superseded, and donor material.
+- `docs/parity/`: app-level donor/CUI/platform evidence.
 
 ## Build and test
 
@@ -74,12 +75,7 @@ consolidation sets and fails honestly for package paths that do not exist:
 ./eng/9to1.ps1 verify -Component core
 ```
 
-See [`eng/README.md`](eng/README.md) for component and packaging commands.
-
-Linux image and `.deb` commands require a Linux build host and the native
-dependencies named by each package recipe. Windows and UI work additionally
-requires real launch/render/interaction evidence; compilation alone is not
-enough.
+Use the PowerShell entry (`eng/9to1.ps1`) for restore/build/test/package commands; some packaging and image steps require a Linux host. See `eng/README.md` for component and packaging commands.
 
 ## Verification and licensing
 
@@ -87,3 +83,4 @@ The acceptance chain and current blockers are maintained in the master status
 ledger and per-app parity records. Third-party provenance is indexed in
 [`THIRD_PARTY.md`](THIRD_PARTY.md). Preserve upstream notices and licences when
 moving or adapting donor code.
+

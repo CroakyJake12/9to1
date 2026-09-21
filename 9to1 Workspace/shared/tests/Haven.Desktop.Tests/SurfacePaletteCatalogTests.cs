@@ -1,9 +1,11 @@
 using Avalonia.Styling;
 using Haven.Core;
 using Haven.Desktop.Controls;
+using Haven.Desktop.HavenUI.Tokens;
 
 namespace Haven.Desktop.Tests;
 
+[Collection("HavenPersonalisation")]
 public sealed class SurfacePaletteCatalogTests
 {
     [Fact]
@@ -39,11 +41,19 @@ public sealed class SurfacePaletteCatalogTests
     [Fact]
     public void Tasks_palette_uses_the_mockup_orange_family_for_background_and_controls()
     {
-        var palette = SurfacePaletteCatalog.For(HavenSurface.Tasks, ThemeVariant.Light);
+        HavenPersonalisation.Reset();
+        try
+        {
+            var palette = SurfacePaletteCatalog.For(HavenSurface.Tasks, ThemeVariant.Light);
 
-        Assert.True(palette.TideColour.R > palette.TideColour.B);
-        Assert.True(palette.Accent.R > palette.Accent.G);
-        Assert.True(palette.AccentStrong.R > palette.AccentStrong.B);
+            Assert.True(palette.TideColour.R > palette.TideColour.B);
+            Assert.True(palette.Accent.R > palette.Accent.G);
+            Assert.True(palette.AccentStrong.R > palette.AccentStrong.B);
+        }
+        finally
+        {
+            HavenPersonalisation.Reset();
+        }
     }
 
     private static double Luminance(Avalonia.Media.Color color) =>

@@ -5,12 +5,12 @@ namespace Haven.Desktop.Tests;
 public sealed class TaskbarShelfLayoutTests
 {
     [Theory]
-    [InlineData(900d, TaskbarShelfState.Compact)]
-    [InlineData(1200d, TaskbarShelfState.Standard)]
-    [InlineData(1800d, TaskbarShelfState.Expanded)]
-    public void Shelf_state_tracks_available_width(double width, TaskbarShelfState expected)
+    [InlineData(900d, "Compact")]
+    [InlineData(1200d, "Standard")]
+    [InlineData(1800d, "Expanded")]
+    public void Shelf_state_tracks_available_width(double width, string expected)
     {
-        Assert.Equal(expected, TaskbarShelfLayout.Resolve(width));
+        Assert.Equal(Enum.Parse<TaskbarShelfState>(expected), TaskbarShelfLayout.Resolve(width));
     }
 
     [Fact]

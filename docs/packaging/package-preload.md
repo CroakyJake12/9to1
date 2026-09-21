@@ -31,6 +31,20 @@ copies `.deb` files into the live-build package directory. It is not modified by
 this model. The preload manifest is therefore the admission gate before calling
 the image builder, rather than a claim that an image has been built.
 
+## Developer Preview Outputs
+
+`eng/9to1.ps1 -Command package-windows` creates a self-contained `win-x64`
+desktop executable. `package-linux` cross-publishes the same current host for
+`linux-x64` and assembles `9-1-legacy-desktop-preview_*.deb` using archive tooling
+available on Windows. These outputs are written under
+`artifacts/developer-preview/`; they are excluded from the release cohort,
+preload manifest, image builder, and release staging records.
+
+They are developer test artifacts only. They package the current legacy desktop
+host, do not prove a CUI renderer or Dulche runtime, carry an explicit
+non-redistribution notice, and have not been installed or run on Linux. The
+release model above remains unchanged.
+
 ## Metadata validation
 
 Run this from the repository root on PowerShell. The default validation reads
@@ -63,8 +77,9 @@ exact package artifacts are available.
 
 ## Current .deb gaps
 
-- No `.deb` files exist in this checkout. `9to1 OS/artifacts/packages` does not
-  exist, so neither listed artifact can be byte-verified or assembled.
+- No release-admitted `.deb` files exist in this checkout. `9to1 OS/artifacts/packages`
+  does not exist, so neither listed artifact can be byte-verified or assembled.
+  `artifacts/developer-preview/` is explicitly excluded from this release path.
 - No image or ISO artifact exists. There is no package-install, boot, launcher,
   runtime, or approved-VM evidence for this release.
 - The image builder currently accepts every `.deb` in `HAVENOS_DEB_DIR`; it does

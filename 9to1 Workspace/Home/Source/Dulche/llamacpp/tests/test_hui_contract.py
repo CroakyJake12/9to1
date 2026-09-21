@@ -8,7 +8,7 @@ RUNTIME = pathlib.Path(__file__).resolve().parents[1]
 REPOSITORY = RUNTIME.parents[4]
 
 
-class HuiProviderContractTests(unittest.TestCase):
+class LegacyHuiProviderContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.hui = json.loads(
@@ -33,18 +33,24 @@ class HuiProviderContractTests(unittest.TestCase):
         self.assertEqual("GET /v1/provider", self.hui["status"]["provider"])
         self.assertEqual("GET /health", self.hui["status"]["health"])
         self.assertEqual("GET /v1/models", self.hui["status"]["models"])
-        self.assertEqual(
-            self.runtime["endpoints"],
-            [
-                "GET /health",
-                "GET /v1/provider",
-                "GET /v1/models",
-                "POST /v1/models/{id}/load",
-                "POST /v1/models/{id}/unload",
-                "POST /v1/chat/completions",
-                "POST /v1/requests/{request_id}/cancel",
-            ],
-        )
+        self.assertEqual(2, self.runtime["schemaVersion"])
+        self.assertTrue({
+            "GET /health",
+            "GET /v1/provider",
+            "GET /v1/models",
+            "POST /v1/models/{id}/load",
+            "POST /v1/models/{id}/unload",
+            "POST /v1/chat/completions",
+            "POST /v1/requests/{request_id}/cancel",
+        }.issubset(self.runtime["endpoints"]))
+
+    def test_runtime_adds_slot_and_permission_contracts_without_changing_legacy_paths(self) -> None:
+        self.assertEqual("single-broker-owned-slot-workers", self.runtime["runtime"]["topology"])
+        self.assertEqual("next available slot", self.runtime["embeddingApi"]["blankSlot"])
+        self.assertEqual("after the current turn completes", self.runtime["embeddingApi"]["contextApplication"])
+        self.assertEqual("permission requests only", self.runtime["tools"]["modelRuntimeAccess"])
+        self.assertEqual(10, self.runtime["tools"]["approvalTimeoutSeconds"])
+        self.assertIn("GET /v1/permissions/events", self.runtime["endpoints"])
 
     def test_model_key_compatibility_and_execution_contract_are_explicit(self) -> None:
         self.assertEqual("llamacpp:<model-id>", self.hui["modelKeys"]["qualified"])

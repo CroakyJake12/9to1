@@ -110,6 +110,7 @@ internal sealed partial class ImagineWorkspaceScene : IDisposable
         AssistantInput.Multiline = true; AssistantInput.SubmitOnEnter = true;
         Assistant.GetComponent<HavenButton>("AddMenu").SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         AssistantSend = Assistant.GetComponent<HavenButton>("Send"); AssistantSend.Accessibility.AccessibleName = "Apply AI structural edit to selection";
+        Assistant.GetComponent<HavenButton>("ChatSettings").Accessibility.AccessibleName = "Manage Imagine response settings";
         Root.Add(Assistant);
 
         _dynamic = new DynamicUI(Root, HavenDynamicUITemplateCatalog.FromAssembly(typeof(ImagineWorkspaceScene).Assembly), _prefabs);

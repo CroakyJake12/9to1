@@ -172,27 +172,14 @@ public sealed class DataPageTests
     }
 
     [AvaloniaFact]
-    public async Task Data_page_creates_first_workbook_and_saves_dirty_state_on_detach()
+    public async Task Data_page_shows_landing_state_without_creating_an_unrequested_workbook()
     {
         var repository = new FakeDataRepository();
         using var page = new DataPage(new HavenEventBus(), repository, new FakeDataFormats(), new FakeDataQueries());
         await page.InitializeAsync();
-        Assert.NotNull(page.Workbook);
-        Assert.Equal(1, repository.SaveCalls);
-        var window = new Window { Width = 1200, Height = 900, Content = page };
-        try
-        {
-            window.Show(); window.UpdateLayout();
-            page.Route.WorkbookTitleInput.Text = "Persist before leaving";
-            page.Route.CellValueInput.Text = "Saved value";
-            Assert.True(page.IsDirty);
-            window.Content = null;
-            await WaitUntilAsync(() => !page.IsDirty);
-            Assert.Equal(2, repository.SaveCalls);
-            Assert.Equal("Persist before leaving", repository.LastSaved?.Title);
-            Assert.Equal("Saved value", repository.LastSaved?.Sheets[0].GetCell(0, 0)?.Value);
-        }
-        finally { window.Content = null; window.Close(); }
+        Assert.Null(page.Workbook);
+        Assert.False(page.IsDirty);
+        Assert.Equal(0, repository.SaveCalls);
     }
 
     [AvaloniaFact]

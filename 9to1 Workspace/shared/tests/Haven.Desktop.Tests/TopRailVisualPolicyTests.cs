@@ -52,12 +52,12 @@ public sealed class TopRailVisualPolicyTests
             Assert.Equal(0d, anchors.Opacity);
             Assert.False(anchors.IsHitTestVisible);
             var names = rail.HavenOwnedScene.Root.DescendantsAndSelf().Select(element => element.Name).ToHashSet();
-            Assert.Contains("TopRail.Logo", names);
+            Assert.Contains("Taskbar.Go", names);
             Assert.Contains("TopRail.Actions.Apps", names);
             Assert.Contains("TopRail.Actions.Capabilities", names);
             Assert.Contains("TopRail.Actions.Model", names);
             Assert.Contains("TopRail.Actions.Notifications", names);
-            Assert.Contains("TopRail.Actions.Search", names);
+            Assert.Contains("Taskbar.Search", names);
         }
         finally { window.Close(); }
     }

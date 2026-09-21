@@ -18,6 +18,7 @@ sys.path.insert(0, str(RUNTIME))
 import broker  # noqa: E402
 
 
+@unittest.skipUnless(broker.HAS_UNIX_SOCKETS, "requires Unix-domain socket support")
 class BrokerIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
@@ -54,6 +55,19 @@ class BrokerIntegrationTests(unittest.TestCase):
             }),
             encoding="utf-8",
         )
+        (self.manifest_root / "replacement-model.json").write_text(
+            json.dumps({
+                "id": "replacement-model",
+                "displayName": "Replacement Model",
+                "sha256": digest,
+                "size": len(payload),
+                "blob": relative,
+                "license": "test-only",
+                "source": "generated-test-fixture",
+                "ggufVersions": [3],
+            }),
+            encoding="utf-8",
+        )
 
         self.stack = ExitStack()
         self.stack.enter_context(mock.patch.dict("os.environ", {
@@ -71,10 +85,11 @@ class BrokerIntegrationTests(unittest.TestCase):
             "WORKER_HOME": self.worker_home,
             "LLAMA_SERVER": self.fake_server,
             "START_TIMEOUT_SECONDS": 3.0,
-            "WORKER": broker.Worker(),
         }
         for name, value in replacements.items():
             self.stack.enter_context(mock.patch.object(broker, name, value))
+        self.stack.enter_context(mock.patch.object(broker, "WORKER", broker.Worker()))
+        self.stack.enter_context(mock.patch.object(broker, "DULCHE_RUNTIME", broker.DulcheRuntime(broker.WORKER)))
         broker.ensure_private_directory(self.runtime_dir)
         broker.ensure_private_directory(self.worker_home)
         self.server = broker.ThreadingUnixServer(str(self.broker_socket), broker.Handler)
@@ -83,7 +98,7 @@ class BrokerIntegrationTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         try:
-            broker.WORKER.unload()
+            broker.DULCHE_RUNTIME.stop()
         finally:
             self.server.shutdown()
             self.server.server_close()
@@ -113,7 +128,7 @@ class BrokerIntegrationTests(unittest.TestCase):
         self.assertEqual(200, status)
         health = json.loads(body)
         self.assertFalse(health["workerReady"])
-        self.assertEqual("single-broker-owned-worker", health["runtime"]["topology"])
+        self.assertEqual("single-broker-owned-slot-workers", health["runtime"]["topology"])
         self.assertFalse(health["runtime"]["perAppServers"])
 
         status, body = self._request("GET", "/v1/provider")
@@ -127,10 +142,10 @@ class BrokerIntegrationTests(unittest.TestCase):
         self.assertEqual(0o600, self.worker_socket.stat().st_mode & 0o777)
 
         status, body = self._request("GET", "/v1/models")
-        models = json.loads(body)["models"]
+        models = {model["id"]: model for model in json.loads(body)["models"]}
         self.assertEqual(200, status)
-        self.assertEqual("llamacpp:integration-model", models[0]["key"])
-        self.assertTrue(models[0]["loaded"])
+        self.assertEqual("llamacpp:integration-model", models["integration-model"]["key"])
+        self.assertTrue(models["integration-model"]["loaded"])
 
         status, stream = self._request("POST", "/v1/chat/completions", {
             "request_id": "integration-stream-1",
@@ -144,6 +159,58 @@ class BrokerIntegrationTests(unittest.TestCase):
         self.assertEqual(200, status, body)
         self.assertFalse(broker.WORKER.ready)
         self.assertFalse(self.worker_socket.exists())
+
+    def test_slots_context_tools_and_permission_resolution_are_broker_owned(self) -> None:
+        status, body = self._request("POST", "/v1/models/integration-model/load", {"slot": 0, "context": 1024})
+        self.assertEqual(200, status, body)
+        status, body = self._request("POST", "/v1/models/replacement-model/load", {"slot": 0, "context": 2048})
+        self.assertEqual(200, status, body)
+        self.assertEqual("replacement-model", json.loads(body)["model"])
+
+        status, body = self._request("POST", "/v1/models/integration-model/load", {"slot": 1, "context": 1024})
+        self.assertEqual(200, status, body)
+        self.assertTrue((self.runtime_dir / "llamacpp-worker-1.sock").exists())
+
+        status, body = self._request("POST", "/v1/slots/1/context", {"context": 4096})
+        self.assertEqual(202, status, body)
+        self.assertEqual("scheduled", json.loads(body)["status"])
+
+        broker.Dulche.OnPermissionRequested(lambda request: True if request.action == "dulche.run_code" else None)
+        status, body = self._request("POST", "/v1/slots/1/tools/dulche.run_code", {"source": "print('native-tool')"})
+        self.assertEqual(200, status, body)
+        result = json.loads(body)
+        self.assertEqual("completed", result["status"])
+        self.assertIn("native-tool", result["output"])
+
+        outcome: dict[str, tuple[int, bytes]] = {}
+
+        def request_permission() -> None:
+            outcome["response"] = self._request("POST", "/v1/slots/1/permissions", {
+                "permission": "endpoint.access",
+                "action": "https://example.test/api",
+            })
+
+        thread = threading.Thread(target=request_permission, daemon=True)
+        thread.start()
+        deadline = time.monotonic() + 3
+        request_id = ""
+        while time.monotonic() < deadline:
+            status, body = self._request("GET", "/v1/permissions/requests")
+            pending = json.loads(body)["requests"]
+            if pending:
+                request_id = pending[0]["id"]
+                break
+            time.sleep(0.01)
+        self.assertTrue(request_id, "permission request was not broadcast")
+
+        status, body = self._request("POST", f"/v1/permissions/{request_id}/resolve", {"approved": True})
+        self.assertEqual(200, status, body)
+        self.assertTrue(json.loads(body)["resolved"])
+        thread.join(timeout=2)
+        self.assertFalse(thread.is_alive())
+        status, body = outcome["response"]
+        self.assertEqual(200, status, body)
+        self.assertEqual("approved", json.loads(body)["decision"])
 
     def test_cancel_endpoint_actively_unblocks_a_blocked_worker_stream(self) -> None:
         self._load()
