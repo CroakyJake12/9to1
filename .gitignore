@@ -24,4 +24,15 @@ haven-build.log
 *.trx
 *.apk
 *.aab
+*.py[cod]
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+node_modules/
+dist/
+*.assets.cache
+*.log
+*.tmp
+*.userprefs
 

@@ -3,10 +3,19 @@
     <AssemblyName>HavenOS.Apps.Browse</AssemblyName>
     <RootNamespace>HavenOS.Apps.Browse</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
   </PropertyGroup>
+
+  <Target Name="RequireHavenUi" BeforeTargets="ResolveProjectReferences">
+    <Error Condition="'$(HavenUiProjectPath)' == ''" Text="Haven.UI is required for the Browse CUI surface. Set /p:HavenUiProjectPath=&lt;path-to-Haven.UI.csproj&gt;." />
+    <Error Condition="'$(HavenUiProjectPath)' != '' and !Exists('$(HavenUiProjectPath)')" Text="HavenUiProjectPath does not exist: $(HavenUiProjectPath)" />
+  </Target>
 
   <ItemGroup>
     <Compile Include="BrowseAppRoute.cs" />
+    <Compile Include="BrowseChrome.cs" />
+    <Compile Include="BrowseCuiScene.cs" />
     <ProjectReference Include="..\shared\src\Haven.Browser\Haven.Browser.csproj" />
+    <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
   </ItemGroup>
 </Project>

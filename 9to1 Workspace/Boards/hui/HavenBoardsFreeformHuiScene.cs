@@ -12,8 +12,8 @@ namespace CakeOS.Apps.Boards.Hui;
 ///
 /// This scene deliberately shares card identity, hierarchy, attachment metadata, commands, and
 /// persistence with the structured projection. AppFlowy remains outside this renderer boundary.
-/// Pointer dragging is intentionally not claimed by this first slice; every position mutation is
-/// available through keyboard-accessible nudge controls that emit typed neutral commands.
+/// Pointer dragging and keyboard-accessible movement both emit the same typed neutral frame
+/// command, so the application session persists either interaction before publishing it.
 /// </summary>
 public sealed class HavenBoardsFreeformHuiScene : IDisposable
 {
@@ -21,6 +21,7 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
 
     private readonly List<HavenButton> _wiredButtons = [];
     private HavenBoardSnapshot _snapshot = HavenBoardSnapshot.CreateDefault();
+    private PopupMenu? _contextMenu;
     private bool _disposed;
 
     public HavenBoardsFreeformHuiScene()
@@ -60,6 +61,7 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
 
     private void RebuildSurface()
     {
+        CloseContextMenu();
         UnwireButtons();
         foreach (var child in Surface.Children.ToArray())
             Surface.Remove(child);
@@ -111,10 +113,18 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
         surface.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
         surface.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(12)));
         surface.Accessibility.AccessibleName = $"Freeform board card {card.Title}";
+        surface.Accessibility.Description = "Right-click for card position actions.";
+        surface.Accessibility.Focusable = true;
+        surface.SecondaryInvoked += (_, _) => OpenContextMenu(surface, card, frame, persistedFrame);
+
+        var dragHandle = new HavenBoardFreeformDragHandle(surface, card, frame);
+        dragHandle.DragCompleted += (_, command) => CommandRequested?.Invoke(this, command);
+        surface.Add(dragHandle);
 
         var title = new HavenText { Content = card.Title };
         title.SetValue(HavenProperties.FontSize, 13d);
         title.SetValue(HavenProperties.FontWeight, 700);
+        title.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.None);
         surface.Add(title);
 
         var details = new List<string> { group.Title };
@@ -129,6 +139,7 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
         var metadata = new HavenText { Content = string.Join(" · ", details) };
         metadata.SetValue(HavenProperties.Foreground, "TextSecondary");
         metadata.SetValue(HavenProperties.FontSize, 11d);
+        metadata.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.None);
         surface.Add(metadata);
 
         var actions = new Container { Layout = HavenLayout.Horizontal };
@@ -138,9 +149,68 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
         actions.Add(NudgeButton("Up", card, frame, 0, -NudgeDistance));
         actions.Add(NudgeButton("Down", card, frame, 0, NudgeDistance));
         actions.Add(NudgeButton("Right", card, frame, NudgeDistance, 0));
+        var contextActions = new HavenButton { Content = "Actions", Variant = ButtonVariant.Tertiary };
+        contextActions.Accessibility.AccessibleName = $"Open position actions for {card.Title}";
+        contextActions.SetValue(HavenProperties.MinHeight, HavenLength.Px(30));
+        contextActions.Invoked += (_, _) => OpenContextMenu(surface, card, frame, persistedFrame);
+        _wiredButtons.Add(contextActions);
+        actions.Add(contextActions);
         surface.Add(actions);
 
         return surface;
+    }
+
+    private void OpenContextMenu(
+        HavenElement anchor,
+        HavenBoardCard card,
+        HavenBoardFreeformItem frame,
+        bool persistedFrame)
+    {
+        CloseContextMenu();
+
+        var highestZIndex = (_snapshot.Freeform?.Items ?? []).Select(item => item.ZIndex).DefaultIfEmpty(0).Max();
+        var canBringForward = highestZIndex < HavenBoardReducer.FreeformZIndexLimit
+            && frame.ZIndex <= highestZIndex;
+        var nextZIndex = canBringForward ? highestZIndex + 1 : frame.ZIndex;
+
+        _contextMenu = new PopupMenu(
+            anchor,
+            Root,
+            [
+                new PopupMenuItem(
+                    "Bring to front",
+                    () => CommandRequested?.Invoke(this, new SetFreeformCardFrameCommand(
+                        card.Id,
+                        frame.X,
+                        frame.Y,
+                        frame.Width,
+                        frame.Height,
+                        nextZIndex)),
+                    Enabled: canBringForward),
+                new PopupMenuItem(
+                    "Reset position",
+                    () => CommandRequested?.Invoke(this, new RemoveFreeformCardFrameCommand(card.Id)),
+                    Enabled: persistedFrame),
+                new PopupMenuItem("Close", () => { })
+            ],
+            accessibleName: $"Position actions for {card.Title}");
+        _contextMenu.Dismissed += OnContextMenuDismissed;
+        Root.Add(_contextMenu);
+    }
+
+    private void OnContextMenuDismissed(object? sender, EventArgs args)
+    {
+        if (ReferenceEquals(_contextMenu, sender))
+            _contextMenu = null;
+    }
+
+    private void CloseContextMenu()
+    {
+        if (_contextMenu is null) return;
+        var menu = _contextMenu;
+        _contextMenu = null;
+        menu.Dismissed -= OnContextMenuDismissed;
+        menu.Dismiss();
     }
 
     private HavenButton NudgeButton(
@@ -234,17 +304,7 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
     }
 
     private static Page BuildRoot()
-    {
-        const string markup = """
-            <Page Name="BoardsFreeformRoot" Layout="Grid" Width="100%" Height="100%" Rows="Auto Auto 1fr Auto" Gap="12px" Padding="22px" Background="Surface">
-              <Text Name="FreeformBoardTitle" Row="0" Content="Haven Boards" Level="H1" />
-              <Text Row="1" Content="Freeform board · local first" Foreground="TextSecondary" FontSize="12" />
-              <Canvas Name="FreeformSurface" Row="2" Width="100%" Height="100%" Overflow="Scroll" Clip="true" Background="SurfaceRaised" />
-              <Text Name="FreeformStatus" Row="3" Content="" Foreground="TextSecondary" FontSize="11" Visibility="Collapsed" />
-            </Page>
-            """;
-        return (Page)new HavenMarkupParser().Parse(markup, "Boards.Freeform.hui");
-    }
+        => HavenBoardsMarkup.Load("Boards.Freeform.cui");
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -252,9 +312,121 @@ public sealed class HavenBoardsFreeformHuiScene : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        CloseContextMenu();
         UnwireButtons();
         CommandRequested = null;
     }
 
     private sealed record LocatedCard(HavenBoardGroup Group, HavenBoardCard Card);
+}
+
+internal sealed class HavenBoardFreeformDragHandle : Container, IHavenPointerInputTarget
+{
+    private readonly HavenElement _cardSurface;
+    private readonly HavenBoardCard _card;
+    private readonly HavenBoardFreeformItem _frame;
+    private HavenPoint _startPointer;
+    private double _currentX;
+    private double _currentY;
+    private bool _dragging;
+    private bool _moved;
+
+    internal HavenBoardFreeformDragHandle(
+        HavenElement cardSurface,
+        HavenBoardCard card,
+        HavenBoardFreeformItem frame)
+    {
+        _cardSurface = cardSurface;
+        _card = card;
+        _frame = frame;
+        _currentX = frame.X;
+        _currentY = frame.Y;
+
+        Name = $"FreeformDragHandle_{SafeName(card.Id)}";
+        Layout = HavenLayout.Horizontal;
+        SetValue(HavenProperties.Width, HavenLength.Percent(100));
+        SetValue(HavenProperties.MinHeight, HavenLength.Px(28));
+        SetValue(HavenProperties.Padding, HavenThickness.Parse("4px 8px"));
+        SetValue(HavenProperties.Background, "SurfaceRaised");
+        SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(8)));
+        SetValue(HavenProperties.Cursor, HavenCursor.Grab);
+        Accessibility.AccessibleName = $"Drag {card.Title} on freeform board";
+        Accessibility.Description = "Pointer drag handle. Use the card movement buttons for keyboard positioning.";
+
+        var label = new HavenText { Content = "Drag card" };
+        label.SetValue(HavenProperties.FontSize, 11d);
+        label.SetValue(HavenProperties.Foreground, "TextSecondary");
+        label.SetValue(HavenProperties.PointerEvents, HavenPointerEvents.None);
+        Add(label);
+    }
+
+    internal event EventHandler<SetFreeformCardFrameCommand>? DragCompleted;
+
+    public bool PointerPressed(HavenPointerInput input)
+    {
+        if (input.Button != HavenPointerButton.Primary) return false;
+        _dragging = true;
+        _moved = false;
+        _startPointer = input.Position;
+        _currentX = _frame.X;
+        _currentY = _frame.Y;
+        SetValue(HavenProperties.Cursor, HavenCursor.Grabbing);
+        return true;
+    }
+
+    public bool PointerMoved(HavenPointerInput input)
+    {
+        if (!_dragging) return false;
+        var nextX = Math.Clamp(
+            _frame.X + input.Position.X - _startPointer.X,
+            -HavenBoardReducer.FreeformCoordinateLimit,
+            HavenBoardReducer.FreeformCoordinateLimit);
+        var nextY = Math.Clamp(
+            _frame.Y + input.Position.Y - _startPointer.Y,
+            -HavenBoardReducer.FreeformCoordinateLimit,
+            HavenBoardReducer.FreeformCoordinateLimit);
+        _moved |= Math.Abs(nextX - _frame.X) >= .0001d || Math.Abs(nextY - _frame.Y) >= .0001d;
+        _currentX = nextX;
+        _currentY = nextY;
+        _cardSurface.SetValue(HavenProperties.Left, HavenLength.Px(nextX));
+        _cardSurface.SetValue(HavenProperties.Top, HavenLength.Px(nextY));
+        return true;
+    }
+
+    public bool PointerReleased(HavenPointerInput input)
+    {
+        if (!_dragging) return false;
+        _dragging = false;
+        SetValue(HavenProperties.Cursor, HavenCursor.Grab);
+        if (_moved)
+        {
+            DragCompleted?.Invoke(this, new SetFreeformCardFrameCommand(
+                _card.Id,
+                _currentX,
+                _currentY,
+                _frame.Width,
+                _frame.Height,
+                _frame.ZIndex));
+        }
+        return true;
+    }
+
+    public bool PointerCancelled(HavenPointerInput input)
+    {
+        if (!_dragging) return false;
+        _dragging = false;
+        _moved = false;
+        _currentX = _frame.X;
+        _currentY = _frame.Y;
+        _cardSurface.SetValue(HavenProperties.Left, HavenLength.Px(_frame.X));
+        _cardSurface.SetValue(HavenProperties.Top, HavenLength.Px(_frame.Y));
+        SetValue(HavenProperties.Cursor, HavenCursor.Grab);
+        return true;
+    }
+
+    private static string SafeName(string value)
+    {
+        var chars = value.Where(char.IsLetterOrDigit).ToArray();
+        return chars.Length == 0 ? "Item" : new string(chars);
+    }
 }

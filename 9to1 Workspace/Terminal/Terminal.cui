@@ -1,0 +1,17 @@
+<Cui product="terminal" version="1">
+  <Page id="terminal.root" title="Terminal">
+    <Toolbar>
+      <Button id="terminal.new" action="terminal.session.start">New session</Button>
+      <Button id="terminal.interrupt" action="terminal.session.interrupt">Interrupt</Button>
+      <Status id="terminal.adapter" source="terminal.adapter.status">PTY adapter status</Status>
+    </Toolbar>
+    <TerminalViewport id="terminal.viewport"
+                      byteSource="terminal.output.bytes"
+                      inputAction="terminal.input.write"
+                      resizeAction="terminal.viewport.resize"
+                      processStateSource="terminal.process.state" />
+    <Notice id="terminal.windows-pty" capability="windows.conpty" state="adapter-required">
+      Windows interactive sessions require a separate ConPTY adapter.
+    </Notice>
+  </Page>
+</Cui>

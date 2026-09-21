@@ -7,7 +7,10 @@
 
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
+    <ProjectReference Include="..\..\9to1 OS\HUI\Cui\CakeOS.Cui.Markup.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
+    <EmbeddedResource Include="UI\Chat\ChatSpace.cui" LogicalName="HavenOS.Apps.Spaces.UI.Chat.ChatSpace.cui" />
+    <None Update="UI\Chat\ChatSpace.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -18,5 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="../contract/CakeOS.Apps.Boards.Contract.csproj" />
     <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
+    <EmbeddedResource Include="Views\**\*.cui" />
   </ItemGroup>
 </Project>

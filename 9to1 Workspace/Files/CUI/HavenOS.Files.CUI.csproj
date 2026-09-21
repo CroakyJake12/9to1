@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Files.CUI</AssemblyName>
+    <RootNamespace>HavenOS.Files</RootNamespace>
+    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
+  </PropertyGroup>
+
+  <Target Name="RequireHavenUi" BeforeTargets="ResolveProjectReferences">
+    <Error Condition="'$(HavenUiProjectPath)' == ''" Text="Haven.UI is required for the Files CUI surface. Set /p:HavenUiProjectPath=&lt;path-to-Haven.UI.csproj&gt;." />
+    <Error Condition="'$(HavenUiProjectPath)' != '' and !Exists('$(HavenUiProjectPath)')" Text="HavenUiProjectPath does not exist: $(HavenUiProjectPath)" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
+  </ItemGroup>
+</Project>

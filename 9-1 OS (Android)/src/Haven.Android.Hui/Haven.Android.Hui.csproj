@@ -1,5 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
-  </ItemGroup>
-</Project>

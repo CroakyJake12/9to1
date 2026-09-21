@@ -240,6 +240,7 @@ class BoundaryTests(unittest.TestCase):
         self.assertFalse(contract["modelLifecycle"]["brokerCanWriteModelStore"])
         self.assertEqual("single-broker-owned-worker", contract["runtime"]["topology"])
         self.assertFalse(contract["runtime"]["perAppServers"])
+        self.assertEqual("process-lifetime-flock", contract["runtime"]["singleInstanceArbitration"])
         self.assertEqual("upstream-resumable-stream-delete", contract["runtime"]["cancellation"]["primary"])
 
 

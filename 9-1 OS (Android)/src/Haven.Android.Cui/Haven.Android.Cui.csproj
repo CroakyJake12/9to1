@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Haven.Android.Cui</RootNamespace>
+    <AssemblyName>Haven.Android.Cui</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../9to1 OS/HUI/Cui/CakeOS.Cui.Markup.csproj" />
+  </ItemGroup>
+</Project>

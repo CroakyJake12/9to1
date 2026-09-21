@@ -102,7 +102,8 @@ The first runtime is intentionally conservative:
 - upstream runtime logging disabled to avoid retaining prompts and to remove stderr-pipe backpressure;
 - server-side cache-RAM pool disabled for the first slice;
 - worker environment strips llama.cpp argument overrides, GGML overrides, proxy/token variables, and dynamic-loader injection variables;
-- cancellation actively shuts down the private worker connection so a blocked read cannot ignore a HUI cancel request.
+- one process-lifetime exclusive `flock` arbitrates broker ownership before stale-socket recovery, preventing concurrent starts from unlinking or replacing each other's socket;
+- cancellation uses the pinned worker's request-scoped resumable-stream DELETE route, with transport close retained only as the documented fallback.
 
 These defaults are safety/resource baselines, not benchmark-derived optimal settings.
 

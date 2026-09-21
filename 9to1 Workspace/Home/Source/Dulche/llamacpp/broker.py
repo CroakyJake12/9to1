@@ -28,7 +28,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from gguf import GgufValidationError, read_gguf_version
-from model_lease import ModelLease, ModelLeaseBusy, ModelLeaseError, acquire_model_lease, ensure_private_directory
+from model_lease import (
+    ModelLease,
+    ModelLeaseBusy,
+    ModelLeaseError,
+    acquire_broker_lease,
+    acquire_model_lease,
+    ensure_private_directory,
+)
 
 
 class BrokerError(RuntimeError):
@@ -416,6 +423,7 @@ def runtime_diagnostics() -> dict[str, Any]:
     return {
         "topology": "single-broker-owned-worker",
         "perAppServers": False,
+        "singleInstanceArbitration": "process-lifetime-flock",
         "worker": {
             "ready": WORKER.ready,
             "loadedModel": None if model is None else model.model_id,
@@ -512,6 +520,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "runtime": {
                         "topology": "single-broker-owned-worker",
                         "perAppServers": False,
+                        "singleInstanceArbitration": "process-lifetime-flock",
                         "cancellation": {
                             "primary": "upstream-resumable-stream-delete",
                             "transportFallback": "before-worker-response-or-control-failure",
@@ -647,14 +656,28 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 def main() -> int:
     ensure_private_directory(RUNTIME_DIR)
-    ensure_private_directory(WORKER_HOME)
-    server = ThreadingUnixServer(str(BROKER_SOCKET), Handler)
     try:
+        broker_lease = acquire_broker_lease(RUNTIME_DIR, blocking=False)
+    except ModelLeaseBusy as exc:
+        raise BrokerError(f"another inference broker already owns {RUNTIME_DIR}") from exc
+    except ModelLeaseError as exc:
+        raise BrokerError(f"cannot arbitrate inference broker ownership: {exc}") from exc
+
+    server: ThreadingUnixServer | None = None
+    try:
+        ensure_private_directory(WORKER_HOME)
+        server = ThreadingUnixServer(str(BROKER_SOCKET), Handler)
         server.serve_forever(poll_interval=0.25)
     finally:
-        WORKER.unload()
-        server.server_close()
-        BROKER_SOCKET.unlink(missing_ok=True)
+        try:
+            WORKER.unload()
+        finally:
+            try:
+                if server is not None:
+                    server.server_close()
+                    BROKER_SOCKET.unlink(missing_ok=True)
+            finally:
+                broker_lease.release()
     return 0
 
 

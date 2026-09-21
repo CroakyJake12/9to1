@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(AvsCurrentTargetFramework);$(AvsLegacyTargetFrameworks)</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BuiltInComInteropSupport Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <!-- CUI fork: bypass meta-package -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Avalonia.Base\Avalonia.Base.csproj"/>
+    <ProjectReference Include="..\..\Avalonia.Controls\Avalonia.Controls.csproj"/>
+  </ItemGroup>
+  <Import Project="..\..\..\build\NullableEnable.props"/>
+  <Import Project="..\..\..\build\DevAnalyzers.props"/>
+  <Import Project="..\..\..\build\TrimmingEnable.props"/>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Avalonia.Win32, PublicKey=$(AvaloniaPublicKey)"/>
+  </ItemGroup>
+</Project>

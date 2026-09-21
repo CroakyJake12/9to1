@@ -1,0 +1,90 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <CuiReportImportance Condition="'$(CuiReportImportance)' == ''">low</CuiReportImportance>
+    <EnableCuiCompilation Condition="'$(EnableCuiCompilation)' == ''">true</EnableCuiCompilation>
+  </PropertyGroup>
+
+  <!-- CUI file handling: .cui is the active markup format -->
+  <ItemGroup Condition="'$(EnableDefaultItems)'=='True'">
+    <Compile Update="**\*.cui.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <None Remove="**\*.cui" />
+  </ItemGroup>
+
+  <!-- Reject legacy AXAML/HUI files in active projects -->
+  <Target Name="RejectLegacyMarkup" BeforeTargets="CoreCompile" Condition="'$(EnableCuiCompilation)' == 'true'">
+    <ItemGroup>
+      <_LegacyAxBlob Include="**\*.axaml" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+      <_LegacyHuiBlob Include="**\*.hui" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    </ItemGroup>
+    <Warning
+      Condition="'@(_LegacyAxBlob)' != ''"
+      Code="CUI1001"
+      Text="Legacy .axaml files are not supported by the CUI framework. Migrate to .cui: @(_LegacyAxBlob)" />
+    <Warning
+      Condition="'@(_LegacyHuiBlob)' != ''"
+      Code="CUI1002"
+      Text="Legacy .hui files are not supported by the CUI framework. Migrate to .cui: @(_LegacyHuiBlob)" />
+  </Target>
+
+  <UsingTask TaskName="GenerateCuiResourcesTask"
+             AssemblyFile="$(CuiBuildTasksLocation)" />
+
+  <UsingTask TaskName="CompileCuiMarkupTask"
+             AssemblyFile="$(CuiBuildTasksLocation)" />
+
+  <Target Name="AddCuiResources"
+          BeforeTargets="ResolveReferences"
+          Condition="('@(CuiMarkup->Count())' > 0) or ('@(AvaloniaResource->Count())' > 0)">
+    <PropertyGroup>
+      <CuiResourcesTemporaryFilePath Condition="'$(CuiResourcesTemporaryFilePath)' == ''">$(IntermediateOutputPath)/Cui/resources</CuiResourcesTemporaryFilePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="$(CuiResourcesTemporaryFilePath)">
+        <LogicalName>!CuiResources</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <BuildCuiResourcesDependsOn>$(BuildCuiResourcesDependsOn);AddCuiResources;ResolveReferences</BuildCuiResourcesDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GenerateCuiResources"
+          BeforeTargets="CoreCompile;CoreResGen"
+          Inputs="@(CuiMarkup);@(AvaloniaResource)"
+          Outputs="$(CuiResourcesTemporaryFilePath)"
+          DependsOnTargets="$(BuildCuiResourcesDependsOn)"
+          Condition="('@(CuiMarkup->Count())' > 0) or ('@(AvaloniaResource->Count())' > 0)">
+    <GenerateCuiResourcesTask
+      Output="$(CuiResourcesTemporaryFilePath)"
+      Root="$(MSBuildProjectDirectory)"
+      Resources="@(CuiMarkup);@(AvaloniaResource)"
+      ReportImportance="$(CuiReportImportance)" />
+    <ItemGroup>
+      <FileWrites Include="$(CuiResourcesTemporaryFilePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AvaloniaPrepareCoreCompile" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <TargetsTriggeredByCompilation>$(TargetsTriggeredByCompilation);CompileCuiMarkup</TargetsTriggeredByCompilation>
+    </PropertyGroup>
+    <ItemGroup>
+      <CustomAdditionalCompileInputs Include="@(CuiMarkup)" />
+      <CustomAdditionalCompileInputs Include="@(AvaloniaResource)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CompileCuiMarkup"
+          Condition="'@(CuiMarkup)' != '' AND $(DesignTimeBuild) != true">
+    <CompileCuiMarkupTask
+      AssemblyFile="@(IntermediateAssembly)"
+      References="@(ReferencePathWithRefAssemblies)"
+      RefAssemblyFile="@(IntermediateRefAssembly)"
+      ProjectDirectory="$(MSBuildProjectDirectory)"
+      SkipXamlCompilation="false" />
+  </Target>
+</Project>

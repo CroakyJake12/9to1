@@ -40,6 +40,7 @@
   "runtime": {
     "topology": "single-broker-owned-worker",
     "perAppServers": false,
+    "singleInstanceArbitration": "process-lifetime-flock",
     "cancellation": {
       "primary": "upstream-resumable-stream-delete",
       "transportFallback": "before-worker-response-or-control-failure",

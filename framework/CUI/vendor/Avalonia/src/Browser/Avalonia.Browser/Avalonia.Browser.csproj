@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(AvsCurrentTargetFramework);$(AvsCurrentBrowserTargetFramework)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <WebAppDir>$(MSBuildThisFileDirectory)webapp</WebAppDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Remove="@(SupportedPlatform)" />
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <Import Project="../../../build/BuildTargets.targets" />
+  <Import Project="../../../build/SkiaSharp.props" />
+  <Import Project="../../../build/HarfBuzzSharp.props" />
+  <Import Project="../../../build/NullableEnable.props" />
+  <Import Project="../../../build/TrimmingEnable.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="../../../packages/Avalonia/Avalonia.csproj" />
+    <ProjectReference Include="../../Skia/Avalonia.Skia/Avalonia.Skia.csproj" />
+    <ProjectReference Include="../../HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- See https://github.com/dotnet/sdk/blob/9d4d2c4ca35b0856af7df63d6a38b3259aa6917c/src/StaticWebAssetsSdk/Targets/Microsoft.NET.Sdk.StaticWebAssets.Pack.targets#L64-L66 -->
+    <Content Include="build\Microsoft.AspNetCore.StaticWebAssets.props">
+      <Pack>true</Pack>
+      <PackagePath>build/</PackagePath>
+    </Content>
+    <Content Include="build\Avalonia.Browser.props">
+      <Pack>true</Pack>
+      <PackagePath>build/;buildTransitive/;buildMultiTargeting/</PackagePath>
+    </Content>
+    <Content Include="build\Avalonia.Browser.targets">
+      <Pack>true</Pack>
+      <PackagePath>build/;buildTransitive/</PackagePath>
+    </Content>
+    <Content Include="staticwebassets/**/*.*">
+      <Pack>true</Pack>
+      <PackagePath>staticwebassets/</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="BunInstall" Inputs="$(WebAppDir)/package.json" Outputs="$(WebAppDir)/node_modules/.install-stamp">
+    <!-- We use bun packages as .NET tool, to avoid preinstalled node.js dependency -->
+    <Exec Command="dnx Bun.Unofficial.Tool --yes -- install" WorkingDirectory="$(WebAppDir)" />
+    <!-- Write the stamp file, so incremental builds work -->
+    <Touch Files="$(WebAppDir)/node_modules/.install-stamp" AlwaysCreate="true" />
+  </Target>
+  <Target Name="BunRunBuild" DependsOnTargets="BunInstall" BeforeTargets="DispatchToInnerBuilds">
+    <Exec Command="dnx Bun.Unofficial.Tool build.js" WorkingDirectory="$(WebAppDir)" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="..\..\Shared\RawEventGrouping.cs">
+      <Link>RawEventGrouping.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+</Project>

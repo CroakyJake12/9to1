@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(AvsCurrentTargetFramework);$(AvsLegacyTargetFrameworks)</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseMicroCom>true</UseMicroCom>
+  </PropertyGroup>
+  <!-- CUI fork: removed Build.Tasks build-order dependency (replaced by CUI compiler) -->
+  <Import Project="..\..\build\MicroCOM.props" />
+  <Import Project="..\..\build\BuildTargets.targets" />
+  <Import Project="..\..\build\TrimmingEnable.props" />
+  <Import Project="..\..\build\NullableEnable.props" />
+</Project>

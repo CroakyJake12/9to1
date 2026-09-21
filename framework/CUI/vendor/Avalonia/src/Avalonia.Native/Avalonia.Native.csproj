@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackAvaloniaNative Condition="'$(PackAvaloniaNative)' == ''">$([MSBuild]::IsOSPlatform(OSX))</PackAvaloniaNative>
+    <IsPackable>$(PackAvaloniaNative)</IsPackable>
+    <IsPackable Condition="'$([MSBuild]::IsOSPlatform(OSX))' == 'True'">true</IsPackable>
+    <IsPackable Condition="'$(ForcePackAvaloniaNative)' == 'True'">True</IsPackable>
+    <TargetFrameworks>$(AvsCurrentTargetFramework);$(AvsLegacyTargetFrameworks)</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseMicroComGeneratorMSBuild>true</UseMicroComGeneratorMSBuild>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PackAvaloniaNative)' == 'true'">
+    <Content Include="../../Build/Products/Release/libAvalonia.Native.OSX.dylib">
+      <Link>libAvaloniaNative.dylib</Link>
+      <PackagePath>runtimes/osx/native/libAvaloniaNative.dylib</PackagePath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\packages\Avalonia\Avalonia.csproj" />
+    <ProjectReference Include="..\Avalonia.Dialogs\Avalonia.Dialogs.csproj" />
+    <MicroComIdl Include="avn.idl" CSharpInteropPath="Interop.Generated.cs" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\MicroCOM.props" />
+  <Import Project="..\..\build\DevAnalyzers.props" />
+  <Import Project="..\..\build\TrimmingEnable.props" />
+  <Import Project="..\..\build\NullableEnable.props" />
+</Project>

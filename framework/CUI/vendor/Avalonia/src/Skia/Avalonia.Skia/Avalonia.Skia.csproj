@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(AvsCurrentTargetFramework);$(AvsLegacyTargetFrameworks)</TargetFrameworks>
+    <IncludeLinuxSkia>true</IncludeLinuxSkia>
+    <IncludeWasmSkia>true</IncludeWasmSkia>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\NoiseAsset_256X256_PNG.png" />
+  </ItemGroup>
+  <!-- CUI fork: bypass meta-package, reference source projects directly -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Avalonia.Base\Avalonia.Base.csproj" />
+    <ProjectReference Include="..\..\Avalonia.Controls\Avalonia.Controls.csproj" />
+    <ProjectReference Include="..\..\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
+    <ProjectReference Include="..\..\Avalonia.OpenGL\Avalonia.OpenGL.csproj" />
+    <ProjectReference Include="..\..\Avalonia.Vulkan\Avalonia.Vulkan.csproj" />
+    <ProjectReference Include="..\..\Avalonia.Metal\Avalonia.Metal.csproj" />
+  </ItemGroup>
+  
+  <Import Project="..\..\..\build\SkiaSharp.props" />
+  <Import Project="..\..\..\build\HarfBuzzSharp.props" />
+  <Import Project="..\..\..\build\DevAnalyzers.props" />
+  <Import Project="..\..\..\build\TrimmingEnable.props" />
+  <Import Project="..\..\..\build\NullableEnable.props" />
+
+  <ItemGroup Label="InternalsVisibleTo">
+    <InternalsVisibleTo Include="Avalonia.Skia.RenderTests, PublicKey=$(AvaloniaPublicKey)" />
+    <InternalsVisibleTo Include="Avalonia.Skia.UnitTests, PublicKey=$(AvaloniaPublicKey)" />
+    <InternalsVisibleTo Include="Avalonia.Benchmarks, PublicKey=$(AvaloniaPublicKey)" />
+  </ItemGroup>
+</Project>

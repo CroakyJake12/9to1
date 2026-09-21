@@ -97,3 +97,12 @@ def acquire_model_lease(
 
 def acquire_store_lease(runtime_dir: pathlib.Path, *, blocking: bool = False) -> ModelLease:
     return _acquire(runtime_dir / "model-store.lease", exclusive=True, blocking=blocking)
+
+
+def acquire_broker_lease(runtime_dir: pathlib.Path, *, blocking: bool = False) -> ModelLease:
+    """Arbitrate ownership of the broker runtime across processes.
+
+    The lease file is persistent, but its kernel lock is released automatically
+    when the owning broker exits, including an ungraceful process exit.
+    """
+    return _acquire(runtime_dir / "inference-broker.lease", exclusive=True, blocking=blocking)

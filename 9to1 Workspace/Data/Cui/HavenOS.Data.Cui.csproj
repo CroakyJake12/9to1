@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>HavenOS.Apps.Data.Cui</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../App/HavenOS.Data.App.csproj" />
+    <ProjectReference Include="../../../9to1 OS/HUI/Cui/CakeOS.Cui.Markup.csproj" />
+    <None Include="DataWorkspace.cui" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
