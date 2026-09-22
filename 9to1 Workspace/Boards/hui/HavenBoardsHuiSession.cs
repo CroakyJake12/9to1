@@ -39,7 +39,9 @@ public sealed class HavenBoardsHuiSession : IAsyncDisposable
                 ? "Recovered from local backup"
                 : store is JsonFileHavenBoardStore { LastLoadDisposition: HavenBoardLoadDisposition.MigratedLegacyJson }
                     ? "Imported legacy board locally"
-                    : "Loaded locally";
+                    : store is JsonFileHavenBoardStore { LastLoadDisposition: HavenBoardLoadDisposition.MigratedSchema }
+                        ? "Upgraded board locally"
+                        : "Loaded locally";
         SetSceneStatus(status);
 
         Scene.CommandRequested += OnSceneCommandRequested;

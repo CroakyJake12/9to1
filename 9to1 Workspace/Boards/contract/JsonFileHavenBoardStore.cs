@@ -5,6 +5,8 @@ namespace CakeOS.Apps.Boards.Contract;
 /// <summary>
 /// The stable, user-owned envelope stored in every <c>.9to1board</c> file.
 /// Runtime snapshot types deliberately remain below this compatibility boundary.
+/// Schema v2 adds the rich-notes facet; the v1 task snapshot facet is preserved verbatim
+/// so files written by earlier builds keep opening with identical board content.
 /// </summary>
 public sealed record HavenBoardDocument(
     string Format,
@@ -12,17 +14,19 @@ public sealed record HavenBoardDocument(
     Guid DocumentId,
     DateTimeOffset CreatedUtc,
     DateTimeOffset ModifiedUtc,
-    HavenBoardSnapshot Snapshot)
+    HavenBoardSnapshot? Snapshot,
+    HavenRichNotes? RichNotes = null)
 {
     public const string FormatIdentity = "9to1.board";
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 }
 
 public enum HavenBoardLoadDisposition
 {
     Normal,
     RecoveredFromBackup,
-    MigratedLegacyJson
+    MigratedLegacyJson,
+    MigratedSchema
 }
 
 /// <summary>Raised instead of opening an unknown future document as an empty board.</summary>
@@ -69,51 +73,102 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
         string boardId,
         CancellationToken cancellationToken = default)
     {
+        var document = await LoadDocumentAsync(boardId, cancellationToken).ConfigureAwait(false);
+        return document?.Snapshot;
+    }
+
+    /// <summary>Loads the full versioned envelope (task snapshot plus rich-notes facets).</summary>
+    public async Task<HavenBoardDocument?> LoadDocumentAsync(
+        string boardId,
+        CancellationToken cancellationToken = default)
+    {
         ThrowIfDisposed();
         ValidateBoardId(boardId);
 
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            LastLoadDisposition = HavenBoardLoadDisposition.Normal;
-            var primary = PrimaryPath(boardId);
-            var primaryResult = await TryReadDocumentAsync(primary, boardId, cancellationToken).ConfigureAwait(false);
-            if (primaryResult.Snapshot is not null)
-                return primaryResult.Snapshot;
-            if (primaryResult.UnsupportedVersion is not null)
-                throw primaryResult.UnsupportedVersion;
-
-            var backupResult = await TryReadDocumentAsync(BackupPath(boardId), boardId, cancellationToken).ConfigureAwait(false);
-            if (backupResult.Snapshot is not null)
-            {
-                LastLoadDisposition = HavenBoardLoadDisposition.RecoveredFromBackup;
-                return backupResult.Snapshot;
-            }
-            if (backupResult.UnsupportedVersion is not null)
-                throw backupResult.UnsupportedVersion;
-
-            // A file that exists but cannot be parsed or validated is never treated as a missing board.
-            // Doing so would let a session create an empty replacement over real user data.
-            if (primaryResult.InvalidDocument is not null)
-                throw primaryResult.InvalidDocument;
-            if (backupResult.InvalidDocument is not null)
-                throw backupResult.InvalidDocument;
-
-            // Older pre-RC prototype documents are imported once, while their original .json remains untouched.
-            var legacyResult = await TryReadLegacySnapshotAsync(LegacyPath(boardId), boardId, cancellationToken).ConfigureAwait(false);
-            if (legacyResult.InvalidDocument is not null)
-                throw legacyResult.InvalidDocument;
-            if (legacyResult.Snapshot is null)
-                return null;
-
-            await SaveCoreAsync(legacyResult.Snapshot, existing: null, primaryWasCorrupt: false, cancellationToken).ConfigureAwait(false);
-            LastLoadDisposition = HavenBoardLoadDisposition.MigratedLegacyJson;
-            return legacyResult.Snapshot;
+            return await LoadDocumentCoreAsync(
+                PrimaryPath(boardId), BackupPath(boardId), LegacyPath(boardId), boardId,
+                migrateLegacy: true, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             _gate.Release();
         }
+    }
+
+    /// <summary>Loads an envelope from an explicit user-chosen file path (Save As / copy friendly).</summary>
+    public async Task<HavenBoardDocument?> LoadDocumentAtPathAsync(
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var fullPath = Path.GetFullPath(path);
+            return await LoadDocumentCoreAsync(
+                fullPath, fullPath + ".bak", legacy: null, expectedBoardId: null,
+                migrateLegacy: false, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task<HavenBoardDocument?> LoadDocumentCoreAsync(
+        string primary, string backup, string? legacy, string? expectedBoardId,
+        bool migrateLegacy, CancellationToken cancellationToken)
+    {
+        LastLoadDisposition = HavenBoardLoadDisposition.Normal;
+        var primaryResult = expectedBoardId is null
+            ? await TryReadDocumentAtPathAsync(primary, cancellationToken).ConfigureAwait(false)
+            : await TryReadDocumentAsync(primary, expectedBoardId, cancellationToken).ConfigureAwait(false);
+        if (primaryResult.Document is not null)
+        {
+            if (primaryResult.Migrated)
+                LastLoadDisposition = HavenBoardLoadDisposition.MigratedSchema;
+            return primaryResult.Document;
+        }
+        if (primaryResult.UnsupportedVersion is not null)
+            throw primaryResult.UnsupportedVersion;
+
+        var backupResult = expectedBoardId is null
+            ? await TryReadDocumentAtPathAsync(backup, cancellationToken).ConfigureAwait(false)
+            : await TryReadDocumentAsync(backup, expectedBoardId, cancellationToken).ConfigureAwait(false);
+        if (backupResult.Document is not null)
+        {
+            LastLoadDisposition = HavenBoardLoadDisposition.RecoveredFromBackup;
+            return backupResult.Document;
+        }
+        if (backupResult.UnsupportedVersion is not null)
+            throw backupResult.UnsupportedVersion;
+
+        // A file that exists but cannot be parsed or validated is never treated as a missing board.
+        // Doing so would let a session create an empty replacement over real user data.
+        if (primaryResult.InvalidDocument is not null)
+            throw primaryResult.InvalidDocument;
+        if (backupResult.InvalidDocument is not null)
+            throw backupResult.InvalidDocument;
+
+        if (!migrateLegacy || legacy is null || expectedBoardId is null)
+            return null;
+
+        // Older pre-RC prototype documents are imported once, while their original .json remains untouched.
+        var legacyResult = await TryReadLegacySnapshotAsync(legacy, expectedBoardId, cancellationToken).ConfigureAwait(false);
+        if (legacyResult.InvalidDocument is not null)
+            throw legacyResult.InvalidDocument;
+        if (legacyResult.Snapshot is null)
+            return null;
+
+        var migrated = MigrateLegacySnapshot(legacyResult.Snapshot);
+        await SaveCoreAsync(migrated.Snapshot!, migrated.RichNotes, expectedBoardId, existing: null, primaryWasCorrupt: false, cancellationToken).ConfigureAwait(false);
+        LastLoadDisposition = HavenBoardLoadDisposition.MigratedLegacyJson;
+        return migrated;
     }
 
     public async Task SaveAsync(
@@ -145,7 +200,100 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
                 existing = backupResult.Document;
             }
 
-            await SaveCoreAsync(snapshot, existing, primaryResult.InvalidDocument is not null, cancellationToken).ConfigureAwait(false);
+            // The task facet is replaced; the rich-notes facet (if any) is preserved untouched.
+            await SaveCoreAsync(
+                snapshot, existing?.RichNotes, snapshot.Id, existing,
+                primaryResult.InvalidDocument is not null, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Saves a full envelope, preserving whichever facet the caller left null from storage.</summary>
+    public async Task SaveDocumentAsync(
+        HavenBoardDocument document,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(document);
+        if (document.Snapshot is null && document.RichNotes is null)
+            throw new InvalidDataException("A .9to1board must contain a board snapshot, rich notes, or both.");
+        if (document.Snapshot is not null)
+        {
+            ValidateBoardId(document.Snapshot.Id);
+            HavenBoardReducer.Validate(document.Snapshot);
+        }
+        if (document.RichNotes is not null)
+            HavenRichNotesValidator.Validate(document.RichNotes);
+
+        var boardId = document.Snapshot?.Id
+            ?? throw new InvalidDataException("Path-independent saves require the task snapshot facet for file naming. Use SaveDocumentAtPathAsync for rich-only files.");
+
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var primaryResult = await TryReadDocumentAsync(PrimaryPath(boardId), boardId, cancellationToken)
+                .ConfigureAwait(false);
+            if (primaryResult.UnsupportedVersion is not null)
+                throw primaryResult.UnsupportedVersion;
+            var existing = primaryResult.Document;
+            if (existing is null)
+            {
+                var backupResult = await TryReadDocumentAsync(BackupPath(boardId), boardId, cancellationToken)
+                    .ConfigureAwait(false);
+                if (backupResult.UnsupportedVersion is not null)
+                    throw backupResult.UnsupportedVersion;
+                existing = backupResult.Document;
+            }
+
+            await SaveCoreAsync(
+                document.Snapshot, document.RichNotes ?? existing?.RichNotes, boardId,
+                existing ?? document, primaryResult.InvalidDocument is not null, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>Saves an envelope to an explicit user-chosen file path (Save As friendly).</summary>
+    public async Task SaveDocumentAtPathAsync(
+        HavenBoardDocument document,
+        string path,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (document.Snapshot is null && document.RichNotes is null)
+            throw new InvalidDataException("A .9to1board must contain a board snapshot, rich notes, or both.");
+        if (document.Snapshot is not null)
+            HavenBoardReducer.Validate(document.Snapshot);
+        if (document.RichNotes is not null)
+            HavenRichNotesValidator.Validate(document.RichNotes);
+        if (document.DocumentId == Guid.Empty)
+            throw new InvalidDataException("A .9to1board must carry a stable document identity.");
+
+        var fullPath = Path.GetFullPath(path);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var existing = await TryReadDocumentAtPathAsync(fullPath, CancellationToken.None).ConfigureAwait(false);
+            if (existing.UnsupportedVersion is not null)
+                throw existing.UnsupportedVersion;
+
+            // Never silently change identity: a Save As keeps the source DocumentId.
+            // A mismatched existing DocumentId means the target belongs to another board.
+            if (existing.Document?.DocumentId is Guid targetId && targetId != Guid.Empty &&
+                targetId != document.DocumentId)
+                throw new InvalidOperationException("The target file belongs to a different board; choose another path.");
+
+            await SaveCoreAtPathAsync(
+                fullPath, document, existing.Document,
+                existing.InvalidDocument is not null, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -154,14 +302,45 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
     }
 
     private async Task SaveCoreAsync(
-        HavenBoardSnapshot snapshot,
+        HavenBoardSnapshot? snapshot,
+        HavenRichNotes? rich,
+        string boardId,
         HavenBoardDocument? existing,
         bool primaryWasCorrupt,
         CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(_rootDirectory);
-        var primary = PrimaryPath(snapshot.Id);
-        var backup = BackupPath(snapshot.Id);
+        var primary = PrimaryPath(boardId);
+        await SaveCoreAtPathAsync(primary, snapshot, rich, boardId, existing, primaryWasCorrupt, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task SaveCoreAtPathAsync(
+        string primary,
+        HavenBoardDocument content,
+        HavenBoardDocument? existing,
+        bool primaryWasCorrupt,
+        CancellationToken cancellationToken) =>
+        await SaveCoreAtPathAsync(
+            primary, content.Snapshot, content.RichNotes, null, existing ?? content,
+            primaryWasCorrupt, cancellationToken).ConfigureAwait(false);
+
+    private async Task SaveCoreAtPathAsync(
+        string primary,
+        HavenBoardSnapshot? snapshot,
+        HavenRichNotes? rich,
+        string? boardIdForTempValidation,
+        HavenBoardDocument? existing,
+        bool primaryWasCorrupt,
+        CancellationToken cancellationToken)
+    {
+        if (snapshot is null && rich is null)
+            throw new InvalidDataException("A .9to1board must contain a board snapshot, rich notes, or both.");
+        if (snapshot is not null)
+            HavenBoardReducer.Validate(snapshot);
+        if (rich is not null)
+            HavenRichNotesValidator.Validate(rich);
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(primary))!);
+        var backup = primary + ".bak";
         var temp = primary + "." + Guid.NewGuid().ToString("N") + ".tmp";
         var now = DateTimeOffset.UtcNow;
         var document = new HavenBoardDocument(
@@ -170,15 +349,18 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
             existing?.DocumentId ?? Guid.NewGuid(),
             existing?.CreatedUtc ?? now,
             now,
-            snapshot);
+            snapshot,
+            rich);
 
         try
         {
             await WriteDocumentAsync(temp, document, cancellationToken).ConfigureAwait(false);
 
             // Read the exact bytes written before the live document is ever touched.
-            var validatedTemp = await TryReadDocumentAsync(temp, snapshot.Id, CancellationToken.None).ConfigureAwait(false);
-            if (validatedTemp.Snapshot is null || validatedTemp.UnsupportedVersion is not null)
+            var validatedTemp = boardIdForTempValidation is null
+                ? await TryReadDocumentAtPathAsync(temp, CancellationToken.None).ConfigureAwait(false)
+                : await TryReadDocumentAsync(temp, boardIdForTempValidation, CancellationToken.None).ConfigureAwait(false);
+            if (validatedTemp.Document is null || validatedTemp.UnsupportedVersion is not null)
                 throw new InvalidDataException("The temporary .9to1board could not be validated before replacement.");
 
             // From here cancellation must not leave replacement half-complete. When the primary
@@ -260,9 +442,20 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
         }
     }
 
-    private async Task<DocumentReadResult> TryReadDocumentAsync(
+    private Task<DocumentReadResult> TryReadDocumentAsync(
         string path,
         string expectedBoardId,
+        CancellationToken cancellationToken) =>
+        TryReadDocumentCoreAsync(path, expectedBoardId, cancellationToken);
+
+    private Task<DocumentReadResult> TryReadDocumentAtPathAsync(
+        string path,
+        CancellationToken cancellationToken) =>
+        TryReadDocumentCoreAsync(path, expectedBoardId: null, cancellationToken);
+
+    private async Task<DocumentReadResult> TryReadDocumentCoreAsync(
+        string path,
+        string? expectedBoardId,
         CancellationToken cancellationToken)
     {
         if (!File.Exists(path))
@@ -284,43 +477,80 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
                 !root.TryGetProperty("schemaVersion", out var versionElement) ||
                 !versionElement.TryGetInt32(out var version))
                 return new DocumentReadResult(null, null, null, new InvalidDataException(
-                    "The .9to1board is missing its required format identity or schema version."));
+                    "The .9to1board is missing its required format identity or schema version."), Migrated: false);
 
             if (version > HavenBoardDocument.CurrentSchemaVersion)
-                return new DocumentReadResult(null, null, new UnsupportedHavenBoardDocumentVersionException(version), null);
+                return new DocumentReadResult(null, null, new UnsupportedHavenBoardDocumentVersionException(version), null, Migrated: false);
             if (version < 0)
-                return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board schema version is invalid."));
+                return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board schema version is invalid."), Migrated: false);
 
-            var document = version switch
+            HavenBoardDocument? document = version switch
             {
-                HavenBoardDocument.CurrentSchemaVersion => root.Deserialize<HavenBoardDocument>(Json),
+                2 => root.Deserialize<HavenBoardDocument>(Json),
+                1 => MigrateSchemaOne(root),
                 0 => MigrateSchemaZero(root),
                 _ => null
             };
+            var migrated = version < HavenBoardDocument.CurrentSchemaVersion;
 
-            if (document?.Snapshot is null ||
-                !string.Equals(document.Snapshot.Id, expectedBoardId, StringComparison.Ordinal) ||
+            if (document is null ||
                 document.DocumentId == Guid.Empty ||
                 document.CreatedUtc == default ||
-                document.ModifiedUtc == default)
+                document.ModifiedUtc == default ||
+                (document.Snapshot is null && document.RichNotes is null))
                 return new DocumentReadResult(null, null, null, new InvalidDataException(
-                    "The .9to1board is incomplete, has a mismatched board identity, or fails validation."));
+                    "The .9to1board is incomplete, has a mismatched board identity, or fails validation."), Migrated: false);
 
-            HavenBoardReducer.Validate(document.Snapshot);
-            return new DocumentReadResult(document.Snapshot, document, null, null);
+            if (document.Snapshot is not null)
+            {
+                if (expectedBoardId is not null &&
+                    !string.Equals(document.Snapshot.Id, expectedBoardId, StringComparison.Ordinal))
+                    return new DocumentReadResult(null, null, null, new InvalidDataException(
+                        "The .9to1board is incomplete, has a mismatched board identity, or fails validation."), Migrated: false);
+                HavenBoardReducer.Validate(document.Snapshot);
+            }
+            if (document.RichNotes is not null)
+                HavenRichNotesValidator.Validate(document.RichNotes);
+
+            return new DocumentReadResult(document.Snapshot, document, null, null, migrated);
         }
         catch (JsonException error)
         {
-            return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board contains invalid JSON.", error));
+            return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board contains invalid JSON.", error), Migrated: false);
         }
         catch (InvalidOperationException error)
         {
-            return new DocumentReadResult(null, null, null, error);
+            return new DocumentReadResult(null, null, null, error, Migrated: false);
         }
         catch (NotSupportedException error)
         {
-            return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board contains unsupported data.", error));
+            return new DocumentReadResult(null, null, null, new InvalidDataException("The .9to1board contains unsupported data.", error), Migrated: false);
         }
+    }
+
+    /// <summary>
+    /// Migrates a schema v1 envelope in memory: the snapshot facet is preserved verbatim
+    /// and a rich-notes seed is derived from it. The original file is untouched until save.
+    /// </summary>
+    private static HavenBoardDocument? MigrateSchemaOne(JsonElement root)
+    {
+        var document = root.Deserialize<HavenBoardDocument>(Json);
+        if (document?.Snapshot is null)
+            return null;
+        return document with { RichNotes = HavenRichNotesSeeder.SeedFromSnapshot(document.Snapshot) };
+    }
+
+    private static HavenBoardDocument MigrateLegacySnapshot(HavenBoardSnapshot snapshot)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return new HavenBoardDocument(
+            HavenBoardDocument.FormatIdentity,
+            HavenBoardDocument.CurrentSchemaVersion,
+            Guid.NewGuid(),
+            now,
+            now,
+            snapshot,
+            HavenRichNotesSeeder.SeedFromSnapshot(snapshot));
     }
 
     private static HavenBoardDocument? MigrateSchemaZero(JsonElement root)
@@ -339,7 +569,8 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
             Guid.NewGuid(),
             now,
             now,
-            snapshot);
+            snapshot,
+            HavenRichNotesSeeder.SeedFromSnapshot(snapshot));
     }
 
     private static async Task<LegacyReadResult> TryReadLegacySnapshotAsync(
@@ -420,7 +651,8 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
         HavenBoardSnapshot? Snapshot,
         HavenBoardDocument? Document,
         UnsupportedHavenBoardDocumentVersionException? UnsupportedVersion,
-        Exception? InvalidDocument);
+        Exception? InvalidDocument,
+        bool Migrated);
 
     private readonly record struct LegacyReadResult(HavenBoardSnapshot? Snapshot, Exception? InvalidDocument);
 }
