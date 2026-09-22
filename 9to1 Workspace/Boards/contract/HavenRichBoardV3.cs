@@ -284,7 +284,7 @@ public static class HavenGraphExpression
         {
             var left = text[..equals].Trim();
             if (left is "y" or "Y" or "f(x)" or "f (x)")
-                return text[(equals + 1)..];
+                return text[(equals + 1)..].Trim();
         }
         return text;
     }
@@ -824,6 +824,15 @@ public static partial class HavenRichNotesOps
         return removed;
     }
 
+    public static bool RemoveAttachmentFromBlock(HavenRichNotes notes, string pageId, string blockId)
+    {
+        var block = RequireBlock(notes, pageId, blockId);
+        if (block.Attachment is null) return false;
+        block.Attachment = null;
+        TouchNotes(notes);
+        return true;
+    }
+
     // ----- Graphs -----
 
     public static HavenRichBlock AddGraphBlock(HavenRichNotes notes, string pageId)
@@ -876,12 +885,13 @@ public static partial class HavenRichNotesOps
         if (clearDomain) { expression.DomainMin = null; expression.DomainMax = null; }
         else
         {
+            var nextMin = domainMin.HasValue ? domainMin : expression.DomainMin;
+            var nextMax = domainMax.HasValue ? domainMax : expression.DomainMax;
+            if (nextMin.HasValue && nextMax.HasValue && nextMin.Value >= nextMax.Value)
+                throw new InvalidOperationException("Graph domain minimum must be below the maximum.");
             if (domainMin.HasValue) expression.DomainMin = domainMin;
             if (domainMax.HasValue) expression.DomainMax = domainMax;
         }
-        if (expression.DomainMin.HasValue && expression.DomainMax.HasValue &&
-            expression.DomainMin.Value >= expression.DomainMax.Value)
-            throw new InvalidOperationException("Graph domain minimum must be below the maximum.");
         TouchNotes(notes);
         return true;
     }
