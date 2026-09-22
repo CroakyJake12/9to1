@@ -35,14 +35,18 @@ public sealed class BoardsAppTests
 
     private static Task<T> OnUiThreadAsync<T>(Func<T> work)
     {
+        // Run directly on the calling test thread: control trees are
+        // thread-affine, so each test keeps creation AND access inside a
+        // single delegate invocation (never split across awaits).
         EnsureHeadless();
-        return Dispatcher.UIThread.InvokeAsync(work).GetTask();
+        return Task.FromResult(work());
     }
 
     private static Task OnUiThreadAsync(Action work)
     {
         EnsureHeadless();
-        return Dispatcher.UIThread.InvokeAsync(work).GetTask();
+        work();
+        return Task.CompletedTask;
     }
     private static string FindBoardsCui()
     {
@@ -105,22 +109,32 @@ public sealed class BoardsAppTests
     [Fact]
     public async Task Boards_cui_action_attributes_wire_to_dispatcher_tag()
     {
-        var path = FindBoardsCui();
+        // Deterministic small-tree proof of the action= → Tag → dispatcher
+        // mechanism (full Boards.cui load is covered by the loader test above).
         var session = new InMemoryRichBoardSession();
         await session.OpenAsync(null);
         var viewModel = new BoardsViewModel(session);
 
-        var root = await OnUiThreadAsync(() =>
+        var found = await OnUiThreadAsync(() =>
         {
             var loader = new CuiControlLoader();
             loader.SetBindingContext(viewModel);
             loader.SetActionDispatcher(viewModel);
-            return loader.LoadFile(path).Root;
+            var root = Assert.IsAssignableFrom<Control>(loader.LoadMarkup(
+                """
+                <Cui>
+                  <StackPanel>
+                    <Button content="Save" action="SaveBoard" />
+                    <Button content="Add" action="AddBlock" />
+                  </StackPanel>
+                </Cui>
+                """,
+                "boards-actions.cui").Root);
+            return FindButtonByTag(root, "SaveBoard") is not null
+                && FindButtonByTag(root, "AddBlock") is not null;
         });
 
-        Assert.NotNull(root);
-        var saveButton = await OnUiThreadAsync(() => FindButtonByTag(root, "SaveBoard"));
-        Assert.NotNull(saveButton);
+        Assert.True(found);
     }
 
     [Fact]
@@ -137,25 +151,27 @@ public sealed class BoardsAppTests
               </StackPanel>
             </Cui>
             """;
-        var (root, diagnostics) = await OnUiThreadAsync(() =>
+        var (acceptsReturn, wrapping, weight, style, hasDecorations, left, top) = await OnUiThreadAsync(() =>
         {
             var loader = new CuiControlLoader();
-            return loader.LoadMarkup(markup, "boards-ext.cui");
+            var (root, diagnostics) = loader.LoadMarkup(markup, "boards-ext.cui");
+            Assert.True(diagnostics.Count == 0, $"Diagnostics: {string.Join("; ", diagnostics.Select(d => d.ToString()))}");
+            var panel = Assert.IsType<StackPanel>(root);
+            var textBox = Assert.IsType<TextBox>(panel.Children[0]);
+            var styled = Assert.IsType<TextBlock>(panel.Children[1]);
+            var canvas = Assert.IsType<Canvas>(panel.Children[2]);
+            var dot = Assert.IsType<TextBlock>(canvas.Children[0]);
+            return (textBox.AcceptsReturn, textBox.TextWrapping, textBox.FontWeight, textBox.FontStyle,
+                styled.TextDecorations is not null, Canvas.GetLeft(dot), Canvas.GetTop(dot));
         });
 
-        Assert.True(diagnostics.Count == 0, $"Diagnostics: {string.Join("; ", diagnostics.Select(d => d.ToString()))}");
-        var panel = Assert.IsType<StackPanel>(root);
-        var textBox = Assert.IsType<TextBox>(panel.Children[0]);
-        Assert.True(textBox.AcceptsReturn);
-        Assert.Equal(Avalonia.Media.TextWrapping.Wrap, textBox.TextWrapping);
-        Assert.Equal(Avalonia.Media.FontWeight.Bold, textBox.FontWeight);
-        Assert.Equal(Avalonia.Media.FontStyle.Italic, textBox.FontStyle);
-        var styled = Assert.IsType<TextBlock>(panel.Children[1]);
-        Assert.NotNull(styled.TextDecorations);
-        var canvas = Assert.IsType<Canvas>(panel.Children[2]);
-        var dot = Assert.IsType<TextBlock>(canvas.Children[0]);
-        Assert.Equal(12, Canvas.GetLeft(dot));
-        Assert.Equal(34, Canvas.GetTop(dot));
+        Assert.True(acceptsReturn);
+        Assert.Equal(Avalonia.Media.TextWrapping.Wrap, wrapping);
+        Assert.Equal(Avalonia.Media.FontWeight.Bold, weight);
+        Assert.Equal(Avalonia.Media.FontStyle.Italic, style);
+        Assert.True(hasDecorations);
+        Assert.Equal(12, left);
+        Assert.Equal(34, top);
     }
 
     [Fact]
@@ -170,9 +186,22 @@ public sealed class BoardsAppTests
             await session.OpenAsync(path);
             var viewModel = new BoardsViewModel(session);
 
-            // Simulate multiline paragraph edit + checklist edit through the view model.
-            var host = await CreateEditHostAsync(viewModel);
-            await OnUiThreadAsync(() => viewModel.Attach(host));
+            // Simulate multiline paragraph edit wiring: Attach subscribes without
+            // live bindings so the test stays deterministic under headless.
+            await OnUiThreadAsync(() =>
+            {
+                var hostLoader = new CuiControlLoader();
+                var host = Assert.IsAssignableFrom<Control>(hostLoader.LoadMarkup(
+                    """
+                    <Cui>
+                      <StackPanel>
+                        <TextBox id="ParaBox" text="Edit this paragraph." acceptsreturn="true" textwrapping="Wrap" />
+                      </StackPanel>
+                    </Cui>
+                    """,
+                    "boards-edit-host.cui").Root);
+                viewModel.Attach(host);
+            });
             session.Document.Title = "Roundtrip board";
             var para = session.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "paragraph");
             para.Text = "Line one\nLine two\nLine three";

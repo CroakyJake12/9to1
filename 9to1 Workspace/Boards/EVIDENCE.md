@@ -1,5 +1,21 @@
 # Haven Boards evidence ledger
 
+## RC1 (9-1 Boards, .9to1board schema v2 + CUI app)
+
+- `.9to1board` schema v2 envelope (`format 9to1.board`, stable `documentId`, `createdUtc`/`modifiedUtc`, task-snapshot facet + rich-notes facet): **IMPLEMENTED, BUILT, TESTED**.
+- Atomic same-directory temp write + byte re-validation + `File.Replace` promotion + `.bak` preservation + corrupt-primary quarantine: **IMPLEMENTED, TESTED**.
+- Schema v0/v1 in-memory migration (original bytes untouched until save), legacy raw-`.json` import (source preserved), future-version loud rejection: **IMPLEMENTED, TESTED**.
+- Rich-notes payload (sections/pages/paragraphs/headings/runs/bold/italic/underline/strikethrough/lists/checklists/tables/ink-strokes/canvas-objects/embedded attachments): **IMPLEMENTED, BUILT, TESTED**.
+- `RichBoardSession` (validated mutations, debounced autosave, monotonic revision, save-gated "Saved" status, flush on dispose, Save As preserving identity): **IMPLEMENTED, TESTED**.
+- CUI runtime extensions (action→Tag wiring, TextBox font/accepts-return/wrap, Canvas attached geometry, decorations): **IMPLEMENTED, TESTED**.
+- Executable CUI Boards app (`9to1 Workspace/Boards/app`, `dotnet build`, `Boards.exe [board-path]`, Ctrl+S, save-on-close): **IMPLEMENTED, BUILT, LAUNCHED** — window rendered, `Boards.cui` 0 diagnostics, created valid schema-v2 file on first run.
+- Lossless editor merge (`ContractSessionAdapter`: delta-only write-back, multi-run/table/canvas/attachment preservation): **IMPLEMENTED, TESTED**.
+- Contract suite: **63/63 passed**. HUI suite: **34/34 passed**. App suite: **9/9 passed**. Foundation static checks: **passed**.
+- Realistic A-Level Maths board (3 sections, 4 pages, headings, multiline formatted text, checklist, table, ink, canvas note) through save → dispose → reopen → edit → autosave → reopen → copy: **TESTED**.
+- Pointer freeform-card drag in HUI scenes: **NOT IMPLEMENTED / NOT CLAIMED** (keyboard nudge covered). Rnote engine reuse: **NOT WIRED** (ink is native stroke points). Attachments >5MB embed: **REJECTED WITH MESSAGE** (sidecar path deferred).
+
+## Prior ledger (boards-appflowy-foundation migration)
+
 This file records what has actually been executed for the `boards-appflowy-foundation` migration. It intentionally distinguishes source inspection, implementation, build/test evidence, and runtime proof.
 
 ## Upstream and donor
