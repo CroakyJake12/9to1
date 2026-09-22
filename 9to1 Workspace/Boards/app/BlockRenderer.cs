@@ -7,6 +7,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -36,23 +37,67 @@ public static class BlockRenderer
         host.Children.Clear();
 
         var blocks = vm.PageBlocks;
+        if (blocks.Count == 0)
+        {
+            host.Children.Add(BuildEmptyPageHint(vm));
+        }
         var index = 0;
         while (index < blocks.Count)
         {
             var block = blocks[index];
-            if (block.Kind == "checklist")
+            if (IsListKind(block.Kind))
             {
                 var run = new List<RichBoardBlock>();
-                while (index < blocks.Count && blocks[index].Kind == "checklist")
+                while (index < blocks.Count && IsListKind(blocks[index].Kind))
                     run.Add(blocks[index++]);
-                host.Children.Add(BuildChecklistRun(vm, run));
+                host.Children.Add(WithSelection(vm, run[0].Id, BuildChecklistRun(vm, run)));
                 continue;
             }
-            host.Children.Add(BuildBlock(vm, block));
+            host.Children.Add(WithSelection(vm, block.Id, BuildBlock(vm, block)));
             index++;
         }
 
         host.Children.Add(BuildFreeformSection(vm, canvasBoxes ?? []));
+    }
+
+    private static Control BuildEmptyPageHint(BoardsViewModel vm)
+    {
+        var panel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 24, 0, 24) };
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Start typing or press + to add content.",
+            FontSize = 15,
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextAlignment = TextAlignment.Center,
+        });
+        var add = new Button
+        {
+            Content = "+ Add your first block",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 12, 0, 0),
+            Padding = new Thickness(16, 8),
+        };
+        ToolTip.SetTip(add, "Add a paragraph block");
+        Avalonia.Automation.AutomationProperties.SetName(add, "Add your first block");
+        add.Click += (_, _) => _ = vm.DispatchAsync("AddBlock", null);
+        panel.Children.Add(add);
+        return panel;
+    }
+
+    /// <summary>Subtle selection outline: transparent until selected, then an accent bar.</summary>
+    private static Control WithSelection(BoardsViewModel vm, string selectId, Control inner)    {
+        var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
+        var border = new Border
+        {
+            Child = inner,
+            BorderThickness = new Thickness(3, 0, 0, 0),
+            BorderBrush = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
+            Padding = new Thickness(9, 2, 0, 2),
+            Margin = new Thickness(0, 0, 0, 10),
+            Background = Brushes.Transparent,
+        };
+        return border;
     }
 
     // ----- Block dispatch -----
@@ -68,34 +113,21 @@ public static class BlockRenderer
         _ => BuildTextBlock(vm, block),
     };
 
-    private static StackPanel BlockShell(BoardsViewModel vm, RichBoardBlock block, string title)
+    private static bool IsListKind(string kind) =>
+        kind is "checklist" or "bulleted" or "numbered";
+
+    private static StackPanel BlockShell(BoardsViewModel vm, RichBoardBlock block)
     {
-        var shell = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 0, 0, 12) };
-        var header = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        var label = new TextBlock
-        {
-            Text = title,
-            FontSize = 13,
-            FontWeight = FontWeight.SemiBold,
-            Foreground = new SolidColorBrush(Color.Parse("#FF757575")),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        AutomationProperties.SetName(label, title + " section");
-        var styleBadge = new TextBlock
-        {
-            Text = "  [" + (vm.StyleName(block.StyleId) ?? block.StyleId) + "]",
-            FontSize = 12,
-            Foreground = new SolidColorBrush(Color.Parse("#FF9AA0A6")),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        var delete = new Button { Content = "Delete", Margin = new Thickness(12, 0, 0, 0) };
-        ToolTip.SetTip(delete, "Delete this block");
-        AutomationProperties.SetName(delete, "Delete " + title + " block");
-        delete.Click += async (_, _) => await vm.DeleteBlockAsync(block.Id);
-        header.Children.Add(label);
-        header.Children.Add(styleBadge);
-        header.Children.Add(delete);
-        shell.Children.Add(header);
+        // No visible header: blocks read as document content. Management lives
+        // in the block context menu (right-click) and the contextual strip.
+        var shell = new StackPanel { Orientation = Orientation.Vertical };
+        var menu = new ContextMenu();
+        var delete = new MenuItem { Header = "Delete block" };
+        Avalonia.Automation.AutomationProperties.SetName(delete, "Delete block");
+        var captured = block.Id;
+        delete.Click += async (_, _) => await vm.DeleteBlockAsync(captured);
+        menu.Items.Add(delete);
+        shell.ContextMenu = menu;
         if (!string.IsNullOrEmpty(block.AttachmentId))
             shell.Children.Add(BuildAttachmentRow(vm, block));
         return shell;
@@ -106,65 +138,85 @@ public static class BlockRenderer
     private static Control BuildTextBlock(BoardsViewModel vm, RichBoardBlock block)
     {
         var isHeading = block.Kind == "heading";
-        var shell = BlockShell(vm, block, isHeading ? "Heading" : "Paragraph");
+        var style = vm.StyleList.FirstOrDefault(s => s.Id == block.StyleId);
+        var shell = BlockShell(vm, block);
         var box = new TextBox
         {
             Name = "t_" + block.Id,
             Text = block.Text ?? string.Empty,
-            FontSize = block.FontSize > 0 ? block.FontSize : isHeading ? 20 : 14,
-            FontWeight = block.Bold || isHeading ? FontWeight.Bold : FontWeight.Normal,
-            FontStyle = block.Italic ? FontStyle.Italic : FontStyle.Normal,
+            FontSize = ResolveFontSize(block, style, isHeading ? 26 : 14),
+            FontWeight = block.Bold || (style?.Bold == true) || isHeading ? FontWeight.Bold : FontWeight.Normal,
+            FontStyle = block.Italic || (style?.Italic == true) ? FontStyle.Italic : FontStyle.Normal,
             AcceptsReturn = !isHeading,
             TextWrapping = TextWrapping.Wrap,
-            MinWidth = 500,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(2, 6),
+            Margin = new Thickness(Math.Max(0, block.IndentLevel) * 20, 0, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
         };
-        if (!string.IsNullOrEmpty(block.FontFamily))
-            box.FontFamily = new FontFamily(block.FontFamily);
-        box.TextAlignment = ParseAlignment(block.Alignment);
+        var family = !string.IsNullOrEmpty(block.FontFamily) ? block.FontFamily : style?.FontFamily;
+        if (!string.IsNullOrEmpty(family))
+            box.FontFamily = new FontFamily(family);
+        box.TextAlignment = ParseAlignment(block.Alignment != "inherit" ? block.Alignment : style?.Alignment ?? "inherit");
         if (TryBrush(block.Background, out var background))
             box.Background = background;
+        else if (TryBrush(style?.Background, out var styleBackground))
+            box.Background = styleBackground;
         if (TryBrush(block.Foreground, out var foreground))
             box.Foreground = foreground;
-        ToolTip.SetTip(box, (isHeading ? "Heading" : "Paragraph") + " text");
+        else if (TryBrush(style?.Foreground, out var styleForeground))
+            box.Foreground = styleForeground;
+        else
+            box.Foreground = BoardsTheme.TextBrush;
+        ToolTip.SetTip(box, (isHeading ? "Heading" : "Paragraph") + " — select to format");
         AutomationProperties.SetName(box, (isHeading ? "Heading" : "Paragraph") + " editor");
         var captured = block.Id;
         box.TextChanged += (_, _) => vm.EditText("t_" + captured, box.Text ?? string.Empty);
         box.GotFocus += (_, _) => vm.FocusBlock(captured);
         shell.Children.Add(box);
-        var flags = new List<string>();
-        if (block.Strike) flags.Add("strike");
-        if (block.Underline) flags.Add("underline");
-        if (block.Baseline is "subscript" or "superscript") flags.Add(block.Baseline);
-        if (block.IndentLevel >= 0) flags.Add("indent " + block.IndentLevel);
-        if (flags.Count > 0)
+        // Extended flags that plain text cannot show stay as a whisper, not chrome.
+        var quiet = new List<string>();
+        if (block.Strike) quiet.Add("strikethrough");
+        if (block.Baseline is "subscript" or "superscript") quiet.Add(block.Baseline);
+        if (quiet.Count > 0)
             shell.Children.Add(new TextBlock
             {
-                Text = string.Join(" · ", flags),
+                Text = string.Join(" · ", quiet),
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Color.Parse("#FF9AA0A6")),
+                Foreground = BoardsTheme.SecondaryTextBrush,
+                Margin = new Thickness(2, 0, 0, 2),
             });
         return shell;
+    }
+
+    private static double ResolveFontSize(RichBoardBlock block, RichStyleView? style, double fallback)
+    {
+        if (block.FontSize > 0)
+            return block.FontSize;
+        if (style is not null && style.FontSize > 0)
+            return style.FontSize;
+        return fallback;
     }
 
     // ----- Checklist -----
 
     private static Control BuildChecklistRun(BoardsViewModel vm, List<RichBoardBlock> run)
     {
-        var shell = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 0, 0, 12) };
-        var header = new TextBlock
-        {
-            Text = "Checklist (" + run.Count + " items)",
-            FontSize = 13,
-            FontWeight = FontWeight.SemiBold,
-            Foreground = new SolidColorBrush(Color.Parse("#FF757575")),
-            Margin = new Thickness(0, 0, 0, 4),
-        };
-        AutomationProperties.SetName(header, "Checklist with " + run.Count + " items");
-        shell.Children.Add(header);
+        var shell = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(0, 4, 0, 4) };
         foreach (var item in run)
             shell.Children.Add(BuildChecklistRow(vm, item));
         var parentKey = ParentKey(run[0].Id);
-        var add = new Button { Content = "+ Add item", Margin = new Thickness(0, 4, 0, 0) };
+        var add = new Button
+        {
+            Content = "+ Add item",
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            FontSize = 13,
+            Padding = new Thickness(28, 4, 8, 4),
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
         ToolTip.SetTip(add, "Add a checklist item");
         AutomationProperties.SetName(add, "Add checklist item");
         add.Click += async (_, _) => await vm.AddChecklistItemAsync(parentKey);
@@ -174,14 +226,18 @@ public static class BlockRenderer
 
     private static Control BuildChecklistRow(BoardsViewModel vm, RichBoardBlock item)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Margin = new Thickness(Math.Max(0, item.Level) * 16, 3, 0, 3),
+        };
         var suffix = NameSuffix(item.Id);
         var check = new CheckBox
         {
             Name = "done_" + suffix,
             IsChecked = item.IsChecked,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 8, 0),
+            Margin = new Thickness(0, 0, 10, 0),
         };
         AutomationProperties.SetName(check, "Checklist item done");
         var text = new TextBox
@@ -189,19 +245,43 @@ public static class BlockRenderer
             Name = "chk_" + suffix,
             Text = item.Text ?? string.Empty,
             FontSize = 14,
-            Width = 460,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(2, 4),
             FontWeight = item.Bold ? FontWeight.Bold : FontWeight.Normal,
             FontStyle = item.Italic ? FontStyle.Italic : FontStyle.Normal,
+            Foreground = item.IsChecked ? BoardsTheme.SecondaryTextBrush : BoardsTheme.TextBrush,
         };
         ToolTip.SetTip(text, "Checklist item text (Enter adds next, empty Backspace removes)");
         AutomationProperties.SetName(text, "Checklist item text");
-        var erase = new Button { Content = "✕", Margin = new Thickness(8, 0, 0, 0) };
+        var erase = new Button
+        {
+            Content = BoardsIcons.Glyph(BoardsIcons.Close, 11, "Remove checklist item"),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            Padding = new Thickness(6, 2),
+            VerticalAlignment = VerticalAlignment.Center,
+            Opacity = 0,
+        };
         ToolTip.SetTip(erase, "Remove this item");
         AutomationProperties.SetName(erase, "Remove checklist item");
         var viewId = item.Id;
         check.IsCheckedChanged += (_, _) => vm.EditCheck("done_" + suffix, check.IsChecked == true);
         text.TextChanged += (_, _) => vm.EditText("chk_" + suffix, text.Text ?? string.Empty);
-        text.GotFocus += (_, _) => vm.FocusBlock(viewId);
+        text.GotFocus += (_, _) =>
+        {
+            vm.FocusBlock(viewId);
+            erase.Opacity = 1;
+        };
+        text.LostFocus += (_, _) => erase.Opacity = 0;
+        row.PointerEntered += (_, _) => erase.Opacity = 1;
+        row.PointerExited += (_, _) =>
+        {
+            if (!text.IsFocused)
+                erase.Opacity = 0;
+        };
         text.KeyDown += async (_, e) =>
         {
             if (e.Key == Key.Enter)
@@ -231,22 +311,40 @@ public static class BlockRenderer
 
     private static Control BuildTable(BoardsViewModel vm, RichBoardBlock block)
     {
-        var shell = BlockShell(vm, block, "Table");
+        var shell = BlockShell(vm, block);
         var rows = block.TableRows > 0 ? block.TableRows : DerivedMax(block, row: true) + 1;
         var cols = block.TableCols > 0 ? block.TableCols : DerivedMax(block, row: false) + 1;
         rows = Math.Clamp(rows, 1, 100);
         cols = Math.Clamp(cols, 1, 50);
 
-        var grid = new Grid { Margin = new Thickness(0, 4, 0, 4) };
+        var tableBorder = new Border
+        {
+            BorderBrush = TableBorderBrush(block),
+            BorderThickness = new Thickness(Math.Clamp(block.TableStyle.BorderWidth > 0 ? block.TableStyle.BorderWidth : 1, 0.5, 8)),
+            CornerRadius = new CornerRadius(Math.Clamp(block.TableStyle.CornerRadius, 0, 16)),
+            Margin = new Thickness(0, 4, 0, 4),
+            ClipToBounds = true,
+        };
+        if (TryBrush(block.TableStyle.Background, out var tableBackground))
+            tableBorder.Background = tableBackground;
+        else
+            tableBorder.Background = BoardsTheme.CardBrush;
+
+        var grid = new Grid();
         for (var r = 0; r < rows; r++)
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
         for (var c = 0; c < cols; c++)
-            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        {
+            var width = c < block.ColumnWidths.Count && block.ColumnWidths[c] > 0
+                ? block.ColumnWidths[c]
+                : double.NaN;
+            grid.ColumnDefinitions.Add(new ColumnDefinition(
+                double.IsNaN(width) ? GridLength.Star : new GridLength(width)));
+        }
 
         for (var r = 0; r < rows; r++)
             for (var c = 0; c < cols; c++)
             {
-                var cellPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(2) };
                 var key = $"{r},{c}";
                 block.TableCells.TryGetValue(key, out var cellText);
                 block.CellStyles.TryGetValue(key, out var cellStyle);
@@ -255,50 +353,50 @@ public static class BlockRenderer
                     Name = $"cell_{block.Id}_{r}_{c}",
                     Text = cellText ?? string.Empty,
                     FontSize = 14,
-                    Width = 130,
+                    AcceptsReturn = true,
+                    TextWrapping = TextWrapping.Wrap,
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(8, 6),
                     FontWeight = cellStyle?.Bold == true ? FontWeight.Bold : FontWeight.Normal,
                     FontStyle = cellStyle?.Italic == true ? FontStyle.Italic : FontStyle.Normal,
+                    MinHeight = 30,
                 };
-                AutomationProperties.SetName(box, $"Table cell row {r + 1} column {c + 1}");
                 if (cellStyle is not null && TryBrush(cellStyle.Background, out var cellBackground))
                     box.Background = cellBackground;
+                else if (block.TableStyle.AlternatingRows && r % 2 == 1)
+                    box.Background = BoardsTheme.Brush(BoardsTheme.Mode == BoardsThemeMode.Dark ? "#FF2A2E34" : "#FFF7F8FA");
+                if (cellStyle is not null && TryBrush(cellStyle.Foreground, out var cellForeground))
+                    box.Foreground = cellForeground;
+                else
+                    box.Foreground = BoardsTheme.TextBrush;
+                box.TextAlignment = ParseAlignment(cellStyle?.AlignH ?? "inherit");
+                box.VerticalAlignment = cellStyle?.AlignV switch
+                {
+                    "top" => VerticalAlignment.Top,
+                    "bottom" => VerticalAlignment.Bottom,
+                    _ => VerticalAlignment.Center,
+                };
+                AutomationProperties.SetName(box, $"Table cell row {r + 1} column {c + 1}");
                 var rr = r;
                 var cc = c;
                 var captured = block.Id;
                 box.TextChanged += (_, _) => vm.EditText($"cell_{captured}_{rr}_{cc}", box.Text ?? string.Empty);
                 box.GotFocus += (_, _) => vm.FocusBlock(captured);
-                var tools = new StackPanel { Orientation = Orientation.Horizontal };
-                var align = new ComboBox
+                var frame = new Border
                 {
-                    ItemsSource = new List<string> { "inherit", "left", "center", "right", "justify" },
-                    SelectedItem = string.IsNullOrEmpty(cellStyle?.AlignH) ? "inherit" : cellStyle!.AlignH,
-                    Width = 88,
-                    Margin = new Thickness(0, 2, 4, 0),
+                    Child = box,
+                    BorderBrush = BoardsTheme.BorderBrush,
+                    BorderThickness = new Thickness(0, 0, c < cols - 1 ? 1 : 0, r < rows - 1 ? 1 : 0),
+                    Background = box.Background,
                 };
-                ToolTip.SetTip(align, "Cell horizontal alignment");
-                AutomationProperties.SetName(align, $"Cell {r + 1},{c + 1} alignment");
-                align.SelectionChanged += (_, _) =>
-                    vm.SetCellAlign(captured, rr, cc, align.SelectedItem?.ToString() ?? "inherit");
-                var bold = new Button { Content = "B", Margin = new Thickness(0, 2, 0, 0) };
-                ToolTip.SetTip(bold, "Toggle cell bold");
-                AutomationProperties.SetName(bold, $"Cell {r + 1},{c + 1} bold");
-                bold.Click += (_, _) => vm.ToggleCellBold(captured, rr, cc);
-                tools.Children.Add(align);
-                tools.Children.Add(bold);
-                cellPanel.Children.Add(box);
-                cellPanel.Children.Add(tools);
-                Grid.SetRow(cellPanel, r);
-                Grid.SetColumn(cellPanel, c);
-                grid.Children.Add(cellPanel);
+                box.Background = Brushes.Transparent;
+                Grid.SetRow(frame, r);
+                Grid.SetColumn(frame, c);
+                grid.Children.Add(frame);
             }
-        shell.Children.Add(grid);
-
-        var structure = new StackPanel { Orientation = Orientation.Horizontal };
-        AddSmallButton(structure, "+ Row", "Add table row", () => vm.TableAddRow(block.Id));
-        AddSmallButton(structure, "− Row", "Delete last table row", () => vm.TableDelRow(block.Id));
-        AddSmallButton(structure, "+ Col", "Add table column", () => vm.TableAddCol(block.Id));
-        AddSmallButton(structure, "− Col", "Delete last table column", () => vm.TableDelCol(block.Id));
-        shell.Children.Add(structure);
+        tableBorder.Child = grid;
+        shell.Children.Add(tableBorder);
         return shell;
     }
 
@@ -306,8 +404,9 @@ public static class BlockRenderer
 
     private static Control BuildDivider(BoardsViewModel vm, RichBoardBlock block)
     {
-        var shell = BlockShell(vm, block, "Divider");
+        var shell = BlockShell(vm, block);
         var divider = block.Divider ?? new RichDividerView();
+        // Line only; thickness/style/color live in the contextual strip when selected.
         if (divider.LineStyle != "none")
         {
             if (divider.LineStyle is "dashed" or "dotted")
@@ -317,7 +416,7 @@ public static class BlockRenderer
                     Text = divider.LineStyle == "dashed" ? "— — — — — — —" : "· · · · · · · · ·",
                     FontSize = 14,
                     Foreground = ParseBrushOrDefault(divider.Color, "#FF5F6368"),
-                    Margin = new Thickness(0, 4, 0, 4),
+                    Margin = new Thickness(0, 8, 0, 8),
                 });
             }
             else
@@ -326,47 +425,11 @@ public static class BlockRenderer
                 {
                     Height = Math.Clamp(divider.Thickness, 1, 12),
                     Fill = ParseBrushOrDefault(divider.Color, "#FF5F6368"),
-                    Margin = new Thickness(0, 4, 0, 4),
-                    Width = 560,
-                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 8, 0, 8),
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
                 });
             }
         }
-        var editors = new StackPanel { Orientation = Orientation.Horizontal };
-        var thickness = new TextBox
-        {
-            Name = "dvth_" + block.Id,
-            Text = divider.Thickness.ToString("0.##"),
-            Width = 70,
-            Margin = new Thickness(0, 0, 8, 0),
-        };
-        ToolTip.SetTip(thickness, "Divider thickness");
-        AutomationProperties.SetName(thickness, "Divider thickness");
-        var captured = block.Id;
-        thickness.TextChanged += (_, _) => vm.EditText("dvth_" + captured, thickness.Text ?? string.Empty);
-        var style = new ComboBox
-        {
-            ItemsSource = new List<string> { "solid", "dashed", "dotted", "none" },
-            SelectedItem = divider.LineStyle,
-            Width = 100,
-            Margin = new Thickness(0, 0, 8, 0),
-        };
-        ToolTip.SetTip(style, "Divider line style");
-        AutomationProperties.SetName(style, "Divider line style");
-        style.SelectionChanged += (_, _) => vm.SetDividerStyle(captured, style.SelectedItem?.ToString() ?? "solid");
-        var color = new TextBox
-        {
-            Name = "dvcl_" + block.Id,
-            Text = divider.Color,
-            Width = 130,
-        };
-        ToolTip.SetTip(color, "Divider color (hex)");
-        AutomationProperties.SetName(color, "Divider color");
-        color.TextChanged += (_, _) => vm.EditText("dvcl_" + captured, color.Text ?? string.Empty);
-        editors.Children.Add(thickness);
-        editors.Children.Add(style);
-        editors.Children.Add(color);
-        shell.Children.Add(editors);
         return shell;
     }
 
@@ -374,8 +437,10 @@ public static class BlockRenderer
 
     private static Control BuildImage(BoardsViewModel vm, RichBoardBlock block)
     {
-        var shell = BlockShell(vm, block, "Image");
+        var shell = BlockShell(vm, block);
         var image = block.Image;
+        var selected = vm.SelectedBlockId == block.Id;
+        Control content;
         if (image?.DataBase64 is { Length: > 0 } data)
         {
             try
@@ -383,11 +448,12 @@ public static class BlockRenderer
                 var bytes = Convert.FromBase64String(data);
                 using var stream = new MemoryStream(bytes);
                 var bitmap = new Bitmap(stream);
-                var control = new Image
+                content = new Image
                 {
                     Source = bitmap,
                     Width = image.Width > 0 ? image.Width : double.NaN,
-                    MaxWidth = 560,
+                    MaxWidth = 720,
+                    Stretch = Stretch.Uniform,
                     HorizontalAlignment = image.Alignment switch
                     {
                         "center" => HorizontalAlignment.Center,
@@ -396,68 +462,42 @@ public static class BlockRenderer
                     },
                     Margin = new Thickness(0, 4, 0, 4),
                 };
-                AutomationProperties.SetName(control, "Image: " + (image.AltText is { Length: > 0 } altText ? altText : image.DisplayName));
-                shell.Children.Add(control);
+                AutomationProperties.SetName(content, "Image: " + (image.AltText is { Length: > 0 } altText ? altText : image.DisplayName));
             }
             catch
             {
-                shell.Children.Add(new TextBlock
+                content = new TextBlock
                 {
                     Text = "Image bytes are not decodable: " + image.DisplayName,
                     FontSize = 13,
+                    Foreground = BoardsTheme.ErrorBrush,
                     Margin = new Thickness(0, 4, 0, 4),
-                });
+                };
             }
         }
         else
         {
-            shell.Children.Add(new TextBlock
+            content = new TextBlock
             {
                 Text = "No image bytes yet — use Replace to choose a file.",
                 FontSize = 13,
+                Foreground = BoardsTheme.SecondaryTextBrush,
                 Margin = new Thickness(0, 4, 0, 4),
-            });
+            };
         }
-        var editors = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
-        var width = new TextBox
+        // Selection outline only while selected; editors live in the contextual strip.
+        var frame = new Border
         {
-            Name = "iw_" + block.Id,
-            Text = (image?.Width ?? 0).ToString("0.##"),
-            Width = 80,
-            Margin = new Thickness(0, 0, 8, 0),
+            Child = content,
+            BorderBrush = BoardsTheme.AccentBrush,
+            BorderThickness = new Thickness(selected ? 2 : 0),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(selected ? 4 : 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
         };
-        ToolTip.SetTip(width, "Image display width (0 = natural)");
-        AutomationProperties.SetName(width, "Image width");
         var captured = block.Id;
-        width.TextChanged += (_, _) => vm.EditText("iw_" + captured, width.Text ?? string.Empty);
-        var align = new ComboBox
-        {
-            ItemsSource = new List<string> { "inherit", "left", "center", "right" },
-            SelectedItem = string.IsNullOrEmpty(image?.Alignment) ? "inherit" : image!.Alignment,
-            Width = 100,
-            Margin = new Thickness(0, 0, 8, 0),
-        };
-        ToolTip.SetTip(align, "Image alignment");
-        AutomationProperties.SetName(align, "Image alignment");
-        align.SelectionChanged += (_, _) => vm.SetImageAlignment(captured, align.SelectedItem?.ToString() ?? "inherit");
-        var alt = new TextBox
-        {
-            Name = "ialt_" + block.Id,
-            Text = image?.AltText ?? string.Empty,
-            Width = 200,
-            Margin = new Thickness(0, 0, 8, 0),
-        };
-        ToolTip.SetTip(alt, "Image alt text");
-        AutomationProperties.SetName(alt, "Image alt text");
-        alt.TextChanged += (_, _) => vm.EditText("ialt_" + captured, alt.Text ?? string.Empty);
-        editors.Children.Add(width);
-        editors.Children.Add(align);
-        editors.Children.Add(alt);
-        shell.Children.Add(editors);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
-        AddSmallButton(actions, "Replace…", "Replace image from a file", async () => await vm.ReplaceImageAsync(captured));
-        AddSmallButton(actions, "Remove image", "Remove this image block", async () => await vm.DeleteBlockAsync(captured));
-        shell.Children.Add(actions);
+        frame.PointerPressed += (_, _) => vm.FocusBlock(captured);
+        shell.Children.Add(frame);
         return shell;
     }
 
@@ -465,40 +505,138 @@ public static class BlockRenderer
 
     private static Control BuildGraph(BoardsViewModel vm, RichBoardBlock block)
     {
-        var shell = BlockShell(vm, block, "Graph");
+        var shell = BlockShell(vm, block);
         var graph = block.Graph ?? new RichGraphView();
+        // Rendered plot dominates; editing lives in chips + collapsed settings.
+        shell.Children.Add(BuildGraphCanvas(graph));
+        var chips = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 2) };
         foreach (var expr in graph.Expressions)
-            shell.Children.Add(BuildGraphExpressionRow(vm, block.Id, expr));
-        var add = new Button { Content = "+ Add expression", Margin = new Thickness(0, 4, 0, 4) };
+            chips.Children.Add(BuildGraphChip(vm, block.Id, expr));
+        var add = new Button
+        {
+            Content = "+ Expression",
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            FontSize = 13,
+            Padding = new Thickness(8, 4),
+            Margin = new Thickness(0, 0, 0, 4),
+        };
         ToolTip.SetTip(add, "Add a graph expression");
         AutomationProperties.SetName(add, "Add graph expression");
-        var captured = block.Id;
-        add.Click += (_, _) => vm.GraphAddExpression(captured);
-        shell.Children.Add(add);
+        var capturedBlock = block.Id;
+        add.Click += (_, _) => vm.GraphAddExpression(capturedBlock);
+        chips.Children.Add(add);
+        shell.Children.Add(chips);
+
+        if (graph.Expressions.Count == 0)
+            shell.Children.Add(new TextBlock
+            {
+                Text = "Add an expression such as y = sin(x).",
+                FontSize = 13,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+                Margin = new Thickness(0, 0, 0, 4),
+            });
+
+        var settings = new Expander
+        {
+            Header = "Graph settings",
+            IsExpanded = false,
+            Margin = new Thickness(0, 2, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var panel = new StackPanel { Orientation = Orientation.Vertical };
+        foreach (var expr in graph.Expressions)
+            panel.Children.Add(BuildGraphExpressionRow(vm, block.Id, expr));
 
         var viewport = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 4) };
-        AddViewportField(vm, viewport, captured, "XMin", graph.XMin);
-        AddViewportField(vm, viewport, captured, "XMax", graph.XMax);
-        AddViewportField(vm, viewport, captured, "YMin", graph.YMin);
-        AddViewportField(vm, viewport, captured, "YMax", graph.YMax);
+        AddViewportField(vm, viewport, capturedBlock, "XMin", graph.XMin);
+        AddViewportField(vm, viewport, capturedBlock, "XMax", graph.XMax);
+        AddViewportField(vm, viewport, capturedBlock, "YMin", graph.YMin);
+        AddViewportField(vm, viewport, capturedBlock, "YMax", graph.YMax);
         var apply = new Button { Content = "Apply", Margin = new Thickness(8, 0, 0, 0) };
         ToolTip.SetTip(apply, "Apply viewport and redraw curves");
         AutomationProperties.SetName(apply, "Apply graph viewport");
         apply.Click += (_, _) => vm.RefreshAfterEdit();
         viewport.Children.Add(apply);
-        shell.Children.Add(viewport);
+        panel.Children.Add(viewport);
 
         var nav = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        AddSmallButton(nav, "◀", "Pan graph left", () => vm.GraphPanZoom(captured, -0.2, 0, 1));
-        AddSmallButton(nav, "▶", "Pan graph right", () => vm.GraphPanZoom(captured, 0.2, 0, 1));
-        AddSmallButton(nav, "▲", "Pan graph up", () => vm.GraphPanZoom(captured, 0, 0.2, 1));
-        AddSmallButton(nav, "▼", "Pan graph down", () => vm.GraphPanZoom(captured, 0, -0.2, 1));
-        AddSmallButton(nav, "+", "Zoom graph in", () => vm.GraphPanZoom(captured, 0, 0, 1.5));
-        AddSmallButton(nav, "−", "Zoom graph out", () => vm.GraphPanZoom(captured, 0, 0, 1 / 1.5));
-        shell.Children.Add(nav);
-
-        shell.Children.Add(BuildGraphCanvas(graph));
+        AddSmallButton(nav, "◀", "Pan graph left", () => vm.GraphPanZoom(capturedBlock, -0.2, 0, 1));
+        AddSmallButton(nav, "▶", "Pan graph right", () => vm.GraphPanZoom(capturedBlock, 0.2, 0, 1));
+        AddSmallButton(nav, "▲", "Pan graph up", () => vm.GraphPanZoom(capturedBlock, 0, 0.2, 1));
+        AddSmallButton(nav, "▼", "Pan graph down", () => vm.GraphPanZoom(capturedBlock, 0, -0.2, 1));
+        AddSmallButton(nav, "+", "Zoom graph in", () => vm.GraphPanZoom(capturedBlock, 0, 0, 1.5));
+        AddSmallButton(nav, "−", "Zoom graph out", () => vm.GraphPanZoom(capturedBlock, 0, 0, 1 / 1.5));
+        panel.Children.Add(nav);
+        settings.Content = panel;
+        shell.Children.Add(settings);
         return shell;
+    }
+
+    private static Control BuildGraphChip(BoardsViewModel vm, string blockId, RichGraphExpressionView expr)
+    {
+        var chip = new Border
+        {
+            Background = expr.Visible ? BoardsTheme.CardBrush : Brushes.Transparent,
+            BorderBrush = BoardsTheme.BorderBrush,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(8, 4),
+            Margin = new Thickness(0, 0, 6, 4),
+        };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        row.Children.Add(new Ellipse
+        {
+            Width = 10,
+            Height = 10,
+            Margin = new Thickness(0, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Fill = TryBrush(expr.Color, out var dot) && dot is not null
+                ? dot
+                : BoardsTheme.AccentBrush,
+        });
+        row.Children.Add(new TextBlock
+        {
+            Text = expr.Text,
+            FontSize = 13,
+            Foreground = expr.Visible ? BoardsTheme.TextBrush : BoardsTheme.SecondaryTextBrush,
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        var eye = new Button
+        {
+            Content = new TextBlock
+            {
+                Text = expr.Visible ? "Hide" : "Show",
+                FontSize = 12,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+            },
+            Padding = new Thickness(8, 0, 0, 0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var eyeTip = expr.Visible ? "Hide expression" : "Show expression";
+        ToolTip.SetTip(eye, eyeTip);
+        Avalonia.Automation.AutomationProperties.SetName(eye, eyeTip);
+        var exprId = expr.Id;
+        var visible = expr.Visible;
+        eye.Click += (_, _) => vm.ToggleGraphExpression(blockId, exprId);
+        var erase = new Button
+        {
+            Content = BoardsIcons.Glyph(BoardsIcons.Close, 10),
+            Padding = new Thickness(8, 0, 0, 0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        ToolTip.SetTip(erase, "Remove this expression");
+        Avalonia.Automation.AutomationProperties.SetName(erase, "Remove graph expression");
+        erase.Click += async (_, _) => await vm.GraphDeleteExpressionAsync(blockId, exprId);
+        row.Children.Add(eye);
+        row.Children.Add(erase);
+        chip.Child = row;
+        return chip;
     }
 
     private static Control BuildGraphExpressionRow(BoardsViewModel vm, string blockId, RichGraphExpressionView expr)
@@ -687,51 +825,182 @@ public static class BlockRenderer
 
     private static Control BuildAttachmentRow(BoardsViewModel vm, RichBoardBlock block)
     {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        row.Children.Add(new TextBlock
+        var card = new Border
         {
-            Text = "Attachment: " + (block.AttachmentName ?? block.AttachmentId)
-                + $" ({block.AttachmentSize / 1024.0:0.#} KB)",
-            FontSize = 12,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 8, 0),
+            Background = BoardsTheme.CardBrush,
+            BorderBrush = BoardsTheme.BorderBrush,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(12, 8),
+            Margin = new Thickness(0, 0, 0, 8),
+            MaxWidth = 480,
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        row.Children.Add(BoardsIcons.Glyph(BoardsIcons.File, 22, "Attachment"));
+        var text = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(10, 0, 0, 0) };
+        text.Children.Add(new TextBlock
+        {
+            Text = block.AttachmentName ?? "Attachment",
+            FontSize = 13,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = BoardsTheme.TextBrush,
+            TextTrimming = TextTrimming.CharacterEllipsis,
         });
+        text.Children.Add(new TextBlock
+        {
+            Text = AttachmentMeta(block),
+            FontSize = 12,
+            Foreground = BoardsTheme.SecondaryTextBrush,
+        });
+        row.Children.Add(text);
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        var open = new Button
+        {
+            Content = "Open",
+            Padding = new Thickness(10, 4),
+            Margin = new Thickness(0, 0, 4, 0),
+        };
+        ToolTip.SetTip(open, "Resolve and open the attachment");
+        Avalonia.Automation.AutomationProperties.SetName(open, "Open attachment");
         var captured = block.Id;
-        AddSmallButton(row, "Open", "Resolve and open the attachment", async () => await vm.OpenAttachmentAsync(captured));
-        AddSmallButton(row, "Remove", "Detach the attachment", async () => await vm.RemoveAttachmentAsync(captured));
-        return row;
+        open.Click += async (_, _) => await vm.OpenAttachmentAsync(captured);
+        var remove = new Button
+        {
+            Content = BoardsIcons.Glyph(BoardsIcons.More, 13, "Attachment options"),
+            Padding = new Thickness(8, 4),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+        };
+        ToolTip.SetTip(remove, "Detach the attachment");
+        Avalonia.Automation.AutomationProperties.SetName(remove, "Detach attachment");
+        remove.Click += async (_, _) => await vm.RemoveAttachmentAsync(captured);
+        actions.Children.Add(open);
+        actions.Children.Add(remove);
+        row.Children.Add(actions);
+        card.Child = row;
+        return card;
     }
+
+    private static string AttachmentMeta(RichBoardBlock block)
+    {
+        var ext = System.IO.Path.GetExtension(block.AttachmentName ?? string.Empty).TrimStart('.').ToUpperInvariant();
+        if (string.IsNullOrEmpty(ext))
+            ext = "File";
+        return $"{ext} · {FormatBytes(block.AttachmentSize)}";
+    }
+
+    internal static string FormatBytes(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} B",
+        < 1024 * 1024 => $"{bytes / 1024.0:0.#} KB",
+        < 1024L * 1024 * 1024 => $"{bytes / (1024.0 * 1024):0.#} MB",
+        _ => $"{bytes / (1024.0 * 1024 * 1024):0.#} GB",
+    };
 
     // ----- Ink -----
 
+    private static readonly (string Name, string Hex)[] InkPalette =
+    [
+        ("Ink black", "#FF111111"), ("Slate", "#FF5F6368"), ("Blue", "#FF1A73E8"),
+        ("Red", "#FFD32F2F"), ("Green", "#FF1E8E3E"), ("Orange", "#FFE8710A"),
+        ("Purple", "#FF9334E6"), ("Teal", "#FF00897B"),
+    ];
+
+    private static readonly double[] InkThicknesses = [2, 4, 8, 12];
+
     private static Control BuildInk(BoardsViewModel vm, RichBoardBlock block)
     {
-        var shell = BlockShell(vm, block, "Ink");
+        var shell = BlockShell(vm, block);
         shell.Children.Add(new TextBlock
         {
-            Text = $"{block.InkStrokeCount} stroke(s) — {block.Text}",
+            Text = $"{block.InkStrokeCount} stroke(s)" + (string.IsNullOrEmpty(block.Text) ? string.Empty : $" — {block.Text}"),
             FontSize = 13,
-            Margin = new Thickness(0, 0, 0, 4),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            Margin = new Thickness(0, 0, 0, 6),
         });
-        var tools = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        tools.Children.Add(new TextBlock
+        var tools = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
+        foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
         {
-            Text = "Tool",
-            FontSize = 12,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 4, 0),
-        });
-        var toolBox = new ComboBox
+            var toggle = new ToggleButton
+            {
+                Content = tool,
+                IsChecked = string.Equals(vm.InkTool, tool, StringComparison.OrdinalIgnoreCase),
+                FontSize = 13,
+                Padding = new Thickness(12, 6),
+                Margin = new Thickness(0, 0, 4, 0),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+            };
+            ToolTip.SetTip(toggle, tool + " tool");
+            Avalonia.Automation.AutomationProperties.SetName(toggle, "Ink tool " + tool);
+            toggle.Click += (_, _) => vm.SetInkTool(tool);
+            tools.Children.Add(toggle);
+        }
+        foreach (var (name, hex) in InkPalette)
         {
-            ItemsSource = new List<string> { "Pen", "Highlighter", "Eraser" },
-            SelectedItem = vm.InkTool,
-            Width = 120,
-            Margin = new Thickness(0, 0, 8, 0),
+            var swatch = new Button
+            {
+                Width = 26,
+                Height = 26,
+                Margin = new Thickness(2, 0),
+                Padding = new Thickness(0),
+                Background = BoardsTheme.Brush(hex),
+                BorderBrush = BoardsTheme.BorderBrush,
+                BorderThickness = new Thickness(string.Equals(vm.InkColor, hex, StringComparison.OrdinalIgnoreCase) ? 3 : 1),
+                CornerRadius = new CornerRadius(13),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            ToolTip.SetTip(swatch, "Ink color " + name);
+            Avalonia.Automation.AutomationProperties.SetName(swatch, "Ink color " + name);
+            swatch.Click += (_, _) => vm.SetInkColor(hex);
+            tools.Children.Add(swatch);
+        }
+        foreach (var thickness in InkThicknesses)
+        {
+            var pill = new ToggleButton
+            {
+                Content = new Ellipse
+                {
+                    Width = Math.Clamp(thickness, 2, 12),
+                    Height = Math.Clamp(thickness, 2, 12),
+                    Fill = BoardsTheme.TextBrush,
+                },
+                IsChecked = Math.Abs(vm.InkWidth - thickness) < 0.01,
+                Padding = new Thickness(10, 6),
+                Margin = new Thickness(2, 0),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            ToolTip.SetTip(pill, $"Stroke width {thickness:0}");
+            Avalonia.Automation.AutomationProperties.SetName(pill, $"Stroke width {thickness:0}");
+            pill.Click += (_, _) => vm.SetInkWidth(thickness);
+            tools.Children.Add(pill);
+        }
+        var clear = new Button
+        {
+            Content = "Clear",
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            FontSize = 13,
+            Padding = new Thickness(8, 6),
         };
-        ToolTip.SetTip(toolBox, "Ink tool (eraser tap erases strokes at that point)");
-        AutomationProperties.SetName(toolBox, "Ink tool");
-        toolBox.SelectionChanged += (_, _) => vm.SetInkTool(toolBox.SelectedItem?.ToString() ?? "Pen");
-        tools.Children.Add(toolBox);
+        ToolTip.SetTip(clear, "Clear all ink on this page");
+        Avalonia.Automation.AutomationProperties.SetName(clear, "Clear ink");
+        clear.Click += async (_, _) => await vm.ClearInkAsync();
+        tools.Children.Add(clear);
+        shell.Children.Add(tools);
+
+        var details = new Expander
+        {
+            Header = "Ink details",
+            IsExpanded = false,
+            Margin = new Thickness(0, 0, 0, 4),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var detailPanel = new StackPanel { Orientation = Orientation.Horizontal };
         var width = new TextBox
         {
             Name = "InkWidthBox",
@@ -739,23 +1008,22 @@ public static class BlockRenderer
             Width = 64,
             Margin = new Thickness(0, 0, 8, 0),
         };
-        ToolTip.SetTip(width, "Stroke width");
-        AutomationProperties.SetName(width, "Ink stroke width");
+        ToolTip.SetTip(width, "Exact stroke width");
+        Avalonia.Automation.AutomationProperties.SetName(width, "Ink stroke width");
         width.TextChanged += (_, _) => vm.EditText("InkWidthBox", width.Text ?? string.Empty);
-        tools.Children.Add(width);
         var color = new TextBox
         {
             Name = "InkColorBox",
             Text = vm.InkColor,
             Width = 110,
-            Margin = new Thickness(0, 0, 8, 0),
         };
-        ToolTip.SetTip(color, "Stroke color (hex)");
-        AutomationProperties.SetName(color, "Ink stroke color");
+        ToolTip.SetTip(color, "Exact stroke color (hex)");
+        Avalonia.Automation.AutomationProperties.SetName(color, "Ink stroke color");
         color.TextChanged += (_, _) => vm.EditText("InkColorBox", color.Text ?? string.Empty);
-        tools.Children.Add(color);
-        AddSmallButton(tools, "Clear", "Clear all ink on this page", async () => await vm.ClearInkAsync());
-        shell.Children.Add(tools);
+        detailPanel.Children.Add(width);
+        detailPanel.Children.Add(color);
+        details.Content = detailPanel;
+        shell.Children.Add(details);
 
         var view = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
         AddSmallButton(view, "Zoom −", "Zoom ink out", async () => await vm.SetInkZoomAsync(vm.InkZoom / 1.25));
@@ -770,9 +1038,10 @@ public static class BlockRenderer
         var canvas = new Canvas
         {
             Name = "ink_" + block.Id,
-            Width = 600,
-            Height = 200,
-            Background = new SolidColorBrush(Color.Parse("#FFFFFFFF")),
+            MinWidth = 240,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Height = 220,
+            Background = BoardsTheme.CardBrush,
             Margin = new Thickness(0, 4, 0, 0),
             RenderTransform = new TransformGroup
             {
@@ -797,33 +1066,45 @@ public static class BlockRenderer
         var header = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
         header.Children.Add(new TextBlock
         {
-            Text = "Freeform canvas (" + boxes.Count + " objects)",
+            Text = boxes.Count == 0 ? "Freeform canvas" : $"Freeform canvas · {boxes.Count}",
             FontSize = 13,
             FontWeight = FontWeight.SemiBold,
-            Foreground = new SolidColorBrush(Color.Parse("#FF757575")),
+            Foreground = BoardsTheme.SecondaryTextBrush,
             VerticalAlignment = VerticalAlignment.Center,
         });
         if (!vm.SupportsFreeform)
             header.Children.Add(new TextBlock
             {
-                Text = "  [needs the contract session]",
+                Text = "  Open a .9to1board file to use freeform.",
                 FontSize = 12,
-                Foreground = new SolidColorBrush(Color.Parse("#FF9AA0A6")),
+                Foreground = BoardsTheme.SecondaryTextBrush,
                 VerticalAlignment = VerticalAlignment.Center,
             });
         shell.Children.Add(header);
+
+        if (boxes.Count == 0)
+        {
+            shell.Children.Add(new TextBlock
+            {
+                Text = "No freeform objects yet — add a box to arrange ideas freely.",
+                FontSize = 13,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+                Margin = new Thickness(0, 0, 0, 4),
+            });
+        }
 
         string? selectedId = null;
         Border? selectedBorder = null;
         var canvas = new Canvas
         {
             Name = "FreeformCanvas",
-            Width = 600,
+            MinWidth = 240,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             Height = 300,
-            Background = new SolidColorBrush(Color.Parse("#FFFFFFFF")),
+            Background = BoardsTheme.CardBrush,
             Margin = new Thickness(0, 4, 0, 4),
         };
-        ToolTip.SetTip(canvas, "Drag a box; the move commits once on release");
+        ToolTip.SetTip(canvas, "Drag a card; the move commits once on release");
         AutomationProperties.SetName(canvas, "Freeform canvas");
         foreach (var box in boxes)
         {
@@ -832,18 +1113,20 @@ public static class BlockRenderer
                 Name = "canvas_" + box.Id,
                 Width = Math.Clamp(box.Width, 24, 5000),
                 Height = Math.Clamp(box.Height, 24, 5000),
-                Background = new SolidColorBrush(Color.Parse("#FFE8EDF3")),
-                BorderBrush = new SolidColorBrush(Color.Parse("#FF4A6FA5")),
+                Background = BoardsTheme.CardBrush,
+                BorderBrush = BoardsTheme.BorderBrush,
                 BorderThickness = new Thickness(1),
-                Padding = new Thickness(6),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(10),
             };
             border.Child = new TextBlock
             {
                 Text = string.IsNullOrEmpty(box.Text) ? box.Kind : box.Text,
-                FontSize = 12,
+                FontSize = 13,
+                Foreground = BoardsTheme.TextBrush,
                 TextWrapping = TextWrapping.Wrap,
             };
-            ToolTip.SetTip(border, "Drag to move; nudge with the arrow buttons");
+            ToolTip.SetTip(border, "Drag to move; arrow keys nudge the selected card");
             AutomationProperties.SetName(border, "Canvas object " + (box.Text is { Length: > 0 } t ? t : box.Kind));
             Canvas.SetLeft(border, box.X);
             Canvas.SetTop(border, box.Y);
@@ -860,9 +1143,14 @@ public static class BlockRenderer
                 e.Pointer.Capture(border);
                 selectedId = captured.Id;
                 if (selectedBorder is not null)
+                {
+                    selectedBorder.BorderBrush = BoardsTheme.BorderBrush;
                     selectedBorder.BorderThickness = new Thickness(1);
+                }
                 selectedBorder = border;
-                border.BorderThickness = new Thickness(3);
+                border.BorderBrush = BoardsTheme.AccentBrush;
+                border.BorderThickness = new Thickness(2);
+                border.Focus();
                 e.Handled = true;
             };
             border.PointerMoved += (_, e) =>
@@ -885,40 +1173,64 @@ public static class BlockRenderer
                 if (Math.Abs(left - dragOrigin.X) > 0.5 || Math.Abs(top - dragOrigin.Y) > 0.5)
                     await vm.MoveCanvasBoxAsync(captured.Id, left, top);
             };
+            border.KeyDown += async (_, e) =>
+            {
+                var step = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 1 : 8;
+                var (dx, dy) = e.Key switch
+                {
+                    Key.Left => (-step, 0),
+                    Key.Right => (step, 0),
+                    Key.Up => (0, -step),
+                    Key.Down => (0, step),
+                    _ => (0, 0),
+                };
+                if (dx == 0 && dy == 0)
+                    return;
+                e.Handled = true;
+                await vm.MoveCanvasBoxAsync(captured.Id, captured.X + dx, captured.Y + dy);
+            };
             canvas.Children.Add(border);
         }
         shell.Children.Add(canvas);
 
-        var actions = new StackPanel { Orientation = Orientation.Horizontal };
-        AddSmallButton(actions, "Add box", "Add a freeform box", async () => await vm.AddCanvasBoxAsync());
-        AddSmallButton(actions, "←", "Nudge selected box left", async () =>
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0) };
+        var addBox = new Button
         {
-            var current = boxes.FirstOrDefault(b => b.Id == selectedId);
-            if (current is not null)
-                await vm.MoveCanvasBoxAsync(current.Id, current.X - 8, current.Y);
-        });
-        AddSmallButton(actions, "→", "Nudge selected box right", async () =>
+            Content = "+ Box",
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            FontSize = 13,
+            Padding = new Thickness(8, 4),
+        };
+        ToolTip.SetTip(addBox, "Add a freeform box");
+        Avalonia.Automation.AutomationProperties.SetName(addBox, "Add freeform box");
+        addBox.Click += async (_, _) => await vm.AddCanvasBoxAsync();
+        actions.Children.Add(addBox);
+        var removeBox = new Button
         {
-            var current = boxes.FirstOrDefault(b => b.Id == selectedId);
-            if (current is not null)
-                await vm.MoveCanvasBoxAsync(current.Id, current.X + 8, current.Y);
-        });
-        AddSmallButton(actions, "↑", "Nudge selected box up", async () =>
-        {
-            var current = boxes.FirstOrDefault(b => b.Id == selectedId);
-            if (current is not null)
-                await vm.MoveCanvasBoxAsync(current.Id, current.X, current.Y - 8);
-        });
-        AddSmallButton(actions, "↓", "Nudge selected box down", async () =>
-        {
-            var current = boxes.FirstOrDefault(b => b.Id == selectedId);
-            if (current is not null)
-                await vm.MoveCanvasBoxAsync(current.Id, current.X, current.Y + 8);
-        });
-        AddSmallButton(actions, "Remove selected", "Remove the selected box", async () =>
+            Content = "Remove selected",
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            FontSize = 13,
+            Padding = new Thickness(8, 4),
+        };
+        ToolTip.SetTip(removeBox, "Remove the selected box");
+        Avalonia.Automation.AutomationProperties.SetName(removeBox, "Remove selected freeform box");
+        removeBox.Click += async (_, _) =>
         {
             if (selectedId is not null)
                 await vm.RemoveCanvasBoxAsync(selectedId);
+        };
+        actions.Children.Add(removeBox);
+        actions.Children.Add(new TextBlock
+        {
+            Text = "Drag to move · arrow keys nudge",
+            FontSize = 12,
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8, 0, 0, 0),
         });
         shell.Children.Add(actions);
         return shell;
@@ -990,6 +1302,11 @@ public static class BlockRenderer
         return new SolidColorBrush(Color.Parse(fallback));
     }
 
+    private static IBrush TableBorderBrush(RichBoardBlock block) =>
+        TryBrush(block.TableStyle.BorderColor, out var brush) && brush is not null
+            ? brush
+            : BoardsTheme.BorderBrush;
+
     /// <summary>Checklist view ids are "parentId:itemId"; plain ids map to themselves with '_' separators.</summary>
     private static string NameSuffix(string viewId) => viewId.Replace(':', '_');
 
@@ -999,3 +1316,4 @@ public static class BlockRenderer
         return colon > 0 ? viewId[..colon] : viewId;
     }
 }
+

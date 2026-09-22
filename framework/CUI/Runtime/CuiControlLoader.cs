@@ -396,6 +396,26 @@ public sealed class CuiControlLoader
                     control.Tag = resolved; // Will be wired in WireBindingsRecursive
                     break;
                 // Grid attached properties
+                case "grid.columndefinitions":
+                case "grid-columndefinitions":
+                case "columndefinitions":
+                case "columns":
+                    if (control is Grid gridCols)
+                    {
+                        try { gridCols.ColumnDefinitions = new Avalonia.Controls.ColumnDefinitions(resolved); }
+                        catch (FormatException) { }
+                    }
+                    break;
+                case "grid.rowdefinitions":
+                case "grid-rowdefinitions":
+                case "rowdefinitions":
+                case "rows":
+                    if (control is Grid gridRows)
+                    {
+                        try { gridRows.RowDefinitions = new Avalonia.Controls.RowDefinitions(resolved); }
+                        catch (FormatException) { }
+                    }
+                    break;
                 case "grid.column":
                 case "grid-column":
                 case "gridcolumn":

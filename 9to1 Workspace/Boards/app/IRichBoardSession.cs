@@ -148,6 +148,16 @@ public sealed class RichStyleView
     public string Name { get; set; } = "Paragraph";
     public bool IsBuiltIn { get; set; } = true;
     public string BlockKind { get; set; } = "paragraph";
+    public bool Bold { get; set; }
+    public bool Italic { get; set; }
+    public bool Underline { get; set; }
+    public bool Strike { get; set; }
+    public string Baseline { get; set; } = "normal";
+    public string FontFamily { get; set; } = string.Empty;
+    public double FontSize { get; set; }
+    public string Foreground { get; set; } = string.Empty;
+    public string Background { get; set; } = string.Empty;
+    public string Alignment { get; set; } = "inherit";
 }
 
 /// <summary>

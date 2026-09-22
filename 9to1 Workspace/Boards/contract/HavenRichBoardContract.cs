@@ -348,6 +348,105 @@ public static partial class HavenRichNotesOps
         Touch(notes);
     }
 
+    /// <summary>Removes a section; refuses the final section so the document stays valid.</summary>
+    public static bool RemoveSection(HavenRichNotes notes, string sectionId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        if (notes.Sections.Count <= 1)
+            return false;
+        var removed = notes.Sections.RemoveAll(s => s.Id == sectionId) > 0;
+        if (removed) Touch(notes);
+        return removed;
+    }
+
+    /// <summary>Deep-copies a section with fresh stable ids.</summary>
+    public static HavenRichSection DuplicateSection(HavenRichNotes notes, string sectionId)
+    {
+        var source = RequireSection(notes, sectionId);
+        var copy = CloneWithFreshIds(source);
+        copy.Title = source.Title + " copy";
+        notes.Sections.Insert(notes.Sections.IndexOf(source) + 1, copy);
+        Touch(notes);
+        return copy;
+    }
+
+    /// <summary>Removes a page; refuses the final page of its section.</summary>
+    public static bool RemovePage(HavenRichNotes notes, string pageId)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var section = notes.Sections.FirstOrDefault(s => s.Pages.Any(p => p.Id == pageId));
+        if (section is null)
+            return false;
+        if (section.Pages.Count <= 1)
+            return false;
+        var removed = section.Pages.RemoveAll(p => p.Id == pageId) > 0;
+        if (removed)
+        {
+            NormalizePages(section);
+            Touch(notes);
+        }
+        return removed;
+    }
+
+    /// <summary>Deep-copies a page with fresh stable ids.</summary>
+    public static HavenRichPage DuplicatePage(HavenRichNotes notes, string pageId)
+    {
+        var section = notes.Sections.FirstOrDefault(s => s.Pages.Any(p => p.Id == pageId))
+            ?? throw new KeyNotFoundException("Rich board page was not found.");
+        var source = section.Pages.Single(p => p.Id == pageId);
+        var copy = CloneWithFreshIds(source);
+        copy.Title = source.Title + " copy";
+        copy.Order = section.Pages.Count;
+        section.Pages.Add(copy);
+        NormalizePages(section);
+        Touch(notes);
+        return copy;
+    }
+
+    private static readonly System.Text.Json.JsonSerializerOptions CloneJson = new(System.Text.Json.JsonSerializerDefaults.Web);
+
+    private static T CloneWithFreshIds<T>(T value)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(value, CloneJson);
+        var copy = System.Text.Json.JsonSerializer.Deserialize<T>(json, CloneJson)
+            ?? throw new InvalidDataException("Section/page clone failed.");
+        if (copy is HavenRichSection section)
+            FreshSectionIds(section);
+        else if (copy is HavenRichPage page)
+            FreshPageIds(page);
+        return copy;
+    }
+
+    private static void FreshSectionIds(HavenRichSection section)
+    {
+        section.Id = "sec-" + Guid.NewGuid().ToString("N")[..12];
+        foreach (var page in section.Pages)
+            FreshPageIds(page);
+    }
+
+    private static void FreshPageIds(HavenRichPage page)
+    {
+        page.Id = "page-" + Guid.NewGuid().ToString("N")[..12];
+        foreach (var block in page.Blocks)
+        {
+            block.Id = "block-" + Guid.NewGuid().ToString("N")[..12];
+            foreach (var item in block.Items)
+                item.Id = "item-" + Guid.NewGuid().ToString("N")[..12];
+            if (block.Table is not null)
+                foreach (var cell in block.Table.Rows.SelectMany(r => r.Cells))
+                    cell.Id = "cell-" + Guid.NewGuid().ToString("N")[..12];
+            if (block.Image is not null)
+                block.Image.Id = "img-" + Guid.NewGuid().ToString("N")[..12];
+            if (block.Graph is not null)
+                foreach (var expression in block.Graph.Expressions)
+                    expression.Id = "expr-" + Guid.NewGuid().ToString("N")[..12];
+            if (block.Attachment is not null)
+                block.Attachment.Id = "att-" + Guid.NewGuid().ToString("N")[..12];
+        }
+        foreach (var canvasObject in page.Canvas)
+            canvasObject.Id = "canvas-" + Guid.NewGuid().ToString("N")[..12];
+    }
+
     public static void RenamePage(HavenRichNotes notes, string pageId, string title)
     {
         RequirePage(notes, pageId).Title =

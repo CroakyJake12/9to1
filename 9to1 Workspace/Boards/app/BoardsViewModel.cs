@@ -31,9 +31,27 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     public BoardsViewModel(IRichBoardSession session)
     {
         _session = session ?? throw new ArgumentNullException(nameof(session));
-        _session.StatusChanged += (_, status) => Set("StatusText", status);
+        _session.StatusChanged += (_, status) =>
+        {
+            Set("StatusText", status);
+            Set("SaveStateText", MapSaveState(status));
+        };
         PushDocumentToBindings();
         Set("StatusText", _session.Status);
+        Set("SaveStateText", MapSaveState(_session.Status));
+    }
+
+    internal static string MapSaveState(string status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+            return "Saved";
+        if (status.StartsWith("Saved", StringComparison.OrdinalIgnoreCase))
+            return status;
+        if (status.Contains("fail", StringComparison.OrdinalIgnoreCase))
+            return "Save failed";
+        if (status.Contains("Saving", StringComparison.OrdinalIgnoreCase))
+            return "Saving…";
+        return "Unsaved changes";
     }
 
     public IRichBoardSession Session => _session;
@@ -87,6 +105,16 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
 
     public void RequestRebuild() => RebuildRequested?.Invoke();
 
+    public void RequestNavRebuild() => NavRebuildRequested?.Invoke();
+
+    /// <summary>Push bindings, flag dirty and rebuild after a direct view-model edit.</summary>
+    public void CommitViewEdit()
+    {
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
     public void RefreshAfterEdit()
     {
         PushDocumentToBindings();
@@ -110,8 +138,10 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 await OpenBoardDispatchAsync(cancellationToken);
                 break;
             case "SaveBoard":
+                Set("SaveStateText", "Saving…");
                 await _session.SaveAsync(cancellationToken);
                 Set("StatusText", _session.Status);
+                Set("SaveStateText", MapSaveState(_session.Status));
                 RefreshAfterEdit();
                 break;
             case "SaveAsBoard":
@@ -210,6 +240,15 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 break;
             case "ManageStyles":
                 StyleEditorRequested?.Invoke();
+                break;
+            case "FileMenu":
+                FileMenuRequested?.Invoke();
+                break;
+            case "OverflowMenu":
+                OverflowRequested?.Invoke();
+                break;
+            case "ToggleTheme":
+                ThemeToggleRequested?.Invoke();
                 break;
             case "AddInkDot":
                 AddInkStroke();
@@ -440,6 +479,10 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 _session.Document.Title = text;
                 Set("BoardTitle", text);
                 break;
+            case "NavSearchBox":
+                // Filter-only: never dirties the document.
+                SearchText = text;
+                return;
             case "HeadingBox":
                 FindOrCreateBlock("heading").Text = text;
                 Set("HeadingText", text);
@@ -652,8 +695,378 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     {
         if (FindBlock(blockId) is null)
             return;
+        if (_selectedBlockId == blockId)
+            return;
         _selectedBlockId = blockId;
         PushSelectedInfo();
+        SelectionChanged?.Invoke();
+    }
+
+    // ----- Product navigation / selection / menus (visual pass) -----
+
+    /// <summary>Raised when block/section/page selection changes (context UI refresh, no editor rebuild).</summary>
+    public event Action? SelectionChanged;
+
+    /// <summary>Raised when the navigation pane alone should rebuild (search, rename, reorder).</summary>
+    public event Action? NavRebuildRequested;
+
+    /// <summary>Raised when the File menu should open (host builds it).</summary>
+    public event Action? FileMenuRequested;
+
+    /// <summary>Raised when the overflow menu should open (host builds it).</summary>
+    public event Action? OverflowRequested;
+
+    /// <summary>Raised when the theme toggle is invoked (host re-applies chrome).</summary>
+    public event Action? ThemeToggleRequested;
+
+    public string SelectedSectionId => _selectedSectionId;
+    public string SelectedPageId => _selectedPageId;
+
+    private string _searchText = string.Empty;
+
+    /// <summary>Navigation filter text; setting it rebuilds only the nav pane.</summary>
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText == value)
+                return;
+            _searchText = value ?? string.Empty;
+            NavRebuildRequested?.Invoke();
+        }
+    }
+
+    public void SelectSection(string sectionId)
+    {
+        var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+        if (section is null)
+            return;
+        _selectedSectionId = section.Id;
+        _selectedPageId = section.Pages.FirstOrDefault()?.Id ?? _selectedPageId;
+        var para = section.Pages.FirstOrDefault()?.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
+        if (para is not null)
+            _selectedBlockId = para.Id;
+        PushDocumentToBindings();
+        NavRebuildRequested?.Invoke();
+        SelectionChanged?.Invoke();
+        RequestRebuild();
+    }
+
+    public void SelectPage(string sectionId, string pageId)
+    {
+        var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+        var page = section?.Pages.FirstOrDefault(p => p.Id == pageId);
+        if (section is null || page is null)
+            return;
+        _selectedSectionId = section.Id;
+        _selectedPageId = page.Id;
+        var para = page.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
+        if (para is not null)
+            _selectedBlockId = para.Id;
+        PushDocumentToBindings();
+        NavRebuildRequested?.Invoke();
+        SelectionChanged?.Invoke();
+        RequestRebuild();
+    }
+
+    public void RenameSection(string sectionId, string title)
+    {
+        var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+        if (section is null)
+            return;
+        section.Title = string.IsNullOrWhiteSpace(title) ? "Untitled section" : title.Trim();
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        NavRebuildRequested?.Invoke();
+    }
+
+    public void RenamePage(string sectionId, string pageId, string title)
+    {
+        var page = _session.Document.Sections
+            .FirstOrDefault(s => s.Id == sectionId)?.Pages.FirstOrDefault(p => p.Id == pageId);
+        if (page is null)
+            return;
+        page.Title = string.IsNullOrWhiteSpace(title) ? "Untitled page" : title.Trim();
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        NavRebuildRequested?.Invoke();
+        RequestRebuild();
+    }
+
+    public async Task DeleteSectionAsync(string sectionId)
+    {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            if (!await adapter.DeleteSectionAsync(sectionId))
+            {
+                Set("StatusText", "The final section cannot be deleted");
+                return;
+            }
+            ReselectAfterNavChange();
+            RefreshAfterEdit();
+            NavRebuildRequested?.Invoke();
+            return;
+        }
+        var removed = _session.Document.Sections.Count > 1 &&
+            _session.Document.Sections.RemoveAll(s => s.Id == sectionId) > 0;
+        if (!removed)
+        {
+            Set("StatusText", "The final section cannot be deleted");
+            return;
+        }
+        ReselectAfterNavChange();
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+        NavRebuildRequested?.Invoke();
+    }
+
+    public async Task DeletePageAsync(string sectionId, string pageId)
+    {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            if (!await adapter.DeletePageAsync(pageId))
+            {
+                Set("StatusText", "The final page cannot be deleted");
+                return;
+            }
+            ReselectAfterNavChange();
+            RefreshAfterEdit();
+            NavRebuildRequested?.Invoke();
+            return;
+        }
+        var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+        var removed = section is not null && section.Pages.Count > 1 &&
+            section.Pages.RemoveAll(p => p.Id == pageId) > 0;
+        if (!removed)
+        {
+            Set("StatusText", "The final page cannot be deleted");
+            return;
+        }
+        ReselectAfterNavChange();
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+        NavRebuildRequested?.Invoke();
+    }
+
+    public async Task DuplicateSectionAsync(string sectionId)
+    {
+        string? freshId = null;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            freshId = await adapter.DuplicateSectionAsync(sectionId);
+            RefreshAfterEdit();
+        }
+        else
+        {
+            var source = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+            if (source is null)
+                return;
+            var copy = CloneSection(source);
+            _session.Document.Sections.Insert(_session.Document.Sections.IndexOf(source) + 1, copy);
+            freshId = copy.Id;
+            PushDocumentToBindings();
+            _session.MarkDirty();
+            RequestRebuild();
+        }
+        if (freshId is not null)
+            _selectedSectionId = freshId;
+        NavRebuildRequested?.Invoke();
+    }
+
+    public async Task DuplicatePageAsync(string sectionId, string pageId)
+    {
+        string? freshId = null;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            freshId = await adapter.DuplicatePageAsync(pageId);
+            RefreshAfterEdit();
+        }
+        else
+        {
+            var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+            var source = section?.Pages.FirstOrDefault(p => p.Id == pageId);
+            if (section is null || source is null)
+                return;
+            var copy = ClonePage(source);
+            section.Pages.Add(copy);
+            freshId = copy.Id;
+            PushDocumentToBindings();
+            _session.MarkDirty();
+            RequestRebuild();
+        }
+        if (freshId is not null)
+            _selectedPageId = freshId;
+        NavRebuildRequested?.Invoke();
+    }
+
+    public async Task MoveSectionAsync(string sectionId, int delta)
+    {
+        var sections = _session.Document.Sections;
+        var index = sections.FindIndex(s => s.Id == sectionId);
+        if (index < 0)
+            return;
+        var target = Math.Clamp(index + delta, 0, sections.Count - 1);
+        if (target == index)
+            return;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.MoveSectionAsync(sectionId, target);
+            RefreshAfterEdit();
+        }
+        else
+        {
+            var section = sections[index];
+            sections.RemoveAt(index);
+            sections.Insert(target, section);
+            PushDocumentToBindings();
+            _session.MarkDirty();
+            RequestRebuild();
+        }
+        NavRebuildRequested?.Invoke();
+    }
+
+    public async Task MovePageAsync(string sectionId, string pageId, int delta)
+    {
+        var section = _session.Document.Sections.FirstOrDefault(s => s.Id == sectionId);
+        if (section is null)
+            return;
+        var index = section.Pages.FindIndex(p => p.Id == pageId);
+        if (index < 0)
+            return;
+        var target = Math.Clamp(index + delta, 0, section.Pages.Count - 1);
+        if (target == index)
+            return;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.MovePageAsync(pageId, sectionId, target);
+            RefreshAfterEdit();
+        }
+        else
+        {
+            var page = section.Pages[index];
+            section.Pages.RemoveAt(index);
+            section.Pages.Insert(target, page);
+            PushDocumentToBindings();
+            _session.MarkDirty();
+            RequestRebuild();
+        }
+        NavRebuildRequested?.Invoke();
+    }
+
+    /// <summary>Converts the selected text block between paragraph/heading/list kinds.</summary>
+    public async Task ConvertSelectedKindAsync(string kind)
+    {
+        var block = SelectedBlockOrNull();
+        if (block is null)
+            return;
+        var contractKind = kind switch
+        {
+            "heading" => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.Heading,
+            "checklist" => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.Checklist,
+            "bulleted" => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.BulletList,
+            "numbered" => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.NumberedList,
+            _ => CakeOS.Apps.Boards.Contract.HavenRichBlockKind.Paragraph,
+        };
+        if (_session is ContractSessionAdapter adapter)
+        {
+            await adapter.ConvertBlockKindAsync(CurrentPage().Id, block.Id, contractKind);
+            RefreshAfterEdit();
+            return;
+        }
+        block.Kind = kind switch
+        {
+            "heading" => "heading",
+            "checklist" or "bulleted" or "numbered" => "checklist",
+            _ => "paragraph",
+        };
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    public (string Title, string FileName, string Path, long SizeBytes) BoardInfo()
+    {
+        var path = _session.FilePath ?? string.Empty;
+        var size = 0L;
+        try
+        {
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                size = new FileInfo(path).Length;
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        return (_session.Document.Title, SafeFileName(path), path, size);
+    }
+
+    private static string SafeFileName(string path)
+    {
+        try
+        {
+            return string.IsNullOrEmpty(path) ? "Unsaved board" : Path.GetFileName(path);
+        }
+        catch (ArgumentException)
+        {
+            return "Unsaved board";
+        }
+    }
+
+    private void ReselectAfterNavChange()
+    {
+        var firstSection = _session.Document.Sections.FirstOrDefault();
+        if (firstSection is null)
+            return;
+        if (!_session.Document.Sections.Any(s => s.Id == _selectedSectionId))
+            _selectedSectionId = firstSection.Id;
+        var section = _session.Document.Sections.First(s => s.Id == _selectedSectionId);
+        if (!section.Pages.Any(p => p.Id == _selectedPageId))
+            _selectedPageId = section.Pages.FirstOrDefault()?.Id ?? _selectedPageId;
+    }
+
+    private RichBoardBlock? SelectedBlockOrNull()
+    {
+        try
+        {
+            return SelectedBlock();
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private static RichBoardSection CloneSection(RichBoardSection source)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(source);
+        var copy = System.Text.Json.JsonSerializer.Deserialize<RichBoardSection>(json) ?? new RichBoardSection();
+        copy.Id = Guid.NewGuid().ToString("N");
+        copy.Title = source.Title + " copy";
+        foreach (var page in copy.Pages)
+            FreshPageCloneIds(page);
+        return copy;
+    }
+
+    private static RichBoardPage ClonePage(RichBoardPage source)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(source);
+        var copy = System.Text.Json.JsonSerializer.Deserialize<RichBoardPage>(json) ?? new RichBoardPage();
+        FreshPageCloneIds(copy);
+        copy.Title = source.Title + " copy";
+        return copy;
+    }
+
+    private static void FreshPageCloneIds(RichBoardPage page)
+    {
+        page.Id = Guid.NewGuid().ToString("N");
+        foreach (var block in page.Blocks)
+        {
+            var parts = block.Id.Split(':');
+            block.Id = parts.Length > 1
+                ? parts[0] + ":" + Guid.NewGuid().ToString("N")
+                : Guid.NewGuid().ToString("N");
+        }
     }
 
     private void FocusBlockFromControl(string controlName)
@@ -685,10 +1098,18 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         else if (controlName.StartsWith("cell_", StringComparison.Ordinal))
         {
             var rest = controlName["cell_".Length..].Split('_');
-            if (rest.Length >= 3)
+            if (rest.Length >= 3 &&
+                int.TryParse(rest[^2], out var row) && int.TryParse(rest[^1], out var col))
+            {
                 FocusBlock(string.Join("_", rest[..^2]));
+                SelectedCell = (string.Join("_", rest[..^2]), row, col);
+                SelectionChanged?.Invoke();
+            }
         }
     }
+
+    /// <summary>Currently focused table cell, if any (block id, row, column).</summary>
+    public (string BlockId, int Row, int Col)? SelectedCell { get; private set; }
 
     // ----- Block operations used by BlockRenderer -----
 
@@ -704,6 +1125,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         {
             "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
             "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
+            "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },
+            "numbered" => new RichBoardBlock { Kind = "numbered", Text = "New item" },
             "table" => new RichBoardBlock
             {
                 Kind = "table", Text = "New table", TableRows = 2, TableCols = 2,
@@ -743,6 +1166,12 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         RequestRebuild();
         if (kindTag == "image")
             await ReplaceImageAsync(block.Id);
+        else if (kindTag == "attachment")
+            await AttachFileAsync(block.Id);
+        else if (kindTag == "ink")
+            AddInkStroke();
+        else if (kindTag == "freeform")
+            await AddCanvasBoxAsync();
     }
 
     public async Task ApplyStyleToSelectedAsync(string styleId)
@@ -921,6 +1350,17 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             ? existing
             : block.CellStyles[$"{row},{col}"] = new RichCellStyleView();
         style.Bold = !style.Bold;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    public void ToggleGraphExpression(string blockId, string exprId)
+    {
+        var expr = FindBlock(blockId)?.Graph?.Expressions.FirstOrDefault(e => e.Id == exprId);
+        if (expr is null)
+            return;
+        expr.Visible = !expr.Visible;
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();
@@ -1138,6 +1578,20 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         Set("StatusText", $"Ink tool: {tool}");
     }
 
+    public void SetInkColor(string hex)
+    {
+        InkColor = string.IsNullOrWhiteSpace(hex) ? "#FF111111" : hex.Trim();
+        PushDocumentToBindings();
+        RequestRebuild();
+    }
+
+    public void SetInkWidth(double width)
+    {
+        InkWidth = Math.Clamp(width, 1, 32);
+        PushDocumentToBindings();
+        RequestRebuild();
+    }
+
     public async Task SetInkZoomAsync(double zoom)
     {
         InkZoom = Math.Clamp(zoom, 0.25, 8);
@@ -1329,7 +1783,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         RequestRebuild();
     }
 
-    private void SetSelectedAlignment(string alignment)
+    public void SetSelectedAlignment(string alignment)
     {
         SelectedBlock().Alignment = alignment;
         PushDocumentToBindings();
@@ -1337,7 +1791,37 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         RequestRebuild();
     }
 
-    private void ShiftSelectedIndent(int delta)
+    public void SetSelectedColors(string foreground, string background)
+    {
+        var block = SelectedBlock();
+        block.Foreground = foreground ?? string.Empty;
+        block.Background = background ?? string.Empty;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    public void SetSelectedFontFamily(string family)
+    {
+        SelectedBlock().FontFamily = family ?? string.Empty;
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    public void SetSelectedFontSize(double size)
+    {
+        SelectedBlock().FontSize = Math.Clamp(size, 8, 96);
+        PushDocumentToBindings();
+        _session.MarkDirty();
+        RequestRebuild();
+    }
+
+    public string SelectedBlockKind => SelectedBlockOrNull()?.Kind ?? "paragraph";
+
+    public string SelectedStyleId => SelectedBlockOrNull()?.StyleId ?? "normal";
+
+    public void ShiftSelectedIndent(int delta)
     {
         var block = SelectedBlock();
         block.IndentLevel = Math.Clamp(block.IndentLevel + delta, -1, 8);

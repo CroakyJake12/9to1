@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Controls\Avalonia.Controls.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Remote.Protocol\Avalonia.Remote.Protocol.csproj" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Skia\Avalonia.Skia\Avalonia.Skia.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\HarfBuzz\Avalonia.HarfBuzz\Avalonia.HarfBuzz.csproj" />
     <ProjectReference Include="..\..\..\framework\CUI\vendor\Avalonia\src\Avalonia.Fonts.Inter\Avalonia.Fonts.Inter.csproj" />

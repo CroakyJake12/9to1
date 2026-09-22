@@ -10,9 +10,13 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
+using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
@@ -102,6 +106,8 @@ internal sealed class BoardsApp : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Styles.Add(new FluentTheme());
+        ApplySavedTheme();
         // Real durable session: edits persist to a physical .9to1board file.
         // Optional CLI arg opens/creates that board; otherwise the default board opens.
         var storeRoot = Path.Combine(
@@ -131,6 +137,12 @@ internal sealed class BoardsApp : Application
     {
         viewModel.RebuildRequested -= PostRebuild;
         viewModel.StyleEditorRequested -= PostStyleEditor;
+        viewModel.SelectionChanged -= OnSelectionChanged;
+        viewModel.NavRebuildRequested -= RebuildNav;
+        viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        viewModel.FileMenuRequested -= PostFileMenu;
+        viewModel.OverflowRequested -= PostOverflowMenu;
+        viewModel.ThemeToggleRequested -= PostThemeToggle;
         viewModel.PickFileAsync = null;
         viewModel.OpenBoardAsync = null;
         viewModel.Detach();
@@ -141,8 +153,11 @@ internal sealed class BoardsApp : Application
         var window = new Window
         {
             Title = "Boards",
-            Width = 1200,
-            Height = 800,
+            MinWidth = 900,
+            MinHeight = 600,
+            Width = 1440,
+            Height = 900,
+            Background = BoardsTheme.AppBackgroundBrush,
         };
         _window = window;
 
@@ -223,7 +238,10 @@ internal sealed class BoardsApp : Application
         return window;
     }
 
-    // ----- Dynamic surface: BlocksHost, combos, insert -----
+    // ----- Dynamic surface: top bar, nav, toolbar, context, blocks -----
+
+    private StackPanel? _navHost;
+    private TextBlock? _saveStateText;
 
     private void WireDynamicSurface(Control root)
     {
@@ -237,6 +255,21 @@ internal sealed class BoardsApp : Application
         // (CuiComponent.Name is dropped), so static-surface lookup uses the
         // automationid attributes above; dynamic controls use real Names.
         WireTitleBox(root);
+        WireSearchBox(root);
+        FillTopBar(root);
+        FillNav(root);
+        FillToolbar();
+        ThemeApplier.ApplyChrome(root);
+        TameEditorScroll(root);
+        UpdateWindowTitle();
+        _viewModel.SelectionChanged += OnSelectionChanged;
+        _viewModel.NavRebuildRequested += RebuildNav;
+        _viewModel.RebuildRequested += PostRebuild;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        _viewModel.StyleEditorRequested += PostStyleEditor;
+        _viewModel.FileMenuRequested += PostFileMenu;
+        _viewModel.OverflowRequested += PostOverflowMenu;
+        _viewModel.ThemeToggleRequested += PostThemeToggle;
         if (_styleBox is not null)
         {
             ToolTip.SetTip(_styleBox, "Apply a style to the selected block");
@@ -271,10 +304,287 @@ internal sealed class BoardsApp : Application
 
     private void PostRebuild()
     {
+        if (_viewModel is null)
+            return;
         if (Dispatcher.UIThread.CheckAccess())
-            _ = RebuildBlocksHostAsync();
+            _ = RebuildAllAsync();
         else
-            Dispatcher.UIThread.Post(() => _ = RebuildBlocksHostAsync());
+            Dispatcher.UIThread.Post(() => _ = RebuildAllAsync());
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is "SaveStateText" or "StatusText")
+            Post(SyncSaveState);
+    }
+
+    private void OnSelectionChanged()
+    {
+        if (_viewModel is null)
+            return;
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            RefreshToolbarAndContext();
+            if (!NavBuilder.RenameActive)
+                RebuildNav();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                RefreshToolbarAndContext();
+                if (!NavBuilder.RenameActive)
+                    RebuildNav();
+            });
+        }
+    }
+
+    private void RebuildNav()
+    {
+        if (_viewModel is null)
+            return;
+        if (Dispatcher.UIThread.CheckAccess())
+            RebuildNavCore();
+        else
+            Dispatcher.UIThread.Post(RebuildNavCore);
+    }
+
+    private void RebuildNavCore()
+    {
+        if (_root is null || _viewModel is null)
+            return;
+        if (NavBuilder.RenameActive)
+            return;
+        var host = FindByAutomationId<StackPanel>(_root, "NavHost");
+        if (host is not null)
+            NavBuilder.Rebuild(host, _viewModel);
+    }
+
+    private async Task RebuildAllAsync()
+    {
+        await RebuildBlocksHostAsync();
+        RefreshToolbarAndContext();
+        RebuildNavCore();
+        UpdateWindowTitle();
+    }
+
+    private void RefreshToolbarAndContext()
+    {
+        if (_root is null || _viewModel is null)
+            return;
+        var toolbar = FindByAutomationId<StackPanel>(_root, "ToolbarHost");
+        if (toolbar is not null)
+            ToolbarBuilder.Rebuild(toolbar, _viewModel);
+        var context = FindByAutomationId<StackPanel>(_root, "ContextHost");
+        if (context is not null)
+            ContextPanels.Rebuild(context, _viewModel);
+    }
+
+    private void UpdateWindowTitle()
+    {
+        if (_window is null || _viewModel is null)
+            return;
+        var title = _viewModel.Session.Document.Title;
+        _window.Title = string.IsNullOrWhiteSpace(title) ? "Boards" : title + " — Boards";
+    }
+
+    private void TameEditorScroll(Control root)
+    {
+        var scroller = FindByAutomationId<ScrollViewer>(root, "EditorScroll");
+        if (scroller is not null)
+            scroller.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+    }
+
+    private void WireSearchBox(Control root)
+    {
+        if (_viewModel is null)
+            return;
+        var search = FindByAutomationId<TextBox>(root, "NavSearchBox");
+        if (search is null)
+            return;
+        var viewModel = _viewModel;
+        search.TextChanged += (_, _) => viewModel.SearchText = search.Text ?? string.Empty;
+    }
+
+    private void FillTopBar(Control root)
+    {
+        if (_viewModel is null)
+            return;
+        var left = FindByAutomationId<StackPanel>(root, "TopBarLeft");
+        var right = FindByAutomationId<StackPanel>(root, "TopBarRight");
+        if (left is null || right is null)
+            return;
+        var vm = _viewModel;
+        ShellChrome.BuildTopBar(left, right, vm,
+            onFileMenu: PostFileMenu,
+            onOverflow: PostOverflowMenu,
+            onTheme: PostThemeToggle,
+            onSaveState: text => { _saveStateText = text; SyncSaveState(); });
+    }
+
+    private void SyncSaveState()
+    {
+        if (_saveStateText is null || _viewModel is null)
+            return;
+        var state = _viewModel.Get("SaveStateText")?.ToString() ?? "Saved";
+        _saveStateText.Text = state;
+        _saveStateText.Foreground = state.StartsWith("Save failed", StringComparison.OrdinalIgnoreCase)
+            ? BoardsTheme.ErrorBrush
+            : BoardsTheme.SecondaryTextBrush;
+    }
+
+    private void FillNav(Control root)
+    {
+        if (_viewModel is null)
+            return;
+        _navHost = FindByAutomationId<StackPanel>(root, "NavHost");
+        RebuildNavCore();
+    }
+
+    private void FillToolbar()
+    {
+        RefreshToolbarAndContext();
+    }
+
+    private void Post(Action action)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+            action();
+        else
+            Dispatcher.UIThread.Post(action);
+    }
+
+    private void PostFileMenu()
+    {
+        if (_window is null || _viewModel is null)
+            return;
+        Post(() =>
+        {
+            if (_window is null || _viewModel is null)
+                return;
+            var flyout = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedLeft };
+            var vm = _viewModel;
+            var win = _window;
+            flyout.Items.Add(MenuAction("New board", async () => await vm.DispatchAsync("NewBoard", null)));
+            flyout.Items.Add(MenuAction("Open…", async () => await vm.DispatchAsync("OpenBoard", null)));
+            flyout.Items.Add(MenuAction("Save", async () => await vm.DispatchAsync("SaveBoard", null), "Ctrl+S"));
+            flyout.Items.Add(MenuAction("Save As…", async () => await vm.DispatchAsync("SaveAsBoard", null)));
+            flyout.Items.Add(new Separator());
+            flyout.Items.Add(MenuAction("Board properties…", () => ShowProperties()));
+            flyout.Items.Add(new Separator());
+            flyout.Items.Add(MenuAction("Exit", () => win.Close()));
+            flyout.ShowAt(win, true);
+        });
+    }
+
+    private static MenuItem MenuAction(string header, Func<Task> tapped, string? gesture = null)
+    {
+        var item = new MenuItem { Header = gesture is null ? header : $"{header}    {gesture}" };
+        AutomationProperties.SetName(item, header);
+        item.Click += async (_, _) => await tapped();
+        return item;
+    }
+
+    private static MenuItem MenuAction(string header, Action tapped)
+    {
+        var item = new MenuItem { Header = header };
+        AutomationProperties.SetName(item, header);
+        item.Click += (_, _) => tapped();
+        return item;
+    }
+
+    private void PostOverflowMenu()
+    {
+        if (_window is null || _viewModel is null)
+            return;
+        Post(() =>
+        {
+            if (_window is null || _viewModel is null)
+                return;
+            var vm = _viewModel;
+            var flyout = new MenuFlyout { Placement = PlacementMode.BottomEdgeAlignedRight };
+            flyout.Items.Add(MenuAction("Styles…", async () => await vm.DispatchAsync("ManageStyles", null)));
+            flyout.Items.Add(MenuAction(
+                BoardsTheme.Mode == BoardsThemeMode.Dark ? "Light theme" : "Dark theme",
+                () => PostThemeToggle()));
+            flyout.Items.Add(MenuAction("Board properties…", () => ShowProperties()));
+            flyout.ShowAt(_window, true);
+        });
+    }
+
+    private void PostThemeToggle()
+    {
+        BoardsTheme.Toggle();
+        SaveThemeChoice();
+        ApplyThemeVariant();
+        if (_root is null || _viewModel is null)
+            return;
+        Post(() =>
+        {
+            if (_root is null || _viewModel is null)
+                return;
+            ThemeApplier.ApplyChrome(_root);
+            RefreshToolbarAndContext();
+            RebuildNavCore();
+            _ = RebuildBlocksHostAsync();
+        });
+    }
+
+    private void ShowProperties()
+    {
+        if (_window is null || _viewModel is null)
+            return;
+        var owner = _window;
+        var viewModel = _viewModel;
+        Post(() =>
+        {
+            var (title, fileName, path, size) = viewModel.BoardInfo();
+            var dialog = new Window
+            {
+                Title = "Board properties",
+                Width = 440,
+                Height = 320,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Background = BoardsTheme.CardBrush,
+            };
+            var panel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(20) };
+            panel.Children.Add(new TextBlock
+            {
+                Text = "Board properties",
+                FontSize = 20,
+                FontWeight = FontWeight.Bold,
+                Foreground = BoardsTheme.TextBrush,
+                Margin = new Thickness(0, 0, 0, 12),
+            });
+            void Row(string label, string value)
+            {
+                panel.Children.Add(new TextBlock
+                {
+                    Text = label,
+                    FontSize = 12,
+                    FontWeight = FontWeight.SemiBold,
+                    Foreground = BoardsTheme.SecondaryTextBrush,
+                });
+                panel.Children.Add(new TextBlock
+                {
+                    Text = string.IsNullOrEmpty(value) ? "—" : value,
+                    FontSize = 13,
+                    Foreground = BoardsTheme.TextBrush,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 8),
+                });
+            }
+            Row("Title", title);
+            Row("File", fileName);
+            Row("Location", path);
+            Row("Size", BlockRenderer.FormatBytes(size));
+            var close = new Button { Content = "Close", HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+            AutomationProperties.SetName(close, "Close properties");
+            close.Click += (_, _) => dialog.Close();
+            panel.Children.Add(close);
+            dialog.Content = panel;
+            dialog.ShowDialog(owner);
+        });
     }
 
     private void PostStyleEditor()
@@ -536,6 +846,46 @@ internal sealed class BoardsApp : Application
             return;
         var viewModel = _viewModel;
         titleBox.TextChanged += (_, _) => viewModel.EditText("BoardTitleBox", titleBox.Text ?? string.Empty);
+    }
+
+    // ----- Theme (Fluent control templates + Boards palette + Light/Dark) -----
+
+    private static string SettingsPath() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "9to1", "Boards", "settings.json");
+
+    private void ApplySavedTheme()
+    {
+        try
+        {
+            var path = SettingsPath();
+            if (File.Exists(path) && File.ReadAllText(path).Contains("\"dark\"", StringComparison.OrdinalIgnoreCase))
+                BoardsTheme.SetMode(BoardsThemeMode.Dark);
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        ApplyThemeVariant();
+    }
+
+    internal static void ApplyThemeVariant()
+    {
+        if (Application.Current is not null)
+        {
+            Application.Current.RequestedThemeVariant =
+                BoardsTheme.Mode == BoardsThemeMode.Dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        }
+    }
+
+    internal static void SaveThemeChoice()
+    {
+        try
+        {
+            var path = SettingsPath();
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, "{\"theme\":\"" + BoardsTheme.Mode.ToString().ToLowerInvariant() + "\"}");
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
 
     // ----- Tree helpers -----

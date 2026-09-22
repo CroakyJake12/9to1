@@ -96,7 +96,17 @@ public sealed class ContractSessionAdapter : IRichBoardSession
                     Id = s.Id,
                     Name = s.Name,
                     IsBuiltIn = s.IsBuiltIn,
-                    BlockKind = s.BlockKind.ToString().ToLowerInvariant()
+                    BlockKind = s.BlockKind.ToString().ToLowerInvariant(),
+                    Bold = s.Bold,
+                    Italic = s.Italic,
+                    Underline = s.Underline,
+                    Strike = s.StrikeThrough,
+                    Baseline = s.Baseline.ToString().ToLowerInvariant(),
+                    FontFamily = s.FontFamily,
+                    FontSize = s.FontSize,
+                    Foreground = s.Foreground,
+                    Background = s.Background,
+                    Alignment = s.Alignment.ToString().ToLowerInvariant()
                 }).ToArray()
             : [];
 
@@ -225,8 +235,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
 
     /// <summary>Keyboard/non-pointer fallback: appends a small but real ink stroke.</summary>
     public async ValueTask<int> EraseInkAtCurrentPageAsync(
-        double x, double y, double radius = 12, CancellationToken cancellationToken = default)
-    {
+        double x, double y, double radius = 12, CancellationToken cancellationToken = default)    {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -254,6 +263,51 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         var y = 40 + random.Next(0, 80);
         await CommitInkStrokeAsync(
             [(x, y), (x + 60, y + 20), (x + 120, y - 10)], cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Selects the nearest stroke within radius of a point (Select tool).</summary>
+    public async ValueTask<bool> SelectInkAtCurrentPageAsync(
+        double x, double y, double radius = 14, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            var selected = false;
+            await _real.MutateAsync(rich =>
+            {
+                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
+                var best = -1;
+                var bestDistance = radius;
+                for (var i = 0; i < target.Ink.Count; i++)
+                {
+                    foreach (var point in target.Ink[i].Points)
+                    {
+                        var distance = Math.Sqrt(
+                            (point.X - x) * (point.X - x) + (point.Y - y) * (point.Y - y));
+                        if (distance <= bestDistance)
+                        {
+                            bestDistance = distance;
+                            best = i;
+                        }
+                    }
+                }
+                if (best >= 0)
+                {
+                    for (var i = 0; i < target.Ink.Count; i++)
+                        HavenRichNotesOps.SetInkStrokeSelection(rich, target.Id, i, i == best);
+                    selected = true;
+                }
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return selected;
+        }
+        finally
+        {
+            _mergeGate.Release();
+        }
     }
 
     public Task<HavenRichAttachmentRef> ImportAttachmentAsync(
@@ -428,6 +482,156 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         }
         finally { _mergeGate.Release(); }
     }
+
+    public async ValueTask<bool> DeleteSectionAsync(string sectionId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var removed = false;
+            await _real.MutateAsync(rich =>
+                removed = HavenRichNotesOps.RemoveSection(rich, sectionId), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return removed;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string> DuplicateSectionAsync(string sectionId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.DuplicateSection(rich, sectionId).Id, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask MoveSectionAsync(string sectionId, int targetIndex, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.MoveSection(rich, sectionId, targetIndex), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<bool> DeletePageAsync(string pageId, CancellationToken cancellationToken = default)    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var removed = false;
+            await _real.MutateAsync(rich =>
+                removed = HavenRichNotesOps.RemovePage(rich, pageId), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return removed;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string> DuplicatePageAsync(string pageId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.DuplicatePage(rich, pageId).Id, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask MovePageAsync(string pageId, string targetSectionId, int targetIndex, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.MovePage(rich, pageId, targetSectionId, targetIndex), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>
+    /// Converts a block between paragraph/heading/list kinds, preserving text
+    /// and list items where they carry over. Position and identity are kept.
+    /// </summary>
+    public async ValueTask<bool> ConvertBlockKindAsync(
+        string pageId, string blockId, HavenRichBlockKind newKind, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var converted = false;
+            await _real.MutateAsync(rich =>
+            {
+                var page = rich.Sections.SelectMany(s => s.Pages).FirstOrDefault(p => p.Id == pageId);
+                var index = page?.Blocks.FindIndex(b => b.Id == blockId) ?? -1;
+                if (page is null || index < 0)
+                    return;
+                var old = page.Blocks[index];
+                if (old.Kind == newKind)
+                    return;
+                var replacement = new HavenRichBlock
+                {
+                    Id = old.Id,
+                    Kind = newKind,
+                    Order = old.Order,
+                    StyleId = old.StyleId,
+                };
+                if (IsListKind(old.Kind) && IsListKind(newKind))
+                {
+                    replacement.Items = old.Items;
+                    replacement.PlainText = old.PlainText;
+                }
+                else if (IsListKind(newKind))
+                {
+                    replacement.Items = [new HavenRichListItem { Text = old.PlainText }];
+                    replacement.PlainText = old.PlainText;
+                }
+                else
+                {
+                    replacement.PlainText = IsListKind(old.Kind) && old.Items.Count > 0
+                        ? string.Join("\n", old.Items.Select(i => (i.Checked ? "[x] " : "[ ] ") + i.Text))
+                        : old.PlainText;
+                    replacement.Runs = old.Runs;
+                }
+                page.Blocks[index] = replacement;
+                HavenRichNotesOps.TouchNotes(rich);
+                converted = true;
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return converted;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    private static bool IsListKind(HavenRichBlockKind kind) =>
+        kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList;
 
     /// <summary>
     /// Deletes a view block: checklist item ids ("parentId:itemId") remove one

@@ -1,140 +1,51 @@
 <Cui>
-  <Resources>
-    <item key="PrimaryColor" value="#4A6FA5" />
-    <item key="BackgroundColor" value="#F5F5F0" />
-    <item key="TextPrimary" value="#212121" />
-    <item key="TextSecondary" value="#757575" />
-    <item key="CardBackground" value="#FFFFFF" />
-    <item key="AccentColor" value="#FF7043" />
-  </Resources>
+  <Grid columndefinitions="280,*" rowdefinitions="Auto,*,Auto">
 
-  <StackPanel class="BoardsRoot" orientation="Vertical" width="1200" height="800">
+    <!-- Top document bar: file actions, title, save state, global actions -->
+    <Border automationid="TopBar" grid-row="0" grid-column="0" grid-columnspan="2" padding="12 8">
+      <Grid columndefinitions="Auto,*,Auto">
+        <StackPanel automationid="TopBarLeft" grid-column="0" orientation="Horizontal" />
+        <TextBox id="BoardTitleBox" automationid="BoardTitleBox" accessible-name="Board title" grid-column="1" text="{Binding BoardTitle, fallback=Untitled board}" font-size="20" font-weight="SemiBold" borderthickness="0" vertical-alignment="Center" margin="12 0" />
+        <StackPanel automationid="TopBarRight" grid-column="2" orientation="Horizontal" />
+      </Grid>
+    </Border>
 
-    <!-- Library bar: title editing + New/Open/Save/Save As + path/status -->
-    <Border background="{Resource PrimaryColor}" padding="16 12">
+    <!-- Left navigation: search, sections/pages (built in code), add actions -->
+    <Border automationid="NavPane" grid-row="1" grid-column="0" padding="8">
       <StackPanel orientation="Vertical">
-        <StackPanel orientation="Horizontal">
-          <TextBlock text="Boards  |  " font-size="20" font-weight="Bold" foreground="White" vertical-alignment="Center" />
-          <TextBox id="BoardTitleBox" automationid="BoardTitleBox" accessible-name="Board title" text="{Binding BoardTitle, fallback=Untitled board}" font-size="18" font-weight="SemiBold" width="320" vertical-alignment="Center" />
-          <Button content="New" action="NewBoard" margin="16 0 0 0" />
-          <Button content="Open" action="OpenBoard" margin="8 0 0 0" />
-          <Button content="Save" action="SaveBoard" margin="8 0 0 0" />
-          <Button content="Save As" action="SaveAsBoard" margin="8 0 0 0" />
-        </StackPanel>
+        <TextBox id="NavSearchBox" automationid="NavSearchBox" accessible-name="Search sections and pages" placeholdertext="Search" margin="0 0 0 8" />
+        <ScrollViewer verticalalignment="Stretch">
+          <StackPanel automationid="NavHost" orientation="Vertical" />
+        </ScrollViewer>
         <StackPanel orientation="Horizontal" margin="0 8 0 0">
-          <TextBlock text="File: " font-size="12" foreground="White" vertical-alignment="Center" />
-          <TextBlock text="{Binding FilePath, fallback=memory://boards/default}" font-size="12" foreground="White" vertical-alignment="Center" />
-          <TextBlock text="   |   Status: " font-size="12" foreground="White" vertical-alignment="Center" />
-          <TextBlock text="{Binding StatusText, fallback=Ready}" font-size="12" font-weight="Bold" foreground="White" vertical-alignment="Center" />
+          <Button content="+ Section" action="AddSection" automationid="AddSectionButton" accessible-name="Add section" margin="0 0 8 0" />
+          <Button content="+ Page" action="AddPage" automationid="AddPageButton" accessible-name="Add page" />
         </StackPanel>
       </StackPanel>
     </Border>
 
-    <!-- Main row: navigation + page editor -->
-    <StackPanel orientation="Horizontal" margin="16 12">
-
-      <!-- Sections/pages navigation -->
-      <StackPanel orientation="Vertical" width="280" margin="0 0 16 0">
-        <TextBlock text="Sections" font-size="16" font-weight="Bold" foreground="{Resource TextPrimary}" margin="0 0 0 4" />
-        <TextBlock text="{Binding SectionListText, fallback=Getting started}" font-size="13" foreground="{Resource TextSecondary}" textwrapping="Wrap" margin="0 0 0 8" />
-        <ListBox>
-          <Button content="Section 1" action="SelectSection1" margin="0 0 0 4" />
-          <Button content="Section 2" action="SelectSection2" margin="0 0 0 4" />
-        </ListBox>
-        <TextBlock text="Pages" font-size="16" font-weight="Bold" foreground="{Resource TextPrimary}" margin="0 12 0 4" />
-        <TextBlock text="{Binding PageListText, fallback=Welcome}" font-size="13" foreground="{Resource TextSecondary}" textwrapping="Wrap" margin="0 0 0 8" />
-        <TreeView>
-          <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="13" />
-        </TreeView>
-        <StackPanel orientation="Horizontal" margin="0 8 0 0">
-          <Button content="Select page 1" action="SelectPage1" margin="0 0 8 0" />
-          <Button content="Select page 2" action="SelectPage2" />
-        </StackPanel>
-        <StackPanel orientation="Horizontal" margin="0 8 0 0">
-          <Button content="Add section" action="AddSection" margin="0 0 8 0" />
-          <Button content="Add page" action="AddPage" />
-        </StackPanel>
-        <TextBlock text="Sections: " font-size="12" foreground="{Resource TextSecondary}" margin="0 8 0 0" />
-        <TextBlock text="{Binding SectionCount, fallback=1}" font-size="12" font-weight="Bold" />
-        <TextBlock text="Pages: " font-size="12" foreground="{Resource TextSecondary}" />
-        <TextBlock text="{Binding PageCount, fallback=1}" font-size="12" font-weight="Bold" />
-      </StackPanel>
-
-      <!-- Page editor -->
-      <ScrollViewer width="860" height="640">
-        <StackPanel orientation="Vertical" margin="0 0 16 0">
-
-          <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="22" font-weight="Bold" foreground="{Resource TextPrimary}" margin="0 0 0 4" />
-
-          <!-- Formatting toolbar: toggles affect the selected block -->
-          <Border background="#E8EDF3" padding="12 8" margin="0 0 0 12">
-            <StackPanel orientation="Vertical">
-              <StackPanel orientation="Horizontal">
-                <TextBlock text="Selected: " font-size="13" vertical-alignment="Center" />
-                <TextBlock text="{Binding SelectedBlockInfo, fallback=No block}" font-size="13" font-weight="SemiBold" vertical-alignment="Center" margin="0 0 12 0" />
-                <Button content="Undo" action="Undo" accessible-name="Undo the last edit" margin="0 0 8 0" />
-                <Button content="Redo" action="Redo" accessible-name="Redo the undone edit" margin="0 0 8 0" />
-              </StackPanel>
-              <StackPanel orientation="Horizontal" margin="0 8 0 0">
-                <Button content="Bold" action="ToggleBold" margin="0 0 8 0" />
-                <Button content="Italic" action="ToggleItalic" margin="0 0 8 0" />
-                <Button content="Underline" action="ToggleUnderline" margin="0 0 8 0" />
-                <Button content="Strike" action="ToggleStrike" accessible-name="Toggle strikethrough on the selected block" margin="0 0 8 0" />
-                <Button content="Sub" action="ToggleSub" accessible-name="Toggle subscript on the selected block" margin="0 0 8 0" />
-                <Button content="Sup" action="ToggleSup" accessible-name="Toggle superscript on the selected block" margin="0 0 8 0" />
-                <Button content="Clear" action="ClearFormat" accessible-name="Clear direct formatting on the selected block" margin="0 0 8 0" />
-              </StackPanel>
-              <StackPanel orientation="Horizontal" margin="0 8 0 0">
-                <Button content="A+" action="FontBigger" accessible-name="Increase font size" margin="0 0 8 0" />
-                <Button content="A-" action="FontSmaller" accessible-name="Decrease font size" margin="0 0 8 0" />
-                <Button content="L" action="AlignLeft" accessible-name="Align left" margin="0 0 8 0" />
-                <Button content="C" action="AlignCenter" accessible-name="Align center" margin="0 0 8 0" />
-                <Button content="R" action="AlignRight" accessible-name="Align right" margin="0 0 8 0" />
-                <Button content="J" action="AlignJustify" accessible-name="Justify text" margin="0 0 8 0" />
-                <Button content="Ind-" action="IndentDec" accessible-name="Decrease indent" margin="0 0 8 0" />
-                <Button content="Ind+" action="IndentInc" accessible-name="Increase indent" margin="0 0 0 0" />
-              </StackPanel>
-              <StackPanel orientation="Horizontal" margin="0 8 0 0">
-                <ComboBox id="StyleBox" automationid="StyleBox" accessible-name="Block style" width="220" margin="0 0 8 0" />
-                <Button content="Styles…" action="ManageStyles" accessible-name="Open the style editor" margin="0 0 8 0" />
-                <TextBlock text="B:" font-size="12" vertical-alignment="Center" margin="8 0 0 0" />
-                <TextBlock text="{Binding BoldState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
-                <TextBlock text=" I:" font-size="12" vertical-alignment="Center" />
-                <TextBlock text="{Binding ItalicState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
-                <TextBlock text=" U:" font-size="12" vertical-alignment="Center" />
-                <TextBlock text="{Binding UnderlineState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
-              </StackPanel>
-            </StackPanel>
-          </Border>
-
-          <!-- Insert row: block kinds + style names (filled in code) -->
-          <StackPanel orientation="Horizontal" margin="0 0 0 12">
-            <TextBlock text="Insert: " font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" vertical-alignment="Center" margin="0 0 8 0" />
-            <ComboBox id="AddKindBox" automationid="AddKindBox" accessible-name="Block kind to insert" width="260" margin="0 0 8 0" />
-            <Button id="AddBlockKind" automationid="AddBlockKind" accessible-name="Insert the selected block kind" content="Insert" />
+    <!-- Editor column: contextual toolbar, context panel, document canvas -->
+    <StackPanel grid-row="1" grid-column="1" orientation="Vertical">
+      <StackPanel automationid="ToolbarHost" orientation="Vertical" />
+      <StackPanel automationid="ContextHost" orientation="Vertical" />
+      <ScrollViewer automationid="EditorScroll" verticalalignment="Stretch" horizontalalignment="Stretch">
+        <Border automationid="PageCard" maxwidth="800" horizontalalignment="Center" cornerradius="8" borderthickness="1" padding="40 32" margin="28 20">
+          <StackPanel orientation="Vertical">
+            <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="28" font-weight="Bold" margin="0 0 0 4" />
+            <StackPanel automationid="BlocksHost" orientation="Vertical" />
           </StackPanel>
-
-          <!-- Dynamic per-block editors (built in code by BlockRenderer) -->
-          <StackPanel id="BlocksHost" automationid="BlocksHost" accessible-name="Page blocks" orientation="Vertical" />
-
-          <!-- Block management -->
-          <StackPanel orientation="Horizontal" margin="12 0 0 0">
-            <Button content="Add block" action="AddBlock" margin="0 0 8 0" />
-            <Button content="Add section" action="AddSection" margin="0 0 8 0" />
-            <Button content="Add page" action="AddPage" />
-          </StackPanel>
-
-        </StackPanel>
+        </Border>
       </ScrollViewer>
     </StackPanel>
 
-    <!-- Status footer -->
-    <Border background="{Resource PrimaryColor}" padding="16 8">
+    <!-- Minimal status footer -->
+    <Border automationid="FooterBar" grid-row="2" grid-column="0" grid-columnspan="2" padding="12 6">
       <StackPanel orientation="Horizontal">
-        <TextBlock text="Boards CUI runtime  |  " font-size="12" foreground="White" />
-        <TextBlock text="{Binding StatusText, fallback=Ready}" font-size="12" foreground="White" />
+        <TextBlock text="{Binding SaveStateText, fallback=Saved}" font-size="12" font-weight="SemiBold" vertical-alignment="Center" />
+        <TextBlock text="·" font-size="12" vertical-alignment="Center" margin="8 0" />
+        <TextBlock text="{Binding StatusText, fallback=Ready}" font-size="12" vertical-alignment="Center" />
       </StackPanel>
     </Border>
 
-  </StackPanel>
+  </Grid>
 </Cui>

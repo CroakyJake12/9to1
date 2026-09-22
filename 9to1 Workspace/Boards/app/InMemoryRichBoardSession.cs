@@ -112,14 +112,14 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
 
     public IReadOnlyList<RichStyleView> Styles { get; } =
     [
-        new() { Id = "normal", Name = "Paragraph", IsBuiltIn = true, BlockKind = "paragraph" },
-        new() { Id = "title", Name = "Title", IsBuiltIn = true, BlockKind = "heading" },
-        new() { Id = "subtitle", Name = "Subtitle", IsBuiltIn = true, BlockKind = "heading" },
-        new() { Id = "heading-1", Name = "Header 1", IsBuiltIn = true, BlockKind = "heading" },
-        new() { Id = "heading-2", Name = "Header 2", IsBuiltIn = true, BlockKind = "heading" },
-        new() { Id = "heading-3", Name = "Header 3", IsBuiltIn = true, BlockKind = "heading" },
-        new() { Id = "quote", Name = "Quote", IsBuiltIn = true, BlockKind = "paragraph" },
-        new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = "paragraph" },
+        new() { Id = "normal", Name = "Paragraph", IsBuiltIn = true, BlockKind = "paragraph", FontSize = 14 },
+        new() { Id = "title", Name = "Title", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 32 },
+        new() { Id = "subtitle", Name = "Subtitle", IsBuiltIn = true, BlockKind = "heading", FontSize = 20, Foreground = "#FF6B7280" },
+        new() { Id = "heading-1", Name = "Header 1", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 26 },
+        new() { Id = "heading-2", Name = "Header 2", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 21 },
+        new() { Id = "heading-3", Name = "Header 3", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 17 },
+        new() { Id = "quote", Name = "Quote", IsBuiltIn = true, BlockKind = "paragraph", Italic = true, Foreground = "#FF6B7280" },
+        new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = "paragraph", FontFamily = "Cascadia Mono", FontSize = 13, Background = "#FFF1F3F4" },
     ];
 
     public bool CanUndo { get { lock (_gate) return _undo.Count > 0; } }
