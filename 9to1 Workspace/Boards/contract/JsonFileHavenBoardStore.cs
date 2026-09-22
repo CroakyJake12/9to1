@@ -18,7 +18,7 @@ public sealed record HavenBoardDocument(
     HavenRichNotes? RichNotes = null)
 {
     public const string FormatIdentity = "9to1.board";
-    public const int CurrentSchemaVersion = 2;
+    public const int CurrentSchemaVersion = 3;
 }
 
 public enum HavenBoardLoadDisposition
@@ -486,6 +486,7 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
 
             HavenBoardDocument? document = version switch
             {
+                3 => root.Deserialize<HavenBoardDocument>(Json),
                 2 => root.Deserialize<HavenBoardDocument>(Json),
                 1 => MigrateSchemaOne(root),
                 0 => MigrateSchemaZero(root),
@@ -510,7 +511,11 @@ public sealed class JsonFileHavenBoardStore : IHavenBoardStore, IDisposable
                 HavenBoardReducer.Validate(document.Snapshot);
             }
             if (document.RichNotes is not null)
+            {
+                if (version < 3)
+                    HavenRichNotesV3Migration.Upgrade(document.RichNotes);
                 HavenRichNotesValidator.Validate(document.RichNotes);
+            }
 
             return new DocumentReadResult(document.Snapshot, document, null, null, migrated);
         }

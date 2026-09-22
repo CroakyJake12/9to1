@@ -11,6 +11,7 @@ public sealed class HavenRichNotes
     public string Title { get; set; } = "Untitled board";
     public long Version { get; set; } = 1;
     public List<HavenRichSection> Sections { get; set; } = [new HavenRichSection()];
+    public List<HavenRichStyle> Styles { get; set; } = HavenRichStyles.BuiltIns();
 
     public static HavenRichNotes Create(string? title = null)
     {
@@ -38,6 +39,7 @@ public sealed class HavenRichPage
     public double CanvasHeight { get; set; } = 900;
     public List<HavenRichBlock> Blocks { get; set; } = [new HavenRichBlock()];
     public List<HavenRichInkStroke> Ink { get; set; } = [];
+    public HavenRichInkView InkView { get; set; } = new();
     public List<HavenRichCanvasObject> Canvas { get; set; } = [];
 }
 
@@ -50,7 +52,8 @@ public enum HavenRichBlockKind
     Checklist = 4,
     Table = 5,
     Image = 6,
-    Divider = 7
+    Divider = 7,
+    Graph = 8
 }
 
 public sealed class HavenRichBlock
@@ -64,6 +67,17 @@ public sealed class HavenRichBlock
     public List<HavenRichListItem> Items { get; set; } = [];
     public HavenRichTable? Table { get; set; }
     public HavenRichAttachmentRef? Attachment { get; set; }
+    public HavenRichImage? Image { get; set; }
+    public HavenRichGraph? Graph { get; set; }
+    public HavenRichDivider? Divider { get; set; }
+    /// <summary>Paragraph alignment override; <see cref="HavenRichAlignment.Inherit"/> resolves from the block style.</summary>
+    public HavenRichAlignment Alignment { get; set; } = HavenRichAlignment.Inherit;
+    /// <summary>Line spacing multiplier override; 0 inherits from the block style.</summary>
+    public double LineSpacing { get; set; }
+    public double SpaceBefore { get; set; }
+    public double SpaceAfter { get; set; }
+    /// <summary>Indentation level override; -1 inherits from the block style.</summary>
+    public int IndentLevel { get; set; } = -1;
 
     public static HavenRichBlock Paragraph(string text = "") => new() { PlainText = text };
     public static HavenRichBlock Heading(string text = "Heading") =>
@@ -77,6 +91,15 @@ public sealed class HavenRichTextRun
     public bool Italic { get; set; }
     public bool Underline { get; set; }
     public bool StrikeThrough { get; set; }
+    public HavenRichBaseline Baseline { get; set; } = HavenRichBaseline.Normal;
+    /// <summary>Font family override; empty inherits.</summary>
+    public string FontFamily { get; set; } = string.Empty;
+    /// <summary>Font size in points; 0 inherits.</summary>
+    public double FontSize { get; set; }
+    /// <summary>Text colour override (#AARRGGBB); empty inherits.</summary>
+    public string Foreground { get; set; } = string.Empty;
+    /// <summary>Highlight/background override (#AARRGGBB); empty inherits.</summary>
+    public string Background { get; set; } = string.Empty;
 }
 
 public sealed class HavenRichListItem
@@ -85,11 +108,25 @@ public sealed class HavenRichListItem
     public string Text { get; set; } = string.Empty;
     public bool Checked { get; set; }
     public int Level { get; set; }
+    public bool Bold { get; set; }
+    public bool Italic { get; set; }
+    public bool Underline { get; set; }
+    public bool StrikeThrough { get; set; }
+    public HavenRichBaseline Baseline { get; set; } = HavenRichBaseline.Normal;
+    public string Foreground { get; set; } = string.Empty;
 }
 
 public sealed class HavenRichTable
 {
     public List<HavenRichTableRow> Rows { get; set; } = [];
+    public string Background { get; set; } = string.Empty;
+    public string BorderColor { get; set; } = string.Empty;
+    public double BorderWidth { get; set; }
+    public HavenRichBorderStyle BorderStyle { get; set; } = HavenRichBorderStyle.Inherit;
+    public double CornerRadius { get; set; }
+    public bool AlternatingRows { get; set; }
+    public List<double> ColumnWidths { get; set; } = [];
+    public List<double> RowHeights { get; set; } = [];
 
     public static HavenRichTable Create(int rows, int columns)
     {
@@ -114,12 +151,23 @@ public sealed class HavenRichTableCell
 {
     public string Id { get; set; } = "cell-" + Guid.NewGuid().ToString("N")[..12];
     public string Text { get; set; } = string.Empty;
+    public List<HavenRichTextRun> Runs { get; set; } = [];
+    public HavenRichAlignment AlignmentH { get; set; } = HavenRichAlignment.Inherit;
+    public HavenRichCellVerticalAlignment AlignmentV { get; set; } = HavenRichCellVerticalAlignment.Inherit;
+    public string Background { get; set; } = string.Empty;
+    public string Foreground { get; set; } = string.Empty;
+    public bool Bold { get; set; }
+    public bool Italic { get; set; }
+    public bool Underline { get; set; }
+    public HavenRichBaseline Baseline { get; set; } = HavenRichBaseline.Normal;
 }
 
 public sealed class HavenRichInkPoint
 {
     public double X { get; set; }
     public double Y { get; set; }
+    /// <summary>Pen pressure 0..1; defaults to 0.5 for RC1-era strokes.</summary>
+    public double Pressure { get; set; } = 0.5;
 }
 
 public sealed class HavenRichInkStroke
@@ -127,6 +175,16 @@ public sealed class HavenRichInkStroke
     public List<HavenRichInkPoint> Points { get; set; } = [];
     public double Width { get; set; } = 2.5;
     public string Color { get; set; } = "#FF1A73E8";
+    public HavenRichInkTool Tool { get; set; } = HavenRichInkTool.Pen;
+    public bool Selected { get; set; }
+}
+
+/// <summary>Persisted ink-canvas viewport so pan/zoom survives reopen.</summary>
+public sealed class HavenRichInkView
+{
+    public double PanX { get; set; }
+    public double PanY { get; set; }
+    public double Zoom { get; set; } = 1;
 }
 
 public sealed class HavenRichCanvasObject
@@ -151,6 +209,8 @@ public sealed class HavenRichAttachmentRef
     public string MediaType { get; set; } = "application/octet-stream";
     public string? DataBase64 { get; set; }
     public string? LocalReference { get; set; }
+    /// <summary>Exact byte size of the attachment payload.</summary>
+    public long SizeBytes { get; set; }
 }
 
 /// <summary>Structural validation for the rich-notes payload. Fail-closed: any error throws.</summary>
@@ -165,11 +225,10 @@ public static class HavenRichNotesValidator
             throw new InvalidOperationException("Rich board title must be non-empty.");
         if (notes.Sections.Count == 0)
             throw new InvalidOperationException("Rich board must contain at least one section.");
-
+        HavenRichStyles.ValidateStyles(notes);
         foreach (var section in notes.Sections)
         {
-            RequireId(section.Id, "Section");
-            if (string.IsNullOrWhiteSpace(section.Title))
+            RequireId(section.Id, "Section");            if (string.IsNullOrWhiteSpace(section.Title))
                 throw new InvalidOperationException("Rich board sections must have non-empty titles.");
             if (section.Pages.Count == 0)
                 throw new InvalidOperationException($"Section '{section.Title}' must contain at least one page.");
@@ -214,7 +273,31 @@ public static class HavenRichNotesValidator
                 throw new InvalidOperationException("Table rows must contain at least one cell.");
             if (block.Table.Rows.Any(row => row.Cells.Count != width))
                 throw new InvalidOperationException("Table rows must be rectangular.");
+            if (block.Table.BorderWidth < 0 || block.Table.BorderWidth > 32)
+                throw new InvalidOperationException("Table border width is outside the supported range.");
+            if (block.Table.CornerRadius < 0 || block.Table.CornerRadius > 128)
+                throw new InvalidOperationException("Table corner radius is outside the supported range.");
+            if (block.Table.ColumnWidths.Any(w => w is < 0 or > 5000) || block.Table.RowHeights.Any(h => h is < 0 or > 5000))
+                throw new InvalidOperationException("Table track sizes are outside the supported range.");
         }
+        if (block.Kind == HavenRichBlockKind.Image)
+        {
+            if (block.Image is null)
+                throw new InvalidOperationException("Image blocks must carry image data.");
+            HavenRichImage.Validate(block.Image);
+        }
+        if (block.Kind == HavenRichBlockKind.Graph)
+        {
+            if (block.Graph is null)
+                throw new InvalidOperationException("Graph blocks must carry graph data.");
+            HavenRichGraphValidator.Validate(block.Graph);
+        }
+        if (block.IndentLevel < -1 || block.IndentLevel > 12)
+            throw new InvalidOperationException("Block indent level is outside the supported range.");
+        if (block.LineSpacing is < 0 or > 10)
+            throw new InvalidOperationException("Block line spacing is outside the supported range.");
+        if (block.SpaceBefore is < 0 or > 1000 || block.SpaceAfter is < 0 or > 1000)
+            throw new InvalidOperationException("Block paragraph spacing is outside the supported range.");
     }
 
     private static void RequireId(string value, string label)
@@ -229,7 +312,7 @@ public static class HavenRichNotesValidator
 /// <c>BoardsWorkspaceService</c> hierarchy/list/table/canvas semantics.
 /// Every mutation bumps <see cref="HavenRichNotes.Version"/> so stale autosaves can be rejected.
 /// </summary>
-public static class HavenRichNotesOps
+public static partial class HavenRichNotesOps
 {
     public static HavenRichSection AddSection(HavenRichNotes notes, string? title = null)
     {
@@ -518,7 +601,10 @@ public static class HavenRichNotesOps
     }
 
     private static bool HasStyle(HavenRichTextRun run) =>
-        run.Bold || run.Italic || run.Underline || run.StrikeThrough;
+        run.Bold || run.Italic || run.Underline || run.StrikeThrough ||
+        run.Baseline != HavenRichBaseline.Normal ||
+        !string.IsNullOrEmpty(run.FontFamily) || run.FontSize > 0 ||
+        !string.IsNullOrEmpty(run.Foreground) || !string.IsNullOrEmpty(run.Background);
 
     private static HavenRichSection RequireSection(HavenRichNotes notes, string sectionId)
     {
