@@ -14,6 +14,8 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
 
     private readonly Timer _autosaveTimer;
     private readonly object _gate = new();
+    private readonly Stack<string> _undo = new();
+    private readonly Stack<string> _redo = new();
     private bool _dirty;
     private bool _disposed;
     private string _status = "Ready";
@@ -56,6 +58,11 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
         {
             Document = CreateDefault();
         }
+        lock (_gate)
+        {
+            _undo.Clear();
+            _redo.Clear();
+        }
         SetStatus("Ready");
         return ValueTask.CompletedTask;
     }
@@ -87,9 +94,67 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
     public void MarkDirty()
     {
         ThrowIfDisposed();
-        lock (_gate) _dirty = true;
+        lock (_gate)
+        {
+            _undo.Push(JsonSerializer.Serialize(Document, JsonOptions));
+            while (_undo.Count > 60)
+            {
+                var kept = _undo.Take(60).Reverse().ToArray();
+                _undo.Clear();
+                foreach (var entry in kept) _undo.Push(entry);
+            }
+            _redo.Clear();
+            _dirty = true;
+        }
         SetStatus("Unsaved changes");
         _autosaveTimer.Change(TimeSpan.FromMilliseconds(500), Timeout.InfiniteTimeSpan);
+    }
+
+    public IReadOnlyList<RichStyleView> Styles { get; } =
+    [
+        new() { Id = "normal", Name = "Paragraph", IsBuiltIn = true, BlockKind = "paragraph" },
+        new() { Id = "title", Name = "Title", IsBuiltIn = true, BlockKind = "heading" },
+        new() { Id = "subtitle", Name = "Subtitle", IsBuiltIn = true, BlockKind = "heading" },
+        new() { Id = "heading-1", Name = "Header 1", IsBuiltIn = true, BlockKind = "heading" },
+        new() { Id = "heading-2", Name = "Header 2", IsBuiltIn = true, BlockKind = "heading" },
+        new() { Id = "heading-3", Name = "Header 3", IsBuiltIn = true, BlockKind = "heading" },
+        new() { Id = "quote", Name = "Quote", IsBuiltIn = true, BlockKind = "paragraph" },
+        new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = "paragraph" },
+    ];
+
+    public bool CanUndo { get { lock (_gate) return _undo.Count > 0; } }
+    public bool CanRedo { get { lock (_gate) return _redo.Count > 0; } }
+
+    public ValueTask<bool> UndoAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        string? previous;
+        lock (_gate)
+        {
+            if (!_undo.TryPop(out previous)) return ValueTask.FromResult(false);
+            _redo.Push(JsonSerializer.Serialize(Document, JsonOptions));
+        }
+        Document = JsonSerializer.Deserialize<RichBoardDocument>(previous, JsonOptions) ?? CreateDefault();
+        lock (_gate) _dirty = true;
+        SetStatus("Undone — editing…");
+        _autosaveTimer.Change(TimeSpan.FromMilliseconds(500), Timeout.InfiniteTimeSpan);
+        return ValueTask.FromResult(true);
+    }
+
+    public ValueTask<bool> RedoAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        string? next;
+        lock (_gate)
+        {
+            if (!_redo.TryPop(out next)) return ValueTask.FromResult(false);
+            _undo.Push(JsonSerializer.Serialize(Document, JsonOptions));
+        }
+        Document = JsonSerializer.Deserialize<RichBoardDocument>(next, JsonOptions) ?? CreateDefault();
+        lock (_gate) _dirty = true;
+        SetStatus("Redone — editing…");
+        _autosaveTimer.Change(TimeSpan.FromMilliseconds(500), Timeout.InfiniteTimeSpan);
+        return ValueTask.FromResult(true);
     }
 
     public async ValueTask DisposeAsync()

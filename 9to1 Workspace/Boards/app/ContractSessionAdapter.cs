@@ -81,6 +81,58 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     public string? FilePath => _real.FilePath;
     public event EventHandler<string>? StatusChanged;
 
+    public IReadOnlyList<RichStyleView> Styles =>
+        _real.HasRichNotes
+            ? _real.Rich.Styles
+                .OrderBy(s => s.IsBuiltIn ? 0 : 1)
+                .ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(s => new RichStyleView
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    IsBuiltIn = s.IsBuiltIn,
+                    BlockKind = s.BlockKind.ToString().ToLowerInvariant()
+                }).ToArray()
+            : [];
+
+    public bool CanUndo => _real.CanUndo;
+    public bool CanRedo => _real.CanRedo;
+
+    public async ValueTask<bool> UndoAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            // Merge pending view edits first so undo steps back through them in order.
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var undone = await _real.UndoAsync(cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return undone;
+        }
+        finally
+        {
+            _mergeGate.Release();
+        }
+    }
+
+    public async ValueTask<bool> RedoAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var redone = await _real.RedoAsync(cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return redone;
+        }
+        finally
+        {
+            _mergeGate.Release();
+        }
+    }
+
     public ValueTask OpenAsync(string? path, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("Adapter sessions are opened via ContractSessionAdapter.OpenAsync.");
 
@@ -174,6 +226,40 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         var y = 40 + random.Next(0, 80);
         await CommitInkStrokeAsync(
             [(x, y), (x + 60, y + 20), (x + 120, y - 10)], cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<HavenRichAttachmentRef> ImportAttachmentAsync(
+        string sourcePath, CancellationToken cancellationToken = default) =>
+        _real.ImportAttachmentAsync(sourcePath, cancellationToken);
+
+    public Task<HavenAttachmentResolution> ResolveAttachmentAsync(
+        string attachmentId, CancellationToken cancellationToken = default)
+    {
+        var attachment = _real.Rich.Sections
+            .SelectMany(s => s.Pages).SelectMany(p => p.Blocks)
+            .Select(b => b.Attachment).FirstOrDefault(a => a?.Id == attachmentId)
+            ?? throw new KeyNotFoundException("Attachment was not found on this board.");
+        return _real.ResolveAttachmentAsync(attachment, cancellationToken);
+    }
+
+    public async ValueTask AttachFileToBlockAsync(
+        string pageId, string blockId, string sourcePath, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        var attachment = await _real.ImportAttachmentAsync(sourcePath, cancellationToken).ConfigureAwait(false);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(
+                rich => HavenRichNotesOps.AttachToBlock(rich, pageId, blockId, attachment),
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally
+        {
+            _mergeGate.Release();
+        }
     }
 
     private HavenRichPage CurrentContractPage()
