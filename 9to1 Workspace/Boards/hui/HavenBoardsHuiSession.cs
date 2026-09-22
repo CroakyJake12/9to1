@@ -33,7 +33,13 @@ public sealed class HavenBoardsHuiSession : IAsyncDisposable
         Scene.SetSnapshot(snapshot);
         FreeformScene.SetSnapshot(snapshot);
 
-        var status = created ? "Created locally" : "Loaded locally";
+        var status = created
+            ? "Created locally"
+            : store is JsonFileHavenBoardStore { LastLoadDisposition: HavenBoardLoadDisposition.RecoveredFromBackup }
+                ? "Recovered from local backup"
+                : store is JsonFileHavenBoardStore { LastLoadDisposition: HavenBoardLoadDisposition.MigratedLegacyJson }
+                    ? "Imported legacy board locally"
+                    : "Loaded locally";
         SetSceneStatus(status);
 
         Scene.CommandRequested += OnSceneCommandRequested;

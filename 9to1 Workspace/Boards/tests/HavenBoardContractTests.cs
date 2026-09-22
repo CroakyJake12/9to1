@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using CakeOS.Apps.Boards.Contract;
 using Xunit;
 
@@ -249,7 +250,7 @@ public sealed class JsonFileHavenBoardStoreTests
 
             await store.SaveAsync(first);
             await store.SaveAsync(second);
-            await File.WriteAllTextAsync(Path.Combine(root, "board-main.json"), "{ not-valid-json");
+            await File.WriteAllTextAsync(Path.Combine(root, "board-main.9to1board"), "{ not-valid-json");
 
             var loaded = await store.LoadAsync("board-main");
 
@@ -269,6 +270,144 @@ public sealed class JsonFileHavenBoardStoreTests
     }
 
     [Fact]
+    public async Task Physical_document_has_identity_version_metadata_and_complete_snapshot()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var snapshot = new HavenBoardSnapshot(
+                "board-main",
+                "A-Level Maths",
+                42,
+                [new HavenBoardGroup("pure", "Pure Mathematics", [
+                    new HavenBoardCard("trigonometry", "Trigonometry", Attachments: [
+                        new HavenBoardAttachment("formula-sheet", "formulae.pdf", "sha256:" + new string('b', 64))])])],
+                new HavenBoardFreeformLayout([new HavenBoardFreeformItem("trigonometry", 12, 24, 320, 200, 1)]));
+
+            await store.SaveAsync(snapshot);
+
+            var path = store.GetDocumentPath("board-main");
+            Assert.Equal(Path.Combine(root, "board-main.9to1board"), path);
+            Assert.True(File.Exists(path));
+            using var json = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+            Assert.Equal(HavenBoardDocument.FormatIdentity, json.RootElement.GetProperty("format").GetString());
+            Assert.Equal(HavenBoardDocument.CurrentSchemaVersion, json.RootElement.GetProperty("schemaVersion").GetInt32());
+            Assert.NotEqual(Guid.Empty, json.RootElement.GetProperty("documentId").GetGuid());
+            Assert.Equal("A-Level Maths", json.RootElement.GetProperty("snapshot").GetProperty("title").GetString());
+
+            var reopened = await store.LoadAsync("board-main");
+            Assert.NotNull(reopened);
+            AssertSnapshotsEquivalent(snapshot, reopened!);
+            var frame = Assert.Single(reopened.Freeform!.Items);
+            Assert.Equal(new HavenBoardFreeformItem("trigonometry", 12, 24, 320, 200, 1), frame);
+        });
+    }
+
+    [Fact]
+    public async Task Legacy_json_is_imported_without_deleting_source_and_written_as_physical_document()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var legacy = HavenBoardSnapshot.CreateDefault() with { Title = "Old notes", Version = 9 };
+            var legacyPath = Path.Combine(root, "board-main.json");
+            var originalBytes = JsonSerializer.Serialize(legacy, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            await File.WriteAllTextAsync(legacyPath, originalBytes);
+
+            var imported = await store.LoadAsync("board-main");
+
+            Assert.NotNull(imported);
+            Assert.Equal("Old notes", imported!.Title);
+            Assert.Equal(HavenBoardLoadDisposition.MigratedLegacyJson, store.LastLoadDisposition);
+            Assert.Equal(originalBytes, await File.ReadAllTextAsync(legacyPath));
+            Assert.True(File.Exists(store.GetDocumentPath("board-main")));
+        });
+    }
+
+    [Fact]
+    public async Task Unsupported_future_schema_fails_safely_instead_of_returning_empty_board()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            var future = new
+            {
+                format = HavenBoardDocument.FormatIdentity,
+                schemaVersion = HavenBoardDocument.CurrentSchemaVersion + 1,
+                documentId = Guid.NewGuid(),
+                createdUtc = DateTimeOffset.UtcNow,
+                modifiedUtc = DateTimeOffset.UtcNow,
+                snapshot = HavenBoardSnapshot.CreateDefault()
+            };
+            await File.WriteAllTextAsync(store.GetDocumentPath("board-main"), JsonSerializer.Serialize(future));
+
+            var error = await Assert.ThrowsAsync<UnsupportedHavenBoardDocumentVersionException>(() => store.LoadAsync("board-main"));
+
+            Assert.Equal(HavenBoardDocument.CurrentSchemaVersion + 1, error.ActualVersion);
+        });
+    }
+
+    [Fact]
+    public async Task Invalid_save_leaves_previous_valid_physical_document_usable()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            var valid = HavenBoardSnapshot.CreateDefault() with { Title = "Known good" };
+            await store.SaveAsync(valid);
+            var invalid = valid with { Groups = [new HavenBoardGroup("bad", "Bad", [new HavenBoardCard("a", "A", "missing")])] };
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => store.SaveAsync(invalid));
+
+            var reopened = await store.LoadAsync("board-main");
+            Assert.NotNull(reopened);
+            Assert.Equal("Known good", reopened!.Title);
+        });
+    }
+
+    [Fact]
+    public async Task Corrupt_primary_reports_backup_recovery_without_replacing_corrupt_bytes()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            await store.SaveAsync(HavenBoardSnapshot.CreateDefault() with { Title = "Backup" });
+            await store.SaveAsync(HavenBoardSnapshot.CreateDefault() with { Title = "Primary" });
+            var path = store.GetDocumentPath("board-main");
+            const string corrupt = "{ this is corrupt";
+            await File.WriteAllTextAsync(path, corrupt);
+
+            var recovered = await store.LoadAsync("board-main");
+
+            Assert.NotNull(recovered);
+            Assert.Equal("Backup", recovered!.Title);
+            Assert.Equal(HavenBoardLoadDisposition.RecoveredFromBackup, store.LastLoadDisposition);
+            Assert.Equal(corrupt, await File.ReadAllTextAsync(path));
+        });
+    }
+
+    [Fact]
+    public async Task Schema_zero_migration_is_in_memory_until_explicit_save_and_preserves_original_on_failure()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            var path = store.GetDocumentPath("board-main");
+            var schemaZero = JsonSerializer.Serialize(new
+            {
+                format = HavenBoardDocument.FormatIdentity,
+                schemaVersion = 0,
+                snapshot = HavenBoardSnapshot.CreateDefault() with { Title = "Migrated" }
+            });
+            await File.WriteAllTextAsync(path, schemaZero);
+
+            var migrated = await store.LoadAsync("board-main");
+            Assert.NotNull(migrated);
+            Assert.Equal("Migrated", migrated!.Title);
+            Assert.Equal(schemaZero, await File.ReadAllTextAsync(path));
+
+            await store.SaveAsync(migrated);
+            using var saved = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+            Assert.Equal(HavenBoardDocument.CurrentSchemaVersion, saved.RootElement.GetProperty("schemaVersion").GetInt32());
+            Assert.True(File.Exists(path + ".bak"));
+        });
+    }
+
+    [Fact]
     public async Task Command_service_reduces_then_persists()
     {
         await WithStoreAsync(async (store, _) =>
@@ -282,6 +421,77 @@ public sealed class JsonFileHavenBoardStoreTests
             AssertSnapshotsEquivalent(updated, reloaded);
             Assert.Contains(reloaded.Groups[0].Cards, card => card.Id == "card-4" && card.Title == "Persist me");
         });
+    }
+
+    [Fact]
+    public async Task Rename_preserves_stable_document_identity_and_content()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            await store.SaveAsync(HavenBoardSnapshot.CreateDefault() with { Title = "Before" });
+            var beforeId = JsonDocument.Parse(await File.ReadAllTextAsync(store.GetDocumentPath("board-main")))
+                .RootElement.GetProperty("documentId").GetGuid();
+
+            var current = await store.LoadAsync("board-main");
+            Assert.NotNull(current);
+            await store.SaveAsync(current! with { Title = "A-Level Maths" });
+
+            var after = await store.LoadAsync("board-main");
+            Assert.NotNull(after);
+            Assert.Equal("board-main", after!.Id);
+            Assert.Equal("A-Level Maths", after.Title);
+            var afterId = JsonDocument.Parse(await File.ReadAllTextAsync(store.GetDocumentPath("board-main")))
+                .RootElement.GetProperty("documentId").GetGuid();
+            Assert.Equal(beforeId, afterId);
+        });
+    }
+
+    [Fact]
+    public async Task Reordered_groups_survive_close_and_reopen()
+    {
+        await WithStoreAsync(async (store, _) =>
+        {
+            await store.SaveAsync(HavenBoardSnapshot.CreateDefault());
+            var current = await store.LoadAsync("board-main");
+            Assert.NotNull(current);
+            var reordered = HavenBoardReducer.Apply(current!, new MoveGroupCommand(0, 2));
+            await store.SaveAsync(reordered);
+
+            using var reopenedStore = new JsonFileHavenBoardStore(Path.GetDirectoryName(store.GetDocumentPath("board-main"))!);
+            var reopened = await reopenedStore.LoadAsync("board-main");
+
+            Assert.NotNull(reopened);
+            Assert.Equal(new[] { "doing", "done", "todo" }, reopened!.Groups.Select(group => group.Id));
+        });
+    }
+
+    [Fact]
+    public async Task Copied_physical_document_opens_with_identical_content()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "cakeos-boards-tests", Guid.NewGuid().ToString("N"));
+        var copyRoot = Path.Combine(Path.GetTempPath(), "cakeos-boards-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(copyRoot);
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var snapshot = HavenBoardSnapshot.CreateDefault() with { Title = "Copy me" };
+            await store.SaveAsync(snapshot);
+
+            File.Copy(store.GetDocumentPath("board-main"), Path.Combine(copyRoot, "board-main.9to1board"));
+
+            using var copyStore = new JsonFileHavenBoardStore(copyRoot);
+            var copied = await copyStore.LoadAsync("board-main");
+
+            Assert.NotNull(copied);
+            Assert.Equal("Copy me", copied!.Title);
+            AssertSnapshotsEquivalent(snapshot with { Version = copied.Version }, copied);
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+            TryDeleteDirectory(copyRoot);
+        }
     }
 
     private static void AssertSnapshotsEquivalent(HavenBoardSnapshot expected, HavenBoardSnapshot actual)

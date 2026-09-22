@@ -46,15 +46,24 @@ public sealed class HavenBoardsHierarchyHuiTests
         try
         {
             using var store = new JsonFileHavenBoardStore(root);
-            var malformed = new HavenBoardSnapshot(
-                "board-main",
-                "Malformed",
-                9,
-                [new HavenBoardGroup(
-                    "todo",
-                    "To do",
-                    [new HavenBoardCard("child", "Child", ParentCardId: "missing-parent")])]);
-            await store.SaveAsync(malformed);
+            var malformed = new HavenBoardDocument(
+                HavenBoardDocument.FormatIdentity,
+                HavenBoardDocument.CurrentSchemaVersion,
+                Guid.NewGuid(),
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow,
+                new HavenBoardSnapshot(
+                    "board-main",
+                    "Malformed",
+                    9,
+                    [new HavenBoardGroup(
+                        "todo",
+                        "To do",
+                        [new HavenBoardCard("child", "Child", ParentCardId: "missing-parent")])]));
+            Directory.CreateDirectory(root);
+            await File.WriteAllTextAsync(
+                store.GetDocumentPath("board-main"),
+                System.Text.Json.JsonSerializer.Serialize(malformed, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)));
 
             var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 HavenBoardsHuiSession.OpenAsync(store));

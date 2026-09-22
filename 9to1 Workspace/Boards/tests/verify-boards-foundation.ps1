@@ -220,8 +220,8 @@ if ($freeformHuiTestsText -notmatch 'Explicit_freeform_frame_is_projected_to_rea
 }
 
 $storeText = Get-Content -LiteralPath $store -Raw
-if ($storeText -notmatch '\.json\.bak' -or $storeText -notmatch 'flushToDisk:\s*true') {
-    throw 'Local-first store must retain backup recovery and durable flush semantics.'
+if ($storeText -notmatch '\.9to1board' -or $storeText -notmatch '\.bak' -or $storeText -notmatch 'flushToDisk:\s*true') {
+    throw 'Local-first store must retain .9to1board backup recovery and durable flush semantics.'
 }
 if ($storeText -match 'HttpClient|WebSocket|https?://') {
     throw 'Local-first board store must not contain a network dependency.'
