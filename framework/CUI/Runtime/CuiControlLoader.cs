@@ -208,6 +208,7 @@ public sealed class CuiControlLoader
 
         var control = CreateControl(component);
         ApplyProperties(control, component);
+        ApplyActionTag(control, component);
         ApplyClasses(control, component);
 
         // Apply theme resources to this control if it's a container
@@ -441,18 +442,66 @@ public sealed class CuiControlLoader
                 case "fontfamily":
                     if (control is TextBlock fttb)
                         fttb.FontFamily = new Avalonia.Media.FontFamily(resolved);
+                    else if (control is TextBox fftb)
+                        fftb.FontFamily = new Avalonia.Media.FontFamily(resolved);
                     break;
                 case "fontsize":
                     if (control is TextBlock fstb && double.TryParse(resolved, out var fs))
                         fstb.FontSize = fs;
+                    else if (control is TextBox fstbx && double.TryParse(resolved, out var fsx))
+                        fstbx.FontSize = fsx;
                     break;
                 case "fontweight":
-                    if (control is TextBlock fwTb && Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
-                        fwTb.FontWeight = fw;
+                    if (Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
+                    {
+                        if (control is TextBlock fwTb)
+                            fwTb.FontWeight = fw;
+                        else if (control is TextBox fwTbx)
+                            fwTbx.FontWeight = fw;
+                    }
+                    break;
+                case "fontstyle":
+                    if (Enum.TryParse<Avalonia.Media.FontStyle>(resolved, true, out var fst)
+                        || TryParseFontStyle(resolved, out fst))
+                    {
+                        if (control is TextBlock fsTb)
+                            fsTb.FontStyle = fst;
+                        else if (control is TextBox fsTbx)
+                            fsTbx.FontStyle = fst;
+                    }
+                    break;
+                case "textdecorations":
+                case "textdecoration":
+                    if (control is TextBlock tdTb)
+                        tdTb.TextDecorations = ParseTextDecorations(resolved);
                     break;
                 case "textwrapping":
-                    if (control is TextBlock twTb && Enum.TryParse<Avalonia.Media.TextWrapping>(resolved, true, out var tw))
-                        twTb.TextWrapping = tw;
+                    if (Enum.TryParse<Avalonia.Media.TextWrapping>(resolved, true, out var tw))
+                    {
+                        if (control is TextBlock twTb)
+                            twTb.TextWrapping = tw;
+                        else if (control is TextBox twTbx)
+                            twTbx.TextWrapping = tw;
+                    }
+                    break;
+                case "acceptsreturn":
+                case "multiline":
+                    if (control is TextBox arTbx && bool.TryParse(resolved, out var ar))
+                        arTbx.AcceptsReturn = ar;
+                    break;
+                case "canvas.left":
+                case "canvasleft":
+                case "canvas-left":
+                case "left":
+                    if (double.TryParse(resolved, out var cl))
+                        Avalonia.Controls.Canvas.SetLeft(control, cl);
+                    break;
+                case "canvas.top":
+                case "canvastop":
+                case "canvas-top":
+                case "top":
+                    if (double.TryParse(resolved, out var ct))
+                        Avalonia.Controls.Canvas.SetTop(control, ct);
                     break;
                 // Automation / Accessibility
                 case "accessible-name":
@@ -463,6 +512,46 @@ public sealed class CuiControlLoader
                     Avalonia.Automation.AutomationProperties.SetAutomationId(control, resolved);
                     break;
             }
+    }
+
+    private void ApplyActionTag(Control control, CuiComponent component)
+    {
+        // The parser routes action="Cmd" into CuiComponent.Actions (not Properties),
+        // so honor it here; WireBindingsRecursive dispatches via control.Tag.
+        if (control.Tag is string existing && !string.IsNullOrWhiteSpace(existing))
+            return;
+        if (component.Actions.TryGetValue("action", out var actionRef)
+            && !string.IsNullOrWhiteSpace(actionRef.Name))
+            control.Tag = actionRef.Name;
+    }
+
+    private static bool TryParseFontStyle(string value, out Avalonia.Media.FontStyle result)
+    {
+        result = Avalonia.Media.FontStyle.Normal;
+        if (string.Equals(value, "italic", StringComparison.OrdinalIgnoreCase))
+        {
+            result = Avalonia.Media.FontStyle.Italic;
+            return true;
+        }
+        if (string.Equals(value, "oblique", StringComparison.OrdinalIgnoreCase))
+        {
+            result = Avalonia.Media.FontStyle.Oblique;
+            return true;
+        }
+        if (string.Equals(value, "normal", StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private static Avalonia.Media.TextDecorationCollection? ParseTextDecorations(string value)
+    {
+        if (string.Equals(value, "none", StringComparison.OrdinalIgnoreCase))
+            return null;
+        if (string.Equals(value, "underline", StringComparison.OrdinalIgnoreCase))
+            return Avalonia.Media.TextDecorations.Underline;
+        if (string.Equals(value, "strikethrough", StringComparison.OrdinalIgnoreCase))
+            return Avalonia.Media.TextDecorations.Strikethrough;
+        return null;
     }
 
     private void ApplyClasses(Control control, CuiComponent component)

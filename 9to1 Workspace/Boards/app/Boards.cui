@@ -1,0 +1,142 @@
+<Cui>
+  <Resources>
+    <item key="PrimaryColor" value="#4A6FA5" />
+    <item key="BackgroundColor" value="#F5F5F0" />
+    <item key="TextPrimary" value="#212121" />
+    <item key="TextSecondary" value="#757575" />
+    <item key="CardBackground" value="#FFFFFF" />
+    <item key="AccentColor" value="#FF7043" />
+  </Resources>
+
+  <StackPanel class="BoardsRoot" orientation="Vertical" width="1200" height="800">
+
+    <!-- Library bar: title editing + New/Open/Save/Save As + path/status -->
+    <Border background="{Resource PrimaryColor}" padding="16 12">
+      <StackPanel orientation="Vertical">
+        <StackPanel orientation="Horizontal">
+          <TextBlock text="Boards  |  " font-size="20" font-weight="Bold" foreground="White" vertical-alignment="Center" />
+          <TextBox id="BoardTitleBox" text="{Binding BoardTitle, fallback=Untitled board}" font-size="18" font-weight="SemiBold" width="320" vertical-alignment="Center" />
+          <Button content="New" action="NewBoard" margin="16 0 0 0" />
+          <Button content="Open" action="OpenBoard" margin="8 0 0 0" />
+          <Button content="Save" action="SaveBoard" margin="8 0 0 0" />
+          <Button content="Save As" action="SaveAsBoard" margin="8 0 0 0" />
+        </StackPanel>
+        <StackPanel orientation="Horizontal" margin="0 8 0 0">
+          <TextBlock text="File: " font-size="12" foreground="White" vertical-alignment="Center" />
+          <TextBlock text="{Binding FilePath, fallback=memory://boards/default}" font-size="12" foreground="White" vertical-alignment="Center" />
+          <TextBlock text="   |   Status: " font-size="12" foreground="White" vertical-alignment="Center" />
+          <TextBlock text="{Binding StatusText, fallback=Ready}" font-size="12" font-weight="Bold" foreground="White" vertical-alignment="Center" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Main row: navigation + page editor -->
+    <StackPanel orientation="Horizontal" margin="16 12">
+
+      <!-- Sections/pages navigation -->
+      <StackPanel orientation="Vertical" width="280" margin="0 0 16 0">
+        <TextBlock text="Sections" font-size="16" font-weight="Bold" foreground="{Resource TextPrimary}" margin="0 0 0 4" />
+        <TextBlock text="{Binding SectionListText, fallback=Getting started}" font-size="13" foreground="{Resource TextSecondary}" textwrapping="Wrap" margin="0 0 0 8" />
+        <ListBox>
+          <Button content="Section 1" action="SelectSection1" margin="0 0 0 4" />
+          <Button content="Section 2" action="SelectSection2" margin="0 0 0 4" />
+        </ListBox>
+        <TextBlock text="Pages" font-size="16" font-weight="Bold" foreground="{Resource TextPrimary}" margin="0 12 0 4" />
+        <TextBlock text="{Binding PageListText, fallback=Welcome}" font-size="13" foreground="{Resource TextSecondary}" textwrapping="Wrap" margin="0 0 0 8" />
+        <TreeView>
+          <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="13" />
+        </TreeView>
+        <StackPanel orientation="Horizontal" margin="0 8 0 0">
+          <Button content="Select page 1" action="SelectPage1" margin="0 0 8 0" />
+          <Button content="Select page 2" action="SelectPage2" />
+        </StackPanel>
+        <StackPanel orientation="Horizontal" margin="0 8 0 0">
+          <Button content="Add section" action="AddSection" margin="0 0 8 0" />
+          <Button content="Add page" action="AddPage" />
+        </StackPanel>
+        <TextBlock text="Sections: " font-size="12" foreground="{Resource TextSecondary}" margin="0 8 0 0" />
+        <TextBlock text="{Binding SectionCount, fallback=1}" font-size="12" font-weight="Bold" />
+        <TextBlock text="Pages: " font-size="12" foreground="{Resource TextSecondary}" />
+        <TextBlock text="{Binding PageCount, fallback=1}" font-size="12" font-weight="Bold" />
+      </StackPanel>
+
+      <!-- Page editor -->
+      <ScrollViewer width="860" height="640">
+        <StackPanel orientation="Vertical" margin="0 0 16 0">
+
+          <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="22" font-weight="Bold" foreground="{Resource TextPrimary}" margin="0 0 0 4" />
+
+          <!-- Formatting toolbar: toggles affect the selected block -->
+          <Border background="#E8EDF3" padding="12 8" margin="0 0 0 12">
+            <StackPanel orientation="Horizontal">
+              <TextBlock text="Selected: " font-size="13" vertical-alignment="Center" />
+              <TextBlock text="{Binding SelectedBlockInfo, fallback=No block}" font-size="13" font-weight="SemiBold" vertical-alignment="Center" margin="0 0 12 0" />
+              <Button content="Bold" action="ToggleBold" margin="0 0 8 0" />
+              <Button content="Italic" action="ToggleItalic" margin="0 0 8 0" />
+              <Button content="Underline" action="ToggleUnderline" margin="0 0 8 0" />
+              <TextBlock text="B:" font-size="12" vertical-alignment="Center" margin="8 0 0 0" />
+              <TextBlock text="{Binding BoldState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+              <TextBlock text=" I:" font-size="12" vertical-alignment="Center" />
+              <TextBlock text="{Binding ItalicState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+              <TextBlock text=" U:" font-size="12" vertical-alignment="Center" />
+              <TextBlock text="{Binding UnderlineState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+            </StackPanel>
+          </Border>
+
+          <!-- Heading block -->
+          <TextBlock text="Heading" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
+          <TextBox id="HeadingBox" text="{Binding HeadingText, fallback=Welcome to Boards}" font-size="20" font-weight="Bold" margin="0 4 0 12" />
+
+          <!-- Paragraph block: multiline editing -->
+          <TextBlock text="Paragraph (multiline)" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
+          <TextBox id="ParaBox" text="{Binding ParaText, fallback=Edit this paragraph.}" font-size="14" acceptsreturn="true" textwrapping="Wrap" height="120" margin="0 4 0 12" />
+
+          <!-- Checklist blocks: CheckBox + TextBox rows -->
+          <TextBlock text="Checklist" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
+          <StackPanel orientation="Horizontal" margin="0 4 0 4">
+            <CheckBox id="Check1Done" ischecked="{Binding Check1Done, fallback=False}" vertical-alignment="Center" margin="0 0 8 0" />
+            <TextBox id="Check1Box" text="{Binding Check1Text, fallback=Try the checklist}" font-size="14" width="500" />
+          </StackPanel>
+          <StackPanel orientation="Horizontal" margin="0 4 0 12">
+            <CheckBox id="Check2Done" ischecked="{Binding Check2Done, fallback=False}" vertical-alignment="Center" margin="0 0 8 0" />
+            <TextBox id="Check2Box" text="{Binding Check2Text, fallback=Save the board}" font-size="14" width="500" />
+          </StackPanel>
+
+          <!-- Table block: Grid of TextBox cells -->
+          <TextBlock text="Table" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
+          <Grid column="2" row="2" margin="0 4 0 12">
+            <TextBox id="Cell00" text="{Binding Cell00, fallback=Q1}" grid-column="0" grid-row="0" font-size="14" margin="2" />
+            <TextBox id="Cell01" text="{Binding Cell01, fallback=Q2}" grid-column="1" grid-row="0" font-size="14" margin="2" />
+            <TextBox id="Cell10" text="{Binding Cell10, fallback=Q3}" grid-column="0" grid-row="1" font-size="14" margin="2" />
+            <TextBox id="Cell11" text="{Binding Cell11, fallback=Q4}" grid-column="1" grid-row="1" font-size="14" margin="2" />
+          </Grid>
+
+          <!-- Ink block: Canvas pointer drawing + keyboard fallback -->
+          <TextBlock text="Ink canvas (draw with pointer, or use the keyboard button)" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
+          <Canvas id="InkCanvas" width="600" height="200" background="#FFFFFF" margin="0 4 0 8" />
+          <StackPanel orientation="Horizontal" margin="0 0 0 12">
+            <Button content="Add ink dot (keyboard)" action="AddInkDot" margin="0 0 8 0" />
+            <TextBlock text="{Binding InkSummary, fallback=No ink yet}" font-size="13" vertical-alignment="Center" />
+          </StackPanel>
+
+          <!-- Block management -->
+          <StackPanel orientation="Horizontal">
+            <Button content="Add block" action="AddBlock" margin="0 0 8 0" />
+            <Button content="Add section" action="AddSection" margin="0 0 8 0" />
+            <Button content="Add page" action="AddPage" />
+          </StackPanel>
+
+        </StackPanel>
+      </ScrollViewer>
+    </StackPanel>
+
+    <!-- Status footer -->
+    <Border background="{Resource PrimaryColor}" padding="16 8">
+      <StackPanel orientation="Horizontal">
+        <TextBlock text="Boards CUI runtime  |  " font-size="12" foreground="White" />
+        <TextBlock text="{Binding StatusText, fallback=Ready}" font-size="12" foreground="White" />
+      </StackPanel>
+    </Border>
+
+  </StackPanel>
+</Cui>

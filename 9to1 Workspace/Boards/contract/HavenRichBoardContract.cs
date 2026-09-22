@@ -444,6 +444,79 @@ public static class HavenRichNotesOps
         Touch(notes);
     }
 
+    /// <summary>
+    /// Inserts a fully-formed section preserving caller-supplied stable IDs.
+    /// Used by UI merge paths that already own identity (e.g. CUI editor state).
+    /// </summary>
+    public static HavenRichSection ImportSection(HavenRichNotes notes, string id, string title)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        RequireImportId(id, "Section");
+        if (notes.Sections.Any(s => s.Id == id))
+            throw new InvalidOperationException($"Section '{id}' already exists.");
+        var section = new HavenRichSection
+        {
+            Id = id,
+            Title = string.IsNullOrWhiteSpace(title) ? "Untitled section" : title.Trim(),
+            Pages = []
+        };
+        notes.Sections.Add(section);
+        Touch(notes);
+        return section;
+    }
+
+    /// <summary>Inserts a fully-formed page preserving caller-supplied stable IDs.</summary>
+    public static HavenRichPage ImportPage(HavenRichSection section, string id, string title)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+        RequireImportId(id, "Page");
+        if (section.Pages.Any(p => p.Id == id))
+            throw new InvalidOperationException($"Page '{id}' already exists.");
+        var page = new HavenRichPage
+        {
+            Id = id,
+            Title = string.IsNullOrWhiteSpace(title) ? "Untitled page" : title.Trim(),
+            Order = section.Pages.Count,
+            Blocks = []
+        };
+        section.Pages.Add(page);
+        return page;
+    }
+
+    /// <summary>Inserts a fully-formed block preserving caller-supplied stable IDs.</summary>
+    public static HavenRichBlock ImportBlock(HavenRichPage page, HavenRichBlockKind kind, string id, string? text = null)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        RequireImportId(id, "Block");
+        if (page.Blocks.Any(b => b.Id == id))
+            throw new InvalidOperationException($"Block '{id}' already exists.");
+        var block = new HavenRichBlock { Id = id, Kind = kind, Order = page.Blocks.Count };
+        if (kind == HavenRichBlockKind.Table)
+            block.Table = HavenRichTable.Create(3, 3);
+        if (text is not null)
+            block.PlainText = text;
+        page.Blocks.Add(block);
+        return block;
+    }
+
+    /// <summary>Inserts a list item preserving caller-supplied stable IDs.</summary>
+    public static HavenRichListItem ImportListItem(HavenRichBlock block, string id, string text, bool isChecked)
+    {
+        ArgumentNullException.ThrowIfNull(block);
+        RequireImportId(id, "List item");
+        if (block.Items.Any(i => i.Id == id))
+            throw new InvalidOperationException($"List item '{id}' already exists.");
+        var item = new HavenRichListItem { Id = id, Text = text ?? string.Empty, Checked = isChecked };
+        block.Items.Add(item);
+        return item;
+    }
+
+    private static void RequireImportId(string value, string label)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length > 128)
+            throw new InvalidOperationException($"{label} ID must contain 1 to 128 characters.");
+    }
+
     private static bool HasStyle(HavenRichTextRun run) =>
         run.Bold || run.Italic || run.Underline || run.StrikeThrough;
 
@@ -474,6 +547,13 @@ public static class HavenRichNotesOps
     }
 
     private static void Touch(HavenRichNotes notes) => notes.Version = checked(notes.Version + 1);
+
+    /// <summary>Advances the monotonic revision after direct structural imports.</summary>
+    public static void TouchNotes(HavenRichNotes notes)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        Touch(notes);
+    }
 }
 
 /// <summary>
