@@ -160,15 +160,23 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
     public async ValueTask DisposeAsync()
     {
         bool flush;
+        string? snapshot;
         lock (_gate)
         {
             flush = _dirty && !_disposed;
+            snapshot = flush ? JsonSerializer.Serialize(Document, JsonOptions) : null;
             _disposed = true;
         }
         _autosaveTimer.Change(Timeout.Infinite, Timeout.Infinite);
-        if (flush)
-            await SaveAsync();
+        // Flush directly (not via SaveAsync: this instance is already disposed).
+        if (flush && snapshot is not null)
+        {
+            Store[FilePath ?? "memory://boards/default"] = snapshot;
+            lock (_gate) _dirty = false;
+            SetStatus($"Saved {DateTime.Now:HH:mm:ss}");
+        }
         _autosaveTimer.Dispose();
+        await Task.CompletedTask;
     }
 
     private async Task AutosaveTickAsync()

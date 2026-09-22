@@ -15,7 +15,7 @@
       <StackPanel orientation="Vertical">
         <StackPanel orientation="Horizontal">
           <TextBlock text="Boards  |  " font-size="20" font-weight="Bold" foreground="White" vertical-alignment="Center" />
-          <TextBox id="BoardTitleBox" text="{Binding BoardTitle, fallback=Untitled board}" font-size="18" font-weight="SemiBold" width="320" vertical-alignment="Center" />
+          <TextBox id="BoardTitleBox" automationid="BoardTitleBox" accessible-name="Board title" text="{Binding BoardTitle, fallback=Untitled board}" font-size="18" font-weight="SemiBold" width="320" vertical-alignment="Center" />
           <Button content="New" action="NewBoard" margin="16 0 0 0" />
           <Button content="Open" action="OpenBoard" margin="8 0 0 0" />
           <Button content="Save" action="SaveBoard" margin="8 0 0 0" />
@@ -68,59 +68,57 @@
 
           <!-- Formatting toolbar: toggles affect the selected block -->
           <Border background="#E8EDF3" padding="12 8" margin="0 0 0 12">
-            <StackPanel orientation="Horizontal">
-              <TextBlock text="Selected: " font-size="13" vertical-alignment="Center" />
-              <TextBlock text="{Binding SelectedBlockInfo, fallback=No block}" font-size="13" font-weight="SemiBold" vertical-alignment="Center" margin="0 0 12 0" />
-              <Button content="Bold" action="ToggleBold" margin="0 0 8 0" />
-              <Button content="Italic" action="ToggleItalic" margin="0 0 8 0" />
-              <Button content="Underline" action="ToggleUnderline" margin="0 0 8 0" />
-              <TextBlock text="B:" font-size="12" vertical-alignment="Center" margin="8 0 0 0" />
-              <TextBlock text="{Binding BoldState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
-              <TextBlock text=" I:" font-size="12" vertical-alignment="Center" />
-              <TextBlock text="{Binding ItalicState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
-              <TextBlock text=" U:" font-size="12" vertical-alignment="Center" />
-              <TextBlock text="{Binding UnderlineState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+            <StackPanel orientation="Vertical">
+              <StackPanel orientation="Horizontal">
+                <TextBlock text="Selected: " font-size="13" vertical-alignment="Center" />
+                <TextBlock text="{Binding SelectedBlockInfo, fallback=No block}" font-size="13" font-weight="SemiBold" vertical-alignment="Center" margin="0 0 12 0" />
+                <Button content="Undo" action="Undo" accessible-name="Undo the last edit" margin="0 0 8 0" />
+                <Button content="Redo" action="Redo" accessible-name="Redo the undone edit" margin="0 0 8 0" />
+              </StackPanel>
+              <StackPanel orientation="Horizontal" margin="0 8 0 0">
+                <Button content="Bold" action="ToggleBold" margin="0 0 8 0" />
+                <Button content="Italic" action="ToggleItalic" margin="0 0 8 0" />
+                <Button content="Underline" action="ToggleUnderline" margin="0 0 8 0" />
+                <Button content="Strike" action="ToggleStrike" accessible-name="Toggle strikethrough on the selected block" margin="0 0 8 0" />
+                <Button content="Sub" action="ToggleSub" accessible-name="Toggle subscript on the selected block" margin="0 0 8 0" />
+                <Button content="Sup" action="ToggleSup" accessible-name="Toggle superscript on the selected block" margin="0 0 8 0" />
+                <Button content="Clear" action="ClearFormat" accessible-name="Clear direct formatting on the selected block" margin="0 0 8 0" />
+              </StackPanel>
+              <StackPanel orientation="Horizontal" margin="0 8 0 0">
+                <Button content="A+" action="FontBigger" accessible-name="Increase font size" margin="0 0 8 0" />
+                <Button content="A-" action="FontSmaller" accessible-name="Decrease font size" margin="0 0 8 0" />
+                <Button content="L" action="AlignLeft" accessible-name="Align left" margin="0 0 8 0" />
+                <Button content="C" action="AlignCenter" accessible-name="Align center" margin="0 0 8 0" />
+                <Button content="R" action="AlignRight" accessible-name="Align right" margin="0 0 8 0" />
+                <Button content="J" action="AlignJustify" accessible-name="Justify text" margin="0 0 8 0" />
+                <Button content="Ind-" action="IndentDec" accessible-name="Decrease indent" margin="0 0 8 0" />
+                <Button content="Ind+" action="IndentInc" accessible-name="Increase indent" margin="0 0 0 0" />
+              </StackPanel>
+              <StackPanel orientation="Horizontal" margin="0 8 0 0">
+                <ComboBox id="StyleBox" automationid="StyleBox" accessible-name="Block style" width="220" margin="0 0 8 0" />
+                <Button content="Styles…" action="ManageStyles" accessible-name="Open the style editor" margin="0 0 8 0" />
+                <TextBlock text="B:" font-size="12" vertical-alignment="Center" margin="8 0 0 0" />
+                <TextBlock text="{Binding BoldState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+                <TextBlock text=" I:" font-size="12" vertical-alignment="Center" />
+                <TextBlock text="{Binding ItalicState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+                <TextBlock text=" U:" font-size="12" vertical-alignment="Center" />
+                <TextBlock text="{Binding UnderlineState, fallback=Off}" font-size="12" font-weight="Bold" vertical-alignment="Center" />
+              </StackPanel>
             </StackPanel>
           </Border>
 
-          <!-- Heading block -->
-          <TextBlock text="Heading" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
-          <TextBox id="HeadingBox" text="{Binding HeadingText, fallback=Welcome to Boards}" font-size="20" font-weight="Bold" margin="0 4 0 12" />
-
-          <!-- Paragraph block: multiline editing -->
-          <TextBlock text="Paragraph (multiline)" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
-          <TextBox id="ParaBox" text="{Binding ParaText, fallback=Edit this paragraph.}" font-size="14" acceptsreturn="true" textwrapping="Wrap" height="120" margin="0 4 0 12" />
-
-          <!-- Checklist blocks: CheckBox + TextBox rows -->
-          <TextBlock text="Checklist" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
-          <StackPanel orientation="Horizontal" margin="0 4 0 4">
-            <CheckBox id="Check1Done" ischecked="{Binding Check1Done, fallback=False}" vertical-alignment="Center" margin="0 0 8 0" />
-            <TextBox id="Check1Box" text="{Binding Check1Text, fallback=Try the checklist}" font-size="14" width="500" />
-          </StackPanel>
-          <StackPanel orientation="Horizontal" margin="0 4 0 12">
-            <CheckBox id="Check2Done" ischecked="{Binding Check2Done, fallback=False}" vertical-alignment="Center" margin="0 0 8 0" />
-            <TextBox id="Check2Box" text="{Binding Check2Text, fallback=Save the board}" font-size="14" width="500" />
-          </StackPanel>
-
-          <!-- Table block: Grid of TextBox cells -->
-          <TextBlock text="Table" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
-          <Grid column="2" row="2" margin="0 4 0 12">
-            <TextBox id="Cell00" text="{Binding Cell00, fallback=Q1}" grid-column="0" grid-row="0" font-size="14" margin="2" />
-            <TextBox id="Cell01" text="{Binding Cell01, fallback=Q2}" grid-column="1" grid-row="0" font-size="14" margin="2" />
-            <TextBox id="Cell10" text="{Binding Cell10, fallback=Q3}" grid-column="0" grid-row="1" font-size="14" margin="2" />
-            <TextBox id="Cell11" text="{Binding Cell11, fallback=Q4}" grid-column="1" grid-row="1" font-size="14" margin="2" />
-          </Grid>
-
-          <!-- Ink block: Canvas pointer drawing + keyboard fallback -->
-          <TextBlock text="Ink canvas (draw with pointer, or use the keyboard button)" font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" />
-          <Canvas id="InkCanvas" width="600" height="200" background="#FFFFFF" margin="0 4 0 8" />
+          <!-- Insert row: block kinds + style names (filled in code) -->
           <StackPanel orientation="Horizontal" margin="0 0 0 12">
-            <Button content="Add ink dot (keyboard)" action="AddInkDot" margin="0 0 8 0" />
-            <TextBlock text="{Binding InkSummary, fallback=No ink yet}" font-size="13" vertical-alignment="Center" />
+            <TextBlock text="Insert: " font-size="13" font-weight="SemiBold" foreground="{Resource TextSecondary}" vertical-alignment="Center" margin="0 0 8 0" />
+            <ComboBox id="AddKindBox" automationid="AddKindBox" accessible-name="Block kind to insert" width="260" margin="0 0 8 0" />
+            <Button id="AddBlockKind" automationid="AddBlockKind" accessible-name="Insert the selected block kind" content="Insert" />
           </StackPanel>
+
+          <!-- Dynamic per-block editors (built in code by BlockRenderer) -->
+          <StackPanel id="BlocksHost" automationid="BlocksHost" accessible-name="Page blocks" orientation="Vertical" />
 
           <!-- Block management -->
-          <StackPanel orientation="Horizontal">
+          <StackPanel orientation="Horizontal" margin="12 0 0 0">
             <Button content="Add block" action="AddBlock" margin="0 0 8 0" />
             <Button content="Add section" action="AddSection" margin="0 0 8 0" />
             <Button content="Add page" action="AddPage" />

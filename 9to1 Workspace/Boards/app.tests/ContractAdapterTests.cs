@@ -160,13 +160,58 @@ public sealed class ContractAdapterTests
         }
     }
 
+    [Fact]
+    public async Task Adapter_eraser_hit_test_removes_only_nearby_strokes()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "eraser.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                await adapter.CommitInkStrokeAsync([(10, 10), (20, 20)]);
+                await adapter.CommitInkStrokeAsync([(400, 400), (410, 410)]);
+                Assert.Equal(0, await adapter.EraseInkAtCurrentPageAsync(200, 200, 5));
+                Assert.Equal(1, await adapter.EraseInkAtCurrentPageAsync(12, 12, 12));
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var ink = reopened.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "ink");
+            Assert.Equal(1, ink.InkStrokeCount);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task InMemory_dispose_flushes_pending_edits_without_save_call()
+    {
+        InMemoryRichBoardSession.ClearStore();
+        const string path = "memory://boards/dispose-flush-test";
+        await using (var session = new InMemoryRichBoardSession())
+        {
+            await session.OpenAsync(path);
+            session.Document.Title = "Flushed on close";
+            session.MarkDirty();
+            // No explicit SaveAsync: DisposeAsync must still persist.
+        }
+
+        await using var reopened = new InMemoryRichBoardSession();
+        await reopened.OpenAsync(path);
+        Assert.Equal("Flushed on close", reopened.Document.Title);
+    }
+
     private static string TempDirectory()
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-adapter-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         return root;
     }
-
     private static void DeleteDirectory(string root)
     {
         try { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); }

@@ -1,5 +1,21 @@
 # Haven Boards evidence ledger
 
+## RC2 (revision editor: schema v3, styles, graphs, tables, undo)
+
+- `.9to1board` schema v3 (backwards-compatible additive facet: run baseline/font/colors, paragraph props, styles catalog, table/cell styling + structure, image/divider/graph blocks, ink tools/pressure/selection/view, attachment size/sidecar): **IMPLEMENTED, BUILT, TESTED**.
+- v0/v1/v2 → v3 in-memory upgrade (style seeding incl. `heading-1` compat, unknown-style repair to Paragraph, RC1 ink/table/checklist/canvas/attachment preservation; original bytes untouched until save): **IMPLEMENTED, TESTED**.
+- Custom + built-in style system (8 built-ins; create/edit/duplicate/delete with fallback; resolver precedence direct-over-style; document-local persistence): **IMPLEMENTED, BUILT, TESTED**.
+- Graph blocks (deterministic local evaluator ported from in-repo GenUI plot parser + implicit multiplication + `y=` handling + domain restrictions; expressions/viewport/grid/points persist as data): **IMPLEMENTED, BUILT, TESTED**.
+- Tables (insert/delete rows/columns, column widths, per-cell alignment/background/foreground/formatting, table borders/corners/alternating style, formatted cell runs): **IMPLEMENTED, BUILT, TESTED**. Merge/split cells: **DEFERRED** (rectangularity invariant risk).
+- Dynamic checklist editing (arbitrary item counts, add/remove/nest/format, Enter/Backspace behaviors): **IMPLEMENTED, TESTED**.
+- Images (insert/render/resize/align/alt/replace/remove) and dividers (thickness/style/color): **IMPLEMENTED, TESTED**.
+- Attachments: embed ≤24 MB, portable sibling `.files/` sidecar beyond that (relative resolution, honest Missing), 512 MB cap: **IMPLEMENTED, TESTED** (6 MB embed + 26 MB sidecar/move/missing).
+- Session undo/redo (bounded history, autosave persists undone state): **IMPLEMENTED, TESTED**.
+- Rnote engine linkage: **NOT LINKED** (Rust PoC has no .NET surface/binary); ink model is Rnote-shaped (pen/highlighter/eraser/selector tools, per-point pressure incl. pointer capture, selection, eraser hit-test, pan/zoom view, history undo) with RC1 stroke migration: **IMPLEMENTED, TESTED**.
+- CUI editor exposes all of the above via dynamic block rendering, Add menu with styles, style editor, table/graph panels, keyboard shortcuts: **IMPLEMENTED, BUILT, TESTED, LAUNCHED**.
+- Subject acceptance (Maths/Law/CS save→reopen), update-safety (v2→v3), perf sanity (8 sections/50 pages): **TESTED**.
+- Release build + Release launch: **(final numbers below)**.
+
 ## RC1 (9-1 Boards, .9to1board schema v2 + CUI app)
 
 - `.9to1board` schema v2 envelope (`format 9to1.board`, stable `documentId`, `createdUtc`/`modifiedUtc`, task-snapshot facet + rich-notes facet): **IMPLEMENTED, BUILT, TESTED**.

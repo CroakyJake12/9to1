@@ -219,6 +219,29 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     }
 
     /// <summary>Keyboard/non-pointer fallback: appends a small but real ink stroke.</summary>
+    public async ValueTask<int> EraseInkAtCurrentPageAsync(
+        double x, double y, double radius = 12, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            var removed = 0;
+            await _real.MutateAsync(rich =>
+                removed = HavenRichNotesOps.EraseInkAt(rich, page.Id, x, y, radius),
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return removed;
+        }
+        finally
+        {
+            _mergeGate.Release();
+        }
+    }
+
+    /// <summary>Keyboard/non-pointer fallback: appends a small but real ink stroke.</summary>
     public async ValueTask AddSampleInkStrokeAsync(CancellationToken cancellationToken = default)
     {
         var random = new Random();
@@ -329,6 +352,319 @@ public sealed class ContractSessionAdapter : IRichBoardSession
 
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 
+    // ----- Additive UI wrappers (permitted single exception: see task brief) -----
+    // These delegate straight to the tested contract ops via _real.MutateAsync with
+    // the same merge-first/refresh discipline as UndoAsync. They exist because
+    // deletions, style catalog edits, canvas objects and ink clearing cannot
+    // round-trip through the view-document merge (which only adds/updates).
+
+    public async ValueTask<string> CreateCustomStyleAsync(string name, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.CreateCustomStyle(rich, name).Id, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask UpdateStyleAsync(string styleId, Action<HavenRichStyle> update, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(update);
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.UpdateStyle(rich, styleId, update), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask DeleteCustomStyleAsync(string styleId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.DeleteCustomStyle(rich, styleId), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<string> DuplicateStyleAsync(string styleId, string? newName = null, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.DuplicateStyle(rich, styleId, newName).Id, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>
+    /// Deletes a view block: checklist item ids ("parentId:itemId") remove one
+    /// item, ink ids clear page ink, anything else removes the contract block.
+    /// </summary>
+    public async ValueTask<bool> DeleteViewBlockAsync(string pageId, string viewBlockId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var removed = false;
+            await _real.MutateAsync(rich =>
+            {
+                var page = rich.Sections.SelectMany(s => s.Pages).FirstOrDefault(p => p.Id == pageId)
+                    ?? throw new KeyNotFoundException("Page was not found.");
+                if (viewBlockId == $"{page.Id}:ink" || viewBlockId.EndsWith(":ink", StringComparison.Ordinal))
+                {
+                    if (page.Ink.Count > 0) { HavenRichNotesOps.ClearInk(rich, page.Id); removed = true; }
+                    return;
+                }
+                var colon = viewBlockId.IndexOf(':');
+                if (colon > 0)
+                {
+                    var parentId = viewBlockId[..colon];
+                    var itemId = viewBlockId[(colon + 1)..];
+                    removed = HavenRichNotesOps.RemoveListItem(rich, page.Id, parentId, itemId);
+                    return;
+                }
+                removed = HavenRichNotesOps.RemoveBlock(rich, page.Id, viewBlockId);
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return removed;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Appends one checklist item to a specific parent list block.</summary>
+    public async ValueTask<string> AddChecklistItemAsync(
+        string pageId, string parentBlockId, string text, bool isChecked = false,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            string itemId = string.Empty;
+            await _real.MutateAsync(rich =>
+            {
+                var page = rich.Sections.SelectMany(s => s.Pages).FirstOrDefault(p => p.Id == pageId)
+                    ?? throw new KeyNotFoundException("Page was not found.");
+                var parent = page.Blocks.FirstOrDefault(b => b.Id == parentBlockId)
+                    ?? throw new KeyNotFoundException("List block was not found.");
+                do { itemId = "item-" + Guid.NewGuid().ToString("N")[..12]; }
+                while (parent.Items.Any(i => i.Id == itemId));
+                HavenRichNotesOps.ImportListItem(parent, itemId, text, isChecked);
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return itemId;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask DetachAttachmentAsync(string pageId, string blockId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.RemoveAttachmentFromBlock(rich, pageId, blockId), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask ClearInkAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.ClearInk(rich, page.Id), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<bool> RemoveLastInkStrokeAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            var removed = false;
+            await _real.MutateAsync(rich =>
+            {
+                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
+                if (target.Ink.Count > 0)
+                    removed = HavenRichNotesOps.RemoveInkStroke(rich, target.Id, target.Ink.Count - 1);
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return removed;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    /// <summary>Pointer-drawn stroke with the selected tool/width/color/pressure.</summary>
+    public async ValueTask CommitInkStrokeAsync(
+        IReadOnlyList<(double X, double Y, double Pressure)> points,
+        double width, string color, string toolName,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(points);
+        if (points.Count == 0)
+            return;
+        if (!Enum.TryParse<HavenRichInkTool>(toolName, ignoreCase: true, out var tool))
+            tool = HavenRichInkTool.Pen;
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            await _real.MutateAsync(rich =>
+            {
+                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
+                HavenRichNotesOps.AddInkStroke(rich, target.Id, new HavenRichInkStroke
+                {
+                    Points = points.Select(p => new HavenRichInkPoint
+                    {
+                        X = p.X, Y = p.Y,
+                        Pressure = double.IsFinite(p.Pressure) && p.Pressure > 0 ? Math.Clamp(p.Pressure, 0.05, 1) : 0.5
+                    }).ToList(),
+                    Width = Math.Clamp(width, 0.5, 64),
+                    Color = string.IsNullOrWhiteSpace(color) ? "#FF111111" : color.Trim(),
+                    Tool = tool
+                });
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask SetInkViewAsync(double panX, double panY, double zoom, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            await _real.MutateAsync(rich =>
+                HavenRichNotesOps.SetInkView(rich, page.Id, panX, panY, zoom), cancellationToken).ConfigureAwait(false);
+            RefreshView();
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public Task<IReadOnlyList<CanvasBoxView>> GetCanvasObjectsAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        var page = CurrentContractPage();
+        IReadOnlyList<CanvasBoxView> boxes = page.Canvas.Select(o => new CanvasBoxView
+        {
+            Id = o.Id, Kind = o.Kind, Text = o.Text,
+            X = o.X, Y = o.Y, Width = o.Width, Height = o.Height
+        }).ToArray();
+        return Task.FromResult(boxes);
+    }
+
+    public async ValueTask<string> AddCanvasObjectAsync(
+        string kind, string? text, double x, double y,
+        double width = 260, double height = 160, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            string id = string.Empty;
+            await _real.MutateAsync(rich =>
+                id = HavenRichNotesOps.AddCanvasObject(rich, page.Id, kind, text, x, y, width, height).Id,
+                cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return id;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<bool> MoveCanvasObjectAsync(string objectId, double x, double y, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            var moved = false;
+            await _real.MutateAsync(rich =>
+            {
+                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
+                var box = target.Canvas.FirstOrDefault(o => o.Id == objectId);
+                if (box is not null)
+                {
+                    box.X = Math.Max(0, x);
+                    box.Y = Math.Max(0, y);
+                    target.CanvasWidth = Math.Max(target.CanvasWidth, box.X + box.Width + 40);
+                    target.CanvasHeight = Math.Max(target.CanvasHeight, box.Y + box.Height + 40);
+                    moved = true;
+                }
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return moved;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
+    public async ValueTask<bool> RemoveCanvasObjectAsync(string objectId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
+            var page = CurrentContractPage();
+            var removed = false;
+            await _real.MutateAsync(rich =>
+            {
+                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
+                removed = target.Canvas.RemoveAll(o => o.Id == objectId) > 0;
+            }, cancellationToken).ConfigureAwait(false);
+            RefreshView();
+            return removed;
+        }
+        finally { _mergeGate.Release(); }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
@@ -346,4 +682,16 @@ public sealed class ContractSessionAdapter : IRichBoardSession
             _mergeGate.Dispose();
         }
     }
+}
+
+/// <summary>Freeform canvas box surfaced to the CUI editor (read model only).</summary>
+public sealed class CanvasBoxView
+{
+    public string Id { get; set; } = string.Empty;
+    public string Kind { get; set; } = "Text";
+    public string Text { get; set; } = string.Empty;
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Width { get; set; } = 260;
+    public double Height { get; set; } = 160;
 }
