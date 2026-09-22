@@ -42,8 +42,6 @@
     <Border automationid="FooterBar" grid-row="2" grid-column="0" grid-columnspan="2" padding="12 6">
       <StackPanel orientation="Horizontal">
         <TextBlock text="{Binding SaveStateText, fallback=Saved}" font-size="12" font-weight="SemiBold" vertical-alignment="Center" />
-        <TextBlock text="·" font-size="12" vertical-alignment="Center" margin="8 0" />
-        <TextBlock text="{Binding StatusText, fallback=Ready}" font-size="12" vertical-alignment="Center" />
       </StackPanel>
     </Border>
 

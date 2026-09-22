@@ -82,7 +82,8 @@ public sealed class VisualCaptureTests
             var left = FindByAutomationId<StackPanel>(root, "TopBarLeft");
             var right = FindByAutomationId<StackPanel>(root, "TopBarRight");
             if (left is not null && right is not null)
-                ShellChrome.BuildTopBar(left, right, viewModel, onFileMenu: () => { }, onOverflow: () => { }, onTheme: () => { }, onSaveState: _ => { });
+                ShellChrome.BuildTopBar(left, right, viewModel, onFileMenu: () => { }, onOverflow: () => { }, onTheme: () => { },
+                    onSaveState: state => state.Text = viewModel.Get("SaveStateText")?.ToString() ?? "Saved");
             var nav = FindByAutomationId<StackPanel>(root, "NavHost");
             if (nav is not null)
                 NavBuilder.Rebuild(nav, viewModel);

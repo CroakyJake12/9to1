@@ -45,6 +45,14 @@ public static class BlockRenderer
         while (index < blocks.Count)
         {
             var block = blocks[index];
+            // BoardProjection always supplies a virtual ink surface for a page.
+            // Keep actual strokes visible, but do not turn every ordinary note
+            // into a large empty drawing panel until Draw is chosen.
+            if (block.Kind == "ink" && block.InkStrokeCount == 0 && !vm.IsDrawMode)
+            {
+                index++;
+                continue;
+            }
             if (IsListKind(block.Kind))
             {
                 var run = new List<RichBoardBlock>();
@@ -88,9 +96,17 @@ public static class BlockRenderer
     /// <summary>Subtle selection outline: transparent until selected, then an accent bar.</summary>
     private static Control WithSelection(BoardsViewModel vm, string selectId, Control inner)    {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
+        var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        var insert = ToolbarBuilder.CreateInsertButton(vm, "Insert a block after this note");
+        insert.Margin = new Thickness(0, 2, 4, 0);
+        insert.Opacity = selected ? 1 : 0.65;
+        Grid.SetColumn(insert, 0);
+        Grid.SetColumn(inner, 1);
+        row.Children.Add(insert);
+        row.Children.Add(inner);
         var border = new Border
         {
-            Child = inner,
+            Child = row,
             BorderThickness = new Thickness(3, 0, 0, 0),
             BorderBrush = selected ? BoardsTheme.AccentBrush : Brushes.Transparent,
             Padding = new Thickness(9, 2, 0, 2),

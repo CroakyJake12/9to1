@@ -325,6 +325,26 @@ public sealed class BoardsVisualTests
     }
 
     [Fact]
+    public void Authored_light_highlights_keep_dark_text_in_dark_appearance()
+    {
+        TestUiThread.Run(() =>
+        {
+            var prior = BoardsTheme.Mode;
+            try
+            {
+                BoardsTheme.SetMode(BoardsThemeMode.Dark);
+                var foreground = Assert.IsType<Avalonia.Media.SolidColorBrush>(
+                    BoardsTheme.ContrastText("#FFFFF3C4"));
+                Assert.Equal(Avalonia.Media.Color.Parse("#FF212121"), foreground.Color);
+            }
+            finally
+            {
+                BoardsTheme.SetMode(prior);
+            }
+        });
+    }
+
+    [Fact]
     public async Task Selection_state_tracks_focus()
     {
         var vm = MemoryModel(out var session);

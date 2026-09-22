@@ -40,6 +40,12 @@ public static class ToolbarBuilder
         host.Children.Clear();
 
         var bar = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(12, 8, 12, 8) };
+        if (vm.IsDrawMode)
+        {
+            BuildDrawToolbar(bar, vm);
+            host.Children.Add(bar);
+            return;
+        }
         bar.Children.Add(BuildStyleGallery(vm));
         bar.Children.Add(Separator());
         var selected = vm.FindBlock(vm.SelectedBlockId);
@@ -69,7 +75,8 @@ public static class ToolbarBuilder
         bar.Children.Add(IndentButton(vm, "−", "Decrease indent", () => vm.ShiftSelectedIndent(-1)));
         bar.Children.Add(IndentButton(vm, "+", "Increase indent", () => vm.ShiftSelectedIndent(1)));
         bar.Children.Add(Separator());
-        bar.Children.Add(InsertButton(vm));
+        bar.Children.Add(DrawButton(vm));
+        bar.Children.Add(CreateInsertButton(vm));
         host.Children.Add(bar);
     }
 
@@ -273,9 +280,31 @@ public static class ToolbarBuilder
         return combo;
     }
 
-    private static Control InsertButton(BoardsViewModel vm)
+    private static Control DrawButton(BoardsViewModel vm)
     {
-        var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", "Insert a block (grouped menu with search)");
+        var button = new ToggleButton
+        {
+            Content = BoardsIcons.Glyph(BoardsIcons.Ink, 16, "Draw"),
+            IsChecked = vm.IsDrawMode,
+            Padding = new Thickness(8, 6),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+        };
+        ToolTip.SetTip(button, "Draw — show pen, highlighter, eraser and colour tools");
+        Avalonia.Automation.AutomationProperties.SetName(button, "Draw");
+        button.Click += async (_, _) =>
+        {
+            if (vm.IsDrawMode)
+                vm.ExitDrawingMode();
+            else
+                await vm.ActivateDrawingAsync();
+        };
+        return button;
+    }
+
+    public static Control CreateInsertButton(BoardsViewModel vm, string? tooltip = null)
+    {
+        var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
         var panel = new StackPanel { Orientation = Orientation.Vertical, MinWidth = 260 };
         var search = new TextBox { PlaceholderText = "Search blocks and styles…", Margin = new Thickness(0, 0, 0, 8) };
@@ -297,7 +326,8 @@ public static class ToolbarBuilder
                 ("Checklist", "checklist"), ("Bulleted list", "bulleted"), ("Numbered list", "numbered"),
                 ("Table", "table"), ("Graph", "graph"), ("Image…", "image"), ("Attachment…", "attachment"),
             ], vm, popup, filter);
-            AddGroup(list, "Canvas", [("Drawing / Ink", "ink"), ("Freeform box", "freeform")], vm, popup, filter);
+            AddGroup(list, "Drawing", [("Drawing", "ink"), ("Freeform box", "freeform")], vm, popup, filter);
+            AddGroup(list, "Document types", [("Canvas document — coming soon", "")], vm, popup, filter);
             AddGroup(list, "Other", [("Divider", "divider")], vm, popup, filter);
         }
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
@@ -350,13 +380,92 @@ public static class ToolbarBuilder
                 Padding = new Thickness(8, 6),
             };
             Avalonia.Automation.AutomationProperties.SetName(item, "Insert " + label);
+            if (string.IsNullOrEmpty(tag))
+            {
+                item.IsEnabled = false;
+                ToolTip.SetTip(item, "Canvas documents are reserved for the future Canvas workspace");
+            }
             item.Click += (_, _) =>
             {
+                if (string.IsNullOrEmpty(tag))
+                    return;
                 popup.Close();
                 _ = vm.InsertKindAsync(tag);
             };
             list.Children.Add(item);
         }
+    }
+
+    private static void BuildDrawToolbar(WrapPanel bar, BoardsViewModel vm)
+    {
+        bar.Children.Add(DrawButton(vm));
+        bar.Children.Add(Separator());
+        foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
+        {
+            var button = new ToggleButton
+            {
+                Content = tool,
+                IsChecked = string.Equals(vm.InkTool, tool, StringComparison.OrdinalIgnoreCase),
+                Padding = new Thickness(8, 6),
+                Margin = new Thickness(1, 0),
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+            };
+            ToolTip.SetTip(button, tool + " drawing tool");
+            Avalonia.Automation.AutomationProperties.SetName(button, tool + " drawing tool");
+            button.Click += (_, _) => vm.SetInkTool(tool);
+            bar.Children.Add(button);
+        }
+        bar.Children.Add(Separator());
+        foreach (var (name, hex) in new[]
+        {
+            ("Black", "#FF111111"), ("Blue", "#FF1A73E8"), ("Red", "#FFD32F2F"),
+            ("Green", "#FF1E8E3E"), ("Orange", "#FFE8710A"), ("Purple", "#FF9334E6")
+        })
+        {
+            var swatch = new Button
+            {
+                Width = 24, Height = 24, Padding = new Thickness(0), Margin = new Thickness(2, 0),
+                Background = BoardsTheme.Brush(hex), BorderBrush = BoardsTheme.BorderBrush,
+                BorderThickness = new Thickness(string.Equals(vm.InkColor, hex, StringComparison.OrdinalIgnoreCase) ? 3 : 1),
+                CornerRadius = new CornerRadius(12), VerticalAlignment = VerticalAlignment.Center,
+            };
+            ToolTip.SetTip(swatch, name + " ink");
+            Avalonia.Automation.AutomationProperties.SetName(swatch, name + " ink");
+            swatch.Click += (_, _) => vm.SetInkColor(hex);
+            bar.Children.Add(swatch);
+        }
+        bar.Children.Add(Separator());
+        foreach (var width in new[] { 2d, 4d, 8d, 12d })
+        {
+            var stroke = new ToggleButton
+            {
+                Content = width.ToString("0") + " px", IsChecked = Math.Abs(vm.InkWidth - width) < 0.01,
+                Padding = new Thickness(7, 6), Margin = new Thickness(1, 0),
+                Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+            };
+            ToolTip.SetTip(stroke, "Stroke width " + width.ToString("0"));
+            Avalonia.Automation.AutomationProperties.SetName(stroke, "Stroke width " + width.ToString("0"));
+            stroke.Click += (_, _) => vm.SetInkWidth(width);
+            bar.Children.Add(stroke);
+        }
+        bar.Children.Add(Separator());
+        var undo = BoardsIcons.IconButton(BoardsIcons.Undo, "Undo drawing", "Undo the last drawing action");
+        undo.Click += async (_, _) => await vm.DispatchAsync("Undo", null);
+        var redo = BoardsIcons.IconButton(BoardsIcons.Redo, "Redo drawing", "Redo the last drawing action");
+        redo.Click += async (_, _) => await vm.DispatchAsync("Redo", null);
+        bar.Children.Add(undo);
+        bar.Children.Add(redo);
+        var zoomOut = new Button { Content = "Zoom −", Padding = new Thickness(7, 6), Margin = new Thickness(2, 0) };
+        ToolTip.SetTip(zoomOut, "Zoom drawing out");
+        Avalonia.Automation.AutomationProperties.SetName(zoomOut, "Zoom drawing out");
+        zoomOut.Click += async (_, _) => await vm.SetInkZoomAsync(vm.InkZoom / 1.25);
+        var reset = new Button { Content = "Reset view", Padding = new Thickness(7, 6), Margin = new Thickness(2, 0) };
+        ToolTip.SetTip(reset, "Reset drawing view");
+        Avalonia.Automation.AutomationProperties.SetName(reset, "Reset drawing view");
+        reset.Click += async (_, _) => await vm.ResetInkViewAsync();
+        bar.Children.Add(zoomOut);
+        bar.Children.Add(reset);
     }
 }
 

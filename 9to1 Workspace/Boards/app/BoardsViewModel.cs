@@ -75,6 +75,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     public string InkTool { get; set; } = "Pen";
     public double InkWidth { get; set; } = 2.5;
     public string InkColor { get; set; } = "#FF111111";
+    public bool IsDrawMode { get; private set; }
     public double InkZoom { get; set; } = 1;
     public double InkPanX { get; set; }
     public double InkPanY { get; set; }
@@ -1115,6 +1116,14 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
 
     public async Task InsertKindAsync(string kindTag)
     {
+        // Drawing is a page capability, not a hidden placeholder block. The
+        // renderer provides its surface only while drawing is active or real
+        // strokes already exist, so an empty page does not acquire dead space.
+        if (string.Equals(kindTag, "ink", StringComparison.OrdinalIgnoreCase))
+        {
+            await ActivateDrawingAsync();
+            return;
+        }
         if (kindTag.StartsWith("style:", StringComparison.Ordinal))
         {
             await ApplyStyleToSelectedAsync(kindTag["style:".Length..]);
@@ -1157,7 +1166,11 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             },
             _ => new RichBoardBlock { Kind = "paragraph", Text = "New block" },
         };
-        page.Blocks.Add(block);
+        var selectedIndex = page.Blocks.FindIndex(item => item.Id == _selectedBlockId);
+        if (selectedIndex >= 0)
+            page.Blocks.Insert(selectedIndex + 1, block);
+        else
+            page.Blocks.Add(block);
         _selectedBlockId = block.Id;
         PushDocumentToBindings();
         _session.MarkDirty();
@@ -1168,8 +1181,6 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             await ReplaceImageAsync(block.Id);
         else if (kindTag == "attachment")
             await AttachFileAsync(block.Id);
-        else if (kindTag == "ink")
-            AddInkStroke();
         else if (kindTag == "freeform")
             await AddCanvasBoxAsync();
     }
@@ -1620,6 +1631,26 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     {
         InkTool = tool;
         Set("StatusText", $"Ink tool: {tool}");
+        RequestRebuild();
+    }
+
+    /// <summary>Turns the current note page into its contextual drawing state.</summary>
+    public Task ActivateDrawingAsync()
+    {
+        IsDrawMode = true;
+        InkTool = "Pen";
+        Set("StatusText", "Draw mode — choose a pen tool and draw on the page");
+        RequestRebuild();
+        return Task.CompletedTask;
+    }
+
+    public void ExitDrawingMode()
+    {
+        if (!IsDrawMode)
+            return;
+        IsDrawMode = false;
+        Set("StatusText", "Editing notes");
+        RequestRebuild();
     }
 
     public void SetInkColor(string hex)

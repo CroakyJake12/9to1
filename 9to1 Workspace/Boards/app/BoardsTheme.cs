@@ -126,7 +126,13 @@ public static class BoardsTheme
         }
     }
 
-    /// <summary>Readable text for a background when no explicit foreground was authored.</summary>
-    public static IBrush ContrastText(string? backgroundHex) =>
-        IsDarkBackground(backgroundHex) ? Brush("#FFF5F5F5") : TextBrush;
+    /// <summary>Readable text for an authored background when no foreground was authored.</summary>
+    public static IBrush ContrastText(string? backgroundHex)
+    {
+        // Theme text remains correct on transparent document blocks. An authored
+        // light highlight needs an explicit dark foreground in dark appearance.
+        if (string.IsNullOrWhiteSpace(backgroundHex))
+            return TextBrush;
+        return IsDarkBackground(backgroundHex) ? Brush("#FFF5F5F5") : Brush("#FF212121");
+    }
 }
