@@ -44,13 +44,18 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         {
             real = await RichBoardSession.CreateNewAsync(store, "Untitled board", cancellationToken).ConfigureAwait(false);
         }
-        else if (File.Exists(path))
-        {
-            real = await RichBoardSession.OpenAtPathAsync(store, path, cancellationToken).ConfigureAwait(false);
-        }
         else
         {
-            real = await CreateAtAsync(store, Path.GetFullPath(path), Path.GetFileNameWithoutExtension(path), cancellationToken).ConfigureAwait(false);
+            // Opening is exact; creation normalizes to a visible .9to1board document.
+            // A bare name whose .9to1board sibling exists opens that sibling.
+            var full = Path.GetFullPath(path.Trim());
+            if (!File.Exists(full) && !full.EndsWith(".9to1board", StringComparison.OrdinalIgnoreCase) &&
+                File.Exists(full + ".9to1board"))
+                full = full + ".9to1board";
+            real = File.Exists(full)
+                ? await RichBoardSession.OpenAtPathAsync(store, full, cancellationToken).ConfigureAwait(false)
+                : await CreateAtAsync(store, EnsureBoardExtension(full),
+                    Path.GetFileNameWithoutExtension(full), cancellationToken).ConfigureAwait(false);
         }
 
         var adapter = new ContractSessionAdapter(store, real);
@@ -347,6 +352,11 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     private static string FirstLine(string message) =>
         message.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? message;
 
+    private static string EnsureBoardExtension(string fullPath) =>
+        fullPath.EndsWith(".9to1board", StringComparison.OrdinalIgnoreCase)
+            ? fullPath
+            : fullPath + ".9to1board";
+
     private static bool IsMemoryPath(string path) =>
         path.StartsWith("memory://", StringComparison.OrdinalIgnoreCase);
 
@@ -627,18 +637,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession
             var page = CurrentContractPage();
             var moved = false;
             await _real.MutateAsync(rich =>
-            {
-                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
-                var box = target.Canvas.FirstOrDefault(o => o.Id == objectId);
-                if (box is not null)
-                {
-                    box.X = Math.Max(0, x);
-                    box.Y = Math.Max(0, y);
-                    target.CanvasWidth = Math.Max(target.CanvasWidth, box.X + box.Width + 40);
-                    target.CanvasHeight = Math.Max(target.CanvasHeight, box.Y + box.Height + 40);
-                    moved = true;
-                }
-            }, cancellationToken).ConfigureAwait(false);
+                moved = HavenRichNotesOps.MoveCanvasObject(rich, page.Id, objectId, x, y),
+                cancellationToken).ConfigureAwait(false);
             RefreshView();
             return moved;
         }
@@ -655,10 +655,8 @@ public sealed class ContractSessionAdapter : IRichBoardSession
             var page = CurrentContractPage();
             var removed = false;
             await _real.MutateAsync(rich =>
-            {
-                var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
-                removed = target.Canvas.RemoveAll(o => o.Id == objectId) > 0;
-            }, cancellationToken).ConfigureAwait(false);
+                removed = HavenRichNotesOps.RemoveCanvasObject(rich, page.Id, objectId),
+                cancellationToken).ConfigureAwait(false);
             RefreshView();
             return removed;
         }

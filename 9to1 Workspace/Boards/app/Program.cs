@@ -27,9 +27,13 @@ internal static class Program
     public static void Main(string[] args)
     {
         Console.WriteLine("[CUI Boards] Starting Avalonia Win32 + Skia...");
+        // File associations and drops may arrive as a split path when quoting is lost;
+        // rejoin extra arguments onto the first when it does not resolve on its own.
         if (args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]))
         {
-            OpenPath = args[0];
+            OpenPath = args.Length > 1 && !File.Exists(args[0])
+                ? string.Join(" ", args)
+                : args[0];
             Console.WriteLine($"[CUI Boards] Board argument: {OpenPath}");
         }
 

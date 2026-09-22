@@ -15,6 +15,9 @@
 - CUI editor exposes all of the above via dynamic block rendering, Add menu with styles, style editor, table/graph panels, keyboard shortcuts: **IMPLEMENTED, BUILT, TESTED, LAUNCHED**.
 - Subject acceptance (Maths/Law/CS save→reopen), update-safety (v2→v3), perf sanity (8 sections/50 pages): **TESTED**.
 - Release build + Release launch: **(final numbers below)**.
+- Automated totals: contract **86/86** (Debug) + **85/85** (Release), HUI **34/34**, app **22/22** (Debug) + **22/22** (Release).
+- Release build: **succeeded, 0 errors** (7 pre-existing vendored-Avalonia warnings; 0 from Boards/CUI code; `/p:TreatWarningsAsErrors=false` invocation-scoped, no repo change).
+- Release launch ×3 (create, spaced-path create, existing-board open): **diagnostics 0, window rendered, alive, valid schema-v3 files written**.
 
 ## RC1 (9-1 Boards, .9to1board schema v2 + CUI app)
 

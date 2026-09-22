@@ -206,6 +206,92 @@ public sealed class ContractAdapterTests
         Assert.Equal("Flushed on close", reopened.Document.Title);
     }
 
+    [Fact]
+    public async Task Adapter_normalizes_extension_on_create_and_prefers_sibling_on_open()
+    {
+        var root = TempDirectory();
+        try
+        {
+            using var store = new JsonFileHavenBoardStore(root);
+            var bare = Path.Combine(root, "My Board");
+
+            await using (var created = await ContractSessionAdapter.OpenAsync(store, bare))
+            {
+                Assert.Equal(bare + ".9to1board", created.FilePath);
+                await created.SaveAsync();
+            }
+            Assert.True(File.Exists(bare + ".9to1board"));
+            Assert.False(File.Exists(bare));
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, bare);
+            Assert.Equal(bare + ".9to1board", reopened.FilePath);
+            Assert.Equal("My Board", reopened.Document.Title);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task Adapter_canvas_drag_move_persists_across_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "drag.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+
+            string boxId;
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                boxId = await adapter.AddCanvasObjectAsync("Text", "Drag me", 10, 10);
+                // One committed move per drag gesture, as the pointer handler does on release.
+                Assert.True(await adapter.MoveCanvasObjectAsync(boxId, 300, 220));
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            var boxes = await reopened.GetCanvasObjectsAsync();
+            var box = Assert.Single(boxes);
+            Assert.Equal(boxId, box.Id);
+            Assert.Equal(300, box.X);
+            Assert.Equal(220, box.Y);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task Adapter_ink_view_pan_zoom_persists_across_reopen()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "inkview.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var session = Assert.IsType<ContractSessionAdapter>(adapter);
+                await session.SetInkViewAsync(120, -40, 2);
+                await adapter.SaveAsync();
+            }
+
+            var raw = await store.LoadDocumentAtPathAsync(path);
+            var view = raw!.RichNotes!.Sections[0].Pages[0].InkView;
+            Assert.Equal(120, view.PanX);
+            Assert.Equal(-40, view.PanY);
+            Assert.Equal(2, view.Zoom);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
     private static string TempDirectory()
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-adapter-tests", Guid.NewGuid().ToString("N"));

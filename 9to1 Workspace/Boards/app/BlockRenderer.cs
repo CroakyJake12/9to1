@@ -760,6 +760,10 @@ public static class BlockRenderer
         var view = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
         AddSmallButton(view, "Zoom −", "Zoom ink out", async () => await vm.SetInkZoomAsync(vm.InkZoom / 1.25));
         AddSmallButton(view, "Zoom +", "Zoom ink in", async () => await vm.SetInkZoomAsync(vm.InkZoom * 1.25));
+        AddSmallButton(view, "←", "Pan ink left", async () => await vm.PanInkViewAsync(-60, 0));
+        AddSmallButton(view, "→", "Pan ink right", async () => await vm.PanInkViewAsync(60, 0));
+        AddSmallButton(view, "↑", "Pan ink up", async () => await vm.PanInkViewAsync(0, -60));
+        AddSmallButton(view, "↓", "Pan ink down", async () => await vm.PanInkViewAsync(0, 60));
         AddSmallButton(view, "Reset view", "Reset ink pan and zoom", async () => await vm.ResetInkViewAsync());
         shell.Children.Add(view);
 
@@ -770,7 +774,14 @@ public static class BlockRenderer
             Height = 200,
             Background = new SolidColorBrush(Color.Parse("#FFFFFFFF")),
             Margin = new Thickness(0, 4, 0, 0),
-            RenderTransform = new ScaleTransform(vm.InkZoom, vm.InkZoom),
+            RenderTransform = new TransformGroup
+            {
+                Children =
+                [
+                    new ScaleTransform(vm.InkZoom, vm.InkZoom),
+                    new TranslateTransform(vm.InkPanX, vm.InkPanY)
+                ]
+            },
         };
         ToolTip.SetTip(canvas, "Draw with the pointer; one gesture commits one stroke");
         AutomationProperties.SetName(canvas, "Ink canvas");

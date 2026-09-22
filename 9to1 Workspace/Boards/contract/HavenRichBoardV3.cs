@@ -994,6 +994,54 @@ public static partial class HavenRichNotesOps
         return block.Graph;
     }
 
+    // ----- Canvas objects -----
+
+    public static bool MoveCanvasObject(HavenRichNotes notes, string pageId, string objectId, double x, double y)
+    {
+        var page = RequirePage(notes, pageId);
+        var box = page.Canvas.FirstOrDefault(o => o.Id == objectId);
+        if (box is null) return false;
+        if (!double.IsFinite(x) || !double.IsFinite(y))
+            throw new ArgumentException("Canvas coordinates must be finite.");
+        box.X = Math.Max(0, x);
+        box.Y = Math.Max(0, y);
+        page.CanvasWidth = Math.Max(page.CanvasWidth, box.X + box.Width + 40);
+        page.CanvasHeight = Math.Max(page.CanvasHeight, box.Y + box.Height + 40);
+        TouchNotes(notes);
+        return true;
+    }
+
+    public static bool ResizeCanvasObject(HavenRichNotes notes, string pageId, string objectId, double width, double height)
+    {
+        var page = RequirePage(notes, pageId);
+        var box = page.Canvas.FirstOrDefault(o => o.Id == objectId);
+        if (box is null) return false;
+        box.Width = Math.Clamp(width, 24, 5000);
+        box.Height = Math.Clamp(height, 24, 5000);
+        page.CanvasWidth = Math.Max(page.CanvasWidth, box.X + box.Width + 40);
+        page.CanvasHeight = Math.Max(page.CanvasHeight, box.Y + box.Height + 40);
+        TouchNotes(notes);
+        return true;
+    }
+
+    public static bool UpdateCanvasObjectText(HavenRichNotes notes, string pageId, string objectId, string? text)
+    {
+        var page = RequirePage(notes, pageId);
+        var box = page.Canvas.FirstOrDefault(o => o.Id == objectId);
+        if (box is null) return false;
+        box.Text = text?.Trim() ?? string.Empty;
+        TouchNotes(notes);
+        return true;
+    }
+
+    public static bool RemoveCanvasObject(HavenRichNotes notes, string pageId, string objectId)
+    {
+        var page = RequirePage(notes, pageId);
+        var removed = page.Canvas.RemoveAll(o => o.Id == objectId) > 0;
+        if (removed) TouchNotes(notes);
+        return removed;
+    }
+
     // ----- Ink tools -----
 
     public static bool SetInkStrokeTool(HavenRichNotes notes, string pageId, int strokeIndex, HavenRichInkTool tool)

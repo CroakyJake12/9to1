@@ -1146,6 +1146,15 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         Set("StatusText", $"Ink zoom: {InkZoom:0.##}x");
     }
 
+    public async Task PanInkViewAsync(double dx, double dy)
+    {
+        InkPanX += dx;
+        InkPanY += dy;
+        if (_session is ContractSessionAdapter adapter)
+            await adapter.SetInkViewAsync(InkPanX, InkPanY, InkZoom);
+        Set("StatusText", $"Ink pan: {InkPanX:0}, {InkPanY:0}");
+    }
+
     public async Task ResetInkViewAsync()
     {
         InkZoom = 1;

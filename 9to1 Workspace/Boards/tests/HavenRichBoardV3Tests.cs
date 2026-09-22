@@ -828,6 +828,39 @@ public sealed class HavenRichBoardV3Tests
 
     // ---------- helpers ----------
 
+    [Fact]
+    public async Task Canvas_objects_move_resize_retext_and_remove_with_reopen()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var path = Path.Combine(root, "canvas.9to1board");
+            await using (var session = await RichBoardSession.CreateNewAsync(store, "Canvas"))
+            {
+                await session.SaveAsAsync(path);
+                var pageId = session.Rich.Sections[0].Pages[0].Id;
+                await session.MutateAsync(rich =>
+                {
+                    var box = HavenRichNotesOps.AddCanvasObject(rich, pageId, "Text", "Idea", 40, 60);
+                    Assert.True(HavenRichNotesOps.MoveCanvasObject(rich, pageId, box.Id, 420, 360));
+                    Assert.True(HavenRichNotesOps.ResizeCanvasObject(rich, pageId, box.Id, 520, 260));
+                    Assert.True(HavenRichNotesOps.UpdateCanvasObjectText(rich, pageId, box.Id, "Moved idea"));
+                    Assert.False(HavenRichNotesOps.MoveCanvasObject(rich, pageId, "missing", 1, 1));
+                    var doomed = HavenRichNotesOps.AddCanvasObject(rich, pageId, "Text", "Gone", 1, 1);
+                    Assert.True(HavenRichNotesOps.RemoveCanvasObject(rich, pageId, doomed.Id));
+                });
+                await session.SaveAsync();
+            }
+
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
+            var box = Assert.Single(reopened.Rich.Sections[0].Pages[0].Canvas);
+            Assert.Equal(420, box.X);
+            Assert.Equal(360, box.Y);
+            Assert.Equal(520, box.Width);
+            Assert.Equal(260, box.Height);
+            Assert.Equal("Moved idea", box.Text);
+        });
+    }
+
     private static async Task WithStoreAsync(Func<JsonFileHavenBoardStore, string, Task> test)
     {
         var root = Path.Combine(Path.GetTempPath(), "cakeos-v3-tests", Guid.NewGuid().ToString("N"));
