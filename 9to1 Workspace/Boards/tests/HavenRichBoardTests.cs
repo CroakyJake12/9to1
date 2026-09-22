@@ -365,12 +365,16 @@ public sealed class HavenRichBoardTests
             }
 
             using var json = JsonDocument.Parse(await File.ReadAllTextAsync(path));
-            Assert.Equal(2, json.RootElement.GetProperty("schemaVersion").GetInt32());
+            Assert.Equal(
+                HavenBoardDocument.CurrentSchemaVersion,
+                json.RootElement.GetProperty("schemaVersion").GetInt32());
             Assert.NotNull(loaded!.RichNotes);
+            Assert.Contains(loaded.RichNotes.Styles, s => s.Id == HavenRichStyles.NormalId);
 
             await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
             Assert.Equal("V1 board", reopened.Rich.Title);
             Assert.Equal("V1 board", reopened.Document.Snapshot!.Title);
+            Assert.Contains(reopened.Rich.Styles, s => s.Id == "heading-1");
         });
     }
 
