@@ -41,8 +41,8 @@ public sealed class ContractAdapterTests
                 var check = reopened.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "checklist");
                 Assert.Equal("Adapter checklist", check.Text);
                 Assert.True(check.IsChecked);
-                var ink = reopened.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "ink");
-                Assert.Equal(1, ink.InkStrokeCount);
+                var ink = await reopened.GetInkStrokesAsync();
+                Assert.Single(ink);
             }
 
             // Raw contract read proves the bytes hold real ink points, not just a counter.
@@ -179,8 +179,8 @@ public sealed class ContractAdapterTests
             }
 
             await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
-            var ink = reopened.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "ink");
-            Assert.Equal(1, ink.InkStrokeCount);
+            var ink = await reopened.GetInkStrokesAsync();
+            Assert.Single(ink);
         }
         finally
         {

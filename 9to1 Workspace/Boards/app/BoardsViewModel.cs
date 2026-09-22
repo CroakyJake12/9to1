@@ -405,16 +405,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             _ = CommitSampleInkAsync(adapter);
             return;
         }
-        var ink = CurrentPage().Blocks.FirstOrDefault(b => b.Kind == "ink");
-        if (ink is null)
-        {
-            ink = new RichBoardBlock { Kind = "ink", Text = "Sketch" };
-            CurrentPage().Blocks.Add(ink);
-        }
-        ink.InkStrokeCount++;
-        PushDocumentToBindings();
-        _session.MarkDirty();
-        RequestRebuild();
+        _ = CommitInkStrokeAsync([(x, y), (x + 24, y + 16)]);
     }
 
     /// <summary>Commits one pointer-drawn stroke as real persisted ink data.</summary>
@@ -455,11 +446,6 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             Set("StatusText", _session.Status);
             return;
         }
-        var ink = CurrentPage().Blocks.FirstOrDefault(b => b.Kind == "ink");
-        if (ink is not null)
-            ink.InkStrokeCount = 0;
-        PushDocumentToBindings();
-        _session.MarkDirty();
         RequestRebuild();
     }
 
@@ -1711,6 +1697,13 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         return [];
     }
 
+    public Task<IReadOnlyList<InkStrokeView>> GetInkStrokesAsync()
+    {
+        if (_session is ContractSessionAdapter adapter)
+            return adapter.GetInkStrokesAsync();
+        return Task.FromResult<IReadOnlyList<InkStrokeView>>([]);
+    }
+
     public bool SupportsFreeform => _session is ContractSessionAdapter;
 
     public async Task AddCanvasBoxAsync()
@@ -2017,7 +2010,6 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         var para = page.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
         var checks = page.Blocks.Where(b => b.Kind == "checklist").ToList();
         var table = page.Blocks.FirstOrDefault(b => b.Kind == "table");
-        var ink = page.Blocks.FirstOrDefault(b => b.Kind == "ink");
         var selected = page.Blocks.FirstOrDefault(b => b.Id == _selectedBlockId) ?? para ?? heading;
 
         if (selected is not null)
@@ -2044,7 +2036,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             Set("Cell01", TableCell(table, "0,1"));
             Set("Cell10", TableCell(table, "1,0"));
             Set("Cell11", TableCell(table, "1,1"));
-            Set("InkSummary", ink is null ? "No ink yet" : $"{ink.InkStrokeCount} stroke(s) — {ink.Text}");
+            Set("InkSummary", "Drawing is available from the Draw button");
             Set("SelectedBlockInfo", selected is null ? "No block" : $"{selected.Kind}: {(selected.Text.Length > 40 ? selected.Text[..40] : selected.Text)}");
             Set("BoldState", selected?.Bold == true ? "On" : "Off");
             Set("ItalicState", selected?.Italic == true ? "On" : "Off");

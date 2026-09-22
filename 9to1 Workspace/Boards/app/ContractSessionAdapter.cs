@@ -877,6 +877,27 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         return Task.FromResult(boxes);
     }
 
+    /// <summary>Copies persisted page ink for the transparent editor overlay.</summary>
+    public Task<IReadOnlyList<InkStrokeView>> GetInkStrokesAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        var page = CurrentContractPage();
+        IReadOnlyList<InkStrokeView> strokes = page.Ink.Select(stroke => new InkStrokeView
+        {
+            Points = stroke.Points.Select(point => new InkPointView
+            {
+                X = point.X,
+                Y = point.Y,
+                Pressure = point.Pressure,
+            }).ToList(),
+            Width = stroke.Width,
+            Color = stroke.Color,
+            Tool = stroke.Tool.ToString(),
+            Selected = stroke.Selected,
+        }).ToArray();
+        return Task.FromResult(strokes);
+    }
+
     public async ValueTask<string> AddCanvasObjectAsync(
         string kind, string? text, double x, double y,
         double width = 260, double height = 160, CancellationToken cancellationToken = default)

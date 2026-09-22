@@ -326,9 +326,7 @@ public static class ToolbarBuilder
                 ("Checklist", "checklist"), ("Bulleted list", "bulleted"), ("Numbered list", "numbered"),
                 ("Table", "table"), ("Graph", "graph"), ("Image…", "image"), ("Attachment…", "attachment"),
             ], vm, popup, filter);
-            AddGroup(list, "Drawing", [("Drawing", "ink"), ("Freeform box", "freeform")], vm, popup, filter);
-            AddGroup(list, "Document types", [("Canvas document — coming soon", "")], vm, popup, filter);
-            AddGroup(list, "Other", [("Divider", "divider")], vm, popup, filter);
+            AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter);
         }
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
         Fill(string.Empty);
@@ -380,15 +378,8 @@ public static class ToolbarBuilder
                 Padding = new Thickness(8, 6),
             };
             Avalonia.Automation.AutomationProperties.SetName(item, "Insert " + label);
-            if (string.IsNullOrEmpty(tag))
-            {
-                item.IsEnabled = false;
-                ToolTip.SetTip(item, "Canvas documents are reserved for the future Canvas workspace");
-            }
             item.Click += (_, _) =>
             {
-                if (string.IsNullOrEmpty(tag))
-                    return;
                 popup.Close();
                 _ = vm.InsertKindAsync(tag);
             };
@@ -460,11 +451,16 @@ public static class ToolbarBuilder
         ToolTip.SetTip(zoomOut, "Zoom drawing out");
         Avalonia.Automation.AutomationProperties.SetName(zoomOut, "Zoom drawing out");
         zoomOut.Click += async (_, _) => await vm.SetInkZoomAsync(vm.InkZoom / 1.25);
+        var zoomIn = new Button { Content = "Zoom +", Padding = new Thickness(7, 6), Margin = new Thickness(2, 0) };
+        ToolTip.SetTip(zoomIn, "Zoom drawing in");
+        Avalonia.Automation.AutomationProperties.SetName(zoomIn, "Zoom drawing in");
+        zoomIn.Click += async (_, _) => await vm.SetInkZoomAsync(vm.InkZoom * 1.25);
         var reset = new Button { Content = "Reset view", Padding = new Thickness(7, 6), Margin = new Thickness(2, 0) };
         ToolTip.SetTip(reset, "Reset drawing view");
         Avalonia.Automation.AutomationProperties.SetName(reset, "Reset drawing view");
         reset.Click += async (_, _) => await vm.ResetInkViewAsync();
         bar.Children.Add(zoomOut);
+        bar.Children.Add(zoomIn);
         bar.Children.Add(reset);
     }
 }

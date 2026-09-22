@@ -45,14 +45,6 @@ public static class BlockRenderer
         while (index < blocks.Count)
         {
             var block = blocks[index];
-            // BoardProjection always supplies a virtual ink surface for a page.
-            // Keep actual strokes visible, but do not turn every ordinary note
-            // into a large empty drawing panel until Draw is chosen.
-            if (block.Kind == "ink" && block.InkStrokeCount == 0 && !vm.IsDrawMode)
-            {
-                index++;
-                continue;
-            }
             if (IsListKind(block.Kind))
             {
                 var run = new List<RichBoardBlock>();
@@ -125,7 +117,6 @@ public static class BlockRenderer
         "divider" => BuildDivider(vm, block),
         "image" => BuildImage(vm, block),
         "graph" => BuildGraph(vm, block),
-        "ink" => BuildInk(vm, block),
         _ => BuildTextBlock(vm, block),
     };
 
@@ -963,166 +954,6 @@ public static class BlockRenderer
         < 1024L * 1024 * 1024 => $"{bytes / (1024.0 * 1024):0.#} MB",
         _ => $"{bytes / (1024.0 * 1024 * 1024):0.#} GB",
     };
-
-    // ----- Ink -----
-
-    private static readonly (string Name, string Hex)[] InkPalette =
-    [
-        ("Ink black", "#FF111111"), ("Slate", "#FF5F6368"), ("Blue", "#FF1A73E8"),
-        ("Red", "#FFD32F2F"), ("Green", "#FF1E8E3E"), ("Orange", "#FFE8710A"),
-        ("Purple", "#FF9334E6"), ("Teal", "#FF00897B"),
-    ];
-
-    private static readonly double[] InkThicknesses = [2, 4, 8, 12];
-
-    private static Control BuildInk(BoardsViewModel vm, RichBoardBlock block)
-    {
-        var shell = BlockShell(vm, block);
-        shell.Children.Add(new TextBlock
-        {
-            Text = $"{block.InkStrokeCount} stroke(s)" + (string.IsNullOrEmpty(block.Text) ? string.Empty : $" — {block.Text}"),
-            FontSize = 13,
-            Foreground = BoardsTheme.SecondaryTextBrush,
-            Margin = new Thickness(0, 0, 0, 6),
-        });
-        var tools = new WrapPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 6) };
-        foreach (var tool in new[] { "Pen", "Highlighter", "Eraser", "Select" })
-        {
-            var toggle = new ToggleButton
-            {
-                Content = tool,
-                IsChecked = string.Equals(vm.InkTool, tool, StringComparison.OrdinalIgnoreCase),
-                FontSize = 13,
-                Padding = new Thickness(12, 6),
-                Margin = new Thickness(0, 0, 4, 0),
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-            };
-            ToolTip.SetTip(toggle, tool + " tool");
-            Avalonia.Automation.AutomationProperties.SetName(toggle, "Ink tool " + tool);
-            toggle.Click += (_, _) => vm.SetInkTool(tool);
-            tools.Children.Add(toggle);
-        }
-        foreach (var (name, hex) in InkPalette)
-        {
-            var swatch = new Button
-            {
-                Width = 26,
-                Height = 26,
-                Margin = new Thickness(2, 0),
-                Padding = new Thickness(0),
-                Background = BoardsTheme.Brush(hex),
-                BorderBrush = BoardsTheme.BorderBrush,
-                BorderThickness = new Thickness(string.Equals(vm.InkColor, hex, StringComparison.OrdinalIgnoreCase) ? 3 : 1),
-                CornerRadius = new CornerRadius(13),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            ToolTip.SetTip(swatch, "Ink color " + name);
-            Avalonia.Automation.AutomationProperties.SetName(swatch, "Ink color " + name);
-            swatch.Click += (_, _) => vm.SetInkColor(hex);
-            tools.Children.Add(swatch);
-        }
-        foreach (var thickness in InkThicknesses)
-        {
-            var pill = new ToggleButton
-            {
-                Content = new Ellipse
-                {
-                    Width = Math.Clamp(thickness, 2, 12),
-                    Height = Math.Clamp(thickness, 2, 12),
-                    Fill = BoardsTheme.TextBrush,
-                },
-                IsChecked = Math.Abs(vm.InkWidth - thickness) < 0.01,
-                Padding = new Thickness(10, 6),
-                Margin = new Thickness(2, 0),
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            ToolTip.SetTip(pill, $"Stroke width {thickness:0}");
-            Avalonia.Automation.AutomationProperties.SetName(pill, $"Stroke width {thickness:0}");
-            pill.Click += (_, _) => vm.SetInkWidth(thickness);
-            tools.Children.Add(pill);
-        }
-        var clear = new Button
-        {
-            Content = "Clear",
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Foreground = BoardsTheme.SecondaryTextBrush,
-            FontSize = 13,
-            Padding = new Thickness(8, 6),
-        };
-        ToolTip.SetTip(clear, "Clear all ink on this page");
-        Avalonia.Automation.AutomationProperties.SetName(clear, "Clear ink");
-        clear.Click += async (_, _) => await vm.ClearInkAsync();
-        tools.Children.Add(clear);
-        shell.Children.Add(tools);
-
-        var details = new Expander
-        {
-            Header = "Ink details",
-            IsExpanded = false,
-            Margin = new Thickness(0, 0, 0, 4),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-        };
-        var detailPanel = new StackPanel { Orientation = Orientation.Horizontal };
-        var width = new TextBox
-        {
-            Name = "InkWidthBox",
-            Text = vm.InkWidth.ToString("0.##"),
-            Width = 64,
-            Margin = new Thickness(0, 0, 8, 0),
-        };
-        ToolTip.SetTip(width, "Exact stroke width");
-        Avalonia.Automation.AutomationProperties.SetName(width, "Ink stroke width");
-        width.TextChanged += (_, _) => vm.EditText("InkWidthBox", width.Text ?? string.Empty);
-        var color = new TextBox
-        {
-            Name = "InkColorBox",
-            Text = vm.InkColor,
-            Width = 110,
-        };
-        ToolTip.SetTip(color, "Exact stroke color (hex)");
-        Avalonia.Automation.AutomationProperties.SetName(color, "Ink stroke color");
-        color.TextChanged += (_, _) => vm.EditText("InkColorBox", color.Text ?? string.Empty);
-        detailPanel.Children.Add(width);
-        detailPanel.Children.Add(color);
-        details.Content = detailPanel;
-        shell.Children.Add(details);
-
-        var view = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
-        AddSmallButton(view, "Zoom −", "Zoom ink out", async () => await vm.SetInkZoomAsync(vm.InkZoom / 1.25));
-        AddSmallButton(view, "Zoom +", "Zoom ink in", async () => await vm.SetInkZoomAsync(vm.InkZoom * 1.25));
-        AddSmallButton(view, "←", "Pan ink left", async () => await vm.PanInkViewAsync(-60, 0));
-        AddSmallButton(view, "→", "Pan ink right", async () => await vm.PanInkViewAsync(60, 0));
-        AddSmallButton(view, "↑", "Pan ink up", async () => await vm.PanInkViewAsync(0, -60));
-        AddSmallButton(view, "↓", "Pan ink down", async () => await vm.PanInkViewAsync(0, 60));
-        AddSmallButton(view, "Reset view", "Reset ink pan and zoom", async () => await vm.ResetInkViewAsync());
-        shell.Children.Add(view);
-
-        var canvas = new Canvas
-        {
-            Name = "ink_" + block.Id,
-            MinWidth = 240,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Height = 220,
-            Background = BoardsTheme.CardBrush,
-            Margin = new Thickness(0, 4, 0, 0),
-            RenderTransform = new TransformGroup
-            {
-                Children =
-                [
-                    new ScaleTransform(vm.InkZoom, vm.InkZoom),
-                    new TranslateTransform(vm.InkPanX, vm.InkPanY)
-                ]
-            },
-        };
-        ToolTip.SetTip(canvas, "Draw with the pointer; one gesture commits one stroke");
-        AutomationProperties.SetName(canvas, "Ink canvas");
-        shell.Children.Add(canvas);
-        return shell;
-    }
 
     // ----- Freeform -----
 

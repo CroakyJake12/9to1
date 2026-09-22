@@ -135,13 +135,6 @@ internal static class Projector
                     break;
             }
         }
-        blocks.Add(new RichBoardBlock
-        {
-            Id = $"{page.Id}:ink",
-            Kind = "ink",
-            Text = page.Ink.Count == 0 ? "No ink yet" : $"{page.Ink.Count} stroke(s)",
-            InkStrokeCount = page.Ink.Count
-        });
         return blocks;
     }
 

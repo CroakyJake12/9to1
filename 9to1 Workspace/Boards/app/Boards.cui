@@ -30,10 +30,13 @@
       <StackPanel automationid="ContextHost" orientation="Vertical" />
       <ScrollViewer automationid="EditorScroll" verticalalignment="Stretch" horizontalalignment="Stretch">
         <Border automationid="PageCard" maxwidth="800" horizontalalignment="Center" cornerradius="8" borderthickness="1" padding="40 32" margin="28 20">
-          <StackPanel orientation="Vertical">
-            <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="28" font-weight="Bold" margin="0 0 0 4" />
-            <StackPanel automationid="BlocksHost" orientation="Vertical" />
-          </StackPanel>
+          <Grid automationid="PageSurface">
+            <StackPanel automationid="DocumentContentLayer" orientation="Vertical">
+              <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="28" font-weight="Bold" margin="0 0 0 4" />
+              <StackPanel automationid="BlocksHost" orientation="Vertical" />
+            </StackPanel>
+            <Canvas automationid="InkOverlayLayer" />
+          </Grid>
         </Border>
       </ScrollViewer>
     </StackPanel>

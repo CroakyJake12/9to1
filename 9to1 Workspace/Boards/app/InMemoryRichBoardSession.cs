@@ -229,7 +229,6 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
                                 new RichBoardBlock { Id = "block-check-1", Kind = "checklist", Text = "Try the checklist", IsChecked = false },
                                 new RichBoardBlock { Id = "block-check-2", Kind = "checklist", Text = "Save the board", IsChecked = false },
                                 new RichBoardBlock { Id = "block-table", Kind = "table", Text = "Quarterly plan", TableCells = new Dictionary<string, string>(StringComparer.Ordinal) { ["0,0"] = "Q1", ["0,1"] = "Q2", ["1,0"] = "Q3", ["1,1"] = "Q4" } },
-                                new RichBoardBlock { Id = "block-ink", Kind = "ink", Text = "Sketch here" },
                             ],
                         },
                     ],

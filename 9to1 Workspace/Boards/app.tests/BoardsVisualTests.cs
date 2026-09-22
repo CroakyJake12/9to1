@@ -246,7 +246,7 @@ public sealed class BoardsVisualTests
         {
             "paragraph", "heading", "checklist", "bulleted", "numbered",
             "table", "graph", "image", "divider", "style:quote", "paragraph", "style:code",
-            "attachment", "ink", "freeform",
+            "attachment", "freeform",
         })
             await vm.InsertKindAsync(tag);
         var kinds = session.Document.Sections[0].Pages[0].Blocks.Select(b => b.Kind).ToList();
@@ -261,6 +261,39 @@ public sealed class BoardsVisualTests
             .Where(b => b.StyleId is "quote" or "code")
             .ToList();
         Assert.Equal(2, styled.Count);
+        Assert.DoesNotContain(kinds, kind => kind == "ink");
+    }
+
+    [Fact]
+    public async Task Draw_mode_is_a_first_class_page_tool_not_a_content_block()
+    {
+        var vm = MemoryModel(out var session);
+        try
+        {
+            await vm.ActivateDrawingAsync();
+            var commands = Ui(() =>
+            {
+                var host = new StackPanel();
+                ToolbarBuilder.Rebuild(host, vm);
+                return Flatten(host)
+                    .Select(Avalonia.Automation.AutomationProperties.GetName)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .ToHashSet(StringComparer.Ordinal);
+            });
+            Assert.True(vm.IsDrawMode);
+            foreach (var expected in new[]
+            {
+                "Draw", "Pen drawing tool", "Highlighter drawing tool", "Eraser drawing tool",
+                "Select drawing tool", "Black ink", "Stroke width 2", "Undo drawing",
+                "Redo drawing", "Zoom drawing out", "Zoom drawing in", "Reset drawing view",
+            })
+                Assert.Contains(expected, commands);
+            Assert.DoesNotContain(session.Document.Sections[0].Pages[0].Blocks, block => block.Kind == "ink");
+        }
+        finally
+        {
+            await session.DisposeAsync();
+        }
     }
 
     [Fact]

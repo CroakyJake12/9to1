@@ -11,6 +11,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -100,6 +101,7 @@ internal sealed class BoardsApp : Application
     private Control? _root;
     private Window? _window;
     private StackPanel? _blocksHost;
+    private Canvas? _inkOverlay;
     private ComboBox? _styleBox;
     private ComboBox? _addKindBox;
     private bool _syncingCombos;
@@ -248,6 +250,7 @@ internal sealed class BoardsApp : Application
         if (_viewModel is null)
             return;
         _blocksHost = FindByAutomationId<StackPanel>(root, "BlocksHost");
+        _inkOverlay = FindByAutomationId<Canvas>(root, "InkOverlayLayer");
         _styleBox = FindByAutomationId<ComboBox>(root, "StyleBox");
         _addKindBox = FindByAutomationId<ComboBox>(root, "AddKindBox");
         var insertButton = FindByAutomationId<Button>(root, "AddBlockKind");
@@ -261,6 +264,7 @@ internal sealed class BoardsApp : Application
         FillToolbar();
         ThemeApplier.ApplyChrome(root);
         TameEditorScroll(root);
+        WireInkOverlay();
         UpdateWindowTitle();
         _viewModel.SelectionChanged += OnSelectionChanged;
         _viewModel.NavRebuildRequested += RebuildNav;
@@ -604,7 +608,7 @@ internal sealed class BoardsApp : Application
         try
         {
             await BlockRenderer.RebuildAsync(_blocksHost, _viewModel);
-            WireInkCanvases(_blocksHost);
+            await RenderInkOverlayAsync();
             FillStyleBox();
             FillKindBox();
         }
@@ -734,56 +738,167 @@ internal sealed class BoardsApp : Application
         }
     }
 
-    // ----- Ink: pressure capture, tool routing, eraser path -----
+    // ----- Page-level ink overlay: persisted page.Ink is always rendered. -----
 
-    private void WireInkCanvases(Control root)
+    private void WireInkOverlay()
     {
-        if (_viewModel is null)
+        if (_inkOverlay is null || Equals(_inkOverlay.Tag, "page-ink-wired"))
             return;
-        foreach (var canvas in FindAll<Canvas>(root))
+        _inkOverlay.Tag = "page-ink-wired";
+        var drawing = false;
+        var points = new System.Collections.Generic.List<(double X, double Y, double Pressure)>();
+        _inkOverlay.PointerPressed += (_, e) =>
         {
-            if (canvas.Name is not { } name || !name.StartsWith("ink_", StringComparison.Ordinal))
-                continue;
-            if (canvas.Tag as string == "ink-wired")
-                continue;
-            canvas.Tag = "ink-wired";
-            var drawing = false;
-            var points = new System.Collections.Generic.List<(double X, double Y, double Pressure)>();
             var viewModel = _viewModel;
-            canvas.PointerPressed += (_, e) =>
+            if (viewModel is null || !viewModel.IsDrawMode)
+                return;
+            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), viewModel);
+            if (string.Equals(viewModel.InkTool, "Eraser", StringComparison.OrdinalIgnoreCase))
             {
-                // Eraser hit-test path: erase strokes near the tap point.
-                if (string.Equals(viewModel.InkTool, "Eraser", StringComparison.OrdinalIgnoreCase))
-                {
-                    var tap = e.GetPosition(canvas);
-                    _ = EraseAtAsync(viewModel, tap.X, tap.Y);
-                    e.Handled = true;
-                    return;
-                }
-                drawing = true;
-                points.Clear();
-                var position = e.GetPosition(canvas);
-                points.Add((position.X, position.Y, ReadPressure(e, canvas)));
-                DrawDot(canvas, position, viewModel.InkWidth);
-            };
-            canvas.PointerMoved += (_, e) =>
+                _ = EraseAtAsync(viewModel, location.X, location.Y);
+                e.Handled = true;
+                return;
+            }
+            if (string.Equals(viewModel.InkTool, "Select", StringComparison.OrdinalIgnoreCase))
             {
-                if (!drawing)
-                    return;
-                var position = e.GetPosition(canvas);
-                points.Add((position.X, position.Y, ReadPressure(e, canvas)));
-                DrawDot(canvas, position, viewModel.InkWidth);
-            };
-            canvas.PointerReleased += (_, _) =>
-            {
-                if (!drawing)
-                    return;
-                drawing = false;
-                if (points.Count > 0)
-                    _ = viewModel.CommitInkStrokeAsync(
-                        points.ToArray(), viewModel.InkWidth, viewModel.InkColor, viewModel.InkTool);
-            };
+                _ = SelectInkAtAsync(viewModel, location.X, location.Y);
+                e.Handled = true;
+                return;
+            }
+            drawing = true;
+            points.Clear();
+            points.Add((location.X, location.Y, ReadPressure(e, _inkOverlay)));
+            e.Pointer.Capture(_inkOverlay);
+            RenderLiveStroke(_inkOverlay, points, viewModel);
+            e.Handled = true;
+        };
+        _inkOverlay.PointerMoved += (_, e) =>
+        {
+            var viewModel = _viewModel;
+            if (!drawing || viewModel is null)
+                return;
+            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), viewModel);
+            points.Add((location.X, location.Y, ReadPressure(e, _inkOverlay)));
+            RenderLiveStroke(_inkOverlay, points, viewModel);
+            e.Handled = true;
+        };
+        _inkOverlay.PointerReleased += (_, e) =>
+        {
+            var viewModel = _viewModel;
+            if (!drawing || viewModel is null)
+                return;
+            drawing = false;
+            e.Pointer.Capture(null);
+            _ = CommitOverlayStrokeAsync(viewModel, points.ToArray());
+            e.Handled = true;
+        };
+        _inkOverlay.SizeChanged += (_, _) => _ = RenderInkOverlayAsync();
+    }
+
+    private async Task CommitOverlayStrokeAsync(
+        BoardsViewModel viewModel, IReadOnlyList<(double X, double Y, double Pressure)> points)
+    {
+        await viewModel.CommitInkStrokeAsync(points, viewModel.InkWidth, viewModel.InkColor, viewModel.InkTool);
+        await RenderInkOverlayAsync();
+    }
+
+    private async Task RenderInkOverlayAsync()
+    {
+        if (_inkOverlay is null || _viewModel is null)
+            return;
+        var overlay = _inkOverlay;
+        var viewModel = _viewModel;
+        var strokes = await viewModel.GetInkStrokesAsync();
+        if (!ReferenceEquals(overlay, _inkOverlay) || !ReferenceEquals(viewModel, _viewModel))
+            return;
+        overlay.Children.Clear();
+        overlay.IsHitTestVisible = viewModel.IsDrawMode;
+        ToolTip.SetTip(overlay, viewModel.IsDrawMode ? "Draw directly over this page" : "Use Draw to annotate this page");
+        AutomationProperties.SetName(overlay, "Page drawing layer");
+        var requiredHeight = 0d;
+        foreach (var stroke in strokes)
+        {
+            if (stroke.Points.Count == 0)
+                continue;
+            requiredHeight = Math.Max(requiredHeight,
+                stroke.Points.Max(point => point.Y * viewModel.InkZoom + viewModel.InkPanY) + stroke.Width + 48);
+            AddRenderedStroke(overlay, stroke, viewModel);
         }
+        if (requiredHeight > overlay.Bounds.Height + 1)
+            overlay.Height = requiredHeight;
+        else if (overlay.Height > 0 && requiredHeight < overlay.Bounds.Height - 24)
+            overlay.Height = double.NaN;
+    }
+
+    private static void AddRenderedStroke(Canvas overlay, InkStrokeView stroke, BoardsViewModel viewModel)
+    {
+        if (stroke.Points.Count == 1)
+        {
+            var point = ToOverlayCoordinates(stroke.Points[0].X, stroke.Points[0].Y, viewModel);
+            var diameter = EffectiveStrokeWidth(stroke, stroke.Points) * 1.5;
+            var dot = new Ellipse { Width = diameter, Height = diameter, Fill = BrushForInk(stroke.Color) };
+            Canvas.SetLeft(dot, point.X - diameter / 2);
+            Canvas.SetTop(dot, point.Y - diameter / 2);
+            overlay.Children.Add(dot);
+            return;
+        }
+        var polyline = new Polyline
+        {
+            Points = stroke.Points.Select(point => ToOverlayCoordinates(point.X, point.Y, viewModel)).ToList(),
+            Stroke = BrushForInk(stroke.Color),
+            StrokeThickness = EffectiveStrokeWidth(stroke, stroke.Points),
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            Opacity = string.Equals(stroke.Tool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1,
+        };
+        overlay.Children.Add(polyline);
+        if (stroke.Selected)
+        {
+            foreach (var endpoint in new[] { stroke.Points[0], stroke.Points[^1] })
+            {
+                var point = ToOverlayCoordinates(endpoint.X, endpoint.Y, viewModel);
+                var handle = new Ellipse { Width = 10, Height = 10, Fill = Brushes.White, Stroke = BoardsTheme.AccentBrush, StrokeThickness = 2 };
+                Canvas.SetLeft(handle, point.X - 5);
+                Canvas.SetTop(handle, point.Y - 5);
+                overlay.Children.Add(handle);
+            }
+        }
+    }
+
+    private static void RenderLiveStroke(Canvas overlay, IReadOnlyList<(double X, double Y, double Pressure)> points, BoardsViewModel viewModel)
+    {
+        var prior = overlay.Children.OfType<Polyline>().Where(line => Equals(line.Tag, "live-ink")).ToList();
+        foreach (var line in prior)
+            overlay.Children.Remove(line);
+        if (points.Count < 2)
+            return;
+        overlay.Children.Add(new Polyline
+        {
+            Tag = "live-ink",
+            Points = points.Select(point => ToOverlayCoordinates(point.X, point.Y, viewModel)).ToList(),
+            Stroke = BrushForInk(viewModel.InkColor),
+            StrokeThickness = Math.Clamp(viewModel.InkWidth, 1, 32),
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            Opacity = string.Equals(viewModel.InkTool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1,
+        });
+    }
+
+    private static Point ToInkCoordinates(Point location, BoardsViewModel viewModel) => new(
+        (location.X - viewModel.InkPanX) / viewModel.InkZoom,
+        (location.Y - viewModel.InkPanY) / viewModel.InkZoom);
+
+    private static Point ToOverlayCoordinates(double x, double y, BoardsViewModel viewModel) => new(
+        x * viewModel.InkZoom + viewModel.InkPanX,
+        y * viewModel.InkZoom + viewModel.InkPanY);
+
+    private static double EffectiveStrokeWidth(InkStrokeView stroke, IReadOnlyList<InkPointView> points) =>
+        Math.Clamp(stroke.Width * Math.Clamp(points.Average(point => point.Pressure), 0.25, 1), 0.8, 64);
+
+    private static IBrush BrushForInk(string color)
+    {
+        try { return new SolidColorBrush(Color.Parse(color)); }
+        catch { return Brushes.Black; }
     }
 
     private static async Task EraseAtAsync(BoardsViewModel viewModel, double x, double y)
@@ -792,6 +907,13 @@ internal sealed class BoardsApp : Application
             await adapter.EraseInkAtCurrentPageAsync(x, y);
         else
             await viewModel.ClearInkAsync();
+        viewModel.RefreshAfterEdit();
+    }
+
+    private static async Task SelectInkAtAsync(BoardsViewModel viewModel, double x, double y)
+    {
+        if (viewModel.Session is ContractSessionAdapter adapter)
+            await adapter.SelectInkAtCurrentPageAsync(x, y);
         viewModel.RefreshAfterEdit();
     }
 
@@ -815,21 +937,6 @@ internal sealed class BoardsApp : Application
         {
             return 0.5;
         }
-    }
-
-    private static void DrawDot(Canvas canvas, Point position, double width)
-    {
-        // Visual feedback only; the stroke is committed once per gesture on release.
-        var size = Math.Clamp(width, 2, 24);
-        canvas.Children.Add(new Avalonia.Controls.Shapes.Ellipse
-        {
-            Width = size,
-            Height = size,
-            Fill = Brushes.Black,
-        });
-        var dot = canvas.Children[^1];
-        Canvas.SetLeft(dot, position.X - size / 2);
-        Canvas.SetTop(dot, position.Y - size / 2);
     }
 
     /// <summary>

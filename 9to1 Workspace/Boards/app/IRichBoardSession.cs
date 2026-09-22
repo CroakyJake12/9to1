@@ -66,6 +66,23 @@ public sealed class RichBoardBlock
     public int InkStrokeCount { get; set; }
 }
 
+/// <summary>Read-only page-level drawing data for the overlay renderer.</summary>
+public sealed class InkStrokeView
+{
+    public List<InkPointView> Points { get; set; } = [];
+    public double Width { get; set; } = 2.5;
+    public string Color { get; set; } = "#FF111111";
+    public string Tool { get; set; } = "Pen";
+    public bool Selected { get; set; }
+}
+
+public sealed class InkPointView
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+    public double Pressure { get; set; } = 0.5;
+}
+
 /// <summary>Table-level formatting surfaced to the editor.</summary>
 public sealed class RichTableStyleView
 {
