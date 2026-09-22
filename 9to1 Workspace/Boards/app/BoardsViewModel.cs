@@ -41,7 +41,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         Set("SaveStateText", MapSaveState(_session.Status));
     }
 
-    internal static string MapSaveState(string status)
+    public static string MapSaveState(string status)
     {
         if (string.IsNullOrWhiteSpace(status))
             return "Saved";
@@ -1419,6 +1419,50 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         PushDocumentToBindings();
         _session.MarkDirty();
         RequestRebuild();
+    }
+
+    private readonly Dictionary<string, (long Version, byte[] Bytes)> _imageBytesCache = new(StringComparer.Ordinal);
+
+    /// <summary>Embedded image bytes without file IO (sidecars need the async path).</summary>
+    public byte[]? TryResolveImageBytes(string blockId)
+    {
+        if (_session is ContractSessionAdapter adapter)
+        {
+            var version = adapter.DocumentVersion;
+            if (_imageBytesCache.TryGetValue(blockId, out var cached) && cached.Version == version)
+                return cached.Bytes;
+            var bytes = adapter.TryGetEmbeddedImageBytes(blockId);
+            if (bytes is not null)
+                _imageBytesCache[blockId] = (version, bytes);
+            return bytes;
+        }
+        var view = FindBlock(blockId)?.Image?.DataBase64;
+        if (string.IsNullOrEmpty(view))
+            return null;
+        try
+        {
+            return Convert.FromBase64String(view);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Display bytes for an image block, resolved from the contract (never stored in the view).</summary>
+    public async Task<byte[]?> ResolveImageBytesAsync(string blockId)
+    {
+        var immediate = TryResolveImageBytes(blockId);
+        if (immediate is not null)
+            return immediate;
+        if (_session is ContractSessionAdapter adapter)
+        {
+            var bytes = await adapter.GetImageBytesAsync(blockId);
+            if (bytes is not null)
+                _imageBytesCache[blockId] = (adapter.DocumentVersion, bytes);
+            return bytes;
+        }
+        return null;
     }
 
     public async Task ReplaceImageAsync(string blockId)

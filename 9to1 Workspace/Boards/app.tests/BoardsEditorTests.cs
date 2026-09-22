@@ -16,44 +16,10 @@ namespace CakeOS.Apps.Boards.App.Tests;
 
 public sealed class BoardsEditorTests
 {
-    private static readonly object HeadlessGate = new();
-    private static bool _headlessStarted;
-
-    private static void EnsureHeadless()
-    {
-        lock (HeadlessGate)
-        {
-            if (_headlessStarted)
-                return;
-            // Yield to the legacy suite's initializer: whichever thread calls
-            // SetupWithoutStarting owns the headless UI thread, and
-            // thread-affine paths (ItemsControl.Items) only work there.
-            // Waiting keeps the original owner (BoardsAppTests) in full runs;
-            // solo runs fall through to self-init after the grace period.
-            for (var i = 0; i < 200 && Application.Current is null; i++)
-                Thread.Sleep(10);
-            if (Application.Current is null)
-            {
-                try
-                {
-                    AppBuilder.Configure<Application>()
-                        .UseHeadless(new AvaloniaHeadlessPlatformOptions())
-                        .SetupWithoutStarting();
-                }
-                catch (InvalidOperationException)
-                {
-                    // Another test class already started the headless platform.
-                }
-            }
-            _headlessStarted = true;
-        }
-    }
-
-    private static Task<T> OnUiThreadAsync<T>(Func<T> work)
-    {
-        EnsureHeadless();
-        return Task.FromResult(work());
-    }
+    private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
+        // All UI work funnels through the shared test UI thread: with Skia
+        // registered, control trees are strictly thread-affine.
+        Task.FromResult(TestUiThread.Run(work));
 
     [Fact]
     public async Task Dynamic_checklist_renders_one_row_per_item()
@@ -238,8 +204,8 @@ public sealed class BoardsEditorTests
         // ListBox.Items, which is thread-affine to whichever test class owned
         // headless init. Full-load coverage lives in
         // BoardsAppTests.Boards_cui_loader_builds_non_null_root; here we prove
-        // the declared surface plus the automationid lookup path on a small
-        // loader-built tree (no ItemsControl children).
+        // the declared product surface plus the automationid lookup path on a
+        // small loader-built tree (no ItemsControl children).
         var path = FindBoardsCui();
         var parser = new CakeOS.Cui.Language.CuiRichParser();
         var document = parser.ParseFile(path);
@@ -249,16 +215,18 @@ public sealed class BoardsEditorTests
             .ToArray();
         Assert.True(errors.Length == 0, $"Boards.cui parse errors: {string.Join("; ", errors)}");
 
+        var expected = new[]
+        {
+            "TopBarLeft", "TopBarRight", "BoardTitleBox", "NavSearchBox", "NavHost",
+            "ToolbarHost", "ContextHost", "EditorScroll", "PageCard", "BlocksHost",
+        };
         var components = document.Components
             .SelectMany(c => c.DescendantsAndSelf())
-            .Where(c => c.Name is "BlocksHost" or "StyleBox" or "AddKindBox" or "AddBlockKind" or "BoardTitleBox")
+            .Where(c => c.Properties.TryGetValue("automationid", out var id)
+                && id is CakeOS.Cui.CuiLiteralValue literal
+                && expected.Contains(literal.Value, StringComparer.Ordinal))
             .ToArray();
-        Assert.Equal(5, components.Length);
-        foreach (var component in components)
-        {
-            Assert.True(component.Properties.ContainsKey("automationid"),
-                $"Component {component.Name} lacks automationid");
-        }
+        Assert.Equal(expected.Length, components.Length);
 
         var found = await OnUiThreadAsync(() =>
         {
@@ -268,18 +236,18 @@ public sealed class BoardsEditorTests
                 <Cui>
                   <StackPanel>
                     <TextBox automationid="BoardTitleBox" text="Title" />
-                    <ComboBox automationid="StyleBox" />
-                    <ComboBox automationid="AddKindBox" />
-                    <Button automationid="AddBlockKind" content="Insert" />
+                    <StackPanel automationid="NavHost" />
+                    <StackPanel automationid="ToolbarHost" />
+                    <StackPanel automationid="ContextHost" />
                     <StackPanel automationid="BlocksHost" />
                   </StackPanel>
                 </Cui>
                 """,
                 "boards-host-lookup.cui").Root);
             return FindByAutomationId<StackPanel>(root, "BlocksHost") is not null
-                && FindByAutomationId<ComboBox>(root, "StyleBox") is not null
-                && FindByAutomationId<ComboBox>(root, "AddKindBox") is not null
-                && FindByAutomationId<Button>(root, "AddBlockKind") is not null
+                && FindByAutomationId<StackPanel>(root, "NavHost") is not null
+                && FindByAutomationId<StackPanel>(root, "ToolbarHost") is not null
+                && FindByAutomationId<StackPanel>(root, "ContextHost") is not null
                 && FindByAutomationId<TextBox>(root, "BoardTitleBox") is not null;
         });
         Assert.True(found);

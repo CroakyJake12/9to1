@@ -108,4 +108,25 @@ public static class BoardsTheme
             return false;
         }
     }
+
+    /// <summary>True when a background is dark enough to need light text.</summary>
+    public static bool IsDarkBackground(string? hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex))
+            return false;
+        try
+        {
+            var color = Color.Parse(hex.Trim());
+            var luminance = (0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B) / 255.0;
+            return luminance < 0.35;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Readable text for a background when no explicit foreground was authored.</summary>
+    public static IBrush ContrastText(string? backgroundHex) =>
+        IsDarkBackground(backgroundHex) ? Brush("#FFF5F5F5") : TextBrush;
 }

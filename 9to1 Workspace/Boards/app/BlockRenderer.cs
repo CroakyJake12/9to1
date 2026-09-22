@@ -168,7 +168,8 @@ public static class BlockRenderer
         else if (TryBrush(style?.Foreground, out var styleForeground))
             box.Foreground = styleForeground;
         else
-            box.Foreground = BoardsTheme.TextBrush;
+            box.Foreground = BoardsTheme.ContrastText(
+                !string.IsNullOrEmpty(block.Background) ? block.Background : style?.Background);
         ToolTip.SetTip(box, (isHeading ? "Heading" : "Paragraph") + " — select to format");
         AutomationProperties.SetName(box, (isHeading ? "Heading" : "Paragraph") + " editor");
         var captured = block.Id;
@@ -369,7 +370,7 @@ public static class BlockRenderer
                 if (cellStyle is not null && TryBrush(cellStyle.Foreground, out var cellForeground))
                     box.Foreground = cellForeground;
                 else
-                    box.Foreground = BoardsTheme.TextBrush;
+                    box.Foreground = BoardsTheme.ContrastText(cellStyle?.Background);
                 box.TextAlignment = ParseAlignment(cellStyle?.AlignH ?? "inherit");
                 box.VerticalAlignment = cellStyle?.AlignV switch
                 {
@@ -440,65 +441,114 @@ public static class BlockRenderer
         var shell = BlockShell(vm, block);
         var image = block.Image;
         var selected = vm.SelectedBlockId == block.Id;
-        Control content;
-        if (image?.DataBase64 is { Length: > 0 } data)
-        {
-            try
-            {
-                var bytes = Convert.FromBase64String(data);
-                using var stream = new MemoryStream(bytes);
-                var bitmap = new Bitmap(stream);
-                content = new Image
-                {
-                    Source = bitmap,
-                    Width = image.Width > 0 ? image.Width : double.NaN,
-                    MaxWidth = 720,
-                    Stretch = Stretch.Uniform,
-                    HorizontalAlignment = image.Alignment switch
-                    {
-                        "center" => HorizontalAlignment.Center,
-                        "right" => HorizontalAlignment.Right,
-                        _ => HorizontalAlignment.Left,
-                    },
-                    Margin = new Thickness(0, 4, 0, 4),
-                };
-                AutomationProperties.SetName(content, "Image: " + (image.AltText is { Length: > 0 } altText ? altText : image.DisplayName));
-            }
-            catch
-            {
-                content = new TextBlock
-                {
-                    Text = "Image bytes are not decodable: " + image.DisplayName,
-                    FontSize = 13,
-                    Foreground = BoardsTheme.ErrorBrush,
-                    Margin = new Thickness(0, 4, 0, 4),
-                };
-            }
-        }
-        else
-        {
-            content = new TextBlock
-            {
-                Text = "No image bytes yet — use Replace to choose a file.",
-                FontSize = 13,
-                Foreground = BoardsTheme.SecondaryTextBrush,
-                Margin = new Thickness(0, 4, 0, 4),
-            };
-        }
-        // Selection outline only while selected; editors live in the contextual strip.
+        // Bytes resolve asynchronously from the contract (the view never hauls
+        // payloads); a placeholder shows until the bitmap lands.
         var frame = new Border
         {
-            Child = content,
             BorderBrush = BoardsTheme.AccentBrush,
             BorderThickness = new Thickness(selected ? 2 : 0),
             CornerRadius = new CornerRadius(6),
             Padding = new Thickness(selected ? 4 : 0),
             HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 4, 0, 4),
+            Child = new TextBlock
+            {
+                Text = "Loading image…",
+                FontSize = 13,
+                Foreground = BoardsTheme.SecondaryTextBrush,
+            },
         };
         var captured = block.Id;
+        var alignment = image?.Alignment;
+        var alt = image?.AltText;
+        var displayName = image?.DisplayName ?? "image";
+        var width = image?.Width ?? 0;
         frame.PointerPressed += (_, _) => vm.FocusBlock(captured);
+        _ = LoadImageIntoAsync(frame, vm, captured, alignment, alt, displayName, width);
         shell.Children.Add(frame);
         return shell;
+    }
+
+    private static async Task LoadImageIntoAsync(
+        Border frame, BoardsViewModel vm, string blockId,
+        string? alignment, string? altText, string displayName, double width)
+    {
+        // Embedded bytes resolve synchronously (cached per document version);
+        // only sidecar payloads take the async path below.
+        var immediate = vm.TryResolveImageBytes(blockId);
+        if (immediate is not null)
+        {
+            SetImageContent(frame, immediate, alignment, altText, displayName, width);
+            return;
+        }
+        byte[]? bytes = null;
+        try
+        {
+            bytes = await vm.ResolveImageBytesAsync(blockId).ConfigureAwait(false);
+        }
+        catch
+        {
+            bytes = null;
+        }
+        if (bytes is null)
+        {
+            SetImagePlaceholder(frame, displayName);
+            return;
+        }
+        var captured = bytes;
+        if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            SetImageContent(frame, captured, alignment, altText, displayName, width);
+        else
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                SetImageContent(frame, captured, alignment, altText, displayName, width));
+    }
+
+    private static void SetImagePlaceholder(Border frame, string displayName) =>
+        frame.Child = new TextBlock
+        {
+            Text = displayName == "image (choose a file)"
+                ? "No image bytes yet — use Replace to choose a file."
+                : "Image unavailable: " + displayName,
+            FontSize = 13,
+            Foreground = BoardsTheme.SecondaryTextBrush,
+            Margin = new Thickness(0, 4, 0, 4),
+        };
+
+    private static void SetImageContent(
+        Border frame, byte[] bytes, string? alignment, string? altText, string displayName, double width)
+    {
+        try
+        {
+            using var stream = new MemoryStream(bytes);
+            var bitmap = new Bitmap(stream);
+            var control = new Image
+            {
+                Source = bitmap,
+                Width = width > 0 ? width : double.NaN,
+                MaxWidth = 720,
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = alignment switch
+                {
+                    "center" => HorizontalAlignment.Center,
+                    "right" => HorizontalAlignment.Right,
+                    _ => HorizontalAlignment.Left,
+                },
+                Margin = new Thickness(0, 4, 0, 4),
+            };
+            AutomationProperties.SetName(control, "Image: " +
+                (!string.IsNullOrEmpty(altText) ? altText : displayName));
+            frame.Child = control;
+        }
+        catch
+        {
+            frame.Child = new TextBlock
+            {
+                Text = "Image bytes are not decodable: " + displayName,
+                FontSize = 13,
+                Foreground = BoardsTheme.ErrorBrush,
+                Margin = new Thickness(0, 4, 0, 4),
+            };
+        }
     }
 
     // ----- Graph -----
@@ -1075,7 +1125,7 @@ public static class BlockRenderer
         if (!vm.SupportsFreeform)
             header.Children.Add(new TextBlock
             {
-                Text = "  Open a .9to1board file to use freeform.",
+                Text = "  Save the board to enable freeform.",
                 FontSize = 12,
                 Foreground = BoardsTheme.SecondaryTextBrush,
                 VerticalAlignment = VerticalAlignment.Center,

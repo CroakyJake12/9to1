@@ -90,7 +90,7 @@ public static class HavenRichStyles
         new() { Id = "heading-2", Name = "Header 2", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 21, SpaceBefore = 12, SpaceAfter = 6 },
         new() { Id = "heading-3", Name = "Header 3", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 17, SpaceBefore = 10, SpaceAfter = 4 },
         new() { Id = "quote", Name = "Quote", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Paragraph, Italic = true, Foreground = "#FF9AA0A6", IndentLevel = 1, SpaceBefore = 8, SpaceAfter = 8 },
-        new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Paragraph, FontFamily = "Cascadia Mono", FontSize = 13, Background = "#FF2B2B2B", SpaceBefore = 8, SpaceAfter = 8 },
+        new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Paragraph, FontFamily = "Cascadia Mono", FontSize = 13, Foreground = "#FF24292E", Background = "#FFF1F3F4", SpaceBefore = 8, SpaceAfter = 8 },
     ];
 
     public static void ValidateStyles(HavenRichNotes notes)

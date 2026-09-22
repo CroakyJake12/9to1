@@ -17,35 +17,14 @@ namespace CakeOS.Apps.Boards.App.Tests;
 
 public sealed class BoardsAppTests
 {
-    private static readonly object HeadlessGate = new();
-    private static bool _headlessStarted;
-
-    private static void EnsureHeadless()
-    {
-        lock (HeadlessGate)
-        {
-            if (_headlessStarted)
-                return;
-            AppBuilder.Configure<Application>()
-                .UseHeadless(new AvaloniaHeadlessPlatformOptions())
-                .SetupWithoutStarting();
-            _headlessStarted = true;
-        }
-    }
-
-    private static Task<T> OnUiThreadAsync<T>(Func<T> work)
-    {
-        // Run directly on the calling test thread: control trees are
-        // thread-affine, so each test keeps creation AND access inside a
-        // single delegate invocation (never split across awaits).
-        EnsureHeadless();
-        return Task.FromResult(work());
-    }
+    private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
+        // All UI work funnels through the shared test UI thread: with Skia
+        // registered, control trees are strictly thread-affine.
+        Task.FromResult(TestUiThread.Run(work));
 
     private static Task OnUiThreadAsync(Action work)
     {
-        EnsureHeadless();
-        work();
+        TestUiThread.Run(work);
         return Task.CompletedTask;
     }
     private static string FindBoardsCui()

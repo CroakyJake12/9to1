@@ -86,6 +86,9 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     public string? FilePath => _real.FilePath;
     public event EventHandler<string>? StatusChanged;
 
+    /// <summary>Monotonic contract revision for cache invalidation.</summary>
+    public long DocumentVersion => _real.HasRichNotes ? _real.Rich.Version : -1;
+
     public IReadOnlyList<RichStyleView> Styles =>
         _real.HasRichNotes
             ? _real.Rich.Styles
@@ -314,6 +317,69 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         string sourcePath, CancellationToken cancellationToken = default) =>
         _real.ImportAttachmentAsync(sourcePath, cancellationToken);
 
+    /// <summary>Embedded image bytes without file IO (sidecars need the async path).</summary>
+    public byte[]? TryGetEmbeddedImageBytes(string blockId)
+    {
+        ThrowIfDisposed();
+        var data = _real.HasRichNotes
+            ? _real.Rich.Sections.SelectMany(s => s.Pages).SelectMany(p => p.Blocks)
+                .FirstOrDefault(b => b.Id == blockId)?.Image?.DataBase64
+            : null;
+        if (string.IsNullOrEmpty(data))
+            return null;
+        try
+        {
+            return Convert.FromBase64String(data);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Resolves display bytes for an image block (embedded or sidecar).</summary>
+    public Task<byte[]?> GetImageBytesAsync(string blockId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        var image = _real.HasRichNotes
+            ? _real.Rich.Sections.SelectMany(s => s.Pages).SelectMany(p => p.Blocks)
+                .FirstOrDefault(b => b.Id == blockId)?.Image
+            : null;
+        if (image is null)
+            return Task.FromResult<byte[]?>(null);
+        if (!string.IsNullOrEmpty(image.DataBase64))
+        {
+            try
+            {
+                return Task.FromResult<byte[]?>(Convert.FromBase64String(image.DataBase64));
+            }
+            catch (FormatException)
+            {
+                return Task.FromResult<byte[]?>(null);
+            }
+        }
+        if (!string.IsNullOrEmpty(image.LocalReference) &&
+            image.LocalReference.StartsWith("sidecar:", StringComparison.Ordinal))
+        {
+            try
+            {
+                var blob = Path.Combine(
+                    RichBoardSession.SidecarDirectoryFor(_real.FilePath),
+                    image.LocalReference["sidecar:".Length..] + ".blob");
+                return Task.FromResult<byte[]?>(File.Exists(blob) ? File.ReadAllBytes(blob) : null);
+            }
+            catch (IOException)
+            {
+                return Task.FromResult<byte[]?>(null);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Task.FromResult<byte[]?>(null);
+            }
+        }
+        return Task.FromResult<byte[]?>(null);
+    }
     public Task<HavenAttachmentResolution> ResolveAttachmentAsync(
         string attachmentId, CancellationToken cancellationToken = default)
     {

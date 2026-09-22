@@ -16,8 +16,6 @@ namespace CakeOS.Apps.Boards.App.Tests;
 
 public sealed class VisualCaptureTests
 {
-    private static readonly object PumpGate = new();
-
     internal static string ShotsDirectory()
     {
         var dir = Environment.GetEnvironmentVariable("BOARDS_SHOTS");
@@ -43,66 +41,16 @@ public sealed class VisualCaptureTests
         throw new FileNotFoundException("Boards.cui was not found from the test output directory.");
     }
 
-    private static readonly System.Collections.Concurrent.BlockingCollection<CaptureRequest> WorkQueue = new();
-    private static Thread? _uiThread;
+    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false) =>
+        // Funnelled through the shared test UI thread like every other suite.
+        TestUiThread.Run(() => CaptureOnUiThread(boardPath, width, height, shotName, dark));
 
-    private sealed record CaptureRequest(
-        string BoardPath, int Width, int Height, string ShotName, bool Dark,
-        TaskCompletionSource<string> Completion);
-
-    /// <summary>
-    /// All capture work runs on ONE dedicated thread (bootstrap included):
-    /// with Skia registered, control trees are strictly thread-affine and
-    /// xUnit facts may arrive on different pool threads.
-    /// </summary>
-    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false)
+    private static string CaptureOnUiThread(string boardPath, int width, int height, string shotName, bool dark)
     {
-        lock (PumpGate)
-        {
-            if (_uiThread is null)
-            {
-                _uiThread = new Thread(RunLoop) { IsBackground = true, Name = "BoardsShotThread" };
-                _uiThread.SetApartmentState(ApartmentState.STA);
-                _uiThread.Start();
-            }
-        }
-        var completion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
-        WorkQueue.Add(new CaptureRequest(boardPath, width, height, shotName, dark, completion));
-        return completion.Task.GetAwaiter().GetResult();
-    }
-
-    private static void RunLoop()
-    {
-        // Headless windowing (no OS window) + Skia CPU rasterizer so
-        // RenderTargetBitmap captures real pixels (headless-only drawing
-        // is a no-op stub and bitmap Save writes nothing).
-        AppBuilder.Configure<Application>()
-            .UseHeadless(new AvaloniaHeadlessPlatformOptions())
-            .UseSkia()
-            .SetupWithoutStarting();
-        Application.Current?.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
-        foreach (var request in WorkQueue.GetConsumingEnumerable())
-        {
-            try
-            {
-                request.Completion.SetResult(CaptureOnUiThread(request));
-            }
-            catch (Exception error)
-            {
-                request.Completion.SetException(
-                    new InvalidOperationException("Capture failed: " + error.Message, error));
-            }
-        }
-    }
-
-    private static string CaptureOnUiThread(CaptureRequest request)
-    {
-        var (boardPath, width, height, shotName) =
-            (request.BoardPath, request.Width, request.Height, request.ShotName);
         var priorMode = BoardsTheme.Mode;
-        BoardsTheme.SetMode(request.Dark ? BoardsThemeMode.Dark : BoardsThemeMode.Light);
+        BoardsTheme.SetMode(dark ? BoardsThemeMode.Dark : BoardsThemeMode.Light);
         if (Avalonia.Application.Current is not null)
-            Avalonia.Application.Current.RequestedThemeVariant = request.Dark
+            Avalonia.Application.Current.RequestedThemeVariant = dark
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
         try

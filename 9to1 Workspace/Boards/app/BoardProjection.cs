@@ -344,7 +344,13 @@ internal static class MergeDeltas
                     break;
                 case "checklist":
                     // Plain-id checklist block created in the editor: a brand-new item.
-                    MergeNewItem(rich, page, viewBlock);
+                    MergeNewItem(rich, page, viewBlock, null);
+                    break;
+                case "bulleted":
+                    MergeNewItem(rich, page, viewBlock, HavenRichBlockKind.BulletList);
+                    break;
+                case "numbered":
+                    MergeNewItem(rich, page, viewBlock, HavenRichBlockKind.NumberedList);
                     break;
                 case "table":
                     MergeTableStructure(rich, page, contractBlock, viewBlock, baselineBlock);
@@ -426,7 +432,7 @@ internal static class MergeDeltas
                     foreground: viewBlock.Foreground);
             return;
         }
-        MergeNewItem(rich, page, NewViewBlock(itemId, viewBlock));
+        MergeNewItem(rich, page, NewViewBlock(itemId, viewBlock), null);
     }
 
     private static bool ItemFormatChanged(RichBoardBlock current, RichBoardBlock baseline) =>
@@ -434,11 +440,13 @@ internal static class MergeDeltas
         current.Underline != baseline.Underline || current.Strike != baseline.Strike ||
         current.Baseline != baseline.Baseline || current.Foreground != baseline.Foreground;
 
-    private static void MergeNewItem(HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock)
+    private static void MergeNewItem(
+        HavenRichNotes rich, HavenRichPage page, RichBoardBlock viewBlock, HavenRichBlockKind? preferredKind)
     {
         var target = page.Blocks.FirstOrDefault(b =>
             b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList);
-        target ??= HavenRichNotesOps.ImportBlock(page, HavenRichBlockKind.Checklist, NewBlockId(page));
+        target ??= HavenRichNotesOps.ImportBlock(
+            page, preferredKind ?? HavenRichBlockKind.Checklist, NewBlockId(page));
         var itemId = TrySplitItemId(viewBlock.Id, out _, out var item) ? item : NewItemId(target);
         if (target.Items.Any(i => i.Id == itemId))
             return;
@@ -618,12 +626,20 @@ internal static class MergeDeltas
                 break;
             }
             case "checklist":
+            case "bulleted":
+            case "numbered":
             {
+                var kind = viewBlock.Kind switch
+                {
+                    "bulleted" => HavenRichBlockKind.BulletList,
+                    "numbered" => HavenRichBlockKind.NumberedList,
+                    _ => HavenRichBlockKind.Checklist,
+                };
                 var parent = page.Blocks.FirstOrDefault(b =>
                     b.Kind is HavenRichBlockKind.Checklist or HavenRichBlockKind.BulletList or HavenRichBlockKind.NumberedList);
                 if (parent is null)
                 {
-                    parent = HavenRichNotesOps.ImportBlock(page, HavenRichBlockKind.Checklist, NewBlockId(page));
+                    parent = HavenRichNotesOps.ImportBlock(page, kind, NewBlockId(page));
                     checklistByParent[parent.Id] = parent;
                 }
                 HavenRichNotesOps.ImportListItem(parent, NewItemId(parent), viewBlock.Text, viewBlock.IsChecked);

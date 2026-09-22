@@ -829,8 +829,7 @@ public sealed class HavenRichBoardV3Tests
     // ---------- helpers ----------
 
     [Fact]
-    public async Task Canvas_objects_move_resize_retext_and_remove_with_reopen()
-    {
+    public async Task Canvas_objects_move_resize_retext_and_remove_with_reopen()    {
         await WithStoreAsync(async (store, root) =>
         {
             var path = Path.Combine(root, "canvas.9to1board");
