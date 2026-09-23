@@ -1,6 +1,6 @@
 # Master Migration Status
 
-Last reconciled: 2026-09-23 against the dirty canonical checkout on `main` at `108404713bdd6a1a90400e5357abd63d38e65bf7`. The initial 2026-09-21 rows below retain their historical scope; the current framework validation is recorded here and in `docs/9TO1_COMPLETION_STATE.md`.
+Last reconciled: 2026-09-23 against the **canonical `C:\Github\9to1` checkout** on `main` at `d949fcf23f10b75694d4b6614108c0d92eada9c4`. The initial 2026-09-21 rows below retain their historical scope; the two-checkout reconciliation and current framework validation are recorded in `docs/9TO1_COMPLETION_STATE.md`.
 
 This is an evidence ledger. `PASS` means only the named check passed; it does
 not mean the product is complete. A row can be `VERIFIED` only after its full
