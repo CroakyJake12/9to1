@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using System.Collections.ObjectModel;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Themes;
 
@@ -15,9 +16,12 @@ public sealed class CuiControlLoader
     private readonly Dictionary<string, Func<Control>> _controlFactory;
     private readonly Dictionary<string, string> _resourceScope;
     private readonly List<(Control Control, string PropertyName, CuiBindingValue Binding)> _liveBindings = new();
+    private readonly Dictionary<Control, CuiComponent> _authoredControls = new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
+    private readonly HashSet<Control> _wiredActions = new(ReferenceEqualityComparer.Instance);
     private ICuiBindingContext? _bindingContext;
     private ICuiActionDispatcher? _actionDispatcher;
-    private readonly CuiThemeScopeStack _themeStack = new();
+    private CuiThemeScopeStack _themeStack = new(CuiSurfacePaletteCatalog.ActiveTheme);
     private string _currentSurface = "Home";
 
     /// <summary>Set a binding context for live {Binding path} resolution.</summary>
@@ -31,6 +35,24 @@ public sealed class CuiControlLoader
 
     /// <summary>The currently active theme at the current point in the tree.</summary>
     public CuiTheme CurrentTheme => _themeStack.Current;
+
+    /// <summary>Read-only diagnostic snapshot for a control created by this loader.</summary>
+    public CuiControlDiagnostics? Inspect(Control control)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        if (!_authoredControls.TryGetValue(control, out var component)) return null;
+        var command = control.Tag as string;
+        return new CuiControlDiagnostics(
+            component.Span, component.Type, component.Name,
+            new ReadOnlyDictionary<string, CuiValue>(new Dictionary<string, CuiValue>(component.Properties)),
+            new ReadOnlyDictionary<string, CuiActionReference>(new Dictionary<string, CuiActionReference>(component.Actions)),
+            _observedBindings.TryGetValue(control, out var bindings)
+                ? Array.AsReadOnly(bindings.Values.ToArray()) : [],
+            _actionDispatcher is not null, _wiredActions.Contains(control),
+            command is null ? null : (_actionDispatcher as ICuiActionAvailability)?.IsActionAvailable(command),
+            command is null || _actionDispatcher is not CuiViewModel viewModel
+                ? null : viewModel.HasAction(command));
+    }
 
     public CuiControlLoader()
     {
@@ -74,6 +96,13 @@ public sealed class CuiControlLoader
     public Control? Load(CuiDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
+        // Reusing a loader must not leak definitions or live controls from a prior document.
+        _resourceScope.Clear();
+        _liveBindings.Clear();
+        _authoredControls.Clear();
+        _observedBindings.Clear();
+        _wiredActions.Clear();
+        _themeStack = new CuiThemeScopeStack(CuiSurfacePaletteCatalog.ActiveTheme);
 
         // Populate resource scope
         foreach (var (key, def) in document.Resources)
@@ -133,6 +162,7 @@ public sealed class CuiControlLoader
         {
             var dispatcher = _actionDispatcher;
             button.Click += async (s, e) => await dispatcher.DispatchAsync(actionName, null);
+            _wiredActions.Add(button);
         }
 
         // Recurse into visual children
@@ -161,7 +191,7 @@ public sealed class CuiControlLoader
         // === DefaultTheme is a scope marker, not a visual control ===
         if (component.IsThemeScope && component.DefaultTheme is not null)
         {
-            var resolvedTheme = CuiThemeScope.ResolveThemeName(component.DefaultTheme, CuiTheme.Glow);
+            var resolvedTheme = CuiThemeScope.ResolveThemeName(component.DefaultTheme, CuiSurfacePaletteCatalog.ActiveTheme);
             _themeStack.Push(resolvedTheme);
 
             try
@@ -207,6 +237,7 @@ public sealed class CuiControlLoader
         }
 
         var control = CreateControl(component);
+        _authoredControls.Add(control, component);
         if (!string.IsNullOrWhiteSpace(component.Name))
         {
             control.Name = component.Name;
@@ -283,7 +314,7 @@ public sealed class CuiControlLoader
         _liveBindings.Add((control, propName, binding));
 
         // Apply initial value
-        var resolved = ResolveBindingValue(binding);
+        var resolved = ResolveObservedBinding(control, propName, binding);
         if (resolved is null) return;
         ApplyLiteralProperty(control, propName, resolved);
     }
@@ -297,7 +328,7 @@ public sealed class CuiControlLoader
         foreach (var (control, propName, binding) in _liveBindings)
         {
             if (control.IsLoaded == false) continue;
-            var resolved = ResolveBindingValue(binding);
+            var resolved = ResolveObservedBinding(control, propName, binding);
             if (resolved is null) continue;
             ApplyLiteralProperty(control, propName, resolved);
         }
@@ -693,6 +724,46 @@ public sealed class CuiControlLoader
         }
         // Fall back to declared fallback value
         return binding.Fallback;
+    }
+
+    private string? ResolveObservedBinding(Control control, string property, CuiBindingValue binding)
+    {
+        string? value = null;
+        string? sourceType = null;
+        var sourceFound = false;
+        var usedFallback = false;
+        string? error = null;
+        try
+        {
+            value = ResolveSpecialBinding(binding.Path);
+            if (value is not null)
+            {
+                sourceFound = true;
+                sourceType = "CUI theme context";
+            }
+            else if (_bindingContext is not null && _bindingContext.TryGetValue(binding.Path, out var result))
+            {
+                sourceFound = true;
+                sourceType = result?.GetType().Name;
+                value = result?.ToString();
+            }
+            else
+            {
+                usedFallback = binding.Fallback is not null;
+                value = binding.Fallback;
+            }
+        }
+        catch (Exception exception)
+        {
+            error = $"{exception.GetType().Name}: {exception.Message}";
+            usedFallback = binding.Fallback is not null;
+            value = binding.Fallback;
+        }
+
+        if (!_observedBindings.TryGetValue(control, out var observed))
+            _observedBindings[control] = observed = new Dictionary<string, CuiObservedBinding>(StringComparer.OrdinalIgnoreCase);
+        observed[property] = new CuiObservedBinding(property, binding, value, sourceType, usedFallback, sourceFound, error);
+        return value;
     }
 
     private static Thickness ParseThickness(string value)

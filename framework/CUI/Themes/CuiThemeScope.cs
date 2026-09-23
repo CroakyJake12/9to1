@@ -46,21 +46,18 @@ public sealed class CuiThemeScope
     /// </summary>
     public static CuiTheme ResolveThemeName(string? themeName, CuiTheme globalDefault)
     {
-        // Use the catalog's active theme as the global default
-        var effectiveDefault = CuiSurfacePaletteCatalog.ActiveTheme;
-
         if (string.IsNullOrWhiteSpace(themeName))
-            return effectiveDefault;
+            return globalDefault;
 
         return themeName.Trim() switch
         {
-            "Default" or "default" => effectiveDefault,
+            "Default" or "default" => globalDefault,
             "Glow" or "glow" => CuiTheme.Glow,
             "Bubble" or "bubble" => CuiTheme.Bubble,
             "Retro" or "retro" => CuiTheme.Retro,
             "Playful" or "playful" => CuiTheme.Playful,
             "Cinematic" or "cinematic" => CuiTheme.Cinematic,
-            _ => effectiveDefault // Unknown themes fall back to default, not crash
+            _ => globalDefault // Unknown themes fall back to default, not crash
         };
     }
 }
@@ -143,8 +140,9 @@ public static class CuiThemeScopeApplier
     /// </summary>
     public static void ApplyGlobalTheme(CuiTheme theme, string surface = "Home")
     {
+        CuiSurfacePaletteCatalog.ActiveTheme = theme;
         var appearance = DetectAppearance();
-        var palette = CuiSurfacePaletteCatalog.For(surface, appearance);
+        var palette = CuiSurfacePaletteCatalog.For(surface, appearance, theme);
         CuiThemeResourceApplier.Apply(palette);
     }
 

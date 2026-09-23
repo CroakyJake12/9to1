@@ -215,8 +215,105 @@ public sealed class CuiThemeTests
     public void DefaultTheme_resolves_to_global_default()
     {
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Bubble;
-        var resolved = CuiThemeScope.ResolveThemeName("Default", CuiTheme.Glow);
+        var resolved = CuiThemeScope.ResolveThemeName("Default", CuiSurfacePaletteCatalog.ActiveTheme);
         Assert.Equal(CuiTheme.Bubble, resolved); // "Default" uses global setting
+        CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
+    }
+
+    [Fact]
+    public void Theme_scope_uses_supplied_default_instead_of_process_global()
+    {
+        var saved = CuiSurfacePaletteCatalog.ActiveTheme;
+        try
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Cinematic;
+            Assert.Equal(CuiTheme.Bubble, CuiThemeScope.ResolveThemeName("Default", CuiTheme.Bubble));
+            Assert.Equal(CuiTheme.Bubble, CuiThemeScope.ResolveThemeName(null, CuiTheme.Bubble));
+            Assert.Equal(CuiTheme.Bubble, CuiThemeScope.ResolveThemeName("Unknown", CuiTheme.Bubble));
+        }
+        finally
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = saved;
+        }
+    }
+
+    [Fact]
+    public void Applying_global_theme_updates_active_theme_for_subsequent_surface_loads()
+    {
+        var saved = CuiSurfacePaletteCatalog.ActiveTheme;
+        try
+        {
+            CuiThemeScopeApplier.ApplyGlobalTheme(CuiTheme.Retro);
+            Assert.Equal(CuiTheme.Retro, CuiSurfacePaletteCatalog.ActiveTheme);
+            Assert.Equal(CuiTheme.Retro, CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark).Theme);
+            Assert.Equal(CuiTheme.Retro, new Runtime.CuiControlLoader().CurrentTheme);
+        }
+        finally
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = saved;
+        }
+    }
+
+    [Fact]
+    public void Loader_reads_global_theme_at_load_time_and_preserves_explicit_scope()
+    {
+        var saved = CuiSurfacePaletteCatalog.ActiveTheme;
+        try
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
+            var loader = new Runtime.CuiControlLoader();
+            CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Bubble;
+            var (root, diagnostics) = loader.LoadMarkup("""
+                <Cui id="theme.loader" version="1">
+                  <DefaultTheme value="Default">
+                    <Page id="root">
+                      <DefaultTheme value="Retro"><Border id="retro" /></DefaultTheme>
+                    </Page>
+                  </DefaultTheme>
+                </Cui>
+                """);
+
+            Assert.Empty(diagnostics);
+            Assert.NotNull(root);
+            Assert.Equal(CuiTheme.Bubble, loader.CurrentTheme);
+            Assert.Equal(CuiTheme.Bubble, Assert.IsType<Avalonia.Controls.ResourceDictionary>(root.Resources.MergedDictionaries.Last())["CuiTheme"]);
+            var page = Assert.IsType<Avalonia.Controls.Panel>(root);
+            var retro = Assert.IsType<Avalonia.Controls.Border>(Assert.Single(page.Children));
+            Assert.Equal(CuiTheme.Retro, Assert.IsType<Avalonia.Controls.ResourceDictionary>(retro.Resources.MergedDictionaries.Last())["CuiTheme"]);
+        }
+        finally
+        {
+            CuiSurfacePaletteCatalog.ActiveTheme = saved;
+        }
+    }
+
+    [Fact]
+    public void Native_hosts_read_the_existing_Haven_theme_preference_without_writing_it()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "cui-theme-preference-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "preferences.json");
+        try
+        {
+            Assert.Equal(CuiTheme.Glow, CuiThemePreferenceReader.Read(directory));
+
+            var first = """{"havenUiThemeName":"Bubble","unrelatedSetting":true}""";
+            File.WriteAllText(path, first);
+            Assert.Equal(CuiTheme.Bubble, CuiThemePreferenceReader.Read(directory));
+            Assert.Equal(first, File.ReadAllText(path));
+
+            File.WriteAllText(path, """{"havenUiThemeName":"Retro"}""");
+            Assert.Equal(CuiTheme.Retro, CuiThemePreferenceReader.Read(directory));
+
+            File.WriteAllText(path, """{"havenUiThemeName":"NotATheme"}""");
+            Assert.Equal(CuiTheme.Glow, CuiThemePreferenceReader.Read(directory));
+            File.WriteAllText(path, "{" );
+            Assert.Equal(CuiTheme.Glow, CuiThemePreferenceReader.Read(directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
@@ -247,11 +344,11 @@ public sealed class CuiThemeTests
     public void Null_or_empty_theme_name_uses_global_default()
     {
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Cinematic;
-        Assert.Equal(CuiTheme.Cinematic, CuiThemeScope.ResolveThemeName(null, CuiTheme.Glow));
-        Assert.Equal(CuiTheme.Cinematic, CuiThemeScope.ResolveThemeName("", CuiTheme.Glow));
+        Assert.Equal(CuiTheme.Cinematic, CuiThemeScope.ResolveThemeName(null, CuiTheme.Cinematic));
+        Assert.Equal(CuiTheme.Cinematic, CuiThemeScope.ResolveThemeName("", CuiTheme.Cinematic));
 
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Retro;
-        Assert.Equal(CuiTheme.Retro, CuiThemeScope.ResolveThemeName("   ", CuiTheme.Glow));
+        Assert.Equal(CuiTheme.Retro, CuiThemeScope.ResolveThemeName("   ", CuiTheme.Retro));
 
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
     }
@@ -260,7 +357,7 @@ public sealed class CuiThemeTests
     public void Invalid_theme_name_falls_back_to_global_default()
     {
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Playful;
-        Assert.Equal(CuiTheme.Playful, CuiThemeScope.ResolveThemeName("NeonRetro", CuiTheme.Glow));
+        Assert.Equal(CuiTheme.Playful, CuiThemeScope.ResolveThemeName("NeonRetro", CuiTheme.Playful));
 
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
         Assert.Equal(CuiTheme.Glow, CuiThemeScope.ResolveThemeName("Bogus", CuiTheme.Glow));

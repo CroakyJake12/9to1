@@ -12,6 +12,12 @@ public interface ICuiActionDispatcher
     ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Optional read-only host signal; null means availability is not known.</summary>
+public interface ICuiActionAvailability
+{
+    bool? IsActionAvailable(string command);
+}
+
 public static class CuiBindingEvaluator
 {
     public static object? Evaluate(CuiValue value, ICuiBindingContext context)

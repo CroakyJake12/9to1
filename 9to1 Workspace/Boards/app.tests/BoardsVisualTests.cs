@@ -359,6 +359,35 @@ public sealed class BoardsVisualTests
     }
 
     [Fact]
+    public void Boards_loads_the_shared_theme_while_retaining_its_appearance_toggle()
+    {
+        TestUiThread.Run(() =>
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "boards-theme-test-" + Guid.NewGuid().ToString("N"));
+            var priorMode = BoardsTheme.Mode;
+            var priorTheme = CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme;
+            Directory.CreateDirectory(directory);
+            try
+            {
+                File.WriteAllText(Path.Combine(directory, "preferences.json"), """{"havenUiThemeName":"Bubble"}""");
+                BoardsTheme.LoadGlobalThemePreference(directory);
+                BoardsTheme.SetMode(BoardsThemeMode.Light);
+                Assert.Equal(CakeOS.Cui.Themes.CuiTheme.Bubble, BoardsTheme.SharedPalette.Theme);
+                var light = BoardsTheme.Current.AppBackground;
+                BoardsTheme.SetMode(BoardsThemeMode.Dark);
+                Assert.Equal(CakeOS.Cui.Themes.CuiTheme.Bubble, BoardsTheme.SharedPalette.Theme);
+                Assert.NotEqual(light, BoardsTheme.Current.AppBackground);
+            }
+            finally
+            {
+                BoardsTheme.SetMode(priorMode);
+                CakeOS.Cui.Themes.CuiSurfacePaletteCatalog.ActiveTheme = priorTheme;
+                Directory.Delete(directory, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
     public void Authored_light_highlights_keep_dark_text_in_dark_appearance()
     {
         TestUiThread.Run(() =>

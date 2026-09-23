@@ -43,7 +43,7 @@ public sealed class CuiElementTree
 {
     private readonly IReadOnlyDictionary<ElementId, CuiElementNode> _nodes;
     private readonly IReadOnlyDictionary<ElementId, ElementId> _parents;
-    private readonly IReadOnlyList<ElementId> _order;
+    private readonly List<ElementId> _order;
 
     public CuiElementTree(CuiElementNode root, long revision = 0)
     {
@@ -57,9 +57,9 @@ public sealed class CuiElementTree
         var order = new List<ElementId>();
         var active = new HashSet<CuiElementNode>(ReferenceEqualityComparer.Instance);
         Index(root, null, nodes, parents, order, active);
-        _nodes = DiagnosticsCollections.Copy(nodes);
-        _parents = DiagnosticsCollections.Copy(parents);
-        _order = order.AsReadOnly();
+        _nodes = DiagnosticsCollections.Copy<ElementId, CuiElementNode>(nodes);
+        _parents = DiagnosticsCollections.Copy<ElementId, ElementId>(parents);
+        _order = order;
     }
 
     public CuiElementNode Root { get; }

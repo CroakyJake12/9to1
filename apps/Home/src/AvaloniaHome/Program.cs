@@ -9,6 +9,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
+using Haven.CUI.DevTools;
 using HavenOS.Home;
 
 namespace AvaloniaHome;
@@ -83,19 +85,20 @@ internal sealed class HomeApp : Application
     {
         ApplySnapshot(_controller.ShowCurrent());
         _viewModel.On("InstallAllUpdates", _ => _ = InstallAllAsync());
-        _viewModel.On("OpenStudio", _ => ReportUnavailable("Studio navigation is not connected in this host."));
-        _viewModel.On("OpenWrite", _ => ReportUnavailable("Write navigation is not connected in this host."));
-        _viewModel.On("OpenBrowse", _ => ReportUnavailable("Browse navigation is not connected in this host."));
-        _viewModel.On("OpenData", _ => ReportUnavailable("Data navigation is not connected in this host."));
-        _viewModel.On("OpenBoards", _ => ReportUnavailable("Boards navigation is not connected in this host."));
+        RegisterUnavailableAction("OpenStudio", "Studio navigation is not connected in this host.");
+        RegisterUnavailableAction("OpenWrite", "Write navigation is not connected in this host.");
+        RegisterUnavailableAction("OpenBrowse", "Browse navigation is not connected in this host.");
+        RegisterUnavailableAction("OpenData", "Data navigation is not connected in this host.");
+        RegisterUnavailableAction("OpenBoards", "Boards navigation is not connected in this host.");
         _viewModel.On("NavigateHome", _ => ReportUnavailable("Home is already open."));
-        _viewModel.On("NavigateSpaces", _ => ReportUnavailable("Spaces navigation is not connected in this host."));
-        _viewModel.On("NavigateApps", _ => ReportUnavailable("Apps navigation is not connected in this host."));
-        _viewModel.On("NavigateLibrary", _ => ReportUnavailable("Library navigation is not connected in this host."));
-        _viewModel.On("NavigateEvents", _ => ReportUnavailable("Events navigation is not connected in this host."));
-        _viewModel.On("NavigateAutomations", _ => ReportUnavailable("Automations navigation is not connected in this host."));
-        _viewModel.On("NavigateDiscover", _ => ReportUnavailable("Discover navigation is not connected in this host."));
-        _viewModel.On("NavigateSettings", _ => ReportUnavailable("Settings navigation is not connected in this host."));
+        _viewModel.SetActionAvailability("NavigateHome", true);
+        RegisterUnavailableAction("NavigateSpaces", "Spaces navigation is not connected in this host.");
+        RegisterUnavailableAction("NavigateApps", "Apps navigation is not connected in this host.");
+        RegisterUnavailableAction("NavigateLibrary", "Library navigation is not connected in this host.");
+        RegisterUnavailableAction("NavigateEvents", "Events navigation is not connected in this host.");
+        RegisterUnavailableAction("NavigateAutomations", "Automations navigation is not connected in this host.");
+        RegisterUnavailableAction("NavigateDiscover", "Discover navigation is not connected in this host.");
+        RegisterUnavailableAction("NavigateSettings", "Settings navigation is not connected in this host.");
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -108,6 +111,7 @@ internal sealed class HomeApp : Application
 
     internal Window BuildWindow()
     {
+        CuiThemeScopeApplier.ApplyGlobalTheme(CuiThemePreferenceReader.Read());
         var window = new Window
         {
             Title = "9-1 Home",
@@ -151,6 +155,16 @@ internal sealed class HomeApp : Application
         }
 
         return window;
+    }
+
+    /// <summary>Capture the current native CUI controls for read-only DevTools inspection.</summary>
+    internal CuiLiveTreeInspector? CaptureDiagnostics(Window window) =>
+        window.Content is Control root ? CuiLiveTreeInspector.Capture(root, _loader) : null;
+
+    private void RegisterUnavailableAction(string name, string message)
+    {
+        _viewModel.On(name, _ => ReportUnavailable(message));
+        _viewModel.SetActionAvailability(name, false);
     }
 
     private static StackPanel CreateFallbackUI(string message)

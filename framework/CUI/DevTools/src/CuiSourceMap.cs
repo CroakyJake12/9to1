@@ -51,7 +51,7 @@ public sealed class CuiSourceMap
                 throw new ArgumentException($"Duplicate source mapping for element '{entry.ElementId}'.", nameof(entries));
         }
 
-        _locations = DiagnosticsCollections.Copy(locations);
+        _locations = DiagnosticsCollections.Copy<ElementId, CuiSourceLocation>(locations);
     }
 
     public bool TryGetLocation(ElementId elementId, out CuiSourceLocation? location) =>

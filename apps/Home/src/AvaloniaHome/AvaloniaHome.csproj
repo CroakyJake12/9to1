@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\CUI\Runtime\CakeOS.Cui.Runtime.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\CUI\DevTools\src\Haven.CUI.DevTools.csproj" />
     <ProjectReference Include="..\..\..\..\framework\CUI\AI\NineToOne.Cui.AI.csproj" />
     <ProjectReference Include="..\..\..\..\9to1 Workspace\Home\HavenOS.Home.csproj" />
     <Content Include="..\..\..\..\9to1 Workspace\Home\UI\Home.cui" Link="UI\Home.cui" CopyToOutputDirectory="PreserveNewest" />

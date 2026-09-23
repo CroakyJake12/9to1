@@ -1,6 +1,6 @@
 // BoardsTheme adapts the shared CUI Boards palette to the app's Light/Dark
 // appearance toggle. Code-built controls and .cui chrome consume the same
-// canonical Glow tokens; only semantic error feedback remains app-specific.
+// canonical theme tokens; only semantic error feedback remains app-specific.
 
 using Avalonia;
 using Avalonia.Media;
@@ -34,15 +34,19 @@ public static class BoardsTheme
 {
     public static BoardsThemeMode Mode { get; private set; } = BoardsThemeMode.Light;
 
-    /// <summary>Boards uses the shared CUI Glow identity with a light or dark appearance.</summary>
+    /// <summary>Boards uses the shared CUI theme with a light or dark appearance.</summary>
     public static CuiPalette SharedPalette => CuiSurfacePaletteCatalog.For(
         "Boards",
         Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright,
-        CuiTheme.Glow);
+        CuiSurfacePaletteCatalog.ActiveTheme);
 
     public static BoardsPalette Current => FromSharedPalette(SharedPalette);
 
     public static event Action? Changed;
+
+    /// <summary>Load the shared Haven theme choice before the Boards CUI tree is built.</summary>
+    public static void LoadGlobalThemePreference(string? dataDirectory = null) =>
+        CuiSurfacePaletteCatalog.ActiveTheme = CuiThemePreferenceReader.Read(dataDirectory);
 
     public static void SetMode(BoardsThemeMode mode)
     {
@@ -69,7 +73,7 @@ public static class BoardsTheme
     {
         get
         {
-            // The canonical applier supplies a three-stop Glow gradient. Keep
+            // The canonical applier supplies a three-stop theme gradient. Keep
             // a semantic solid fallback for isolated controls before startup.
             if (Application.Current?.TryGetResource("CuiAccentBrush", null, out var accent) == true
                 && accent is IBrush accentBrush)

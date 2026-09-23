@@ -202,6 +202,26 @@ public class CuiToAvaloniaPipelineTests
     }
 
     [Fact]
+    public void Reused_loader_does_not_resolve_resources_from_a_previous_document()
+    {
+        var loader = new CuiControlLoader();
+        var (first, firstDiagnostics) = loader.LoadMarkup("""
+            <Cui>
+              <Resources><Resource key="local-title" value="First document" /></Resources>
+              <Page><TextBlock text="{Resource local-title}" /></Page>
+            </Cui>
+            """);
+        Assert.Empty(firstDiagnostics);
+        Assert.Equal("First document", Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(first).Children)).Text);
+
+        var (second, secondDiagnostics) = loader.LoadMarkup("""
+            <Cui><Page><TextBlock text="{Resource local-title}" /></Page></Cui>
+            """);
+        Assert.Empty(secondDiagnostics);
+        Assert.Null(Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(second).Children)).Text);
+    }
+
+    [Fact]
     public void Invalid_markup_produces_diagnostics()
     {
         var parser = new CuiRichParser();

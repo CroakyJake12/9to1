@@ -1055,8 +1055,7 @@ internal sealed class BoardsApp : Application
     }
 
     /// <summary>
-    /// The loader drops id="..." (never sets Control.Name), so the static
-    /// title box is wired here by automation id. Without this, title edits
+    /// The static title box is wired by automation id. Without this, title edits
     /// would never reach the session.
     /// </summary>
     private void WireTitleBox(Control root)
@@ -1070,7 +1069,7 @@ internal sealed class BoardsApp : Application
         titleBox.TextChanged += (_, _) => viewModel.EditText("BoardTitleBox", titleBox.Text ?? string.Empty);
     }
 
-    // ----- Theme (Fluent control templates + shared CUI Glow + Light/Dark) -----
+    // ----- Theme (Fluent control templates + shared CUI theme + Light/Dark) -----
 
     private static string SettingsPath() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -1078,6 +1077,7 @@ internal sealed class BoardsApp : Application
 
     private void ApplySavedTheme()
     {
+        BoardsTheme.LoadGlobalThemePreference();
         try
         {
             var path = SettingsPath();

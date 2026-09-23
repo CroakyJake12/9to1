@@ -1,4 +1,4 @@
-// ThemeApplier applies the shared CUI Boards/Glow palette, then paints static
+// ThemeApplier applies the shared CUI Boards palette, then paints static
 // .cui chrome from those semantic roles. Code-built controls read the same
 // resolved palette; rebuilding them applies an appearance change.
 

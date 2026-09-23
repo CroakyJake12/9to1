@@ -9,10 +9,11 @@ namespace CakeOS.Cui.Runtime;
 /// Implements ICuiBindingContext for the CUI language model
 /// and INotifyPropertyChanged for live Avalonia bindings.
 /// </summary>
-public sealed class CuiViewModel : ICuiBindingContext, ICuiActionDispatcher, INotifyPropertyChanged
+public sealed class CuiViewModel : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Action<object?>> _commands = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, bool> _actionAvailability = new(StringComparer.OrdinalIgnoreCase);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -30,6 +31,15 @@ public sealed class CuiViewModel : ICuiBindingContext, ICuiActionDispatcher, INo
     /// <summary>Register a command handler.</summary>
     public void On(string command, Action<object?> handler) =>
         _commands[command] = handler;
+
+    /// <summary>Declare whether a registered command can actually serve its route.</summary>
+    public void SetActionAvailability(string command, bool available) =>
+        _actionAvailability[command] = available;
+
+    public bool HasAction(string command) => _commands.ContainsKey(command);
+
+    public bool? IsActionAvailable(string command) =>
+        _actionAvailability.TryGetValue(command, out var available) ? available : null;
 
     /// <summary>ICuiBindingContext: resolve a binding path.</summary>
     public bool TryGetValue(string path, out object? value)
