@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AI\NineToOne.Cui.AI.csproj" />
-    <ProjectReference Include="..\..\..\9to1 OS\HUI\Cui\CakeOS.Cui.Markup.csproj" />
+    <ProjectReference Include="..\Core\CakeOS.Cui.Core.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">

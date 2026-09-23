@@ -9,16 +9,20 @@ static void Assert(bool condition, string message)
     if (!condition) throw new InvalidOperationException(message);
 }
 
-static string FindRepositoryRoot()
+static string FindDataDirectory()
 {
     var current = new DirectoryInfo(Directory.GetCurrentDirectory());
     while (current is not null)
     {
-        if (File.Exists(Path.Combine(current.FullName, "apps", "Data", "workers", "calc_worker.py")))
-            return current.FullName;
+        foreach (var relativePath in new[] { Path.Combine("apps", "Data"), Path.Combine("9to1 Workspace", "Data") })
+        {
+            var dataDirectory = Path.Combine(current.FullName, relativePath);
+            if (File.Exists(Path.Combine(dataDirectory, "workers", "calc_worker.py")))
+                return dataDirectory;
+        }
         current = current.Parent;
     }
-    throw new DirectoryNotFoundException("Could not locate the CakeOS repository root.");
+    throw new DirectoryNotFoundException("Could not locate the Data app directory containing workers/calc_worker.py.");
 }
 
 static async Task ConvertCsvToOdsAsync(string csvPath, string outputDirectory)
@@ -84,9 +88,9 @@ static DataHuiAction KeyboardInvokeAndDequeue(HavenInputRouter input, DataHuiSce
     return action;
 }
 
-var root = FindRepositoryRoot();
+var dataDirectory = FindDataDirectory();
 var python = Environment.GetEnvironmentVariable("HAVEN_DATA_PYTHON") ?? "/usr/bin/python3";
-var calcWorker = Path.Combine(root, "apps", "Data", "workers", "calc_worker.py");
+var calcWorker = Path.Combine(dataDirectory, "workers", "calc_worker.py");
 var temporaryRoot = Path.Combine(Path.GetTempPath(), $"haven-data-hui-runtime-{Guid.NewGuid():N}");
 Directory.CreateDirectory(temporaryRoot);
 
@@ -97,8 +101,8 @@ try
     var savedOds = Path.Combine(temporaryRoot, "hui-saved.ods");
     await File.WriteAllTextAsync(
         csvPath,
-        "Name,Score,Double\n" +
-        "Ada,2,\n" +
+        "Name,Score,Double,,,,,,Tag\n" +
+        "Ada,2,,,,,,,Tag-A\n" +
         "Bob,10,\n" +
         "Cara,5,\n" +
         "Drew,8,\n" +
@@ -106,7 +110,10 @@ try
         "Faye,7,\n" +
         "Gus,4,\n" +
         "Hope,9,\n" +
-        "Iris,6,\n");
+        "Iris,6,\n" +
+        "Jade,3,,,,,,,Tag-Jade\n" +
+        "Kiki,11,\n" +
+        "Liam,12,\n");
     await ConvertCsvToOdsAsync(csvPath, temporaryRoot);
     Assert(File.Exists(sourceOds) && new FileInfo(sourceOds).Length > 0, "LibreOffice did not create the Data HUI ODS fixture.");
 
@@ -121,7 +128,50 @@ try
 
     var opened = await controller.OpenAsync(sourceOds);
     Assert(opened.Grid.Values[1][0] == "Ada" && opened.Grid.Values[1][1] == "2", "Data HUI did not receive the opened Calc viewport.");
+    Assert(opened.Grid.Values.Count == 10 && opened.Grid.Values.All(row => row.Count == 8), "Data HUI did not preserve its fixed 10 x 8 viewport.");
+    Assert(scene.PreviousRowsButton.State.HasFlag(HavenElementState.Disabled), "Previous rows was enabled on the first row page.");
+    Assert(scene.PreviousColumnsButton.State.HasFlag(HavenElementState.Disabled), "Previous columns was enabled on the first column page.");
     LayoutAndRequireRender(scene, layout, renderer, measure);
+
+    var nextRowsAction = KeyboardInvokeAndDequeue(input, scene, scene.NextRowsButton);
+    Assert(nextRowsAction == DataHuiAction.NextRowPage, "Next rows button emitted the wrong typed Data action.");
+    var nextRowPage = await controller.ExecuteAsync(nextRowsAction);
+    Assert(nextRowPage.Grid.StartRow == 10, "Next rows button did not advance the real DataGridSession by ten rows.");
+    Assert(nextRowPage.Grid.Values.Count == 10 && nextRowPage.Grid.Values[0].Count == 8, "Next row page changed the fixed 10 x 8 viewport.");
+    Assert(nextRowPage.Grid.Values[0][0] == "Jade", "Next row page did not load data from the next Calc rows.");
+    Assert(scene.CellButton(0, 0).Accessibility.AccessibleName == "A11: Jade", "Paged cell accessibility did not report its absolute spreadsheet address.");
+    Assert((scene.StatusText.Content ?? string.Empty).Contains("rows 11–20", StringComparison.Ordinal), "Paged status did not announce the visible absolute row range.");
+    Assert(scene.CellButton(scene.SelectedRow, scene.SelectedColumn).Accessibility.AccessibleName == "A12: Kiki",
+        "Paged selected-cell accessibility did not report its absolute spreadsheet address.");
+    Assert((scene.StatusText.Content ?? string.Empty).Contains("selected A12", StringComparison.Ordinal) &&
+        scene.StatusText.Accessibility.AccessibleName == scene.StatusText.Content,
+        "Paged status text and accessibility name did not report the same absolute selected cell.");
+    Assert(!scene.PreviousRowsButton.State.HasFlag(HavenElementState.Disabled), "Previous rows stayed disabled after advancing.");
+    LayoutAndRequireRender(scene, layout, renderer, measure);
+
+    var nextColumnsAction = KeyboardInvokeAndDequeue(input, scene, scene.NextColumnsButton);
+    Assert(nextColumnsAction == DataHuiAction.NextColumnPage, "Next columns button emitted the wrong typed Data action.");
+    var nextColumnPage = await controller.ExecuteAsync(nextColumnsAction);
+    Assert(nextColumnPage.Grid.StartColumn == 8, "Next columns button did not advance the real DataGridSession by eight columns.");
+    Assert(nextColumnPage.Grid.Values.Count == 10 && nextColumnPage.Grid.Values.All(row => row.Count == 8), "Next column page changed the fixed 10 x 8 viewport.");
+    Assert(nextColumnPage.Grid.Values[0][0] == "Tag-Jade", "Next column page did not load the Calc value from absolute column I.");
+    Assert(scene.CellButton(0, 0).Accessibility.AccessibleName == "I11: Tag-Jade", "Paged column accessibility did not report its absolute spreadsheet address.");
+    Assert((scene.StatusText.Content ?? string.Empty).Contains("columns I–P", StringComparison.Ordinal), "Paged status did not announce the visible absolute column range.");
+    Assert(scene.CellButton(scene.SelectedRow, scene.SelectedColumn).Accessibility.AccessibleName == "I12: blank" &&
+        (scene.StatusText.Content ?? string.Empty).Contains("selected I12", StringComparison.Ordinal) &&
+        scene.StatusText.Accessibility.AccessibleName == scene.StatusText.Content,
+        "Paged column selection, status, and accessibility addresses diverged.");
+    Assert(!scene.PreviousColumnsButton.State.HasFlag(HavenElementState.Disabled), "Previous columns stayed disabled after advancing.");
+
+    var previousColumnsAction = KeyboardInvokeAndDequeue(input, scene, scene.PreviousColumnsButton);
+    Assert(previousColumnsAction == DataHuiAction.PreviousColumnPage, "Previous columns button emitted the wrong typed Data action.");
+    var firstColumnPageAgain = await controller.ExecuteAsync(previousColumnsAction);
+    Assert(firstColumnPageAgain.Grid.StartColumn == 0 && firstColumnPageAgain.Grid.Values[0][0] == "Jade", "Previous columns button did not return to the first column page.");
+
+    var previousRowsAction = KeyboardInvokeAndDequeue(input, scene, scene.PreviousRowsButton);
+    Assert(previousRowsAction == DataHuiAction.PreviousRowPage, "Previous rows button emitted the wrong typed Data action.");
+    var firstRowPageAgain = await controller.ExecuteAsync(previousRowsAction);
+    Assert(firstRowPageAgain.Grid.StartRow == 0 && firstRowPageAgain.Grid.Values[1][0] == "Ada", "Previous rows button did not return to the first Calc page.");
 
     // Seed one dependent formula through the typed session so the subsequent HUI edit
     // must traverse edit -> Calc recalculation -> refresh before the scene can pass.
@@ -150,10 +200,22 @@ try
     Assert(sorted.Grid.Values[2][1] == "3", "Edited score did not survive the HUI-driven sort.");
 
     LayoutAndRequireRender(scene, layout, renderer, measure);
+    var laterRowsAction = KeyboardInvokeAndDequeue(input, scene, scene.NextRowsButton);
+    _ = await controller.ExecuteAsync(laterRowsAction);
+    var laterColumnsAction = KeyboardInvokeAndDequeue(input, scene, scene.NextColumnsButton);
+    var laterPage = await controller.ExecuteAsync(laterColumnsAction);
+    Assert(laterPage.Grid.StartRow == DataGridSession.VisibleRows &&
+        laterPage.Grid.StartColumn == DataGridSession.VisibleColumns,
+        "Save/reopen reset was not exercised from a noninitial workbook page.");
+
     var saveAction = KeyboardInvokeAndDequeue(input, scene, scene.SaveReopenButton);
     Assert(saveAction == DataHuiAction.SaveAndReopen, "Save/reopen button emitted the wrong typed Data action.");
     var reopened = await controller.ExecuteAsync(saveAction, destinationPath: savedOds);
     Assert(File.Exists(savedOds) && new FileInfo(savedOds).Length > 0, "HUI save/reopen path did not produce an ODS workbook.");
+    Assert(reopened.Grid.StartRow == 0 && reopened.Grid.StartColumn == 0 &&
+        scene.PreviousRowsButton.State.HasFlag(HavenElementState.Disabled) &&
+        scene.PreviousColumnsButton.State.HasFlag(HavenElementState.Disabled),
+        "HUI save/reopen did not reset the page and disable previous-page controls.");
     var reopenedNames = reopened.Grid.Values.Skip(1).Take(9).Select(row => row[0]).ToArray();
     Assert(reopenedNames.SequenceEqual(expectedNames), "HUI save/reopen path did not preserve sorted row order.");
     Assert(reopened.Grid.Values[2][1] == "3", "HUI save/reopen path did not preserve the edited score.");
@@ -161,6 +223,11 @@ try
     LayoutAndRequireRender(scene, layout, renderer, measure);
     Assert(scene.CellButton(2, 1).Content == "3", "HUI scene did not refresh from the reopened workbook snapshot.");
     Assert((scene.StatusText.Accessibility.AccessibleName ?? string.Empty).Contains("selected", StringComparison.OrdinalIgnoreCase), "HUI status text did not expose an accessible selected-cell summary.");
+    Assert((scene.StatusText.Content ?? string.Empty).Contains("rows 1–10", StringComparison.Ordinal) &&
+        (scene.StatusText.Content ?? string.Empty).Contains("columns A–H", StringComparison.Ordinal) &&
+        (scene.StatusText.Content ?? string.Empty).Contains("selected B2", StringComparison.Ordinal) &&
+        scene.StatusText.Accessibility.AccessibleName == scene.StatusText.Content,
+        "Reopened workbook status and accessibility text did not agree on the reset page and selected address.");
 
     await session.CloseAsync();
     Console.WriteLine("Haven Data HUI contract edit/recalc/sort/save-reopen runtime checks passed.");

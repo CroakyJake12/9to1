@@ -11,6 +11,10 @@ public enum DataHuiAction
     EditSelected,
     SortAscending,
     SaveAndReopen,
+    PreviousRowPage,
+    NextRowPage,
+    PreviousColumnPage,
+    NextColumnPage,
 }
 
 /// <summary>Shared registry metadata for the Data HUI surface.</summary>
@@ -72,6 +76,9 @@ public sealed class DataHuiScene
     private readonly Queue<DataHuiAction> _actions = new();
     private int _selectedRow = 1;
     private int _selectedColumn;
+    private int _rowStart;
+    private int _columnStart;
+    private string _activeSheetName = "No workbook open";
 
     public DataHuiScene()
     {
@@ -102,9 +109,21 @@ public sealed class DataHuiScene
         EditButton = NewActionButton("Data.Hui.Edit", "Edit selected", DataHuiAction.EditSelected);
         SortAscendingButton = NewActionButton("Data.Hui.SortAscending", "Sort ascending", DataHuiAction.SortAscending);
         SaveReopenButton = NewActionButton("Data.Hui.SaveReopen", "Save + reopen", DataHuiAction.SaveAndReopen);
+        PreviousRowsButton = NewActionButton("Data.Hui.PreviousRows", "Rows -10", DataHuiAction.PreviousRowPage);
+        NextRowsButton = NewActionButton("Data.Hui.NextRows", "Rows +10", DataHuiAction.NextRowPage);
+        PreviousColumnsButton = NewActionButton("Data.Hui.PreviousColumns", "Cols -8", DataHuiAction.PreviousColumnPage);
+        NextColumnsButton = NewActionButton("Data.Hui.NextColumns", "Cols +8", DataHuiAction.NextColumnPage);
+        PreviousRowsButton.Accessibility.AccessibleName = "Previous 10 rows";
+        NextRowsButton.Accessibility.AccessibleName = "Next 10 rows";
+        PreviousColumnsButton.Accessibility.AccessibleName = "Previous 8 columns";
+        NextColumnsButton.Accessibility.AccessibleName = "Next 8 columns";
         toolbar.Add(EditButton);
         toolbar.Add(SortAscendingButton);
         toolbar.Add(SaveReopenButton);
+        toolbar.Add(PreviousRowsButton);
+        toolbar.Add(NextRowsButton);
+        toolbar.Add(PreviousColumnsButton);
+        toolbar.Add(NextColumnsButton);
         Root.Add(toolbar);
 
         Grid = new Container
@@ -160,6 +179,10 @@ public sealed class DataHuiScene
     public HuiButton EditButton { get; }
     public HuiButton SortAscendingButton { get; }
     public HuiButton SaveReopenButton { get; }
+    public HuiButton PreviousRowsButton { get; }
+    public HuiButton NextRowsButton { get; }
+    public HuiButton PreviousColumnsButton { get; }
+    public HuiButton NextColumnsButton { get; }
     public HuiText StatusText { get; }
     public int SelectedRow => _selectedRow;
     public int SelectedColumn => _selectedColumn;
@@ -181,6 +204,12 @@ public sealed class DataHuiScene
         if (snapshot.Grid.RowVisibility is not null && snapshot.Grid.RowVisibility.Count != DataGridSession.VisibleRows)
             throw new InvalidDataException("Data HUI received invalid row-visibility metadata.");
 
+        _rowStart = snapshot.Grid.StartRow;
+        _columnStart = snapshot.Grid.StartColumn;
+        _activeSheetName = snapshot.ActiveSheet.Name;
+        PreviousRowsButton.SetState(HavenElementState.Disabled, _rowStart == 0);
+        PreviousColumnsButton.SetState(HavenElementState.Disabled, _columnStart == 0);
+
         for (var row = 0; row < DataGridSession.VisibleRows; row++)
         {
             var visible = snapshot.Grid.RowVisibility?[row] ?? true;
@@ -190,13 +219,15 @@ public sealed class DataHuiScene
                 cell.Content = snapshot.Grid.Values[row][column];
                 cell.SetValue(HavenProperties.Opacity, visible ? 1d : .32d);
                 cell.SetState(HavenElementState.Disabled, !visible);
+                var absoluteRow = _rowStart + row + 1;
+                var absoluteColumn = _columnStart + column;
                 cell.Accessibility.AccessibleName = visible
-                    ? $"{ColumnName(column)}{row + 1}: {DisplayValue(cell.Content)}"
-                    : $"Hidden row {row + 1}, {ColumnName(column)}: {DisplayValue(cell.Content)}";
+                    ? $"{ColumnName(absoluteColumn)}{absoluteRow}: {DisplayValue(cell.Content)}"
+                    : $"Hidden row {absoluteRow}, {ColumnName(absoluteColumn)}: {DisplayValue(cell.Content)}";
             }
         }
 
-        StatusText.Content = $"{snapshot.ActiveSheet.Name} · {DataGridSession.VisibleRows} rows × {DataGridSession.VisibleColumns} columns · selected {ColumnName(_selectedColumn)}{_selectedRow + 1}";
+        UpdateStatus();
         ApplySelectionState();
     }
 
@@ -208,7 +239,7 @@ public sealed class DataHuiScene
         _selectedRow = row;
         _selectedColumn = column;
         ApplySelectionState();
-        StatusText.Content = $"Selected {ColumnName(column)}{row + 1}";
+        UpdateStatus();
     }
 
     private HuiButton NewActionButton(string name, string content, DataHuiAction action)
@@ -255,6 +286,14 @@ public sealed class DataHuiScene
             value /= 26;
         }
         return name;
+    }
+
+    private void UpdateStatus()
+    {
+        var firstColumn = ColumnName(_columnStart);
+        var lastColumn = ColumnName(_columnStart + DataGridSession.VisibleColumns - 1);
+        var selectedCell = $"{ColumnName(_columnStart + _selectedColumn)}{_rowStart + _selectedRow + 1}";
+        StatusText.Content = $"{_activeSheetName} · {DataGridSession.VisibleRows} rows × {DataGridSession.VisibleColumns} columns · rows {_rowStart + 1}–{_rowStart + DataGridSession.VisibleRows} · columns {firstColumn}–{lastColumn} · selected {selectedCell}";
     }
 
     private static string DisplayValue(string value) => string.IsNullOrEmpty(value) ? "blank" : value;
@@ -323,6 +362,22 @@ public sealed class DataHuiController(DataGridSession session, DataHuiScene? sce
                 await _session.SaveAsAsync(destinationPath, cancellationToken).ConfigureAwait(false);
                 await _session.CloseAsync(cancellationToken).ConfigureAwait(false);
                 snapshot = await _session.OpenAsync(destinationPath, readOnly: false, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case DataHuiAction.PreviousRowPage:
+                snapshot = await _session.MovePageAsync(-1, 0, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case DataHuiAction.NextRowPage:
+                snapshot = await _session.MovePageAsync(1, 0, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case DataHuiAction.PreviousColumnPage:
+                snapshot = await _session.MovePageAsync(0, -1, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case DataHuiAction.NextColumnPage:
+                snapshot = await _session.MovePageAsync(0, 1, cancellationToken).ConfigureAwait(false);
                 break;
 
             default:

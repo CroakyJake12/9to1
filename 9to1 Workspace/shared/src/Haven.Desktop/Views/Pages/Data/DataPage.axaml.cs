@@ -81,6 +81,26 @@ public sealed partial class DataPage : UserControl, IDisposable
         finally { SetBusy(false); }
     }
 
+    /// <summary>Opens a workbook owned by another app in the real Data editor.</summary>
+    public async Task<bool> OpenWorkbookAsync(Guid workbookId, CancellationToken cancellationToken = default)
+    {
+        if (workbookId == Guid.Empty) return false;
+        await InitializeAsync(cancellationToken);
+        if (Workbook?.Id == workbookId) return true;
+        await RefreshWorkbooksAsync(cancellationToken);
+        var index = -1;
+        for (var item = 0; item < _workbooks.Count; item++)
+            if (_workbooks[item].Id == workbookId) { index = item; break; }
+        if (index < 0)
+        {
+            _route.SetStatus("That app-owned workbook is not available in local Data storage.");
+            return false;
+        }
+        if (!await SaveAsync("Autosave before opening an app-owned workbook", cancellationToken)) return false;
+        await OpenWorkbookAtAsync(index, cancellationToken, saveBeforeSwitch: false);
+        return Workbook?.Id == workbookId;
+    }
+
     public async Task<bool> SaveAsync(string reason = "Manual save", CancellationToken cancellationToken = default)
     {
         if (Workbook is null) return true; if (Interlocked.Exchange(ref _saveRunning, 1) != 0) return false;

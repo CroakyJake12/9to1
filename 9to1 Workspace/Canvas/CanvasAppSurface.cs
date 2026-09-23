@@ -26,6 +26,53 @@ public sealed class CanvasAppSurface
     public static CanvasAppSurface Create(string? title = null) =>
         new(CanvasDocumentModel.Create(title));
 
+    /// <summary>
+    /// Creates and durably saves a native Canvas document through the shared Notes repository.
+    /// </summary>
+    public static async Task<CanvasAppSurface> CreateAsync(
+        INotesRepository repository,
+        string? title = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        var document = CanvasDocumentModel.Create(title);
+        await repository.SaveAsync(document, "Created Canvas document", cancellationToken).ConfigureAwait(false);
+        return new CanvasAppSurface(document);
+    }
+
+    /// <summary>
+    /// Opens a native Canvas document by its persisted identity. Non-Canvas Notes documents are rejected.
+    /// </summary>
+    public static async Task<CanvasAppSurface?> OpenAsync(
+        INotesRepository repository,
+        Guid documentId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        if (documentId == Guid.Empty)
+            throw new ArgumentException("Document ID cannot be empty.", nameof(documentId));
+
+        var document = await repository.LoadAsync(documentId, cancellationToken).ConfigureAwait(false);
+        if (document is null) return null;
+        if (!CanvasDocumentModel.IsCanvasDocument(document))
+            throw new InvalidDataException("The requested Notes document is not a Haven Canvas document.");
+
+        return new CanvasAppSurface(document);
+    }
+
+    /// <summary>
+    /// Saves the current Canvas document through the shared Notes repository.
+    /// </summary>
+    public Task<NotesSaveResult> SaveAsync(
+        INotesRepository repository,
+        string reason = "Saved Canvas document",
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(repository);
+        var saveReason = string.IsNullOrWhiteSpace(reason) ? "Saved Canvas document" : reason.Trim();
+        return repository.SaveAsync(Document, saveReason, cancellationToken);
+    }
+
     public NotesDocument Document { get; }
 
     public NotesCanvasData Board => _interaction.Board;

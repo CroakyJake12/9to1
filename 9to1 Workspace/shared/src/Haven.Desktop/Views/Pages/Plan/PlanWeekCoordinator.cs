@@ -33,12 +33,14 @@ internal sealed class PlanWeekCoordinator
     private readonly HavenButton _thisWeek;
     private readonly HavenButton _next;
     private readonly HavenButton _refresh;
+    private readonly HavenButton _completedFilter;
     private DateTimeOffset _anchor = DateTimeOffset.Now;
     private DateTimeOffset _monthAnchor = DateTimeOffset.Now;
     private int _version;
     private int _monthVersion;
     private bool _visible;
     private bool _monthVisible;
+    private bool _hideCompleted;
 
     private PlanWeekCoordinator(
         PlanHavenScene scene,
@@ -65,9 +67,11 @@ internal sealed class PlanWeekCoordinator
         _thisWeek = Button("PlanWeekThisWeek", "This week", "calendar");
         _next = Button("PlanWeekNext", "Next", "chevron-right");
         _refresh = Button("PlanWeekRefresh", "Refresh", "refresh");
+        _completedFilter = Button("PlanWeekCompletedFilter", "Hide completed", "filter");
+        _completedFilter.Accessibility.AccessibleName = "Hide completed tasks";
         _range = new HavenText { Name = "PlanWeekRange", Content = "Week", Level = TextLevel.H2 };
         _range.SetValue(HavenProperties.MinWidth, HavenLength.Px(210));
-        nav.Add(_previous); nav.Add(_range); nav.Add(_thisWeek); nav.Add(_next); nav.Add(_refresh);
+        nav.Add(_previous); nav.Add(_range); nav.Add(_thisWeek); nav.Add(_next); nav.Add(_completedFilter); nav.Add(_refresh);
         _root.Add(nav);
         _strip = Horizontal("PlanWeekDays", 10);
         _strip.SetValue(HavenProperties.Width, HavenLength.Percent(100));
@@ -99,6 +103,13 @@ internal sealed class PlanWeekCoordinator
         _thisWeek.Invoked += (_, _) => { _anchor = DateTimeOffset.Now; _ = RefreshAsync(); };
         _next.Invoked += (_, _) => Shift(7);
         _refresh.Invoked += (_, _) => _ = RefreshAsync();
+        _completedFilter.Invoked += (_, _) =>
+        {
+            _hideCompleted = !_hideCompleted;
+            _completedFilter.Content = _hideCompleted ? "Show completed" : "Hide completed";
+            _completedFilter.Accessibility.AccessibleName = _hideCompleted ? "Show completed tasks" : "Hide completed tasks";
+            _ = RefreshAsync();
+        };
     }
 
     public static void Attach(
@@ -316,6 +327,9 @@ internal sealed class PlanWeekCoordinator
         for (var dayIndex = 0; dayIndex < days.Count; dayIndex++)
         {
             var day = days[dayIndex];
+            var visibleItems = day.Items.Where(item => !_hideCompleted
+                || item.Kind != PlannerDayItemKind.Task
+                || !item.IsCompleted).ToArray();
             var localDay = TimeZoneInfo.ConvertTime(day.DayStart, zone);
             var column = dayIndex + 1;
             var header = Vertical($"PlanWeekHeader-{localDay:yyyyMMdd}", 2);
@@ -339,7 +353,7 @@ internal sealed class PlanWeekCoordinator
             allDay.SetValue(HavenProperties.Padding, HavenThickness.Parse("5px"));
             allDay.SetValue(HavenProperties.BorderColor, "Border");
             allDay.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
-            foreach (var item in day.Items.Where(IsUntimedOrAllDay))
+            foreach (var item in visibleItems.Where(IsUntimedOrAllDay))
                 allDay.Add(CompactAgendaItem(item, zone, links, subjects));
             grid.Add(allDay);
         }
@@ -373,7 +387,10 @@ internal sealed class PlanWeekCoordinator
         {
             var day = days[dayIndex];
             var localDay = TimeZoneInfo.ConvertTime(day.DayStart, zone);
-            foreach (var item in day.Items.Where(item => !IsUntimedOrAllDay(item)))
+            var visibleItems = day.Items.Where(item => !_hideCompleted
+                || item.Kind != PlannerDayItemKind.Task
+                || !item.IsCompleted);
+            foreach (var item in visibleItems.Where(item => !IsUntimedOrAllDay(item)))
             {
                 var placement = Place(item, localDay, zone, slotMinutes, slotCount);
                 var eventCard = TimedItem(item, localDay.Date, zone, links, subjects, placement.Span);
@@ -569,7 +586,7 @@ internal sealed class PlanWeekCoordinator
 
     private void SetLoading(bool value)
     {
-        foreach (var button in new[] { _previous, _thisWeek, _next, _refresh })
+        foreach (var button in new[] { _previous, _thisWeek, _next, _completedFilter, _refresh })
             button.SetValue(HavenProperties.Enabled, !value);
     }
 

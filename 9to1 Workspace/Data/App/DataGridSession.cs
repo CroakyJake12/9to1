@@ -20,6 +20,8 @@ public sealed class DataGridSession : IAsyncDisposable
     private DataWorkbookHandle? _workbook;
     private IReadOnlyList<DataSheetSummary> _sheets = [];
     private int _activeSheetIndex;
+    private int _startRow;
+    private int _startColumn;
     private bool _disposed;
 
     public DataGridSession(IDataSpreadsheetEngine spreadsheet)
@@ -50,6 +52,8 @@ public sealed class DataGridSession : IAsyncDisposable
             _workbook = opened;
             _sheets = sheets.ToArray();
             _activeSheetIndex = 0;
+            _startRow = 0;
+            _startColumn = 0;
             return await RefreshAsync(cancellationToken).ConfigureAwait(false);
         }
         catch
@@ -57,6 +61,8 @@ public sealed class DataGridSession : IAsyncDisposable
             _workbook = null;
             _sheets = [];
             _activeSheetIndex = 0;
+            _startRow = 0;
+            _startColumn = 0;
             try { await _spreadsheet.CloseAsync(opened.Id, CancellationToken.None).ConfigureAwait(false); }
             catch { }
             throw;
@@ -72,8 +78,53 @@ public sealed class DataGridSession : IAsyncDisposable
         if (sheetIndex < 0 || sheetIndex >= _sheets.Count)
             throw new ArgumentOutOfRangeException(nameof(sheetIndex));
 
+        var previousSheetIndex = _activeSheetIndex;
+        var previousStartRow = _startRow;
+        var previousStartColumn = _startColumn;
         _activeSheetIndex = sheetIndex;
-        return await RefreshAsync(cancellationToken).ConfigureAwait(false);
+        _startRow = 0;
+        _startColumn = 0;
+        try
+        {
+            return await RefreshAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            _activeSheetIndex = previousSheetIndex;
+            _startRow = previousStartRow;
+            _startColumn = previousStartColumn;
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Moves the fixed grid by whole pages. Negative moves stop at the first page;
+    /// positive moves are bounded to coordinates representable by the spreadsheet API.
+    /// </summary>
+    public async Task<DataGridSessionSnapshot> MovePageAsync(
+        int rowPages,
+        int columnPages = 0,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        EnsureOpen();
+
+        var nextStartRow = MoveViewportOffset(_startRow, rowPages, VisibleRows, nameof(rowPages));
+        var nextStartColumn = MoveViewportOffset(_startColumn, columnPages, VisibleColumns, nameof(columnPages));
+        var previousStartRow = _startRow;
+        var previousStartColumn = _startColumn;
+        _startRow = nextStartRow;
+        _startColumn = nextStartColumn;
+        try
+        {
+            return await RefreshAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            _startRow = previousStartRow;
+            _startColumn = previousStartColumn;
+            throw;
+        }
     }
 
     public async Task<DataGridSessionSnapshot> EditCellAsync(
@@ -87,7 +138,10 @@ public sealed class DataGridSession : IAsyncDisposable
         var workbook = EnsureEditable();
         ValidateVisibleCell(row, column);
 
-        var address = new DataCellAddress(_sheets[_activeSheetIndex].Name, row, column);
+        var address = new DataCellAddress(
+            _sheets[_activeSheetIndex].Name,
+            checked(_startRow + row),
+            checked(_startColumn + column));
         _ = await _spreadsheet.SetCellAsync(workbook.Id, address, value, formula, cancellationToken).ConfigureAwait(false);
         await _spreadsheet.RecalculateAsync(workbook.Id, cancellationToken).ConfigureAwait(false);
         return await RefreshAsync(cancellationToken).ConfigureAwait(false);
@@ -263,7 +317,7 @@ public sealed class DataGridSession : IAsyncDisposable
         var activeSheet = _sheets[_activeSheetIndex];
         var grid = await _spreadsheet.ReadRangeAsync(
             workbook.Id,
-            new DataRangeRequest(activeSheet.Name, 0, 0, VisibleRows, VisibleColumns),
+            new DataRangeRequest(activeSheet.Name, _startRow, _startColumn, VisibleRows, VisibleColumns),
             cancellationToken).ConfigureAwait(false);
 
         if (grid.Values.Count != VisibleRows || grid.Values.Any(row => row.Count != VisibleColumns))
@@ -293,6 +347,8 @@ public sealed class DataGridSession : IAsyncDisposable
         _workbook = null;
         _sheets = [];
         _activeSheetIndex = 0;
+        _startRow = 0;
+        _startColumn = 0;
     }
 
     public async ValueTask DisposeAsync()
@@ -307,6 +363,8 @@ public sealed class DataGridSession : IAsyncDisposable
             _workbook = null;
             _sheets = [];
             _activeSheetIndex = 0;
+            _startRow = 0;
+            _startColumn = 0;
             try { await _spreadsheet.CloseAsync(id, CancellationToken.None).ConfigureAwait(false); }
             catch { }
         }
@@ -328,6 +386,7 @@ public sealed class DataGridSession : IAsyncDisposable
             throw new ArgumentOutOfRangeException(nameof(count), $"First-slice structural edits can affect 1-{visibleCount} {(rows ? "rows" : "columns")} at a time.");
 
         var sheet = _sheets[_activeSheetIndex].Name;
+        index = checked((rows ? _startRow : _startColumn) + index);
         if (rows)
         {
             if (insert)
@@ -360,7 +419,22 @@ public sealed class DataGridSession : IAsyncDisposable
     private DataRangeRequest VisibleRange(int startRow, int startColumn, int rowCount, int columnCount)
     {
         ValidateVisibleRange(startRow, startColumn, rowCount, columnCount);
-        return new DataRangeRequest(_sheets[_activeSheetIndex].Name, startRow, startColumn, rowCount, columnCount);
+        return new DataRangeRequest(
+            _sheets[_activeSheetIndex].Name,
+            checked(_startRow + startRow),
+            checked(_startColumn + startColumn),
+            rowCount,
+            columnCount);
+    }
+
+    private static int MoveViewportOffset(int current, int pageDelta, int pageSize, string parameterName)
+    {
+        var next = (long)current + (long)pageDelta * pageSize;
+        if (next < 0)
+            return 0;
+        if (next > int.MaxValue - pageSize)
+            throw new ArgumentOutOfRangeException(parameterName, "The requested Data page is outside supported spreadsheet coordinates.");
+        return (int)next;
     }
 
     private static void ValidateVisibleCell(int row, int column)

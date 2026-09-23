@@ -102,6 +102,27 @@ public sealed class DataPageTests
         finally { window.Content = null; window.Close(); }
     }
 
+    [Fact]
+    public async Task Data_page_opens_an_app_owned_workbook_by_its_stable_id()
+    {
+        var current = DataWorkbook.Create("Current workbook");
+        current.UpdatedAt = DateTimeOffset.UtcNow;
+        var donor = DataWorkbook.Create("Forms responses");
+        donor.Id = DataWorkbookAppLinks.FormsResponses;
+        donor.UpdatedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+        var repository = new FakeDataRepository(current, donor);
+        using var page = new DataPage(new HavenEventBus(), repository, new FakeDataFormats(), new FakeDataQueries());
+
+        await page.InitializeAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(current.Id, page.Workbook?.Id);
+
+        var opened = await page.OpenWorkbookAsync(DataWorkbookAppLinks.FormsResponses, TestContext.Current.CancellationToken);
+
+        Assert.True(opened);
+        Assert.Equal(DataWorkbookAppLinks.FormsResponses, page.Workbook?.Id);
+        Assert.Equal("Forms responses", page.Workbook?.Title);
+    }
+
     [AvaloniaFact]
     public async Task Data_page_recalculates_formulas_renders_results_and_updates_dependents_from_cell_edits()
     {

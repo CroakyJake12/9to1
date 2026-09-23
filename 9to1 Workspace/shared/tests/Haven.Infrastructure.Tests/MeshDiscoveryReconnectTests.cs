@@ -67,6 +67,36 @@ public sealed class MeshDiscoveryReconnectTests
         Assert.DoesNotContain(dashboard.NearbyDevices ?? [], item => item.DeviceId == peer.DeviceId);
     }
 
+    [Fact]
+    public async Task ExpiredNearbyCandidateNotifiesDashboardWithoutAnotherDiscoveryOrRefresh()
+    {
+        var store = new InMemoryStateStore(StateWithPeer(TrustedPeer()));
+        var transport = new VerifyingTransport();
+        var discovery = new FakeDiscovery();
+        await using var coordinator = CreateCoordinator(store, transport, discovery);
+        var stateChangedCount = 0;
+        coordinator.StateChanged += () => Interlocked.Increment(ref stateChangedCount);
+
+        await coordinator.InitialiseAsync(CancellationToken.None);
+        var candidateId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        discovery.Observe(new MeshDiscoveryCandidate(
+            candidateId,
+            "Nearby phone",
+            MeshDeviceClass.Phone,
+            CapabilityPlatform.Android,
+            new string('e', 64),
+            "127.0.0.1:42002",
+            DateTimeOffset.UtcNow.AddSeconds(-25)));
+
+        // The expiry notification must arrive on its own; polling the dashboard would
+        // hide the stale candidate even before the expiry timer has run.
+        await WaitForAsync(() => Volatile.Read(ref stateChangedCount) >= 3);
+
+        var dashboard = await coordinator.GetDashboardAsync(CancellationToken.None);
+        Assert.DoesNotContain(dashboard.NearbyDevices ?? [], item => item.DeviceId == candidateId);
+        Assert.Equal(0, transport.ConnectCalls);
+    }
+
     private static MeshCoordinator CreateCoordinator(InMemoryStateStore store, VerifyingTransport transport, FakeDiscovery discovery) =>
         new(
             store,

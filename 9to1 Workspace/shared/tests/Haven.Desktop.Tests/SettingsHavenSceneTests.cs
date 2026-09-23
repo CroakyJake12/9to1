@@ -1,3 +1,4 @@
+using System.Reflection;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Views.Pages.Settings;
@@ -101,6 +102,91 @@ public sealed class SettingsHavenSceneTests
     }
 
     [Fact]
+    public async Task Suggested_mcp_connection_requires_access_review_before_connect_event()
+    {
+        using var scene = new SettingsHavenScene();
+        scene.NavigateTo("integrations");
+        scene.SetMcpSuggestions([
+            new McpSuggestionSnapshot(
+                "custom-mcp", "Custom MCP Server", "Connect another server.",
+                "https://mcp.example.com:8443/mcp?mode=readonly", "MCP - Streamable HTTP - OAuth 2.1 browser sign-in", "Connect MCP Server")
+        ]);
+
+        var connectRequest = new TaskCompletionSource<(string Key, string Name, string Endpoint)>(TaskCreationOptions.RunContinuationsAsynchronously);
+        scene.ConnectSuggestedMcpRequested += (key, name, endpoint) =>
+        {
+            connectRequest.TrySetResult((key, name, endpoint));
+            return Task.CompletedTask;
+        };
+
+        var nameInput = Assert.Single(scene.Root.DescendantsAndSelf().OfType<Input>(), input => input.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Name");
+        nameInput.Text = "Team MCP";
+        Invoke(FindButton(scene, "Settings.Integrations.Mcp.Suggest.custom-mcp.Connect"));
+
+        Assert.False(connectRequest.Task.IsCompleted);
+        var review = Assert.Single(scene.Root.DescendantsAndSelf(), element => element.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review");
+        var reviewText = string.Join("\n", review.DescendantsAndSelf().OfType<Text>().Select(text => text.Content?.ToString() ?? string.Empty));
+        Assert.Contains("Destination host and port: mcp.example.com:8443", reviewText);
+        Assert.Contains("OAuth 2.1 in your browser", reviewText);
+        Assert.Contains("does not contact the proposed endpoint", reviewText);
+        Assert.Contains("tool inputs are sent only when an attached tool is invoked", reviewText);
+        Assert.Contains("existing permission checks still apply", reviewText);
+        Assert.DoesNotContain("mode=readonly", reviewText);
+        Assert.False(nameInput.GetValue(HavenProperties.Enabled));
+
+        Invoke(FindButton(scene, "Settings.Integrations.Mcp.Suggest.custom-mcp.Review.Cancel"));
+        Assert.False(connectRequest.Task.IsCompleted);
+        Assert.DoesNotContain(scene.Root.DescendantsAndSelf(), element => element.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review");
+        Assert.True(nameInput.GetValue(HavenProperties.Enabled));
+
+        Invoke(FindButton(scene, "Settings.Integrations.Mcp.Suggest.custom-mcp.Connect"));
+        Invoke(FindButton(scene, "Settings.Integrations.Mcp.Suggest.custom-mcp.Review.Continue"));
+        var request = await connectRequest.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        Assert.Equal("custom-mcp", request.Key);
+        Assert.Equal("Team MCP", request.Name);
+        Assert.Equal("https://mcp.example.com:8443/mcp?mode=readonly", request.Endpoint);
+        Assert.DoesNotContain(scene.Root.DescendantsAndSelf(), element => element.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review");
+    }
+
+    [Fact]
+    public void Suggested_mcp_access_review_blocks_insecure_remote_endpoint_locally()
+    {
+        using var scene = new SettingsHavenScene();
+        scene.SetMcpSuggestions([
+            new McpSuggestionSnapshot(
+                "custom-mcp", "Custom MCP Server", "Connect another server.",
+                "http://mcp.example.com/mcp", "MCP - Streamable HTTP - OAuth 2.1 browser sign-in", "Connect MCP Server")
+        ]);
+
+        Invoke(FindButton(scene, "Settings.Integrations.Mcp.Suggest.custom-mcp.Connect"));
+
+        var review = Assert.Single(scene.Root.DescendantsAndSelf(), element => element.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review");
+        var continueButton = Assert.Single(review.DescendantsAndSelf().OfType<Button>(), button => button.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review.Continue");
+        Assert.False(continueButton.GetValue(HavenProperties.Enabled));
+        Assert.Contains(review.DescendantsAndSelf().OfType<Text>(), text => text.Content?.ToString()?.Contains("Remote MCP servers must use HTTPS.", StringComparison.Ordinal) == true);
+    }
+
+    [Fact]
+    public void Suggested_mcp_access_review_identifies_loopback_as_local_and_oauth_free()
+    {
+        using var scene = new SettingsHavenScene();
+        scene.SetMcpSuggestions([
+            new McpSuggestionSnapshot(
+                "custom-mcp", "Custom MCP Server", "Connect another server.",
+                "http://127.0.0.1:8000/mcp", "MCP - Streamable HTTP - local/no OAuth", "Connect MCP Server")
+        ]);
+
+        Invoke(FindButton(scene, "Settings.Integrations.Mcp.Suggest.custom-mcp.Connect"));
+
+        var review = Assert.Single(scene.Root.DescendantsAndSelf(), element => element.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review");
+        var reviewText = string.Join("\n", review.DescendantsAndSelf().OfType<Text>().Select(text => text.Content?.ToString() ?? string.Empty));
+        var continueButton = Assert.Single(review.DescendantsAndSelf().OfType<Button>(), button => button.Name == "Settings.Integrations.Mcp.Suggest.custom-mcp.Review.Continue");
+        Assert.Contains("127.0.0.1:8000", reviewText);
+        Assert.Contains("Sign-in: none", reviewText);
+        Assert.True(continueButton.GetValue(HavenProperties.Enabled));
+    }
+
+    [Fact]
     public void Privacy_section_exposes_persistable_controls_and_loads_store_values()
     {
         using var scene = new SettingsHavenScene();
@@ -142,5 +228,15 @@ public sealed class SettingsHavenSceneTests
         Assert.NotNull(scene.LearnMeRejectButton);
         Assert.NotNull(scene.ApiBankRemoveButton);
         Assert.NotNull(scene.LearningTaskCancelButton);
+    }
+
+    private static Button FindButton(SettingsHavenScene scene, string name) =>
+        Assert.Single(scene.Root.DescendantsAndSelf().OfType<Button>(), button => button.Name == name);
+
+    private static void Invoke(Button button)
+    {
+        var method = typeof(HavenElement).GetMethod("Invoke", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        method.Invoke(button, null);
     }
 }

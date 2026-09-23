@@ -4,7 +4,16 @@
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>NineToOne.Cui.Markup</RootNamespace>
-    <AssemblyName>NineToOne.Cui.Markup</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>NineToOne.Cui.Markup.Retired</AssemblyName>
   </PropertyGroup>
+  <!--
+    The former minimal parser is deliberately excluded from compilation.  Its source
+    remains in this repository as migration donor material, while all active
+    consumers reference the authoritative Core/Language parser directly.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="../Core/CakeOS.Cui.Core.csproj" />
+  </ItemGroup>
 </Project>

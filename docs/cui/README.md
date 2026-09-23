@@ -1,19 +1,19 @@
 # CUI Foundation
 
-`framework/CUI/src/NineToOne.Cui.Markup.csproj` is the active CUI foundation. It
-parses a small renderer-neutral CUI tree with a required `<Cui>` root and loads
-only `.cui` files. Both the parser and file loader explicitly reject `.axaml`
-and `.hui` inputs.
+The authoritative CUI source is `framework/CUI`:
 
-The CUI project has no references to `Haven.UI`, `CakeOS.Hui.Renderer`, or an
-Avalonia package. All material under `9to1 OS/HUI/vendor/Haven.UI`,
-`HuiRenderer`, and the existing HUI hosts remains legacy HUI implementation;
-none is an input or runtime dependency for new CUI documents.
+- `Language` parses only `.cui` documents and rejects `.axaml` and `.hui`.
+- `Core` owns the renderer-neutral document tree.
+- `Compiler` and `Runtime` are the intended lowering and native-host layers.
+- `Themes`, `AI`, and `DevTools` are framework extensions, not replacements for
+  the language/core boundary.
 
-The existing `CakeOS.Hui.Renderer` remains the legacy Avalonia-package backend that
-translates Haven scene draw commands. No Avalonia framework source or fork is
-staged here, and CUI makes no claim to provide one. The unchanged Haven donor
-is pinned at `9to1 OS/HUI/vendor/.donor-revision` (`7c021082565b3e0ef9110bc4a1287ca3cc2c1fbb`);
-the CUI foundation copies no donor or Avalonia source. A future CUI-to-renderer
-adapter requires an approved shared scene/draw contract and applicable source
-provenance and licensing before importing or deriving any renderer code.
+The former lightweight `NineToOne.Cui.Markup` parser is retired from active
+compilation. Do not add a second parser or reference historical
+`9to1 OS/HUI/Cui` project paths.
+
+The native runtime is not presently build-verified because the checked-in
+Avalonia vendor tree imports a missing build file and has restore-time target
+cycles. See
+`docs/MASTER-MIGRATION-STATUS.md` for the evidence ledger and
+`docs/architecture/cui.md` for the required runtime verification chain.

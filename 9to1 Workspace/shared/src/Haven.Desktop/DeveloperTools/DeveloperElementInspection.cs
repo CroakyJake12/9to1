@@ -9,6 +9,7 @@
 using System.Globalization;
 using System.Text;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -86,6 +87,13 @@ internal static class DeveloperElementFormatter
             rows.Add(new("Data context", styled.DataContext?.GetType().FullName ?? "null"));
             rows.Add(new("Templated parent", styled.TemplatedParent?.GetType().Name ?? "(none)"));
             rows.Add(new("Theme variant", styled.ActualThemeVariant?.ToString() ?? "(default)"));
+            rows.Add(new("Accessible name override", FormatOptional(AutomationProperties.GetName(styled))));
+            rows.Add(new("Automation ID", FormatOptional(AutomationProperties.GetAutomationId(styled))));
+            rows.Add(new("Accessibility help text", FormatOptional(AutomationProperties.GetHelpText(styled))));
+            rows.Add(new("Access key", FormatOptional(AutomationProperties.GetAccessKey(styled))));
+            rows.Add(new("Accelerator key", FormatOptional(AutomationProperties.GetAcceleratorKey(styled))));
+            rows.Add(new("Control type override", AutomationProperties.GetControlTypeOverride(styled)?.ToString() ?? "(default)"));
+            rows.Add(new("Accessibility view", AutomationProperties.GetAccessibilityView(styled).ToString()));
         }
 
         if (visual is Layoutable layout)
@@ -140,6 +148,8 @@ internal static class DeveloperElementFormatter
     private static string FormatSize(Size size) => $"{size.Width:0.###} × {size.Height:0.###}";
 
     private static string FormatLength(double value) => double.IsNaN(value) ? "Auto" : value.ToString("0.###", CultureInfo.InvariantCulture);
+
+    private static string FormatOptional(string? value) => string.IsNullOrWhiteSpace(value) ? "(not set)" : value;
 
     private static string FormatObject(object? value) => value switch
     {

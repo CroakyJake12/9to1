@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
+using CakeOS.Cui.Themes;
 using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
@@ -106,6 +107,35 @@ public sealed class VisualCaptureTests
         window.Arrange(new Rect(0, 0, width, height));
         root.Measure(new Size(width, height));
         root.Arrange(new Rect(0, 0, width, height));
+        var pageCard = FindByAutomationId<Border>(root, "PageCard");
+        Assert.NotNull(pageCard);
+        Assert.True(root.Bounds.Width >= width - 1,
+            $"The CUI root only measured {root.Bounds.Width}px of the {width}px capture.");
+        var navPane = FindByAutomationId<Border>(root, "NavPane");
+        Assert.NotNull(navPane);
+        var editorScroll = FindByAutomationId<ScrollViewer>(root, "EditorScroll");
+        Assert.NotNull(editorScroll);
+        Assert.True(editorScroll.Bounds.Width > width * 0.70,
+            $"Editor viewport was {editorScroll.Bounds.Width}px wide (root={root.Bounds}, nav={navPane.Bounds}).");
+        var widthDifference = Math.Abs(pageCard.Bounds.Width - editorScroll.Viewport.Width);
+        Assert.True(widthDifference <= 1,
+            $"The seamless page width {pageCard.Bounds.Width} did not fill its editor viewport {editorScroll.Viewport.Width}.");
+        Assert.True(pageCard.Bounds.Height >= 400, $"PageCard layout height was only {pageCard.Bounds.Height}.");
+        Assert.Equal(new Thickness(0), pageCard.Margin);
+        Assert.Equal(new Thickness(0), pageCard.Padding);
+        Assert.Equal(new Thickness(0), pageCard.BorderThickness);
+        Assert.Equal(new CornerRadius(0), pageCard.CornerRadius);
+        var contentLayer = FindByAutomationId<StackPanel>(root, "DocumentContentLayer");
+        Assert.NotNull(contentLayer);
+        Assert.Equal(new Thickness(40, 32), contentLayer.Margin);
+        Assert.Equal(CuiTheme.Glow, BoardsTheme.SharedPalette.Theme);
+        object? accent = null;
+        Assert.True(Avalonia.Application.Current?.TryGetResource("CuiAccentBrush", null, out accent) == true);
+        Assert.IsType<Avalonia.Media.LinearGradientBrush>(accent);
+        var topBar = FindByAutomationId<Border>(root, "TopBar");
+        Assert.NotNull(topBar);
+        Assert.Same(accent, topBar.BorderBrush);
+        Assert.NotEmpty(host.Children);
 
         var pixelSize = new PixelSize(width, height);
         var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));

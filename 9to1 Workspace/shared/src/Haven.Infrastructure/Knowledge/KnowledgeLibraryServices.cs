@@ -210,6 +210,12 @@ public sealed class KnowledgeLibraryService(
             throw new InvalidOperationException("Previously rejected knowledge cannot be re-learned without an explicit user correction.");
         }
 
+        var existingSources = await ReadExistingSourcesAsync(record.Id, cancellationToken).ConfigureAwait(false);
+        record = record with
+        {
+            Sources = MergeSourcesByIdentity(existingSources, record.Sources)
+        };
+
         var sourcesJson = JsonSerializer.Serialize(record.Sources, JsonOptions);
         var estimate = KnowledgeContentSafety.Utf8Bytes(
             record.Topic, record.Title, record.Summary, record.LearnedBecause, sourcesJson, indexedText,
@@ -284,6 +290,45 @@ public sealed class KnowledgeLibraryService(
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return record;
+    }
+
+    private async Task<IReadOnlyList<KnowledgeSource>> ReadExistingSourcesAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT sources_json FROM knowledge_records WHERE id=$id;";
+        command.Parameters.AddWithValue("$id", id.ToString());
+        var value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        if (value is not string json || string.IsNullOrWhiteSpace(json)) return [];
+        return JsonSerializer.Deserialize<KnowledgeSource[]>(json, JsonOptions) ?? [];
+    }
+
+    private static IReadOnlyList<KnowledgeSource> MergeSourcesByIdentity(
+        IReadOnlyList<KnowledgeSource> existingSources,
+        IReadOnlyList<KnowledgeSource> incomingSources)
+    {
+        var merged = new List<KnowledgeSource>();
+        var sourceIndexes = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (var source in existingSources.Concat(incomingSources))
+        {
+            if (string.IsNullOrWhiteSpace(source.SourceId))
+            {
+                merged.Add(source);
+                continue;
+            }
+
+            if (sourceIndexes.TryGetValue(source.SourceId, out var existingIndex))
+            {
+                merged[existingIndex] = source;
+                continue;
+            }
+
+            sourceIndexes.Add(source.SourceId, merged.Count);
+            merged.Add(source);
+        }
+
+        return merged;
     }
 
     public async Task<IReadOnlyList<KnowledgeRecord>> SearchMetadataAsync(

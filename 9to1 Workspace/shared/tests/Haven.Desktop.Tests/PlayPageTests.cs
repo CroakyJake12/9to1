@@ -9,6 +9,24 @@ namespace Haven.Desktop.Tests;
 
 public sealed class PlayPageTests
 {
+    [Fact]
+    public void Quiz_feedback_tracks_the_answered_question_before_and_after_completion()
+    {
+        var now = DateTimeOffset.UtcNow;
+        QuizQuestion[] questions =
+        [
+            new("First?", ["A", "B"], 1, "The first explanation."),
+            new("Second?", ["Yes", "No"], 0, "The final explanation.")
+        ];
+
+        Assert.Null(PlayPage.FormatQuizFeedback(new QuizGameState(questions, 0, 0, false, null, now)));
+        Assert.Equal("Correct. The first explanation.", PlayPage.FormatQuizFeedback(
+            new QuizGameState(questions, 1, 1, false, true, now)));
+        Assert.Equal("Not quite. The final explanation.", PlayPage.FormatQuizFeedback(
+            new QuizGameState(questions, 1, 1, true, false, now)));
+        Assert.Null(PlayPage.FormatQuizFeedback(new QuizGameState(questions, 0, 1, false, false, now)));
+    }
+
     [AvaloniaFact]
     public async Task Play_page_renders_real_discovery_surface_and_empty_library_state()
     {

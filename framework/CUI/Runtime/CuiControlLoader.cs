@@ -207,7 +207,13 @@ public sealed class CuiControlLoader
         }
 
         var control = CreateControl(component);
+        if (!string.IsNullOrWhiteSpace(component.Name))
+        {
+            control.Name = component.Name;
+            Avalonia.Automation.AutomationProperties.SetAutomationId(control, component.Name);
+        }
         ApplyProperties(control, component);
+        ApplyAuthoredText(control, component);
         ApplyActionTag(control, component);
         ApplyClasses(control, component);
 
@@ -250,6 +256,27 @@ public sealed class CuiControlLoader
         }
     }
 
+    private static void ApplyAuthoredText(Control control, CuiComponent component)
+    {
+        if (string.IsNullOrWhiteSpace(component.Text)
+            || component.Properties.ContainsKey("text")
+            || component.Properties.ContainsKey("content"))
+            return;
+
+        switch (control)
+        {
+            case TextBlock textBlock:
+                textBlock.Text = component.Text;
+                break;
+            case TextBox textBox:
+                textBox.Text = component.Text;
+                break;
+            case ContentControl contentControl:
+                contentControl.Content = component.Text;
+                break;
+        }
+    }
+
     private void ApplyLiveBinding(Control control, string propName, CuiBindingValue binding)
     {
         // Track for periodic refresh
@@ -278,7 +305,8 @@ public sealed class CuiControlLoader
 
     private void ApplyLiteralProperty(Control control, string propName, string resolved)
     {
-        switch (propName.ToLowerInvariant())
+        var normalizedPropertyName = propName.Replace("-", string.Empty, StringComparison.Ordinal);
+        switch (normalizedPropertyName.ToLowerInvariant())
         {
                 case "width":
                     if (double.TryParse(resolved, out var w))
@@ -338,7 +366,7 @@ public sealed class CuiControlLoader
                     else if (control is Avalonia.Controls.Primitives.TemplatedControl tbct)
                         tbct.BorderThickness = ParseThickness(resolved);
                     break;
-                case "cornerRadius":
+                case "cornerradius":
                     if (control is Border brd && TryParseCornerRadius(resolved, out var cr))
                         brd.CornerRadius = cr;
                     break;
@@ -419,6 +447,8 @@ public sealed class CuiControlLoader
                 case "grid.column":
                 case "grid-column":
                 case "gridcolumn":
+                    Avalonia.Controls.Grid.SetColumn(control, int.TryParse(resolved, out var gridColumn) ? gridColumn : 0);
+                    break;
                 case "column":
                     if (control is Grid gridCol && int.TryParse(resolved, out var colCount) && colCount > 0)
                     {
@@ -433,6 +463,8 @@ public sealed class CuiControlLoader
                 case "grid.row":
                 case "grid-row":
                 case "gridrow":
+                    Avalonia.Controls.Grid.SetRow(control, int.TryParse(resolved, out var gridRowIndex) ? gridRowIndex : 0);
+                    break;
                 case "row":
                     if (control is Grid gridRow && int.TryParse(resolved, out var rowCount) && rowCount > 0)
                     {
@@ -462,23 +494,20 @@ public sealed class CuiControlLoader
                 case "fontfamily":
                     if (control is TextBlock fttb)
                         fttb.FontFamily = new Avalonia.Media.FontFamily(resolved);
-                    else if (control is TextBox fftb)
-                        fftb.FontFamily = new Avalonia.Media.FontFamily(resolved);
+                    else if (control is Avalonia.Controls.Primitives.TemplatedControl fttc)
+                        fttc.FontFamily = new Avalonia.Media.FontFamily(resolved);
                     break;
                 case "fontsize":
                     if (control is TextBlock fstb && double.TryParse(resolved, out var fs))
                         fstb.FontSize = fs;
-                    else if (control is TextBox fstbx && double.TryParse(resolved, out var fsx))
-                        fstbx.FontSize = fsx;
+                    else if (control is Avalonia.Controls.Primitives.TemplatedControl fstc && double.TryParse(resolved, out fs))
+                        fstc.FontSize = fs;
                     break;
                 case "fontweight":
-                    if (Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
-                    {
-                        if (control is TextBlock fwTb)
-                            fwTb.FontWeight = fw;
-                        else if (control is TextBox fwTbx)
-                            fwTbx.FontWeight = fw;
-                    }
+                    if (control is TextBlock fwTb && Enum.TryParse<Avalonia.Media.FontWeight>(resolved, true, out var fw))
+                        fwTb.FontWeight = fw;
+                    else if (control is Avalonia.Controls.Primitives.TemplatedControl fwTc && Enum.TryParse(resolved, true, out fw))
+                        fwTc.FontWeight = fw;
                     break;
                 case "fontstyle":
                     if (Enum.TryParse<Avalonia.Media.FontStyle>(resolved, true, out var fst)
@@ -543,6 +572,9 @@ public sealed class CuiControlLoader
         if (component.Actions.TryGetValue("action", out var actionRef)
             && !string.IsNullOrWhiteSpace(actionRef.Name))
             control.Tag = actionRef.Name;
+        else if (component.Actions.TryGetValue("on:click", out var clickRef)
+            && !string.IsNullOrWhiteSpace(clickRef.Name))
+            control.Tag = clickRef.Name;
     }
 
     private static bool TryParseFontStyle(string value, out Avalonia.Media.FontStyle result)
@@ -615,7 +647,35 @@ public sealed class CuiControlLoader
         {
             CuiLiteralValue literal => literal.Value,
             CuiBindingValue binding => ResolveBindingValue(binding),
-            CuiResourceValue resource => _resourceScope.TryGetValue(resource.Key, out var val) ? val : null,
+            CuiResourceValue resource => ResolveResourceValue(resource.Key),
+            _ => null,
+        };
+    }
+
+    private string? ResolveResourceValue(string key)
+    {
+        if (_resourceScope.TryGetValue(key, out var value))
+            return value;
+
+        var palette = CuiSurfacePaletteCatalog.For(
+            _currentSurface,
+            CuiThemeScopeApplier.DetectAppearance(),
+            _themeStack.Current);
+        return key switch
+        {
+            "CuiBackgroundBrush" => palette.TideBase.ToString(),
+            "CuiTextBrush" => palette.Text.ToString(),
+            "CuiTextSoftBrush" => palette.TextSoft.ToString(),
+            "CuiMutedBrush" => palette.Muted.ToString(),
+            "CuiPanelBrush" => palette.Panel.ToString(),
+            "CuiPanel2Brush" => palette.Panel2.ToString(),
+            "CuiPanel3Brush" => palette.Panel3.ToString(),
+            "CuiPanelHoverBrush" => palette.PanelHover.ToString(),
+            "CuiLineBrush" => palette.Line.ToString(),
+            "CuiLineStrongBrush" => palette.LineStrong.ToString(),
+            "CuiButtonBrush" => palette.Button.ToString(),
+            "CuiFocusBrush" => palette.Focus.ToString(),
+            "CuiAccentSoftBrush" => palette.AccentSoft.ToString(),
             _ => null,
         };
     }

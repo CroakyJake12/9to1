@@ -54,6 +54,48 @@ public sealed class NativePlanWeekTests
             zone.Id);
         await planner.UpsertTaskAsync(task, CancellationToken.None);
 
+        var plannedTaskId = Guid.NewGuid();
+        var plannedTaskStart = mondayStart.AddHours(13);
+        await planner.UpsertTaskAsync(new PlannerTask(
+            plannedTaskId,
+            PlannerDefaults.CollegeCollectionId,
+            null,
+            "Keep planned task",
+            string.Empty,
+            PlannerPriority.Medium,
+            PlannerTaskStatus.Planned,
+            "[]",
+            45,
+            plannedTaskStart,
+            plannedTaskStart.AddMinutes(45),
+            null,
+            null,
+            null,
+            1,
+            now,
+            now,
+            zone.Id), CancellationToken.None);
+        var eventId = Guid.NewGuid();
+        var eventStart = mondayStart.AddHours(15);
+        await planner.UpsertEventAsync(new PlannerEvent(
+            eventId,
+            PlannerDefaults.LocalCalendarId,
+            "Keep calendar event",
+            string.Empty,
+            string.Empty,
+            eventStart,
+            eventStart.AddMinutes(45),
+            false,
+            null,
+            null,
+            false,
+            null,
+            null,
+            now,
+            now,
+            null,
+            zone.Id), CancellationToken.None);
+
         using var page = new NativePlanPage(planner, containers);
         var window = new Window { Width = 1280, Height = 860, Content = page };
         PlannerStudyLink? openedStudy = null;
@@ -96,6 +138,37 @@ public sealed class NativePlanWeekTests
             Click(root, completeButton);
             await WaitForAsync(async () => (await planner.GetTaskAsync(taskId, CancellationToken.None))?.Status == PlannerTaskStatus.Completed);
             Assert.Equal(PlannerTaskStatus.Completed, (await planner.GetTaskAsync(taskId, CancellationToken.None))?.Status);
+
+            var filter = root.DescendantsAndSelf().OfType<Button>().Single(item => item.Name == "PlanWeekCompletedFilter");
+            await WaitForAsync(() => filter.GetValue(HavenProperties.Enabled));
+            Assert.Equal("Hide completed", filter.Content);
+            Assert.Equal("Hide completed tasks", filter.Accessibility.AccessibleName);
+            var plannedTaskRowName = $"PlanWeekTimed-Task-{plannedTaskId:N}-{mondayDate:yyyyMMdd}";
+            var eventRowName = $"PlanWeekTimed-Event-{eventId:N}-{mondayDate:yyyyMMdd}";
+            Assert.Contains(root.DescendantsAndSelf(), item => item.Name == plannedTaskRowName);
+            Assert.Contains(root.DescendantsAndSelf(), item => item.Name == eventRowName);
+
+            Click(root, filter);
+            await WaitForAsync(() =>
+            {
+                window.UpdateLayout();
+                return filter.Content == "Show completed"
+                    && !root.DescendantsAndSelf().Any(item => item.Name == $"PlanWeekTimed-Task-{taskId:N}-{mondayDate:yyyyMMdd}")
+                    && !root.DescendantsAndSelf().Any(item => item.Name == $"PlanWeekTimed-Task-{taskId:N}-{mondayDate.AddDays(1):yyyyMMdd}")
+                    && root.DescendantsAndSelf().Any(item => item.Name == plannedTaskRowName)
+                    && root.DescendantsAndSelf().Any(item => item.Name == eventRowName);
+            });
+            Assert.Equal("Show completed tasks", filter.Accessibility.AccessibleName);
+
+            Click(root, filter);
+            await WaitForAsync(() =>
+            {
+                window.UpdateLayout();
+                return filter.Content == "Hide completed"
+                    && root.DescendantsAndSelf().Any(item => item.Name == $"PlanWeekTimed-Task-{taskId:N}-{mondayDate:yyyyMMdd}")
+                    && root.DescendantsAndSelf().Any(item => item.Name == plannedTaskRowName)
+                    && root.DescendantsAndSelf().Any(item => item.Name == eventRowName);
+            });
 
             var range = root.DescendantsAndSelf().OfType<Text>().Single(item => item.Name == "PlanWeekRange");
             var thisWeekRange = range.Content;

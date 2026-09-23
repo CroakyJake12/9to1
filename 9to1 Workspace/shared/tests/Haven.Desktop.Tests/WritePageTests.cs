@@ -213,6 +213,224 @@ public sealed class WritePageTests
         Assert.Contains("may not preserve every Haven-only object", writePage.Route.StatusText.Content, StringComparison.Ordinal);
     }
 
+    [AvaloniaFact]
+    public async Task Write_find_navigates_and_selects_matches_and_reports_missing_text()
+    {
+        var document = NotesDocument.Create("Find navigation");
+        var blocks = document.Sections[0].Pages[0].Blocks;
+        blocks[0].PlainText = "needle at the start";
+        for (var index = 1; index <= 40; index++)
+        {
+            var text = index == 40
+                ? "needle near the end"
+                : "A longer paragraph to make the document scroll well beyond the visible editor area.";
+            var block = NotesBlock.CreateParagraph(text);
+            block.Order = index;
+            blocks.Add(block);
+        }
+
+        var repository = new FakeNotesRepository(document);
+        using var writePage = new WritePage(new HavenEventBus(), repository, new FakeNotesFormats(), initialDocumentId: document.Id);
+        await writePage.InitializeAsync();
+        var window = new Window { Width = 1800, Height = 680, Content = writePage };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            var router = new HavenInputRouter(writePage.SceneRoot);
+            Click(router, writePage.Route.ReviewTab);
+            window.UpdateLayout();
+
+            var findInput = Assert.IsType<Input>(writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.Find"));
+            findInput.Text = "needle";
+            var findNext = writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.FindNext");
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Contains("Match 1 of 2", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+            Assert.Equal("needle", writePage.Route.DocumentSurface.SelectedText);
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Equal("needle", writePage.Route.DocumentSurface.SelectedText);
+            Assert.Contains("Match 2 of 2", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Contains("Match 1 of 2", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+
+            findInput = Assert.IsType<Input>(writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.Find"));
+            findInput.Text = "missing text";
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Empty(writePage.Route.DocumentSurface.SelectedText);
+            Assert.Contains("No matches", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+            Assert.False(writePage.IsDirty);
+            Assert.Equal(0, repository.SaveCalls);
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Write_find_reports_no_matches_and_clears_the_previous_selection()
+    {
+        var document = NotesDocument.Create("Find no matches");
+        var paragraph = document.Sections[0].Pages[0].Blocks[0];
+        paragraph.PlainText = "needle in document text";
+
+        var repository = new FakeNotesRepository(document);
+        using var writePage = new WritePage(new HavenEventBus(), repository, new FakeNotesFormats(), initialDocumentId: document.Id);
+        await writePage.InitializeAsync();
+        var window = new Window { Width = 1800, Height = 680, Content = writePage };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            var router = new HavenInputRouter(writePage.SceneRoot);
+            Click(router, writePage.Route.ReviewTab);
+            window.UpdateLayout();
+
+            var findInput = Assert.IsType<Input>(writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.Find"));
+            findInput.Text = "needle";
+            var findNext = writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.FindNext");
+            var findInvoked = false;
+            findNext.Invoked += (_, _) => findInvoked = true;
+            Click(router, findNext);
+
+            Assert.True(findInvoked);
+            Assert.Contains("Match 1 of 1", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+            Assert.Equal("needle", writePage.Route.DocumentSurface.SelectedText);
+
+            findInput = Assert.IsType<Input>(writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.Find"));
+            findInput.Text = "not present";
+            var noMatchNext = writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.FindNext");
+            var noMatchInvoked = false;
+            noMatchNext.Invoked += (_, _) => noMatchInvoked = true;
+            Click(router, noMatchNext);
+
+            Assert.True(noMatchInvoked);
+            Assert.Contains("No matches", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+            Assert.Empty(writePage.Route.DocumentSurface.SelectedText);
+            Assert.Null(writePage.Route.DocumentSurface.ActiveTableCellId);
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task Write_find_navigates_embedded_objects_and_table_cells_with_wraparound_and_selection()
+    {
+        var document = NotesDocument.Create("Find across content");
+        var blocks = document.Sections[0].Pages[0].Blocks;
+        var paragraph = blocks[0];
+        paragraph.PlainText = "needle in document text";
+        paragraph.Order = 0;
+
+        var image = new NotesBlock
+        {
+            Kind = NotesBlockKind.Image,
+            Order = 1,
+            Media = new NotesMediaData
+            {
+                OriginalName = "diagram.png",
+                AltText = "needle image description",
+                Caption = "Architecture diagram"
+            }
+        };
+        var table = NotesBlock.TableBlock(2, 2);
+        table.Order = 2;
+        table.Table!.Rows[0].Cells[0].Text = "first cell content";
+        table.Table.Rows[0].Cells[1].Text = "second cell content";
+        table.Table.Rows[1].Cells[0].Text = "third cell content";
+        var tableMatchCell = table.Table!.Rows[1].Cells[1];
+        tableMatchCell.Text = "needle table target";
+        blocks.Add(image);
+        blocks.Add(table);
+
+        var repository = new FakeNotesRepository(document);
+        using var writePage = new WritePage(new HavenEventBus(), repository, new FakeNotesFormats(), initialDocumentId: document.Id);
+        await writePage.InitializeAsync();
+        var window = new Window { Width = 1800, Height = 680, Content = writePage };
+        try
+        {
+            window.Show();
+            window.UpdateLayout();
+            var router = new HavenInputRouter(writePage.SceneRoot);
+            Click(router, writePage.Route.ReviewTab);
+            window.UpdateLayout();
+
+            var findInput = Assert.IsType<Input>(writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.Find"));
+            findInput.Text = "needle";
+            var findNext = writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.FindNext");
+            var findPrevious = writePage.SceneRoot.DescendantsAndSelf()
+                .Single(element => element.Name == "Write.Review.FindPrevious");
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Contains("Match 1 of 3", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+            Assert.Equal(paragraph.Id, writePage.Route.SelectedBlockId);
+            Assert.Equal("needle", writePage.Route.DocumentSurface.SelectedText);
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Equal(image.Id, writePage.Route.SelectedBlockId);
+            Assert.Empty(writePage.Route.DocumentSurface.SelectedText);
+            Assert.Contains("Match 2 of 3", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Equal(table.Id, writePage.Route.SelectedBlockId);
+            Assert.Equal(tableMatchCell.Id, writePage.Route.DocumentSurface.ActiveTableCellId);
+            Assert.Equal("needle", writePage.Route.DocumentSurface.SelectedText);
+            Assert.Equal("needle", writePage.Route.DocumentSurface.Copy());
+            Assert.Contains("Match 3 of 3", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+
+            Click(router, findNext);
+            window.UpdateLayout();
+            Assert.Equal(paragraph.Id, writePage.Route.SelectedBlockId);
+            Assert.Contains("Match 1 of 3", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+
+            Click(router, findPrevious);
+            window.UpdateLayout();
+            Assert.Equal(table.Id, writePage.Route.SelectedBlockId);
+            Assert.Equal(tableMatchCell.Id, writePage.Route.DocumentSurface.ActiveTableCellId);
+            Assert.Equal("needle", writePage.Route.DocumentSurface.SelectedText);
+            Assert.Contains("Match 3 of 3", writePage.Route.StatusText.Content, StringComparison.Ordinal);
+
+            Assert.True(writePage.Route.DocumentSurface.TextInput("found"));
+            Assert.Equal("found table target", tableMatchCell.Text);
+            Assert.Empty(writePage.Route.DocumentSurface.SelectedText);
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    private static void Click(HavenInputRouter router, HavenElement element)
+    {
+        var point = new HavenPoint(element.Bounds.X + element.Bounds.Width / 2, element.Bounds.Y + element.Bounds.Height / 2);
+        router.PointerPressed(point);
+        Assert.True(router.PointerReleased(point));
+    }
+
     private sealed class FakeNotesFormats : INotesImportExportService
     {
         public IReadOnlyList<string> ImportExtensions { get; } = [".docx", ".md", ".html"];

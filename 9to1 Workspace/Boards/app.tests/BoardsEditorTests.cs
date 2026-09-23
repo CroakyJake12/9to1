@@ -14,6 +14,7 @@ using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
 
+[Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsEditorTests
 {
     private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
@@ -179,7 +180,7 @@ public sealed class BoardsEditorTests
         });
         var viewModel = new BoardsViewModel(session);
 
-        var (errorCount, mentionsBad, canvasCount) = await OnUiThreadAsync(() =>
+        var (errorCount, mentionsBad, canvasCount, plotClips) = await OnUiThreadAsync(() =>
         {
             var host = new StackPanel();
             BlockRenderer.Rebuild(host, viewModel, []);
@@ -187,14 +188,17 @@ public sealed class BoardsEditorTests
             var errors = all.OfType<TextBlock>()
                 .Where(t => (t.Text ?? string.Empty).StartsWith("Invalid expression", StringComparison.Ordinal))
                 .ToArray();
+            var plot = all.OfType<Canvas>().SingleOrDefault(c =>
+                Avalonia.Automation.AutomationProperties.GetName(c) == "Graph plot");
             return (errors.Length, errors.Any(t => t.Text!.Contains("y = ???", StringComparison.Ordinal)),
-                all.OfType<Canvas>().Count());
+                all.OfType<Canvas>().Count(), plot?.ClipToBounds == true);
         });
 
         Assert.Equal(1, errorCount);
         Assert.True(mentionsBad);
         // One plot canvas plus the always-present freeform canvas.
         Assert.Equal(2, canvasCount);
+        Assert.True(plotClips, "Graph curves must be clipped to their plot canvas.");
     }
 
     [Fact]

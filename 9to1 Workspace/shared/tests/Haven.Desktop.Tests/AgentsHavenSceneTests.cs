@@ -38,6 +38,92 @@ public sealed class AgentsHavenSceneTests
     }
 
     [Fact]
+    public void Latest_run_activity_formats_saved_events_without_displaying_private_details()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var activity = new ToolActivity(
+            Guid.NewGuid(), "Search public sources", "private response content", true,
+            TimeSpan.FromMilliseconds(186), now);
+        var run = new AgentRun(
+            Guid.NewGuid(), Guid.NewGuid(), "Research Agent", "Find sources", AgentRunStatus.Completed,
+            "local-model", "done", string.Empty, "[]", JsonSerializer.Serialize(new[] { activity }),
+            now, now, now);
+
+        var formatted = AgentsHavenScene.FormatActivityLog(run);
+
+        Assert.Contains("Search public sources", formatted, StringComparison.Ordinal);
+        Assert.Contains("Succeeded", formatted, StringComparison.Ordinal);
+        Assert.Contains("186 ms", formatted, StringComparison.Ordinal);
+        Assert.DoesNotContain("private response content", formatted, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Latest_run_activity_reports_corrupt_and_empty_logs_honestly()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var run = new AgentRun(
+            Guid.NewGuid(), Guid.NewGuid(), "Research Agent", "Find sources", AgentRunStatus.Failed,
+            "local-model", string.Empty, "failed", "[]", "{", now, now, now);
+
+        Assert.Equal("Saved activity log could not be read.", AgentsHavenScene.FormatActivityLog(run));
+        Assert.Equal("No tool events were recorded for this run.", AgentsHavenScene.FormatActivityLog(run with { ActivityJson = "[]" }));
+    }
+
+    [Fact]
+    public void Latest_run_activity_bounds_untrusted_logs_and_removes_private_details()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var run = new AgentRun(
+            Guid.NewGuid(), Guid.NewGuid(), "Research Agent", "Find sources", AgentRunStatus.Completed,
+            "local-model", "secret result", string.Empty, "[]", "[]", now, now, now);
+
+        Assert.Equal("Saved activity log is too large to display.",
+            AgentsHavenScene.FormatActivityLog(run with { ActivityJson = new string('x', 256 * 1024 + 1) }));
+        Assert.Equal("Saved activity log contains invalid events.",
+            AgentsHavenScene.FormatActivityLog(run with { ActivityJson = "[{}]" }));
+
+        var events = Enumerable.Range(0, 10).Select(index => new
+        {
+            Title = index == 9 ? "Visible\r\n\u202e title" : $"Event {index}",
+            Succeeded = true,
+            Duration = TimeSpan.FromMilliseconds(20),
+            Timestamp = now,
+            Details = "private tool details",
+            Response = "private response"
+        });
+        var activity = AgentsHavenScene.FormatActivityLog(run with { ActivityJson = JsonSerializer.Serialize(events) });
+
+        Assert.Contains("2 earlier events omitted.", activity, StringComparison.Ordinal);
+        Assert.Contains("Visible title", activity, StringComparison.Ordinal);
+        Assert.DoesNotContain("Event 0", activity, StringComparison.Ordinal);
+        Assert.DoesNotContain("private", activity, StringComparison.Ordinal);
+        Assert.DoesNotContain("Visible\r\n", activity, StringComparison.Ordinal);
+        Assert.DoesNotContain('\u202e', activity);
+    }
+
+    [Fact]
+    public void Run_updates_do_not_replace_a_newer_latest_run_with_an_older_completion()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var viewModel = new CatalogPageViewModel(CatalogPageKind.Agents,
+            new FakeCatalogRepository([]), new FakeOllamaClient(), true);
+        using var scene = new AgentsHavenScene(viewModel);
+        AgentRun CreateRun(DateTimeOffset createdAt, string name) => new(
+            Guid.NewGuid(), Guid.NewGuid(), name, "Task", AgentRunStatus.Running,
+            "local-model", string.Empty, string.Empty, "[]", "[]", createdAt, createdAt, createdAt);
+        var older = CreateRun(now.AddMinutes(-1), "Older");
+        var newer = CreateRun(now, "Newer");
+
+        scene.ApplyRunUpdate(older);
+        scene.ApplyRunUpdate(newer);
+        scene.ApplyRunUpdate(older with { Status = AgentRunStatus.Completed });
+
+        Assert.Contains("Newer", scene.RecentRunsText.Content, StringComparison.Ordinal);
+        Assert.Contains("Older · Completed", scene.RecentRunsText.Content, StringComparison.Ordinal);
+        Assert.Equal("No tool events were recorded for this run.", scene.LatestActivityText.Content);
+    }
+
+    [Fact]
     public async Task Scene_create_duplicate_and_confirm_delete_use_real_catalog_commands()
     {
         var now = DateTimeOffset.UtcNow;

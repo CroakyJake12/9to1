@@ -63,6 +63,32 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         return adapter;
     }
 
+    /// <summary>Creates and durably saves a new board at a distinct local path.</summary>
+    public static async Task<ContractSessionAdapter> CreateNewAtPathAsync(
+        JsonFileHavenBoardStore store, string path, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = EnsureBoardExtension(Path.GetFullPath(path.Trim()));
+        if (Directory.Exists(fullPath) || File.Exists(fullPath) || File.Exists(fullPath + ".bak"))
+            throw new IOException("A board or recovery backup already exists at that location. Choose a different file name.");
+
+        var title = Path.GetFileNameWithoutExtension(fullPath);
+        var real = await RichBoardSession.CreateNewAsync(store, title, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await real.SaveAsAsync(fullPath, cancellationToken).ConfigureAwait(false);
+            var adapter = new ContractSessionAdapter(store, real);
+            adapter.RefreshView();
+            return adapter;
+        }
+        catch
+        {
+            await real.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+    }
+
     private static async Task<RichBoardSession> CreateAtAsync(
         JsonFileHavenBoardStore store, string path, string title, CancellationToken cancellationToken)
     {
@@ -207,7 +233,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
 
     /// <summary>Commits one pointer-drawn stroke as real persisted ink data.</summary>
     public async ValueTask CommitInkStrokeAsync(
-        IReadOnlyList<(double X, double Y)> points, CancellationToken cancellationToken = default)
+        string pageId, IReadOnlyList<(double X, double Y)> points, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         ArgumentNullException.ThrowIfNull(points);
@@ -217,7 +243,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             await _real.MutateAsync(rich =>
             {
                 var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
@@ -237,14 +263,15 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     }
 
     /// <summary>Keyboard/non-pointer fallback: appends a small but real ink stroke.</summary>
-    public async ValueTask<int> EraseInkAtCurrentPageAsync(
-        double x, double y, double radius = 12, CancellationToken cancellationToken = default)    {
+    public async ValueTask<int> EraseInkAtPageAsync(
+        string pageId, double x, double y, double radius = 12, CancellationToken cancellationToken = default)
+    {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             var removed = 0;
             await _real.MutateAsync(rich =>
                 removed = HavenRichNotesOps.EraseInkAt(rich, page.Id, x, y, radius),
@@ -259,25 +286,25 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     }
 
     /// <summary>Keyboard/non-pointer fallback: appends a small but real ink stroke.</summary>
-    public async ValueTask AddSampleInkStrokeAsync(CancellationToken cancellationToken = default)
+    public async ValueTask AddSampleInkStrokeAsync(string pageId, CancellationToken cancellationToken = default)
     {
         var random = new Random();
         var x = 40 + random.Next(0, 200);
         var y = 40 + random.Next(0, 80);
-        await CommitInkStrokeAsync(
+        await CommitInkStrokeAsync(pageId,
             [(x, y), (x + 60, y + 20), (x + 120, y - 10)], cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Selects the nearest stroke within radius of a point (Select tool).</summary>
-    public async ValueTask<bool> SelectInkAtCurrentPageAsync(
-        double x, double y, double radius = 14, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> SelectInkAtPageAsync(
+        string pageId, double x, double y, double radius = 14, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             var selected = false;
             await _real.MutateAsync(rich =>
             {
@@ -410,19 +437,11 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         }
     }
 
-    private HavenRichPage CurrentContractPage()
+    private HavenRichPage ContractPage(string pageId)
     {
-        var rich = _real.Rich;
-        var viewSection = _view.Sections.FirstOrDefault();
-        var viewPage = viewSection?.Pages.FirstOrDefault();
-        if (viewSection is not null && viewPage is not null)
-        {
-            var section = rich.Sections.FirstOrDefault(s => s.Id == viewSection.Id);
-            var page = section?.Pages.FirstOrDefault(p => p.Id == viewPage.Id);
-            if (page is not null)
-                return page;
-        }
-        return rich.Sections.SelectMany(s => s.Pages).First();
+        ArgumentException.ThrowIfNullOrWhiteSpace(pageId);
+        return _real.Rich.Sections.SelectMany(s => s.Pages).FirstOrDefault(p => p.Id == pageId)
+            ?? throw new InvalidOperationException($"The selected board page '{pageId}' no longer exists.");
     }
 
     private async Task MergeAsync()
@@ -777,14 +796,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         finally { _mergeGate.Release(); }
     }
 
-    public async ValueTask ClearInkAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ClearInkAsync(string pageId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             await _real.MutateAsync(rich =>
                 HavenRichNotesOps.ClearInk(rich, page.Id), cancellationToken).ConfigureAwait(false);
             RefreshView();
@@ -792,14 +811,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         finally { _mergeGate.Release(); }
     }
 
-    public async ValueTask<bool> RemoveLastInkStrokeAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<bool> RemoveLastInkStrokeAsync(string pageId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             var removed = false;
             await _real.MutateAsync(rich =>
             {
@@ -815,7 +834,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
 
     /// <summary>Pointer-drawn stroke with the selected tool/width/color/pressure.</summary>
     public async ValueTask CommitInkStrokeAsync(
-        IReadOnlyList<(double X, double Y, double Pressure)> points,
+        string pageId, IReadOnlyList<(double X, double Y, double Pressure)> points,
         double width, string color, string toolName,
         CancellationToken cancellationToken = default)
     {
@@ -829,7 +848,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             await _real.MutateAsync(rich =>
             {
                 var target = rich.Sections.SelectMany(s => s.Pages).First(p => p.Id == page.Id);
@@ -850,14 +869,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         finally { _mergeGate.Release(); }
     }
 
-    public async ValueTask SetInkViewAsync(double panX, double panY, double zoom, CancellationToken cancellationToken = default)
+    public async ValueTask SetInkViewAsync(string pageId, double panX, double panY, double zoom, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             await _real.MutateAsync(rich =>
                 HavenRichNotesOps.SetInkView(rich, page.Id, panX, panY, zoom), cancellationToken).ConfigureAwait(false);
             RefreshView();
@@ -865,10 +884,10 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         finally { _mergeGate.Release(); }
     }
 
-    public Task<IReadOnlyList<CanvasBoxView>> GetCanvasObjectsAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<CanvasBoxView>> GetCanvasObjectsAsync(string pageId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        var page = CurrentContractPage();
+        var page = ContractPage(pageId);
         IReadOnlyList<CanvasBoxView> boxes = page.Canvas.Select(o => new CanvasBoxView
         {
             Id = o.Id, Kind = o.Kind, Text = o.Text,
@@ -878,10 +897,10 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     }
 
     /// <summary>Copies persisted page ink for the transparent editor overlay.</summary>
-    public Task<IReadOnlyList<InkStrokeView>> GetInkStrokesAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<InkStrokeView>> GetInkStrokesAsync(string pageId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        var page = CurrentContractPage();
+        var page = ContractPage(pageId);
         IReadOnlyList<InkStrokeView> strokes = page.Ink.Select(stroke => new InkStrokeView
         {
             Points = stroke.Points.Select(point => new InkPointView
@@ -899,7 +918,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
     }
 
     public async ValueTask<string> AddCanvasObjectAsync(
-        string kind, string? text, double x, double y,
+        string pageId, string kind, string? text, double x, double y,
         double width = 260, double height = 160, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -907,7 +926,7 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             string id = string.Empty;
             await _real.MutateAsync(rich =>
                 id = HavenRichNotesOps.AddCanvasObject(rich, page.Id, kind, text, x, y, width, height).Id,
@@ -918,14 +937,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         finally { _mergeGate.Release(); }
     }
 
-    public async ValueTask<bool> MoveCanvasObjectAsync(string objectId, double x, double y, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> MoveCanvasObjectAsync(string pageId, string objectId, double x, double y, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             var moved = false;
             await _real.MutateAsync(rich =>
                 moved = HavenRichNotesOps.MoveCanvasObject(rich, page.Id, objectId, x, y),
@@ -936,14 +955,14 @@ public sealed class ContractSessionAdapter : IRichBoardSession
         finally { _mergeGate.Release(); }
     }
 
-    public async ValueTask<bool> RemoveCanvasObjectAsync(string objectId, CancellationToken cancellationToken = default)
+    public async ValueTask<bool> RemoveCanvasObjectAsync(string pageId, string objectId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         await _mergeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await MergeCoreAsync(cancellationToken).ConfigureAwait(false);
-            var page = CurrentContractPage();
+            var page = ContractPage(pageId);
             var removed = false;
             await _real.MutateAsync(rich =>
                 removed = HavenRichNotesOps.RemoveCanvasObject(rich, page.Id, objectId),

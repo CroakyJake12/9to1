@@ -20,6 +20,7 @@ internal sealed class OverlayShellHavenScene : IDisposable
         "Summarise this file",
         "Research a question"
     ];
+    private bool _syncingCollapsedPromptFocusVisual;
     private bool _disposed;
 
     public OverlayShellHavenScene()
@@ -32,6 +33,7 @@ internal sealed class OverlayShellHavenScene : IDisposable
         Set(CollapsedPromptButton, HavenProperties.Width, HavenLength.Percent(100));
         Set(CollapsedPromptButton, HavenProperties.MinHeight, HavenLength.Px(56));
         CollapsedPromptButton.Accessibility.AccessibleName = "Ask Haven about your Screen";
+        CollapsedPromptButton.Invalidated += (_, _) => UpdateCollapsedPromptFocusVisual();
         Root.Add(CollapsedPromptButton);
 
         ExpandedPanel = new Container { Name = "Overlay.Expanded", Layout = HavenLayout.Vertical };
@@ -210,6 +212,7 @@ internal sealed class OverlayShellHavenScene : IDisposable
             Placeholder = "Ask Haven anything",
             SubmitOnEnter = true
         };
+        ComposerInput.Accessibility.AccessibleName = "Ask Haven anything";
         Set(ComposerInput, HavenProperties.Column, 1);
         Set(ComposerInput, HavenProperties.Width, HavenLength.Percent(100));
         SendButton = Action("Overlay.Composer.Send", "→", ButtonVariant.Primary);
@@ -410,6 +413,35 @@ internal sealed class OverlayShellHavenScene : IDisposable
         else if (hasSelection)
             RegionStatus.Content = "Region selected. Apply it when ready, or replace the capture.";
     }
+
+    private void UpdateCollapsedPromptFocusVisual()
+    {
+        if (_syncingCollapsedPromptFocusVisual) return;
+
+        _syncingCollapsedPromptFocusVisual = true;
+        try
+        {
+            if (CollapsedPromptButton.State.HasFlag(HavenElementState.Focused))
+            {
+                CollapsedPromptButton.SetValue(HavenProperties.BorderColor, "AccentSecondary", HavenValueSource.State);
+                CollapsedPromptButton.SetValue(HavenProperties.BorderWidth, HavenLength.Px(2), HavenValueSource.State);
+            }
+            else
+            {
+                CollapsedPromptButton.ClearValue(HavenProperties.BorderColor, HavenValueSource.State);
+                CollapsedPromptButton.ClearValue(HavenProperties.BorderWidth, HavenValueSource.State);
+            }
+        }
+        finally
+        {
+            _syncingCollapsedPromptFocusVisual = false;
+        }
+    }
+
+    public HavenElement ActivationFocusTarget =>
+        ExpandedPanel.GetValue(HavenProperties.Visibility) == HavenVisibility.Collapsed
+            ? CollapsedPromptButton
+            : ComposerInput;
 
     public void SetCollapsed(bool collapsed)
     {

@@ -87,6 +87,18 @@ public sealed class SpacesAppSurfaceTests
     }
 
     [Fact]
+    public async Task Chat_open_action_respects_cancellation_before_returning_an_action()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var model = new SpacesModel(registry);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => model.CreateOpenActionAsync(SpaceScope.Chat, cancellation.Token));
+    }
+
+    [Fact]
     public void Navigation_exposes_the_bounded_Home_Chat_Study_Tasks_Research_order()
     {
         Assert.Equal(

@@ -3,18 +3,12 @@
     <AssemblyName>HavenOS.Home</AssemblyName>
     <RootNamespace>HavenOS.Home</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <CuiMarkupProjectPath Condition="'$(CuiMarkupProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\framework\CUI\src\NineToOne.Cui.Markup.csproj')">$(MSBuildThisFileDirectory)..\..\framework\CUI\src\NineToOne.Cui.Markup.csproj</CuiMarkupProjectPath>
   </PropertyGroup>
-
-  <Target Name="RequireCuiMarkup" BeforeTargets="ResolveProjectReferences">
-    <Error Condition="'$(CuiMarkupProjectPath)' == ''" Text="NineToOne.Cui.Markup is required for Home markup. Set /p:CuiMarkupProjectPath=&lt;path-to-NineToOne.Cui.Markup.csproj&gt;." />
-    <Error Condition="'$(CuiMarkupProjectPath)' != '' and !Exists('$(CuiMarkupProjectPath)')" Text="CuiMarkupProjectPath does not exist: $(CuiMarkupProjectPath)" />
-  </Target>
 
   <ItemGroup>
     <Compile Include="Source\Home\HomeDashboard.cs" />
     <Compile Include="Source\Home\HomeCuiScene.cs" />
-    <ProjectReference Include="$(CuiMarkupProjectPath)" Condition="'$(CuiMarkupProjectPath)' != '' and Exists('$(CuiMarkupProjectPath)')" />
+    <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <Content Include="UI\Home.cui">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

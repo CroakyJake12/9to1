@@ -1,4 +1,4 @@
-﻿/*
+/*
  * FILE DOCUMENTATION
  * Where: src/Haven.Infrastructure/ServiceCollectionExtensions.cs, in the Infrastructure layer, where persistence, providers, Windows integration, and external I/O are implemented.
  * What: This file owns ServiceCollectionExtensions. Read the type and member comments below as a map of each responsibility.
@@ -298,6 +298,7 @@ public static class ServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd(OpenStreetMapService.UserAgent);
         });
         services.AddSingleton<IMapsSavedPlaceStore, MapsSavedPlaceStore>();
+        services.AddSingleton<IFormsSubmissionStore, DataWorkbookFormsSubmissionStore>();
         services.AddSingleton<OsmRasterTileSource>();
         services.AddSingleton<ITileSource>(provider => provider.GetRequiredService<OsmRasterTileSource>());
         services.AddSingleton<OsrmRoutingService>();

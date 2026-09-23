@@ -19,6 +19,8 @@ internal sealed partial class WordWriteHavenScene : IDisposable
     private IReadOnlyList<NotesDocumentSummary> _libraryDocuments = [];
     private readonly Dictionary<Guid, Input> _blockInputs = [];
     private string _find = string.Empty, _replace = string.Empty, _comment = string.Empty, _citationTitle = string.Empty, _citationAuthors = string.Empty, _citationUrl = string.Empty;
+    private string _lastFindQuery = string.Empty;
+    private WriteFindResult? _lastFindMatch;
     private string _aiInstruction = string.Empty; private bool _allowAiDocumentContext; private NotesAiChange? _pendingAiChange; private IReadOnlyList<string> _aiModels = []; private string _selectedAiModel = string.Empty;
     private readonly Haven.Desktop.HavenUI.Runtime.TrailingDebouncer _statsDebouncer = new(TimeSpan.FromMilliseconds(300));
 
@@ -156,9 +158,67 @@ _statsDebouncer.Schedule(UpdateStats); RefreshCommands(); DocumentChanged?.Invok
 
     private void Review()
     {
-        var editor = _editor!; var stats = editor.Statistics; RibbonContent.Add(Caption($"{stats.Words} words · {stats.Characters} chars · {stats.Paragraphs} paragraphs · {stats.ReadingMinutes} min")); var modelIndex = _aiModels.ToList().FindIndex(value => value.Equals(_selectedAiModel, StringComparison.Ordinal)); var aiModel = Choice("Write.Review.AiModel", "AI model", _aiModels, modelIndex); aiModel.SelectionChanged += (_, _) => _selectedAiModel = aiModel.SelectedItem ?? string.Empty; RibbonContent.Add(aiModel); var aiInstruction = Field("Write.Review.AiInstruction", "AI edit instruction", "Describe the edit"); aiInstruction.Text = _aiInstruction; aiInstruction.SetValue(HavenProperties.Width, HavenLength.Px(220)); aiInstruction.Invalidated += (_, _) => _aiInstruction = aiInstruction.Text; RibbonContent.Add(aiInstruction); var aiContext = new Toggle { Name = "Write.Review.AiContext", IsChecked = _allowAiDocumentContext }; aiContext.Accessibility.AccessibleName = "Allow full document context for AI proposal"; aiContext.CheckedChanged += (_, _) => _allowAiDocumentContext = aiContext.IsChecked; RibbonContent.Add(aiContext); var propose = Btn("Write.Review.AiPropose", "Propose edit", ButtonVariant.Primary); propose.Invoked += (_, _) => { if (string.IsNullOrWhiteSpace(_aiInstruction) || string.IsNullOrWhiteSpace(_selectedAiModel)) { SetStatus("Choose a model and describe the edit first."); return; } AiProposalRequested?.Invoke(_aiInstruction.Trim(), _allowAiDocumentContext, _selectedAiModel); }; RibbonContent.Add(propose); var find = Field("Write.Review.Find", "Find text", "Find"); find.Text = _find; find.SetValue(HavenProperties.Width, HavenLength.Px(140)); find.Invalidated += (_, _) => _find = find.Text; RibbonContent.Add(find); var replace = Field("Write.Review.Replace", "Replacement text", "Replace with"); replace.Text = _replace; replace.SetValue(HavenProperties.Width, HavenLength.Px(140)); replace.Invalidated += (_, _) => _replace = replace.Text; RibbonContent.Add(replace); var findButton = Btn("Write.Review.FindButton", "Find"); findButton.Invoked += (_, _) => SetStatus(editor.Find(_find).Count + " match(es)"); RibbonContent.Add(findButton); var replaceAll = Btn("Write.Review.ReplaceAll", "Replace all"); replaceAll.Invoked += (_, _) => { var count = editor.ReplaceAll(_find, _replace); RebuildAll(); SetStatus($"Replaced {count} match(es)"); }; RibbonContent.Add(replaceAll);
+        var editor = _editor!; var stats = editor.Statistics; RibbonContent.Add(Caption($"{stats.Words} words · {stats.Characters} chars · {stats.Paragraphs} paragraphs · {stats.ReadingMinutes} min")); var modelIndex = _aiModels.ToList().FindIndex(value => value.Equals(_selectedAiModel, StringComparison.Ordinal)); var aiModel = Choice("Write.Review.AiModel", "AI model", _aiModels, modelIndex); aiModel.SelectionChanged += (_, _) => _selectedAiModel = aiModel.SelectedItem ?? string.Empty; RibbonContent.Add(aiModel); var aiInstruction = Field("Write.Review.AiInstruction", "AI edit instruction", "Describe the edit"); aiInstruction.Text = _aiInstruction; aiInstruction.SetValue(HavenProperties.Width, HavenLength.Px(220)); aiInstruction.Invalidated += (_, _) => _aiInstruction = aiInstruction.Text; RibbonContent.Add(aiInstruction); var aiContext = new Toggle { Name = "Write.Review.AiContext", IsChecked = _allowAiDocumentContext }; aiContext.Accessibility.AccessibleName = "Allow full document context for AI proposal"; aiContext.CheckedChanged += (_, _) => _allowAiDocumentContext = aiContext.IsChecked; RibbonContent.Add(aiContext); var propose = Btn("Write.Review.AiPropose", "Propose edit", ButtonVariant.Primary); propose.Invoked += (_, _) => { if (string.IsNullOrWhiteSpace(_aiInstruction) || string.IsNullOrWhiteSpace(_selectedAiModel)) { SetStatus("Choose a model and describe the edit first."); return; } AiProposalRequested?.Invoke(_aiInstruction.Trim(), _allowAiDocumentContext, _selectedAiModel); }; RibbonContent.Add(propose); var find = Field("Write.Review.Find", "Find text", "Find"); find.Text = _find; find.SetValue(HavenProperties.Width, HavenLength.Px(140)); find.Invalidated += (_, _) => _find = find.Text; RibbonContent.Add(find); var replace = Field("Write.Review.Replace", "Replacement text", "Replace with"); replace.Text = _replace; replace.SetValue(HavenProperties.Width, HavenLength.Px(140)); replace.Invalidated += (_, _) => _replace = replace.Text; RibbonContent.Add(replace); var findPrevious = Btn("Write.Review.FindPrevious", "Find previous"); findPrevious.Invoked += (_, _) => NavigateFind(forward: false); RibbonContent.Add(findPrevious); var findNext = Btn("Write.Review.FindNext", "Find next"); findNext.Invoked += (_, _) => NavigateFind(forward: true); RibbonContent.Add(findNext); var replaceAll = Btn("Write.Review.ReplaceAll", "Replace all"); replaceAll.Invoked += (_, _) => { var count = editor.ReplaceAll(_find, _replace); RebuildAll(); SetStatus($"Replaced {count} match(es)"); }; RibbonContent.Add(replaceAll);
         var comment = Field("Write.Review.Comment", "Comment", "Comment on selected block"); comment.Text = _comment; comment.SetValue(HavenProperties.Width, HavenLength.Px(190)); comment.Invalidated += (_, _) => _comment = comment.Text; RibbonContent.Add(comment); var addComment = Btn("Write.Review.AddComment", "Add comment"); addComment.Invoked += (_, _) => { editor.AddComment(_comment); _comment = string.Empty; RebuildAll(); }; RibbonContent.Add(addComment);
         var sourceTitle = Field("Write.Review.SourceTitle", "Source title", "Source title"); sourceTitle.Text = _citationTitle; sourceTitle.SetValue(HavenProperties.Width, HavenLength.Px(150)); sourceTitle.Invalidated += (_, _) => _citationTitle = sourceTitle.Text; RibbonContent.Add(sourceTitle); var authors = Field("Write.Review.Authors", "Source authors", "Authors"); authors.Text = _citationAuthors; authors.SetValue(HavenProperties.Width, HavenLength.Px(120)); authors.Invalidated += (_, _) => _citationAuthors = authors.Text; RibbonContent.Add(authors); var url = Field("Write.Review.Url", "Source URL", "https://"); url.Text = _citationUrl; url.SetValue(HavenProperties.Width, HavenLength.Px(150)); url.Invalidated += (_, _) => _citationUrl = url.Text; RibbonContent.Add(url); var cite = Btn("Write.Review.AddSource", "Add source"); cite.Invoked += (_, _) => { editor.AddCitation(_citationTitle, _citationAuthors, _citationUrl); _citationTitle = _citationAuthors = _citationUrl = string.Empty; RebuildAll(); }; RibbonContent.Add(cite); if (_pendingAiChange is { Status: NotesAiChangeStatus.Proposed } pending) { var original = Field("Write.Review.AiOriginal", "Original content", "Original"); original.Text = pending.OriginalContent; original.Multiline = true; original.SetValue(HavenProperties.Width, HavenLength.Px(230)); original.SetValue(HavenProperties.Enabled, false); RibbonContent.Add(original); var proposed = Field("Write.Review.AiProposed", "Proposed content", "Proposal"); proposed.Text = pending.ProposedContent; proposed.Multiline = true; proposed.SetValue(HavenProperties.Width, HavenLength.Px(260)); proposed.SetValue(HavenProperties.Enabled, false); RibbonContent.Add(proposed); RibbonContent.Add(Caption(string.IsNullOrWhiteSpace(pending.Explanation) ? "AI proposal ready for review. Nothing has been applied." : pending.Explanation)); var apply = Btn("Write.Review.AiApply", "Apply proposal", ButtonVariant.Primary); apply.Invoked += (_, _) => { if (ApplyPendingAiChange()) AiApplyRequested?.Invoke(this, EventArgs.Empty); }; RibbonContent.Add(apply); var reject = Btn("Write.Review.AiReject", "Reject", ButtonVariant.Danger); reject.Invoked += (_, _) => { if (RejectPendingAiChange()) AiRejectRequested?.Invoke(this, EventArgs.Empty); }; RibbonContent.Add(reject); } RibbonContent.Add(Caption($"Comments {editor.Document.Comments.Count} · Sources {editor.Document.Citations.Count} · Revisions {editor.Document.Revisions.Count}"));
+    }
+
+    private void NavigateFind(bool forward)
+    {
+        if (_editor is null) return;
+        var query = _find;
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            SetStatus("Enter text to find.");
+            return;
+        }
+
+        var matches = _editor.Find(query);
+        if (matches.Count == 0)
+        {
+            if (_lastFindMatch is not null)
+                DocumentSurface.ClearFindSelection();
+            _lastFindQuery = query;
+            _lastFindMatch = null;
+            SetStatus($"No matches for “{query}”.");
+            return;
+        }
+
+        var currentIndex = _lastFindMatch is { } previous
+            && _lastFindQuery.Equals(query, StringComparison.OrdinalIgnoreCase)
+                ? matches.ToList().FindIndex(match => match.BlockId == previous.BlockId && match.Offset == previous.Offset)
+                : -1;
+        var nextIndex = currentIndex < 0
+            ? (forward ? 0 : matches.Count - 1)
+            : (currentIndex + (forward ? 1 : -1) + matches.Count) % matches.Count;
+        var match = matches[nextIndex];
+        if (!DocumentSurface.SelectFindMatch(match, query))
+        {
+            SetStatus("The document changed before that match could be selected. Search again.");
+            _lastFindMatch = null;
+            return;
+        }
+
+        _lastFindQuery = query;
+        _lastFindMatch = match;
+        RevealFindMatch(match.BlockId);
+        SetStatus($"Match {nextIndex + 1} of {matches.Count} · {match.Kind}");
+    }
+
+    private void RevealFindMatch(Guid blockId)
+    {
+        if (!DocumentSurface.TryGetBlockBounds(blockId, out var blockBounds)
+            || Scroller.ViewportSize.Height <= 0)
+            return;
+
+        var contentTop = Scroller.ScrollY + DocumentSurface.Bounds.Y - Scroller.Bounds.Y + blockBounds.Y;
+        var contentBottom = contentTop + blockBounds.Height;
+        var visibleTop = Scroller.ScrollY;
+        var visibleBottom = visibleTop + Scroller.ViewportSize.Height;
+        if (contentTop < visibleTop)
+            Scroller.ScrollY = Math.Max(0, contentTop - 18);
+        else if (contentBottom > visibleBottom)
+            Scroller.ScrollY = Math.Max(0, contentBottom - Scroller.ViewportSize.Height + 18);
     }
 
     private void RebuildDocument()

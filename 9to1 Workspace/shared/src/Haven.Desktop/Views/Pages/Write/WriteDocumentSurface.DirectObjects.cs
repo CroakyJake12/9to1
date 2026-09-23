@@ -10,6 +10,7 @@ internal sealed partial class WriteDocumentSurface
 
     private Guid? _activeTableCellId;
     private int _tableCellCaret;
+    private (Guid CellId, int Start, int Length)? _tableCellSelection;
     private WriteObjectDragMode _objectDragMode;
     private HavenPoint _objectDragStart;
     private HavenPoint _objectDragCurrent;
@@ -18,6 +19,19 @@ internal sealed partial class WriteDocumentSurface
     private DocumentVectorTransform? _startVectorTransform;
 
     public Guid? ActiveTableCellId => _activeTableCellId;
+
+    private string? SelectedTableText
+    {
+        get
+        {
+            if (_tableCellSelection is not { } selection || ActiveTableCell() is not { } cell || cell.Id != selection.CellId)
+                return null;
+
+            var start = Math.Clamp(selection.Start, 0, cell.Text.Length);
+            var length = Math.Clamp(selection.Length, 0, cell.Text.Length - start);
+            return length > 0 ? cell.Text.Substring(start, length) : null;
+        }
+    }
 
     internal int LaidOutPageCount
     {
@@ -45,6 +59,84 @@ internal sealed partial class WriteDocumentSurface
         return false;
     }
 
+    internal bool SelectFindMatch(WriteFindResult match, string query)
+    {
+        if (_editor is null || string.IsNullOrEmpty(query)) return false;
+        var block = _editor.Blocks().FirstOrDefault(value => value.Id == match.BlockId);
+        if (block is null) return false;
+
+        _pointerSelecting = false;
+        _activeTableCellId = null;
+        _tableCellSelection = null;
+        if (IsTextBlock(block))
+        {
+            var text = TextOf(block);
+            if (match.Offset < 0 || match.Offset + query.Length > text.Length) return false;
+            _editor.SetDocumentCaret(block.Id, match.Offset);
+            _editor.SetDocumentCaret(block.Id, match.Offset + query.Length, extendSelection: true);
+        }
+        else
+        {
+            _editor.SelectBlock(block.Id);
+            if (block.Table is { } table)
+            {
+                var remainingOffset = match.Offset;
+                var selectedCell = false;
+                foreach (var cell in table.Rows.SelectMany(row => row.Cells))
+                {
+                    if (remainingOffset >= 0 && remainingOffset + query.Length <= cell.Text.Length)
+                    {
+                        _editor.SelectTableCell(block.Id, cell.Id);
+                        _activeTableCellId = cell.Id;
+                        _tableCellCaret = remainingOffset + query.Length;
+                        _tableCellSelection = (cell.Id, remainingOffset, query.Length);
+                        selectedCell = true;
+                        break;
+                    }
+
+                    remainingOffset -= cell.Text.Length + Environment.NewLine.Length;
+                }
+
+                if (!selectedCell) return false;
+            }
+        }
+
+        InvalidateDocument();
+        return true;
+    }
+
+    internal void ClearFindSelection()
+    {
+        _pointerSelecting = false;
+        _activeTableCellId = null;
+        _tableCellSelection = null;
+        if (_editor is { } editor)
+        {
+            var caret = editor.DocumentCaret;
+            if (caret.BlockId != Guid.Empty)
+                editor.SelectBlock(caret.BlockId, caret.Offset);
+            else if (editor.Blocks().FirstOrDefault() is { } first)
+                editor.SelectBlock(first.Id);
+        }
+        InvalidateDocument();
+    }
+
+    private bool DeleteTableCellSelection()
+    {
+        if (_editor is null || _tableCellSelection is not { } selection || ActiveTableCell() is not { } cell || cell.Id != selection.CellId)
+            return false;
+
+        var start = Math.Clamp(selection.Start, 0, cell.Text.Length);
+        var length = Math.Clamp(selection.Length, 0, cell.Text.Length - start);
+        _tableCellSelection = null;
+        if (length > 0)
+            _editor.UpdateTableCell(cell.Id, cell.Text.Remove(start, length));
+        _tableCellCaret = start;
+        InvalidateDocument();
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        return length > 0;
+    }
+
     private bool TryPointerPressSpecial(HavenPointerInput input)
     {
         if (_editor is null) return false;
@@ -52,6 +144,7 @@ internal sealed partial class WriteDocumentSurface
         {
             _editor.SelectBlock(tableHit.Block.Id);
             _activeTableCellId = tableHit.Cell.Id;
+            _tableCellSelection = null;
             _tableCellCaret = CaretForCellPoint(tableHit, input.LocalPosition);
             _pointerSelecting = false;
             _objectDragMode = WriteObjectDragMode.None;
@@ -68,6 +161,7 @@ internal sealed partial class WriteDocumentSurface
 
         _editor.SelectBlock(objectLayout.Block.Id);
         _activeTableCellId = null;
+        _tableCellSelection = null;
         _pointerSelecting = false;
         _objectDragStart = input.LocalPosition;
         _objectDragCurrent = input.LocalPosition;
@@ -143,10 +237,18 @@ internal sealed partial class WriteDocumentSurface
     {
         if (_editor is null || ActiveTableCell() is not { } cell || string.IsNullOrEmpty(text)) return false;
         var caret = Math.Clamp(_tableCellCaret, 0, cell.Text.Length);
-        var next = cell.Text.Insert(caret, text);
+        var selectionLength = 0;
+        if (_tableCellSelection is { } selection && selection.CellId == cell.Id)
+        {
+            caret = Math.Clamp(selection.Start, 0, cell.Text.Length);
+            selectionLength = Math.Clamp(selection.Length, 0, cell.Text.Length - caret);
+        }
+        var next = cell.Text.Remove(caret, selectionLength).Insert(caret, text);
         _editor.UpdateTableCell(cell.Id, next);
         _tableCellCaret = caret + text.Length;
+        _tableCellSelection = null;
         InvalidateDocument();
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
 
@@ -155,15 +257,21 @@ internal sealed partial class WriteDocumentSurface
         if (_editor is null || ActiveTableCell() is not { } cell || modifiers.Control) return false;
         switch (key)
         {
-            case HavenKey.Left: _tableCellCaret = Math.Max(0, _tableCellCaret - 1); Invalidate(); return true;
-            case HavenKey.Right: _tableCellCaret = Math.Min(cell.Text.Length, _tableCellCaret + 1); Invalidate(); return true;
-            case HavenKey.Home: _tableCellCaret = 0; Invalidate(); return true;
-            case HavenKey.End: _tableCellCaret = cell.Text.Length; Invalidate(); return true;
+            case HavenKey.Left:
+                if (CollapseTableCellSelection(toEnd: false)) return true;
+                _tableCellCaret = Math.Max(0, _tableCellCaret - 1); Invalidate(); return true;
+            case HavenKey.Right:
+                if (CollapseTableCellSelection(toEnd: true)) return true;
+                _tableCellCaret = Math.Min(cell.Text.Length, _tableCellCaret + 1); Invalidate(); return true;
+            case HavenKey.Home: _tableCellSelection = null; _tableCellCaret = 0; Invalidate(); return true;
+            case HavenKey.End: _tableCellSelection = null; _tableCellCaret = cell.Text.Length; Invalidate(); return true;
             case HavenKey.Backspace:
+                if (DeleteTableCellSelection()) return true;
                 if (_tableCellCaret <= 0) return true;
                 _editor.UpdateTableCell(cell.Id, cell.Text.Remove(_tableCellCaret - 1, 1));
                 _tableCellCaret--; InvalidateDocument(); return true;
             case HavenKey.Delete:
+                if (DeleteTableCellSelection()) return true;
                 if (_tableCellCaret >= cell.Text.Length) return true;
                 _editor.UpdateTableCell(cell.Id, cell.Text.Remove(_tableCellCaret, 1));
                 InvalidateDocument(); return true;
@@ -182,6 +290,7 @@ internal sealed partial class WriteDocumentSurface
         var index = Array.FindIndex(cells, cell => cell.Id == _activeTableCellId);
         if (index < 0 || cells.Length == 0) return false;
         var next = Math.Clamp(index + delta, 0, cells.Length - 1);
+        _tableCellSelection = null;
         _activeTableCellId = cells[next].Id;
         _tableCellCaret = Math.Min(_tableCellCaret, cells[next].Text.Length);
         SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate();
@@ -198,12 +307,24 @@ internal sealed partial class WriteDocumentSurface
             if (cellIndex < 0) continue;
             var targetRow = Math.Clamp(rowIndex + deltaRow, 0, table.Rows.Count - 1);
             var target = table.Rows[targetRow].Cells[Math.Min(cellIndex, table.Rows[targetRow].Cells.Count - 1)];
+            _tableCellSelection = null;
             _activeTableCellId = target.Id;
             _tableCellCaret = Math.Min(_tableCellCaret, target.Text.Length);
             SelectionChanged?.Invoke(this, EventArgs.Empty); Invalidate();
             return true;
         }
         return false;
+    }
+
+    private bool CollapseTableCellSelection(bool toEnd)
+    {
+        if (_tableCellSelection is not { } selection || ActiveTableCell()?.Id != selection.CellId)
+            return false;
+        _tableCellCaret = toEnd ? selection.Start + selection.Length : selection.Start;
+        _tableCellSelection = null;
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        Invalidate();
+        return true;
     }
 
     private NotesTableCell? ActiveTableCell()

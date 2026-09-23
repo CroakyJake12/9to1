@@ -479,8 +479,20 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
 
     private async Task EmitAsync(GenUiComponent component, GenUiEventType eventType, JsonElement? value, CancellationToken cancellationToken)
     {
-        var document = _document;
-        if (document is null || component.Actions.Count == 0) return;
+        var presentedDocument = _document;
+        if (presentedDocument is null) return;
+
+        // Event handlers are wired when the scene tree is first built. Resolve the
+        // component against the authoritative instance store at invocation time so
+        // in-place updates cannot keep routing a replaced action/capability binding.
+        var document = _instances.TryGet(presentedDocument.Origin.InstanceId);
+        if (document is null || document.Origin.ThreadId != presentedDocument.Origin.ThreadId) return;
+        var currentComponent = FindComponent(document.Root, component.ComponentId);
+        if (currentComponent is null || currentComponent.Actions.Count == 0) return;
+        component = currentComponent;
+        if (value is null && eventType == GenUiEventType.ActionInvoked)
+            value = GetValue(component, "value");
+
         var binding = component.Actions[0];
         var semanticEvent = new GenUiEvent(
             Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, document.Origin,
@@ -542,6 +554,17 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
 
     private static string StructureSignature(GenUiComponent component) =>
         component.ComponentId + ":" + component.ComponentType + "[" + string.Join(',', component.Children.Select(StructureSignature)) + "]";
+
+    private static GenUiComponent? FindComponent(GenUiComponent root, string componentId)
+    {
+        if (root.ComponentId.Equals(componentId, StringComparison.Ordinal)) return root;
+        foreach (var child in root.Children)
+        {
+            var match = FindComponent(child, componentId);
+            if (match is not null) return match;
+        }
+        return null;
+    }
 
     private static string SanitizeName(string value)
     {

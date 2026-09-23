@@ -1,10 +1,11 @@
-// BoardsTheme: the single source of product color truth for Boards.
-// Semantic roles with Light/Dark branches. Code-built controls read these;
-// .cui chrome keeps structural markup and receives the same values through
-// ThemeApplier after load (no per-control magic hex in product code).
-// Hues follow the established 9-1 Boards accent (#4A6FA5 slate blue).
+// BoardsTheme adapts the shared CUI Boards palette to the app's Light/Dark
+// appearance toggle. Code-built controls and .cui chrome consume the same
+// canonical Glow tokens; only semantic error feedback remains app-specific.
 
+using Avalonia;
 using Avalonia.Media;
+using Avalonia.Controls;
+using CakeOS.Cui.Themes;
 
 namespace CakeOS.Apps.Boards.App;
 
@@ -33,37 +34,13 @@ public static class BoardsTheme
 {
     public static BoardsThemeMode Mode { get; private set; } = BoardsThemeMode.Light;
 
-    public static readonly BoardsPalette Light = new(
-        AppBackground: "#FFEDEDE9",
-        Surface: "#FFF5F5F0",
-        Card: "#FFFFFFFF",
-        PageBackground: "#FFFFFFFF",
-        Text: "#FF212121",
-        SecondaryText: "#FF6B7280",
-        Border: "#FFE0DED8",
-        Accent: "#FF4A6FA5",
-        AccentContrast: "#FFFFFFFF",
-        Success: "#FF1E8E3E",
-        Warning: "#FFE8710A",
-        Error: "#FFD32F2F",
-        CodeBackground: "#FFF1F3F4");
+    /// <summary>Boards uses the shared CUI Glow identity with a light or dark appearance.</summary>
+    public static CuiPalette SharedPalette => CuiSurfacePaletteCatalog.For(
+        "Boards",
+        Mode == BoardsThemeMode.Dark ? CuiAppearance.Dark : CuiAppearance.Bright,
+        CuiTheme.Glow);
 
-    public static readonly BoardsPalette Dark = new(
-        AppBackground: "#FF1B1D21",
-        Surface: "#FF23262B",
-        Card: "#FF2C3036",
-        PageBackground: "#FF26292F",
-        Text: "#FFE8EAED",
-        SecondaryText: "#FF9AA0A6",
-        Border: "#FF3C4046",
-        Accent: "#FF7AA5D2",
-        AccentContrast: "#FF101418",
-        Success: "#FF81C995",
-        Warning: "#FFFDD663",
-        Error: "#FFF28B82",
-        CodeBackground: "#FF2B2F36");
-
-    public static BoardsPalette Current => Mode == BoardsThemeMode.Dark ? Dark : Light;
+    public static BoardsPalette Current => FromSharedPalette(SharedPalette);
 
     public static event Action? Changed;
 
@@ -88,10 +65,39 @@ public static class BoardsTheme
     public static IBrush TextBrush => Brush(Current.Text);
     public static IBrush SecondaryTextBrush => Brush(Current.SecondaryText);
     public static IBrush BorderBrush => Brush(Current.Border);
-    public static IBrush AccentBrush => Brush(Current.Accent);
+    public static IBrush AccentBrush
+    {
+        get
+        {
+            // The canonical applier supplies a three-stop Glow gradient. Keep
+            // a semantic solid fallback for isolated controls before startup.
+            if (Application.Current?.TryGetResource("CuiAccentBrush", null, out var accent) == true
+                && accent is IBrush accentBrush)
+                return accentBrush;
+            return Brush(Current.Accent);
+        }
+    }
     public static IBrush AccentContrastBrush => Brush(Current.AccentContrast);
     public static IBrush ErrorBrush => Brush(Current.Error);
     public static IBrush SuccessBrush => Brush(Current.Success);
+
+    private static BoardsPalette FromSharedPalette(CuiPalette palette) => new(
+        AppBackground: Hex(palette.TideBase),
+        Surface: Hex(palette.Panel),
+        Card: Hex(palette.Panel2),
+        PageBackground: Hex(palette.TideBase),
+        Text: Hex(palette.Text),
+        SecondaryText: Hex(palette.Muted),
+        Border: Hex(palette.Line),
+        Accent: Hex(palette.Accent),
+        AccentContrast: Hex(palette.AccentInk),
+        Success: Hex(palette.AccentStrong),
+        Warning: Hex(palette.Attention),
+        Error: Mode == BoardsThemeMode.Dark ? "#FFF28B82" : "#FFD32F2F",
+        CodeBackground: Hex(palette.Panel3));
+
+    private static string Hex(Color color) =>
+        $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
 
     public static bool TryBrush(string? hex, out IBrush brush)
     {

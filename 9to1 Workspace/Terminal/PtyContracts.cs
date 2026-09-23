@@ -77,6 +77,10 @@ public sealed class InteractiveTerminalSession : IAsyncDisposable
     private IPtyProcess? _process;
     private bool _disposed;
 
+    public InteractiveTerminalSession() : this(new PlatformPtyProcessFactory())
+    {
+    }
+
     public InteractiveTerminalSession(IPtyProcessFactory factory)
     {
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
@@ -106,6 +110,11 @@ public sealed class InteractiveTerminalSession : IAsyncDisposable
         var executable = ResolveShell(shell);
         var replacement = await _factory.StartAsync(
             new PtyProcessStartOptions(executable, [], root, size), cancellationToken).ConfigureAwait(false);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            await replacement.DisposeAsync().ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+        }
 
         replacement.OutputReceived += OnOutputReceived;
         replacement.StateChanged += OnStateChanged;
@@ -143,14 +152,37 @@ public sealed class InteractiveTerminalSession : IAsyncDisposable
             : throw new InvalidOperationException("No interactive terminal process is running.");
     }
 
-    private static string ResolveShell(string? shell)
+    private static string ResolveShell(string? shell) => ResolveShell(
+        shell,
+        Environment.GetEnvironmentVariable("SHELL"),
+        Environment.GetEnvironmentVariable("ComSpec"),
+        Environment.SystemDirectory,
+        OperatingSystem.IsWindows());
+
+    internal static string ResolveShell(
+        string? shell,
+        string? shellPreference,
+        string? commandProcessor,
+        string systemDirectory,
+        bool isWindows)
     {
         var candidate = string.IsNullOrWhiteSpace(shell)
-            ? Environment.GetEnvironmentVariable("SHELL")
+            ? shellPreference
             : shell.Trim();
         if (!string.IsNullOrWhiteSpace(candidate) && Path.IsPathRooted(candidate) && File.Exists(candidate))
             return Path.GetFullPath(candidate);
-        if (!OperatingSystem.IsWindows() && File.Exists("/bin/sh")) return "/bin/sh";
+        if (isWindows)
+        {
+            if (!string.IsNullOrWhiteSpace(commandProcessor) && File.Exists(commandProcessor))
+                return Path.GetFullPath(commandProcessor);
+
+            var systemCommandProcessor = Path.Combine(systemDirectory, "cmd.exe");
+            if (File.Exists(systemCommandProcessor))
+                return systemCommandProcessor;
+
+            throw new PlatformNotSupportedException("No Windows command shell was found for the ConPTY session.");
+        }
+        if (File.Exists("/bin/sh")) return "/bin/sh";
         throw new PlatformNotSupportedException("No executable Unix shell was supplied for the PTY session.");
     }
 

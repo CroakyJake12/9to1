@@ -1,4 +1,5 @@
 using Haven.Browser;
+using Haven.Core;
 using Haven.UI;
 using Haven.UI.Components;
 using HuiButton = Haven.UI.Components.Button;

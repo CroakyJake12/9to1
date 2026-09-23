@@ -34,6 +34,41 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
     }
 
     [Fact]
+    public async Task Knowledge_updates_merge_sources_by_identity_and_refresh_metadata()
+    {
+        var (database, library, _, _) = await CreateServicesAsync();
+        var now = DateTimeOffset.UtcNow;
+        var firstSource = new KnowledgeSource(
+            "source-a", "Reference A", "documentation", "Publisher A", "https://example.test/a", now, now, null, "verified");
+        var secondSource = new KnowledgeSource(
+            "source-b", "Reference B", "documentation", "Publisher B", "https://example.test/b", now, null, now.AddDays(7), "trusted");
+        var record = NewKnowledge("Avalonia", "Keep provenance on updates.", now) with { Sources = [firstSource, secondSource] };
+        await library.UpsertAsync(record, record.Summary, CancellationToken.None);
+
+        var refreshedSource = firstSource with
+        {
+            Title = "Reference A (latest)",
+            Publisher = "Publisher A, updated",
+            Url = "https://example.test/a/latest",
+            LastVerifiedAt = now.AddMinutes(2),
+            TrustLevel = "reviewed"
+        };
+        var duplicateRefresh = refreshedSource with { Title = "Reference A (final)" };
+        var updated = record with
+        {
+            UpdatedAt = now.AddMinutes(1),
+            Sources = [refreshedSource, duplicateRefresh]
+        };
+        await library.UpsertAsync(updated, updated.Summary, CancellationToken.None);
+        var reopenedLibrary = new KnowledgeLibraryService(database, new RetrievalIndexService(database, new LocalHashEmbeddingService()));
+
+        var stored = await reopenedLibrary.GetAsync(record.Id, CancellationToken.None);
+        Assert.NotNull(stored);
+        Assert.Equal(new[] { duplicateRefresh, secondSource }, stored.Sources);
+        Assert.Equal(2, stored.Sources.Count);
+    }
+
+    [Fact]
     public async Task Correction_and_rejection_preserve_user_authority()
     {
         var (_, library, _, maintenance) = await CreateServicesAsync();

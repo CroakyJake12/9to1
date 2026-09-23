@@ -15,13 +15,18 @@
       <Button x:Name="OpenButton" Grid.Column="1" VerticalAlignment="Center" Padding="18,10">Open image</Button>
     </Grid>
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
       <Button x:Name="PreviousButton" IsEnabled="False">Previous</Button>
-      <Button x:Name="NextButton" IsEnabled="False">Next</Button>
-      <TextBlock x:Name="StatusText" VerticalAlignment="Center" Margin="8,0,0,0" Text="No image open" TextTrimming="CharacterEllipsis" />
-    </StackPanel>
+      <Button x:Name="NextButton" Grid.Column="1" IsEnabled="False">Next</Button>
+      <Button x:Name="ZoomOutButton" Grid.Column="2" IsEnabled="False">Zoom out</Button>
+      <TextBlock x:Name="ZoomText" Grid.Column="3" Text="100%" VerticalAlignment="Center" MinWidth="40" TextAlignment="Center" />
+      <Button x:Name="ZoomInButton" Grid.Column="4" IsEnabled="False">Zoom in</Button>
+      <Button x:Name="FitButton" Grid.Column="5" IsEnabled="False">Fit</Button>
+      <TextBlock x:Name="StatusText" Grid.Column="6" VerticalAlignment="Center" Text="No image open" TextTrimming="CharacterEllipsis" />
+      <TextBlock Grid.Column="7" Text="Drag to pan · scroll to zoom" VerticalAlignment="Center" Opacity="0.68" />
+    </Grid>
 
-    <Border Grid.Row="2" BorderBrush="#55808080" BorderThickness="1" CornerRadius="18" Padding="18">
+    <Border Grid.Row="2" BorderBrush="#55808080" BorderThickness="1" CornerRadius="18" Padding="18" ClipToBounds="True">
       <Grid>
         <Image x:Name="PreviewImage"
                Stretch="Uniform"

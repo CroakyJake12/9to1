@@ -1,16 +1,15 @@
-// CUI Home — Avalonia 12.0.1 Win32 desktop entry point.
-// Loads a real .cui file and opens a native window with Skia rendering.
-// Proves: bindings, events, resources, styles, keyboard/pointer input, accessibility.
+// 9-1 Home native host. The canonical Home.cui surface is loaded through CUI.
 
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using CakeOS.Cui.Runtime;
+using HavenOS.Home;
 
 namespace AvaloniaHome;
 
@@ -19,10 +18,10 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        Console.WriteLine("[CUI Home] Starting Avalonia Win32 + Skia...");
+        Console.WriteLine("[9-1 Home] Starting native CUI host...");
 
         var cuiPath = FindCuiFile();
-        Console.WriteLine($"[CUI Home] .cui file: {cuiPath ?? "NOT FOUND"}");
+        Console.WriteLine($"[9-1 Home] canonical .cui file: {cuiPath ?? "NOT FOUND"}");
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
@@ -41,7 +40,7 @@ internal static class Program
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
         var candidates = new[]
         {
-            Path.Combine(baseDir, "ui", "Home.cui"),
+            Path.Combine(baseDir, "UI", "Home.cui"),
             Path.Combine(baseDir, "Home.cui"),
         };
 
@@ -54,7 +53,7 @@ internal static class Program
         var dir = new DirectoryInfo(baseDir);
         for (var i = 0; i < 10 && dir != null; i++)
         {
-            var path = Path.Combine(dir.FullName, "apps", "Home", "ui", "Home.cui");
+            var path = Path.Combine(dir.FullName, "9to1 Workspace", "Home", "UI", "Home.cui");
             if (File.Exists(path))
                 return path;
             dir = dir.Parent;
@@ -65,87 +64,79 @@ internal static class Program
 }
 
 /// <summary>
-/// Avalonia Application that loads a .cui file into a real window.
-/// Demonstrates live bindings, event handling, keyboard input, and accessibility.
+/// Avalonia Application that renders the canonical Home CUI surface and projects only
+/// observed Home-domain state. Providers that are not configured remain visibly unavailable.
 /// </summary>
 internal sealed class HomeApp : Application
 {
     private readonly CuiViewModel _viewModel = new();
+    private readonly HomeDashboard _dashboard = new();
+    private readonly HomeCuiController _controller;
     private CuiControlLoader? _loader;
+
+    public HomeApp()
+    {
+        _controller = new HomeCuiController(_dashboard);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Set up live binding context — proves CUI bindings connect to real data
-        _viewModel.Set("AppName", "CUI Home");
-        _viewModel.Set("WelcomeMessage", "Welcome to 9to1 — your desktop, powered by CUI");
-        _viewModel.Set("ClickCount", "0");
-        _viewModel.Set("StatusText", "Ready");
-        _viewModel.Set("CurrentTime", DateTime.Now.ToString("HH:mm:ss"));
-
-        // Register action handlers — proves CUI action dispatch works
-        _viewModel.On("OpenChat", _ => _viewModel.Set("StatusText", "Opening Chat..."));
-        _viewModel.On("OpenTasks", _ => _viewModel.Set("StatusText", "Opening Tasks..."));
-        _viewModel.On("OpenBrowse", _ => _viewModel.Set("StatusText", "Opening Browse..."));
-        _viewModel.On("OpenFiles", _ => _viewModel.Set("StatusText", "Opening Files..."));
-        _viewModel.On("OpenData", _ => _viewModel.Set("StatusText", "Opening Data..."));
-        _viewModel.On("OpenTerminal", _ =>
-        {
-            var count = int.TryParse(_viewModel.Get("ClickCount")?.ToString(), out var c) ? c : 0;
-            _viewModel.Set("ClickCount", (count + 1).ToString());
-            _viewModel.Set("StatusText", $"Terminal opened {count + 1} time(s)");
-        });
+        ApplySnapshot(_controller.ShowCurrent());
+        _viewModel.On("InstallAllUpdates", _ => _ = InstallAllAsync());
+        _viewModel.On("OpenStudio", _ => ReportUnavailable("Studio navigation is not connected in this host."));
+        _viewModel.On("OpenWrite", _ => ReportUnavailable("Write navigation is not connected in this host."));
+        _viewModel.On("OpenBrowse", _ => ReportUnavailable("Browse navigation is not connected in this host."));
+        _viewModel.On("OpenData", _ => ReportUnavailable("Data navigation is not connected in this host."));
+        _viewModel.On("OpenBoards", _ => ReportUnavailable("Boards navigation is not connected in this host."));
+        _viewModel.On("NavigateHome", _ => ReportUnavailable("Home is already open."));
+        _viewModel.On("NavigateSpaces", _ => ReportUnavailable("Spaces navigation is not connected in this host."));
+        _viewModel.On("NavigateApps", _ => ReportUnavailable("Apps navigation is not connected in this host."));
+        _viewModel.On("NavigateLibrary", _ => ReportUnavailable("Library navigation is not connected in this host."));
+        _viewModel.On("NavigateEvents", _ => ReportUnavailable("Events navigation is not connected in this host."));
+        _viewModel.On("NavigateAutomations", _ => ReportUnavailable("Automations navigation is not connected in this host."));
+        _viewModel.On("NavigateDiscover", _ => ReportUnavailable("Discover navigation is not connected in this host."));
+        _viewModel.On("NavigateSettings", _ => ReportUnavailable("Settings navigation is not connected in this host."));
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = BuildWindow();
             desktop.MainWindow = window;
-
-            // Periodic time update — proves live binding refresh works
-            var timer = new Timer(_ =>
-            {
-                _viewModel.Set("CurrentTime", DateTime.Now.ToString("HH:mm:ss"));
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => _loader?.RefreshBindings());
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
         }
 
         base.OnFrameworkInitializationCompleted();
     }
 
-    private Window BuildWindow()
+    internal Window BuildWindow()
     {
         var window = new Window
         {
-            Title = "CUI Home",
+            Title = "9-1 Home",
             Width = 1200,
             Height = 800,
         };
 
-        // Add keyboard handler — proves keyboard input works
         window.KeyDown += (s, e) =>
         {
             if (e.Key == Key.F5)
-                _viewModel.Set("CurrentTime", DateTime.Now.ToString("HH:mm:ss"));
-            else if (e.Key == Key.Escape)
-                _viewModel.Set("StatusText", "Ready");
+                _ = RefreshAsync();
         };
 
         var cuiPath = Program.FindCuiFile();
         if (cuiPath != null)
         {
-            Console.WriteLine($"[CUI Home] Loading .cui: {cuiPath}");
+            Console.WriteLine($"[9-1 Home] Loading canonical .cui: {cuiPath}");
             _loader = new CuiControlLoader();
             _loader.SetBindingContext(_viewModel);
             _loader.SetActionDispatcher(_viewModel);
 
             var (root, diagnostics) = _loader.LoadFile(cuiPath);
-            Console.WriteLine($"[CUI Home] Diagnostics: {diagnostics.Count}");
+            Console.WriteLine($"[9-1 Home] Diagnostics: {diagnostics.Count}");
 
             if (root != null)
             {
-                // Wire live bindings and event handlers
                 _loader.WireBindings(root);
                 window.Content = root;
-                Console.WriteLine($"[CUI Home] Root: {root.GetType().Name} — window rendered");
+                Console.WriteLine($"[9-1 Home] Root: {root.GetType().Name} — CUI loaded into window");
             }
             else
             {
@@ -172,7 +163,7 @@ internal sealed class HomeApp : Application
 
         panel.Children.Add(new TextBlock
         {
-            Text = "CUI Home",
+            Text = "9-1 Home",
             FontSize = 32,
             FontWeight = Avalonia.Media.FontWeight.Bold,
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
@@ -189,5 +180,37 @@ internal sealed class HomeApp : Application
         });
 
         return panel;
+    }
+
+    private async Task RefreshAsync()
+    {
+        ApplySnapshot(await _controller.RefreshAsync());
+    }
+
+    private async Task InstallAllAsync()
+    {
+        if (!_controller.Surface.RequestInstallAll())
+        {
+            ApplySnapshot(_controller.ShowCurrent());
+            return;
+        }
+
+        if (_controller.Surface.TryDequeueAction(out var action))
+            ApplySnapshot(await _controller.ExecuteAsync(action));
+    }
+
+    private void ApplySnapshot(HomeDashboardSnapshot snapshot)
+    {
+        _viewModel.Set("CatalogSummary", snapshot.Catalog.Status.Message);
+        _viewModel.Set("RuntimeSummary", snapshot.Runtime.Runtime.Message);
+        _viewModel.Set("EventsSummary", "An events provider is not configured in this host.");
+        _viewModel.Set("OperationSummary", $"{snapshot.LastOperation.State}: {snapshot.LastOperation.Message}");
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => _loader?.RefreshBindings());
+    }
+
+    private void ReportUnavailable(string message)
+    {
+        _viewModel.Set("OperationSummary", message);
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => _loader?.RefreshBindings());
     }
 }

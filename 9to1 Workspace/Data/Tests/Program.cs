@@ -48,18 +48,81 @@ await using (var session = new DataGridSession(fake))
     Assert(fake.InsertRowsCalls == 1 && fake.DeleteRowsCalls == 1, "Grid session did not delegate row structural edits exactly once.");
     Assert(fake.InsertColumnsCalls == 1 && fake.DeleteColumnsCalls == 1, "Grid session did not delegate column structural edits exactly once.");
 
+    var secondPage = await session.MovePageAsync(rowPages: 1, columnPages: 1);
+    Assert(secondPage.Grid.StartRow == DataGridSession.VisibleRows && secondPage.Grid.StartColumn == DataGridSession.VisibleColumns,
+        "Moving one Data page did not advance by the fixed viewport dimensions.");
+    Assert(secondPage.Grid.Values.Count == DataGridSession.VisibleRows &&
+        secondPage.Grid.Values.All(row => row.Count == DataGridSession.VisibleColumns),
+        "Paging changed the fixed 10 x 8 Data grid shape.");
+    var secondPageEdit = await session.EditCellAsync(0, 0, "second page");
+    Assert(fake.LastSetAddress is { Row: DataGridSession.VisibleRows, Column: DataGridSession.VisibleColumns } &&
+        secondPageEdit.Grid.Values[0][0] == "second page",
+        "Editing the second page did not target its absolute workbook cell.");
+    var secondPageRange = await session.CreateNamedRangeAsync("PageTwoRange", 0, 0, 1, 1);
+    Assert(secondPageRange.Range.StartRow == DataGridSession.VisibleRows &&
+        secondPageRange.Range.StartColumn == DataGridSession.VisibleColumns,
+        "A range action on the second page did not target absolute workbook coordinates.");
+    var secondPageValidation = await session.ApplyListValidationAsync(0, 0, 1, 1, ["PageTwo"], allowBlank: false);
+    Assert(secondPageValidation.Range.StartRow == DataGridSession.VisibleRows &&
+        secondPageValidation.Range.StartColumn == DataGridSession.VisibleColumns,
+        "A validation range action on the second page did not target absolute workbook coordinates.");
+    _ = await session.ClearValidationAsync(0, 0, 1, 1);
+    _ = await session.InsertRowsAsync(index: 1);
+    _ = await session.InsertColumnsAsync(index: 2);
+    _ = await session.DeleteRowsAsync(index: 3);
+    _ = await session.DeleteColumnsAsync(index: 4);
+    Assert(fake.LastInsertedRowIndex == DataGridSession.VisibleRows + 1 &&
+        fake.LastInsertedColumnIndex == DataGridSession.VisibleColumns + 2,
+        "A structural edit on a later page did not target absolute workbook coordinates.");
+    Assert(fake.LastDeletedRowIndex == DataGridSession.VisibleRows + 3 &&
+        fake.LastDeletedColumnIndex == DataGridSession.VisibleColumns + 4,
+        "A structural delete on a later page did not target absolute workbook coordinates.");
+    var firstPageAgain = await session.MovePageAsync(rowPages: -1, columnPages: -1);
+    Assert(firstPageAgain.Grid.StartRow == 0 && firstPageAgain.Grid.StartColumn == 0,
+        "Moving back one Data page did not return to the first page.");
+    var clampedFirstPage = await session.MovePageAsync(rowPages: -1, columnPages: -1);
+    Assert(clampedFirstPage.Grid.StartRow == 0 && clampedFirstPage.Grid.StartColumn == 0,
+        "Moving before the first Data page did not clamp at the first page.");
+
     var bridge = new DataWorkbookDatabaseBridge(fake, fakeDatabase);
     var published = await bridge.PublishRangeAsync(opened.Workbook.Id, new DataRangeRequest("Sheet 1", 0, 0, 1, 2), "GridSnapshot");
     Assert(published.Columns.SequenceEqual(["A", "B"]) && published.RowCount == 1, "Database bridge published the wrong shape.");
     var publishedTable = fakeDatabase.LastTable ?? throw new InvalidOperationException("Database bridge did not call the database engine.");
     Assert(publishedTable.Rows[0].SequenceEqual(["5", "10"]), "Database bridge did not publish displayed spreadsheet values.");
 
+    _ = await session.MovePageAsync(rowPages: 1, columnPages: 1);
     var secondSheet = await session.SelectSheetAsync(1);
-    Assert(secondSheet.ActiveSheet.Name == "Summary", "Grid session sheet selection failed.");
+    Assert(secondSheet.ActiveSheet.Name == "Summary" && secondSheet.Grid.StartRow == 0 && secondSheet.Grid.StartColumn == 0,
+        "Changing sheets from a later page did not reset the fixed viewport.");
+    _ = await session.MovePageAsync(rowPages: 1, columnPages: 1);
+    fake.FailNextRead = true;
+    var sheetSwitchFailed = false;
+    try { _ = await session.SelectSheetAsync(0); }
+    catch (InvalidOperationException) { sheetSwitchFailed = true; }
+    Assert(sheetSwitchFailed, "The sheet-switch rollback regression did not exercise a refresh failure.");
+    var afterFailedSheetSwitch = await session.RefreshAsync();
+    Assert(afterFailedSheetSwitch.ActiveSheet.Name == "Summary" &&
+        afterFailedSheetSwitch.Grid.StartRow == DataGridSession.VisibleRows &&
+        afterFailedSheetSwitch.Grid.StartColumn == DataGridSession.VisibleColumns,
+        "A failed sheet switch changed the active sheet or page offsets.");
+    var returnedToFirstSheet = await session.SelectSheetAsync(0);
+    Assert(returnedToFirstSheet.ActiveSheet.Name == "Sheet 1" &&
+        returnedToFirstSheet.Grid.StartRow == 0 && returnedToFirstSheet.Grid.StartColumn == 0,
+        "A successful sheet switch after a failed attempt did not reset the page.");
     await session.SaveAsAsync("saved.ods");
     Assert(fake.LastSavePath == "saved.ods", "Grid session did not delegate save-as.");
+    var workbookPage = await session.MovePageAsync(rowPages: 2, columnPages: 3);
+    Assert(workbookPage.Grid.StartRow == 2 * DataGridSession.VisibleRows &&
+        workbookPage.Grid.StartColumn == 3 * DataGridSession.VisibleColumns,
+        "The workbook-reset regression did not move to a noninitial page before closing.");
     await session.CloseAsync();
     Assert(fake.CloseCalls == 1, "Grid session did not close the workbook exactly once.");
+    var reopenedWorkbook = await session.OpenAsync("reopened.ods");
+    Assert(reopenedWorkbook.ActiveSheet.Name == "Sheet 1" &&
+        reopenedWorkbook.Grid.StartRow == 0 && reopenedWorkbook.Grid.StartColumn == 0,
+        "Opening a new workbook after a later page did not reset sheet and viewport state.");
+    await session.CloseAsync();
+    Assert(fake.CloseCalls == 2, "Grid session did not close the reopened workbook exactly once.");
 }
 await fakeDatabase.CloseAsync();
 
@@ -142,7 +205,13 @@ internal sealed class FakeSpreadsheetEngine : IDataSpreadsheetEngine
     public int DeleteRowsCalls { get; private set; }
     public int InsertColumnsCalls { get; private set; }
     public int DeleteColumnsCalls { get; private set; }
+    public int? LastInsertedRowIndex { get; private set; }
+    public int? LastInsertedColumnIndex { get; private set; }
+    public int? LastDeletedRowIndex { get; private set; }
+    public int? LastDeletedColumnIndex { get; private set; }
+    public bool FailNextRead { get; set; }
     public string? LastSavePath { get; private set; }
+    public DataCellAddress? LastSetAddress { get; private set; }
 
     public Task<DataWorkbookHandle> OpenAsync(string path, bool readOnly, CancellationToken cancellationToken = default)
     {
@@ -163,6 +232,11 @@ internal sealed class FakeSpreadsheetEngine : IDataSpreadsheetEngine
     {
         cancellationToken.ThrowIfCancellationRequested();
         EnsureOpen(workbookId);
+        if (FailNextRead)
+        {
+            FailNextRead = false;
+            throw new InvalidOperationException("Forced Data range-read failure for rollback coverage.");
+        }
         var rows = new List<IReadOnlyList<string>>(range.RowCount);
         for (var row = 0; row < range.RowCount; row++)
         {
@@ -178,6 +252,7 @@ internal sealed class FakeSpreadsheetEngine : IDataSpreadsheetEngine
     {
         cancellationToken.ThrowIfCancellationRequested();
         EnsureOpen(workbookId);
+        LastSetAddress = address;
         var stored = string.IsNullOrWhiteSpace(formula) ? value ?? string.Empty : formula == "=A1*2" ? "10" : value ?? string.Empty;
         _values[(address.Sheet, address.Row, address.Column)] = stored;
         return Task.FromResult(new DataCellSnapshot(address, stored, formula ?? string.Empty));
@@ -260,22 +335,22 @@ internal sealed class FakeSpreadsheetEngine : IDataSpreadsheetEngine
 
     public Task InsertRowsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); InsertRowsCalls++; return Task.CompletedTask;
+        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); InsertRowsCalls++; LastInsertedRowIndex = index; return Task.CompletedTask;
     }
 
     public Task DeleteRowsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); DeleteRowsCalls++; return Task.CompletedTask;
+        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); DeleteRowsCalls++; LastDeletedRowIndex = index; return Task.CompletedTask;
     }
 
     public Task InsertColumnsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); InsertColumnsCalls++; return Task.CompletedTask;
+        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); InsertColumnsCalls++; LastInsertedColumnIndex = index; return Task.CompletedTask;
     }
 
     public Task DeleteColumnsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); DeleteColumnsCalls++; return Task.CompletedTask;
+        cancellationToken.ThrowIfCancellationRequested(); EnsureOpen(workbookId); DeleteColumnsCalls++; LastDeletedColumnIndex = index; return Task.CompletedTask;
     }
 
     public Task RecalculateAsync(string workbookId, CancellationToken cancellationToken = default)

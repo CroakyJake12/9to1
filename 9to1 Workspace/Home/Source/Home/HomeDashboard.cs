@@ -196,10 +196,16 @@ public sealed class HomeDashboard : IDisposable
         }
         catch (Exception exception)
         {
-            var message = $"Package backend refresh failed: {exception.Message}";
+            var message = $"Package backend refresh failed: {exception.Message} Last known package data may be stale.";
             var current = Current;
+            // Keep the last observed rows visible for recovery and context, but mark
+            // every package section as failed so callers cannot treat it as fresh.
+            var inventory = new HomePackageInventory(
+                current.Catalog with { Status = HomeSectionStatus.Error(message) },
+                current.InstalledApps with { Status = HomeSectionStatus.Error(message) },
+                current.Updates with { Status = HomeSectionStatus.Error(message) });
             var snapshot = CreateSnapshot(
-                HomePackageInventory.Error(message),
+                inventory,
                 current.Settings,
                 current.Runtime,
                 new HomeOperationStatus(HomeOperationState.Failed, message));
@@ -257,12 +263,16 @@ public sealed class HomeDashboard : IDisposable
         catch (Exception exception)
         {
             var current = Current;
-            var failed = current with
-            {
-                LastOperation = new HomeOperationStatus(
-                    HomeOperationState.Failed,
-                    $"Install all failed: {exception.Message}"),
-            };
+            var message = $"Install all failed: {exception.Message} Package state may be stale; refresh before retrying.";
+            var inventory = new HomePackageInventory(
+                current.Catalog,
+                current.InstalledApps with { Status = HomeSectionStatus.Error(message) },
+                current.Updates with { Status = HomeSectionStatus.Error(message) });
+            var failed = CreateSnapshot(
+                inventory,
+                current.Settings,
+                current.Runtime,
+                new HomeOperationStatus(HomeOperationState.Failed, message));
             Publish(failed);
             return failed;
         }

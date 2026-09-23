@@ -140,6 +140,8 @@ internal sealed class BoardsApp : Application
     {
         viewModel.RebuildRequested -= PostRebuild;
         viewModel.StyleEditorRequested -= PostStyleEditor;
+        viewModel.NewBoardRequested -= PostNewBoard;
+        viewModel.NewMenuRequested -= PostNewMenu;
         viewModel.SelectionChanged -= OnSelectionChanged;
         viewModel.NavRebuildRequested -= RebuildNav;
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
@@ -260,10 +262,10 @@ internal sealed class BoardsApp : Application
         // automationid attributes above; dynamic controls use real Names.
         WireTitleBox(root);
         WireSearchBox(root);
+        ThemeApplier.ApplyChrome(root);
         FillTopBar(root);
         FillNav(root);
         FillToolbar();
-        ThemeApplier.ApplyChrome(root);
         TameEditorScroll(root);
         WireInkOverlay();
         UpdateWindowTitle();
@@ -273,6 +275,8 @@ internal sealed class BoardsApp : Application
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel.StyleEditorRequested += PostStyleEditor;
         _viewModel.FileMenuRequested += PostFileMenu;
+        _viewModel.NewBoardRequested += PostNewBoard;
+        _viewModel.NewMenuRequested += PostNewMenu;
         _viewModel.OverflowRequested += PostOverflowMenu;
         _viewModel.ThemeToggleRequested += PostThemeToggle;
         if (_styleBox is not null)
@@ -480,6 +484,55 @@ internal sealed class BoardsApp : Application
             flyout.Items.Add(MenuAction("Exit", () => win.Close()));
             flyout.ShowAt(win, true);
         });
+    }
+
+    private void PostNewMenu()
+    {
+        if (_window is null || _viewModel is null)
+            return;
+        Post(() =>
+        {
+            if (_window is null || _viewModel is null)
+                return;
+            var flyout = BoardsCreationMenu.Create(_viewModel);
+            var button = _root is null ? null : FindByAutomationId<Button>(_root, "AddNewButton");
+            if (button is not null)
+                flyout.ShowAt(button);
+            else
+                flyout.ShowAt(_window, true);
+        });
+    }
+
+    private void PostNewBoard() => Post(() => _ = CreateNewBoardAsync());
+
+    private async Task CreateNewBoardAsync()
+    {
+        if (_window is null || _store is null || _viewModel is null)
+            return;
+        try
+        {
+            var file = await _window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Create a new 9-1 Board",
+                SuggestedFileName = "Untitled board",
+                DefaultExtension = "9to1board",
+                FileTypeChoices = [new FilePickerFileType("9-1 Boards") { Patterns = ["*.9to1board"] }],
+                ShowOverwritePrompt = false,
+            });
+            var path = file?.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            // Build and save the new document before changing the live session.
+            // Existing targets are rejected by the adapter, leaving the current
+            // board and its recovery data untouched.
+            var adapter = await ContractSessionAdapter.CreateNewAtPathAsync(_store, path);
+            await ActivateBoardAsync(adapter);
+        }
+        catch (Exception error)
+        {
+            _viewModel?.Set("StatusText", "New board failed: " + error.Message.Split('\n')[0]);
+        }
     }
 
     private static MenuItem MenuAction(string header, Func<Task> tapped, string? gesture = null)
@@ -718,25 +771,39 @@ internal sealed class BoardsApp : Application
         try
         {
             var adapter = await ContractSessionAdapter.OpenAsync(_store, path);
-            var next = new BoardsViewModel(adapter);
-            if (oldVm is not null)
-                UnwireViewModel(oldVm);
-            _session = adapter;
-            _viewModel = next;
-            WireViewModel(next);
-            _loader.SetBindingContext(next);
-            _loader.SetActionDispatcher(next);
-            _loader.WireBindings(_root);
-            next.Attach(_root);
-            WireDynamicSurface(_root);
-            if (oldSession is not null)
-                await oldSession.DisposeAsync();
+            await ActivateBoardAsync(adapter, oldVm, oldSession);
         }
         catch (Exception error)
         {
             Console.WriteLine($"[CUI Boards] Open failed: {error.Message}");
             _viewModel?.Set("StatusText", "Open failed: " + error.Message.Split('\n')[0]);
         }
+    }
+
+    private async Task ActivateBoardAsync(
+        ContractSessionAdapter adapter, BoardsViewModel? oldVm = null, IRichBoardSession? oldSession = null)
+    {
+        if (_loader is null || _root is null)
+        {
+            await adapter.DisposeAsync();
+            throw new InvalidOperationException("The Boards surface is not ready to switch documents.");
+        }
+
+        oldVm ??= _viewModel;
+        oldSession ??= _session;
+        var next = new BoardsViewModel(adapter);
+        if (oldVm is not null)
+            UnwireViewModel(oldVm);
+        _session = adapter;
+        _viewModel = next;
+        WireViewModel(next);
+        _loader.SetBindingContext(next);
+        _loader.SetActionDispatcher(next);
+        _loader.WireBindings(_root);
+        next.Attach(_root);
+        WireDynamicSurface(_root);
+        if (oldSession is not null)
+            await oldSession.DisposeAsync();
     }
 
     // ----- Page-level ink overlay: persisted page.Ink is always rendered. -----
@@ -748,29 +815,45 @@ internal sealed class BoardsApp : Application
         _inkOverlay.Tag = "page-ink-wired";
         var drawing = false;
         var points = new System.Collections.Generic.List<(double X, double Y, double Pressure)>();
+        string? drawingPageId = null;
+        double drawingZoom = 1;
+        double drawingPanX = 0;
+        double drawingPanY = 0;
+        double drawingWidth = 2.5;
+        string drawingColor = "#FF111111";
+        string drawingTool = "Pen";
         _inkOverlay.PointerPressed += (_, e) =>
         {
             var viewModel = _viewModel;
             if (viewModel is null || !viewModel.IsDrawMode)
                 return;
-            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), viewModel);
+            var pageId = viewModel.SelectedPageId;
+            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), viewModel.InkPanX, viewModel.InkPanY, viewModel.InkZoom);
             if (string.Equals(viewModel.InkTool, "Eraser", StringComparison.OrdinalIgnoreCase))
             {
-                _ = EraseAtAsync(viewModel, location.X, location.Y);
+                _ = EraseAtAsync(viewModel, pageId, location.X, location.Y);
                 e.Handled = true;
                 return;
             }
             if (string.Equals(viewModel.InkTool, "Select", StringComparison.OrdinalIgnoreCase))
             {
-                _ = SelectInkAtAsync(viewModel, location.X, location.Y);
+                _ = SelectInkAtAsync(viewModel, pageId, location.X, location.Y);
                 e.Handled = true;
                 return;
             }
             drawing = true;
+            drawingPageId = pageId;
+            drawingZoom = viewModel.InkZoom;
+            drawingPanX = viewModel.InkPanX;
+            drawingPanY = viewModel.InkPanY;
+            drawingWidth = viewModel.InkWidth;
+            drawingColor = viewModel.InkColor;
+            drawingTool = viewModel.InkTool;
             points.Clear();
-            points.Add((location.X, location.Y, ReadPressure(e, _inkOverlay)));
+            var inkLocation = ToInkCoordinates(e.GetPosition(_inkOverlay), drawingPanX, drawingPanY, drawingZoom);
+            points.Add((inkLocation.X, inkLocation.Y, ReadPressure(e, _inkOverlay)));
             e.Pointer.Capture(_inkOverlay);
-            RenderLiveStroke(_inkOverlay, points, viewModel);
+            RenderLiveStroke(_inkOverlay, points, drawingColor, drawingWidth, drawingTool, drawingZoom, drawingPanX, drawingPanY);
             e.Handled = true;
         };
         _inkOverlay.PointerMoved += (_, e) =>
@@ -778,9 +861,9 @@ internal sealed class BoardsApp : Application
             var viewModel = _viewModel;
             if (!drawing || viewModel is null)
                 return;
-            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), viewModel);
+            var location = ToInkCoordinates(e.GetPosition(_inkOverlay), drawingPanX, drawingPanY, drawingZoom);
             points.Add((location.X, location.Y, ReadPressure(e, _inkOverlay)));
-            RenderLiveStroke(_inkOverlay, points, viewModel);
+            RenderLiveStroke(_inkOverlay, points, drawingColor, drawingWidth, drawingTool, drawingZoom, drawingPanX, drawingPanY);
             e.Handled = true;
         };
         _inkOverlay.PointerReleased += (_, e) =>
@@ -790,16 +873,29 @@ internal sealed class BoardsApp : Application
                 return;
             drawing = false;
             e.Pointer.Capture(null);
-            _ = CommitOverlayStrokeAsync(viewModel, points.ToArray());
+            var pageId = drawingPageId;
+            drawingPageId = null;
+            if (pageId is not null)
+                _ = CommitOverlayStrokeAsync(viewModel, pageId, points.ToArray(), drawingWidth, drawingColor, drawingTool);
             e.Handled = true;
         };
         _inkOverlay.SizeChanged += (_, _) => _ = RenderInkOverlayAsync();
     }
 
     private async Task CommitOverlayStrokeAsync(
-        BoardsViewModel viewModel, IReadOnlyList<(double X, double Y, double Pressure)> points)
+        BoardsViewModel viewModel, string pageId,
+        IReadOnlyList<(double X, double Y, double Pressure)> points,
+        double width, string color, string tool)
     {
-        await viewModel.CommitInkStrokeAsync(points, viewModel.InkWidth, viewModel.InkColor, viewModel.InkTool);
+        try
+        {
+            await viewModel.CommitInkStrokeAsync(pageId, points, width, color, tool);
+        }
+        catch (Exception error)
+        {
+            viewModel.ReportInkCommitFailure(error.Message);
+            return;
+        }
         await RenderInkOverlayAsync();
     }
 
@@ -809,9 +905,19 @@ internal sealed class BoardsApp : Application
             return;
         var overlay = _inkOverlay;
         var viewModel = _viewModel;
-        var strokes = await viewModel.GetInkStrokesAsync();
-        if (!ReferenceEquals(overlay, _inkOverlay) || !ReferenceEquals(viewModel, _viewModel))
+        var pageId = viewModel.SelectedPageId;
+        var panX = viewModel.InkPanX;
+        var panY = viewModel.InkPanY;
+        var zoom = viewModel.InkZoom;
+        var strokes = await viewModel.GetInkStrokesAsync(pageId);
+        if (!ReferenceEquals(overlay, _inkOverlay) || !ReferenceEquals(viewModel, _viewModel) ||
+            !string.Equals(pageId, viewModel.SelectedPageId, StringComparison.Ordinal))
             return;
+        if (panX != viewModel.InkPanX || panY != viewModel.InkPanY || zoom != viewModel.InkZoom)
+        {
+            await RenderInkOverlayAsync();
+            return;
+        }
         overlay.Children.Clear();
         overlay.IsHitTestVisible = viewModel.IsDrawMode;
         ToolTip.SetTip(overlay, viewModel.IsDrawMode ? "Draw directly over this page" : "Use Draw to annotate this page");
@@ -822,8 +928,8 @@ internal sealed class BoardsApp : Application
             if (stroke.Points.Count == 0)
                 continue;
             requiredHeight = Math.Max(requiredHeight,
-                stroke.Points.Max(point => point.Y * viewModel.InkZoom + viewModel.InkPanY) + stroke.Width + 48);
-            AddRenderedStroke(overlay, stroke, viewModel);
+                stroke.Points.Max(point => point.Y * zoom + panY) + stroke.Width + 48);
+            AddRenderedStroke(overlay, stroke, panX, panY, zoom);
         }
         if (requiredHeight > overlay.Bounds.Height + 1)
             overlay.Height = requiredHeight;
@@ -831,11 +937,11 @@ internal sealed class BoardsApp : Application
             overlay.Height = double.NaN;
     }
 
-    private static void AddRenderedStroke(Canvas overlay, InkStrokeView stroke, BoardsViewModel viewModel)
+    private static void AddRenderedStroke(Canvas overlay, InkStrokeView stroke, double panX, double panY, double zoom)
     {
         if (stroke.Points.Count == 1)
         {
-            var point = ToOverlayCoordinates(stroke.Points[0].X, stroke.Points[0].Y, viewModel);
+            var point = ToOverlayCoordinates(stroke.Points[0].X, stroke.Points[0].Y, panX, panY, zoom);
             var diameter = EffectiveStrokeWidth(stroke, stroke.Points) * 1.5;
             var dot = new Ellipse { Width = diameter, Height = diameter, Fill = BrushForInk(stroke.Color) };
             Canvas.SetLeft(dot, point.X - diameter / 2);
@@ -845,7 +951,7 @@ internal sealed class BoardsApp : Application
         }
         var polyline = new Polyline
         {
-            Points = stroke.Points.Select(point => ToOverlayCoordinates(point.X, point.Y, viewModel)).ToList(),
+            Points = stroke.Points.Select(point => ToOverlayCoordinates(point.X, point.Y, panX, panY, zoom)).ToList(),
             Stroke = BrushForInk(stroke.Color),
             StrokeThickness = EffectiveStrokeWidth(stroke, stroke.Points),
             StrokeLineCap = PenLineCap.Round,
@@ -857,7 +963,7 @@ internal sealed class BoardsApp : Application
         {
             foreach (var endpoint in new[] { stroke.Points[0], stroke.Points[^1] })
             {
-                var point = ToOverlayCoordinates(endpoint.X, endpoint.Y, viewModel);
+                var point = ToOverlayCoordinates(endpoint.X, endpoint.Y, panX, panY, zoom);
                 var handle = new Ellipse { Width = 10, Height = 10, Fill = Brushes.White, Stroke = BoardsTheme.AccentBrush, StrokeThickness = 2 };
                 Canvas.SetLeft(handle, point.X - 5);
                 Canvas.SetTop(handle, point.Y - 5);
@@ -866,7 +972,15 @@ internal sealed class BoardsApp : Application
         }
     }
 
-    private static void RenderLiveStroke(Canvas overlay, IReadOnlyList<(double X, double Y, double Pressure)> points, BoardsViewModel viewModel)
+    private static void RenderLiveStroke(
+        Canvas overlay,
+        IReadOnlyList<(double X, double Y, double Pressure)> points,
+        string color,
+        double width,
+        string tool,
+        double zoom,
+        double panX,
+        double panY)
     {
         var prior = overlay.Children.OfType<Polyline>().Where(line => Equals(line.Tag, "live-ink")).ToList();
         foreach (var line in prior)
@@ -876,22 +990,22 @@ internal sealed class BoardsApp : Application
         overlay.Children.Add(new Polyline
         {
             Tag = "live-ink",
-            Points = points.Select(point => ToOverlayCoordinates(point.X, point.Y, viewModel)).ToList(),
-            Stroke = BrushForInk(viewModel.InkColor),
-            StrokeThickness = Math.Clamp(viewModel.InkWidth, 1, 32),
+            Points = points.Select(point => new Point(point.X * zoom + panX, point.Y * zoom + panY)).ToList(),
+            Stroke = BrushForInk(color),
+            StrokeThickness = Math.Clamp(width, 1, 32),
             StrokeLineCap = PenLineCap.Round,
             StrokeJoin = PenLineJoin.Round,
-            Opacity = string.Equals(viewModel.InkTool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1,
+            Opacity = string.Equals(tool, "Highlighter", StringComparison.OrdinalIgnoreCase) ? 0.42 : 1,
         });
     }
 
-    private static Point ToInkCoordinates(Point location, BoardsViewModel viewModel) => new(
-        (location.X - viewModel.InkPanX) / viewModel.InkZoom,
-        (location.Y - viewModel.InkPanY) / viewModel.InkZoom);
+    private static Point ToInkCoordinates(Point location, double panX, double panY, double zoom) => new(
+        (location.X - panX) / zoom,
+        (location.Y - panY) / zoom);
 
-    private static Point ToOverlayCoordinates(double x, double y, BoardsViewModel viewModel) => new(
-        x * viewModel.InkZoom + viewModel.InkPanX,
-        y * viewModel.InkZoom + viewModel.InkPanY);
+    private static Point ToOverlayCoordinates(double x, double y, double panX, double panY, double zoom) => new(
+        x * zoom + panX,
+        y * zoom + panY);
 
     private static double EffectiveStrokeWidth(InkStrokeView stroke, IReadOnlyList<InkPointView> points) =>
         Math.Clamp(stroke.Width * Math.Clamp(points.Average(point => point.Pressure), 0.25, 1), 0.8, 64);
@@ -902,26 +1016,26 @@ internal sealed class BoardsApp : Application
         catch { return Brushes.Black; }
     }
 
-    private static async Task EraseAtAsync(BoardsViewModel viewModel, double x, double y)
+    private static async Task EraseAtAsync(BoardsViewModel viewModel, string pageId, double x, double y)
     {
         if (viewModel.Session is ContractSessionAdapter adapter)
-            await adapter.EraseInkAtCurrentPageAsync(x, y);
+            await adapter.EraseInkAtPageAsync(pageId, x, y);
         else
-            await viewModel.ClearInkAsync();
+            await viewModel.ClearInkAsync(pageId);
         viewModel.RefreshAfterEdit();
     }
 
-    private static async Task SelectInkAtAsync(BoardsViewModel viewModel, double x, double y)
+    private static async Task SelectInkAtAsync(BoardsViewModel viewModel, string pageId, double x, double y)
     {
         if (viewModel.Session is ContractSessionAdapter adapter)
-            await adapter.SelectInkAtCurrentPageAsync(x, y);
+            await adapter.SelectInkAtPageAsync(pageId, x, y);
         viewModel.RefreshAfterEdit();
     }
 
     private static async Task RemoveLastStrokeAsync(BoardsViewModel viewModel)
     {
         if (viewModel.Session is ContractSessionAdapter adapter)
-            await adapter.RemoveLastInkStrokeAsync();
+            await adapter.RemoveLastInkStrokeAsync(viewModel.SelectedPageId);
         else
             await viewModel.ClearInkAsync();
         viewModel.RefreshAfterEdit();
@@ -956,7 +1070,7 @@ internal sealed class BoardsApp : Application
         titleBox.TextChanged += (_, _) => viewModel.EditText("BoardTitleBox", titleBox.Text ?? string.Empty);
     }
 
-    // ----- Theme (Fluent control templates + Boards palette + Light/Dark) -----
+    // ----- Theme (Fluent control templates + shared CUI Glow + Light/Dark) -----
 
     private static string SettingsPath() => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

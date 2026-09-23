@@ -28,8 +28,8 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
         {
             var recentTask = _backend.GetRecentChatsAsync(RecentLimit, cancellationToken);
             var modelsTask = _backend.GetModelInventoryAsync(cancellationToken);
-            var conversationTask = conversationId is { } id
-                ? _backend.GetConversationAsync(id, cancellationToken)
+            Task<ChatSpaceConversationData?> conversationTask = conversationId is { } id
+                ? GetConversationOrNullAsync(id, cancellationToken)
                 : Task.FromResult<ChatSpaceConversationData?>(null);
             await Task.WhenAll(recentTask, modelsTask, conversationTask).ConfigureAwait(false);
             if (request != Volatile.Read(ref _requestVersion)) return;
@@ -239,6 +239,11 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
             State.Composer.SelectedModelName,
             status);
     }
+
+    private async Task<ChatSpaceConversationData?> GetConversationOrNullAsync(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        await _backend.GetConversationAsync(conversationId, cancellationToken).ConfigureAwait(false);
 
     private void ApplyLoaded(
         IReadOnlyList<Conversation> recent,

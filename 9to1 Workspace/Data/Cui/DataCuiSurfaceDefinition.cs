@@ -1,4 +1,5 @@
-using CakeOS.Cui.Markup;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
 
 namespace HavenOS.Apps.Data.Cui;
 
@@ -30,36 +31,38 @@ public sealed class DataCuiSurfaceDefinition
         DataSaveWorkbookAsAction.Id,
     ];
 
-    private DataCuiSurfaceDefinition(CuiDocument document, IReadOnlyDictionary<string, CuiElement> elements)
+    private DataCuiSurfaceDefinition(CuiDocument document, IReadOnlyDictionary<string, CuiComponent> elements)
     {
         Document = document;
         Elements = elements;
     }
 
     public CuiDocument Document { get; }
-    public IReadOnlyDictionary<string, CuiElement> Elements { get; }
+    public IReadOnlyDictionary<string, CuiComponent> Elements { get; }
 
     public static DataCuiSurfaceDefinition LoadDefault() =>
         Load(Path.Combine(AppContext.BaseDirectory, "DataWorkspace.cui"));
 
     public static DataCuiSurfaceDefinition Load(string filePath)
     {
-        var document = new CuiMarkupLoader().Load(filePath);
-        var elements = IndexElements(document.Root);
+        var document = new CuiRichParser().ParseFile(filePath);
+        var elements = IndexElements(document.Components);
 
         foreach (var required in RequiredElements)
         {
             if (!elements.TryGetValue(required.Key, out var element))
                 throw new InvalidDataException($"Data CUI is missing required element '{required.Key}'.");
-            if (!string.Equals(element.Name, required.Value, StringComparison.Ordinal))
+            if (!string.Equals(element.Type, required.Value, StringComparison.Ordinal))
                 throw new InvalidDataException($"Data CUI element '{required.Key}' must be a {required.Value}.");
         }
 
-        var actions = DescendantsAndSelf(document.Root)
-            .SelectMany(element => element.Attributes
-                .Where(attribute => attribute.Key.EndsWith("Action", StringComparison.Ordinal) ||
-                                    string.Equals(attribute.Key, "action", StringComparison.Ordinal))
-                .Select(attribute => attribute.Value))
+        var actions = DescendantsAndSelf(document.Components)
+            .SelectMany(element => element.AuthoredAttributeNames()
+                .Where(attribute => attribute.EndsWith("Action", StringComparison.Ordinal) ||
+                                    string.Equals(attribute, "action", StringComparison.Ordinal))
+                .Select(attribute => element.TryGetLiteralAttribute(attribute, out var value) ? value : null)
+                .Where(value => value is not null)
+                .Select(value => value!))
             .ToHashSet(StringComparer.Ordinal);
         foreach (var requiredAction in RequiredActions)
         {
@@ -70,12 +73,12 @@ public sealed class DataCuiSurfaceDefinition
         return new DataCuiSurfaceDefinition(document, elements);
     }
 
-    private static IReadOnlyDictionary<string, CuiElement> IndexElements(CuiElement root)
+    private static IReadOnlyDictionary<string, CuiComponent> IndexElements(IReadOnlyList<CuiComponent> roots)
     {
-        var result = new Dictionary<string, CuiElement>(StringComparer.Ordinal);
-        foreach (var element in DescendantsAndSelf(root))
+        var result = new Dictionary<string, CuiComponent>(StringComparer.Ordinal);
+        foreach (var element in DescendantsAndSelf(roots))
         {
-            if (!element.Attributes.TryGetValue("id", out var id))
+            if (!element.TryGetLiteralAttribute("id", out var id))
                 continue;
             if (string.IsNullOrWhiteSpace(id))
                 throw new InvalidDataException("Data CUI element IDs cannot be blank.");
@@ -85,11 +88,10 @@ public sealed class DataCuiSurfaceDefinition
         return result;
     }
 
-    private static IEnumerable<CuiElement> DescendantsAndSelf(CuiElement root)
+    private static IEnumerable<CuiComponent> DescendantsAndSelf(IReadOnlyList<CuiComponent> roots)
     {
-        yield return root;
-        foreach (var child in root.Children)
-        foreach (var descendant in DescendantsAndSelf(child))
-            yield return descendant;
+        foreach (var root in roots)
+        foreach (var component in root.DescendantsAndSelf())
+            yield return component;
     }
 }

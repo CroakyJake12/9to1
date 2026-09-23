@@ -73,6 +73,15 @@ public sealed class PresentAppHost : IDisposable
         return Page.InitializeAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Saves pending edits before the standalone window is allowed to close.
+    /// </summary>
+    public Task<bool> TrySaveBeforeCloseAsync(CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return Page.SaveAsync("Autosave before closing Present", cancellationToken);
+    }
+
     public void Dispose()
     {
         if (_disposed)

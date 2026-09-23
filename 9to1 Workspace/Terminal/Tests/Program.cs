@@ -8,8 +8,38 @@ using Haven.Application;
 using Haven.Core;
 using HavenOS.Apps.Terminal;
 
-await TerminalAppSurfaceSpecs.RunAsync();
-Console.WriteLine("Terminal app surface specs passed.");
+try
+{
+    if (args.Length == 1 && string.Equals(args[0], "--pty-output-buffer-only", StringComparison.Ordinal))
+    {
+        PtyProcessSpecs.RunOutputBufferSpec();
+        Console.WriteLine("PTY output buffer spec passed.");
+        return;
+    }
+
+    if (args.Length == 1 && string.Equals(args[0], "--pty-delayed-output-only", StringComparison.Ordinal))
+    {
+        await PtyProcessSpecs.RunDelayedOutputSpecAsync();
+        Console.WriteLine("PTY delayed output spec passed.");
+        return;
+    }
+
+    if (args.Length == 1 && string.Equals(args[0], "--pty-working-directory-only", StringComparison.Ordinal))
+    {
+        await PtyProcessSpecs.RunWorkingDirectorySpecAsync();
+        Console.WriteLine("PTY working-directory, resize, exit, and disposal spec passed.");
+        return;
+    }
+
+    await TerminalAppSurfaceSpecs.RunAsync();
+    await PtyProcessSpecs.RunAsync();
+    Console.WriteLine("Terminal specs passed.");
+}
+catch (Exception exception)
+{
+    Console.Error.WriteLine(exception);
+    Environment.ExitCode = 1;
+}
 
 internal static class TerminalAppSurfaceSpecs
 {

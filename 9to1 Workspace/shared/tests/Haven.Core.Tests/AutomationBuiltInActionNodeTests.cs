@@ -48,6 +48,54 @@ public sealed class AutomationBuiltInActionNodeTests
     }
 
     [Theory]
+    [InlineData(AutomationGraphRunMode.Real)]
+    [InlineData(AutomationGraphRunMode.Test)]
+    public async Task Emit_action_forwards_a_single_upstream_graph_output(AutomationGraphRunMode mode)
+    {
+        var source = Node("Action", ("action", "emit"), ("value", "ready"));
+        var forward = Node("Action", ("action", "emit"), ("value", "{{input}}"));
+        var graph = new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion, [source, forward], [new(source.Id, forward.Id)]);
+
+        var result = await new AutomationGraphRunner([new BuiltInAutomationActionNodeExecutor()]).RunAsync(graph, mode, CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        var trace = Assert.Single(result.Trace, item => item.NodeId == forward.Id);
+        Assert.Equal("ready", trace.Output);
+        Assert.Contains("forward", trace.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ready", trace.Inputs![source.Id]);
+    }
+
+    [Theory]
+    [InlineData(0, "no input is available")]
+    [InlineData(2, "ambiguous")]
+    public async Task Emit_action_reports_missing_or_ambiguous_upstream_input(int sourceCount, string expectedMessage)
+    {
+        var sources = Enumerable.Range(0, sourceCount).Select(index => Node("Action", ("action", "emit"), ("value", $"value-{index}"))).ToArray();
+        var forward = Node("Action", ("action", "emit"), ("value", "{{input}}"));
+        var graph = new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion, [.. sources, forward], sources.Select(source => new AutomationGraphEdgeDefinition(source.Id, forward.Id)).ToArray());
+
+        var result = await new AutomationGraphRunner([new BuiltInAutomationActionNodeExecutor()]).RunAsync(graph, AutomationGraphRunMode.Real, CancellationToken.None);
+
+        Assert.False(result.Succeeded);
+        var trace = Assert.Single(result.Trace, item => item.NodeId == forward.Id);
+        Assert.Equal(AutomationGraphTraceStatus.Failed, trace.Status);
+        Assert.Contains(expectedMessage, result.FailureMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Emit_action_reports_an_upstream_node_that_produced_no_output()
+    {
+        var trigger = Node("Trigger");
+        var forward = Node("Action", ("action", "emit"), ("value", "{{input}}"));
+        var graph = new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion, [trigger, forward], [new(trigger.Id, forward.Id)]);
+
+        var result = await new AutomationGraphRunner([new BuiltInAutomationActionNodeExecutor()]).RunAsync(graph, AutomationGraphRunMode.Real, CancellationToken.None);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("produced an output", result.FailureMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
     [InlineData("write")]
     [InlineData("delete")]
     [InlineData("run-command")]
@@ -94,6 +142,28 @@ public sealed class AutomationBuiltInActionNodeTests
         Assert.Equal(ReusableDeviceWorkflowRunKind.GraphWorkflow, result.Kind);
         Assert.True(result.GraphResult?.Succeeded);
         Assert.Contains(result.GraphResult!.Trace, trace => trace.NodeId == action.Id && trace.Output == "ready");
+    }
+
+    [Fact]
+    public async Task Reusable_real_graph_forwards_output_between_emit_nodes()
+    {
+        var trigger = Node("Trigger");
+        var source = Node("Action", ("action", "emit"), ("value", "ready"));
+        var forward = Node("Action", ("action", "emit"), ("value", "{{input}}"));
+        var graph = new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion, [trigger, source, forward],
+            [new(trigger.Id, source.Id), new(source.Id, forward.Id)]);
+        var now = DateTimeOffset.UtcNow;
+        var workflow = new ReusableTaskDefinition(Guid.NewGuid(), "Forwarding workflow", string.Empty, string.Empty, null, true, now, now, AutomationGraphCodec.Serialize(graph));
+        var runner = new ReusableDeviceWorkflowRunner(null, new BuiltInAutomationActionNodeExecutor());
+
+        var result = await runner.RunAsync(workflow, permissionGranted: false, CancellationToken.None);
+
+        Assert.True(result.Handled);
+        Assert.Equal(ReusableDeviceWorkflowRunKind.GraphWorkflow, result.Kind);
+        Assert.True(result.GraphResult?.Succeeded);
+        var forwardTrace = Assert.Single(result.GraphResult!.Trace, trace => trace.NodeId == forward.Id);
+        Assert.Equal("ready", forwardTrace.Output);
+        Assert.Equal("ready", forwardTrace.Inputs![source.Id]);
     }
 
     private static AutomationGraphNodeExecutionContext Context(AutomationGraphNodeDefinition node, AutomationGraphRunMode mode) =>

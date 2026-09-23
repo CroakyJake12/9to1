@@ -32,7 +32,8 @@ public sealed partial class MainView
             return;
         }
 
-        var page = new MapsPage(maps, tiles, savedPlaces);
+        var page = new MapsPage(maps, tiles, savedPlaces, _structuredFormTemplate, _genUiRouter, _genUiInstances);
+        page.DataWorkbookRequested += OnDataWorkbookRequested;
         AddOrSelectTab(key, "Maps", page, closeable: true, surface: HavenSurface.Maps);
     }
 }

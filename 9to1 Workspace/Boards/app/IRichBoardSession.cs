@@ -26,6 +26,9 @@ public sealed class RichBoardPage
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Title { get; set; } = "Untitled page";
     public List<RichBoardBlock> Blocks { get; set; } = [];
+    public double InkPanX { get; set; }
+    public double InkPanY { get; set; }
+    public double InkZoom { get; set; } = 1;
 }
 
 /// <summary>One editable block: heading, paragraph, checklist item, table, ink, image, graph, divider.</summary>

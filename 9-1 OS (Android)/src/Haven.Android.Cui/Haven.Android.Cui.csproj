@@ -4,6 +4,6 @@
     <AssemblyName>Haven.Android.Cui</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../framework/CUI/src/NineToOne.Cui.Markup.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
   </ItemGroup>
 </Project>

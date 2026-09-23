@@ -184,6 +184,60 @@ public sealed class CallCoordinatorTests
         Assert.Equal(1, input.StartCount);
     }
 
+    [Theory]
+    [InlineData("mute")]
+    [InlineData("pause")]
+    public async Task StoppingCaptureDuringPartialUtteranceDiscardsLateFinalUntilNewSpeech(string stopMode)
+    {
+        var conversations = new MemoryConversationRepository();
+        var input = new FakeSpeechInput();
+        var ollama = new FakeOllamaClient(["Fresh request received."]);
+        await using var coordinator = new CallCoordinator(
+            new MemoryCallRepository(), conversations, ollama, input,
+            new FakeSpeechOutput(), new FakeScreenShare());
+        var session = await coordinator.StartAsync(new CallStartOptions(Model()), null, CancellationToken.None);
+        var transcriptEvents = new List<CallTranscriptEventArgs>();
+        coordinator.TranscriptChanged += (_, args) => transcriptEvents.Add(args);
+
+        await input.EmitAsync(new SpeechInputEvent(SpeechInputEventKind.SpeechStarted));
+        await input.EmitAsync(new SpeechInputEvent(
+            SpeechInputEventKind.PartialTranscript, "sensitive unfinished request"));
+        var unfinishedMessageId = Assert.Single(transcriptEvents).MessageId;
+
+        if (stopMode == "mute")
+        {
+            await coordinator.SetMutedAsync(true, CancellationToken.None);
+            await coordinator.SetMutedAsync(false, CancellationToken.None);
+        }
+        else
+        {
+            await coordinator.PauseAsync(CancellationToken.None);
+            await coordinator.ResumeAsync(CancellationToken.None);
+        }
+
+        await input.EmitAsync(new SpeechInputEvent(
+            SpeechInputEventKind.PartialTranscript, "sensitive late callback"));
+        await input.EmitAsync(new SpeechInputEvent(
+            SpeechInputEventKind.FinalTranscript, "sensitive unfinished request"));
+
+        Assert.Single(transcriptEvents);
+        Assert.DoesNotContain(transcriptEvents, args => args.Role == MessageRole.User && args.IsFinal);
+        Assert.False(conversations.Messages.TryGetValue(session.ConversationId, out var beforeFreshSpeech)
+            && beforeFreshSpeech.Count > 0);
+        Assert.Null(ollama.LastRequest);
+
+        await input.EmitAsync(new SpeechInputEvent(SpeechInputEventKind.SpeechStarted));
+        await input.EmitAsync(new SpeechInputEvent(SpeechInputEventKind.FinalTranscript, "fresh request"));
+
+        var persistedUser = Assert.Single(
+            conversations.Messages[session.ConversationId],
+            message => message.Role == MessageRole.User);
+        Assert.Equal("fresh request", persistedUser.Content);
+        Assert.NotEqual(unfinishedMessageId, persistedUser.Id);
+        Assert.DoesNotContain(conversations.Messages[session.ConversationId],
+            message => message.Content == "sensitive unfinished request");
+    }
+
     /// <summary>
     /// Performs the interrupt cancels generation and persists only marked partial transcript step owned by this component.
     /// </summary>

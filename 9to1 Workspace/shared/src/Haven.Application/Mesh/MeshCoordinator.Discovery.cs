@@ -10,6 +10,9 @@ public sealed partial class MeshCoordinator
     private readonly ConcurrentDictionary<Guid, MeshDiscoveryCandidate> _nearby = new();
     private readonly ConcurrentDictionary<Guid, byte> _discoveryReconnects = new();
     private readonly ConcurrentDictionary<Guid, DateTimeOffset> _discoveryReconnectNotBefore = new();
+    private readonly object _nearbyExpiryTimerGate = new();
+    private Timer? _nearbyExpiryTimer;
+    private bool _nearbyExpiryTimerStopped;
     private IMeshDiscoveryService? _discovery;
 
     public MeshCoordinator(
@@ -24,6 +27,7 @@ public sealed partial class MeshCoordinator
     {
         _discovery = discovery ?? throw new ArgumentNullException(nameof(discovery));
         _discovery.CandidateObserved += OnDiscoveryCandidateObserved;
+        _nearbyExpiryTimer = new Timer(OnNearbyCandidateExpiry, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
     private async Task StartDiscoveryAsync(CancellationToken cancellationToken)
@@ -34,14 +38,59 @@ public sealed partial class MeshCoordinator
 
     private IReadOnlyList<MeshDiscoveryCandidate> GetNearbyCandidates()
     {
-        var threshold = DateTimeOffset.UtcNow - DiscoveryCandidateLifetime;
-        foreach (var pair in _nearby.ToArray())
-            if (pair.Value.ObservedAt < threshold) _nearby.TryRemove(pair.Key, out _);
+        if (RemoveExpiredNearbyCandidates(DateTimeOffset.UtcNow))
+        {
+            ScheduleNearbyCandidateExpiry();
+            StateChanged?.Invoke();
+        }
         var trustedIds = _state.TrustedPeers.Where(peer => peer.TrustState == MeshPeerTrustState.Trusted).Select(peer => peer.DeviceId).ToHashSet();
         return _nearby.Values
-            .Where(candidate => !trustedIds.Contains(candidate.DeviceId) && candidate.ObservedAt >= threshold)
+            .Where(candidate => !trustedIds.Contains(candidate.DeviceId)
+                && candidate.ObservedAt >= DateTimeOffset.UtcNow - DiscoveryCandidateLifetime)
             .OrderBy(candidate => candidate.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
+    }
+
+    private bool RemoveExpiredNearbyCandidates(DateTimeOffset now)
+    {
+        var threshold = now - DiscoveryCandidateLifetime;
+        var removedAny = false;
+        foreach (var pair in _nearby.ToArray())
+        {
+            if (pair.Value.ObservedAt >= threshold) continue;
+            if (((ICollection<KeyValuePair<Guid, MeshDiscoveryCandidate>>)_nearby).Remove(pair))
+                removedAny = true;
+        }
+        return removedAny;
+    }
+
+    private void ScheduleNearbyCandidateExpiry()
+    {
+        lock (_nearbyExpiryTimerGate)
+        {
+            if (_nearbyExpiryTimerStopped || _nearbyExpiryTimer is null) return;
+
+            var nextExpiry = _nearby.Values
+                .Select(candidate => candidate.ObservedAt + DiscoveryCandidateLifetime)
+                .DefaultIfEmpty()
+                .Min();
+            if (nextExpiry == default)
+            {
+                _nearbyExpiryTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+                return;
+            }
+
+            var delay = nextExpiry - DateTimeOffset.UtcNow;
+            if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
+            _nearbyExpiryTimer.Change(delay, Timeout.InfiniteTimeSpan);
+        }
+    }
+
+    private void OnNearbyCandidateExpiry(object? state)
+    {
+        if (RemoveExpiredNearbyCandidates(DateTimeOffset.UtcNow))
+            StateChanged?.Invoke();
+        ScheduleNearbyCandidateExpiry();
     }
 
     private void OnDiscoveryCandidateObserved(MeshDiscoveryCandidate candidate)
@@ -74,6 +123,7 @@ public sealed partial class MeshCoordinator
         }
 
         _nearby[candidate.DeviceId] = candidate;
+        ScheduleNearbyCandidateExpiry();
         StateChanged?.Invoke();
     }
 
@@ -155,6 +205,12 @@ public sealed partial class MeshCoordinator
     {
         if (_discovery is null) return;
         _discovery.CandidateObserved -= OnDiscoveryCandidateObserved;
+        lock (_nearbyExpiryTimerGate)
+        {
+            _nearbyExpiryTimerStopped = true;
+            _nearbyExpiryTimer?.Dispose();
+            _nearbyExpiryTimer = null;
+        }
         try { if (_discovery.IsRunning) await _discovery.StopAsync(CancellationToken.None).ConfigureAwait(false); } catch { }
     }
 }

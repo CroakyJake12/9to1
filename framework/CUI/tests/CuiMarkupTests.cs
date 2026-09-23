@@ -1,4 +1,4 @@
-using NineToOne.Cui.Markup;
+using CakeOS.Cui.Language;
 using Xunit;
 
 namespace NineToOne.Cui.Markup.Tests;
@@ -8,12 +8,12 @@ public sealed class CuiMarkupTests
     [Fact]
     public void ParserBuildsNativeCuiDocument()
     {
-        var document = new CuiMarkupParser().Parse("<Cui><Stack gap=\"8\"><Text>Hello</Text></Stack></Cui>", "dashboard.cui");
+        var document = new CuiRichParser().Parse("<Cui><Stack gap=\"8\"><Text>Hello</Text></Stack></Cui>", "dashboard.cui");
 
-        var stack = Assert.Single(document.Root.Children);
-        Assert.Equal("Cui", document.Root.Name);
-        Assert.Equal("Stack", stack.Name);
-        Assert.Equal("8", stack.Attributes["gap"]);
+        var stack = Assert.Single(document.Components);
+        Assert.Equal("Stack", stack.Type);
+        Assert.True(stack.TryGetLiteralAttribute("gap", out var gap));
+        Assert.Equal("8", gap);
         Assert.Equal("Hello", Assert.Single(stack.Children).Text);
     }
 
@@ -25,10 +25,10 @@ public sealed class CuiMarkupTests
         {
             File.WriteAllText(path, "<Cui><Text>Loaded</Text></Cui>");
 
-            var document = new CuiMarkupLoader().Load(path);
+            var document = new CuiRichParser().ParseFile(path);
 
             Assert.Equal(Path.GetFullPath(path), document.SourceName);
-            Assert.Equal("Loaded", Assert.Single(document.Root.Children).Text);
+            Assert.Equal("Loaded", Assert.Single(document.Components).Text);
         }
         finally
         {
@@ -42,9 +42,9 @@ public sealed class CuiMarkupTests
     public void ParserAndLoaderRejectLegacyMarkupInputs(string sourceName)
     {
         var parserException = Assert.Throws<NotSupportedException>(
-            () => new CuiMarkupParser().Parse("<Cui />", sourceName));
+            () => new CuiRichParser().ParseFile(sourceName));
         var loaderException = Assert.Throws<NotSupportedException>(
-            () => new CuiMarkupLoader().Load(Path.Combine(Path.GetTempPath(), sourceName)));
+            () => new CuiRichParser().ParseFile(Path.Combine(Path.GetTempPath(), sourceName)));
 
         Assert.Contains(".cui", parserException.Message, StringComparison.Ordinal);
         Assert.Contains(".cui", loaderException.Message, StringComparison.Ordinal);

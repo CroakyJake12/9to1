@@ -1,4 +1,5 @@
-using NineToOne.Cui.Markup;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
 
 namespace HavenOS.Home;
 
@@ -28,7 +29,7 @@ public sealed class HomeCuiSurface
     public static HomeCuiSurface LoadDefault()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "UI", "Home.cui");
-        return new HomeCuiSurface(new CuiMarkupLoader().Load(path));
+        return new HomeCuiSurface(new CuiRichParser().ParseFile(path));
     }
 
     public void ApplySnapshot(HomeDashboardSnapshot snapshot)

@@ -36,11 +36,25 @@ public sealed class TranslateServiceTests
         Assert.Equal("item 8", result.Ambiguities[^1]);
     }
 
+    [Fact]
+    public void ParseResponseSkipsMalformedBraceNoiseAndPreservesBracesInsideTranslationText()
+    {
+        var result = TranslateService.ParseResponse("""
+            Model preface {not json}; translation:
+            {"translatedText":"Hola {mundo}.","detectedSourceLanguage":"Spanish","detectedSourceLanguageCode":"es","ambiguities":[]}
+            trailing brace }
+            """);
+
+        Assert.Equal("Hola {mundo}.", result.TranslatedText);
+        Assert.Equal("Spanish", result.DetectedSourceLanguage);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("not json")]
     [InlineData("{\"translatedText\":\"\",\"detectedSourceLanguage\":\"English\",\"ambiguities\":[]}")]
     [InlineData("{broken}")]
+    [InlineData("{\"error\":{\"translatedText\":\"not a translation\"}}")]
     public void ParseResponseRejectsMissingOrMalformedTranslation(string response)
     {
         Assert.Throws<InvalidOperationException>(() => TranslateService.ParseResponse(response));

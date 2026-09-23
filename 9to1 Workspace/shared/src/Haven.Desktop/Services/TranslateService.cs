@@ -123,13 +123,33 @@ public sealed class TranslateService(IOllamaClient models, UserPreferencesServic
     public static TranslateResult ParseResponse(string response)
     {
         if (string.IsNullOrWhiteSpace(response)) throw new InvalidOperationException("The selected model returned an empty translation.");
-        var start = response.IndexOf('{');
-        var end = response.LastIndexOf('}');
-        if (start < 0 || end <= start) throw new InvalidOperationException("The selected model returned an invalid translation response.");
-        try
+        JsonException? malformedJson = null;
+        var foundValidObject = false;
+        var skipNestedObjectsBefore = 0;
+        foreach (var candidate in FindJsonObjects(response))
         {
-            var payload = JsonSerializer.Deserialize<TranslationPayload>(response[start..(end + 1)], new JsonSerializerOptions(JsonSerializerDefaults.Web));
-            if (payload is null || string.IsNullOrWhiteSpace(payload.TranslatedText)) throw new InvalidOperationException("The selected model returned no translated text.");
+            if (candidate.Start < skipNestedObjectsBefore) continue;
+            TranslationPayload? payload;
+            try
+            {
+                payload = JsonSerializer.Deserialize<TranslationPayload>(
+                    response[candidate.Start..candidate.EndExclusive],
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                foundValidObject = true;
+            }
+            catch (JsonException ex)
+            {
+                malformedJson ??= ex;
+                continue;
+            }
+
+            if (payload is null || string.IsNullOrWhiteSpace(payload.TranslatedText))
+            {
+                // Do not mistake a nested property in a valid non-translation object for a translation result.
+                skipNestedObjectsBefore = candidate.EndExclusive;
+                continue;
+            }
+
             return new TranslateResult(
                 payload.TranslatedText,
                 string.IsNullOrWhiteSpace(payload.DetectedSourceLanguage) ? "Unknown" : payload.DetectedSourceLanguage.Trim(),
@@ -137,7 +157,38 @@ public sealed class TranslateService(IOllamaClient models, UserPreferencesServic
                 payload.Ambiguities?.Where(item => !string.IsNullOrWhiteSpace(item)).Select(item => item.Trim()).Take(8).ToArray() ?? [],
                 string.Empty);
         }
-        catch (JsonException ex) { throw new InvalidOperationException("The selected model returned malformed translation data.", ex); }
+
+        if (foundValidObject) throw new InvalidOperationException("The selected model returned no translated text.");
+        if (malformedJson is not null)
+            throw new InvalidOperationException("The selected model returned malformed translation data.", malformedJson);
+        throw new InvalidOperationException("The selected model returned an invalid translation response.");
+    }
+
+    private static IReadOnlyList<JsonObjectRange> FindJsonObjects(string response)
+    {
+        var openings = new Stack<int>();
+        var objects = new List<JsonObjectRange>();
+        var insideString = false;
+        var escaped = false;
+        for (var index = 0; index < response.Length; index++)
+        {
+            var character = response[index];
+            if (insideString)
+            {
+                if (escaped) escaped = false;
+                else if (character == '\\') escaped = true;
+                else if (character == '"') insideString = false;
+                continue;
+            }
+
+            if (character == '"') insideString = true;
+            else if (character == '{') openings.Push(index);
+            else if (character == '}' && openings.TryPop(out var start))
+                objects.Add(new JsonObjectRange(start, index + 1));
+        }
+
+        objects.Sort(static (left, right) => left.Start.CompareTo(right.Start));
+        return objects;
     }
 
     private static string ProcessingNotice(string metadataJson)
@@ -150,6 +201,8 @@ public sealed class TranslateService(IOllamaClient models, UserPreferencesServic
         }
         catch (JsonException) { return string.Empty; }
     }
+
+    private readonly record struct JsonObjectRange(int Start, int EndExclusive);
 
     private sealed record TranslationPayload(string? TranslatedText, string? DetectedSourceLanguage, string? DetectedSourceLanguageCode, IReadOnlyList<string>? Ambiguities);
 }

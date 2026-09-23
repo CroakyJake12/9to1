@@ -15,4 +15,23 @@ public sealed class AutomationGraphTestRunnerTests
         Assert.True(result.Succeeded); Assert.Equal(AutomationGraphRunMode.Test, result.Mode);
         var trace = Assert.Single(result.Trace); Assert.Equal(AutomationGraphTraceStatus.Succeeded, trace.Status); Assert.Contains("would execute", trace.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task Test_graph_forwards_an_action_output_to_the_next_emit_node()
+    {
+        var source = new AutomationGraphNodeDefinition(Guid.NewGuid(), "Action", null, null,
+            new Dictionary<string, string> { ["action"] = "emit", ["value"] = "ready" });
+        var forward = new AutomationGraphNodeDefinition(Guid.NewGuid(), "Action", null, null,
+            new Dictionary<string, string> { ["action"] = "emit", ["value"] = "{{input}}" });
+        var graph = new AutomationGraphDefinition(AutomationGraphDefinition.CurrentVersion, [source, forward], [new(source.Id, forward.Id)]);
+
+        var result = await AutomationGraphTestRunner.RunAsync(graph, CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(AutomationGraphRunMode.Test, result.Mode);
+        var forwardTrace = Assert.Single(result.Trace, item => item.NodeId == forward.Id);
+        Assert.Equal("ready", forwardTrace.Output);
+        Assert.Equal("ready", forwardTrace.Inputs![source.Id]);
+        Assert.Contains("forward", forwardTrace.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

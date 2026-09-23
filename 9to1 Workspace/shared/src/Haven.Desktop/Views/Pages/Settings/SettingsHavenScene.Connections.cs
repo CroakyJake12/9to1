@@ -1,3 +1,4 @@
+using Haven.Application;
 using Haven.Core;
 using Haven.UI;
 using Haven.UI.Components;
@@ -53,6 +54,11 @@ internal sealed record McpConnectionSnapshot(
 
 internal sealed partial class SettingsHavenScene
 {
+    private sealed record McpAccessReviewDetails(string Destination, string Authentication, string? ValidationError)
+    {
+        public bool CanContinue => string.IsNullOrWhiteSpace(ValidationError);
+    }
+
     private Container _servicesHost = null!;
     private Container _providersHost = null!;
     private Container _mcpSuggestionsHost = null!;
@@ -192,14 +198,32 @@ internal sealed partial class SettingsHavenScene
             var connect = new HavenButton
             {
                 Name = $"Settings.Integrations.Mcp.Suggest.{suggestion.Key}.Connect",
-                Content = suggestion.ActionLabel,
+                Content = "Review access",
                 Variant = ButtonVariant.Primary
             };
-            connect.Accessibility.AccessibleName = suggestion.ActionLabel;
-            connect.Invoked += async (_, _) =>
+            connect.Accessibility.AccessibleName = $"Review access before connecting to {suggestion.DisplayName}";
+            Container? review = null;
+
+            void CloseReview()
             {
-                if (ConnectSuggestedMcpRequested is { } handler)
-                    await handler(suggestion.Key, name.Text, endpoint.Text);
+                if (review is null) return;
+                card.Remove(review);
+                review = null;
+                name.SetValue(HavenProperties.Enabled, true);
+                endpoint.SetValue(HavenProperties.Enabled, true);
+                connect.SetValue(HavenProperties.Enabled, true);
+            }
+
+            connect.Invoked += (_, _) =>
+            {
+                if (review is not null) return;
+                var reviewedName = name.Text;
+                var reviewedEndpoint = endpoint.Text.Trim();
+                name.SetValue(HavenProperties.Enabled, false);
+                endpoint.SetValue(HavenProperties.Enabled, false);
+                connect.SetValue(HavenProperties.Enabled, false);
+                review = BuildMcpAccessReview(suggestion, reviewedName, reviewedEndpoint, CloseReview);
+                card.Add(review);
             };
             actions.Add(connect);
             card.Add(actions);
@@ -327,6 +351,88 @@ internal sealed partial class SettingsHavenScene
 
         confirmation.Add(confirmActions);
         return confirmation;
+    }
+
+    private Container BuildMcpAccessReview(McpSuggestionSnapshot suggestion, string name, string endpoint, Action closeReview)
+    {
+        var details = DescribeMcpAccessReview(suggestion.Key, endpoint);
+        var review = ConnectionCard($"Settings.Integrations.Mcp.Suggest.{suggestion.Key}.Review");
+        review.Add(Heading(null, "Review connection access", 15));
+        review.Add(Muted(null, $"Destination host and port: {details.Destination}"));
+        review.Add(Muted(null, details.Authentication));
+        review.Add(Muted(null,
+            "This preview runs local checks and does not contact the proposed endpoint. Continuing contacts it to confirm server identity and discover its tools."));
+        review.Add(Muted(null,
+            "The exact tool list is provided by the server during connection. Afterward, tool inputs are sent only when an attached tool is invoked."));
+        review.Add(Muted(null,
+            "Haven's existing permission checks still apply: tools that change external state require permission, and destructive tools require one-action approval or Full Access."));
+        if (!string.IsNullOrWhiteSpace(details.ValidationError))
+            review.Add(Muted($"Settings.Integrations.Mcp.Suggest.{suggestion.Key}.Review.Validation", details.ValidationError));
+
+        var actions = ActionRow();
+        var confirm = new HavenButton
+        {
+            Name = $"Settings.Integrations.Mcp.Suggest.{suggestion.Key}.Review.Continue",
+            Content = suggestion.ActionLabel,
+            Variant = ButtonVariant.Primary
+        };
+        confirm.Accessibility.AccessibleName = $"Continue connecting to {suggestion.DisplayName}";
+        confirm.SetValue(HavenProperties.Enabled, details.CanContinue);
+        var cancel = new HavenButton
+        {
+            Name = $"Settings.Integrations.Mcp.Suggest.{suggestion.Key}.Review.Cancel",
+            Content = "Cancel",
+            Variant = ButtonVariant.Ghost
+        };
+        cancel.Accessibility.AccessibleName = $"Cancel {suggestion.DisplayName} connection review";
+        cancel.Invoked += (_, _) => closeReview();
+        confirm.Invoked += async (_, _) =>
+        {
+            if (!details.CanContinue || ConnectSuggestedMcpRequested is not { } handler) return;
+            confirm.SetValue(HavenProperties.Enabled, false);
+            cancel.SetValue(HavenProperties.Enabled, false);
+            try { await handler(suggestion.Key, name, endpoint); }
+            finally { closeReview(); }
+        };
+        actions.Add(confirm);
+        actions.Add(cancel);
+        review.Add(actions);
+        return review;
+    }
+
+    private static McpAccessReviewDetails DescribeMcpAccessReview(string key, string endpointText)
+    {
+        var isUefn = string.Equals(key, "uefn", StringComparison.OrdinalIgnoreCase);
+        Uri? endpoint = null;
+        if (Uri.TryCreate(endpointText, UriKind.Absolute, out var parsedEndpoint)) endpoint = parsedEndpoint;
+        var endpointScheme = endpoint?.Scheme;
+        var isHttpEndpoint = string.Equals(endpointScheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(endpointScheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        var isLoopback = isHttpEndpoint && endpoint?.IsLoopback == true;
+        var useOAuth = !isUefn && isHttpEndpoint && !isLoopback;
+        var configuration = isUefn
+            ? McpConnectionConfiguration.UefnDefault with { Endpoint = endpointText }
+            : new McpConnectionConfiguration(McpTransportKind.StreamableHttp, endpointText, TimeoutSeconds: 30, UseOAuth: useOAuth);
+
+        string? validationError = null;
+        try { ExternalConnectionRegistryService.ValidateMcpConfiguration(configuration, requireLoopback: isUefn); }
+        catch (Exception exception) when (exception is InvalidOperationException or ArgumentOutOfRangeException)
+        {
+            validationError = exception.Message;
+        }
+
+        var destination = isHttpEndpoint
+            ? endpoint?.GetComponents(UriComponents.HostAndPort, UriFormat.UriEscaped) ?? "Invalid endpoint"
+            : "Invalid endpoint";
+        var authentication = !isHttpEndpoint
+            ? "Sign-in: unavailable until an absolute HTTP or HTTPS endpoint is entered."
+            : isUefn
+                ? "Sign-in: none. The UEFN preset is restricted to a loopback endpoint on this device."
+                : isLoopback
+                    ? "Sign-in: none. This loopback connection stays on this device."
+                    : "Sign-in: OAuth 2.1 in your browser. Haven stores returned credentials in its protected provider store.";
+
+        return new McpAccessReviewDetails(destination, authentication, validationError);
     }
 
     private void RebuildServices(IReadOnlyList<ServiceConnectionSnapshot> services)

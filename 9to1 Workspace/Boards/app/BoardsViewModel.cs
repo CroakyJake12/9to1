@@ -36,6 +36,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             Set("StatusText", status);
             Set("SaveStateText", MapSaveState(status));
         };
+        ReselectDefaults();
         PushDocumentToBindings();
         Set("StatusText", _session.Status);
         Set("SaveStateText", MapSaveState(_session.Status));
@@ -47,6 +48,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             return "Saved";
         if (status.StartsWith("Saved", StringComparison.OrdinalIgnoreCase))
             return status;
+        if (status.Equals("Loaded locally", StringComparison.OrdinalIgnoreCase))
+            return "Loaded locally";
         if (status.Contains("fail", StringComparison.OrdinalIgnoreCase))
             return "Save failed";
         if (status.Contains("Saving", StringComparison.OrdinalIgnoreCase))
@@ -127,13 +130,10 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         switch (command)
         {
             case "NewBoard":
-                _session.Document.Title = "Untitled board";
-                _session.Document.Sections.Clear();
-                _session.Document.Sections.Add(InMemoryRichBoardSession.CreateDefault().Sections[0]);
-                ReselectDefaults();
-                PushDocumentToBindings();
-                _session.MarkDirty();
-                RequestRebuild();
+                NewBoardRequested?.Invoke();
+                break;
+            case "NewMenu":
+                NewMenuRequested?.Invoke();
                 break;
             case "OpenBoard":
                 await OpenBoardDispatchAsync(cancellationToken);
@@ -166,6 +166,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 _session.Document.Sections.Add(section);
                 _selectedSectionId = section.Id;
                 _selectedPageId = section.Pages[0].Id;
+                SelectExistingBlock(section.Pages[0]);
+                SyncSelectedInkView();
                 PushDocumentToBindings();
                 _session.MarkDirty();
                 RequestRebuild();
@@ -174,6 +176,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 var page = new RichBoardPage { Title = $"Page {CurrentSection().Pages.Count + 1}" };
                 CurrentSection().Pages.Add(page);
                 _selectedPageId = page.Id;
+                SelectExistingBlock(page);
+                SyncSelectedInkView();
                 PushDocumentToBindings();
                 _session.MarkDirty();
                 RequestRebuild();
@@ -262,6 +266,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 {
                     _selectedSectionId = _session.Document.Sections[0].Id;
                     _selectedPageId = CurrentSection().Pages.Count > 0 ? CurrentSection().Pages[0].Id : _selectedPageId;
+                    SelectExistingBlock(CurrentPage());
+                    SyncSelectedInkView();
                     PushDocumentToBindings();
                     RequestRebuild();
                 }
@@ -271,6 +277,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 {
                     _selectedSectionId = _session.Document.Sections[1].Id;
                     _selectedPageId = CurrentSection().Pages.Count > 0 ? CurrentSection().Pages[0].Id : _selectedPageId;
+                    SelectExistingBlock(CurrentPage());
+                    SyncSelectedInkView();
                     PushDocumentToBindings();
                     RequestRebuild();
                 }
@@ -279,6 +287,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 if (CurrentSection().Pages.Count > 0)
                 {
                     _selectedPageId = CurrentSection().Pages[0].Id;
+                    SelectExistingBlock(CurrentPage());
+                    SyncSelectedInkView();
                     PushDocumentToBindings();
                     RequestRebuild();
                 }
@@ -287,6 +297,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
                 if (CurrentSection().Pages.Count > 1)
                 {
                     _selectedPageId = CurrentSection().Pages[1].Id;
+                    SelectExistingBlock(CurrentPage());
+                    SyncSelectedInkView();
                     PushDocumentToBindings();
                     RequestRebuild();
                 }
@@ -402,18 +414,18 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     {
         if (_session is ContractSessionAdapter adapter)
         {
-            _ = CommitSampleInkAsync(adapter);
+            _ = CommitSampleInkAsync(adapter, SelectedPageId);
             return;
         }
-        _ = CommitInkStrokeAsync([(x, y), (x + 24, y + 16)]);
+        _ = CommitInkStrokeAsync(SelectedPageId, [(x, y), (x + 24, y + 16)]);
     }
 
     /// <summary>Commits one pointer-drawn stroke as real persisted ink data.</summary>
-    public async ValueTask CommitInkStrokeAsync(IReadOnlyList<(double X, double Y)> points)
+    public async ValueTask CommitInkStrokeAsync(string pageId, IReadOnlyList<(double X, double Y)> points)
     {
         if (_session is ContractSessionAdapter adapter)
         {
-            await adapter.CommitInkStrokeAsync(points);
+            await adapter.CommitInkStrokeAsync(pageId, points);
             PushDocumentToBindings();
             RequestRebuild();
             return;
@@ -423,12 +435,13 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
 
     /// <summary>Commits one pressure-aware stroke with the selected tool/width/color.</summary>
     public async ValueTask CommitInkStrokeAsync(
+        string pageId,
         IReadOnlyList<(double X, double Y, double Pressure)> points,
         double width, string color, string tool)
     {
         if (_session is ContractSessionAdapter adapter)
         {
-            await adapter.CommitInkStrokeAsync(points, width, color, tool);
+            await adapter.CommitInkStrokeAsync(pageId, points, width, color, tool);
             PushDocumentToBindings();
             RequestRebuild();
             return;
@@ -437,10 +450,13 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     }
 
     public async ValueTask ClearInkAsync(CancellationToken cancellationToken = default)
+        => await ClearInkAsync(SelectedPageId, cancellationToken);
+
+    public async ValueTask ClearInkAsync(string pageId, CancellationToken cancellationToken = default)
     {
         if (_session is ContractSessionAdapter adapter)
         {
-            await adapter.ClearInkAsync(cancellationToken);
+            await adapter.ClearInkAsync(pageId, cancellationToken);
             PushDocumentToBindings();
             RequestRebuild();
             Set("StatusText", _session.Status);
@@ -449,9 +465,9 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         RequestRebuild();
     }
 
-    private async Task CommitSampleInkAsync(ContractSessionAdapter adapter)
+    private async Task CommitSampleInkAsync(ContractSessionAdapter adapter, string pageId)
     {
-        await adapter.AddSampleInkStrokeAsync();
+        await adapter.AddSampleInkStrokeAsync(pageId);
         PushDocumentToBindings();
         RequestRebuild();
     }
@@ -700,6 +716,12 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     /// <summary>Raised when the File menu should open (host builds it).</summary>
     public event Action? FileMenuRequested;
 
+    /// <summary>Raised when the host should create a separate local board document.</summary>
+    public event Action? NewBoardRequested;
+
+    /// <summary>Raised when the host should open the in-page + New menu.</summary>
+    public event Action? NewMenuRequested;
+
     /// <summary>Raised when the overflow menu should open (host builds it).</summary>
     public event Action? OverflowRequested;
 
@@ -730,10 +752,11 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         if (section is null)
             return;
         _selectedSectionId = section.Id;
-        _selectedPageId = section.Pages.FirstOrDefault()?.Id ?? _selectedPageId;
-        var para = section.Pages.FirstOrDefault()?.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
-        if (para is not null)
-            _selectedBlockId = para.Id;
+        var page = section.Pages.FirstOrDefault();
+        _selectedPageId = page?.Id ?? _selectedPageId;
+        if (page is not null)
+            SelectExistingBlock(page);
+        SyncSelectedInkView();
         PushDocumentToBindings();
         NavRebuildRequested?.Invoke();
         SelectionChanged?.Invoke();
@@ -748,9 +771,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             return;
         _selectedSectionId = section.Id;
         _selectedPageId = page.Id;
-        var para = page.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
-        if (para is not null)
-            _selectedBlockId = para.Id;
+        SelectExistingBlock(page);
+        SyncSelectedInkView();
         PushDocumentToBindings();
         NavRebuildRequested?.Invoke();
         SelectionChanged?.Invoke();
@@ -859,7 +881,10 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             RequestRebuild();
         }
         if (freshId is not null)
+        {
             _selectedSectionId = freshId;
+            ReselectAfterNavChange();
+        }
         NavRebuildRequested?.Invoke();
     }
 
@@ -885,7 +910,10 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             RequestRebuild();
         }
         if (freshId is not null)
+        {
             _selectedPageId = freshId;
+            ReselectAfterNavChange();
+        }
         NavRebuildRequested?.Invoke();
     }
 
@@ -1010,18 +1038,15 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         var section = _session.Document.Sections.First(s => s.Id == _selectedSectionId);
         if (!section.Pages.Any(p => p.Id == _selectedPageId))
             _selectedPageId = section.Pages.FirstOrDefault()?.Id ?? _selectedPageId;
+        SelectExistingBlock(CurrentPage());
+        SyncSelectedInkView();
     }
 
     private RichBoardBlock? SelectedBlockOrNull()
     {
-        try
-        {
-            return SelectedBlock();
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
+        var page = CurrentPage();
+        return page.Blocks.FirstOrDefault(b => b.Id == _selectedBlockId)
+            ?? page.Blocks.FirstOrDefault();
     }
 
     private static RichBoardSection CloneSection(RichBoardSection source)
@@ -1100,7 +1125,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
 
     // ----- Block operations used by BlockRenderer -----
 
-    public async Task InsertKindAsync(string kindTag)
+    public async Task InsertKindAsync(string kindTag, string? insertAfterBlockId = null)
     {
         // Drawing is a page capability, not a hidden placeholder block. The
         // renderer provides its surface only while drawing is active or real
@@ -1110,49 +1135,104 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             await ActivateDrawingAsync();
             return;
         }
-        if (kindTag.StartsWith("style:", StringComparison.Ordinal))
+        if (string.Equals(kindTag, "freeform", StringComparison.OrdinalIgnoreCase))
         {
-            await ApplyStyleToSelectedAsync(kindTag["style:".Length..]);
+            await AddCanvasBoxAsync();
             return;
         }
-        var page = CurrentPage();
-        RichBoardBlock block = kindTag switch
+        string? attachmentPath = null;
+        if (string.Equals(kindTag, "attachment", StringComparison.OrdinalIgnoreCase))
         {
-            "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
-            "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
-            "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },
-            "numbered" => new RichBoardBlock { Kind = "numbered", Text = "New item" },
-            "table" => new RichBoardBlock
+            if (PickFileAsync is null)
             {
-                Kind = "table", Text = "New table", TableRows = 2, TableCols = 2,
-                TableCells = new Dictionary<string, string>(StringComparer.Ordinal)
+                Set("StatusText", "Attachment pick needs the desktop host");
+                return;
+            }
+            var targetSectionId = SelectedSectionId;
+            var targetPageId = SelectedPageId;
+            attachmentPath = await PickFileAsync("attach");
+            if (SelectedSectionId != targetSectionId || SelectedPageId != targetPageId)
+            {
+                Set("StatusText", "The page changed while choosing an attachment. Choose a note and try again.");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(attachmentPath) || !File.Exists(attachmentPath))
+                return;
+        }
+        RichStyleView? insertionStyle = null;
+        if (kindTag.StartsWith("style:", StringComparison.Ordinal))
+        {
+            var styleId = kindTag["style:".Length..];
+            insertionStyle = StyleList.FirstOrDefault(candidate => candidate.Id == styleId);
+            if (insertionStyle is null)
+            {
+                Set("StatusText", $"Style '{styleId}' was not found");
+                return;
+            }
+            if (insertAfterBlockId is null)
+            {
+                await ApplyStyleToSelectedAsync(styleId);
+                return;
+            }
+        }
+        var page = CurrentPage();
+        RichBoardBlock block;
+        if (insertionStyle is not null)
+        {
+            block = new RichBoardBlock
+            {
+                Kind = insertionStyle.BlockKind == "heading" ? "heading" : "paragraph",
+                Text = insertionStyle.BlockKind == "heading" ? "New heading" : "New paragraph",
+                StyleId = insertionStyle.Id,
+            };
+        }
+        else
+        {
+            block = kindTag switch
+            {
+                "paragraph" => new RichBoardBlock { Kind = "paragraph", Text = "New paragraph" },
+                "heading" => new RichBoardBlock { Kind = "heading", Text = "New heading" },
+                "checklist" => new RichBoardBlock { Kind = "checklist", Text = "New item" },
+                "bulleted" => new RichBoardBlock { Kind = "bulleted", Text = "New item" },
+                "numbered" => new RichBoardBlock { Kind = "numbered", Text = "New item" },
+                "table" => new RichBoardBlock
                 {
-                    ["0,0"] = string.Empty, ["0,1"] = string.Empty,
-                    ["1,0"] = string.Empty, ["1,1"] = string.Empty,
+                    Kind = "table", Text = "New table", TableRows = 2, TableCols = 2,
+                    TableCells = new Dictionary<string, string>(StringComparer.Ordinal)
+                    {
+                        ["0,0"] = string.Empty, ["0,1"] = string.Empty,
+                        ["1,0"] = string.Empty, ["1,1"] = string.Empty,
+                    },
                 },
-            },
-            "image" => new RichBoardBlock
-            {
-                Kind = "image", Text = "image",
-                Image = new RichImageView { DisplayName = "image (choose a file)", MediaType = "image/png" },
-            },
-            "divider" => new RichBoardBlock
-            {
-                Kind = "divider",
-                Divider = new RichDividerView { Thickness = 1, LineStyle = "solid", Color = "#FF5F6368" },
-            },
-            "graph" => new RichBoardBlock
-            {
-                Kind = "graph",
-                Graph = new RichGraphView
+                "image" => new RichBoardBlock
                 {
-                    Expressions = [new RichGraphExpressionView { Text = "y = x" }],
-                    XMin = -10, XMax = 10, YMin = -10, YMax = 10,
+                    Kind = "image", Text = "image",
+                    Image = new RichImageView { DisplayName = "image (choose a file)", MediaType = "image/png" },
                 },
-            },
-            _ => new RichBoardBlock { Kind = "paragraph", Text = "New block" },
-        };
-        var selectedIndex = page.Blocks.FindIndex(item => item.Id == _selectedBlockId);
+                "divider" => new RichBoardBlock
+                {
+                    Kind = "divider",
+                    Divider = new RichDividerView { Thickness = 1, LineStyle = "solid", Color = "#FF5F6368" },
+                },
+                "graph" => new RichBoardBlock
+                {
+                    Kind = "graph",
+                    Graph = new RichGraphView
+                    {
+                        Expressions = [new RichGraphExpressionView { Text = "y = x" }],
+                        XMin = -10, XMax = 10, YMin = -10, YMax = 10,
+                    },
+                },
+                _ => new RichBoardBlock { Kind = "paragraph", Text = "New block" },
+            };
+        }
+        var insertionAnchor = insertAfterBlockId ?? _selectedBlockId;
+        var selectedIndex = page.Blocks.FindIndex(item => item.Id == insertionAnchor);
+        if (insertAfterBlockId is not null && selectedIndex < 0)
+        {
+            Set("StatusText", "The insertion point is no longer on this page. Choose a note and try again.");
+            return;
+        }
         if (selectedIndex >= 0)
             page.Blocks.Insert(selectedIndex + 1, block);
         else
@@ -1166,9 +1246,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         if (kindTag == "image")
             await ReplaceImageAsync(block.Id);
         else if (kindTag == "attachment")
-            await AttachFileAsync(block.Id);
-        else if (kindTag == "freeform")
-            await AddCanvasBoxAsync();
+            await AttachFileAsync(block.Id, attachmentPath);
     }
 
     public async Task ApplyStyleToSelectedAsync(string styleId)
@@ -1500,17 +1578,17 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         RequestRebuild();
     }
 
-    public async Task AttachFileAsync(string blockId)
+    public async Task AttachFileAsync(string blockId, string? pickedPath = null)
     {
         var block = FindBlock(blockId);
         if (block is null)
             return;
-        if (PickFileAsync is null)
+        if (pickedPath is null && PickFileAsync is null)
         {
             Set("StatusText", "Attachment pick needs the desktop host");
             return;
         }
-        var path = await PickFileAsync("attach");
+        var path = pickedPath ?? await PickFileAsync!("attach");
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return;
         if (_session is ContractSessionAdapter adapter)
@@ -1657,7 +1735,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
     {
         InkZoom = Math.Clamp(zoom, 0.25, 8);
         if (_session is ContractSessionAdapter adapter)
-            await adapter.SetInkViewAsync(InkPanX, InkPanY, InkZoom);
+            await adapter.SetInkViewAsync(SelectedPageId, InkPanX, InkPanY, InkZoom);
         Set("StatusText", $"Ink zoom: {InkZoom:0.##}x");
     }
 
@@ -1666,7 +1744,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         InkPanX += dx;
         InkPanY += dy;
         if (_session is ContractSessionAdapter adapter)
-            await adapter.SetInkViewAsync(InkPanX, InkPanY, InkZoom);
+            await adapter.SetInkViewAsync(SelectedPageId, InkPanX, InkPanY, InkZoom);
         Set("StatusText", $"Ink pan: {InkPanX:0}, {InkPanY:0}");
     }
 
@@ -1676,7 +1754,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         InkPanX = 0;
         InkPanY = 0;
         if (_session is ContractSessionAdapter adapter)
-            await adapter.SetInkViewAsync(0, 0, 1);
+            await adapter.SetInkViewAsync(SelectedPageId, 0, 0, 1);
         RequestRebuild();
     }
 
@@ -1686,7 +1764,7 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         {
             try
             {
-                return await adapter.GetCanvasObjectsAsync();
+                return await adapter.GetCanvasObjectsAsync(SelectedPageId);
             }
             catch (Exception error)
             {
@@ -1697,12 +1775,15 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         return [];
     }
 
-    public Task<IReadOnlyList<InkStrokeView>> GetInkStrokesAsync()
+    public Task<IReadOnlyList<InkStrokeView>> GetInkStrokesAsync(string pageId)
     {
         if (_session is ContractSessionAdapter adapter)
-            return adapter.GetInkStrokesAsync();
+            return adapter.GetInkStrokesAsync(pageId);
         return Task.FromResult<IReadOnlyList<InkStrokeView>>([]);
     }
+
+    public void ReportInkCommitFailure(string message)
+        => Set("StatusText", "Ink could not be saved: " + FirstLine(message));
 
     public bool SupportsFreeform => _session is ContractSessionAdapter;
 
@@ -1713,21 +1794,21 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             Set("StatusText", "Freeform canvas needs the contract session");
             return;
         }
-        await adapter.AddCanvasObjectAsync("Text", "New note", 40, 40);
+        await adapter.AddCanvasObjectAsync(SelectedPageId, "Text", "New note", 40, 40);
         RefreshAfterEdit();
     }
 
     public async Task MoveCanvasBoxAsync(string objectId, double x, double y)
     {
         if (_session is ContractSessionAdapter adapter)
-            await adapter.MoveCanvasObjectAsync(objectId, x, y);
+            await adapter.MoveCanvasObjectAsync(SelectedPageId, objectId, x, y);
         RefreshAfterEdit();
     }
 
     public async Task RemoveCanvasBoxAsync(string objectId)
     {
         if (_session is ContractSessionAdapter adapter)
-            await adapter.RemoveCanvasObjectAsync(objectId);
+            await adapter.RemoveCanvasObjectAsync(SelectedPageId, objectId);
         RefreshAfterEdit();
     }
 
@@ -2010,7 +2091,8 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         var para = page.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
         var checks = page.Blocks.Where(b => b.Kind == "checklist").ToList();
         var table = page.Blocks.FirstOrDefault(b => b.Kind == "table");
-        var selected = page.Blocks.FirstOrDefault(b => b.Id == _selectedBlockId) ?? para ?? heading;
+        var selected = page.Blocks.FirstOrDefault(b => b.Id == _selectedBlockId)
+            ?? para ?? heading ?? page.Blocks.FirstOrDefault();
 
         if (selected is not null)
             _selectedBlockId = selected.Id;
@@ -2063,10 +2145,21 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
             ?? throw new InvalidOperationException("Section has no pages.");
     }
 
-    private RichBoardBlock SelectedBlock() =>
-        CurrentPage().Blocks.FirstOrDefault(b => b.Id == _selectedBlockId)
-        ?? CurrentPage().Blocks.FirstOrDefault()
-        ?? throw new InvalidOperationException("Page has no blocks.");
+    private RichBoardBlock SelectedBlock()
+    {
+        var page = CurrentPage();
+        var selected = page.Blocks.FirstOrDefault(b => b.Id == _selectedBlockId)
+            ?? page.Blocks.FirstOrDefault();
+        if (selected is not null)
+            return selected;
+
+        // New notes pages are intentionally empty. Formatting one should begin
+        // an editable paragraph rather than throwing on the first toolbar action.
+        selected = new RichBoardBlock { Kind = "paragraph" };
+        page.Blocks.Add(selected);
+        _selectedBlockId = selected.Id;
+        return selected;
+    }
 
     private RichBoardBlock FindOrCreateBlock(string kind)
     {
@@ -2108,10 +2201,11 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         if (firstSection is null)
             return;
         _selectedSectionId = firstSection.Id;
-        _selectedPageId = firstSection.Pages.FirstOrDefault()?.Id ?? _selectedPageId;
-        var para = firstSection.Pages.FirstOrDefault()?.Blocks.FirstOrDefault(b => b.Kind == "paragraph");
-        if (para is not null)
-            _selectedBlockId = para.Id;
+        var page = firstSection.Pages.FirstOrDefault();
+        _selectedPageId = page?.Id ?? _selectedPageId;
+        if (page is not null)
+            SelectExistingBlock(page);
+        SyncSelectedInkView();
     }
 
     private void ReselectAfterUndo()
@@ -2126,8 +2220,26 @@ public sealed class BoardsViewModel : ICuiBindingContext, ICuiActionDispatcher, 
         if (page is null)
             return;
         _selectedPageId = page.Id;
-        if (page.Blocks.All(b => b.Id != _selectedBlockId))
-            _selectedBlockId = page.Blocks.FirstOrDefault()?.Id ?? _selectedBlockId;
+        SelectExistingBlock(page);
+        SyncSelectedInkView();
+    }
+
+    private void SelectExistingBlock(RichBoardPage page)
+    {
+        var selected = page.Blocks.FirstOrDefault(b => b.Id == _selectedBlockId)
+            ?? page.Blocks.FirstOrDefault(b => b.Kind == "paragraph")
+            ?? page.Blocks.FirstOrDefault();
+        _selectedBlockId = selected?.Id ?? string.Empty;
+    }
+
+    private void SyncSelectedInkView()
+    {
+        var page = _session.Document.Sections
+            .FirstOrDefault(section => section.Id == _selectedSectionId)?.Pages
+            .FirstOrDefault(candidate => candidate.Id == _selectedPageId);
+        InkPanX = page?.InkPanX ?? 0;
+        InkPanY = page?.InkPanY ?? 0;
+        InkZoom = page is null ? 1 : Math.Clamp(page.InkZoom, 0.25, 8);
     }
 
     private static IEnumerable<T> FindControls<T>(Control root) where T : Control

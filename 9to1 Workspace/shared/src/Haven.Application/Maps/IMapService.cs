@@ -62,6 +62,9 @@ public interface ITileSource
 /// <summary>Persisted saved places and recent search queries for Maps, stored locally only.</summary>
 public interface IMapsSavedPlaceStore
 {
+    /// <summary>Data workbook id that opens the same saved places in the Data app.</summary>
+    Guid DataWorkbookId { get; }
+
     /// <summary>Returns saved places, newest first, capped by <see cref="MapsStoreLogic.MaxSavedPlaces"/>.</summary>
     Task<IReadOnlyList<SavedMapPlace>> GetSavedPlacesAsync(CancellationToken cancellationToken);
 

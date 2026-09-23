@@ -177,8 +177,10 @@ internal sealed class OverlayWorkspaceWindow : Window
         if (!IsVisible) Show();
         EnsureVisibleOnAvailableScreen();
         Activate();
-        if (_chatPage is not null) _chatPage.FocusComposer();
-        else GoPage?.FocusComposer();
+        // A newly expanded/collapsed scene retains its previous layout's inclusion
+        // flags until arranged; the input router only focuses included elements.
+        ShellControl.UpdateLayout();
+        ShellControl.FocusElement(ShellScene.ActivationFocusTarget);
     }
 
     public void HideWorkspace()

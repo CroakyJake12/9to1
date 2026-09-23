@@ -28,6 +28,31 @@ public class CuiToAvaloniaPipelineTests
     }
 
     [Fact]
+    public void Authored_component_ids_remain_named_and_automatable_in_the_control_tree()
+    {
+        var cui = """
+            <Cui id="test.identity" version="1">
+              <StackPanel id="home-root">
+                <Button id="nav-home" content="Home" />
+                <Button id="nav-settings" automation-id="settings-accessibility-id" content="Settings" />
+              </StackPanel>
+            </Cui>
+            """;
+
+        var result = CuiHeadlessRenderer.Render(cui, "component-identity.cui");
+
+        Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
+        var root = Assert.IsType<StackPanel>(result.Root);
+        var home = Assert.IsType<Button>(root.Children[0]);
+        var settings = Assert.IsType<Button>(root.Children[1]);
+        Assert.Equal("home-root", root.Name);
+        Assert.Equal("nav-home", home.Name);
+        Assert.Equal("nav-home", Avalonia.Automation.AutomationProperties.GetAutomationId(home));
+        Assert.Equal("nav-settings", settings.Name);
+        Assert.Equal("settings-accessibility-id", Avalonia.Automation.AutomationProperties.GetAutomationId(settings));
+    }
+
+    [Fact]
     public void Nested_layout_produces_correct_control_tree()
     {
         var cui = """
@@ -82,6 +107,28 @@ public class CuiToAvaloniaPipelineTests
         Assert.NotNull(button);
         Assert.Equal(200, button.Width);
         Assert.Equal(50, button.Height);
+    }
+
+    [Fact]
+    public void Grid_attached_coordinates_do_not_replace_a_nested_grids_definitions()
+    {
+        var cui = """
+            <Cui>
+              <Grid columnDefinitions="120,*" rowDefinitions="Auto,*">
+                <Grid grid-column="1" grid-row="1" columnDefinitions="32,*" rowDefinitions="Auto,*" />
+              </Grid>
+            </Cui>
+            """;
+
+        var result = CuiHeadlessRenderer.Render(cui, "nested-grid-coordinates.cui");
+
+        Assert.True(result.Success, $"Render failed: {string.Join("; ", result.Errors)}");
+        var root = Assert.IsType<Grid>(result.Root);
+        var nested = Assert.IsType<Grid>(root.Children[0]);
+        Assert.Equal(2, nested.ColumnDefinitions.Count);
+        Assert.Equal(2, nested.RowDefinitions.Count);
+        Assert.Equal(1, Grid.GetColumn(nested));
+        Assert.Equal(1, Grid.GetRow(nested));
     }
 
     [Fact]

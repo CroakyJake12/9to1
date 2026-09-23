@@ -50,7 +50,7 @@ public static class BlockRenderer
                 var run = new List<RichBoardBlock>();
                 while (index < blocks.Count && IsListKind(blocks[index].Kind))
                     run.Add(blocks[index++]);
-                host.Children.Add(WithSelection(vm, run[0].Id, BuildChecklistRun(vm, run)));
+                host.Children.Add(WithSelection(vm, run[0].Id, BuildChecklistRun(vm, run), run[^1].Id));
                 continue;
             }
             host.Children.Add(WithSelection(vm, block.Id, BuildBlock(vm, block)));
@@ -86,10 +86,13 @@ public static class BlockRenderer
     }
 
     /// <summary>Subtle selection outline: transparent until selected, then an accent bar.</summary>
-    private static Control WithSelection(BoardsViewModel vm, string selectId, Control inner)    {
+    private static Control WithSelection(
+        BoardsViewModel vm, string selectId, Control inner, string? insertAfterBlockId = null)
+    {
         var selected = string.Equals(vm.SelectedBlockId, selectId, StringComparison.Ordinal);
         var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        var insert = ToolbarBuilder.CreateInsertButton(vm, "Insert a block after this note");
+        var insert = ToolbarBuilder.CreateInsertButton(
+            vm, "Insert a block after this note", insertAfterBlockId ?? selectId);
         insert.Margin = new Thickness(0, 2, 4, 0);
         insert.Opacity = selected ? 1 : 0.65;
         Grid.SetColumn(insert, 0);
@@ -768,6 +771,7 @@ public static class BlockRenderer
         {
             Width = GraphWidth,
             Height = GraphHeight,
+            ClipToBounds = true,
             Background = new SolidColorBrush(Color.Parse("#FFFFFFFF")),
             Margin = new Thickness(0, 4, 0, 0),
         };

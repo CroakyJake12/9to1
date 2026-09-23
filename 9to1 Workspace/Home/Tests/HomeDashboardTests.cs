@@ -1,4 +1,4 @@
-using NineToOne.Cui.Markup;
+using CakeOS.Cui;
 using HavenOS.Home;
 using Xunit;
 
@@ -88,8 +88,8 @@ public sealed class HomeDashboardTests
         await controller.RefreshAsync();
         Assert.Equal("Home.cui", Path.GetFileName(controller.Surface.Document.SourceName));
         Assert.All(
-            new[] { "catalog", "installed", "updates", "settings", "runtime" },
-            id => Assert.Contains(Descendants(controller.Surface.Document.Root), element => element.Attributes.TryGetValue("id", out var value) && value == id));
+            new[] { "home-root", "global-search", "nav-home", "nav-settings", "home-hero", "app-cards", "upcoming-events" },
+            id => Assert.Contains(Descendants(controller.Surface.Document.Components), element => element.Name == id));
         Assert.True(controller.Surface.CanInstallAll);
         Assert.True(controller.Surface.RequestInstallAll());
         Assert.True(controller.Surface.TryDequeueAction(out var action));
@@ -163,11 +163,8 @@ public sealed class HomeDashboardTests
         }
     }
 
-    private static IEnumerable<CuiElement> Descendants(CuiElement root)
+    private static IEnumerable<CuiComponent> Descendants(IReadOnlyList<CuiComponent> roots)
     {
-        yield return root;
-        foreach (var child in root.Children)
-        foreach (var descendant in Descendants(child))
-            yield return descendant;
+        return roots.SelectMany(root => root.DescendantsAndSelf());
     }
 }

@@ -1,25 +1,56 @@
 # CUI Architecture
 
-## Status
+## Current boundary
 
-CUI is **UNFINISHED**. The active foundation is `framework/CUI/src/NineToOne.Cui.Markup.csproj`. It accepts only `.cui` input, requires a `<Cui>` root, and rejects `.axaml` and `.hui` before parsing. `9to1 Workspace/Home/UI/Home.cui` is an authored consumer.
+The active CUI language pipeline is `framework/CUI/Language` plus
+`framework/CUI/Core`. `CuiRichParser` accepts `.cui` only, requires a `Cui`
+root, and rejects legacy `.axaml` and `.hui` inputs. Its document model keeps
+authored root metadata, components, resources, actions, literal attributes,
+bindings, and direct element text so that a later compiler/runtime sees the
+authored surface rather than a lossy convenience tree.
 
-The current library is a markup loader and document tree only. It is not a CUI compiler, renderer, platform host, editor, language service, resource system, or DevTools implementation. Applications must not present legacy HUI controls or Avalonia XAML as CUI.
+`framework/CUI/src/NineToOne.Cui.Markup.csproj` is retained only as a retired
+compatibility shell; it no longer compiles the competing lightweight parser.
+New production code must reference CUI Core and Language directly.
 
-## Avalonia Foundation
+## Runtime status
 
-Existing Linux and Windows legacy hosts use Avalonia packages. This preserves working rendering, input, windowing, text, accessibility, DPI, clipboard, drag/drop, and platform integrations while migration work proceeds. No in-repository Avalonia fork is currently present, so no fork revision, modification set, or rebase strategy can be claimed.
+`framework/CUI/Runtime` lowers the document into native Avalonia controls and
+resolves CUI semantic theme resources. The earlier missing-public-key and
+`MSB4006` build blockers no longer reproduce in the canonical checkout:
+the CUI Runtime Release tests and native Home Release build pass. Native
+Windows interaction and platform/package validation remain unverified.
+The parser's authored component `id` is retained as the native control's
+`Name` and default automation ID; an explicit `automation-id` attribute can
+override only the automation ID. This contract is covered by the CUI Runtime
+suite and a headless test that builds the actual Home host window from its
+canonical `Home.cui`, arranges the route, and checks bound unavailable states.
 
-Before CUI is promoted beyond parser-only status, the repository needs a licensed, vendored or maintained Avalonia-derived source tree with upstream repository, immutable revision, MIT notice, modification log, and rebase process. A CUI compiler must lower native CUI constructs to a renderer-neutral scene contract; CUI must not depend on runtime string parsing as its final rendering mechanism.
+The intended runtime order is:
 
-## Legacy Boundary
+```text
+.cui source -> CUI Language/Core -> CUI Runtime -> native platform host
+                                      |-> DevTools inspection
+                                      |-> semantic global theme resources
+```
 
-HUI, Haven.UI, `.hui`, and `.axaml` still exist in active migration-era code. They are not valid CUI authoring inputs. New CUI work must use `.cui`; conversion from legacy formats is an explicit import task, not silent runtime compatibility.
+## Authoring and legacy boundary
 
-## Required Next Layers
+`9to1 Workspace/Home/UI/Home.cui` is the canonical Home document. Applications
+must not maintain a second demo `.cui` surface for the same product. New CUI
+work uses semantic palette resources and explicit actions/bindings; it does not
+use HUI or AXAML as an input format.
 
-- Schema and compiler diagnostics for components, bindings, resources, styles, templates, accessibility, and actions.
-- Renderer-neutral CUI scene contract backed by the retained Avalonia-derived platform architecture.
-- Linux and Windows CUI hosts with native presentation adapters.
-- CUI DevTools with tree inspection, layout, style, binding, event, accessibility, and rendering diagnostics.
-- A complete HUI and AXAML migration plan that preserves donor material under `reference/` or history documentation.
+Existing HUI and AXAML sources remain legacy donor/host material until their
+individual migration has been rendered and validated. Their presence means a
+full CUI-only claim is currently false.
+
+## Verification required before promotion
+
+- Build the repaired vendor, CUI Runtime, Themes, and each native host.
+- Render the authored CUI surface on Linux and Windows and exercise input,
+  accessibility, layout/DPI, bindings, actions, resources, and theme changes.
+- Demonstrate one persisted global theme setting across Home and every migrated
+  surface.
+- Connect DevTools to a live CUI runtime, including tree, style, binding,
+  action, accessibility, and rendering diagnostics.

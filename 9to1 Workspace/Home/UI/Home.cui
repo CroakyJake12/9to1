@@ -1,19 +1,64 @@
-<Cui>
-  <Page id="home" title="Home">
-    <Navigation aria-label="Home sections">
-      <NavigationItem id="catalog" label="Apps" />
-      <NavigationItem id="installed" label="Installed" />
-      <NavigationItem id="updates" label="Updates" />
-      <NavigationItem id="settings" label="Settings" />
-      <NavigationItem id="runtime" label="Local models and voice" />
-    </Navigation>
-    <Section id="catalog" binding="Catalog" />
-    <Section id="installed" binding="InstalledApps" />
-    <Section id="updates" binding="Updates">
-      <Button id="install-all" action="InstallAllUpdates" enabled-binding="CanInstallAll">Install all updates</Button>
-    </Section>
-    <Section id="settings" binding="Settings" />
-    <Section id="runtime" binding="Runtime" />
-    <Status binding="OperationStatus" />
-  </Page>
+<Cui id="home" product="9-1" version="1">
+  <DefaultTheme value="Default">
+    <StackPanel id="home-root" orientation="Vertical" background="{Resource CuiBackgroundBrush}">
+      <StackPanel id="top-bar" orientation="Horizontal" padding="24 16" background="{Resource CuiPanelBrush}">
+        <TextBlock id="brand" text="9-1" font-size="22" font-weight="Bold" foreground="{Resource CuiTextBrush}" margin="0 0 24 0" />
+        <TextBox id="global-search" placeholder-text="Search 9-1" accessible-name="Search 9-1" width="360" margin="0 0 16 0" />
+        <Button id="open-studio" action="OpenStudio" content="Open Studio" margin="0 0 8 0" />
+        <Button id="install-all" action="InstallAllUpdates" content="Install apps" />
+      </StackPanel>
+      <StackPanel id="home-body" orientation="Horizontal" margin="24">
+        <Border id="navigation-rail" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="14" width="176" margin="0 0 20 0">
+          <StackPanel orientation="Vertical">
+            <Button id="nav-home" action="NavigateHome" content="Home" />
+            <Button id="nav-spaces" action="NavigateSpaces" content="Spaces" />
+            <Button id="nav-apps" action="NavigateApps" content="Apps" />
+            <Button id="nav-library" action="NavigateLibrary" content="Library" />
+            <Button id="nav-events" action="NavigateEvents" content="Events" />
+            <Button id="nav-automations" action="NavigateAutomations" content="Automations" />
+            <Button id="nav-discover" action="NavigateDiscover" content="Discover" />
+            <Button id="nav-settings" action="NavigateSettings" content="Settings" />
+          </StackPanel>
+        </Border>
+        <StackPanel id="home-content" orientation="Vertical">
+          <TextBlock id="welcome-heading" text="Welcome to 9-1" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+          <TextBlock id="welcome-copy" text="Your apps, spaces and settings in one place." font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
+          <Border id="home-hero" background="{Resource CuiPanel2Brush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="14" padding="24" margin="0 0 18 0">
+            <StackPanel orientation="Horizontal">
+              <StackPanel orientation="Vertical" width="420">
+                <TextBlock text="Pick up where you left off" font-size="20" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+                <TextBlock text="Open a Space, manage your apps, or review what needs attention." foreground="{Resource CuiTextSoftBrush}" margin="0 8 0 16" />
+                <Button id="open-spaces" action="NavigateSpaces" content="Open Spaces" width="132" />
+              </StackPanel>
+              <StackPanel id="observed-status" orientation="Vertical" margin="24 0 0 0">
+                <TextBlock text="Apps" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+                <TextBlock id="catalog-status" text="{Binding CatalogSummary, fallback=App catalogue is not connected}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 10" />
+                <TextBlock text="Runtime" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+                <TextBlock id="runtime-status" text="{Binding RuntimeSummary, fallback=Runtime status is not connected}" foreground="{Resource CuiTextSoftBrush}" margin="0 4 0 0" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <TextBlock id="operation-status" text="{Binding OperationSummary, fallback=Home services are not connected}" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 18" />
+          <StackPanel id="app-shortcuts" orientation="Vertical">
+            <StackPanel orientation="Horizontal">
+              <TextBlock text="Quick access" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+              <Button id="view-all-apps" action="NavigateApps" content="View all" margin="14 0 0 0" />
+            </StackPanel>
+            <WrapPanel id="app-cards" margin="0 10 0 18">
+              <Button id="shortcut-write" action="OpenWrite" content="Write" width="148" height="58" margin="0 0 10 10" />
+              <Button id="shortcut-browse" action="OpenBrowse" content="Browse" width="148" height="58" margin="0 0 10 10" />
+              <Button id="shortcut-data" action="OpenData" content="Data" width="148" height="58" margin="0 0 10 10" />
+              <Button id="shortcut-boards" action="OpenBoards" content="Boards" width="148" height="58" margin="0 0 10 10" />
+            </WrapPanel>
+          </StackPanel>
+          <StackPanel id="upcoming-events" orientation="Vertical">
+            <TextBlock text="Upcoming events" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+            <Border id="events-card" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="12" padding="14" margin="0 10 0 0">
+              <TextBlock id="events-status" text="{Binding EventsSummary, fallback=No upcoming events are available}" foreground="{Resource CuiTextSoftBrush}" />
+            </Border>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </DefaultTheme>
 </Cui>

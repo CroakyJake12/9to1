@@ -8,6 +8,8 @@ The assigned baseline exposes the stable `motion` application route through the 
 
 This standalone slice therefore adds only an independent `HavenOS Apps/Motion` capability surface. It preserves the route identity `motion` and fails closed: all engine-dependent capabilities remain explicitly unavailable.
 
+The surface supports read-only header inspection for MP4, M4V, MOV, 3GP, WebM, Matroska, and AVI sources. It reports the recognized container and file size; it does not decode or play the media.
+
 The slice does **not** claim or simulate timeline editing, keyframes, rendering, export, media encoding, or persistence. Those capabilities must remain disabled until a real implementation is present and validated.
 
 ## Donor / licence status

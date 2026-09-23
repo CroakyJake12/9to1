@@ -10,6 +10,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Language/CakeOS.Cui.Language.csproj" />
-    <ProjectReference Include="../vendor/Avalonia/CakeOS.Cui.AvaloniaFork.csproj" />
   </ItemGroup>
 </Project>

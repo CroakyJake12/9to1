@@ -478,8 +478,11 @@ public sealed partial class WriteDocumentEditor
         NotesBlockKind.List when block.List is not null => string.Join(Environment.NewLine, block.List.Items.Select(item => item.Text)),
         NotesBlockKind.Table when block.Table is not null => string.Join(Environment.NewLine, block.Table.Rows.SelectMany(row => row.Cells).Select(cell => cell.Text)),
         NotesBlockKind.Equation when block.Equation is not null => block.Equation.Source + " " + block.Equation.AccessibleAlternative,
+        NotesBlockKind.Image or NotesBlockKind.Audio or NotesBlockKind.Video when block.Media is not null => JoinSearchText(EditableText(block), block.Media.OriginalName, block.Media.AltText, block.Media.Caption),
+        NotesBlockKind.Shape when block.VectorShape is not null => JoinSearchText(EditableText(block), block.VectorShape.Name),
         _ => EditableText(block)
     };
+    private static string JoinSearchText(params string?[] values) => string.Join(Environment.NewLine, values.Where(value => !string.IsNullOrWhiteSpace(value)));
     private static void EnsureRuns(NotesBlock block) { if (block.Runs.Count == 0) block.Runs.Add(new NotesTextRun { Text = block.PlainText, Bold = block.Kind == NotesBlockKind.Heading, Italic = block.Kind == NotesBlockKind.Quote, FontFamily = block.Kind == NotesBlockKind.Code ? "Cascadia Mono" : "Montserrat", FontSize = block.Kind == NotesBlockKind.Heading ? 24 : 14 }); }
     private static NotesTextRun RunAt(NotesBlock block, int index) { EnsureRuns(block); return block.Runs[Math.Clamp(index, 0, block.Runs.Count - 1)]; }
     private static int RunIndexAtCaret(NotesBlock block, int caret) { EnsureRuns(block); var offset = 0; for (var index = 0; index < block.Runs.Count; index++) { offset += block.Runs[index].Text.Length; if (caret <= offset) return index; } return block.Runs.Count - 1; }

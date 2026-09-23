@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using CakeOS.Cui.Markup;
+using CakeOS.Cui.Language;
 using NineToOne.Cui.AI;
 using Xunit;
 
@@ -61,10 +61,9 @@ public sealed class AppAiCoordinatorTests
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "AI", "UI", "FloatingAiBar.cui"));
 
-        var document = new CuiMarkupLoader().Load(path);
+        var document = new CuiRichParser().ParseFile(path);
 
-        Assert.Equal("Cui", document.Root.Name);
-        Assert.Contains(document.Root.Children, child => child.Name == "Component");
+        Assert.Contains(document.Components, child => child.Type == "Component");
     }
 
     private sealed class FakeContext : IAppAiContext

@@ -193,6 +193,7 @@ public sealed class SpacesModel
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(scope);
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (scope == SpaceScope.Chat)
             return new(SpacesActionKind.Open, new(FindBuiltIn(SpacesDestinationKind.Chat), null));

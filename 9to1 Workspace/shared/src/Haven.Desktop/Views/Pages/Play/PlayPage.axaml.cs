@@ -288,23 +288,23 @@ public sealed partial class PlayPage : UserControl
     {
         if (_active is null) return;
         var state = _sessions.ReadQuiz(_active);
+        var feedback = FormatQuizFeedback(state);
         ExperienceStatus.Text = state.Completed
             ? $"Finished · {state.Score}/{state.Questions.Count}"
             : $"Question {state.QuestionIndex + 1} of {state.Questions.Count} · {state.Score} correct";
 
         if (state.Completed)
         {
-            ExperienceHost.Content = new StackPanel
+            var completion = new StackPanel
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Spacing = 10,
-                Children =
-                {
-                    new TextBlock { Text = "Quiz complete", FontSize = 24, FontWeight = FontWeight.ExtraBold, HorizontalAlignment = HorizontalAlignment.Center },
-                    new TextBlock { Text = $"Score: {state.Score}/{state.Questions.Count}", FontSize = 18, HorizontalAlignment = HorizontalAlignment.Center },
-                    new TextBlock { Text = "Restart to try the same local question set again.", Classes = { "muted" }, HorizontalAlignment = HorizontalAlignment.Center }
-                }
+                Spacing = 10
             };
+            completion.Children.Add(new TextBlock { Text = "Quiz complete", FontSize = 24, FontWeight = FontWeight.ExtraBold, HorizontalAlignment = HorizontalAlignment.Center });
+            completion.Children.Add(new TextBlock { Text = $"Score: {state.Score}/{state.Questions.Count}", FontSize = 18, HorizontalAlignment = HorizontalAlignment.Center });
+            if (feedback is not null) completion.Children.Add(BuildQuizFeedback(feedback));
+            completion.Children.Add(new TextBlock { Text = "Restart to try the same local question set again.", Classes = { "muted" }, HorizontalAlignment = HorizontalAlignment.Center });
+            ExperienceHost.Content = completion;
             return;
         }
 
@@ -332,18 +332,46 @@ public sealed partial class PlayPage : UserControl
             options.Children.Add(button);
         }
 
-        ExperienceHost.Content = new StackPanel
+        var quizContent = new StackPanel
         {
             MaxWidth = 680,
             HorizontalAlignment = HorizontalAlignment.Center,
-            Spacing = 14,
-            Children =
-            {
-                new TextBlock { Text = question.Prompt, FontSize = 21, FontWeight = FontWeight.ExtraBold, TextWrapping = TextWrapping.Wrap },
-                options,
-                new TextBlock { Text = "Questions and scoring run locally. A future model-backed host can adapt this activity through the same semantic Play events.", Classes = { "muted" }, TextWrapping = TextWrapping.Wrap }
-            }
+            Spacing = 14
         };
+        if (feedback is not null) quizContent.Children.Add(BuildQuizFeedback(feedback));
+        quizContent.Children.Add(new TextBlock { Text = question.Prompt, FontSize = 21, FontWeight = FontWeight.ExtraBold, TextWrapping = TextWrapping.Wrap });
+        quizContent.Children.Add(options);
+        quizContent.Children.Add(new TextBlock { Text = "Questions and scoring run locally. A future model-backed host can adapt this activity through the same semantic Play events.", Classes = { "muted" }, TextWrapping = TextWrapping.Wrap });
+        ExperienceHost.Content = quizContent;
+    }
+
+    internal static string? FormatQuizFeedback(QuizGameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (state.LastAnswerCorrect is not bool correct || state.Questions.Count == 0)
+            return null;
+
+        var answeredIndex = state.Completed ? state.QuestionIndex : state.QuestionIndex - 1;
+        if (answeredIndex < 0 || answeredIndex >= state.Questions.Count)
+            return null;
+
+        var explanation = state.Questions[answeredIndex].Explanation?.Trim() ?? string.Empty;
+        var result = correct ? "Correct." : "Not quite.";
+        return string.IsNullOrWhiteSpace(explanation) ? result : result + " " + explanation;
+    }
+
+    private static TextBlock BuildQuizFeedback(string feedback)
+    {
+        var text = new TextBlock
+        {
+            Name = "QuizFeedback",
+            Text = feedback,
+            FontWeight = FontWeight.SemiBold,
+            TextWrapping = TextWrapping.Wrap,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        AutomationProperties.SetName(text, "Last answer result. " + feedback);
+        return text;
     }
 
     private async Task RestartActiveAsync()

@@ -165,3 +165,14 @@ The following must not be described as proven yet:
 ## Acceptance rule
 
 Only promote evidence states after directly running the matching stage. Source presence is not build evidence; build success is not runtime proof; desktop component proof is not packaged-process or approved-VM/Linux proof; a tested sync boundary is not a tested network transport.
+
+## 2026-09-23 — Seamless editor surface and shared Glow palette
+
+- User clarified the page treatment: the editor should feel edge-to-edge and seamless, with fixed content margins rather than a fixed visible paper rectangle.
+- `app/Boards.cui` now gives the editor column the remaining window space, removes the centered 800 px card/border/radius treatment, and preserves its former inner padding as a 40 px horizontal / 32 px vertical content inset. Page-level ink remains on the full document surface.
+- Root cause of the narrow editor during the first layout pass was shared CUI Grid placement: `grid-column` / `grid-row` on a `Grid` control were interpreted as generated definitions instead of attached coordinates. The loader now handles standard attached coordinates consistently; the legacy `column` / `row` convenience attributes retain their definition-count behavior. A runtime regression test covers nested grids.
+- Boards’ app-local slate Light/Dark palette bypassed the CUI surface palette and overwrote its resources. `BoardsTheme` now resolves the canonical Boards surface in CUI Glow for Bright/Dark appearance, and `ThemeApplier` applies the shared semantic and gradient resources. Source history identifies commit `89077af` (the Boards visual pass) as the change that introduced the local palette and stopped consuming shared surface tokens.
+- Existing local boards now display `Loaded locally` instead of the misleading `Unsaved changes` state.
+- Release Boards app suite: **40/40 passed**. CUI Runtime Release suite: **52/52 passed**. Boards foundation static gate: **passed**. Contract Release **86/86**, HUI Release **34/34**, and CUI markup **4/4** passed earlier in this run, before the final UI-only changes.
+- Headless screenshots inspected for Maths Light/Dark, Law, and Computer Science; Maths also rendered at 1280×720, 1440×900, and 1920×1080. Automated assertions verify full editor viewport width, fixed content insets, no card treatment, and the Glow gradient resource.
+- Native interactive validation remains **UNVERIFIED**: the Computer app inventory had no available native apps. Pointer/trail behavior and live Draw interaction have not been claimed as proven. No commit or merge was made.

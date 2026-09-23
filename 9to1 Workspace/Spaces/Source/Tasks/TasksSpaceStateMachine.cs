@@ -101,7 +101,7 @@ public static class TasksSpaceStateMachine
         ArgumentNullException.ThrowIfNull(finalOutputs);
         EnsureUniqueOutputs(job.Outputs, finalOutputs);
         var allOutputs = job.Outputs.Concat(finalOutputs).ToArray();
-        if (allOutputs.Count == 0 || allOutputs.Any(output => !output.Observed))
+        if (allOutputs.Length == 0 || allOutputs.Any(output => !output.Observed))
             throw new InvalidOperationException("A completed job requires at least one observed output and cannot include unobserved output claims.");
         return job with
         {

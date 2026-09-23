@@ -302,7 +302,8 @@ public static class ToolbarBuilder
         return button;
     }
 
-    public static Control CreateInsertButton(BoardsViewModel vm, string? tooltip = null)
+    public static Control CreateInsertButton(
+        BoardsViewModel vm, string? tooltip = null, string? insertAfterBlockId = null)
     {
         var button = BoardsIcons.IconButton(BoardsIcons.Add, "Insert", tooltip ?? "Insert a block (grouped menu with search)");
         var popup = new Popup { PlacementTarget = button, Placement = PlacementMode.Bottom };
@@ -318,15 +319,15 @@ public static class ToolbarBuilder
             AddGroup(list, "Text", [
                 ("Paragraph", "paragraph"), ("Title", "style:title"), ("Header", "style:heading-1"),
                 ("Quote", "style:quote"), ("Code", "style:code"),
-            ], vm, popup, filter);
+            ], vm, popup, filter, insertAfterBlockId);
             var customs = vm.StyleList.Where(s => !s.IsBuiltIn).ToList();
             if (customs.Count > 0)
-                AddGroup(list, "Custom styles", customs.Select(s => (s.Name, "style:" + s.Id)).ToList(), vm, popup, filter);
+                AddGroup(list, "Custom styles", customs.Select(s => (s.Name, "style:" + s.Id)).ToList(), vm, popup, filter, insertAfterBlockId);
             AddGroup(list, "Content", [
                 ("Checklist", "checklist"), ("Bulleted list", "bulleted"), ("Numbered list", "numbered"),
                 ("Table", "table"), ("Graph", "graph"), ("Image…", "image"), ("Attachment…", "attachment"),
-            ], vm, popup, filter);
-            AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter);
+            ], vm, popup, filter, insertAfterBlockId);
+            AddGroup(list, "Other", [("Freeform box", "freeform"), ("Divider", "divider")], vm, popup, filter, insertAfterBlockId);
         }
         search.TextChanged += (_, _) => Fill(search.Text ?? string.Empty);
         Fill(string.Empty);
@@ -351,7 +352,7 @@ public static class ToolbarBuilder
 
     private static void AddGroup(
         StackPanel list, string heading, IReadOnlyList<(string Label, string Tag)> entries,
-        BoardsViewModel vm, Popup popup, string filter)
+        BoardsViewModel vm, Popup popup, string filter, string? insertAfterBlockId)
     {
         var matches = string.IsNullOrWhiteSpace(filter)
             ? entries
@@ -381,7 +382,7 @@ public static class ToolbarBuilder
             item.Click += (_, _) =>
             {
                 popup.Close();
-                _ = vm.InsertKindAsync(tag);
+                _ = vm.InsertKindAsync(tag, insertAfterBlockId);
             };
             list.Children.Add(item);
         }

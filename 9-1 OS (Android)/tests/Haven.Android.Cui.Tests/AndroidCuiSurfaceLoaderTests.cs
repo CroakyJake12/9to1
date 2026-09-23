@@ -1,4 +1,5 @@
 using Haven.Android.Cui;
+using Xunit;
 
 namespace Haven.Android.Cui.Tests;
 

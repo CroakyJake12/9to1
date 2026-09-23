@@ -170,6 +170,12 @@ public sealed class BuiltInModeSeed
             "motion", "Motion", "Open the Motion workspace shell; editing tools are not enabled in this checkpoint", "play",
             HavenMode.Chat, "[\"Motion\"]", "[]", "[]", "[]", "Act as Haven Motion checkpoint shell. Help plan motion work, but do not claim timeline editing, rendering, export or project persistence is available until the corresponding Motion workspace capability is installed.",
             ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"media\",\"creative\"]",
+            DateTimeOffset.MinValue, DateTimeOffset.MinValue),
+        new ModeDefinition(
+            Guid.Parse("a0000000-0000-0000-0000-000000000026"),
+            "forms", "Forms", "Submit structured feedback and review responses stored on this device", "form",
+            HavenMode.Chat, "[\"Forms\"]", "[]", "[]", "[]", "Use the local Haven Forms surface to submit structured feedback. Validate required answers and keep responses on this device.",
+            ModeSource.BuiltIn, ModeInstallState.BuiltIn, "Haven", "1.0.0", "[\"productivity\"]",
             DateTimeOffset.MinValue, DateTimeOffset.MinValue)
     ];
 }

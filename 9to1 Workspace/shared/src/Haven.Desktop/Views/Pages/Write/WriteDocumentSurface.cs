@@ -28,7 +28,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
 
     public event EventHandler? SelectionChanged;
     public double Zoom => _zoom;
-    public string SelectedText => _editor?.SelectedDocumentText ?? string.Empty;
+    public string SelectedText => SelectedTableText ?? _editor?.SelectedDocumentText ?? string.Empty;
 
     public void SetEditor(WriteDocumentEditor editor)
     {
@@ -59,6 +59,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         if (HitTextPosition(input.LocalPosition) is { } position)
         {
             _activeTableCellId = null;
+            _tableCellSelection = null;
             _editor.SetDocumentCaret(position.BlockId, position.Offset, input.Modifiers.HasFlag(HavenKeyModifiers.Shift));
             _pointerSelecting = true;
             SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -68,6 +69,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
         if (_layouts.LastOrDefault(layout => layout.Rect.Contains(input.LocalPosition)) is { } blockLayout)
         {
             _activeTableCellId = null;
+            _tableCellSelection = null;
             _editor.SelectBlock(blockLayout.Block.Id);
             _pointerSelecting = false;
             SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -169,6 +171,7 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
 
     public bool DeleteSelection()
     {
+        if (DeleteTableCellSelection()) return true;
         if (_editor?.DeleteDocumentSelection() != true) return false;
         InvalidateDocument();
         return true;
@@ -359,7 +362,10 @@ internal sealed partial class WriteDocumentSurface : HavenElement, IHavenDrawCom
             context.Add(new HavenStrokeRoundedRectCommand(cellRect, new HavenPen(selected ? new HavenSolidBrush(210, 57, 110, 220) : new HavenSolidBrush(80, 92, 103, 117), selected ? 2 : 1), 0, opacity));
             var textRect = new HavenRect(cellRect.X + 6, cellRect.Y + 4, Math.Max(1, cellRect.Width - 12), Math.Max(1, cellRect.Height - 8));
             var weight = cellLayout.Row == 0 && table.HeaderRow ? 600 : 400;
-            context.Add(new HavenTextCommand(textRect, new HavenTextLayout(cell.Text, "Montserrat", 11 * _zoom, weight, textRect.Width, true), new HavenSolidBrush(255, 35, 42, 52), opacity));
+            var textLayout = new HavenTextLayout(cell.Text, "Montserrat", 11 * _zoom, weight, textRect.Width, true);
+            if (_tableCellSelection is { } tableSelection && tableSelection.CellId == cell.Id && tableSelection.Length > 0)
+                context.Add(new HavenTextSelectionCommand(textRect, textLayout, tableSelection.Start, tableSelection.Length, new HavenSolidBrush(95, 57, 110, 220), opacity));
+            context.Add(new HavenTextCommand(textRect, textLayout, new HavenSolidBrush(255, 35, 42, 52), opacity));
             if (State.HasFlag(HavenElementState.Focused) && selected)
             {
                 var caret = Math.Clamp(_tableCellCaret, 0, cell.Text.Length);

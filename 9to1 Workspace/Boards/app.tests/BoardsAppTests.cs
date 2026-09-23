@@ -15,6 +15,7 @@ using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
 
+[Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsAppTests
 {
     private static Task<T> OnUiThreadAsync<T>(Func<T> work) =>
@@ -151,6 +152,37 @@ public sealed class BoardsAppTests
         Assert.True(hasDecorations);
         Assert.Equal(12, left);
         Assert.Equal(34, top);
+    }
+
+    [Fact]
+    public async Task Boards_cui_grid_definitions_apply()
+    {
+        var layout = await OnUiThreadAsync(() =>
+        {
+            var loader = new CuiControlLoader();
+            var (loaded, diagnostics) = loader.LoadMarkup(
+                """
+                <Cui>
+                  <Grid columnDefinitions="100,*" rowDefinitions="Auto,*">
+                    <TextBlock text="layout" grid-column="1" grid-row="1" />
+                  </Grid>
+                </Cui>
+                """,
+                "boards-grid.cui");
+            Assert.Empty(diagnostics);
+            var grid = Assert.IsType<Grid>(loaded);
+            var child = Assert.IsType<TextBlock>(grid.Children[0]);
+            return (
+                ColumnCount: grid.ColumnDefinitions.Count,
+                RowCount: grid.RowDefinitions.Count,
+                Column: Grid.GetColumn(child),
+                Row: Grid.GetRow(child));
+        });
+
+        Assert.Equal(2, layout.ColumnCount);
+        Assert.Equal(2, layout.RowCount);
+        Assert.Equal(1, layout.Column);
+        Assert.Equal(1, layout.Row);
     }
 
     [Fact]

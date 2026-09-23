@@ -9,8 +9,8 @@ public sealed partial class MailPageViewModel
         var account = SelectedAccount;
         if (account is null || IsComposeOpen) return;
 
-        var draft = (await _mail.GetDraftsAsync(CancellationToken.None))
-            .FirstOrDefault(item => item.AccountId == account.AccountId);
+        var draft = SelectLatestDraftForAccount(
+            await _mail.GetDraftsAsync(CancellationToken.None), account.AccountId);
         if (draft is null) return;
 
         CancelDraftAutosave();
@@ -36,6 +36,12 @@ public sealed partial class MailPageViewModel
             ? "Recovered draft - previous provider action did not complete"
             : "Recovered saved draft";
     }
+
+    internal static MailDraft? SelectLatestDraftForAccount(IEnumerable<MailDraft> drafts, Guid accountId) => drafts
+        .Where(item => item.AccountId == accountId)
+        .OrderByDescending(item => item.UpdatedAt ?? DateTimeOffset.MinValue)
+        .ThenBy(item => item.LocalId)
+        .FirstOrDefault();
 
     private static string ToPlainText(string html)
     {

@@ -14,6 +14,7 @@ public static class BuiltInAutomationNodeCategory
 public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeExecutor
 {
     private const int MaximumTraceOutputCharacters = 4_000;
+    private const string UpstreamInputPlaceholder = "{{input}}";
     private readonly DeviceActionRouter? _deviceActions;
     private readonly FilesystemActionService? _filesystem;
     private readonly bool _permissionGranted;
@@ -47,13 +48,13 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         if (issue is not null) return new(false, issue.Message);
 
         if (context.Mode == AutomationGraphRunMode.Test)
-            return Preview(context.Node);
+            return Preview(context);
 
         if (IsCategory(context.Node, BuiltInAutomationNodeCategory.App))
             return await ExecuteAppAsync(context.Node, cancellationToken).ConfigureAwait(false);
         if (IsCategory(context.Node, BuiltInAutomationNodeCategory.File))
             return await ExecuteFileAsync(context.Node, cancellationToken).ConfigureAwait(false);
-        return await ExecuteActionAsync(context.Node, cancellationToken).ConfigureAwait(false);
+        return await ExecuteActionAsync(context, cancellationToken).ConfigureAwait(false);
     }
 
     public static IReadOnlyList<AutomationGraphValidationIssue> ValidateConfiguration(AutomationGraphNodeDefinition node)
@@ -132,8 +133,9 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         return new(result.Succeeded, result.Message, LimitOutput(result.Content));
     }
 
-    private static async Task<AutomationGraphNodeExecutionResult> ExecuteActionAsync(AutomationGraphNodeDefinition node, CancellationToken cancellationToken)
+    private static async Task<AutomationGraphNodeExecutionResult> ExecuteActionAsync(AutomationGraphNodeExecutionContext context, CancellationToken cancellationToken)
     {
+        var node = context.Node;
         var action = Parameter(node, "action", "emit");
         if (action.Equals("delay", StringComparison.OrdinalIgnoreCase))
         {
@@ -141,12 +143,35 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
             if (milliseconds > 0) await Task.Delay(milliseconds, cancellationToken).ConfigureAwait(false);
             return new(true, $"Delayed for {milliseconds} ms.", milliseconds.ToString(CultureInfo.InvariantCulture));
         }
-        var value = Parameter(node, "value");
-        return new(true, "Emitted the configured value.", LimitOutput(value));
+        return ResolveEmit(context, isPreview: false);
     }
 
-    private static AutomationGraphNodeExecutionResult Preview(AutomationGraphNodeDefinition node)
+    private static AutomationGraphNodeExecutionResult ResolveEmit(AutomationGraphNodeExecutionContext context, bool isPreview)
     {
+        var value = Parameter(context.Node, "value");
+        var forwarding = string.Equals(value, UpstreamInputPlaceholder, StringComparison.Ordinal);
+        if (forwarding)
+        {
+            if (context.Inputs.Count == 0)
+                return new(false, $"Action value '{UpstreamInputPlaceholder}' needs one upstream node output, but no input is available.");
+            if (context.Inputs.Count > 1)
+                return new(false, $"Action value '{UpstreamInputPlaceholder}' is ambiguous: connect exactly one upstream output.");
+            value = context.Inputs.Single().Value;
+            if (value is null)
+                return new(false, $"Action value '{UpstreamInputPlaceholder}' needs an upstream node that produced an output.");
+        }
+
+        string message;
+        if (forwarding)
+            message = isPreview ? "Test mode would forward the single upstream value." : "Forwarded the single upstream value.";
+        else
+            message = isPreview ? "Test mode would emit the configured value." : "Emitted the configured value.";
+        return new(true, message, LimitOutput(value));
+    }
+
+    private static AutomationGraphNodeExecutionResult Preview(AutomationGraphNodeExecutionContext context)
+    {
+        var node = context.Node;
         if (IsCategory(node, BuiltInAutomationNodeCategory.App))
             return new(true, $"Test mode would launch {Parameter(node, "name")} without opening the application.");
         if (IsCategory(node, BuiltInAutomationNodeCategory.File))
@@ -158,7 +183,7 @@ public sealed class BuiltInAutomationActionNodeExecutor : IAutomationGraphNodeEx
         var action = Parameter(node, "action", "emit");
         return action.Equals("delay", StringComparison.OrdinalIgnoreCase)
             ? new(true, $"Test mode would delay for {Parameter(node, "milliseconds", "1000")} ms without waiting.")
-            : new(true, "Test mode would emit the configured value.", LimitOutput(Parameter(node, "value")));
+            : ResolveEmit(context, isPreview: true);
     }
 
     private static bool IsCategory(AutomationGraphNodeDefinition node, string category) =>

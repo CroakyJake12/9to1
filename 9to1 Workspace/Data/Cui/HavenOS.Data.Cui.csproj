@@ -9,7 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../App/HavenOS.Data.App.csproj" />
-    <ProjectReference Include="../../../framework/CUI/src/NineToOne.Cui.Markup.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
     <None Include="DataWorkspace.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

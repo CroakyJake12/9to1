@@ -8,7 +8,11 @@ internal sealed record WaveformPreview(
     double DurationSeconds,
     int SampleRate,
     int Channels,
-    float[] Peaks);
+    float[] Peaks,
+    long DataOffset,
+    long DataSize,
+    ushort BlockAlign,
+    uint ByteRate);
 
 internal sealed record WaveSurfaceState(bool IsLoaded, string Message, WaveformPreview? Preview)
 {
@@ -60,6 +64,7 @@ internal static class PcmWaveformReader
         ushort formatTag = 0;
         ushort channels = 0;
         uint sampleRate = 0;
+        uint byteRate = 0;
         ushort blockAlign = 0;
         ushort bitsPerSample = 0;
         long dataOffset = -1;
@@ -80,7 +85,7 @@ internal static class PcmWaveformReader
                 formatTag = reader.ReadUInt16();
                 channels = reader.ReadUInt16();
                 sampleRate = reader.ReadUInt32();
-                _ = reader.ReadUInt32();
+                byteRate = reader.ReadUInt32();
                 blockAlign = reader.ReadUInt16();
                 bitsPerSample = reader.ReadUInt16();
                 hasFormat = true;
@@ -106,6 +111,8 @@ internal static class PcmWaveformReader
         var expectedBlockAlign = channels * sizeof(short);
         if (blockAlign != expectedBlockAlign)
             throw new InvalidDataException("WAV block alignment is unsupported.");
+        if (dataSize % blockAlign != 0)
+            throw new InvalidDataException("WAV data ends with an incomplete audio frame.");
 
         var totalFrames = dataSize / blockAlign;
         if (totalFrames <= 0) throw new InvalidDataException("WAV contains no audio frames.");
@@ -134,7 +141,7 @@ internal static class PcmWaveformReader
         }
 
         var durationSeconds = totalFrames / (double)sampleRate;
-        return new WaveformPreview(Path.GetFullPath(path), durationSeconds, (int)sampleRate, channels, peaks);
+        return new WaveformPreview(Path.GetFullPath(path), durationSeconds, (int)sampleRate, channels, peaks, dataOffset, dataSize, blockAlign, byteRate);
     }
 
     private static string ReadFourCc(BinaryReader reader)
@@ -167,6 +174,111 @@ internal static class WaveConsoleSurface
     }
 }
 
+internal sealed record WaveTrimResult(bool Succeeded, string Message, string? OutputPath = null)
+{
+    public static WaveTrimResult Failed(string message) => new(false, message);
+    public static WaveTrimResult Saved(string path, double durationSeconds) => new(true, $"Trimmed audio saved ({durationSeconds.ToString("0.###", CultureInfo.InvariantCulture)}s).", path);
+}
+
+internal static class PcmWaveTrimmer
+{
+    private const int CopyBufferSize = 64 * 1024;
+
+    public static WaveTrimResult Trim(string? inputPath, double startSeconds, double endSeconds, string? outputPath)
+    {
+        if (string.IsNullOrWhiteSpace(inputPath) || string.IsNullOrWhiteSpace(outputPath))
+            return WaveTrimResult.Failed("Choose an input WAV file and a new output path.");
+        if (!double.IsFinite(startSeconds) || !double.IsFinite(endSeconds))
+            return WaveTrimResult.Failed("Trim times must be finite numbers of seconds.");
+
+        var loaded = WaveSurface.Load(inputPath);
+        if (!loaded.IsLoaded || loaded.Preview is null)
+            return WaveTrimResult.Failed(loaded.Message);
+
+        var preview = loaded.Preview;
+        string fullInput;
+        string fullOutput;
+        try
+        {
+            fullInput = Path.GetFullPath(inputPath);
+            fullOutput = Path.GetFullPath(outputPath);
+        }
+        catch (Exception exception) when (exception is ArgumentException or IOException or NotSupportedException)
+        {
+            return WaveTrimResult.Failed("Choose valid local input and output paths.");
+        }
+
+        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (string.Equals(fullInput, fullOutput, pathComparison))
+            return WaveTrimResult.Failed("Wave never trims over the source file. Choose a different output path.");
+        if (startSeconds < 0 || endSeconds <= startSeconds || endSeconds > preview.DurationSeconds)
+            return WaveTrimResult.Failed($"Trim range must satisfy 0 <= start < end <= {preview.DurationSeconds.ToString("0.###", CultureInfo.InvariantCulture)} seconds.");
+
+        var frameCount = preview.DataSize / preview.BlockAlign;
+        var startFrame = Math.Min(frameCount, (long)Math.Ceiling(startSeconds * preview.SampleRate));
+        var endFrame = Math.Min(frameCount, (long)Math.Ceiling(endSeconds * preview.SampleRate));
+        if (endFrame <= startFrame)
+            return WaveTrimResult.Failed("The trim range does not contain a complete audio frame.");
+
+        var outputDataSize = checked((uint)((endFrame - startFrame) * preview.BlockAlign));
+        if (outputDataSize > uint.MaxValue - 36)
+            return WaveTrimResult.Failed("The selected audio is too large for a standard RIFF/WAV output file.");
+
+        var outputCreated = false;
+        try
+        {
+            using var input = File.OpenRead(fullInput);
+            input.Position = checked(preview.DataOffset + startFrame * preview.BlockAlign);
+            using var output = new FileStream(fullOutput, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            outputCreated = true;
+            using (var writer = new BinaryWriter(output, Encoding.UTF8, leaveOpen: true))
+            {
+                writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+                writer.Write(36u + outputDataSize);
+                writer.Write(Encoding.ASCII.GetBytes("WAVE"));
+                writer.Write(Encoding.ASCII.GetBytes("fmt "));
+                writer.Write(16u);
+                writer.Write((ushort)1);
+                writer.Write((ushort)preview.Channels);
+                writer.Write((uint)preview.SampleRate);
+                writer.Write(preview.ByteRate);
+                writer.Write(preview.BlockAlign);
+                writer.Write((ushort)16);
+                writer.Write(Encoding.ASCII.GetBytes("data"));
+                writer.Write(outputDataSize);
+            }
+
+            CopyExactly(input, output, outputDataSize);
+            return WaveTrimResult.Saved(fullOutput, (endFrame - startFrame) / (double)preview.SampleRate);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or OverflowException)
+        {
+            if (!outputCreated && File.Exists(fullOutput))
+                return WaveTrimResult.Failed("The output file already exists. Wave will not overwrite it.");
+            if (outputCreated)
+            {
+                try { File.Delete(fullOutput); }
+                catch (IOException) { return WaveTrimResult.Failed("Trim failed and a partial output file may remain. Remove it before retrying."); }
+                catch (UnauthorizedAccessException) { return WaveTrimResult.Failed("Trim failed and a partial output file may remain. Remove it before retrying."); }
+            }
+            return WaveTrimResult.Failed("Wave could not write the trimmed output file. The input was left unchanged.");
+        }
+    }
+
+    private static void CopyExactly(Stream input, Stream output, long byteCount)
+    {
+        var buffer = new byte[CopyBufferSize];
+        while (byteCount > 0)
+        {
+            var requested = (int)Math.Min(buffer.Length, byteCount);
+            var read = input.Read(buffer, 0, requested);
+            if (read == 0) throw new EndOfStreamException("The WAV data chunk ended before the selected frames were copied.");
+            output.Write(buffer, 0, read);
+            byteCount -= read;
+        }
+    }
+}
+
 internal static class WaveSelfTest
 {
     public static void Run()
@@ -188,6 +300,28 @@ internal static class WaveSelfTest
             Require(preview.Peaks.Any(peak => peak > .2f), "Generated waveform did not contain real signal peaks.");
             Require(preview.Peaks.All(peak => peak is >= 0f and <= 1f), "Waveform peaks escaped the bounded range.");
 
+            var trimmedPath = Path.Combine(directory, "trimmed.wav");
+            var trim = PcmWaveTrimmer.Trim(tonePath, .25, .75, trimmedPath);
+            Require(trim.Succeeded && trim.OutputPath == trimmedPath, trim.Message);
+            var trimmed = WaveSurface.Load(trimmedPath);
+            Require(trimmed.IsLoaded && trimmed.Preview is not null, "Trimmed output did not load as a valid WAV file.");
+            Require(trimmed.Preview!.DurationSeconds is >= .499 and <= .501, "Trimmed output did not contain the selected half-second.");
+            var sourceBytes = File.ReadAllBytes(tonePath);
+            var trimmedBytes = File.ReadAllBytes(trimmedPath);
+            var expectedSelection = sourceBytes.AsSpan(44 + 2000 * sizeof(short), 4000 * sizeof(short)).ToArray();
+            var actualSelection = trimmedBytes.AsSpan(44).ToArray();
+            Require(expectedSelection.SequenceEqual(actualSelection), "Trimmed output did not preserve the exact selected PCM frames.");
+
+            var protectedPath = Path.Combine(directory, "protected.wav");
+            File.WriteAllText(protectedPath, "keep existing file");
+            var protectedBytes = File.ReadAllBytes(protectedPath);
+            var overwrite = PcmWaveTrimmer.Trim(tonePath, 0, .5, protectedPath);
+            Require(!overwrite.Succeeded && overwrite.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase) && File.ReadAllBytes(protectedPath).SequenceEqual(protectedBytes), "Trim must report and preserve an existing output file.");
+            var inPlace = PcmWaveTrimmer.Trim(tonePath, 0, .5, tonePath);
+            Require(!inPlace.Succeeded && File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Trim must leave its source file unchanged.");
+            var invalidRange = PcmWaveTrimmer.Trim(tonePath, .75, .25, Path.Combine(directory, "invalid-range.wav"));
+            Require(!invalidRange.Succeeded, "An inverted trim range must be rejected.");
+
             var shortPath = Path.Combine(directory, "short.wav");
             WriteTone(shortPath, sampleRate: 16, seconds: 1);
             var shortAudio = WaveSurface.Load(shortPath);
@@ -198,7 +332,7 @@ internal static class WaveSelfTest
             var invalid = WaveSurface.Load(invalidPath);
             Require(!invalid.IsLoaded && invalid.Preview is null, "Corrupt audio must fail closed.");
 
-            Console.WriteLine("Wave self-test passed: PCM waveform load, short-file bounds, and fail-closed invalid input.");
+            Console.WriteLine("Wave self-test passed: PCM waveform load, exact trim/export, overwrite protection, short-file bounds, and fail-closed invalid input.");
         }
         finally
         {
@@ -264,12 +398,34 @@ internal static class Program
             }
         }
 
-        if (args.Length != 1)
+        var isTrimCommand = args.Length == 5 && string.Equals(args[0], "--trim", StringComparison.Ordinal);
+        if (args.Length != 1 && !isTrimCommand)
         {
             Console.WriteLine("HavenOS Wave — first standalone surface");
             Console.WriteLine("Usage: HavenOS.Wave <local-pcm-wave-file>");
+            Console.WriteLine("       HavenOS.Wave --trim <input.wav> <start-seconds> <end-seconds> <new-output.wav>");
             Console.WriteLine("Validation: HavenOS.Wave --self-test");
             return 2;
+        }
+
+        if (args.Length == 5 && string.Equals(args[0], "--trim", StringComparison.Ordinal))
+        {
+            if (!double.TryParse(args[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var startSeconds)
+                || !double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var endSeconds))
+            {
+                Console.Error.WriteLine("Trim times must be numbers of seconds using invariant decimal notation.");
+                return 2;
+            }
+
+            var result = PcmWaveTrimmer.Trim(args[1], startSeconds, endSeconds, args[4]);
+            if (!result.Succeeded)
+            {
+                Console.Error.WriteLine(result.Message);
+                return 1;
+            }
+
+            Console.WriteLine($"{result.Message} {result.OutputPath}");
+            return 0;
         }
 
         var state = WaveSurface.Load(args[0]);

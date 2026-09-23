@@ -27,6 +27,9 @@ internal static class Projector
     {
         Id = page.Id,
         Title = page.Title,
+        InkPanX = page.InkView?.PanX ?? 0,
+        InkPanY = page.InkView?.PanY ?? 0,
+        InkZoom = page.InkView?.Zoom ?? 1,
         Blocks = ProjectBlocks(page)
     };
 
@@ -361,6 +364,30 @@ internal static class MergeDeltas
                     break;
             }
         }
+        PreserveProjectedBlockOrder(page, viewPage);
+    }
+
+    private static void PreserveProjectedBlockOrder(HavenRichPage page, RichBoardPage viewPage)
+    {
+        var byId = page.Blocks.ToDictionary(block => block.Id, StringComparer.Ordinal);
+        var ordered = new List<HavenRichBlock>(page.Blocks.Count);
+        var included = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var viewBlock in viewPage.Blocks)
+        {
+            var contractId = TrySplitItemId(viewBlock.Id, out var parentId, out _)
+                ? parentId
+                : viewBlock.Id;
+            if (included.Add(contractId) && byId.TryGetValue(contractId, out var contractBlock))
+                ordered.Add(contractBlock);
+        }
+        foreach (var contractBlock in page.Blocks)
+            if (included.Add(contractBlock.Id))
+                ordered.Add(contractBlock);
+
+        page.Blocks.Clear();
+        page.Blocks.AddRange(ordered);
+        for (var index = 0; index < page.Blocks.Count; index++)
+            page.Blocks[index].Order = index;
     }
 
     private static void MergeTextBlock(

@@ -90,6 +90,10 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
     /// </summary>
     private Guid _partialUserMessageId;
     /// <summary>
+    /// Suppresses late transcript callbacks from a capture that ended before recognition completed.
+    /// </summary>
+    private bool _discardTranscriptUntilSpeechStarted;
+    /// <summary>
     /// Stores ending locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private bool _ending;
@@ -211,6 +215,8 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
                 ? null
                 : new VoiceReactionRuntime(ActiveVoiceProfile, _timeProvider);
             _ephemeralHistory.Clear();
+            _partialUserMessageId = Guid.Empty;
+            _discardTranscriptUntilSpeechStarted = false;
             _speechModel = speechModel;
             IsMuted = false;
 
@@ -320,6 +326,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
         IsMuted = muted;
         if (muted)
         {
+            DiscardPendingTranscript();
             await _speechInput.StopAsync(cancellationToken).ConfigureAwait(false);
             SetInputStatus(new VoiceInputStatus(VoiceInputState.Muted, "Microphone muted.", CanRetry: true));
             SetState(State, "Microphone muted");
@@ -688,6 +695,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
         switch (inputEvent.Kind)
         {
             case SpeechInputEventKind.SpeechStarted:
+                _discardTranscriptUntilSpeechStarted = false;
                 if (State is CallState.Speaking or CallState.Thinking)
                     await InterruptAsync(cancellationToken).ConfigureAwait(false);
                 _partialUserMessageId = Guid.NewGuid();
@@ -696,12 +704,14 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
                 await PublishVoiceReactionAsync(_voiceReactionRuntime?.ObserveSpeechStarted(), cancellationToken).ConfigureAwait(false);
                 break;
             case SpeechInputEventKind.PartialTranscript when !string.IsNullOrWhiteSpace(inputEvent.Text):
+                if (_discardTranscriptUntilSpeechStarted) break;
                 if (_partialUserMessageId == Guid.Empty) _partialUserMessageId = Guid.NewGuid();
                 TranscriptChanged?.Invoke(this, new(
                     _partialUserMessageId, MessageRole.User, inputEvent.Text!, false, false));
                 await PublishVoiceReactionAsync(_voiceReactionRuntime?.ObservePartial(inputEvent.Text!), cancellationToken).ConfigureAwait(false);
                 break;
             case SpeechInputEventKind.FinalTranscript when !string.IsNullOrWhiteSpace(inputEvent.Text):
+                if (_discardTranscriptUntilSpeechStarted) break;
                 if (_partialUserMessageId == Guid.Empty) _partialUserMessageId = Guid.NewGuid();
                 var messageId = _partialUserMessageId;
                 _partialUserMessageId = Guid.Empty;
@@ -777,6 +787,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
 
     private async Task DegradeSpeechInputAsync(string message)
     {
+        DiscardPendingTranscript();
         await BestEffortAsync(() => _speechInput.StopAsync(CancellationToken.None)).ConfigureAwait(false);
         if (_ending || !IsActive || State == CallState.Paused) return;
 
@@ -865,8 +876,18 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
     /// </summary>
     private async Task StopMediaInputAndOutputAsync(CancellationToken cancellationToken)
     {
+        DiscardPendingTranscript();
         await BestEffortAsync(() => _speechInput.StopAsync(cancellationToken)).ConfigureAwait(false);
         await BestEffortAsync(() => _speechOutput.StopAsync(cancellationToken)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Discards an unfinished utterance and ignores late transcript callbacks until new speech begins.
+    /// </summary>
+    private void DiscardPendingTranscript()
+    {
+        _partialUserMessageId = Guid.Empty;
+        _discardTranscriptUntilSpeechStarted = true;
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
 
+[Collection(BoardSessionTestCollection.Name)]
 public sealed class ContractAdapterTests
 {
     [Fact]
@@ -17,19 +18,28 @@ public sealed class ContractAdapterTests
         {
             var path = Path.Combine(root, "adapter.9to1board");
             using var store = new JsonFileHavenBoardStore(root);
+            string pageId;
 
             await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
             {
                 adapter.Document.Title = "Adapter board";
                 var page = adapter.Document.Sections[0].Pages[0];
+                pageId = page.Id;
                 var para = page.Blocks.First(b => b.Kind == "paragraph");
                 para.Text = "Adapter line one\nAdapter line two";
                 para.Bold = true;
                 page.Blocks.Add(new RichBoardBlock { Kind = "checklist", Text = "Adapter checklist", IsChecked = true });
                 adapter.MarkDirty();
-                await adapter.CommitInkStrokeAsync([(5, 5), (50, 25), (90, 10)]);
+                await adapter.CommitInkStrokeAsync(pageId, [(1, 1), (2, 2)]);
                 await adapter.SaveAsync();
                 Assert.StartsWith("Saved", adapter.Status, StringComparison.Ordinal);
+            }
+
+            // Add new ink to a board that already contains persisted ink.
+            await using (var resumed = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                await resumed.CommitInkStrokeAsync(pageId, [(5, 5), (50, 25), (90, 10)]);
+                await resumed.SaveAsync();
             }
 
             await using (var reopened = await ContractSessionAdapter.OpenAsync(store, path))
@@ -41,14 +51,17 @@ public sealed class ContractAdapterTests
                 var check = reopened.Document.Sections[0].Pages[0].Blocks.First(b => b.Kind == "checklist");
                 Assert.Equal("Adapter checklist", check.Text);
                 Assert.True(check.IsChecked);
-                var ink = await reopened.GetInkStrokesAsync();
-                Assert.Single(ink);
+                var ink = await reopened.GetInkStrokesAsync(reopened.Document.Sections[0].Pages[0].Id);
+                Assert.Equal(2, ink.Count);
+                Assert.Equal(2, ink[0].Points.Count);
+                Assert.Equal(3, ink[1].Points.Count);
             }
 
             // Raw contract read proves the bytes hold real ink points, not just a counter.
             var raw = await store.LoadDocumentAtPathAsync(path);
             Assert.NotNull(raw?.RichNotes);
-            var stroke = Assert.Single(raw!.RichNotes!.Sections[0].Pages[0].Ink);
+            Assert.Equal(2, raw!.RichNotes!.Sections[0].Pages[0].Ink.Count);
+            var stroke = raw.RichNotes.Sections[0].Pages[0].Ink[1];
             Assert.Equal(3, stroke.Points.Count);
             Assert.Equal(90, stroke.Points[2].X);
         }
@@ -171,15 +184,16 @@ public sealed class ContractAdapterTests
 
             await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
             {
-                await adapter.CommitInkStrokeAsync([(10, 10), (20, 20)]);
-                await adapter.CommitInkStrokeAsync([(400, 400), (410, 410)]);
-                Assert.Equal(0, await adapter.EraseInkAtCurrentPageAsync(200, 200, 5));
-                Assert.Equal(1, await adapter.EraseInkAtCurrentPageAsync(12, 12, 12));
+                var pageId = adapter.Document.Sections[0].Pages[0].Id;
+                await adapter.CommitInkStrokeAsync(pageId, [(10, 10), (20, 20)]);
+                await adapter.CommitInkStrokeAsync(pageId, [(400, 400), (410, 410)]);
+                Assert.Equal(0, await adapter.EraseInkAtPageAsync(pageId, 200, 200, 5));
+                Assert.Equal(1, await adapter.EraseInkAtPageAsync(pageId, 12, 12, 12));
                 await adapter.SaveAsync();
             }
 
             await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
-            var ink = await reopened.GetInkStrokesAsync();
+            var ink = await reopened.GetInkStrokesAsync(reopened.Document.Sections[0].Pages[0].Id);
             Assert.Single(ink);
         }
         finally
@@ -245,14 +259,15 @@ public sealed class ContractAdapterTests
             string boxId;
             await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
             {
-                boxId = await adapter.AddCanvasObjectAsync("Text", "Drag me", 10, 10);
+                var pageId = adapter.Document.Sections[0].Pages[0].Id;
+                boxId = await adapter.AddCanvasObjectAsync(pageId, "Text", "Drag me", 10, 10);
                 // One committed move per drag gesture, as the pointer handler does on release.
-                Assert.True(await adapter.MoveCanvasObjectAsync(boxId, 300, 220));
+                Assert.True(await adapter.MoveCanvasObjectAsync(pageId, boxId, 300, 220));
                 await adapter.SaveAsync();
             }
 
             await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
-            var boxes = await reopened.GetCanvasObjectsAsync();
+            var boxes = await reopened.GetCanvasObjectsAsync(reopened.Document.Sections[0].Pages[0].Id);
             var box = Assert.Single(boxes);
             Assert.Equal(boxId, box.Id);
             Assert.Equal(300, box.X);
@@ -276,7 +291,8 @@ public sealed class ContractAdapterTests
             await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
             {
                 var session = Assert.IsType<ContractSessionAdapter>(adapter);
-                await session.SetInkViewAsync(120, -40, 2);
+                var pageId = session.Document.Sections[0].Pages[0].Id;
+                await session.SetInkViewAsync(pageId, 120, -40, 2);
                 await adapter.SaveAsync();
             }
 
@@ -285,6 +301,72 @@ public sealed class ContractAdapterTests
             Assert.Equal(120, view.PanX);
             Assert.Equal(-40, view.PanY);
             Assert.Equal(2, view.Zoom);
+        }
+        finally
+        {
+            DeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task Selected_page_ink_and_freeform_are_isolated_and_reopen_with_their_own_viewport()
+    {
+        var root = TempDirectory();
+        try
+        {
+            var path = Path.Combine(root, "page-routing.9to1board");
+            using var store = new JsonFileHavenBoardStore(root);
+            string sectionId;
+            string firstPageId;
+            string secondPageId;
+
+            await using (var adapter = await ContractSessionAdapter.OpenAsync(store, path))
+            {
+                var section = adapter.Document.Sections[0];
+                sectionId = section.Id;
+                firstPageId = section.Pages[0].Id;
+                var secondPage = new RichBoardPage { Title = "Second page" };
+                section.Pages.Add(secondPage);
+                secondPageId = secondPage.Id;
+                adapter.MarkDirty();
+                await adapter.SaveAsync();
+
+                var viewModel = new BoardsViewModel(adapter);
+                await viewModel.CommitInkStrokeAsync(firstPageId, [(10, 10, 0.6), (20, 20, 0.8)], 2, "#FF111111", "Pen");
+                viewModel.SelectPage(sectionId, secondPageId);
+                Assert.Equal(1, viewModel.InkZoom);
+                await viewModel.CommitInkStrokeAsync(secondPageId, [(210, 210, 0.7), (220, 220, 0.9)], 3, "#FF1122AA", "Pen");
+                await viewModel.PanInkViewAsync(15, -7);
+                await viewModel.SetInkZoomAsync(2);
+
+                viewModel.SelectPage(sectionId, firstPageId);
+                Assert.Equal(1, viewModel.InkZoom);
+                viewModel.SelectPage(sectionId, secondPageId);
+                Assert.Equal(2, viewModel.InkZoom);
+
+                Assert.False(await adapter.SelectInkAtPageAsync(secondPageId, 10, 10));
+                Assert.Equal(0, await adapter.EraseInkAtPageAsync(secondPageId, 10, 10, 6));
+                Assert.True(await adapter.SelectInkAtPageAsync(secondPageId, 210, 210));
+                Assert.Equal(1, await adapter.EraseInkAtPageAsync(secondPageId, 210, 210, 6));
+                Assert.Single(await adapter.GetInkStrokesAsync(firstPageId));
+
+                await adapter.CommitInkStrokeAsync(secondPageId, [(230, 230), (240, 240)]);
+                await adapter.AddCanvasObjectAsync(secondPageId, "Text", "Second-page note", 30, 40);
+                await adapter.SaveAsync();
+            }
+
+            await using var reopened = await ContractSessionAdapter.OpenAsync(store, path);
+            Assert.Single(await reopened.GetInkStrokesAsync(firstPageId));
+            var secondPageInk = Assert.Single(await reopened.GetInkStrokesAsync(secondPageId));
+            Assert.Equal(230, secondPageInk.Points[0].X);
+            Assert.Empty(await reopened.GetCanvasObjectsAsync(firstPageId));
+            Assert.Equal("Second-page note", Assert.Single(await reopened.GetCanvasObjectsAsync(secondPageId)).Text);
+
+            var secondPageView = reopened.Document.Sections
+                .First(section => section.Id == sectionId).Pages.First(page => page.Id == secondPageId);
+            Assert.Equal(15, secondPageView.InkPanX);
+            Assert.Equal(-7, secondPageView.InkPanY);
+            Assert.Equal(2, secondPageView.InkZoom);
         }
         finally
         {

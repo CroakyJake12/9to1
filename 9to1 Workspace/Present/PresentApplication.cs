@@ -30,6 +30,36 @@ public sealed class PresentApplication : Application
                 Content = _host.Page
             };
 
+            var closeAfterSave = false;
+            var closeSavePending = false;
+            window.Closing += async (_, args) =>
+            {
+                if (closeAfterSave || _host is null)
+                {
+                    return;
+                }
+
+                args.Cancel = true;
+                if (closeSavePending)
+                {
+                    return;
+                }
+
+                closeSavePending = true;
+                try
+                {
+                    if (await _host.TrySaveBeforeCloseAsync())
+                    {
+                        closeAfterSave = true;
+                        window.Close();
+                    }
+                }
+                finally
+                {
+                    closeSavePending = false;
+                }
+            };
+
             window.Closed += (_, _) =>
             {
                 _host?.Dispose();

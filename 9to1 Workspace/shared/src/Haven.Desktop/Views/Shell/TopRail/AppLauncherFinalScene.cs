@@ -119,10 +119,13 @@ internal sealed class AppLauncherFinalScene
                            || item.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
                            || item.Description.Contains(query, StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        AddSection("General", filtered.Where(item => AppLauncherControl.CategoryFor(item) == "General").ToArray());
-        AddSection("Productivity", filtered.Where(item => AppLauncherControl.CategoryFor(item) == "Productivity").ToArray());
-        AddSection("Media & creativity", filtered.Where(item => AppLauncherControl.CategoryFor(item) == "Media & creativity").ToArray());
-        AddSection("More", filtered.Where(item => AppLauncherControl.CategoryFor(item) == "More").ToArray());
+
+        // MainView supplies pins first in pin order, followed by apps ordered by local usage.
+        // Keep the supplied order in each section so category grouping cannot change either ranking.
+        var pinned = filtered.Where(item => _pinnedIds.Contains(item.Id)).ToArray();
+        var available = filtered.Where(item => !_pinnedIds.Contains(item.Id)).ToArray();
+        AddSection("Pinned", pinned);
+        AddSection("Available", available);
 
         if (_appButtons.Count == 0)
         {

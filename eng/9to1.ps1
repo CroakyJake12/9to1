@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 
 $projects = @{
-    cui = @('9to1 OS/HUI/Cui.Tests/CakeOS.Cui.Markup.Tests.csproj')
+    cui = @('framework/CUI/tests/NineToOne.Cui.Markup.Tests.csproj')
     home = @('9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj')
     spaces = @('9to1 Workspace/Spaces/Tests/HavenOS.Spaces.Tests.csproj')
     shared = @('9to1 Workspace/shared/Haven.sln')

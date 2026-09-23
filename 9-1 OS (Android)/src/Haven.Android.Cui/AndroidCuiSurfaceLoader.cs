@@ -1,5 +1,6 @@
 using System.Globalization;
-using CakeOS.Cui.Markup;
+using CakeOS.Cui;
+using CakeOS.Cui.Language;
 
 namespace Haven.Android.Cui;
 
@@ -66,18 +67,18 @@ public sealed class AndroidCuiSurfaceLoader
     private static readonly IReadOnlySet<string> TextAttributes = AttributeSet("id", "role");
     private static readonly IReadOnlySet<string> ButtonAttributes = AttributeSet("id", "action");
 
-    private readonly CuiMarkupParser _parser;
+    private readonly CuiRichParser _parser;
 
-    public AndroidCuiSurfaceLoader(CuiMarkupParser? parser = null)
+    public AndroidCuiSurfaceLoader(CuiRichParser? parser = null)
     {
-        _parser = parser ?? new CuiMarkupParser();
+        _parser = parser ?? new CuiRichParser();
     }
 
     public AndroidCuiSurface Load(string filePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var fullPath = Path.GetFullPath(filePath);
-        CuiMarkupFormat.RequireCuiInput(fullPath);
+        CuiProjectItems.RequireCui(fullPath);
         return Parse(File.ReadAllText(fullPath), fullPath);
     }
 
@@ -90,7 +91,7 @@ public sealed class AndroidCuiSurfaceLoader
         ArgumentNullException.ThrowIfNull(source);
 
         // Reject the identity before asking a platform source to open anything.
-        CuiMarkupFormat.RequireCuiInput(sourceName);
+        CuiProjectItems.RequireCui(sourceName);
         var markup = await source.ReadAsync(sourceName, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         return Parse(markup, sourceName);
@@ -101,30 +102,29 @@ public sealed class AndroidCuiSurfaceLoader
         ArgumentNullException.ThrowIfNull(markup);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);
 
-        // CuiMarkupParser repeats this check by design. Keeping it at the Android edge
+        // CuiRichParser repeats this check by design. Keeping it at the Android edge
         // ensures legacy files cannot be interpreted even if parser behavior changes.
-        CuiMarkupFormat.RequireCuiInput(sourceName);
+        CuiProjectItems.RequireCui(sourceName);
         var document = _parser.Parse(markup, sourceName);
-        ValidateAttributes(document.Root, RootAttributes, sourceName);
-        ValidateNoText(document.Root, sourceName);
+        ValidateRootAttributes(document, RootAttributes, sourceName);
 
         return new AndroidCuiSurface(
             document.SourceName,
-            OptionalAttribute(document.Root, "id"),
-            document.Root.Children.Select(child => Project(child, sourceName)).ToArray());
+            OptionalRootAttribute(document, "id"),
+            document.Components.Select(child => Project(child, sourceName)).ToArray());
     }
 
-    private static AndroidCuiNode Project(CuiElement element, string sourceName) => element.Name switch
+    private static AndroidCuiNode Project(CuiComponent element, string sourceName) => element.Type switch
     {
         "Stack" => ProjectStack(element, sourceName),
         "Text" => ProjectText(element, sourceName),
         "Button" => ProjectButton(element, sourceName),
         _ => throw new AndroidCuiSurfaceException(
             sourceName,
-            $"Element <{element.Name}> is not supported by the bounded Android CUI surface.")
+            $"Element <{element.Type}> is not supported by the bounded Android CUI surface.")
     };
 
-    private static AndroidCuiStackNode ProjectStack(CuiElement element, string sourceName)
+    private static AndroidCuiStackNode ProjectStack(CuiComponent element, string sourceName)
     {
         ValidateAttributes(element, StackAttributes, sourceName);
         ValidateNoText(element, sourceName);
@@ -146,7 +146,7 @@ public sealed class AndroidCuiSurfaceLoader
             element.Children.Select(child => Project(child, sourceName)).ToArray());
     }
 
-    private static AndroidCuiTextNode ProjectText(CuiElement element, string sourceName)
+    private static AndroidCuiTextNode ProjectText(CuiComponent element, string sourceName)
     {
         ValidateAttributes(element, TextAttributes, sourceName);
         ValidateLeaf(element, sourceName);
@@ -164,7 +164,7 @@ public sealed class AndroidCuiSurfaceLoader
         return new AndroidCuiTextNode(OptionalAttribute(element, "id"), element.Text, role);
     }
 
-    private static AndroidCuiButtonNode ProjectButton(CuiElement element, string sourceName)
+    private static AndroidCuiButtonNode ProjectButton(CuiComponent element, string sourceName)
     {
         ValidateAttributes(element, ButtonAttributes, sourceName);
         ValidateLeaf(element, sourceName);
@@ -188,30 +188,42 @@ public sealed class AndroidCuiSurfaceLoader
     }
 
     private static void ValidateAttributes(
-        CuiElement element,
+        CuiComponent element,
         IReadOnlySet<string> supported,
         string sourceName)
     {
-        var unsupported = element.Attributes.Keys.FirstOrDefault(attribute => !supported.Contains(attribute));
+        var unsupported = element.AuthoredAttributeNames().FirstOrDefault(attribute => !supported.Contains(attribute));
         if (unsupported is not null)
             throw new AndroidCuiSurfaceException(
                 sourceName,
-                $"Attribute '{unsupported}' is not supported on <{element.Name}> by the Android CUI surface.");
+                $"Attribute '{unsupported}' is not supported on <{element.Type}> by the Android CUI surface.");
     }
 
-    private static void ValidateNoText(CuiElement element, string sourceName)
+    private static void ValidateRootAttributes(
+        CuiDocument document,
+        IReadOnlySet<string> supported,
+        string sourceName)
+    {
+        var unsupported = document.RootProperties.Keys.FirstOrDefault(attribute => !supported.Contains(attribute));
+        if (unsupported is not null)
+            throw new AndroidCuiSurfaceException(
+                sourceName,
+                $"Attribute '{unsupported}' is not supported on <Cui> by the Android CUI surface.");
+    }
+
+    private static void ValidateNoText(CuiComponent element, string sourceName)
     {
         if (!string.IsNullOrWhiteSpace(element.Text))
-            throw new AndroidCuiSurfaceException(sourceName, $"Element <{element.Name}> cannot contain direct text.");
+            throw new AndroidCuiSurfaceException(sourceName, $"Element <{element.Type}> cannot contain direct text.");
     }
 
-    private static void ValidateLeaf(CuiElement element, string sourceName)
+    private static void ValidateLeaf(CuiComponent element, string sourceName)
     {
         if (element.Children.Count != 0)
-            throw new AndroidCuiSurfaceException(sourceName, $"Element <{element.Name}> cannot contain child elements.");
+            throw new AndroidCuiSurfaceException(sourceName, $"Element <{element.Type}> cannot contain child elements.");
     }
 
-    private static string RequiredAttribute(CuiElement element, string name, string sourceName)
+    private static string RequiredAttribute(CuiComponent element, string name, string sourceName)
     {
         var value = OptionalAttribute(element, name);
         if (string.IsNullOrWhiteSpace(value))
@@ -219,10 +231,16 @@ public sealed class AndroidCuiSurfaceLoader
         return value;
     }
 
-    private static string? OptionalAttribute(CuiElement element, string name) =>
-        element.Attributes.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value)
+    private static string? OptionalAttribute(CuiComponent element, string name) =>
+        element.TryGetLiteralAttribute(name, out var value) && !string.IsNullOrWhiteSpace(value)
             ? value.Trim()
             : null;
+
+    private static string? OptionalRootAttribute(CuiDocument document, string name) =>
+        document.RootProperties.TryGetValue(name, out var value) && value is CuiLiteralValue literal
+            && !string.IsNullOrWhiteSpace(literal.Value)
+                ? literal.Value.Trim()
+                : null;
 
     private static IReadOnlySet<string> AttributeSet(params string[] names) =>
         new HashSet<string>(names, StringComparer.Ordinal);

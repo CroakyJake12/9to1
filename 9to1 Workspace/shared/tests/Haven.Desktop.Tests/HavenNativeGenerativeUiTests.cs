@@ -16,6 +16,69 @@ namespace Haven.Desktop.Tests;
 public sealed class HavenNativeGenerativeUiTests
 {
     [AvaloniaFact]
+    public async Task In_place_document_update_uses_current_capability_binding_and_keeps_permission_gate()
+    {
+        var store = new GenUiInstanceStore();
+        var local = new GenUiLocalActionRegistry();
+        var oldActionInvoked = false;
+        local.Register("old-local-target", (semanticEvent, _) =>
+        {
+            oldActionInvoked = true;
+            return Task.FromResult(GenerativeUiEventRouter.Result(
+                semanticEvent, GenUiActionStatus.Completed, "Old action ran."));
+        });
+        var capabilityInvoked = false;
+        var capabilities = new GenUiCapabilityEventHandler();
+        capabilities.Register("messages.send", (semanticEvent, _, _) =>
+        {
+            capabilityInvoked = true;
+            return Task.FromResult(GenerativeUiEventRouter.Result(
+                semanticEvent, GenUiActionStatus.Completed, "Capability ran."));
+        });
+        var permissions = new PermissionDecisionEngine();
+        var router = new GenerativeUiEventRouter(
+            [local, capabilities], new BoundedGenUiEventAuditSink(), store, permissions);
+        using var surface = new HavenGenUiSceneSurface(router, store);
+        var host = new HavenSceneControl { Root = surface.Root };
+        var window = new Window { Width = 520, Height = 360, Content = host };
+        var threadId = Guid.NewGuid();
+        var instanceId = Guid.NewGuid();
+        var origin = new GenUiOrigin(threadId, "chat", null, instanceId);
+        var documentId = Guid.NewGuid();
+        var first = ActionDocument(origin, documentId, new GenUiActionBinding(
+            "run-local", GenUiRouteKind.Local, "old-local-target", CapabilityRiskClass.Low, false));
+        var updated = ActionDocument(origin, documentId, new GenUiActionBinding(
+            "send-message", GenUiRouteKind.Capability, "messages.send", CapabilityRiskClass.Consequential, true));
+
+        try
+        {
+            surface.Present(first);
+            window.Show();
+            window.UpdateLayout();
+            var button = Single<HavenButton>(surface.Root, "run");
+            var completed = new TaskCompletionSource<GenUiActionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            surface.ActionCompleted += (_, result) => completed.TrySetResult(result);
+
+            surface.Present(updated);
+
+            Assert.Same(button, Single<HavenButton>(surface.Root, "run"));
+            Click(surface.Root, button);
+            var result = await completed.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+
+            Assert.Equal(GenUiActionStatus.PermissionRequired, result.Status);
+            Assert.Equal("send-message", result.ActionId);
+            Assert.Equal("messages.send", result.StructuredResult.GetProperty("scope").GetString());
+            Assert.False(oldActionInvoked);
+            Assert.False(capabilityInvoked);
+        }
+        finally
+        {
+            window.Content = null;
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
     public async Task Calculator_routes_through_Haven_scene_and_updates_existing_result()
     {
         var store = new GenUiInstanceStore();
@@ -187,6 +250,21 @@ public sealed class HavenNativeGenerativeUiTests
 
     private static T Single<T>(HavenElement root, string componentId) where T : HavenElement =>
         Assert.Single(root.DescendantsAndSelf().OfType<T>(), element => element.Name == "GenUI_" + componentId.Replace('.', '_'));
+
+    private static GenUiDocument ActionDocument(GenUiOrigin origin, Guid documentId, GenUiActionBinding action)
+    {
+        var button = new GenUiComponent(
+            "run", "HavenButton",
+            new Dictionary<string, JsonElement>
+            {
+                ["label"] = JsonSerializer.SerializeToElement("Run")
+            },
+            [action], []);
+        var root = new GenUiComponent("root", "HavenStack", new Dictionary<string, JsonElement>(), [], [button]);
+        return new GenUiDocument(
+            documentId, GenerativeUiContractValidator.CurrentContractVersion, origin,
+            "Action refresh", "Accent", root, new Dictionary<string, JsonElement>(), DateTimeOffset.UtcNow);
+    }
 
     private static void Click(HavenElement root, HavenElement element)
     {

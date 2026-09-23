@@ -17,21 +17,18 @@
         <ScrollViewer verticalalignment="Stretch">
           <StackPanel automationid="NavHost" orientation="Vertical" />
         </ScrollViewer>
-        <StackPanel orientation="Horizontal" margin="0 8 0 0">
-          <Button content="+ Section" action="AddSection" automationid="AddSectionButton" accessible-name="Add section" margin="0 0 8 0" />
-          <Button content="+ Page" action="AddPage" automationid="AddPageButton" accessible-name="Add page" />
-        </StackPanel>
+        <Button content="+ New" action="NewMenu" automationid="AddNewButton" accessible-name="New content" margin="0 8 0 0" />
       </StackPanel>
     </Border>
 
     <!-- Editor column: contextual toolbar, context panel, document canvas -->
-    <StackPanel grid-row="1" grid-column="1" orientation="Vertical">
-      <StackPanel automationid="ToolbarHost" orientation="Vertical" />
-      <StackPanel automationid="ContextHost" orientation="Vertical" />
-      <ScrollViewer automationid="EditorScroll" verticalalignment="Stretch" horizontalalignment="Stretch">
-        <Border automationid="PageCard" maxwidth="800" horizontalalignment="Center" cornerradius="8" borderthickness="1" padding="40 32" margin="28 20">
+    <Grid grid-row="1" grid-column="1" rowdefinitions="Auto,Auto,*">
+      <StackPanel automationid="ToolbarHost" grid-row="0" orientation="Vertical" />
+      <StackPanel automationid="ContextHost" grid-row="1" orientation="Vertical" />
+      <ScrollViewer automationid="EditorScroll" grid-row="2" verticalalignment="Stretch" horizontalalignment="Stretch">
+        <Border automationid="PageCard" horizontalalignment="Stretch" cornerradius="0" borderthickness="0" padding="0" margin="0">
           <Grid automationid="PageSurface">
-            <StackPanel automationid="DocumentContentLayer" orientation="Vertical">
+            <StackPanel automationid="DocumentContentLayer" orientation="Vertical" margin="40 32">
               <TextBlock text="{Binding PageTitle, fallback=Welcome}" font-size="28" font-weight="Bold" margin="0 0 0 4" />
               <StackPanel automationid="BlocksHost" orientation="Vertical" />
             </StackPanel>
@@ -39,7 +36,7 @@
           </Grid>
         </Border>
       </ScrollViewer>
-    </StackPanel>
+    </Grid>
 
     <!-- Minimal status footer -->
     <Border automationid="FooterBar" grid-row="2" grid-column="0" grid-columnspan="2" padding="12 6">

@@ -41,6 +41,8 @@ internal sealed class MapsHavenScene : IDisposable
 
     /// <summary>Raised whenever the viewport changed and tiles may need to be loaded.</summary>
     public event EventHandler? ViewportChanged;
+    public event EventHandler? SaveFormCancelled;
+    public event EventHandler? DataWorkbookRequested;
 
     public Page Root { get; }
     internal HavenInput SearchInput { get; private set; } = null!;
@@ -49,6 +51,7 @@ internal sealed class MapsHavenScene : IDisposable
     internal Select ProfileSelect { get; private set; } = null!;
     internal HavenButton RouteButton { get; private set; } = null!;
     internal HavenButton SavePlaceButton { get; private set; } = null!;
+    internal HavenButton OpenDataButton { get; private set; } = null!;
     internal HavenButton CopyCoordinatesButton { get; private set; } = null!;
     internal Select SavedPlacesSelect { get; private set; } = null!;
     internal Select RecentSearchesSelect { get; private set; } = null!;
@@ -60,6 +63,7 @@ internal sealed class MapsHavenScene : IDisposable
     private Container RouteLayer { get; set; } = null!;
     private HavenText ZoomLabel { get; set; } = null!;
     private HavenText AttributionText { get; set; } = null!;
+    private Container SaveFormHost { get; set; } = null!;
 
     private GeoPoint? MarkerStart { get; set; }
     private GeoPoint? MarkerEnd { get; set; }
@@ -159,6 +163,24 @@ internal sealed class MapsHavenScene : IDisposable
     }
 
     internal void SetStatus(string message) => StatusText.Content = _disposed ? StatusText.Content : message;
+
+    internal void ShowSaveForm(HavenElement formRoot)
+    {
+        if (_disposed) return;
+        HideSaveForm();
+        Set(SaveFormHost, HavenProperties.Visibility, HavenVisibility.Visible);
+        SaveFormHost.Add(formRoot);
+        var cancel = Button("Maps.SaveForm.Cancel", "Cancel", ButtonVariant.Secondary);
+        cancel.Invoked += (_, _) => SaveFormCancelled?.Invoke(this, EventArgs.Empty);
+        SaveFormHost.Add(cancel);
+    }
+
+    internal void HideSaveForm()
+    {
+        if (SaveFormHost is null) return;
+        foreach (var child in SaveFormHost.Children.ToArray()) SaveFormHost.Remove(child);
+        Set(SaveFormHost, HavenProperties.Visibility, HavenVisibility.Collapsed);
+    }
 
     public void Dispose()
     {
@@ -312,6 +334,11 @@ internal sealed class MapsHavenScene : IDisposable
         actionsRow.Add(CopyCoordinatesButton);
         card.Add(actionsRow);
         card.Add(Muted("Actions apply to the most recently chosen place."));
+        SaveFormHost = new Container { Name = "Maps.SaveForm.Host", Layout = HavenLayout.Vertical };
+        Set(SaveFormHost, HavenProperties.Width, HavenLength.Percent(100));
+        Set(SaveFormHost, HavenProperties.Gap, HavenLength.Px(8));
+        Set(SaveFormHost, HavenProperties.Visibility, HavenVisibility.Collapsed);
+        card.Add(SaveFormHost);
         parent.Add(card);
     }
 
@@ -324,6 +351,9 @@ internal sealed class MapsHavenScene : IDisposable
         Set(SavedPlacesSelect, HavenProperties.Width, HavenLength.Percent(100));
         card.Add(SavedPlacesSelect);
         card.Add(Muted("Saved places stay on this device."));
+        OpenDataButton = Button("Maps.Saved.OpenInData", "Open saved places in Data", ButtonVariant.Secondary);
+        OpenDataButton.Invoked += (_, _) => DataWorkbookRequested?.Invoke(this, EventArgs.Empty);
+        card.Add(OpenDataButton);
         parent.Add(card);
     }
 

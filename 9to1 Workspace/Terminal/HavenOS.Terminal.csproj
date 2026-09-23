@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
-    <ProjectReference Include="..\framework\CUI\src\NineToOne.Cui.Markup.csproj" />
+    <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <Compile Remove="Tests\**\*.cs" />
     <Content Include="Terminal.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

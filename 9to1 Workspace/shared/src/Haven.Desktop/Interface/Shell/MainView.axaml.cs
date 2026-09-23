@@ -664,6 +664,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         HavenSurface.Training => "Haven Training",
         HavenSurface.Mesh => "Haven Mesh",
         HavenSurface.Mail => "Haven Mail",
+        HavenSurface.Maps => "Haven Maps",
+        HavenSurface.Forms => "Haven Forms",
         _ => "Haven"
     };
 
@@ -1689,6 +1691,11 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (openInNewTab) AddNewTab();
             OpenMaps();
         }
+        else if (route.Kind == HavenAppRouteKind.Forms)
+        {
+            if (openInNewTab) AddNewTab();
+            OpenForms();
+        }
         else if (route.Kind == HavenAppRouteKind.ModeWorkspace)
         {
             await OpenModeWorkspaceAsync(app, route.Surface, openInNewTab);
@@ -1796,6 +1803,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                     break;
                 case HavenSurface.Maps:
                     OpenMaps();
+                    break;
+                case HavenSurface.Forms:
+                    OpenForms();
                     break;
                 default:
                     var registered = await _modeRegistry.GetModeByKeyAsync(surfaceName.ToLowerInvariant(), CancellationToken.None);

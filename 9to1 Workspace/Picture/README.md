@@ -7,8 +7,9 @@ This directory contains the first bounded standalone Images app surface for Have
 1. Launch the `HavenOS.Images` Avalonia desktop app directly.
 2. Choose **Open image** and select a local PNG, JPEG, BMP, GIF, or WebP file.
 3. Images asks Avalonia/Skia to decode the selected file and shows the decoded bitmap plus its pixel dimensions.
-4. **Previous** and **Next** browse other files in the same directory whose extensions are in the Images picker policy, ordered by file name.
-5. Decode, file-system, and picker failures are shown as status text rather than being presented as successful capability.
+4. The image opens fitted to the preview. **Zoom in**, **Zoom out**, and **Fit** adjust the view; the mouse wheel zooms around its pointer location, and dragging pans the image.
+5. **Previous** and **Next** browse other files in the same directory whose extensions are in the Images picker policy, ordered by file name.
+6. Decode, file-system, and picker failures are shown as status text rather than being presented as successful capability.
 
 The extension list is a picker/navigation policy, not a promise that every file carrying one of those extensions will decode. Actual decoding is delegated to the Avalonia runtime and corrupt/unsupported payloads fail closed in the UI.
 

@@ -1,5 +1,8 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Globalization;
+using System.Text.Json;
+using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.ViewModels;
@@ -18,6 +21,13 @@ namespace Haven.Desktop.Views.Pages.Catalog;
 /// </summary>
 internal sealed class AgentsHavenScene : IDisposable
 {
+    private const int MaxActivityJsonCharacters = 256 * 1024;
+    private const int MaxActivityEventCount = 512;
+    private const int VisibleActivityEventCount = 8;
+    private static readonly JsonSerializerOptions ActivityJsonOptions = new() { MaxDepth = 16 };
+
+    private sealed record ActivityLogEvent(string? Title, bool? Succeeded, TimeSpan? Duration, DateTimeOffset? Timestamp);
+
     private readonly CatalogPageViewModel _viewModel;
     private readonly DynamicUI _dynamicUi;
     private readonly AgentTaskRuntimeService? _runtime;
@@ -103,6 +113,12 @@ internal sealed class AgentsHavenScene : IDisposable
         RecentRunsText.Accessibility.AccessibleName = "Recent Agent runs";
         Set(RecentRunsText, HavenProperties.Foreground, "TextSecondary");
         runtimeNotice.Add(RecentRunsText);
+        var latestActivityTitle = new HavenText("Latest run activity") { Level = TextLevel.H4 };
+        runtimeNotice.Add(latestActivityTitle);
+        LatestActivityText = new HavenText("No Agent run selected.") { Name = "Agents.Execution.LatestActivity", Level = TextLevel.Caption };
+        LatestActivityText.Accessibility.AccessibleName = "Latest Agent run activity log";
+        Set(LatestActivityText, HavenProperties.Foreground, "TextSecondary");
+        runtimeNotice.Add(LatestActivityText);
         Root.Add(runtimeNotice);
 
         Creator = BuildCreator();
@@ -174,6 +190,7 @@ internal sealed class AgentsHavenScene : IDisposable
     public HavenButton CancelLatestButton { get; }
     public HavenButton RetryLatestButton { get; }
     public HavenText RecentRunsText { get; }
+    public HavenText LatestActivityText { get; }
     public DynamicUIRuntime AgentCards { get; }
 
     private Container BuildCreator()
@@ -388,9 +405,7 @@ internal sealed class AgentsHavenScene : IDisposable
 
         ExecutionStatusText.Content = $"Starting {card.Name}…";
         var run = await _runtime.RunAsync(card.Id, RunTaskInput.Text.Trim(), CancellationToken.None, resourceReference: RunResourceInput.Text);
-        _latestRun = run;
-        _recentRuns = [run, .. _recentRuns.Where(item => item.Id != run.Id).Take(7)];
-        RefreshExecutionStatus();
+        ApplyRunUpdate(run);
         return run;
     }
 
@@ -416,6 +431,7 @@ internal sealed class AgentsHavenScene : IDisposable
 
     private void RefreshExecutionStatus()
     {
+        LatestActivityText.Content = FormatActivityLog(_latestRun);
         if (_runtime is null)
         {
             ExecutionStatusText.Content = "Agent runtime is unavailable in this host.";
@@ -457,11 +473,106 @@ internal sealed class AgentsHavenScene : IDisposable
                 $"{run.AgentName} · {run.Status} · {run.ProgressPercent}% · {Short(run.Task, 72)}"));
     }
 
+    internal static string FormatActivityLog(AgentRun? run)
+    {
+        if (run is null)
+            return "No Agent run selected.";
+        if (string.IsNullOrWhiteSpace(run.ActivityJson))
+            return "No tool events were recorded for this run.";
+        if (run.ActivityJson.Length > MaxActivityJsonCharacters)
+            return "Saved activity log is too large to display.";
+
+        ActivityLogEvent?[] activities;
+        try
+        {
+            activities = JsonSerializer.Deserialize<ActivityLogEvent?[]>(run.ActivityJson, ActivityJsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return "Saved activity log could not be read.";
+        }
+
+        if (activities.Length == 0)
+            return "No tool events were recorded for this run.";
+        if (activities.Length > MaxActivityEventCount || activities.Any(activity =>
+                activity is null || !activity.Succeeded.HasValue || activity.Duration is null || activity.Duration < TimeSpan.Zero || activity.Timestamp is null))
+            return "Saved activity log contains invalid events.";
+
+        var visible = activities.TakeLast(VisibleActivityEventCount).ToArray();
+        var lines = visible.Select(activity =>
+        {
+            var entry = activity!;
+            var title = SafeActivityTitle(entry.Title);
+            var timestamp = FormatActivityTimestamp(entry.Timestamp!.Value);
+            var outcome = entry.Succeeded!.Value ? "Succeeded" : "Needs attention";
+            return $"{timestamp} · {outcome} · {title} · {entry.Duration!.Value.TotalMilliseconds:0} ms";
+        }).ToList();
+
+        var earlierCount = activities.Length - visible.Length;
+        if (earlierCount > 0)
+            lines.Insert(0, $"{earlierCount} earlier events omitted.");
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
     private static string Short(string value, int limit) => value.Length <= limit ? value : value[..(limit - 1)] + "…";
+
+    private static string SafeActivityTitle(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return "Agent activity";
+
+        var normalized = new string(title.Select(character =>
+        {
+            var category = char.GetUnicodeCategory(character);
+            return char.IsControl(character) || char.IsWhiteSpace(character) || category == UnicodeCategory.Format
+                ? ' '
+                : character;
+        }).ToArray());
+        var compact = string.Join(' ', normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        return compact.Length == 0 ? "Agent activity" : Short(compact, 96);
+    }
+
+    private static string FormatActivityTimestamp(DateTimeOffset timestamp)
+    {
+        try
+        {
+            timestamp = timestamp.ToLocalTime();
+        }
+        catch (ArgumentException)
+        {
+            // A boundary timestamp in a damaged log should still produce a readable entry.
+        }
+
+        return timestamp.ToString("HH:mm:ss zzz", CultureInfo.InvariantCulture);
+    }
 
     private void OnRunChanged(AgentRun run)
     {
-        _latestRun = run;
+        if (_disposed) return;
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            ApplyRunUpdate(run);
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() => ApplyRunUpdate(run));
+    }
+
+    internal void ApplyRunUpdate(AgentRun run)
+    {
+        if (_disposed) return;
+
+        var recent = _recentRuns.ToList();
+        var existingIndex = recent.FindIndex(item => item.Id == run.Id);
+        if (existingIndex >= 0)
+            recent[existingIndex] = run;
+        else
+            recent.Insert(0, run);
+        _recentRuns = recent.Take(8).ToArray();
+
+        if (_latestRun is null || _latestRun.Id == run.Id || run.CreatedAt >= _latestRun.CreatedAt)
+            _latestRun = run;
+
         RefreshExecutionStatus();
     }
 
@@ -473,8 +584,8 @@ internal sealed class AgentsHavenScene : IDisposable
     private async void OnRetryLatestInvoked(object? sender, EventArgs e)
     {
         if (_runtime is null || _latestRun is null) return;
-        _latestRun = await _runtime.RetryAsync(_latestRun.Id, CancellationToken.None);
-        RefreshExecutionStatus();
+        var run = await _runtime.RetryAsync(_latestRun.Id, CancellationToken.None);
+        ApplyRunUpdate(run);
     }
 
     private void UpdateDeleteLabels()

@@ -11,6 +11,7 @@ using Xunit;
 
 namespace CakeOS.Apps.Boards.App.Tests;
 
+[Collection(BoardSessionTestCollection.Name)]
 public sealed class BoardsVisualTests
 {
     private static T Ui<T>(Func<T> work) => TestUiThread.Run(work);
@@ -327,7 +328,7 @@ public sealed class BoardsVisualTests
         Assert.Equal("Save failed", BoardsViewModel.MapSaveState("Autosave failed: busy"));
         Assert.Equal("Saving…", BoardsViewModel.MapSaveState("Saving…"));
         Assert.Equal("Unsaved changes", BoardsViewModel.MapSaveState("Editing…"));
-        Assert.Equal("Unsaved changes", BoardsViewModel.MapSaveState("Loaded locally"));
+        Assert.Equal("Loaded locally", BoardsViewModel.MapSaveState("Loaded locally"));
     }
 
     [Fact]

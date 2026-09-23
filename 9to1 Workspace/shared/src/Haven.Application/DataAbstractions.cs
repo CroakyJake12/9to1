@@ -6,6 +6,13 @@ public sealed record DataWorkbookSummary(Guid Id, string Title, DateTimeOffset U
 public sealed record DataSaveResult(Guid WorkbookId, int Version, DateTimeOffset SavedAt, string CurrentPath, string BackupPath);
 public sealed record DataQueryResult(IReadOnlyList<string> Columns, IReadOnlyList<IReadOnlyList<string>> Rows, bool Truncated, string SourceDescription);
 
+/// <summary>Stable Data workbooks that are owned by other Haven apps and open in the Data app.</summary>
+public static class DataWorkbookAppLinks
+{
+    public static Guid MapsSavedPlaces { get; } = Guid.Parse("f1000000-0000-4000-8000-000000000001");
+    public static Guid FormsResponses { get; } = Guid.Parse("f1000000-0000-4000-8000-000000000002");
+}
+
 public interface IDataWorkbookRepository
 {
     Task<IReadOnlyList<DataWorkbookSummary>> ListAsync(CancellationToken cancellationToken);

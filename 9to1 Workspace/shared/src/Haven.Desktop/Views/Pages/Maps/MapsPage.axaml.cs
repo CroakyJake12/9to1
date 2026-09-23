@@ -1,10 +1,12 @@
 using System.Globalization;
+using System.Text.Json;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.HavenUI.Backend;
+using Haven.Desktop.HavenUI.GenerativeUi;
 using Haven.Desktop.Services.Maps;
 
 namespace Haven.Desktop.Views.Pages.Maps;
@@ -20,8 +22,12 @@ public sealed partial class MapsPage : UserControl, IDisposable
     private readonly IMapService _maps;
     private readonly ITileSource _tiles;
     private readonly IMapsSavedPlaceStore _savedPlaces;
+    private readonly StructuredFormTemplateRuntime _structuredFormTemplate;
+    private readonly GenerativeUiEventRouter _genUiRouter;
+    private readonly GenUiInstanceStore _genUiInstances;
     private readonly MapsHavenScene _scene;
     private readonly CancellationTokenSource _lifetime = new();
+    private readonly Guid _mapSessionId = Guid.NewGuid();
     private readonly HashSet<MapTileId> _requestedTiles = [];
     private readonly List<MapPlace> _results = [];
     private readonly List<SavedMapPlace> _saved = [];
@@ -30,14 +36,26 @@ public sealed partial class MapsPage : UserControl, IDisposable
     private MapPlace? _startPlace;
     private MapPlace? _endPlace;
     private MapPlace? _selectedPlace;
+    private MapPlace? _placeBeingSaved;
+    private HavenGenUiSceneSurface? _saveFormSurface;
+    private int _savingPlace;
     private bool _searching;
     private bool _disposed;
 
-    public MapsPage(IMapService maps, ITileSource tiles, IMapsSavedPlaceStore savedPlaces)
+    public MapsPage(
+        IMapService maps,
+        ITileSource tiles,
+        IMapsSavedPlaceStore savedPlaces,
+        StructuredFormTemplateRuntime structuredFormTemplate,
+        GenerativeUiEventRouter genUiRouter,
+        GenUiInstanceStore genUiInstances)
     {
         _maps = maps ?? throw new ArgumentNullException(nameof(maps));
         _tiles = tiles ?? throw new ArgumentNullException(nameof(tiles));
         _savedPlaces = savedPlaces ?? throw new ArgumentNullException(nameof(savedPlaces));
+        _structuredFormTemplate = structuredFormTemplate ?? throw new ArgumentNullException(nameof(structuredFormTemplate));
+        _genUiRouter = genUiRouter ?? throw new ArgumentNullException(nameof(genUiRouter));
+        _genUiInstances = genUiInstances ?? throw new ArgumentNullException(nameof(genUiInstances));
 
         _scene = new MapsHavenScene();
         Scene = new HavenSceneControl(new MapTileImageResolver(tiles)) { Root = _scene.Root };
@@ -55,17 +73,23 @@ public sealed partial class MapsPage : UserControl, IDisposable
 
     internal HavenSceneControl Scene { get; }
     internal MapsHavenScene HavenScene => _scene;
+    public event Action<Guid>? DataWorkbookRequested;
 
     private void WireEvents()
     {
         _scene.SearchButton.Invoked += (_, _) => _ = RunSearchAsync();
         Scene.InputSubmitted += input =>
         {
-            if (ReferenceEquals(input, _scene.SearchInput)) _ = RunSearchAsync();
+            if (_saveFormSurface?.OwnsInput(input) == true)
+                _ = _saveFormSurface.SubmitInputAsync(input, _lifetime.Token);
+            else if (ReferenceEquals(input, _scene.SearchInput))
+                _ = RunSearchAsync();
         };
         _scene.ResultsSelect.SelectionChanged += (_, _) => HandleResultSelected();
         _scene.RouteButton.Invoked += (_, _) => _ = RunRouteAsync();
         _scene.SavePlaceButton.Invoked += (_, _) => _ = SaveSelectedPlaceAsync();
+        _scene.SaveFormCancelled += OnSaveFormCancelled;
+        _scene.DataWorkbookRequested += OnOpenDataRequested;
         _scene.CopyCoordinatesButton.Invoked += (_, _) => _ = CopySelectedCoordinatesAsync();
         _scene.SavedPlacesSelect.SelectionChanged += (_, _) => HandleSavedPlaceSelected();
         _scene.RecentSearchesSelect.SelectionChanged += (_, _) => HandleRecentSearchSelected();
@@ -261,28 +285,81 @@ public sealed partial class MapsPage : UserControl, IDisposable
         }
     }
 
-    private async Task SaveSelectedPlaceAsync()
+    private Task SaveSelectedPlaceAsync()
     {
-        if (_disposed) return;
+        if (_disposed) return Task.CompletedTask;
         var place = _selectedPlace;
         if (place is null)
         {
             _scene.SetStatus("Choose a place first; saving applies to the most recently chosen place.");
+            return Task.CompletedTask;
+        }
+        OpenSaveForm(place);
+        return Task.CompletedTask;
+    }
+
+    private void OpenSaveForm(MapPlace place)
+    {
+        CloseSaveForm();
+        var document = _structuredFormTemplate.Create(_mapSessionId, "maps", BuildSavePlaceFormInputs(place));
+        var surface = new HavenGenUiSceneSurface(_genUiRouter, _genUiInstances);
+        surface.ActionCompleted += OnSavePlaceFormActionCompleted;
+        _saveFormSurface = surface;
+        _placeBeingSaved = place;
+        surface.Present(document);
+        _scene.ShowSaveForm(surface.Root);
+        _scene.SetStatus($"Edit the saved name and note for {place.DisplayName}.");
+    }
+
+    private static IReadOnlyDictionary<string, JsonElement> BuildSavePlaceFormInputs(MapPlace place) =>
+        new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+        {
+            ["title"] = JsonSerializer.SerializeToElement("Save place details"),
+            ["schema"] = JsonSerializer.SerializeToElement(new object[]
+            {
+                new { id = "displayName", label = "Saved place name", type = "text", placeholder = "Name this place" },
+                new { id = "note", label = "Note", type = "text", placeholder = "Optional note" }
+            }),
+            ["initialValues"] = JsonSerializer.SerializeToElement(new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["displayName"] = place.DisplayName,
+                ["note"] = place.DetailLine ?? string.Empty
+            })
+        };
+
+    private void OnSavePlaceFormActionCompleted(object? sender, GenUiActionResult result)
+    {
+        if (result.ActionId == "structured-form.submit" && result.Status == GenUiActionStatus.Completed)
+            _ = PersistSavePlaceFormAsync(result.StructuredResult);
+    }
+
+    private void OnSaveFormCancelled(object? sender, EventArgs e) => CloseSaveForm();
+    private void OnOpenDataRequested(object? sender, EventArgs e) => DataWorkbookRequested?.Invoke(_savedPlaces.DataWorkbookId);
+
+    private async Task PersistSavePlaceFormAsync(JsonElement values)
+    {
+        if (_disposed || Interlocked.Exchange(ref _savingPlace, 1) != 0) return;
+        var place = _placeBeingSaved;
+        if (place is null)
+        {
+            _scene.SetStatus("Choose a place first; saving applies to the most recently chosen place.");
+            Interlocked.Exchange(ref _savingPlace, 0);
+            return;
+        }
+        if (!TryCreateSavedPlaceFromForm(place, values, DateTimeOffset.UtcNow, out var saved, out var error))
+        {
+            _scene.SetStatus(error ?? "The saved place name is required.");
+            Interlocked.Exchange(ref _savingPlace, 0);
             return;
         }
         try
         {
-            var saved = new SavedMapPlace(
-                Guid.NewGuid().ToString("N"),
-                place.DisplayName,
-                place.DetailLine,
-                place.Location,
-                DateTimeOffset.Now);
-            await _savedPlaces.SaveAsync(saved, _lifetime.Token);
-            _saved.Insert(0, saved);
+            await _savedPlaces.SaveAsync(saved!, _lifetime.Token);
+            _saved.Insert(0, saved!);
             while (_saved.Count > MapsStoreLogic.MaxSavedPlaces) _saved.RemoveAt(_saved.Count - 1);
             RefreshSavedPlacesList();
-            _scene.SetStatus($"Saved “{place.DisplayName}” to this device.");
+            _scene.SetStatus($"Saved “{saved!.DisplayName}” to this device.");
+            CloseSaveForm();
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
         {
@@ -291,6 +368,52 @@ public sealed partial class MapsPage : UserControl, IDisposable
         {
             _scene.SetStatus($"The place could not be saved: {failure.Message}");
         }
+        finally
+        {
+            Interlocked.Exchange(ref _savingPlace, 0);
+        }
+    }
+
+    internal static bool TryCreateSavedPlaceFromForm(
+        MapPlace place,
+        JsonElement values,
+        DateTimeOffset savedAt,
+        out SavedMapPlace? saved,
+        out string? validationError)
+    {
+        ArgumentNullException.ThrowIfNull(place);
+        saved = null;
+        validationError = null;
+        if (values.ValueKind != JsonValueKind.Object
+            || !values.TryGetProperty("structured-form.input.displayName", out var nameValue)
+            || nameValue.ValueKind != JsonValueKind.String
+            || string.IsNullOrWhiteSpace(nameValue.GetString()))
+        {
+            validationError = "The saved place name is required.";
+            return false;
+        }
+        var displayName = nameValue.GetString()!.Trim();
+        if (displayName.Length > 160) displayName = displayName[..160];
+        string? note = null;
+        if (values.TryGetProperty("structured-form.input.note", out var noteValue) && noteValue.ValueKind == JsonValueKind.String)
+        {
+            var noteText = noteValue.GetString()?.Trim();
+            if (!string.IsNullOrWhiteSpace(noteText)) note = noteText.Length > 4000 ? noteText[..4000] : noteText;
+        }
+        saved = new SavedMapPlace(Guid.NewGuid().ToString("N"), displayName, note, place.Location, savedAt);
+        return true;
+    }
+
+    private void CloseSaveForm()
+    {
+        _scene.HideSaveForm();
+        var surface = _saveFormSurface;
+        _saveFormSurface = null;
+        _placeBeingSaved = null;
+        if (surface is null) return;
+        surface.ActionCompleted -= OnSavePlaceFormActionCompleted;
+        if (surface.Document is { } document) _genUiInstances.Remove(document.Origin.InstanceId);
+        surface.Dispose();
     }
 
     private async Task CopySelectedCoordinatesAsync()
@@ -345,6 +468,10 @@ public sealed partial class MapsPage : UserControl, IDisposable
         SizeChanged -= OnSizeChanged;
         Interlocked.Exchange(ref _tileLoading, null)?.Cancel();
         _lifetime.Cancel();
+        CloseSaveForm();
+        _scene.SaveFormCancelled -= OnSaveFormCancelled;
+        _scene.DataWorkbookRequested -= OnOpenDataRequested;
+        DataWorkbookRequested = null;
         _lifetime.Dispose();
         Scene.Root = null;
         _scene.Dispose();

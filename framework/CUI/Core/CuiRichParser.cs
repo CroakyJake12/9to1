@@ -58,7 +58,10 @@ public sealed class CuiRichParser
                 actions,
                 templates,
                 components,
-                SpanOf(root, sourceName));
+                SpanOf(root, sourceName))
+            {
+                RootProperties = ParseRootProperties(root, sourceName),
+            };
         }
         catch (XmlException ex)
         {
@@ -93,6 +96,24 @@ public sealed class CuiRichParser
             [], new Dictionary<string, CuiActionDefinition>(),
             new Dictionary<string, CuiTemplateDefinition>(),
             [], CuiSourceSpan.At(sourceName, 1, 1));
+
+    private static IReadOnlyDictionary<string, CuiValue> ParseRootProperties(
+        XElement root,
+        string sourceName)
+    {
+        var properties = new Dictionary<string, CuiValue>(StringComparer.Ordinal);
+        foreach (var attribute in root.Attributes())
+        {
+            if (attribute.IsNamespaceDeclaration || attribute.Name.Namespace != XNamespace.None)
+                continue;
+
+            properties[attribute.Name.LocalName] = ParseValue(
+                attribute.Value,
+                SpanOf(attribute, sourceName));
+        }
+
+        return properties;
+    }
 
     #region Resources
 
@@ -354,7 +375,10 @@ public sealed class CuiRichParser
 
         return new CuiComponent(
             type, name, classes, properties, actions,
-            children, condition, list, span);
+            children, condition, list, span)
+        {
+            Text = string.Concat(element.Nodes().OfType<XText>().Select(node => node.Value)).Trim(),
+        };
     }
 
     /// <summary>
@@ -410,7 +434,10 @@ public sealed class CuiRichParser
             null,
             null,
             span,
-            defaultTheme: themeName);
+            defaultTheme: themeName)
+        {
+            Text = string.Empty,
+        };
     }
 
     #endregion
