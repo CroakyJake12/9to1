@@ -184,6 +184,55 @@ public sealed class SpacesAppSurfaceTests
         Assert.Equal(SpacesDestination.Home, surface.CurrentDestination);
     }
 
+    [Fact]
+    public async Task Concurrent_navigation_is_serialized_so_destination_matches_final_scope()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var host = new BlockingRecordingHost();
+        var surface = new SpacesAppSurface(registry, host);
+
+        var studyNavigation = surface.NavigateAsync(SpacesDestination.Study);
+        await host.SpaceLaunchStarted.Task;
+
+        var chatNavigation = surface.NavigateAsync(SpacesDestination.Chat);
+        await Assert.ThrowsAsync<TimeoutException>(
+            () => host.ModeLaunchStarted.Task.WaitAsync(TimeSpan.FromMilliseconds(100)));
+
+        host.ReleaseSpaceLaunch.TrySetResult();
+        await Task.WhenAll(studyNavigation, chatNavigation);
+
+        Assert.True(host.ModeLaunchStarted.Task.IsCompletedSuccessfully);
+        Assert.Equal(HavenMode.Chat, host.Mode);
+        Assert.Equal(SpaceRegistry.StudySpaceId, host.Space!.Id);
+        Assert.Null(await registry.GetCurrentSpaceIdAsync());
+        Assert.Equal(SpacesDestination.Chat, surface.CurrentDestination);
+    }
+
+    private sealed class BlockingRecordingHost : ISpacesNavigationHost
+    {
+        public TaskCompletionSource SpaceLaunchStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ReleaseSpaceLaunch { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ModeLaunchStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public SpaceDefinition? Space { get; private set; }
+        public HavenMode? Mode { get; private set; }
+
+        public Task OpenHomeAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task OpenModeAsync(HavenMode mode, CancellationToken cancellationToken = default)
+        {
+            Mode = mode;
+            ModeLaunchStarted.TrySetResult();
+            return Task.CompletedTask;
+        }
+
+        public async Task OpenSpaceAsync(SpaceDefinition space, CancellationToken cancellationToken = default)
+        {
+            Space = space;
+            SpaceLaunchStarted.TrySetResult();
+            await ReleaseSpaceLaunch.Task.WaitAsync(cancellationToken);
+        }
+    }
+
     private sealed class RecordingHost : ISpacesNavigationHost
     {
         public bool HomeOpened { get; private set; }

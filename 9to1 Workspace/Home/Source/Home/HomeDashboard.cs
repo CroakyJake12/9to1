@@ -342,6 +342,6 @@ public sealed class HomeDashboard : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        _operationGate.Dispose();
+        // An in-flight operation may still own the gate and release it in its finally block.
     }
 }

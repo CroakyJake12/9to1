@@ -252,7 +252,11 @@ public sealed class MapsSavedPlaceStore : IMapsSavedPlaceStore
         var oldById = existing.GroupBy(row => row.Place.Id, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.OrderBy(row => row.Row).First(), StringComparer.Ordinal);
         var retainedIds = places.Select(place => place.Id).ToHashSet(StringComparer.Ordinal);
-        foreach (var stale in existing.Where(row => !retainedIds.Contains(row.Place.Id)))
+        var retainedRows = oldById.Values.Select(row => row.Row).ToHashSet();
+        // Data workbooks may be edited outside Maps and can therefore contain duplicate IDs.
+        // Keep the earliest row as the canonical record and clear only Maps-owned columns on
+        // every stale or duplicate row; user-added cells on those rows remain intact.
+        foreach (var stale in existing.Where(row => !retainedIds.Contains(row.Place.Id) || !retainedRows.Contains(row.Row)))
             foreach (var header in Headers) sheet.SetCell(stale.Row, columns[header], string.Empty);
 
         var usedRows = sheet.Cells.Where(cell => cell.Row > 0).Select(cell => cell.Row).ToHashSet();

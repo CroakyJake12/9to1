@@ -125,6 +125,7 @@ public sealed class CanvasAppSurface
         var previousTool = _interaction.Tool;
         try
         {
+            _interaction.ReleaseInteraction();
             _interaction.Tool = CanvasTool.Pen;
             var changed = _interaction.Begin(samples[0]);
             for (var index = 1; index < samples.Count - 1; index++)
@@ -144,6 +145,7 @@ public sealed class CanvasAppSurface
         var previousTool = _interaction.Tool;
         try
         {
+            _interaction.ReleaseInteraction();
             _interaction.Tool = CanvasTool.Pan;
             _interaction.Begin(new CanvasPointerSample(startX, startY));
             var changed = _interaction.Move(new CanvasPointerSample(endX, endY));

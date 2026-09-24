@@ -31,8 +31,13 @@ public sealed class ImageViewportState
         var ratio = nextScale / Scale;
         var centerX = viewportWidth / 2;
         var centerY = viewportHeight / 2;
-        OffsetX = anchorX - centerX - (anchorX - centerX - OffsetX) * ratio;
-        OffsetY = anchorY - centerY - (anchorY - centerY - OffsetY) * ratio;
+        var nextOffsetX = anchorX - centerX - (anchorX - centerX - OffsetX) * ratio;
+        var nextOffsetY = anchorY - centerY - (anchorY - centerY - OffsetY) * ratio;
+        if (!double.IsFinite(nextOffsetX) || !double.IsFinite(nextOffsetY))
+            return false;
+
+        OffsetX = nextOffsetX;
+        OffsetY = nextOffsetY;
         Scale = nextScale;
         return true;
     }
@@ -43,8 +48,13 @@ public sealed class ImageViewportState
             || (deltaX == 0 && deltaY == 0))
             return false;
 
-        OffsetX += deltaX;
-        OffsetY += deltaY;
+        var nextOffsetX = OffsetX + deltaX;
+        var nextOffsetY = OffsetY + deltaY;
+        if (!double.IsFinite(nextOffsetX) || !double.IsFinite(nextOffsetY))
+            return false;
+
+        OffsetX = nextOffsetX;
+        OffsetY = nextOffsetY;
         return true;
     }
 

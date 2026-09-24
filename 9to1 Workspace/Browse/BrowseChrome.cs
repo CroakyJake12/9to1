@@ -190,6 +190,7 @@ public sealed class BrowseChrome : IAsyncDisposable
         ThrowIfDisposed();
         var tab = RequireTab(tabId);
         var index = _tabs.IndexOf(tab);
+        var wasSelected = tab.Id == _selectedTabId;
         _tabs.Remove(tab);
         await ReleaseHostAsync(tab).ConfigureAwait(false);
         tab.Session.Dispose();
@@ -199,9 +200,13 @@ public sealed class BrowseChrome : IAsyncDisposable
         if (_tabs.Count == 0)
         {
             var home = new Uri(_data.Settings.HomePage, UriKind.Absolute);
-            await AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
+            var recreated = await AddRuntimeAsync(Guid.NewGuid(), "New tab", home, BrowserTabPrivacy.Standard, string.Empty, cancellationToken).ConfigureAwait(false);
+            _selectedTabId = recreated.Id;
         }
-        _selectedTabId = _tabs[Math.Clamp(index, 0, _tabs.Count - 1)].Id;
+        else if (wasSelected)
+        {
+            _selectedTabId = _tabs[Math.Clamp(index, 0, _tabs.Count - 1)].Id;
+        }
         _status = "Tab closed.";
         await SaveTabsAsync(cancellationToken).ConfigureAwait(false);
         return Publish();

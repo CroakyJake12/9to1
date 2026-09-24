@@ -11,11 +11,36 @@ static string FindRepositoryRoot()
     var current = new DirectoryInfo(Directory.GetCurrentDirectory());
     while (current is not null)
     {
-        if (File.Exists(Path.Combine(current.FullName, "apps", "Data", "workers", "calc_worker.py")))
+        if (File.Exists(Path.Combine(current.FullName, "apps", "Data", "workers", "calc_worker.py")) ||
+            File.Exists(Path.Combine(current.FullName, "workers", "calc_worker.py")) ||
+            File.Exists(Path.Combine(current.FullName, "9to1 Workspace", "Data", "workers", "calc_worker.py")))
             return current.FullName;
         current = current.Parent;
     }
     throw new DirectoryNotFoundException("Could not locate the CakeOS repository root.");
+}
+
+static async Task VerifyCellAddressContractAsync()
+{
+    var engine = new MisaddressedCellEngine();
+    await using var grid = new DataGridSession(engine);
+    await grid.OpenAsync("fake.ods");
+    try
+    {
+        _ = await grid.EditCellAsync(0, 0, "=1+1", "=1+1");
+        throw new InvalidOperationException("DataGridSession accepted an engine response for the wrong cell.");
+    }
+    catch (InvalidDataException)
+    {
+        Assert(engine.RecalculateCount == 0, "DataGridSession recalculated after the engine reported editing the wrong cell.");
+    }
+}
+
+if (args.Length == 1 && args[0] == "--cell-contract-only")
+{
+    await VerifyCellAddressContractAsync();
+    Console.WriteLine("DataGridSession cell-address contract check passed.");
+    return;
 }
 
 static async Task ConvertCsvToOdsAsync(string csvPath, string outputDirectory)
@@ -57,13 +82,21 @@ static async Task ConvertCsvToOdsAsync(string csvPath, string outputDirectory)
 
 var root = FindRepositoryRoot();
 var python = Environment.GetEnvironmentVariable("HAVEN_DATA_PYTHON") ?? "python3";
-var calcWorker = Path.Combine(root, "apps", "Data", "workers", "calc_worker.py");
-var duckDbWorker = Path.Combine(root, "apps", "Data", "workers", "duckdb_worker.py");
+var workerDirectory = new[]
+{
+    Path.Combine(root, "apps", "Data", "workers"),
+    Path.Combine(root, "workers"),
+    Path.Combine(root, "9to1 Workspace", "Data", "workers"),
+}.First(Directory.Exists);
+var calcWorker = Path.Combine(workerDirectory, "calc_worker.py");
+var duckDbWorker = Path.Combine(workerDirectory, "duckdb_worker.py");
 var temporaryRoot = Path.Combine(Path.GetTempPath(), $"haven-data-dotnet-runtime-{Guid.NewGuid():N}");
 Directory.CreateDirectory(temporaryRoot);
 
 try
 {
+    await VerifyCellAddressContractAsync();
+
     var csvPath = Path.Combine(temporaryRoot, "fixture.csv");
     var sourceOds = Path.Combine(temporaryRoot, "fixture.ods");
     var savedOds = Path.Combine(temporaryRoot, "saved.ods");
@@ -173,4 +206,42 @@ try
 finally
 {
     try { Directory.Delete(temporaryRoot, recursive: true); } catch { }
+}
+
+sealed class MisaddressedCellEngine : IDataSpreadsheetEngine
+{
+    public int RecalculateCount { get; private set; }
+
+    public Task<DataWorkbookHandle> OpenAsync(string path, bool readOnly, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new DataWorkbookHandle("fake", path, readOnly));
+
+    public Task<IReadOnlyList<DataSheetSummary>> ListSheetsAsync(string workbookId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<DataSheetSummary>>([new DataSheetSummary("Sheet1", 0)]);
+
+    public Task<DataRangeSnapshot> ReadRangeAsync(string workbookId, DataRangeRequest range, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new DataRangeSnapshot(range.Sheet, range.StartRow, range.StartColumn,
+            Enumerable.Range(0, range.RowCount).Select(_ => (IReadOnlyList<string>)Enumerable.Repeat(string.Empty, range.ColumnCount).ToArray()).ToArray()));
+
+    public Task<DataCellSnapshot> SetCellAsync(string workbookId, DataCellAddress address, string? value, string? formula = null, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new DataCellSnapshot(address with { Column = address.Column + 1 }, value ?? string.Empty, formula ?? string.Empty));
+
+    public Task<DataRangeSnapshot> CreateSheetWithValuesAsync(string workbookId, string sheetName, IReadOnlyList<IReadOnlyList<string>> values, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<IReadOnlyList<DataNamedRangeSummary>> ListNamedRangesAsync(string workbookId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<DataNamedRangeSummary> CreateNamedRangeAsync(string workbookId, string name, DataRangeRequest range, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task DeleteNamedRangeAsync(string workbookId, string name, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<DataListValidationState> GetListValidationAsync(string workbookId, DataRangeRequest range, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<DataListValidationState> ApplyListValidationAsync(string workbookId, DataRangeRequest range, IReadOnlyList<string> values, bool allowBlank = true, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<DataListValidationState> ClearValidationAsync(string workbookId, DataRangeRequest range, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task InsertRowsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task DeleteRowsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task InsertColumnsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task DeleteColumnsAsync(string workbookId, string sheet, int index, int count, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task RecalculateAsync(string workbookId, CancellationToken cancellationToken = default)
+    {
+        RecalculateCount++;
+        return Task.CompletedTask;
+    }
+    public Task SaveAsync(string workbookId, string destinationPath, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task CloseAsync(string workbookId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

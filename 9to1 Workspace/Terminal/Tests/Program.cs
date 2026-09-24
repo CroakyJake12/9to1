@@ -50,6 +50,7 @@ internal static class TerminalAppSurfaceSpecs
         await AskPermissionRequiresApprovalWithoutExecutingAsync();
         await ApprovalUsesTheSamePersistentSessionAsync();
         await WorkingDirectoryAndNewSessionUseHostSessionContractAsync();
+        await FailedReplacementPreservesHealthySessionAsync();
         CreationFailureFailsClosedAndRedactsReason();
     }
 
@@ -121,6 +122,25 @@ internal static class TerminalAppSurfaceSpecs
         Check(!surface.UnavailableReason.Contains("secret-value", StringComparison.Ordinal), "raw secret from host failure must not reach UI state");
     }
 
+    private static async Task FailedReplacementPreservesHealthySessionAsync()
+    {
+        var factory = new FakeSessionFactory();
+        using var surface = new TerminalAppSurface(new(factory, () => PermissionMode.FullAccess));
+        var original = factory.LastSession!;
+        factory.FailNextCreate = true;
+
+        Check(!surface.NewSession(), "failed replacement should report failure");
+        Check(surface.IsAvailable, "failed replacement must leave the existing session available");
+        Check(surface.SessionMetadata?.SessionId == original.Metadata.SessionId,
+            "failed replacement must retain the existing session metadata");
+        Check(original.Metadata.State != TerminalSessionLifecycleState.Disposed,
+            "failed replacement must not dispose the existing session");
+        var result = await surface.SubmitAsync("echo still-working");
+        Check(result.State == TerminalAppCommandState.Succeeded,
+            "the existing session must continue accepting commands after replacement failure");
+        Check(original.ExecuteCount == 1, "commands after replacement failure must use the original session");
+    }
+
     private static void Check(bool condition, string message)
     {
         if (!condition)
@@ -132,10 +152,16 @@ internal sealed class FakeSessionFactory : ITerminalSessionFactory
 {
     public int CreateCount { get; private set; }
     public FakeSession? LastSession { get; private set; }
+    public bool FailNextCreate { get; set; }
 
     public ITerminalSession Create(string initialDirectory, string? displayName = null)
     {
         CreateCount++;
+        if (FailNextCreate)
+        {
+            FailNextCreate = false;
+            throw new InvalidOperationException("replacement creation failed");
+        }
         LastSession = new FakeSession(initialDirectory, displayName ?? "Terminal");
         return LastSession;
     }

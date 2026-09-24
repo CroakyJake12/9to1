@@ -48,6 +48,7 @@ public sealed class SpacesAppSurface
 
     private readonly SpaceRegistry _spaces;
     private readonly ISpacesNavigationHost _host;
+    private readonly SemaphoreSlim _navigationGate = new(1, 1);
 
     public SpacesAppSurface(SpaceRegistry spaces, ISpacesNavigationHost host)
     {
@@ -65,36 +66,44 @@ public sealed class SpacesAppSurface
         SpacesDestination destination,
         CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        switch (destination)
+        await _navigationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            case SpacesDestination.Home:
-                await _host.OpenHomeAsync(cancellationToken).ConfigureAwait(false);
-                break;
-            case SpacesDestination.Chat:
-                await NavigateWithScopeAsync(
-                    nextSpaceId: null,
-                    token => _host.OpenModeAsync(HavenMode.Chat, token),
-                    cancellationToken).ConfigureAwait(false);
-                break;
-            case SpacesDestination.Study:
-                await NavigateToBuiltInSpaceAsync(SpaceRegistry.StudySpaceId, cancellationToken).ConfigureAwait(false);
-                break;
-            case SpacesDestination.Tasks:
-                // The existing Agent built-in Space is intentionally used here. SpaceLaunchPolicy
-                // already maps that Space kind onto HavenMode.Tasks.
-                await NavigateToBuiltInSpaceAsync(SpaceRegistry.AgentSpaceId, cancellationToken).ConfigureAwait(false);
-                break;
-            case SpacesDestination.Research:
-                await NavigateToBuiltInSpaceAsync(SpaceRegistry.ResearchSpaceId, cancellationToken).ConfigureAwait(false);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(destination), destination, "Unknown Spaces destination.");
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-        CurrentDestination = destination;
-        DestinationChanged?.Invoke(destination);
+            switch (destination)
+            {
+                case SpacesDestination.Home:
+                    await _host.OpenHomeAsync(cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Chat:
+                    await NavigateWithScopeAsync(
+                        nextSpaceId: null,
+                        token => _host.OpenModeAsync(HavenMode.Chat, token),
+                        cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Study:
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.StudySpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Tasks:
+                    // The existing Agent built-in Space is intentionally used here. SpaceLaunchPolicy
+                    // already maps that Space kind onto HavenMode.Tasks.
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.AgentSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Research:
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.ResearchSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(destination), destination, "Unknown Spaces destination.");
+            }
+
+            CurrentDestination = destination;
+            DestinationChanged?.Invoke(destination);
+        }
+        finally
+        {
+            _navigationGate.Release();
+        }
     }
 
     private async Task NavigateToBuiltInSpaceAsync(Guid spaceId, CancellationToken cancellationToken)

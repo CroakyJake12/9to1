@@ -142,7 +142,11 @@ public sealed class DataGridSession : IAsyncDisposable
             _sheets[_activeSheetIndex].Name,
             checked(_startRow + row),
             checked(_startColumn + column));
-        _ = await _spreadsheet.SetCellAsync(workbook.Id, address, value, formula, cancellationToken).ConfigureAwait(false);
+        var editedCell = await _spreadsheet.SetCellAsync(workbook.Id, address, value, formula, cancellationToken).ConfigureAwait(false);
+        if (editedCell is null)
+            throw new InvalidDataException("Spreadsheet engine returned no cell snapshot after editing a cell.");
+        if (editedCell.Address != address)
+            throw new InvalidDataException($"Spreadsheet engine edited {editedCell.Address.Sheet}!({editedCell.Address.Row},{editedCell.Address.Column}) instead of {address.Sheet}!({address.Row},{address.Column}).");
         await _spreadsheet.RecalculateAsync(workbook.Id, cancellationToken).ConfigureAwait(false);
         return await RefreshAsync(cancellationToken).ConfigureAwait(false);
     }

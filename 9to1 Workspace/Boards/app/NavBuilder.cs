@@ -13,6 +13,7 @@ namespace CakeOS.Apps.Boards.App;
 public static class NavBuilder
 {
     private static readonly HashSet<string> CollapsedSections = new(StringComparer.Ordinal);
+    private static object? _stateDocument;
 
     /// <summary>Pending inline rename: set by double-click, F2 or the Rename menu item.</summary>
     private static (bool IsSection, string SectionId, string? PageId)? _pendingRename;
@@ -24,6 +25,14 @@ public static class NavBuilder
     {
         ArgumentNullException.ThrowIfNull(host);
         ArgumentNullException.ThrowIfNull(vm);
+        var document = vm.Session.Document;
+        if (!ReferenceEquals(_stateDocument, document))
+        {
+            CollapsedSections.Clear();
+            _pendingRename = null;
+            RenameActive = false;
+            _stateDocument = document;
+        }
         RenameActive = false;
         host.Children.Clear();
 

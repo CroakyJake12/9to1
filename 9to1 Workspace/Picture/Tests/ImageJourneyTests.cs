@@ -104,4 +104,29 @@ public sealed class ImageJourneyTests
         Assert.True(viewport.IsDefault);
         Assert.True(viewport.CanZoomOut);
     }
+
+    [Fact]
+    public void ViewportRejectsPanAndZoomThatWouldOverflowWithoutChangingState()
+    {
+        var viewport = new ImageViewportState();
+        Assert.True(viewport.PanBy(double.MaxValue, double.MaxValue));
+
+        Assert.False(viewport.PanBy(double.MaxValue, 1));
+        Assert.Equal(double.MaxValue, viewport.OffsetX);
+        Assert.Equal(double.MaxValue, viewport.OffsetY);
+        Assert.Equal(1, viewport.Scale);
+
+        Assert.False(viewport.ZoomAt(2, 0, 0, 2, 2));
+        Assert.Equal(double.MaxValue, viewport.OffsetX);
+        Assert.Equal(double.MaxValue, viewport.OffsetY);
+        Assert.Equal(1, viewport.Scale);
+        Assert.True(double.IsFinite(viewport.OffsetX));
+        Assert.True(double.IsFinite(viewport.OffsetY));
+
+        Assert.True(viewport.Reset());
+        Assert.True(viewport.IsDefault);
+        Assert.True(viewport.PanBy(12, -7));
+        Assert.Equal(12, viewport.OffsetX);
+        Assert.Equal(-7, viewport.OffsetY);
+    }
 }

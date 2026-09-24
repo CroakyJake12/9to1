@@ -57,4 +57,22 @@ public sealed class CanvasAppSurfaceTests
 
         Assert.Contains("Haven Canvas document", error.Message);
     }
+
+    [Fact]
+    public void Pan_does_not_append_its_endpoint_to_an_in_progress_pen_stroke()
+    {
+        var surface = CanvasAppSurface.Create();
+        surface.Interaction.Tool = CanvasTool.Pen;
+        Assert.True(surface.Interaction.Begin(new CanvasPointerSample(10, 20)));
+
+        Assert.True(surface.Pan(0, 0, 30, 40));
+
+        var stroke = Assert.Single(surface.Board.Strokes);
+        var point = Assert.Single(stroke.Points);
+        Assert.Equal(10, point.X);
+        Assert.Equal(20, point.Y);
+        Assert.Equal(30, surface.Board.OffsetX);
+        Assert.Equal(40, surface.Board.OffsetY);
+        Assert.Same(surface.Board, CanvasDocumentModel.GetBoard(surface.Document));
+    }
 }

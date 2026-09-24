@@ -187,9 +187,10 @@ public sealed class TerminalAppSurface : IDisposable
         {
             replacement = _host.SessionFactory.Create(_initialDirectory, "Terminal");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            SetUnavailable("Terminal host could not create a shell session: " + SensitiveTextRedactor.Redact(ex.Message, 2_000));
+            // A failed replacement must not take down the session that is still serving commands.
+            // The bool result reports the failure while preserving the current availability/state.
             return false;
         }
 
