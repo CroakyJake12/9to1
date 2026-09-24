@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>HavenOS.Apps.Present</RootNamespace>
     <AssemblyName>HavenOS.Present</AssemblyName>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>

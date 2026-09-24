@@ -3,6 +3,7 @@
     <AssemblyName>HavenOS.Apps.Browse</AssemblyName>
     <RootNamespace>HavenOS.Apps.Browse</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
     <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
   </PropertyGroup>
 

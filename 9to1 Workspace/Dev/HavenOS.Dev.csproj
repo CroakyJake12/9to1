@@ -8,6 +8,7 @@
   <PropertyGroup>
     <AssemblyName>HavenOS.Apps.Dev</AssemblyName>
     <RootNamespace>HavenOS.Apps.Dev</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*;Tests\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />

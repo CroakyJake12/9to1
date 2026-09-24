@@ -24,7 +24,9 @@ Browse CUI shell
 `HavenOS.Apps.Browse` already owns browser state, privacy, permission, popup,
 download, recovery, and an engine-host seam (`IBrowseEngineHostFactory`). It
 does **not** currently expose a Gecko/Chromium identity, select an engine per
-tab, register an engine factory, or contain Gecko source/package provenance.
+tab, or register an engine factory. Pinned Firefox/Gecko source and MPL-2.0
+provenance are now under `9to1 Workspace/Browse/Source/FirefoxGecko/` and
+`Source/DONOR-PROVENANCE.md`; there is still no Gecko adapter/build/package proof.
 The existing `BrowseCuiScene` still builds legacy HUI controls, so it is not the
 required CUI shell.
 

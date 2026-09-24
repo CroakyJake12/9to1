@@ -18,3 +18,7 @@ This standalone slice uses the reference for behavior and migration provenance. 
 The donor/reference is first-party code in this same `CroakyJake12/HavenAI` repository. At the authoritative base commit, GitHub repository metadata reports `license: null`, and a root `LICENSE` file is not present. Therefore this slice does **not** assert an open-source licence that the repository has not declared.
 
 The existing Imagine donor uses NAudio for decoding. This first Wave slice intentionally introduces no new package dependency and implements only a bounded 16-bit PCM WAV reader locally, so it does not copy or vendor NAudio code.
+
+## External pipeline donor (2026-09-24)
+
+The declared GStreamer and GES backend source is now available under `Wave/Source/GStreamer/` and `Wave/Source/GES/` at exact fork/upstream revisions recorded in `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json`. This does not change the first-party PCM reader or claim a GStreamer runtime, editing pipeline, or plugin acceptance. The standalone GES repository's latest default-branch HEAD is historical; current GES code is also present within the pinned GStreamer monorepo.

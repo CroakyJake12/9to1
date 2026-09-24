@@ -32,3 +32,7 @@ Severity scale: `NONE` = pattern correct, no violation. `LOW` = proof/doc gap on
 3. **Write stays BLOCKED** until an authoritative Writer-backed slice lands; do not backfill it from Data/Present code or from memory of Writer UI.
 4. **Licence boundaries**: AppFlowy-Board neutrality (MPL, no donor classes in schema) is the template; Rnote GPL-3.0-or-later engine boundary (C ABI, no `ui` feature) likewise. Future donors need a `THIRD_PARTY.md`-equivalent before integration.
 5. **Absent ≠ failed**: rows marked BLOCKED are scope statements, not accusations. The violation this audit was asked to find is confirmed only for Canvas/Boards HUI surfaces (simplified vs donor), and both now have matrices that bound the debt without discarding the proven backends.
+
+## Later source-only checkpoint — 2026-09-24
+
+This page's earlier `no source in this checkout` statements describe the historical audit worktree. In the canonical repository, latest default-branch sources for the external donors listed above now have detached app-local checkouts and exact upstream/fork pins in `eng/donor-sources.json` and app-local `Source/DONOR-PROVENANCE.md`. Source availability is separate from integration, build, runtime and platform acceptance. The strict recursive-checkout gate remains open until each path is a committed gitlink; no downstream capability in the historical table is upgraded by source presence alone.

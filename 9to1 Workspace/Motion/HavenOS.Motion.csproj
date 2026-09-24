@@ -8,5 +8,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>HavenOS.Apps.Motion</RootNamespace>
     <AssemblyName>HavenOS.Motion</AssemblyName>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
 </Project>

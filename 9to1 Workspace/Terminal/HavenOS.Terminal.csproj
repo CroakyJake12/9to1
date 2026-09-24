@@ -8,6 +8,7 @@
   <PropertyGroup>
     <AssemblyName>HavenOS.Terminal</AssemblyName>
     <RootNamespace>HavenOS.Apps.Terminal</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />

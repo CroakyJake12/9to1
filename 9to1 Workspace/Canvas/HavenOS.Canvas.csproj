@@ -2,6 +2,7 @@
   <PropertyGroup>
     <AssemblyName>HavenOS.Canvas</AssemblyName>
     <RootNamespace>HavenOS.Apps.Canvas</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />

@@ -3,6 +3,7 @@
     <AssemblyName>HavenOS.Home</AssemblyName>
     <RootNamespace>HavenOS.Home</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\Dulche\Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

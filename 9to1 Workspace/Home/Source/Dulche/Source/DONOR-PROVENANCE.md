@@ -1,0 +1,3 @@
+# Dulche llama.cpp donor and broker boundary
+
+Upstream https://github.com/ggml-org/llama.cpp (`master`) and controlled fork https://github.com/CroakyJake12/llama.cpp are both pinned to `53ed051ce5e8193652e449f43216ca3859454f49` (tag `b11157`; selected 2026-09-24 UTC). The actual unmodified donor source is at `Source/llama.cpp/`, MIT notice `Source/llama.cpp/LICENSE`; no patches. `Dulche/llamacpp/` continues to hold 9-1 broker/model integration code and its older runtime build lock (`5266f24`/v0.4.0). The broker was not replaced, and compatibility with newest upstream source has **not** been established.

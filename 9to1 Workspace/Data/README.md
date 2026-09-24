@@ -2,7 +2,7 @@
 
 Status: **implemented and runtime-proven in disposable Ubuntu CI, including a thin HUI contract integration against the accepted CakeOS HUI reference; not yet graphically hosted inside the accepted Linux host and not yet accepted inside the approved CakeOS VM**.
 
-This directory is the CakeOS-native Haven Data foundation. It does not copy the legacy donor implementation or LibreOffice/DuckDB upstream source. HUI-facing code depends only on Haven-owned interfaces; LibreOffice Calc and DuckDB live behind separate worker processes.
+This directory is the CakeOS-native Haven Data foundation. Latest default-branch LibreOffice and DuckDB upstream source is materialised beneath `Source/LibreOffice/` and `Source/DuckDB/`; see `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json` for exact commits and fork URLs. This source import does not replace the separately versioned Calc/UNO and DuckDB worker runtimes or prove their compatibility with the newest sources. HUI-facing code depends only on Haven-owned interfaces; LibreOffice Calc and DuckDB live behind separate worker processes.
 
 ## Boundary
 

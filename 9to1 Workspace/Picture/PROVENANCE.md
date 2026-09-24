@@ -9,9 +9,9 @@ Observed: 2026-08-30
 | Official app page | https://apps.gnome.org/Loupe/ |
 | Official source repository | https://gitlab.gnome.org/GNOME/loupe |
 | Upstream license | GPL-3.0-or-later (SPDX identifier present in upstream source) |
-| Use in this slice | Reference-only: local file chooser → image view → browse adjacent images / inspect basic properties |
-| Code/assets copied | None |
+| Use in the historical first slice | Local file chooser → image view → browse adjacent images / inspect basic properties |
+| Current donor materialisation | Both glycin/libglycin and Loupe actual upstream source are pinned in `Source/`; see `Source/DONOR-PROVENANCE.md` |
 
 ## Boundary
 
-Loupe is used only as a product/interaction reference. No GPL source code, UI markup, icons, artwork, or other assets were copied into HavenOS. The implementation in this directory is original C#/Avalonia code and deliberately exposes only capabilities implemented locally in this slice.
+The roadmap names glycin/libglycin as the image-loader donor; Loupe is the viewer/interaction donor. Both actual donor trees are now present separately from this app's original C#/Avalonia implementation, with upstream licences intact. This does not establish loader integration or Loupe UI parity. The historical reference-only classification above describes the *first implementation slice*, not an exemption from donor-source obligations.

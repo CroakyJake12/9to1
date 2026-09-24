@@ -1,0 +1,3 @@
+# Present LibreOffice source
+
+Canonical repository https://git.libreoffice.org/core and its GitHub mirror https://github.com/LibreOffice/core (`master`) matched at the selected revision; controlled fork https://github.com/CroakyJake12/libreoffice is pinned to `d3fca73f81dfb19a72a0da41598b7390eaf5845b` (selected 2026-09-24 UTC). Actual unmodified source is in `Source/LibreOffice/`; `COPYING`, `COPYING.MPL` and `COPYING.LGPL` retain MPL-2.0 / LGPL-3.0-or-later terms. No patches. The Impress/LibreOfficeKit worker's ABI with this revision is unverified; its current headless tests do not establish donor-runtime compatibility.

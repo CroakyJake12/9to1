@@ -10,7 +10,7 @@ Evidence is attached to the exact commit that produced it; one stage never inher
 - Haven broker/model admission code: **implemented and CI-gated**.
 - Explicit local model manager: **implemented on the lifecycle slice; tested only when that slice's CI succeeds**.
 - Pinned CPU `llama-server`: **built/smoke-tested only when the relevant current-head `build-pinned-llamacpp-cpu` CI job succeeds**.
-- Pinned llama.cpp source: **not copied into this repository**.
+- This `llamacpp/` directory holds 9-1 integration/broker code, **not** upstream llama.cpp. The actual newest pinned upstream source is now separately materialised in `../Source/llama.cpp/`, with provenance in `../Source/DONOR-PROVENANCE.md`. The existing broker build lock still targets v0.4.0; compatibility with the latest source is unverified.
 - Model inference: **not runtime-proven until an approved GGUF is actually loaded and prompted**.
 - Approved Ubuntu VM: **unchanged until a separately recorded staging/runtime gate**.
 - GPU backends: **not built, tested, benchmarked, or runtime-proven**.

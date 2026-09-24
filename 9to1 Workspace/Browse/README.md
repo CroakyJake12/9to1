@@ -18,7 +18,7 @@ The authoritative starting point is `havenos-main` at `7b2acae6175e5c380a3812b53
 
 The repository's HavenOS provenance ledger records the Browse route source commit as `ec48a80d4da14f80dbb4f578a17f170ae70ddd5b`, which added the `web` alias while retaining the existing `HavenAppRouteKind.Browse` / `HavenSurface.Browse` path. The reused browser capability remains under `src/Haven.Browser`, principally `Session/BrowserSessionService.cs` for this slice.
 
-No external donor code is introduced by this migration slice; it reuses code already contained in the Haven repository and remains under the repository's existing licensing boundary.
+The original migration slice introduced no external donor code. The later donor-source pass added the actual pinned Firefox/Gecko source under `Source/FirefoxGecko/` with MPL-2.0; see `Source/DONOR-PROVENANCE.md`. This does not wire a Gecko engine or prove browser rendering.
 
 ## Visual boundary
 

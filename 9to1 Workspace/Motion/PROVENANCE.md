@@ -14,4 +14,4 @@ The slice does **not** claim or simulate timeline editing, keyframes, rendering,
 
 ## Donor / licence status
 
-No external donor implementation, source, UI markup, assets, codecs, or media engine are copied or vendored by this slice. No new third-party dependency is introduced.
+At the time this first slice was implemented, no external donor was present. GStreamer and GES actual source is now materialised under `Source/GStreamer/` and `Source/GES/` at immutable revisions; see `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json`. The standalone GES latest default-branch HEAD is historical, while the GStreamer monorepo contains the newer GES implementation. Neither source is integrated with Motion's current read-only header inspector; playback, editing, rendering and export remain unavailable.

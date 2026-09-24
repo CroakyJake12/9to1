@@ -4,3 +4,69 @@
 [submodule "9to1 OS/platform/mutter"]
 	path = 9to1 OS/platform/mutter
 	url = https://github.com/CroakyJake12/mutter.git
+[submodule "9to1 Workspace/Boards/Source/AppFlowyBoard"]
+	path = 9to1 Workspace/Boards/Source/AppFlowyBoard
+	url = https://github.com/CroakyJake12/appflowy-board.git
+[submodule "9to1 Workspace/Boards/Source/Rnote"]
+	path = 9to1 Workspace/Boards/Source/Rnote
+	url = https://github.com/CroakyJake12/rnote.git
+[submodule "9to1 Workspace/Canvas/Source/Rnote"]
+	path = 9to1 Workspace/Canvas/Source/Rnote
+	url = https://github.com/CroakyJake12/rnote.git
+[submodule "9to1 Workspace/Browse/Source/FirefoxGecko"]
+	path = 9to1 Workspace/Browse/Source/FirefoxGecko
+	url = https://github.com/CroakyJake12/gecko-dev.git
+[submodule "9to1 Workspace/Write/Source/LibreOffice"]
+	path = 9to1 Workspace/Write/Source/LibreOffice
+	url = https://github.com/CroakyJake12/libreoffice.git
+[submodule "9to1 Workspace/Present/Source/LibreOffice"]
+	path = 9to1 Workspace/Present/Source/LibreOffice
+	url = https://github.com/CroakyJake12/libreoffice.git
+[submodule "9to1 Workspace/Data/Source/LibreOffice"]
+	path = 9to1 Workspace/Data/Source/LibreOffice
+	url = https://github.com/CroakyJake12/libreoffice.git
+[submodule "9to1 Workspace/Data/Source/DuckDB"]
+	path = 9to1 Workspace/Data/Source/DuckDB
+	url = https://github.com/CroakyJake12/duckdb.git
+[submodule "9to1 Workspace/Planner/Source/EvolutionDataServer"]
+	path = 9to1 Workspace/Planner/Source/EvolutionDataServer
+	url = https://github.com/CroakyJake12/evolution-data-server.git
+[submodule "9to1 Workspace/Planner/Source/libical"]
+	path = 9to1 Workspace/Planner/Source/libical
+	url = https://github.com/CroakyJake12/libical.git
+[submodule "9to1 Workspace/Terminal/Source/libvterm"]
+	path = 9to1 Workspace/Terminal/Source/libvterm
+	url = https://github.com/CroakyJake12/libvterm.git
+[submodule "9to1 Workspace/Dev/Source/VSCodium"]
+	path = 9to1 Workspace/Dev/Source/VSCodium
+	url = https://github.com/CroakyJake12/vscodium.git
+[submodule "9to1 Workspace/Dev/Source/CodeOSS"]
+	path = 9to1 Workspace/Dev/Source/CodeOSS
+	url = https://github.com/CroakyJake12/vscode.git
+[submodule "9to1 Workspace/Picture/Source/glycin"]
+	path = 9to1 Workspace/Picture/Source/glycin
+	url = https://github.com/CroakyJake12/glycin.git
+[submodule "9to1 Workspace/Picture/Source/loupe"]
+	path = 9to1 Workspace/Picture/Source/loupe
+	url = https://github.com/CroakyJake12/loupe.git
+[submodule "9to1 Workspace/Wave/Source/GStreamer"]
+	path = 9to1 Workspace/Wave/Source/GStreamer
+	url = https://github.com/CroakyJake12/gstreamer.git
+[submodule "9to1 Workspace/Wave/Source/GES"]
+	path = 9to1 Workspace/Wave/Source/GES
+	url = https://github.com/CroakyJake12/gst-editing-services.git
+[submodule "9to1 Workspace/Motion/Source/GStreamer"]
+	path = 9to1 Workspace/Motion/Source/GStreamer
+	url = https://github.com/CroakyJake12/gstreamer.git
+[submodule "9to1 Workspace/Motion/Source/GES"]
+	path = 9to1 Workspace/Motion/Source/GES
+	url = https://github.com/CroakyJake12/gst-editing-services.git
+[submodule "9to1 Workspace/Home/Source/Dulche/Source/llama.cpp"]
+	path = 9to1 Workspace/Home/Source/Dulche/Source/llama.cpp
+	url = https://github.com/CroakyJake12/llama.cpp.git
+[submodule "9to1 OS/compatibility/wine/Source/Wine"]
+	path = 9to1 OS/compatibility/wine/Source/Wine
+	url = https://github.com/CroakyJake12/wine.git
+[submodule "9to1 OS/compatibility/winboat/Source/WinBoat"]
+	path = 9to1 OS/compatibility/winboat/Source/WinBoat
+	url = https://github.com/CroakyJake12/winboat.git

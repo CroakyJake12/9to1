@@ -8,5 +8,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>HavenOS.Apps.Wave</RootNamespace>
     <AssemblyName>HavenOS.Wave</AssemblyName>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
 </Project>
