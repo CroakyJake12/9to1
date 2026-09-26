@@ -81,8 +81,8 @@ public sealed class ModelRouter(IModelProviderRegistry providers) : IModelRouter
             if (eligibleSelection is not null)
                 return new(eligibleSelection, "The selected model supports the required capabilities and routing policy.", false);
 
-            if (request.Policy.Mode != ModelRoutingMode.ManualFallback)
-                throw new InvalidOperationException($"The explicitly selected model '{selected.Label}' is unavailable or does not satisfy this request's routing policy; automatic substitution is disabled.");
+            if (!request.Policy.AllowFallback)
+                throw new InvalidOperationException($"The explicitly selected model '{selected.Label}' is unavailable or does not satisfy this request's routing policy; fallback is disabled.");
         }
 
         foreach (var key in request.Policy.PreferredModelKeys)
@@ -91,18 +91,32 @@ public sealed class ModelRouter(IModelProviderRegistry providers) : IModelRouter
                     ? $"Selected the highest-priority eligible model in the configured route: {preferred.Label}."
                     : $"The explicit selection was ineligible; selected the next eligible model in the configured fallback chain: {preferred.Label}.", request.SelectedModel is not null);
 
-        if (request.SelectedModel is not null)
-            throw new InvalidOperationException("The explicitly selected model is ineligible and no eligible model is available in the configured fallback chain.");
+        if (request.SelectedModel is not null && request.Policy.PreferredModelKeys.Count > 0)
+            throw new InvalidOperationException("The explicit selection and configured fallback route contain no eligible model for this request.");
 
-        var automatic = candidates
-            .OrderByDescending(model => request.Policy.PreferLocal && model.IsLocal)
+        if (request.SelectedModel is not null)
+        {
+            if (!request.Policy.AllowFallback)
+                throw new InvalidOperationException("The explicitly selected model is ineligible and fallback is disabled.");
+            if (request.Policy.Mode == ModelRoutingMode.ManualFallback)
+                throw new InvalidOperationException("The explicit selection is ineligible and no eligible model is available in the configured fallback chain.");
+            var fallback = SelectAutomatic(candidates, request.Policy);
+            return fallback is null
+                ? throw new InvalidOperationException("The explicitly selected model is ineligible and no fallback model supports the request.")
+                : new(fallback, $"The explicit selection was ineligible; selected a compatible fallback model: {fallback.Label}.", true);
+        }
+
+        var automatic = SelectAutomatic(candidates, request.Policy);
+
+        return automatic is null
+            ? throw new InvalidOperationException("No enabled model supports the capabilities required for this request.")
+            : new(automatic, automatic.IsLocal ? "Selected a compatible local model." : "Selected a compatible cloud model.", false);
+    }
+
+    private static ProviderModelDescriptor? SelectAutomatic(IReadOnlyList<ProviderModelDescriptor> candidates, ModelRoutingPolicy policy) => candidates
+            .OrderByDescending(model => policy.PreferLocal && model.IsLocal)
             .ThenByDescending(model => model.Capabilities.Count)
             .ThenByDescending(model => model.ContextWindow ?? 0)
             .ThenBy(model => model.Label, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();
-
-        return automatic is null
-            ? throw new InvalidOperationException("No enabled model supports the capabilities required for this request.")
-            : new(automatic, automatic.IsLocal ? "Selected a compatible local model." : "Selected a compatible cloud model.", request.SelectedModel is not null);
-    }
 }

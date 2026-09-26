@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace HavenOS.Apps.Motion;
 
+// FileId is retained as an opaque Files identity; resolution is not available in this Motion-only lane.
 internal sealed record MotionAssetReference(Guid AssetId, string FileId);
 
 internal sealed record MotionElement(
@@ -124,8 +125,14 @@ internal sealed class MotionProjectStore
         using var projectLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         try
         {
-            var storedRevision = File.Exists(fullPath) ? Load(fullPath).Revision : -1;
-            if (storedRevision != expectedStoredRevision || project.Revision < expectedStoredRevision)
+            var storedProject = File.Exists(fullPath) ? Load(fullPath) : null;
+            var storedRevision = storedProject?.Revision ?? -1;
+            if (storedRevision != expectedStoredRevision
+                || (storedProject is null && project.Revision != 0)
+                || (storedProject is not null
+                    && (project.ProjectId != storedProject.ProjectId
+                        || project.SchemaVersion != storedProject.SchemaVersion
+                        || project.Revision != checked(expectedStoredRevision + 1))))
                 throw new InvalidOperationException("RevisionConflict");
             using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
             {

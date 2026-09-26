@@ -65,7 +65,7 @@ public sealed record ProviderModelDescriptor(string ProviderId, bool IsLocal, Mo
 /// <summary>
 /// Represents model routing policy and keeps its related state and behavior together.
 /// </summary>
-public sealed record ModelRoutingPolicy(ModelRoutingMode Mode, bool PreferLocal, bool AllowCloud, IReadOnlyList<string> PreferredModelKeys);
+public sealed record ModelRoutingPolicy(ModelRoutingMode Mode, bool PreferLocal, bool AllowCloud, IReadOnlyList<string> PreferredModelKeys, bool AllowFallback = true);
 /// <summary>
 /// Represents model routing request and keeps its related state and behavior together.
 /// </summary>

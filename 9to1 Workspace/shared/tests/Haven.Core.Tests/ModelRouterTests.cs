@@ -74,7 +74,47 @@ public sealed class ModelRouterTests
         var router = new ModelRouter(new StubRegistry([local, cloud]));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => router.RouteAsync(new ModelRoutingRequest(local,
-            new HashSet<ToolCapability> { ToolCapability.Vision }, new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, true, [cloud.Key])), CancellationToken.None));
+            new HashSet<ToolCapability> { ToolCapability.Vision }, new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, true, [cloud.Key], false)), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AutomaticExplicitSelectionUsesEligibleConfiguredFallbackInOrder()
+    {
+        var selected = Descriptor("ollama", true, "pinned", ToolCapability.Text);
+        var first = Descriptor("openai", false, "no-vision", ToolCapability.Text);
+        var next = Descriptor("anthropic", false, "vision", ToolCapability.Text, ToolCapability.Vision);
+        var later = Descriptor("gemini", false, "also-vision", ToolCapability.Text, ToolCapability.Vision, ToolCapability.Tools);
+        var router = new ModelRouter(new StubRegistry([selected, later, next, first]));
+
+        var result = await router.RouteAsync(new ModelRoutingRequest(selected, new HashSet<ToolCapability> { ToolCapability.Vision },
+            new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, true, [first.Key, next.Key, later.Key])), CancellationToken.None);
+
+        Assert.Equal(next.Key, result.Model.Key);
+        Assert.True(result.UsedFallback);
+        Assert.Contains("configured fallback chain", result.Reason, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ConfiguredRouteDoesNotEscapeToUnlistedProviderWhenAllRouteCandidatesAreIneligible()
+    {
+        var selected = Descriptor("ollama", true, "pinned", ToolCapability.Text);
+        var configured = Descriptor("openai", false, "configured", ToolCapability.Text);
+        var unlisted = Descriptor("anthropic", false, "unlisted", ToolCapability.Text, ToolCapability.Vision);
+        var router = new ModelRouter(new StubRegistry([selected, configured, unlisted]));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => router.RouteAsync(new ModelRoutingRequest(selected,
+            new HashSet<ToolCapability> { ToolCapability.Vision }, new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, true, [configured.Key])), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task LocalOnlyExplicitFallbackCannotCrossToCloud()
+    {
+        var selected = Descriptor("ollama", true, "pinned", ToolCapability.Text);
+        var cloud = Descriptor("openai", false, "cloud", ToolCapability.Text, ToolCapability.Vision);
+        var router = new ModelRouter(new StubRegistry([selected, cloud]));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => router.RouteAsync(new ModelRoutingRequest(selected,
+            new HashSet<ToolCapability> { ToolCapability.Vision }, new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, false, [cloud.Key])), CancellationToken.None));
     }
 
     [Fact]

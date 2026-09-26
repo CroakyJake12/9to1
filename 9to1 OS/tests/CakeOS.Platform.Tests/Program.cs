@@ -316,10 +316,16 @@ internal sealed class PlatformFoundationSuite
 
     private static string RepositoryRoot()
     {
-        for (DirectoryInfo? directory = new DirectoryInfo(Directory.GetCurrentDirectory()); directory is not null; directory = directory.Parent)
+        foreach (var start in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
         {
-            if (File.Exists(Path.Combine(directory.FullName, "havenos.lock")))
-                return directory.FullName;
+            for (DirectoryInfo? directory = new DirectoryInfo(start); directory is not null; directory = directory.Parent)
+            {
+                if (File.Exists(Path.Combine(directory.FullName, "havenos.lock")))
+                    return directory.FullName;
+                var osRoot = Path.Combine(directory.FullName, "9to1 OS");
+                if (File.Exists(Path.Combine(osRoot, "havenos.lock")))
+                    return osRoot;
+            }
         }
         throw new InvalidOperationException("Could not locate the CakeOS repository root.");
     }
