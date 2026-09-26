@@ -6,10 +6,13 @@ public sealed record HomeCoreOperationResult<T>(bool Succeeded, string Code, str
     bool Recoverable = true, long? Revision = null);
 
 public sealed record HomeFeatureNavigationRequest(string RouteId, string? EntityType = null, string? EntityId = null,
-    string? Action = null, string? DeepLink = null);
+    string? Action = null, string? DeepLink = null, HomeModelPickerNavigationTarget? ModelPickerTarget = null);
 
 public sealed record HomeFeatureNavigationResult(bool Succeeded, string Code, string Message,
-    HomeFeatureNavigationRequest Request, bool Recoverable = true);
+    HomeFeatureNavigationRequest Request, bool Recoverable = true, HomeFeatureViewState? ViewState = null);
+
+/// <summary>Platform-neutral route state; native/web shells map the stable view ID to their renderer.</summary>
+public sealed record HomeFeatureViewState(string RouteId, string ViewId, long Revision, JsonElement State);
 
 /// <summary>Feature-owned route adapter. The Home shell owns dispatch; feature modules own destination behavior.</summary>
 public interface IHomeFeatureRouteHandler
@@ -22,6 +25,7 @@ public interface IHomeFeatureRouteHandler
 public interface IHomeFeatureNavigationHost
 {
     IReadOnlyCollection<string> AvailableRoutes { get; }
+    event Action<HomeFeatureNavigationResult>? NavigationCompleted;
     HomeCoreOperationResult<bool> Register(IHomeFeatureRouteHandler handler);
     Task<HomeFeatureNavigationResult> NavigateAsync(HomeFeatureNavigationRequest request,
         CancellationToken cancellationToken = default);
@@ -44,11 +48,20 @@ public static class HomeFeatureRouteIds
     public const string Automations = "app.automations";
 }
 
-public sealed class HomeFeatureNavigationHost(IEnumerable<IHomeFeatureRouteHandler>? handlers = null)
-    : IHomeFeatureNavigationHost
+public sealed record HomeModelPickerNavigationTarget(string Scope, string? ScopeId, string Category,
+    string? RouteId = null, string? AppId = null, string? AgentId = null);
+
+public sealed class HomeFeatureNavigationHost : IHomeFeatureNavigationHost
 {
     private readonly Dictionary<string, IHomeFeatureRouteHandler> _handlers = new(StringComparer.Ordinal);
     private readonly object _sync = new();
+
+    public HomeFeatureNavigationHost(IEnumerable<IHomeFeatureRouteHandler>? handlers = null)
+    {
+        foreach (var handler in handlers ?? []) Register(handler);
+    }
+
+    public event Action<HomeFeatureNavigationResult>? NavigationCompleted;
 
     public IReadOnlyCollection<string> AvailableRoutes
     {
@@ -82,7 +95,13 @@ public sealed class HomeFeatureNavigationHost(IEnumerable<IHomeFeatureRouteHandl
         try
         {
             var result = await handler.OpenAsync(request, cancellationToken).ConfigureAwait(false);
-            return result ?? new(false, "HomeServiceUnavailable", "The Home destination returned no result.", request, true);
+            result ??= new(false, "HomeServiceUnavailable", "The Home destination returned no result.", request, true);
+            foreach (var observer in NavigationCompleted?.GetInvocationList().Cast<Action<HomeFeatureNavigationResult>>() ?? [])
+            {
+                try { observer(result); }
+                catch { /* A native view observer cannot invalidate a completed domain route operation. */ }
+            }
+            return result;
         }
         catch (OperationCanceledException)
         {
@@ -102,6 +121,9 @@ public sealed class HomeFeatureNavigationHost(IEnumerable<IHomeFeatureRouteHandl
 public enum HomeAppsAction
 {
     Refresh,
+    Launch,
+    SelectChannel,
+    SelectVersion,
     Install,
     Update,
     Repair,
@@ -112,19 +134,43 @@ public enum HomeAppsAction
 public sealed record HomeAppsCommand(HomeAppsAction Action, string? PackageId = null, string? VersionOrChannel = null,
     long? ExpectedRevision = null, string? IdempotencyKey = null);
 
+public sealed record HomeApplicationRecord(string AppId, string DisplayName, string Version,
+    IReadOnlyList<string>? Channels = null, string? SelectedChannel = null, string? SelectedVersion = null,
+    string? IconReference = null, string? Description = null, string? CompatibilityState = null,
+    string? UpdateState = null, string? RepairState = null);
+
+public sealed record HomeAppsSnapshot(long Revision, IReadOnlyList<HomeApplicationRecord> Applications,
+    IReadOnlyList<HomeUpdate> Updates, IReadOnlyList<HomeCoreFailure> Diagnostics);
+
 /// <summary>Home-owned app/package operations route to the single package service used by Home UI and APIs.</summary>
 public interface IHomeAppsFeatureProvider
 {
-    Task<HomeDashboardSnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default);
-    Task<HomeCoreOperationResult<HomeDashboardSnapshot>> ExecuteAsync(HomeAppsCommand command,
+    Task<HomeAppsSnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default);
+    Task<HomeCoreOperationResult<HomeAppsSnapshot>> ExecuteAsync(HomeAppsCommand command,
         CancellationToken cancellationToken = default);
 }
 
 public sealed record HomeDiscoverQuery(string Text, IReadOnlyList<string>? ProviderIds = null, int Offset = 0,
     int Limit = 50, string? Cursor = null);
 
+public sealed record HomeDiscoverCostMetadata(decimal? Amount = null, string? Currency = null, string? Unit = null,
+    bool? IsFree = null, string? BillingCadence = null);
+
+public sealed record HomeDiscoverPrivacyMetadata(bool? SendsDataExternally = null, string? DataHandling = null,
+    string? Retention = null, IReadOnlyList<string>? Disclosures = null);
+
+public sealed record HomeDiscoverEvidence(string EvidenceId, string Kind, string? Uri, string? Summary,
+    DateTimeOffset? ObservedAtUtc = null);
+
+public sealed record HomeDiscoverVoiceVariant(string VariantId, string DisplayName, string? Locale,
+    IReadOnlySet<string>? Capabilities = null);
+
 public sealed record HomeDiscoverCandidate(string ProviderId, string CandidateId, string DisplayName,
-    string Capability, string Version, string? InstallationState = null);
+    string Capability, string Version, string? InstallationState = null, string? Category = null,
+    IReadOnlySet<string>? Capabilities = null,
+    IReadOnlyDictionary<string, string?>? TechnicalMetadata = null,
+    HomeDiscoverPrivacyMetadata? Privacy = null, HomeDiscoverCostMetadata? Cost = null,
+    IReadOnlyList<HomeDiscoverEvidence>? Evidence = null, IReadOnlyList<HomeDiscoverVoiceVariant>? VoiceVariants = null);
 
 public sealed record HomeDiscoverPage(IReadOnlyList<HomeDiscoverCandidate> Candidates, string? NextCursor,
     bool HasMore, long Revision);
@@ -222,7 +268,7 @@ public sealed record HomeModelRouteCandidate(string ProviderId, string ModelId, 
 
 public sealed record HomeModelRouteContract(string RouteId, long Version, string Scope, string Category,
     string? AppId, string? OverrideIdentity, IReadOnlyList<HomeModelRouteCandidate> Candidates,
-    JsonElement Policy);
+    JsonElement Policy, string? ScopeId = null);
 
 public sealed record HomeModelPickerSnapshot(long Revision, string Scope, string Category,
     IReadOnlyList<HomeModelRouteContract> Routes);
@@ -237,6 +283,8 @@ public sealed record HomeModelRoutePreviewRequest(string RouteId, string Capabil
 
 public interface IHomeModelPickerFeatureProvider
 {
+    Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null,
+        CancellationToken cancellationToken = default);
     Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category,
         CancellationToken cancellationToken = default);
     Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit,
@@ -244,6 +292,13 @@ public interface IHomeModelPickerFeatureProvider
     Task<HomeCoreOperationResult<HomeModelRoutePreview>> PreviewResolutionAsync(HomeModelRoutePreviewRequest request,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record HomeModelPickerCatalogueEntry(string ProviderId, string ModelId, string? ArtifactRevision,
+    string DisplayName, string ProviderName, bool? IsLocal, IReadOnlySet<string>? Capabilities,
+    int? ContextWindow, string? LifecycleState, string? PrivacyResidency, string? Alias);
+
+public sealed record HomeModelCataloguePage(IReadOnlyList<HomeModelPickerCatalogueEntry> Items, int Offset,
+    int Limit, bool HasMore, long Revision);
 
 public sealed record HomeSearchRecord(string SourceApp, string EntityId, string EntityType, string Title,
     string DisplayMetadata, string? SearchText, string? VectorReference, DateTimeOffset ModifiedAtUtc,
@@ -265,4 +320,3 @@ public interface IHomeSearchIndexFeatureProvider
     Task<HomeCoreOperationResult<bool>> InvalidateAsync(string sourceApp, string entityId, long expectedRevision,
         CancellationToken cancellationToken = default);
 }
-

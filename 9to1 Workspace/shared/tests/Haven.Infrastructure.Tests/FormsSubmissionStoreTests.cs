@@ -138,6 +138,140 @@ public sealed class FormsSubmissionStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Forms_typed_answers_keep_values_references_version_and_provenance_in_the_Data_workbook()
+    {
+        var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));
+        var store = new DataWorkbookFormsSubmissionStore(repository);
+        var workbookId = Guid.NewGuid();
+        var tableId = Guid.NewGuid();
+        var submittedAt = DateTimeOffset.UtcNow;
+        var submission = new FormsSubmission("response-typed", "registration", "Registration",
+            new Dictionary<string, string> { ["name"] = "Ada" }, submittedAt)
+        {
+            FormVersionId = "registration:3",
+            StartedAt = submittedAt.AddMinutes(-4),
+            DataBindingId = "binding-registration",
+            DataTargetWorkbookId = workbookId,
+            DataTargetTableId = tableId,
+            DataWriteStatus = FormsDataWriteStatus.Pending,
+            Revision = 3,
+            Answers = new Dictionary<string, FormsAnswer>(StringComparer.Ordinal)
+            {
+                ["age"] = new("age", "integer", JsonSerializer.SerializeToElement(17)),
+                ["household"] = new("household", "repeating-records", JsonSerializer.SerializeToElement(new[]
+                {
+                    new { memberId = "member-1", name = "Grace", guardian = new { recordId = "guardian-7" } }
+                })),
+                ["school"] = new("school", "reference", JsonSerializer.SerializeToElement("school-42"), workbookId, tableId, "schoolId", "school-42")
+            }
+        };
+
+        await store.SaveAsync(submission, CancellationToken.None);
+
+        var stored = Assert.Single(await new DataWorkbookFormsSubmissionStore(repository).GetLatestAsync(CancellationToken.None));
+        Assert.Equal("registration:3", stored.FormVersionId);
+        Assert.Equal(submittedAt.AddMinutes(-4), stored.StartedAt);
+        Assert.Equal(FormsDataWriteStatus.Pending, stored.DataWriteStatus);
+        Assert.Equal(3, stored.Revision);
+        Assert.Equal(workbookId, stored.DataTargetWorkbookId);
+        Assert.Equal(tableId, stored.DataTargetTableId);
+        Assert.Equal(JsonValueKind.Number, stored.Answers["age"].Value.ValueKind);
+        Assert.Equal(17, stored.Answers["age"].Value.GetInt32());
+        Assert.Equal("repeating-records", stored.Answers["household"].ValueType);
+        Assert.Equal("member-1", stored.Answers["household"].Value[0].GetProperty("memberId").GetString());
+        Assert.Equal("school-42", stored.Answers["school"].DataRecordId);
+    }
+
+    [Fact]
+    public async Task Legacy_forms_response_rows_migrate_without_overwriting_user_columns()
+    {
+        var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));
+        var workbook = DataWorkbook.Create("Forms responses");
+        workbook.Id = DataWorkbookAppLinks.FormsResponses;
+        workbook.Sheets[0].Name = "Responses";
+        workbook.Metadata["haven.app"] = "forms";
+        var sheet = workbook.Sheets[0];
+        var legacyHeaders = new[] { "Response ID", "Form ID", "Form Title", "Submitted At (UTC)", "Values (JSON)", "My Notes" };
+        for (var column = 0; column < legacyHeaders.Length; column++)
+            sheet.SetCell(0, column, legacyHeaders[column]);
+        sheet.SetCell(1, 0, "response-legacy");
+        sheet.SetCell(1, 1, "feedback");
+        sheet.SetCell(1, 2, "Feedback");
+        sheet.SetCell(1, 3, DateTimeOffset.UtcNow.ToString("O"));
+        sheet.SetCell(1, 4, "{\"message\":\"legacy answer\"}");
+        sheet.SetCell(1, 5, "keep this Data-owned column");
+        await repository.SaveAsync(workbook, "legacy Forms fixture", CancellationToken.None);
+
+        var stored = Assert.Single(await new DataWorkbookFormsSubmissionStore(repository).GetLatestAsync(CancellationToken.None));
+
+        Assert.Equal("legacy-unversioned", stored.FormVersionId);
+        Assert.Equal("legacy answer", stored.Values["message"]);
+        Assert.Equal(JsonValueKind.String, stored.Answers["message"].Value.ValueKind);
+        var migrated = Assert.IsType<DataWorkbook>(await repository.LoadAsync(DataWorkbookAppLinks.FormsResponses, CancellationToken.None));
+        Assert.Equal("2", migrated.Metadata["haven.forms.responseSchemaVersion"]);
+        Assert.Equal("My Notes", migrated.Sheets[0].GetCell(0, 5)?.Value);
+        Assert.Equal("keep this Data-owned column", migrated.Sheets[0].GetCell(1, 5)?.Value);
+        Assert.Contains(migrated.Sheets[0].Cells, cell => cell.Row == 0 && cell.Value == "Form Version ID");
+    }
+
+    [Fact]
+    public async Task Response_history_is_not_evicted_and_keyset_pages_have_no_duplicates()
+    {
+        const int responseCount = 503;
+        var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));
+        var workbook = DataWorkbook.Create("Forms responses");
+        workbook.Id = DataWorkbookAppLinks.FormsResponses;
+        workbook.Sheets[0].Name = "Responses";
+        workbook.Metadata["haven.app"] = "forms";
+        workbook.Metadata["haven.forms.responseSchemaVersion"] = "2";
+        var sheet = workbook.Sheets[0];
+        var headers = new[]
+        {
+            "Response ID", "Form ID", "Form Title", "Submitted At (UTC)", "Values (JSON)",
+            "Form Version ID", "Started At (UTC)", "Typed Answers (JSON)", "Data Binding ID",
+            "Data Target Workbook ID", "Data Target Table ID", "Data Write Status", "Revision"
+        };
+        for (var column = 0; column < headers.Length; column++) sheet.SetCell(0, column, headers[column]);
+        var submittedAt = DateTimeOffset.UtcNow;
+        for (var index = 0; index < responseCount; index++)
+        {
+            var row = index + 1;
+            sheet.SetCell(row, 0, $"response-{index:D4}");
+            sheet.SetCell(row, 1, "feedback");
+            sheet.SetCell(row, 2, "Feedback");
+            sheet.SetCell(row, 3, submittedAt.ToString("O"));
+            sheet.SetCell(row, 4, "{}");
+            sheet.SetCell(row, 5, "feedback:1");
+            sheet.SetCell(row, 11, FormsDataWriteStatus.NotBound.ToString());
+            sheet.SetCell(row, 12, "1");
+        }
+        workbook.Tables.Add(new DataTableDefinition
+        {
+            Name = "FormsResponses",
+            SheetId = sheet.Id,
+            Range = new DataCellRange { StartRow = 0, StartColumn = 0, EndRow = responseCount, EndColumn = headers.Length - 1 }
+        });
+        await repository.SaveAsync(workbook, "paged Forms fixture", CancellationToken.None);
+
+        var store = new DataWorkbookFormsSubmissionStore(repository);
+        var all = await store.GetLatestAsync(CancellationToken.None);
+        var paged = new List<FormsSubmission>();
+        FormsSubmissionCursor? cursor = null;
+        do
+        {
+            var page = await store.GetPageAsync(new FormsSubmissionPageRequest(100, cursor), CancellationToken.None);
+            paged.AddRange(page.Items);
+            cursor = page.Next;
+        } while (cursor is not null);
+
+        Assert.Equal(responseCount, all.Count);
+        Assert.Equal(responseCount, paged.Count);
+        Assert.Equal(responseCount, paged.Select(item => item.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal("response-0000", paged[0].Id);
+        Assert.Equal($"response-{responseCount - 1:D4}", paged[^1].Id);
+    }
+
+    [Fact]
     public async Task Maps_migrates_legacy_places_to_the_Data_workbook_and_keeps_recent_history_local()
     {
         var paths = new TestPaths(_dataDirectory);

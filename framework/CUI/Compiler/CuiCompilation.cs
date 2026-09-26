@@ -6,6 +6,8 @@ public sealed record CuiCompilation(
     CuiDocument? Document,
     IReadOnlyList<CuiDiagnostic> Diagnostics)
 {
+    public CuiCompiledDocument? Output { get; init; }
+
     public bool Succeeded => Document is not null && Diagnostics.All(x => x.Severity != CuiDiagnosticSeverity.Error);
 }
 

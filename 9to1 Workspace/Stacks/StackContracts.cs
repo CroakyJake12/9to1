@@ -88,6 +88,8 @@ public enum StackFailureCode
     CapabilityUnavailable,
     InvalidPath,
     DuplicateIdentity,
+    ManagedRefProtected,
+    RecoveryStateUncertain,
 }
 
 public enum StackCapability
@@ -154,7 +156,7 @@ public sealed record StackProjectConfiguration(
 
 public sealed record StackResource(byte[] Content, StackVisibility Visibility = StackVisibility.Private, bool IsBinary = false)
 {
-    public StackResource Clone() => this with { Content = Content.ToArray() };
+    public StackResource Copy() => this with { Content = Content.ToArray() };
 }
 
 public sealed record StackMutation(
@@ -171,7 +173,8 @@ public sealed record StackRevision(
     DateTimeOffset CreatedAt,
     string ActorId,
     string Message,
-    IReadOnlyList<string> ChangedPaths);
+    IReadOnlyList<string> ChangedPaths,
+    string? GitCommitId = null);
 
 public sealed record StackConflict(
     Guid Id,
@@ -209,10 +212,10 @@ public sealed record StackSubroot(
     Guid OwnerDomainId,
     IReadOnlyList<Guid> RootIds,
     IReadOnlyList<StackMutation> ProposedChanges,
-    IReadOnlySet<string> RequiredChecks,
-    IReadOnlySet<string> CompletedChecks,
+    HashSet<string> RequiredChecks,
+    HashSet<string> CompletedChecks,
     int RequiredApprovals,
-    IReadOnlySet<string> Approvals,
+    HashSet<string> Approvals,
     bool HasUnresolvedConflicts,
     DateTimeOffset CreatedAt,
     string CreatedBy,
@@ -222,7 +225,7 @@ public sealed record StackFreeze(
     Guid Id,
     Guid TargetDomainId,
     string? TargetPath,
-    IReadOnlySet<Guid> DescendantDomainIds,
+    HashSet<Guid> DescendantDomainIds,
     DateTimeOffset CreatedAt,
     string CreatedBy,
     string Reason,
@@ -287,7 +290,8 @@ public static class StackPath
         }
 
         string[] parts = path.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0 || parts.Any(static part => part is "." or ".." || part.StartsWith(".stack", StringComparison.OrdinalIgnoreCase)))
+        if (parts.Length == 0 || parts.Any(static part => part is "." or ".." || part.StartsWith(".stack", StringComparison.OrdinalIgnoreCase))
+            || new[] { ".git", ".branches", ".source", ".roots" }.Contains(parts[0], StringComparer.OrdinalIgnoreCase))
         {
             throw new StackFailureException(StackFailureCode.InvalidPath, "The path is empty, traverses outside the project, or targets reserved Stack metadata.", path);
         }

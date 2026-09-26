@@ -6,6 +6,7 @@ that best explains the design.
 | System | Owns / does | Start reading | Key collaborators |
 |---|---|---|---|
 | Shell & launch routing | Window shell, tabs, `LaunchAppAsync` route table, contextual actions | `src/Haven.Desktop/Interface/Shell/MainView.axaml.cs`, `HavenAppRoutePolicy` | Mode registry, TopRail, page factories |
+| Shelf (domain foundation) | Typed canonical launch targets, user collections, membership, deterministic lookup policy | `src/Haven.Core/Shelf/ShelfModels.cs`, `src/Haven.Application/Shelf/ShelfLibraryPolicy.cs` | Target-owning platform and app services; persistence and UI integration remain pending |
 | HavenUI framework | `.hui` markup, scene tree, layout, draw commands, input, animations | `src/Haven.UI/Markup/HavenMarkupParser.cs`, `Rendering/HavenSceneRenderer.cs`, README in project | Backend bridge (Desktop) |
 | HUI↔Avalonia backend | Renders scenes into an Avalonia control; resolves images/fonts/tokens | `src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs` | `HavenAvaloniaThemeResolver`, `HavenDesktopImageResolver`, `HavenUiFont` |
 | Prefabs & DynamicUI | Reusable `.hui` components with code-behind; data-driven list rows | `src/Haven.UI/Components/Prefab/Prefab.cs`, `Components/DynamicUI/DynamicUI.cs`; examples in `src/Haven.Desktop/Prefabs`, `DynamicUI` | Scene pages (Chat, Imagine, Studio) |

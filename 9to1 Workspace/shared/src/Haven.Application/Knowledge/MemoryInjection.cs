@@ -21,7 +21,8 @@ public interface IMemoryQuerySource
     /// </summary>
     Task<IReadOnlyList<KnowledgeRecord>> GetRelevantBackgroundLearningAsync(
         KnowledgeRetrievalContext context,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<KnowledgeRecord>>([]);
 }
 
 /// <summary>

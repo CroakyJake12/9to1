@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace HavenOS.Apps.Terminal;
+namespace Haven.Infrastructure.Terminal;
 
 /// <summary>
 /// Unix adapter backed by forkpty(3). Windows support intentionally belongs in a separate ConPTY

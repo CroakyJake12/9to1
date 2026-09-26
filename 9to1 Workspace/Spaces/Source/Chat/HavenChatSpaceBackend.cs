@@ -19,7 +19,8 @@ public sealed class HavenChatSpaceBackend(
     public async Task<IReadOnlyList<Conversation>> GetRecentChatsAsync(int limit, CancellationToken cancellationToken) =>
         (await conversations.GetRecentInScopeAsync(ConversationScope.GeneralChat, Math.Clamp(limit, 1, 100), cancellationToken)
             .ConfigureAwait(false))
-        .Where(item => !item.IsArchived && !item.IsTemporary)
+        .Where(item => !item.IsArchived && !item.IsTemporary &&
+            (item.SpaceId is null || item.SpaceId == SpaceRegistry.ChatSpaceId))
         .OrderByDescending(item => item.UpdatedAt)
         .ToArray();
 
@@ -31,7 +32,7 @@ public sealed class HavenChatSpaceBackend(
         var now = DateTimeOffset.UtcNow;
         var conversation = new Conversation(
             Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "New chat", null, null,
-            false, false, now, now);
+            false, false, now, now, SpaceId: SpaceRegistry.ChatSpaceId);
         await conversations.UpsertConversationAsync(conversation, cancellationToken).ConfigureAwait(false);
         await production.EnsureRootBranchAsync(conversation.Id, cancellationToken).ConfigureAwait(false);
         return conversation;
@@ -41,8 +42,9 @@ public sealed class HavenChatSpaceBackend(
     {
         var conversation = await conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Chat '{conversationId}' was not found.");
-        if (!ConversationScope.GeneralChat.Matches(conversation))
-            throw new InvalidOperationException("Chat Space can open only unscoped general Chat conversations.");
+        if (!ConversationScope.GeneralChat.Matches(conversation) ||
+            conversation.SpaceId is { } spaceId && spaceId != SpaceRegistry.ChatSpaceId)
+            throw new InvalidOperationException("Chat Space can open only general Chat conversations assigned to Chat.");
 
         var current = await production.GetCurrentBranchAsync(conversationId, cancellationToken).ConfigureAwait(false)
             ?? await production.EnsureRootBranchAsync(conversationId, cancellationToken).ConfigureAwait(false);

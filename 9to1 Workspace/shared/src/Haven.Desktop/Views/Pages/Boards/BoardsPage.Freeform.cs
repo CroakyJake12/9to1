@@ -22,6 +22,11 @@ public sealed partial class BoardsPage
     private async Task AddFreeformCardAsync()
     {
         if (_document is null || _page is null) return;
+        if (_boards.GetLayoutMode(_document, _page.Id) != BoardsPageLayoutMode.Unlocked)
+        {
+            SetStatus("Unlock the page layout before placing a freeform object.");
+            return;
+        }
         _boards.AddCanvasObject(
             _document,
             _page.Id,
@@ -47,6 +52,8 @@ public sealed partial class BoardsPage
         AutomationProperties.SetName(canvas, "Boards freeform page");
 
         var objects = _page?.CanvasObjects.OrderBy(value => value.ZIndex).ToArray() ?? [];
+        var canPlace = _document is not null && _page is not null &&
+            _boards.GetLayoutMode(_document, _page.Id) == BoardsPageLayoutMode.Unlocked;
         if (objects.Length == 0)
         {
             var empty = new TextBlock
@@ -60,7 +67,7 @@ public sealed partial class BoardsPage
 
         foreach (var value in objects)
         {
-            var card = BuildFreeformObjectCard(canvas, value);
+            var card = BuildFreeformObjectCard(canvas, value, canPlace);
             AvaloniaCanvas.SetLeft(card, value.X);
             AvaloniaCanvas.SetTop(card, value.Y);
             card.SetValue(Panel.ZIndexProperty, value.ZIndex);
@@ -75,7 +82,7 @@ public sealed partial class BoardsPage
             Content = canvas
         };
     }
-    private Border BuildFreeformObjectCard(AvaloniaCanvas canvas, NotesCanvasObject value)
+    private Border BuildFreeformObjectCard(AvaloniaCanvas canvas, NotesCanvasObject value, bool canPlace)
     {
         var card = new Border
         {
@@ -104,20 +111,23 @@ public sealed partial class BoardsPage
             SetStatus("Unsaved freeform text");
         };
         grid.Children.Add(text);
-        var resizeHandle = new Border
+        if (canPlace)
         {
-            Width = 18,
-            Height = 18,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom,
-            Background = new SolidColorBrush(Color.FromArgb(150, 150, 155, 170)),
-            CornerRadius = new CornerRadius(4)
-        };
-        AutomationProperties.SetName(resizeHandle, "Resize freeform object");
-        grid.Children.Add(resizeHandle);
+            var resizeHandle = new Border
+            {
+                Width = 18,
+                Height = 18,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom,
+                Background = new SolidColorBrush(Color.FromArgb(150, 150, 155, 170)),
+                CornerRadius = new CornerRadius(4)
+            };
+            AutomationProperties.SetName(resizeHandle, "Resize freeform object");
+            grid.Children.Add(resizeHandle);
+            WireFreeformDrag(canvas, card, value);
+            WireFreeformResize(resizeHandle, card, value);
+        }
         card.Child = grid;
-        WireFreeformDrag(canvas, card, value);
-        WireFreeformResize(resizeHandle, card, value);
         return card;
     }
     private void WireFreeformDrag(AvaloniaCanvas canvas, Border card, NotesCanvasObject value)

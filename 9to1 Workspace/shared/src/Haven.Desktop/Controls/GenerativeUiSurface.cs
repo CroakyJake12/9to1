@@ -603,8 +603,9 @@ public sealed class GenerativeUiSurface : UserControl, IDisposable
 
     private async Task EmitAsync(GenUiComponent component, GenUiEventType eventType, JsonElement? value)
     {
-        if (_document is null || component.Actions.Count == 0) return;
-        var binding = component.Actions[0];
+        if (_document is null) return;
+        var binding = GenerativeUiContractValidator.SelectActionBinding(component);
+        if (binding is null) return;
         CaptureCurrentInputValues();
         var payload = JsonSerializer.SerializeToElement(new
         {

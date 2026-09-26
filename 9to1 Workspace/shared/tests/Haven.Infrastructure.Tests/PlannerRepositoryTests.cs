@@ -147,6 +147,37 @@ public sealed class PlannerRepositoryTests : IDisposable
         Assert.Empty(await repository.GetDueRemindersAsync(now, 20, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task StructuredPlannerEntitiesUseOptimisticRevisionsAndDurableEventOutbox()
+    {
+        var (_, repository) = await CreateAsync();
+        var now = DateTimeOffset.UtcNow;
+        var id = Guid.NewGuid();
+        var entity = new PlannerStructuredEntityEnvelope(id, PlannerStructuredEntityKind.Assignment, 1, "Essay", 0,
+            now.AddDays(2), 1, "{\"title\":\"Essay\"}", now, now);
+
+        var created = await repository.UpsertAsync(entity, null, "PlannerAssignmentChanged", null, "{\"id\":\"test\"}", CancellationToken.None);
+        Assert.Equal(1, created.Revision);
+        var loaded = await repository.GetAsync(PlannerStructuredEntityKind.Assignment, id, CancellationToken.None);
+        Assert.Equal(created, loaded);
+        var page = await repository.ListAsync(new PlannerStructuredEntityQuery(PlannerStructuredEntityKind.Assignment, Search: "Essay"), CancellationToken.None);
+        Assert.Equal(id, Assert.Single(page.Items).Id);
+        var eventRecord = Assert.Single(await repository.GetPendingAutomationEventsAsync(10, CancellationToken.None));
+        Assert.Equal(created.Revision, eventRecord.EntityRevision);
+
+        var updated = await repository.UpsertAsync(created with { Name = "Essay revised", ModifiedAt = now.AddMinutes(1) },
+            created.Revision, "PlannerAssignmentChanged", null, "{}", CancellationToken.None);
+        Assert.Equal(2, updated.Revision);
+        await Assert.ThrowsAsync<PlannerRevisionConflictException>(() => repository.UpsertAsync(created, created.Revision,
+            "PlannerAssignmentChanged", null, "{}", CancellationToken.None));
+        var deleted = await repository.SetDeletedAsync(PlannerStructuredEntityKind.Assignment, id, updated.Revision, now.AddMinutes(2), CancellationToken.None);
+        Assert.NotNull(deleted.DeletedAt);
+        Assert.Null(await repository.GetAsync(PlannerStructuredEntityKind.Assignment, id, CancellationToken.None));
+        var restored = await repository.SetDeletedAsync(PlannerStructuredEntityKind.Assignment, id, deleted.Revision, null, CancellationToken.None);
+        Assert.Null(restored.DeletedAt);
+        Assert.Equal(4, restored.Revision);
+    }
+
     /// <summary>
     /// Performs the remote calendar writes queue outbox and sync state round trips step owned by this component.
     /// </summary>

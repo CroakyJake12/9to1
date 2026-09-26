@@ -1,10 +1,44 @@
+using System.IO.Compression;
+
 using Haven.Application;
 using Haven.Infrastructure;
+using Haven.Infrastructure.WindowsCompatibility;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Infrastructure.Tests;
 
 public sealed class ApkLaunchServiceTests
 {
+    [Fact]
+    public async Task AddHavenApkLaunch_RegistersFailClosedServiceWithoutRuntimeProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddHavenApkLaunch();
+
+        using var provider = services.BuildServiceProvider();
+        var service = provider.GetRequiredService<IApkLaunchService>();
+        var capability = await service.GetCapabilityAsync(CancellationToken.None);
+
+        Assert.False(capability.IsAvailable);
+        Assert.Equal("none", capability.RuntimeId);
+        Assert.Contains("No APK runtime provider", capability.UnavailableReason ?? string.Empty, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AddHavenApkLaunch_UsesHostRegisteredRuntimeProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IApkRuntimeProvider>(new RecordingProvider(available: true));
+        services.AddHavenApkLaunch();
+
+        using var provider = services.BuildServiceProvider();
+        var service = provider.GetRequiredService<IApkLaunchService>();
+        var capability = await service.GetCapabilityAsync(CancellationToken.None);
+
+        Assert.True(capability.IsAvailable);
+        Assert.Equal("test-runtime", capability.RuntimeId);
+    }
+
     [Fact]
     public async Task GetCapabilityAsync_FailsClosed_WhenNoRuntimeProviderIsRegistered()
     {
@@ -48,6 +82,33 @@ public sealed class ApkLaunchServiceTests
             Assert.Equal(1, provider.ProbeCount);
             Assert.Equal(0, provider.LaunchCount);
             Assert.Contains("not installed", result.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task LaunchAsync_RejectsArchiveWithoutAndroidManifestBeforeRuntimeProbe()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"haven-not-apk-{Guid.NewGuid():N}.apk");
+        using (var file = File.Create(path))
+        using (var archive = new ZipArchive(file, ZipArchiveMode.Create))
+            archive.CreateEntry("notes.txt");
+
+        try
+        {
+            var runtime = new RecordingProvider(available: true);
+            var service = new ApkLaunchService([runtime]);
+
+            var result = await service.LaunchAsync(new ApkLaunchRequest(path), CancellationToken.None);
+
+            Assert.False(result.Succeeded);
+            Assert.Equal(ApkLaunchStatus.InvalidRequest, result.Status);
+            Assert.Equal(0, runtime.ProbeCount);
+            Assert.Equal(0, runtime.LaunchCount);
+            Assert.Contains("AndroidManifest.xml", result.Message, StringComparison.Ordinal);
         }
         finally
         {
@@ -104,7 +165,10 @@ public sealed class ApkLaunchServiceTests
     private static string CreateTemporaryApk()
     {
         var path = Path.Combine(Path.GetTempPath(), $"haven-apk-launch-{Guid.NewGuid():N}.apk");
-        File.WriteAllBytes(path, [0x50, 0x4B, 0x03, 0x04]);
+        using var file = File.Create(path);
+        using var archive = new ZipArchive(file, ZipArchiveMode.Create);
+        using var manifest = new StreamWriter(archive.CreateEntry("AndroidManifest.xml").Open());
+        manifest.Write("<manifest package=\"test.runtime\" />");
         return path;
     }
 

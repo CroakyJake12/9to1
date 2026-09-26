@@ -35,6 +35,25 @@ public static class GenUiGenerationPipeline
             .Select(pair => new GenUiStateFieldDefinition(
                 pair.Key, InferType(pair.Value), GenUiPersistenceScope.Instance, Required: false, pair.Value.Clone()))
             .ToArray();
+        var actions = Flatten(document.Root)
+            .SelectMany(component => component.Actions)
+            .GroupBy(action => action.ActionId, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var binding = group.First();
+                if (group.Any(action => action != binding))
+                    throw new InvalidOperationException($"Action ID '{binding.ActionId}' has conflicting bindings.");
+                return new GenUiActionDefinition(binding.ActionId, binding.Route switch
+                {
+                    GenUiRouteKind.Local => GenUiActionExecutionKind.Local,
+                    GenUiRouteKind.App => GenUiActionExecutionKind.App,
+                    GenUiRouteKind.Agent => GenUiActionExecutionKind.Agent,
+                    GenUiRouteKind.Capability => GenUiActionExecutionKind.Capability,
+                    GenUiRouteKind.External => GenUiActionExecutionKind.External,
+                    _ => throw new InvalidOperationException($"Action '{binding.ActionId}' has an unsupported route.")
+                }, [], null, []);
+            })
+            .ToArray();
         var definition = new GenUiAppDefinition(
             plan.TemplateKey,
             GenUiSemanticValidator.CurrentSchemaVersion,
@@ -45,6 +64,7 @@ public static class GenUiGenerationPipeline
             [new GenUiNavigationRoute("root", document.Root.ComponentId, GenUiNavigationKind.Root, null, null, true)],
             RuntimeVersion)
         {
+            Actions = actions,
             Rendering = GenUiRenderingLayerSelector.Select(document)
         };
         return new GenUiGenerationSpecification(definition);
@@ -134,4 +154,11 @@ public static class GenUiGenerationPipeline
         JsonValueKind.Object => GenUiValueType.Object,
         _ => GenUiValueType.Object
     };
+
+    private static IEnumerable<GenUiComponent> Flatten(GenUiComponent root)
+    {
+        yield return root;
+        foreach (var child in root.Children)
+            foreach (var item in Flatten(child)) yield return item;
+    }
 }

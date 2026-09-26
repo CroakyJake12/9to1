@@ -18,6 +18,32 @@ public sealed class BrowseEngineSelectionPolicy
 
     public BrowseEngineKind DefaultEngine { get; private set; } = BrowseEngineKind.Gecko;
 
+    public IReadOnlyDictionary<string, BrowseEngineKind> SiteOverrides =>
+        new Dictionary<string, BrowseEngineKind>(_siteOverrides, StringComparer.OrdinalIgnoreCase);
+    public IReadOnlyDictionary<Guid, BrowseEngineKind> TabOverrides => new Dictionary<Guid, BrowseEngineKind>(_tabOverrides);
+
+    public static BrowseEngineSelectionPolicy Restore(BrowseEnginePreferences preferences)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        var policy = new BrowseEngineSelectionPolicy();
+        policy.SetDefault(preferences.DefaultEngine);
+        foreach (var (host, engine) in preferences.SiteOverrides)
+        {
+            if (Uri.TryCreate("https://" + host, UriKind.Absolute, out var address) &&
+                address.Scheme == Uri.UriSchemeHttps && address.Port == 443 && address.UserInfo.Length == 0 &&
+                address.AbsolutePath == "/" && address.Query.Length == 0 && address.Fragment.Length == 0 &&
+                string.Equals(address.IdnHost, host.Trim().TrimEnd('.'), StringComparison.OrdinalIgnoreCase))
+                policy.SetSiteOverride(address, engine);
+        }
+        foreach (var (tabId, engine) in preferences.TabOverrides ?? new Dictionary<Guid, BrowseEngineKind>())
+        {
+            if (tabId != Guid.Empty && Enum.IsDefined(engine)) policy.SetTabOverride(tabId, engine);
+        }
+        return policy;
+    }
+
+    public BrowseEnginePreferences Capture() => new(DefaultEngine, SiteOverrides, TabOverrides);
+
     public BrowseEngineKind Resolve(Uri address, Guid tabId)
     {
         ArgumentNullException.ThrowIfNull(address);

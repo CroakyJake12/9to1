@@ -27,6 +27,8 @@ public sealed class MultimodalSessionStore
         if (sessionId == Guid.Empty) throw new ArgumentException("SessionID cannot be empty.", nameof(sessionId));
         var key = Key(sessionId);
         var envelope = await ReadEnvelopeAsync(key, cancellationToken).ConfigureAwait(false);
+        if (envelope is null && await ContainsKeyAsync(key, cancellationToken).ConfigureAwait(false))
+            throw new InvalidDataException("Existing session metadata could not be read; stored data was preserved.");
         return envelope?.Session;
     }
 

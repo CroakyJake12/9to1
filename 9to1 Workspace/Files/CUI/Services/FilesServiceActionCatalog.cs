@@ -15,7 +15,7 @@ public static class FilesServiceActionCatalog
 		Mutate("Move", "item ID, destination folder and expected revision", "operation and item result", "item"),
 		Mutate("Copy", "item ID, destination folder and conflict policy", "transfer or operation result", "source and destination items"),
 		Mutate("Delete", "item ID and expected revision", "recoverable trash result", "item", FilesRiskLevel.Elevated),
-		new("Purge", "item ID and expected revision", "structured operation result", ["files.purge"], FilesRiskLevel.Destructive, false, false, "item; impact count must be previewed"),
+		new("Purge", "item ID and expected revision", "structured operation result", ["files.purge"], FilesRiskLevel.Destructive, false, true, "item; impact count must be previewed"),
 		Mutate("Restore", "item ID", "restored item metadata", "item"),
 		Mutate("Upload", "destination folder, source and explicit conflict policy", "durable transfer job", "source and destination", FilesRiskLevel.Elevated),
 		Mutate("Download", "item ID and destination", "durable transfer job", "item and destination", FilesRiskLevel.Elevated),
@@ -38,10 +38,10 @@ public static class FilesServiceActionCatalog
 		Mutate("Sync.ResolveConflict", "conflict ID and resolution", "structured conflict result", "conflict"),
 		Read("GetVersions", "item ID and page token", "paged durable revisions"),
 		Mutate("RestoreVersion", "item ID and revision ID", "new current revision", "item and revision history"),
-		new("CommitOwningAppRevision", "file ID, owning app and revision IDs, actor, content identity and expected base", "durable Files revision", ["files.revision.commit"], FilesRiskLevel.Ordinary, true, false, "file and revision history"),
+		new("CommitOwningAppRevision", "file ID, owning app and revision IDs, actor, content identity and expected base", "durable Files revision", ["files.revision.commit"], FilesRiskLevel.Ordinary, true, true, "file and revision history"),
 		Read("Share.Get", "item ID and page token", "effective and direct grants"),
-		new("Share.Grant", "item ID, stable principal ID and role", "share grant", ["files.share"], FilesRiskLevel.SecuritySensitive, true, false, "item and principal"),
-		new("Share.Revoke", "item ID and stable principal ID", "revocation result", ["files.share"], FilesRiskLevel.SecuritySensitive, true, false, "item and principal"),
+		new("Share.Grant", "item ID, stable principal ID and role", "share grant", ["files.share"], FilesRiskLevel.SecuritySensitive, true, true, "item and principal"),
+		new("Share.Revoke", "item ID and stable principal ID", "revocation result", ["files.share"], FilesRiskLevel.SecuritySensitive, true, true, "item and principal"),
 		Read("Search", "query, optional scope and page token", "permission-filtered paged item metadata"),
 		Read("Changes.Subscribe", "optional durable cursor", "resumable change stream"),
 		Read("Changes.GetSince", "cursor and page size", "paged change events"),
@@ -79,5 +79,5 @@ public static class FilesServiceActionCatalog
 		string result,
 		string affected,
 		FilesRiskLevel risk = FilesRiskLevel.Ordinary) =>
-		new(name, arguments, result, ["files.write"], risk, risk is not FilesRiskLevel.Destructive, false, affected);
+		new(name, arguments, result, ["files.write"], risk, risk is not FilesRiskLevel.Destructive, true, affected);
 }

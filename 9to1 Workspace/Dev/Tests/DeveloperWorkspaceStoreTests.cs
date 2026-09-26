@@ -60,6 +60,21 @@ public sealed class DeveloperWorkspaceStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task GetAsync_ReportsMissingSchemaAsMalformedStoredData()
+    {
+        var workspaceId = Guid.NewGuid();
+        var directory = Path.Combine(_stateRoot, "workspaces");
+        Directory.CreateDirectory(directory);
+        await File.WriteAllTextAsync(Path.Combine(directory, workspaceId.ToString("N") + ".json"),
+            "{\"workspace\":{\"workspaceId\":\"" + workspaceId + "\"}}");
+
+        var loaded = await new FileDeveloperWorkspaceStore(_stateRoot).GetAsync(workspaceId);
+
+        Assert.False(loaded.Succeeded);
+        Assert.Equal(DeveloperOperationErrorCode.InvalidStoredData, loaded.Error!.Code);
+    }
+
+    [Fact]
     public async Task CreateAsync_RejectsWorkspaceWithoutRoots()
     {
         var workspace = DeveloperWorkspace.Create([new DeveloperWorkspaceRoot(Guid.NewGuid(), Path.GetFullPath(Path.GetTempPath()))])

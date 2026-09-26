@@ -108,6 +108,8 @@ public static class PlannerServiceCollectionExtensions
         services.TryAddSingleton<PlannerRepository>();
         services.TryAddSingleton<IPlannerRepository>(provider => provider.GetRequiredService<PlannerRepository>());
         services.TryAddSingleton<ICalendarSyncStore>(provider => provider.GetRequiredService<PlannerRepository>());
+        services.TryAddSingleton<IPlannerStructuredEntityRepository>(provider => provider.GetRequiredService<PlannerRepository>());
+        services.TryAddSingleton<PlannerStructuredEntityService>();
         services.TryAddSingleton<IPlannerProposalService, PlannerProposalService>();
         services.TryAddSingleton<IPlannerDayService, PlannerDayService>();
         services.TryAddSingleton<IPlannerCountdownService, PlannerCountdownService>();

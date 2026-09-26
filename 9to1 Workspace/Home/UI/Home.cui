@@ -10,7 +10,7 @@
       <StackPanel id="home-body" orientation="Horizontal" margin="24">
         <Border id="navigation-rail" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="14" width="176" margin="0 0 20 0">
           <StackPanel orientation="Vertical">
-            <Button id="nav-home" action="NavigateHome" content="Home" />
+            <Button id="nav-home" action="NavigateDashboard" content="Home" />
             <Button id="nav-apps" action="NavigateApps" content="Apps" />
             <Button id="nav-library" action="NavigateLibrary" content="Library" />
             <Button id="nav-events" action="NavigateEvents" content="Events" />
@@ -24,6 +24,7 @@
           </StackPanel>
         </Border>
         <StackPanel id="home-content" orientation="Vertical">
+          <If Condition="{Binding IsDashboard}">
           <TextBlock id="welcome-heading" text="Welcome to 9-1" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
           <TextBlock id="welcome-copy" text="Your day across 9-1" font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
           <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
@@ -47,6 +48,7 @@
             </StackPanel>
           </Border>
           <TextBlock id="operation-status" text="{Binding OperationSummary, fallback=Home services are not connected}" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 18" />
+          <TextBlock id="navigation-status" text="{Binding NavigationStatus}" foreground="{Resource CuiTextSoftBrush}" margin="0 0 0 8" />
           <StackPanel id="app-shortcuts" orientation="Vertical">
             <StackPanel orientation="Horizontal">
               <TextBlock text="Quick access" font-size="18" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
@@ -65,6 +67,66 @@
               <TextBlock id="events-status" text="{Binding EventsSummary, fallback=No upcoming events are available}" foreground="{Resource CuiTextSoftBrush}" />
             </Border>
           </StackPanel>
+          <Border id="dashboard-layout-controls" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="10" padding="14" margin="0 12 0 0">
+            <StackPanel orientation="Vertical">
+              <TextBlock text="Dashboard controls" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+              <StackPanel orientation="Horizontal" margin="0 8 0 0">
+                <Button id="allow-ai-tiles" action="EnableAIGeneratedTiles" content="Allow AI tiles" margin="0 0 8 0" />
+                <Button id="disallow-ai-tiles" action="DisableAIGeneratedTiles" content="Keep AI tiles off" margin="0 0 8 0" />
+              </StackPanel>
+              <StackPanel orientation="Horizontal">
+                <Button id="allow-ai-reorder" action="EnableAIReorder" content="Allow AI rearrangement" margin="0 0 8 0" />
+                <Button id="disallow-ai-reorder" action="DisableAIReorder" content="Keep AI layout fixed" margin="0 0 8 0" />
+                <Button id="undo-ai-layout" action="UndoAiDashboardLayout" content="Undo AI layout" margin="0 0 8 0" />
+                <Button id="reset-dashboard-layout" action="ResetDashboardLayout" content="Reset layout" />
+              </StackPanel>
+              <TextBlock id="dashboard-tiles-summary" text="{Binding DashboardTilesSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 12 0 10" />
+              <StackPanel orientation="Horizontal">
+                <Button id="add-dashboard-tile" action="AddDashboardTile" content="Add tile" margin="0 0 8 0" />
+                <Button id="remove-dashboard-tile" action="RemoveSelectedDashboardTile" content="Remove selected" margin="0 0 8 0" />
+                <Button id="move-dashboard-tile-up" action="MoveSelectedDashboardTileUp" content="Move up" margin="0 0 8 0" />
+                <Button id="move-dashboard-tile-down" action="MoveSelectedDashboardTileDown" content="Move down" margin="0 0 8 0" />
+                <Button id="pin-dashboard-tile" action="PinSelectedDashboardTile" content="Pin" margin="0 0 8 0" />
+                <Button id="lock-dashboard-tile" action="LockSelectedDashboardTile" content="Lock" margin="0 0 8 0" />
+                <Button id="hide-dashboard-tile" action="HideSelectedDashboardTile" content="Hide" margin="0 0 8 0" />
+                <Button id="refresh-dashboard-tile" action="RefreshSelectedDashboardTile" content="Refresh selected" />
+              </StackPanel>
+              <StackPanel orientation="Horizontal" margin="0 8 0 0">
+                <Button id="resize-dashboard-tile-small" action="ResizeSelectedDashboardTileSmall" content="Small" margin="0 0 8 0" />
+                <Button id="resize-dashboard-tile-medium" action="ResizeSelectedDashboardTileMedium" content="Medium" margin="0 0 8 0" />
+                <Button id="resize-dashboard-tile-large" action="ResizeSelectedDashboardTileLarge" content="Large" margin="0 0 8 0" />
+                <Button id="resize-dashboard-tile-wide" action="ResizeSelectedDashboardTileWide" content="Wide" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          </If>
+          <If Condition="{Binding IsLibrary}">
+            <StackPanel id="library-page" orientation="Vertical">
+              <TextBlock text="Library" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+              <TextBlock text="Find authorised artifacts across your apps. Items stay in their owning app." foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 14" />
+              <StackPanel orientation="Horizontal">
+                <TextBox id="library-search" placeholder-text="Search artifacts" accessible-name="Search Library" width="360" />
+                <Button id="library-search-submit" action="SearchLibrary" content="Search" margin="12 0 0 0" />
+              </StackPanel>
+              <TextBlock id="library-status" text="{Binding LibrarySummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 12" />
+              <TextBlock id="library-results" text="{Binding LibraryItemsSummary}" foreground="{Resource CuiTextBrush}" />
+              <StackPanel orientation="Horizontal" margin="0 12 0 0">
+                <Button id="library-open-selected" action="OpenLibraryItem" content="Open selected" margin="0 0 8 0" />
+                <Button id="library-pin-selected" action="PinSelectedLibraryItem" content="Pin selected" margin="0 0 8 0" />
+                <Button id="library-unpin-selected" action="UnpinSelectedLibraryItem" content="Unpin selected" />
+              </StackPanel>
+            </StackPanel>
+          </If>
+          <If Condition="{Binding IsEvents}">
+            <StackPanel id="events-page" orientation="Vertical">
+              <TextBlock text="Events" font-size="28" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+              <TextBlock text="Activity from your authorised apps and services." foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 14" />
+              <Button id="events-refresh" action="RefreshEvents" content="Refresh activity" />
+              <TextBlock id="events-page-status" text="{Binding EventsSummary}" foreground="{Resource CuiTextSoftBrush}" margin="0 10 0 12" />
+              <TextBlock id="events-page-items" text="{Binding EventItemsSummary}" foreground="{Resource CuiTextBrush}" />
+              <Button id="events-open-selected" action="OpenEventObject" content="Open selected activity item" margin="0 12 0 0" />
+            </StackPanel>
+          </If>
         </StackPanel>
       </StackPanel>
     </StackPanel>

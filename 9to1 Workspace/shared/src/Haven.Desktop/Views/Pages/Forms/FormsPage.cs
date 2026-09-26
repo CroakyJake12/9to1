@@ -26,6 +26,7 @@ public sealed class FormsPage : UserControl, IDisposable
     private readonly HavenSceneControl _sceneHost;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Guid _threadId = Guid.NewGuid();
+    private readonly DateTimeOffset _formStartedAt;
     private bool _saving;
     private bool _disposed;
 
@@ -39,6 +40,7 @@ public sealed class FormsPage : UserControl, IDisposable
         _template = template ?? throw new ArgumentNullException(nameof(template));
         _router = router ?? throw new ArgumentNullException(nameof(router));
         _instances = instances ?? throw new ArgumentNullException(nameof(instances));
+        _formStartedAt = DateTimeOffset.UtcNow;
 
         _formSurface = new HavenGenUiSceneSurface(_router, _instances);
         _formSurface.ActionCompleted += OnFormActionCompleted;
@@ -91,7 +93,7 @@ public sealed class FormsPage : UserControl, IDisposable
         if (_disposed || Interlocked.Exchange(ref _saving, true)) return;
         try
         {
-            if (!TryCreateFeedbackSubmission(result.StructuredResult, DateTimeOffset.UtcNow, out var submission, out var validationError))
+            if (!TryCreateFeedbackSubmission(result.StructuredResult, DateTimeOffset.UtcNow, out var submission, out var validationError, _formStartedAt))
             {
                 _scene.SetStatus(validationError ?? "The response needs more information.");
                 return;
@@ -103,7 +105,7 @@ public sealed class FormsPage : UserControl, IDisposable
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
         {
         }
-        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {
             await Dispatcher.UIThread.InvokeAsync(() => _scene.SetStatus($"Response could not be saved: {failure.Message}"));
         }
@@ -136,7 +138,8 @@ public sealed class FormsPage : UserControl, IDisposable
         JsonElement structuredResult,
         DateTimeOffset submittedAt,
         out FormsSubmission? submission,
-        out string? validationError)
+        out string? validationError,
+        DateTimeOffset? startedAt = null)
     {
         submission = null;
         validationError = null;
@@ -161,18 +164,30 @@ public sealed class FormsPage : UserControl, IDisposable
             return false;
         }
 
+        var values = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["name"] = anonymous ? string.Empty : name.Trim(),
+            ["topic"] = string.IsNullOrWhiteSpace(topic) ? "Feedback" : topic.Trim(),
+            ["message"] = message.Trim(),
+            ["anonymous"] = anonymous ? "true" : "false"
+        };
         submission = new FormsSubmission(
             Guid.NewGuid().ToString("N"),
             "feedback",
             "Feedback",
-            new Dictionary<string, string>(StringComparer.Ordinal)
+            values,
+            submittedAt)
             {
-                ["name"] = anonymous ? string.Empty : name.Trim(),
-                ["topic"] = string.IsNullOrWhiteSpace(topic) ? "Feedback" : topic.Trim(),
-                ["message"] = message.Trim(),
-                ["anonymous"] = anonymous ? "true" : "false"
-            },
-            submittedAt);
+                FormVersionId = "feedback:1",
+                StartedAt = startedAt ?? submittedAt,
+                Answers = new Dictionary<string, FormsAnswer>(StringComparer.Ordinal)
+                {
+                    ["name"] = new FormsAnswer("name", "text", JsonSerializer.SerializeToElement(values["name"])),
+                    ["topic"] = new FormsAnswer("topic", "enum", JsonSerializer.SerializeToElement(values["topic"])),
+                    ["message"] = new FormsAnswer("message", "text", JsonSerializer.SerializeToElement(values["message"])),
+                    ["anonymous"] = new FormsAnswer("anonymous", "boolean", JsonSerializer.SerializeToElement(anonymous))
+                }
+            };
         submission = FormsSubmissionLogic.Normalise(submission);
         return true;
     }

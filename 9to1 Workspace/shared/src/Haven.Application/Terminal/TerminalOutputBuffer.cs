@@ -51,16 +51,18 @@ public sealed class TerminalOutputBuffer
     public long Append(TerminalSessionOutput output)
     {
         ArgumentNullException.ThrowIfNull(output);
-        var byteCount = output.RawBytes?.Length ?? Encoding.UTF8.GetByteCount(output.Text ?? string.Empty);
+        var textBytes = Encoding.UTF8.GetByteCount(output.Text ?? string.Empty);
+        var rawByteCount = output.RawBytes?.Length ?? 0;
+        var byteCount = Math.Max(rawByteCount, textBytes);
         lock (_gate)
         {
             var sequence = ++_nextSequence;
             var retainedOutput = output;
             if (byteCount > _maximumBytes)
             {
-                var removeCount = byteCount - _maximumBytes;
-                if (output.RawBytes is { } raw)
+                if (output.RawBytes is { Length: > 0 } raw && raw.Length > _maximumBytes)
                 {
+                    var removeCount = raw.Length - _maximumBytes;
                     var retained = raw.Slice(removeCount).ToArray();
                     retainedOutput = output with
                     {
@@ -71,15 +73,15 @@ public sealed class TerminalOutputBuffer
                 else
                 {
                     var text = output.Text ?? string.Empty;
-                    var textBytes = Encoding.UTF8.GetBytes(text);
-                    var retained = textBytes.AsSpan(Math.Max(0, textBytes.Length - _maximumBytes)).ToArray();
+                    var encodedText = Encoding.UTF8.GetBytes(text);
+                    var retained = encodedText.AsSpan(Math.Max(0, encodedText.Length - _maximumBytes)).ToArray();
                     retainedOutput = output with
                     {
                         Text = Encoding.UTF8.GetString(retained),
-                        RawBytes = retained
+                        RawBytes = output.RawBytes
                     };
                 }
-                _truncatedPrefixBytes += removeCount;
+                _truncatedPrefixBytes += Math.Max(0, byteCount - _maximumBytes);
                 byteCount = _maximumBytes;
             }
 

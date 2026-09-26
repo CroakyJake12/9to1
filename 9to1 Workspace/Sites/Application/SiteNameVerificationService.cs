@@ -8,6 +8,7 @@ namespace HavenOS.Apps.Sites.Application;
 
 public sealed record SiteNameAssessmentInput(string Subject, string NormalizedSubject, string? ProjectName, string SubjectKind);
 public sealed record SiteNameModelAssessment(bool IsClear, IReadOnlyList<string> ReasonCategories, string ModelVersion);
+public enum SitePublicNameKind { FirstPartySlug, CustomDomain }
 
 public interface ISiteNameAssessmentModel
 {
@@ -91,27 +92,51 @@ public sealed class SiteNameVerificationService(FileSiteWorkspaceStore store, IS
     public async Task<SiteApiResult<PublicNameVerification>> VerifyAsync(
         Guid siteId,
         string subject,
-        string normalizedSubject,
-        string subjectKind,
+        SitePublicNameKind kind,
         string? projectName,
         CancellationToken cancellationToken = default)
     {
-        if (siteId == Guid.Empty || string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(normalizedSubject))
+        if (siteId == Guid.Empty || string.IsNullOrWhiteSpace(subject))
             return SiteApiResult<PublicNameVerification>.Failure(new SiteApiError("InvalidInput", "A SiteID and normalized public name are required.", "VerifyPublicName", false));
         try
         {
+            var normalizedSubject = kind switch
+            {
+                SitePublicNameKind.FirstPartySlug => $"{SiteAddressRules.FirstPartyHost}/{SiteAddressRules.NormalizeSlug(subject)}",
+                SitePublicNameKind.CustomDomain => SiteAddressRules.NormalizeHostname(subject).AsciiName,
+                _ => throw new SiteOperationException(new SiteApiError("InvalidInput", "The public-name kind is not supported.", "VerifyPublicName", false))
+            };
+            var subjectKind = kind == SitePublicNameKind.FirstPartySlug ? "slug" : "domain";
             var project = await store.ReadAsync(state => state.Projects.SingleOrDefault(candidate => candidate.SiteId == siteId), cancellationToken).ConfigureAwait(false);
             if (project is null)
                 return SiteApiResult<PublicNameVerification>.Failure(new SiteApiError("SiteNotFound", "The Sites project was not found.", siteId.ToString(), false));
 
             var deterministicReasons = FindDeterministicConcerns(subject, normalizedSubject, subjectKind);
-            var assessment = await model.AssessAsync(new SiteNameAssessmentInput(subject, normalizedSubject, projectName ?? project.Name, subjectKind), cancellationToken).ConfigureAwait(false);
-            var reasons = deterministicReasons.Concat(assessment.ReasonCategories).Distinct(StringComparer.Ordinal).ToArray();
-            var state = reasons.Length == 0 && assessment.IsClear
-                ? SiteNameVerificationState.Passed
-                : SiteNameVerificationState.PendingReview;
             var now = DateTimeOffset.UtcNow;
-            var verification = new PublicNameVerification(Guid.NewGuid(), siteId, subject, normalizedSubject, RulesVersion, assessment.ModelVersion, state, reasons, now, now, null, null);
+            SiteNameModelAssessment? assessment = null;
+            SiteNameVerificationState state;
+            string? modelVersion;
+            IReadOnlyList<string> reasons;
+            try
+            {
+                assessment = await model.AssessAsync(new SiteNameAssessmentInput(subject, normalizedSubject, project.Name, subjectKind), cancellationToken).ConfigureAwait(false);
+                reasons = deterministicReasons.Concat(assessment.ReasonCategories).Distinct(StringComparer.Ordinal).ToArray();
+                state = reasons.Count == 0 && assessment.IsClear ? SiteNameVerificationState.Passed : SiteNameVerificationState.PendingReview;
+                modelVersion = assessment.ModelVersion;
+            }
+            catch (SiteOperationException ex) when (ex.Error.Code is "NameAssessmentUnavailable" or "NameAssessmentInvalid")
+            {
+                reasons = ["AssessmentUnavailable"];
+                state = SiteNameVerificationState.Unavailable;
+                modelVersion = null;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TimeoutException or IOException)
+            {
+                reasons = ["AssessmentUnavailable"];
+                state = SiteNameVerificationState.Unavailable;
+                modelVersion = null;
+            }
+            var verification = new PublicNameVerification(Guid.NewGuid(), siteId, subject, normalizedSubject, RulesVersion, modelVersion, state, reasons, now, now, null, null);
             await store.MutateAsync(snapshot =>
             {
                 if (!snapshot.Projects.Any(candidate => candidate.SiteId == siteId))
@@ -127,6 +152,23 @@ public sealed class SiteNameVerificationService(FileSiteWorkspaceStore store, IS
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return SiteApiResult<PublicNameVerification>.Failure(new SiteApiError("Cancelled", "Name verification was cancelled. No public identity was activated.", "VerifyPublicName", true));
+        }
+    }
+
+    public async Task<SiteApiResult<PublicNameVerification>> GetVerificationAsync(Guid verificationId, CancellationToken cancellationToken = default)
+    {
+        if (verificationId == Guid.Empty)
+            return SiteApiResult<PublicNameVerification>.Failure(new SiteApiError("InvalidInput", "A valid VerificationID is required.", "verificationID", false));
+        try
+        {
+            var value = await store.ReadAsync(state => state.NameVerifications.SingleOrDefault(item => item.VerificationId == verificationId), cancellationToken).ConfigureAwait(false);
+            return value is null
+                ? SiteApiResult<PublicNameVerification>.Failure(new SiteApiError("VerificationNotFound", "The public-name verification was not found.", verificationId.ToString(), false))
+                : SiteApiResult<PublicNameVerification>.Success(value);
+        }
+        catch (SiteOperationException ex)
+        {
+            return SiteApiResult<PublicNameVerification>.Failure(ex.Error);
         }
     }
 

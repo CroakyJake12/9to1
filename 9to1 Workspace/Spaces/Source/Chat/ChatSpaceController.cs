@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using Haven.Application;
 using Haven.Core;
 
 namespace HavenOS.Apps.Spaces.Chat;
@@ -157,7 +158,8 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
                         false,
                         false,
                         DateTimeOffset.MinValue,
-                        DateTimeOffset.MinValue),
+                        DateTimeOffset.MinValue,
+                        SpaceId: SpaceRegistry.ChatSpaceId),
                     prompt,
                     model,
                     attachments.Select(item => item.Id).ToArray()),

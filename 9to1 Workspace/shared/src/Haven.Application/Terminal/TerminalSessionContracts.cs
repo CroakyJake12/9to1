@@ -88,6 +88,7 @@ public sealed record TerminalEnvironmentDescriptor(
     string Platform,
     string Architecture,
     TerminalEnvironmentCapability Capabilities,
+    bool IsElevated = false,
     string? SecurityContext = null,
     string? UnavailableReason = null);
 
@@ -299,4 +300,5 @@ public interface ITerminalInteractiveSessionFactory : ITerminalSessionFactory
     IReadOnlyList<TerminalEnvironmentDescriptor> ListEnvironments();
     IReadOnlyList<TerminalShellProfile> ListShellProfiles(TerminalEnvironmentId? environmentId = null);
     ITerminalInteractiveSession Create(TerminalSessionStartRequest request);
+    Task<ITerminalInteractiveSession> CreateAsync(TerminalSessionStartRequest request, CancellationToken cancellationToken = default);
 }

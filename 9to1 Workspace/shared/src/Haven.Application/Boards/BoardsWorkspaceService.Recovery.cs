@@ -62,6 +62,7 @@ public sealed partial class BoardsWorkspaceService
     public void MovePage(NotesDocument notebook, Guid pageId, Guid targetSectionId, int targetIndex)
     {
         EnsureBoards(notebook);
+        EnsureEditablePage(notebook, pageId);
         var source = notebook.Sections.FirstOrDefault(section => section.Pages.Any(page => page.Id == pageId))
             ?? throw new KeyNotFoundException("The requested Boards page was not found.");
         var target = RequireRecoverySection(notebook, targetSectionId);
@@ -126,6 +127,7 @@ public sealed partial class BoardsWorkspaceService
     public bool DeletePage(NotesDocument notebook, Guid pageId)
     {
         EnsureBoards(notebook);
+        EnsureEditablePage(notebook, pageId);
         var section = notebook.Sections.FirstOrDefault(value => value.Pages.Any(page => page.Id == pageId));
         if (section is null) return false;
         if (section.Pages.Count(page => !IsPageDeleted(notebook, page.Id)) <= 1) return false;
@@ -140,6 +142,7 @@ public sealed partial class BoardsWorkspaceService
     {
         EnsureBoards(notebook);
         if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId)) return false;
+        EnsureEditablePage(notebook, pageId);
         var deleted = GetDeletedPageIds(notebook);
         if (!deleted.Remove(pageId)) return false;
         SetDeletedPageIds(notebook, deleted);
@@ -220,6 +223,7 @@ public sealed partial class BoardsWorkspaceService
         double height = 160)
     {
         var page = RequireRecoveryPage(notebook, pageId);
+        EnsureUnlockedLayout(notebook, pageId);
         var value = new NotesCanvasObject
         {
             Kind = kind,
@@ -244,6 +248,7 @@ public sealed partial class BoardsWorkspaceService
         double y)
     {
         var page = RequireRecoveryPage(notebook, pageId);
+        EnsureUnlockedLayout(notebook, pageId);
         var value = page.CanvasObjects.FirstOrDefault(item => item.Id == objectId);
         if (value is null)
             return false;
@@ -262,6 +267,7 @@ public sealed partial class BoardsWorkspaceService
         double height)
     {
         var page = RequireRecoveryPage(notebook, pageId);
+        EnsureUnlockedLayout(notebook, pageId);
         var value = page.CanvasObjects.FirstOrDefault(item => item.Id == objectId);
         if (value is null)
             return false;
@@ -378,6 +384,7 @@ public sealed partial class BoardsWorkspaceService
         Guid componentId,
         Action<BoardsLiveComponentSource> update)
     {
+        EnsureComponentEditable(notebook, componentId);
         ArgumentNullException.ThrowIfNull(update);
         var components = Read<List<BoardsLiveComponent>>(notebook, ComponentsKey) ?? [];
         var component = components.FirstOrDefault(item => item.Id == componentId);
@@ -449,10 +456,26 @@ public sealed partial class BoardsWorkspaceService
     private static NotesPage RequireRecoveryPage(NotesDocument notebook, Guid pageId)
     {
         EnsureBoards(notebook);
-        return notebook.Sections
+        var page = notebook.Sections
             .SelectMany(section => section.Pages)
             .FirstOrDefault(page => page.Id == pageId && !IsPageDeleted(notebook, page.Id))
             ?? throw new KeyNotFoundException("The requested Boards page was not found.");
+        EnsureEditablePage(notebook, pageId);
+        return page;
+    }
+
+    private static void EnsureEditablePage(NotesDocument notebook, Guid pageId)
+    {
+        var modes = Read<Dictionary<Guid, BoardsPageEditMode>>(notebook, PageEditModesKey) ?? [];
+        if (modes.TryGetValue(pageId, out var mode) && mode == BoardsPageEditMode.View)
+            throw new InvalidOperationException("The Boards page is in View mode and cannot be modified.");
+    }
+
+    private static void EnsureUnlockedLayout(NotesDocument notebook, Guid pageId)
+    {
+        var modes = Read<Dictionary<Guid, BoardsPageLayoutMode>>(notebook, PageLayoutModesKey) ?? [];
+        if (!modes.TryGetValue(pageId, out var mode) || mode == BoardsPageLayoutMode.Locked)
+            throw new InvalidOperationException("The Boards page layout is Locked; switch to Unlocked to place or resize freeform objects.");
     }
 
     private static void NormalizePages(NotesSection section)

@@ -82,6 +82,34 @@ public sealed class CalendarConnectionToolRuntimeTests
         Assert.DoesNotContain("private-secret", result.Failure!.SafeMessage, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task CapabilityCatalogueKeepsSameProviderAccountsSeparateAndMarksCachedCalendarDataStale()
+    {
+        var fixture = Fixture();
+        var now = DateTimeOffset.UtcNow;
+        var offlineAccount = new CalendarAccount(Guid.NewGuid(), CalendarProviderKind.Google, "Work calendar", "work@example.test", CalendarSyncStatus.Offline, null, null, now, now);
+        var planner = new FakePlannerRepository
+        {
+            Accounts = [fixture.Account, offlineAccount],
+            Calendars = fixture.Repository.Calendars,
+            Events = fixture.Repository.Events
+        };
+        var provider = new ConnectionCapabilityProvider(new FakeExternalConnectionRepository(), planner);
+
+        var capabilities = (await provider.GetCapabilitiesAsync(CapabilityPlatform.Windows, CancellationToken.None))
+            .Where(item => item.ImplementationKey == "connection.calendar")
+            .ToArray();
+
+        Assert.Equal(2, capabilities.Length);
+        Assert.Equal(2, capabilities.Select(item => item.Id).Distinct().Count());
+        Assert.Contains(capabilities, item => item.Id == fixture.Account.Id && item.Availability == CapabilityAvailability.PermissionRequired);
+        var offline = Assert.Single(capabilities, item => item.Id == offlineAccount.Id);
+        Assert.Equal(CapabilityAvailability.PermissionRequired, offline.Availability);
+        Assert.Contains("Offline", offline.Description, StringComparison.Ordinal);
+        Assert.Contains("last successful sync: unknown", offline.Description, StringComparison.Ordinal);
+        Assert.Contains("must not be presented as live", offline.Instructions, StringComparison.Ordinal);
+    }
+
     private static (FakePlannerRepository Repository, FakeCalendarProviderRegistry Registry, FakeCalendarProvider Provider, CalendarAccount Account) Fixture()
     {
         var now = DateTimeOffset.Parse("2026-08-22T12:00:00Z");
@@ -132,6 +160,14 @@ public sealed class CalendarConnectionToolRuntimeTests
     {
         public IReadOnlyList<ICalendarSyncProvider> Providers { get; } = providers;
         public ICalendarSyncProvider Get(CalendarProviderKind kind) => Providers.Single(item => item.Kind == kind);
+    }
+
+    private sealed class FakeExternalConnectionRepository : IExternalConnectionRepository
+    {
+        public Task<IReadOnlyList<ExternalConnection>> GetAllAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<ExternalConnection>>([]);
+        public Task<ExternalConnection?> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<ExternalConnection?>(null);
+        public Task UpsertAsync(ExternalConnection connection, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task DeleteAsync(Guid id, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class FakePlannerRepository : IPlannerRepository

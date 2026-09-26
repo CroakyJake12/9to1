@@ -123,12 +123,14 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
     private static string Diagnose(ExternalConnection connection, Exception exception)
     {
         var text = exception.Message;
+        if (exception is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized })
+            return "MCP authentication is required. Reconnect the account and review granted scopes.";
+        if (exception is HttpRequestException { StatusCode: HttpStatusCode.Forbidden })
+            return "MCP provider scope is insufficient. Review the granted scopes for this connection.";
+        if (exception is HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests })
+            return "MCP provider rate limit reached. Retry after the provider's cooldown.";
         if (!connection.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase))
-            return exception is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden }
-                ? "MCP authentication is required. Reconnect the account and review granted scopes."
-                : exception is HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests }
-                    ? "MCP provider rate limit reached. Retry after the provider's cooldown."
-                    : "MCP connection unavailable. Check the endpoint and authentication, then retry.";
+            return "MCP connection unavailable. Check the endpoint and authentication, then retry.";
         if (text.Contains("refused", StringComparison.OrdinalIgnoreCase) || text.Contains("actively refused", StringComparison.OrdinalIgnoreCase))
             return "UEFN MCP is not reachable. Make sure UEFN is running, Python Editor Scripting and UEFN MCP Toolsets are enabled, and the Unreal MCP server has started.";
         if (text.Contains("timed out", StringComparison.OrdinalIgnoreCase) || text.Contains("timeout", StringComparison.OrdinalIgnoreCase))

@@ -17,6 +17,7 @@
     <Compile Include="BrowseChrome.cs" />
     <Compile Include="BrowseCuiScene.cs" />
     <Compile Include="BrowseEngineSelectionPolicy.cs" />
+    <Compile Include="BrowseEnginePreferencesStore.cs" />
     <ProjectReference Include="..\shared\src\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
   </ItemGroup>

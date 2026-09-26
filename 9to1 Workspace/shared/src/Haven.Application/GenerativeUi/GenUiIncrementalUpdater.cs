@@ -120,29 +120,24 @@ public sealed class GenUiIncrementalUpdater
     }
     private bool ApplyStructuralChange(GenUiIncrementalChange change)
     {
-        var document = _instances.TryGet(change.InstanceId);
-        if (document is null) return false;
-
-        GenUiDocument updated = change.Operation switch
-        {
-            GenUiIncrementalOperation.AddComponent => AddComponentToDocument(document, change),
-            GenUiIncrementalOperation.RemoveComponent => RemoveComponentFromDocument(document, change),
-            GenUiIncrementalOperation.ReplaceComponent => ReplaceComponentInDocument(document, change),
-            GenUiIncrementalOperation.MoveComponent => MoveComponentInDocument(document, change),
-            _ => document
-        };
-
-        if (updated == document) return false;
-        _instances.Register(updated with { UpdatedAt = change.Timestamp });
-        ChangeApplied?.Invoke(this, change);
-        return true;
+        var applied = _instances.ApplyDocumentChange(change.ChangeId, change.InstanceId,
+            document => change.Operation switch
+            {
+                GenUiIncrementalOperation.AddComponent => AddComponentToDocument(document, change),
+                GenUiIncrementalOperation.RemoveComponent => RemoveComponentFromDocument(document, change),
+                GenUiIncrementalOperation.ReplaceComponent => ReplaceComponentInDocument(document, change),
+                GenUiIncrementalOperation.MoveComponent => MoveComponentInDocument(document, change),
+                _ => document
+            }, change.Timestamp);
+        if (applied) ChangeApplied?.Invoke(this, change);
+        return applied;
     }
 
     private static GenUiDocument AddComponentToDocument(GenUiDocument document, GenUiIncrementalChange change)
     {
-        if (change.Value is null || change.Value?.ValueKind != JsonValueKind.Object) return document;
+        if (change.Value is null || change.Value.Value.ValueKind != JsonValueKind.Object) throw new InvalidOperationException("An added component is required.");
         var component = JsonSerializer.Deserialize<GenUiComponent>(change.Value!.Value.GetRawText());
-        if (component is null) return document;
+        if (component is null) throw new InvalidOperationException("The added component is invalid.");
 
         if (change.DestinationContainerId is null)
         {
@@ -155,32 +150,40 @@ public sealed class GenUiIncrementalUpdater
             };
         }
 
+        if (FindComponent(document.Root, change.DestinationContainerId) is null)
+            throw new InvalidOperationException($"Destination container '{change.DestinationContainerId}' does not exist.");
         return document with { Root = AddChildToContainer(document.Root, change.DestinationContainerId, component, change.Position) };
     }
 
     private static GenUiDocument RemoveComponentFromDocument(GenUiDocument document, GenUiIncrementalChange change)
     {
-        if (change.TargetComponentId is null) return document;
+        if (string.IsNullOrWhiteSpace(change.TargetComponentId) || change.TargetComponentId == document.Root.ComponentId) throw new InvalidOperationException("A non-root component ID is required for removal.");
+        if (FindComponent(document.Root, change.TargetComponentId) is null) throw new InvalidOperationException("The component to remove does not exist.");
         return document with { Root = RemoveChild(document.Root, change.TargetComponentId) };
     }
 
     private static GenUiDocument ReplaceComponentInDocument(GenUiDocument document, GenUiIncrementalChange change)
     {
-        if (change.TargetComponentId is null || change.Value is null || change.Value?.ValueKind != JsonValueKind.Object) return document;
+        if (string.IsNullOrWhiteSpace(change.TargetComponentId) || change.Value is null || change.Value.Value.ValueKind != JsonValueKind.Object) throw new InvalidOperationException("A target ID and replacement component are required.");
         var replacement = JsonSerializer.Deserialize<GenUiComponent>(change.Value!.Value.GetRawText());
-        if (replacement is null) return document;
+        if (replacement is null || replacement.ComponentId != change.TargetComponentId) throw new InvalidOperationException("A replacement must preserve the target component ID.");
+        if (FindComponent(document.Root, change.TargetComponentId) is null) throw new InvalidOperationException("The component to replace does not exist.");
         return document with { Root = ReplaceChild(document.Root, change.TargetComponentId, replacement) };
     }
 
     private static GenUiDocument MoveComponentInDocument(GenUiDocument document, GenUiIncrementalChange change)
     {
-        if (change.TargetComponentId is null || change.DestinationContainerId is null) return document;
+        if (string.IsNullOrWhiteSpace(change.TargetComponentId) || string.IsNullOrWhiteSpace(change.DestinationContainerId) || change.TargetComponentId == document.Root.ComponentId)
+            throw new InvalidOperationException("A movable component and destination container are required.");
+        var component = FindComponent(document.Root, change.TargetComponentId) ?? throw new InvalidOperationException("The component to move does not exist.");
+        var destination = FindComponent(document.Root, change.DestinationContainerId) ?? throw new InvalidOperationException("The destination container does not exist.");
+        if (Contains(component, destination.ComponentId)) throw new InvalidOperationException("A component cannot be moved into itself or one of its descendants.");
         var root = RemoveChild(document.Root, change.TargetComponentId);
-        var document2 = document with { Root = root };
-        var component = FindComponent(document.Root, change.TargetComponentId);
-        if (component is null) return document;
-        return document2 with { Root = AddChildToContainer(root, change.DestinationContainerId, component, change.Position) };
+        return document with { Root = AddChildToContainer(root, change.DestinationContainerId, component, change.Position) };
     }
+
+    private static bool Contains(GenUiComponent root, string componentId) =>
+        root.ComponentId.Equals(componentId, StringComparison.Ordinal) || root.Children.Any(child => Contains(child, componentId));
 
     private static GenUiComponent AddChildToContainer(GenUiComponent root, string containerId, GenUiComponent child, int? position)
     {

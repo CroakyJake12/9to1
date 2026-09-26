@@ -84,7 +84,9 @@ public sealed record AppAiActionDescriptor(
     bool IsMutation = true,
     bool IsReversible = true,
     bool HasExternalSideEffects = false,
-    IReadOnlyList<string>? AffectedObjectIds = null);
+    IReadOnlyList<string>? AffectedObjectIds = null,
+    bool ImpactUnknown = true,
+    string? ImpactSummary = null);
 
 public sealed record AppAiActionRequest(
     string AppId,
@@ -102,6 +104,9 @@ public sealed record AppAiActionResult(
     string? ErrorCode = null,
     bool CanRetry = false)
 {
+    public static AppAiActionResult Success(string summary, JsonElement? value = null) =>
+        new(true, summary, value);
+
     public static AppAiActionResult Rejected(string summary, string errorCode, bool canRetry = false) =>
         new(false, summary, null, errorCode, canRetry);
 }
@@ -175,7 +180,12 @@ public sealed record AppAiPrompt(
     string CorrelationId,
     AppAiAccessMode AccessMode = AppAiAccessMode.ReadOnly,
     IReadOnlyList<AppAiActionDescriptor>? AvailableActions = null,
-    AppAiModelSelection? ModelSelection = null);
+    AppAiModelSelection? ModelSelection = null)
+{
+    public string SystemInstructions => AccessMode == AppAiAccessMode.ReadOnly
+        ? "Inspect only the supplied authorised semantic context. Do not request or perform app actions. You may describe proposed changes in your response. Do not infer private or off-scope information."
+        : "Use only the supplied authorised semantic context and listed typed app actions. Request mutations only through those actions and stable target IDs. The host app, Home permissions and its current edit/review state remain authoritative; Write mode does not bypass them. Do not use UI simulation or invent entities.";
+}
 
 /// <summary>A model-selected typed action. Approval tokens are never model-authored.</summary>
 public sealed record AppAiRequestedAction(string ActionId, JsonElement Arguments);

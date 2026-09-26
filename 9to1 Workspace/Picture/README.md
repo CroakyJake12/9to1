@@ -1,25 +1,25 @@
-# HavenOS Images
+# Picture
 
-This directory contains the first bounded standalone Images app surface for HavenOS.
+Picture is the HavenOS image viewer and editing surface under active development. The current local Avalonia implementation opens an image, previews it, supports fit/zoom/pan and adjacent-file navigation, and records a non-destructive crop operation before exporting a PNG copy.
 
-## Implemented journey
+## Current local journey
 
-1. Launch the `HavenOS.Images` Avalonia desktop app directly.
-2. Choose **Open image** and select a local PNG, JPEG, BMP, GIF, or WebP file.
-3. Images asks Avalonia/Skia to decode the selected file and shows the decoded bitmap plus its pixel dimensions.
-4. The image opens fitted to the preview. **Zoom in**, **Zoom out**, and **Fit** adjust the view; the mouse wheel zooms around its pointer location, and dragging pans the image.
-5. **Previous** and **Next** browse other files in the same directory whose extensions are in the Images picker policy, ordered by file name.
-6. Decode, file-system, and picker failures are shown as status text rather than being presented as successful capability.
+1. Open a local PNG, JPEG, BMP, GIF, or WebP supported by the platform decoder.
+2. View the image with fit, zoom, pointer-centred wheel zoom, and drag pan.
+3. Browse neighboring supported files in the same directory.
+4. Inspect the file signature, decoded pixel dimensions, file size, and metadata exposed by the installed reader through **Info**.
+5. Enter crop bounds in source-image pixels and export a new PNG file.
+6. Choose **Preserve supported metadata**, **Remove location (strips all metadata)**, or **Remove all metadata**. The location option currently strips all metadata because this implementation cannot reliably distinguish every location-bearing field across formats.
 
-The extension list is a picker/navigation policy, not a promise that every file carrying one of those extensions will decode. Actual decoding is delegated to the Avalonia runtime and corrupt/unsupported payloads fail closed in the UI.
+The source image is protected from replacement. Crop edits remain non-destructive until export. Unsupported/corrupt data and metadata-reader limitations are surfaced as unavailable or failed operations.
 
-## Explicit non-capabilities
+## Current limits
 
-This slice does **not** claim image editing, AI generation, export/conversion, metadata editing, cloud libraries, catalog persistence, or integration with the existing `imagine` creative workspace. It also does not register a new shared-shell route; the project is directly launchable so the app surface remains isolated from concurrent shell/HUI lanes.
+This is not yet the complete Picture product contract. Raster brush/eraser, selections and transforms, layers, vector/text tools, history, AI generation/editing, linked Files identity and save workflows, color-profile handling, broad format writing, shared Home/CUI integration, and accessibility/device validation still require implementation or owner integration. Metadata DPI and ICC profiles are not currently reported. Donor trees in `Source/glycin` and `Source/loupe` are provenance inputs only; they are not integrated runtime dependencies.
 
 ## Focused validation
 
 ```powershell
-dotnet build "HavenOS Apps/Images/HavenOS.Images.csproj" -c Release
-dotnet test "HavenOS Apps/Images/Tests/HavenOS.Images.Tests.csproj" -c Release
+dotnet build "9to1 Workspace/Picture/HavenOS.Images.csproj" -c Release --no-restore -p:UsedAvaloniaProducts=
+dotnet test "9to1 Workspace/Picture/Tests/HavenOS.Images.Tests.csproj" -c Release --no-restore -p:UsedAvaloniaProducts=
 ```

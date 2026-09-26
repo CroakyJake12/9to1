@@ -59,4 +59,18 @@ public sealed class BrowseEngineSelectionPolicyTests
         Assert.Throws<ArgumentException>(() =>
             policy.SetSiteOverride(new Uri("about:blank"), BrowseEngineKind.Chromium));
     }
+
+    [Fact]
+    public void CapturedDefaultAndSitePreferencesCanBeRestored()
+    {
+        var original = new BrowseEngineSelectionPolicy();
+        original.SetDefault(BrowseEngineKind.Chromium);
+        original.SetSiteOverride(new Uri("https://example.test/"), BrowseEngineKind.Gecko);
+
+        var restored = BrowseEngineSelectionPolicy.Restore(original.Capture());
+
+        Assert.Equal(BrowseEngineKind.Chromium, restored.DefaultEngine);
+        Assert.Equal(BrowseEngineKind.Gecko, restored.Resolve(new Uri("https://example.test/path"), Guid.NewGuid()));
+        Assert.Equal(BrowseEngineKind.Chromium, restored.Resolve(new Uri("https://other.test/"), Guid.NewGuid()));
+    }
 }

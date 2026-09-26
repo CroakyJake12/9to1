@@ -253,6 +253,97 @@ public sealed class ImageJourneyTests
     }
 
     [AvaloniaFact]
+    public async Task MetadataReaderReportsAvailableFileFactsWithoutInventingOptionalMetadata()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"picture-metadata-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var sourcePath = Path.Combine(directory, "source.bmp");
+        try
+        {
+            await File.WriteAllBytesAsync(sourcePath, CreateTwoPixelBmp(), TestContext.Current.CancellationToken);
+            using var bitmap = new Bitmap(sourcePath);
+            var metadata = ImageMetadataSnapshot.Read(sourcePath, bitmap);
+
+            Assert.Equal("BMP", metadata.Format);
+            Assert.Equal(2, metadata.PixelWidth);
+            Assert.Equal(1, metadata.PixelHeight);
+            Assert.Equal(new FileInfo(sourcePath).Length, metadata.FileSizeBytes);
+            Assert.NotEqual(ImageMetadataAvailability.UnsupportedByReader, metadata.MetadataAvailability);
+            Assert.DoesNotContain("Latitude", metadata.Fields.Keys);
+            Assert.True(metadata.DpiX is null || double.IsFinite(metadata.DpiX.Value));
+            Assert.True(metadata.DpiY is null || double.IsFinite(metadata.DpiY.Value));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task PngExportAppliesMetadataPrivacyModeAndNeverChangesTheSource()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"picture-metadata-export-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var bitmapPath = Path.Combine(directory, "source.bmp");
+        var sourcePath = Path.Combine(directory, "source.png");
+        var preservePath = Path.Combine(directory, "preserved.png");
+        var privatePath = Path.Combine(directory, "private.png");
+        var strippedPath = Path.Combine(directory, "stripped.png");
+        try
+        {
+            await File.WriteAllBytesAsync(bitmapPath, CreateTwoPixelBmp(), TestContext.Current.CancellationToken);
+            using (var bitmap = new Bitmap(bitmapPath))
+            using (var stream = File.Create(sourcePath))
+                bitmap.Save(stream);
+
+            using (var sourceMetadata = TagLib.File.Create(sourcePath))
+            {
+                var pngTag = Assert.IsAssignableFrom<TagLib.Png.PngTag>(sourceMetadata.GetTag(TagLib.TagTypes.Png, create: true));
+                pngTag.Title = "Preserve this image title";
+                pngTag.Comment = "Preserve this non-location comment";
+                if (sourceMetadata is TagLib.Image.File imageSource)
+                {
+                    imageSource.ImageTag.Latitude = 51.5;
+                    imageSource.ImageTag.Longitude = -0.12;
+                    imageSource.ImageTag.Altitude = 24;
+                }
+                sourceMetadata.Save();
+            }
+            using (var sourceMetadata = TagLib.File.Create(sourcePath))
+            {
+                var pngTag = Assert.IsAssignableFrom<TagLib.Png.PngTag>(sourceMetadata.GetTag(TagLib.TagTypes.Png, create: false));
+                Assert.Equal("Preserve this image title", pngTag.Title);
+            }
+
+            var originalBytes = await File.ReadAllBytesAsync(sourcePath, TestContext.Current.CancellationToken);
+            var service = new PictureCropService();
+            var document = service.OpenSource(sourcePath).Crop(0, 0, 1, 1);
+            service.ExportPng(document, preservePath, PictureMetadataExportMode.Preserve);
+            service.ExportPng(document, privatePath, PictureMetadataExportMode.RemoveLocation);
+            service.ExportPng(document, strippedPath, PictureMetadataExportMode.RemoveAll);
+
+            using (var preserved = TagLib.File.Create(preservePath))
+            {
+                var pngTag = Assert.IsAssignableFrom<TagLib.Png.PngTag>(preserved.GetTag(TagLib.TagTypes.Png, create: false));
+                Assert.Equal("Preserve this image title", pngTag.Title);
+                Assert.Equal("Preserve this non-location comment", pngTag.Comment);
+            }
+            using (var privateFile = TagLib.File.Create(privatePath))
+            {
+                Assert.Equal(TagLib.TagTypes.None, privateFile.TagTypesOnDisk);
+            }
+            using (var stripped = TagLib.File.Create(strippedPath))
+                Assert.Null(stripped.GetTag(TagLib.TagTypes.Png, create: false));
+
+            Assert.Equal(originalBytes, await File.ReadAllBytesAsync(sourcePath, TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
     public void CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState()
     {
         var screenshotDirectory = Path.Combine(Path.GetTempPath(), "opencode", "picture-ui-qa");
@@ -264,9 +355,12 @@ public sealed class ImageJourneyTests
             var cropBounds = window.FindControl<TextBox>("CropBoundsBox")!;
             var applyCrop = window.FindControl<Button>("ApplyCropButton")!;
             var exportCrop = window.FindControl<Button>("ExportCropButton")!;
+            var info = window.FindControl<Button>("InfoButton")!;
             Assert.Equal("Crop bounds in current image pixels", AutomationProperties.GetName(cropBounds));
             Assert.False(applyCrop.IsEnabled);
             Assert.False(exportCrop.IsEnabled);
+            Assert.False(info.IsEnabled);
+            Assert.Equal("View image metadata", AutomationProperties.GetName(info));
             Assert.True(window.FindControl<StackPanel>("EmptyState")!.IsVisible);
             cropBounds.Focus();
             Assert.True(cropBounds.IsFocused);
@@ -289,6 +383,7 @@ public sealed class ImageJourneyTests
                 .Invoke(window, [sourcePath]);
             Assert.True(applyCrop.IsEnabled);
             Assert.False(exportCrop.IsEnabled);
+            Assert.True(info.IsEnabled);
             cropBounds.Text = "not crop bounds";
             applyCrop.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
             var status = window.FindControl<TextBlock>("StatusText")!;

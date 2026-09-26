@@ -1,3 +1,5 @@
+using HavenOS.Mail.Storage;
+
 namespace HavenOS.Mail.Services;
 
 /// <summary>Evaluates a Mail query against the canonical AccountID-scoped cache.</summary>
@@ -24,8 +26,8 @@ public static class MailSearchEngine
     {
         if (message.IsDeleted) return false;
         if (query.AccountIds is { Count: > 0 } accounts && !accounts.Contains(message.AccountId)) return false;
-        if (query.FolderKeys is { Count: > 0 } folders && !folders.Contains(message.FolderKey)) return false;
-        if (query.Labels is { Count: > 0 } labels && !labels.Any(message.Labels.Contains)) return false;
+        if (query.FolderKeys is { Count: > 0 } folders && !folders.Contains(message.FolderKey, StringComparer.OrdinalIgnoreCase)) return false;
+        if (query.Labels is { Count: > 0 } labels && !labels.Any(label => message.Labels.Contains(label, StringComparer.OrdinalIgnoreCase))) return false;
         if (query.IsRead is { } isRead && message.IsRead != isRead) return false;
         if (query.IsStarred is { } isStarred && message.IsStarred != isStarred) return false;
         if (query.HasAttachments is { } hasAttachments && (message.AttachmentIds.Count > 0) != hasAttachments) return false;
@@ -38,10 +40,10 @@ public static class MailSearchEngine
         if (query.Body is { Length: > 0 } body && !Contains(message.PlainBody, body) && !Contains(message.HtmlBody, body)) return false;
         if (query.AttachmentName is { Length: > 0 } fileName &&
             (!attachmentNames.TryGetValue(message.MessageId, out var names) || !names.Any(name => Contains(name, fileName)))) return false;
-        if (query.Categories is { Count: > 0 } categories && !categories.Any(message.Labels.Contains)) return false;
+        if (query.Categories is { Count: > 0 } categories && !categories.Any(category => message.Labels.Contains(category, StringComparer.OrdinalIgnoreCase))) return false;
         if (query.Text is { Length: > 0 } text)
         {
-            var inAttachment = attachmentNames.TryGetValue(message.MessageId, out var names) && names.Any(name => Contains(name, text));
+            var inAttachment = attachmentNames.TryGetValue(message.MessageId, out var textAttachmentNames) && textAttachmentNames.Any(name => Contains(name, text));
             if (!Contains(message.Subject, text) && !Contains(message.Preview, text) &&
                 !Contains(message.Sender?.Address, text) && !Contains(message.Sender?.DisplayName, text) &&
                 !recipients.Any(item => Contains(item, text)) &&

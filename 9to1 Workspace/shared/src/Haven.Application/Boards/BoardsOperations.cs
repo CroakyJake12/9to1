@@ -14,7 +14,9 @@ public enum BoardsOperationKind
     DeleteNotebook = 7,
     RestoreNotebook = 8,
     DeletePage = 9,
-    RestorePage = 10
+    RestorePage = 10,
+    SetEditMode = 11,
+    SetLayoutMode = 12
 }
 
 public sealed record BoardsOperation(
@@ -72,6 +74,34 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
         }
         var notebook = await boards.OpenNotebookAsync(notebookId, cancellationToken).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Boards notebook {notebookId:D} was not found.");
+
+        if (operation.Kind == BoardsOperationKind.SetEditMode)
+        {
+            var modePageId = operation.PageId ?? throw new ArgumentException("SetEditMode requires PageId.", nameof(operation));
+            if (!Enum.TryParse<BoardsPageEditMode>(operation.Text, ignoreCase: true, out var mode))
+                throw new ArgumentException("SetEditMode requires Text 'Edit' or 'View'.", nameof(operation));
+            boards.SetEditMode(notebook, modePageId, mode);
+            await boards.SaveAsync(notebook, "Changed Boards page edit mode", cancellationToken).ConfigureAwait(false);
+            var modeSection = notebook.Sections.First(section => section.Pages.Any(page => page.Id == modePageId));
+            return new BoardsOperationResult(notebook.Id, modeSection.Id, modePageId, null, null, null,
+                new BoardsDeepLink(notebook.Id, modeSection.Id, modePageId).ToString());
+        }
+
+        if (operation.Kind == BoardsOperationKind.SetLayoutMode)
+        {
+            var modePageId = operation.PageId ?? throw new ArgumentException("SetLayoutMode requires PageId.", nameof(operation));
+            if (!Enum.TryParse<BoardsPageLayoutMode>(operation.Text, ignoreCase: true, out var mode))
+                throw new ArgumentException("SetLayoutMode requires Text 'Locked' or 'Unlocked'.", nameof(operation));
+            boards.SetLayoutMode(notebook, modePageId, mode);
+            await boards.SaveAsync(notebook, "Changed Boards page layout mode", cancellationToken).ConfigureAwait(false);
+            var modeSection = notebook.Sections.First(section => section.Pages.Any(page => page.Id == modePageId));
+            return new BoardsOperationResult(notebook.Id, modeSection.Id, modePageId, null, null, null,
+                new BoardsDeepLink(notebook.Id, modeSection.Id, modePageId).ToString());
+        }
+
+        if (operation.PageId is Guid requestedPageId &&
+            boards.GetEditMode(notebook, requestedPageId) == BoardsPageEditMode.View)
+            throw new InvalidOperationException("The Boards page is in View mode and cannot be modified.");
 
         var section = ResolveSection(notebook, operation.SectionId);
         var page = ResolvePage(section, operation.PageId);
@@ -147,6 +177,12 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
                 page = notebook.Sections.SelectMany(value => value.Pages).First(value => value.Id == restorePageId);
                 section = notebook.Sections.First(value => value.Pages.Contains(page));
                 break;
+
+            case BoardsOperationKind.SetEditMode:
+                throw new InvalidOperationException("SetEditMode was not dispatched through its scoped branch.");
+
+            case BoardsOperationKind.SetLayoutMode:
+                throw new InvalidOperationException("SetLayoutMode was not dispatched through its scoped branch.");
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(operation), operation.Kind, "Unknown Boards operation.");

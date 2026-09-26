@@ -60,7 +60,7 @@ public sealed class JsonStudioProjectStore(string rootPath) : IStudioProjectStor
         StudioStoreDocument? document;
         try { document = await JsonSerializer.DeserializeAsync<StudioStoreDocument>(input, Json, cancellationToken).ConfigureAwait(false); }
         catch (JsonException ex) { throw new InvalidDataException("AI Studio project store is invalid; source data has been preserved.", ex); }
-        document ??= throw new InvalidDataException("AI Studio project store is empty or invalid; source data has been preserved.");
+        if (document is null) throw new InvalidDataException("AI Studio project store is empty or invalid; source data has been preserved.");
         if (document.SchemaVersion != CurrentSchemaVersion)
             throw new InvalidDataException($"AI Studio project store schema {document.SchemaVersion} is unsupported; expected {CurrentSchemaVersion}. No data was changed.");
         return document;

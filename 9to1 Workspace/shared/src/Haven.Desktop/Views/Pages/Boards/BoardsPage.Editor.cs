@@ -15,6 +15,7 @@ public sealed partial class BoardsPage
     private void RebuildEditor()
     {
         _editor.Children.Clear();
+        UpdatePageModePresentation();
         if (_page is null || _document is null)
         {
             _editor.Children.Add(new TextBlock { Text = "Choose a page to begin." });

@@ -18,7 +18,7 @@ namespace Haven.Application;
 /// only expose transcripts/snapshots, which keeps raw audio and video out of
 /// persistence by construction.
 /// </summary>
-public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IVoiceInputStatusSource
+public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IVoiceInputStatusSource, ICallDeviceSelection
 {
     /// <summary>
     /// Stores default system prompt locally so this component can preserve the dependency, cache, or state between member calls.
@@ -353,6 +353,57 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
             SetState(CallState.Listening, "Listening");
         else
             SetState(CallState.Listening, InputStatus.Message);
+    }
+
+    public async Task SelectInputDeviceAsync(string? deviceId, CancellationToken cancellationToken)
+    {
+        EnsureActive();
+        await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            EnsureActive();
+            if (deviceId is not null && !_speechInput.Devices.Any(device => device.Id == deviceId))
+                throw new ArgumentException("The selected microphone is not available.", nameof(deviceId));
+            var previous = _options?.InputDeviceId;
+            if (string.Equals(previous, deviceId, StringComparison.Ordinal)) return;
+            await _speechInput.StopAsync(cancellationToken).ConfigureAwait(false);
+            _options = (_options ?? throw new InvalidOperationException("Call options are unavailable.")) with { InputDeviceId = deviceId };
+            var updated = (CurrentSession ?? throw new InvalidOperationException("Call session is unavailable.")) with { InputDeviceId = deviceId };
+            try
+            {
+                await _calls.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
+                CurrentSession = updated;
+                if (!IsMuted && State != CallState.Paused && _lifetimeCts is not null &&
+                    !await TryStartSpeechInputAsync(_lifetimeCts.Token).ConfigureAwait(false))
+                    SetState(State, InputStatus.Message);
+            }
+            catch
+            {
+                _options = _options with { InputDeviceId = previous };
+                if (!IsMuted && State != CallState.Paused && _lifetimeCts is not null)
+                    await TryStartSpeechInputAsync(_lifetimeCts.Token).ConfigureAwait(false);
+                throw;
+            }
+        }
+        finally { _lifecycleGate.Release(); }
+    }
+
+    public async Task SelectOutputDeviceAsync(string? deviceId, CancellationToken cancellationToken)
+    {
+        EnsureActive();
+        if (deviceId is not null && !_speechOutput.Devices.Any(device => device.Id == deviceId))
+            throw new ArgumentException("The selected audio output is not available.", nameof(deviceId));
+        await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            EnsureActive();
+            if (string.Equals(_options?.OutputDeviceId, deviceId, StringComparison.Ordinal)) return;
+            var updated = (CurrentSession ?? throw new InvalidOperationException("Call session is unavailable.")) with { OutputDeviceId = deviceId };
+            await _calls.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
+            CurrentSession = updated;
+            _options = (_options ?? throw new InvalidOperationException("Call options are unavailable.")) with { OutputDeviceId = deviceId };
+        }
+        finally { _lifecycleGate.Release(); }
     }
 
     /// <summary>

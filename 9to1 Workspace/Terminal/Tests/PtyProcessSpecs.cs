@@ -1,5 +1,5 @@
 using System.Text;
-using HavenOS.Apps.Terminal;
+using Haven.Infrastructure.Terminal;
 
 internal static class PtyProcessSpecs
 {
@@ -74,6 +74,12 @@ internal static class PtyProcessSpecs
         buffer.OutputReceived -= handler;
         buffer.Publish(sender, new PtyOutputChunk(Encoding.ASCII.GetBytes("unobserved chunk")));
         Check(received.Count == 3, "output should not accumulate for later subscribers after the first subscription");
+
+        var bounded = new PtyOutputBuffer();
+        bounded.Publish(sender, new PtyOutputChunk(new byte[4 * 1024 * 1024]));
+        bounded.Publish(sender, new PtyOutputChunk(Encoding.ASCII.GetBytes("tail")));
+        Check(bounded.DroppedPendingBytes == 4 * 1024 * 1024,
+            "pre-subscription output must enforce its memory bound and expose the dropped byte count");
     }
 
     private static Task PtySizeRejectsEmptyDimensionsAsync()

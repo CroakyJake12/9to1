@@ -34,7 +34,14 @@ public sealed class GenUiInstanceStore
 
     public Task ApplyResultAsync(GenUiActionResult result, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(result);
         cancellationToken.ThrowIfCancellationRequested();
+        if (result.Patches is null) throw new InvalidOperationException("Action result patches are required.");
+        if (result.Patches.Count > 100) throw new InvalidOperationException("An action result exceeds the patch batch limit.");
+        if (result.Status != GenUiActionStatus.Completed && result.Patches.Count > 0)
+            throw new InvalidOperationException("A non-completed action cannot mutate generated UI state.");
+        if (result.Patches.Any(patch => patch.InstanceId != result.Origin.InstanceId || patch.PatchId == Guid.Empty))
+            throw new InvalidOperationException("Action result patches must target the originating instance and have stable IDs.");
         ApplyPatchesAtomically(result.Patches);
         return Task.CompletedTask;
     }
@@ -45,15 +52,39 @@ public sealed class GenUiInstanceStore
             throw new InvalidOperationException($"GenUI instance '{patch.InstanceId}' is not registered.");
         lock (instance.Gate)
         {
-            if (!instance.AppliedPatches.Add(patch.PatchId)) return false;
+            if (instance.AppliedPatches.Contains(patch.PatchId)) return false;
             var document = patch.TargetId.Equals("state", StringComparison.Ordinal)
                 ? PatchState(instance.Document, patch)
                 : PatchComponent(instance.Document, patch);
             GenerativeUiContractValidator.ValidateAndThrow(document);
             instance.Document = document with { UpdatedAt = patch.Timestamp };
-            DocumentChanged?.Invoke(this, instance.Document);
-            return true;
+            instance.AppliedPatches.Add(patch.PatchId);
         }
+        DocumentChanged?.Invoke(this, instance.Document);
+        return true;
+    }
+
+    /// <summary>Applies a validated document mutation once, committing its ID only after success.</summary>
+    public bool ApplyDocumentChange(Guid changeId, Guid instanceId, Func<GenUiDocument, GenUiDocument> update, DateTimeOffset timestamp)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+        if (changeId == Guid.Empty) throw new InvalidOperationException("A change ID is required.");
+        if (!_instances.TryGetValue(instanceId, out var instance))
+            throw new InvalidOperationException($"GenUI instance '{instanceId}' is not registered.");
+
+        GenUiDocument changed;
+        lock (instance.Gate)
+        {
+            if (instance.AppliedChanges.Contains(changeId)) return false;
+            var candidate = update(instance.Document) ?? throw new InvalidOperationException("A document change cannot return null.");
+            candidate = candidate with { UpdatedAt = timestamp };
+            GenerativeUiContractValidator.ValidateAndThrow(candidate);
+            instance.Document = candidate;
+            instance.AppliedChanges.Add(changeId);
+            changed = candidate;
+        }
+        DocumentChanged?.Invoke(this, changed);
+        return true;
     }
 
     public IReadOnlyList<bool> ApplyPatchesAtomically(IReadOnlyList<GenUiStatePatch> patches)
@@ -151,6 +182,7 @@ public sealed class GenUiInstanceStore
     {
         public object Gate { get; } = new();
         public HashSet<Guid> AppliedPatches { get; } = [];
+        public HashSet<Guid> AppliedChanges { get; } = [];
         public GenUiDocument Document { get; set; } = document;
     }
 }

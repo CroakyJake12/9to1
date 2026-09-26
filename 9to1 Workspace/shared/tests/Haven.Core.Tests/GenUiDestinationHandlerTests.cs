@@ -189,6 +189,51 @@ public sealed class GenUiAgentFeedbackTests
 public sealed class GenUiIncrementalUpdaterTests
 {
     [Fact]
+    public void FailedPatchDoesNotConsumeItsId()
+    {
+        var store = new GenUiInstanceStore();
+        var document = CreateDocument();
+        store.Register(document);
+        var id = Guid.NewGuid();
+        var invalid = new GenUiStatePatch(id, document.Origin.InstanceId, GenUiPatchOperation.Replace, "state", "", JsonSerializer.SerializeToElement(5), DateTimeOffset.UtcNow);
+        Assert.Throws<InvalidOperationException>(() => store.ApplyPatch(invalid));
+        Assert.True(store.ApplyPatch(invalid with { Path = "score" }));
+    }
+
+    [Fact]
+    public void InvalidMoveLeavesDocumentUntouchedAndCanRetryChangeId()
+    {
+        var store = new GenUiInstanceStore();
+        var document = CreateDocument();
+        store.Register(document);
+        var updater = new GenUiIncrementalUpdater(store);
+        var id = Guid.NewGuid();
+        var move = new GenUiIncrementalChange(id, document.Origin.InstanceId,
+            GenUiIncrementalOperation.MoveComponent, "test.button", null, "test.button", null,
+            null, null, null, null, DateTimeOffset.UtcNow);
+
+        Assert.Throws<InvalidOperationException>(() => updater.Apply(move));
+        Assert.Equal(document, store.TryGet(document.Origin.InstanceId));
+        Assert.True(updater.Apply(move with { DestinationContainerId = "test.workspace" }));
+        Assert.False(updater.Apply(move with { DestinationContainerId = "test.workspace" }));
+    }
+
+    [Fact]
+    public void MissingDestinationDoesNotDropMovedComponent()
+    {
+        var store = new GenUiInstanceStore();
+        var document = CreateDocument();
+        store.Register(document);
+        var updater = new GenUiIncrementalUpdater(store);
+        var move = new GenUiIncrementalChange(Guid.NewGuid(), document.Origin.InstanceId,
+            GenUiIncrementalOperation.MoveComponent, "test.button", null, "missing.container", null,
+            null, null, null, null, DateTimeOffset.UtcNow);
+
+        Assert.Throws<InvalidOperationException>(() => updater.Apply(move));
+        Assert.NotNull(store.TryGet(document.Origin.InstanceId)!.Root.Children.SingleOrDefault(c => c.ComponentId == "test.button"));
+    }
+
+    [Fact]
     public void PatchStateUpdatesDocumentState()
     {
         var store = new GenUiInstanceStore();

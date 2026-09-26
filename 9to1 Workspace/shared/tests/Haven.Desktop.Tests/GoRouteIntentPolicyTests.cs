@@ -68,6 +68,18 @@ public sealed class GoRouteIntentPolicyTests
     }
 
     [Fact]
+    public void Legacy_name_only_project_context_does_not_create_a_fake_stable_id()
+    {
+        var decision = GoRouteIntentPolicy.Resolve(
+            "open the Haven project",
+            new GoRoutingContext([], ["Haven"]));
+
+        Assert.Equal(GoRouteDestination.Project, decision.Destination);
+        Assert.Null(decision.ProjectId);
+        Assert.Equal("Haven", decision.ProjectName);
+    }
+
+    [Fact]
     public void Project_intent_carries_the_stable_project_id_when_available()
     {
         var projectId = Guid.NewGuid();

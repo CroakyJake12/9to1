@@ -12,6 +12,7 @@ using CakeOS.Cui.Runtime;
 using CakeOS.Cui.Themes;
 using Haven.CUI.DevTools;
 using HavenOS.Home;
+using HavenOS.Home.Core;
 
 namespace AvaloniaHome;
 
@@ -73,17 +74,32 @@ internal sealed class HomeApp : Application
 {
     private readonly CuiViewModel _viewModel = new();
     private readonly HomeDashboard _dashboard = new();
+    private readonly IHomeCoreStateStore _coreStateStore;
+    private readonly HomeProductivityEngineService _productivityEngine;
+    private readonly HomeCoreRuntime _homeCore;
+    private readonly HomeCoreApi _homeCoreApi;
+    private readonly HomeFeatureNavigationHost _featureNavigation = new();
     private readonly HomeCuiController _controller;
+    private IDisposable? _homeCoreSubscription;
     private CuiControlLoader? _loader;
 
     public HomeApp()
     {
+        _coreStateStore = FileHomeCoreStateStore.CreateDefault();
+        var authorization = new DenyAllHomeCoreAuthorization();
+        _productivityEngine = new HomeProductivityEngineService();
+        _homeCore = new HomeCoreRuntime([new HomeCoreStateService(_coreStateStore), _productivityEngine], authorization);
+        _homeCoreApi = new HomeCoreApi(_homeCore, authorization);
         _controller = new HomeCuiController(_dashboard);
     }
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Home Core is ready before Home presents its normal shell. State corruption leaves the
+        // control plane explicitly degraded while preserving the original state for repair.
+        _ = _homeCore.StartAsync().GetAwaiter().GetResult();
         ApplySnapshot(_controller.ShowCurrent());
+        _homeCoreSubscription = _homeCore.Subscribe(OnHomeCoreChanged);
         _viewModel.On("InstallAllUpdates", _ => _ = InstallAllAsync());
         RegisterUnavailableAction("OpenStudio", "Studio navigation is not connected in this host.");
         RegisterUnavailableAction("OpenWrite", "Write navigation is not connected in this host.");
@@ -102,6 +118,15 @@ internal sealed class HomeApp : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // Closing the visible shell must not tear down the shared service lifetime. The core
+            // stops only when the process receives an explicit application shutdown request.
+            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            desktop.Exit += async (_, _) =>
+            {
+                _homeCoreSubscription?.Dispose();
+                _homeCoreSubscription = null;
+                await _homeCore.StopAsync(explicitlyRequested: true);
+            };
             var window = BuildWindow();
             desktop.MainWindow = window;
         }
@@ -227,4 +252,24 @@ internal sealed class HomeApp : Application
         _viewModel.Set("OperationSummary", message);
         Avalonia.Threading.Dispatcher.UIThread.Post(() => _loader?.RefreshBindings());
     }
+
+    private void OnHomeCoreChanged(HomeCoreDependencySignal signal)
+    {
+        var ready = signal.Services.Count(service => service.IsAvailable);
+        var unavailable = signal.Services.Count - ready;
+        _viewModel.Set("HomeCoreSummary", $"Home Core {ready} services available; {unavailable} unavailable.");
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => _loader?.RefreshBindings());
+    }
+
+    internal HomeCoreRuntime HomeCore => _homeCore;
+    internal IHomeCoreApi HomeCoreApi => _homeCoreApi;
+    internal IHomeCoreStateStore HomeCoreStateStore => _coreStateStore;
+    internal IHomeProductivityEngine ProductivityEngine => _productivityEngine.Engine;
+    internal IHomeFeatureNavigationHost FeatureNavigation => _featureNavigation;
+}
+
+internal sealed class DenyAllHomeCoreAuthorization : IHomeCoreAuthorization
+{
+    public ValueTask<bool> IsAllowedAsync(HomeCallerIdentity caller, string target, IReadOnlySet<string> scopes,
+        CancellationToken cancellationToken = default) => ValueTask.FromResult(false);
 }

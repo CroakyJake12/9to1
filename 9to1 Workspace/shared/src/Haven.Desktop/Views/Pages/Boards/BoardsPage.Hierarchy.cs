@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Haven.Application;
 using Haven.Core;
 using Haven.UI.Components;
 using DomainPage = Haven.Core.NotesPage;
@@ -12,7 +13,9 @@ public sealed partial class BoardsPage
     private void RebuildHierarchy()
     {
         _sections.Children.Clear();
+        UpdateBoardSwitcher();
         if (_document is null) return;
+        var document = _document;
 
         foreach (var section in _document.Sections)
         {
@@ -30,12 +33,41 @@ public sealed partial class BoardsPage
                 });
             button.HorizontalContentAlignment = HorizontalAlignment.Left;
             _sections.Children.Add(button);
+            foreach (var page in section.Pages.Where(value => !BoardsWorkspaceService.IsPageDeleted(document, value.Id))
+                         .OrderBy(value => value.Order))
+            {
+                var localPage = page;
+                var pageButton = ActionButton(
+                    (page.Id == _page?.Id ? "• " : "") + "↳ " + page.Title,
+                    () => SelectHierarchyPageAsync(local, localPage));
+                pageButton.HorizontalContentAlignment = HorizontalAlignment.Left;
+                pageButton.Margin = new Avalonia.Thickness(16, 0, 0, 0);
+                _sections.Children.Add(pageButton);
+            }
+        }
+
+        if (_document is not null)
+        {
+            var deletedPages = _boards.ListDeletedPages(document);
+            if (deletedPages.Count > 0)
+            {
+                _sections.Children.Add(new TextBlock { Text = "Deleted pages", FontSize = 11, Margin = new Avalonia.Thickness(4, 10, 0, 0) });
+                foreach (var deleted in deletedPages)
+                {
+                    var localDeleted = deleted;
+                    var restore = ActionButton("Restore · " + deleted.Title, async () => await RestorePageAsync(localDeleted.Id));
+                    restore.HorizontalContentAlignment = HorizontalAlignment.Left;
+                    _sections.Children.Add(restore);
+                }
+            }
         }
     }
 
     private void RebuildPageTabs()
     {
-        var pages = _section?.Pages.OrderBy(item => item.Order).ToArray() ?? [];
+        var document = _document;
+        var pages = _section?.Pages.Where(item => document is not null && !BoardsWorkspaceService.IsPageDeleted(document, item.Id))
+            .OrderBy(item => item.Order).ToArray() ?? [];
         _pageTabs.SetItems(pages.Select(item =>
             new Haven.UI.Components.TabStripItem(item.Id.ToString("D"), item.Title, item.Id == _page?.Id, false)).ToArray());
     }
@@ -43,7 +75,7 @@ public sealed partial class BoardsPage
     private void OnPageTabInvoked(object? sender, string key)
     {
         if (_section is null || !Guid.TryParse(key, out var id)) return;
-        var page = _section.Pages.FirstOrDefault(item => item.Id == id);
+        var page = _section.Pages.FirstOrDefault(item => item.Id == id && !BoardsWorkspaceService.IsPageDeleted(_document!, item.Id));
         if (page is null) return;
         _page = page;
         RebuildPageTabs();
@@ -71,6 +103,45 @@ public sealed partial class BoardsPage
         RebuildPageTabs();
         RebuildEditor();
         await SaveAsync("Added Boards page");
+    }
+
+    private Task SelectHierarchyPageAsync(DomainSection section, DomainPage page)
+    {
+        _section = section;
+        _page = page;
+        RebuildHierarchy();
+        RebuildPageTabs();
+        RebuildEditor();
+        SetStatus($"{section.Title} · {page.Title}");
+        return Task.CompletedTask;
+    }
+
+    private async Task DeleteCurrentPageAsync()
+    {
+        if (_document is null || _section is null || _page is null) return;
+        if (!_boards.DeletePage(_document, _page.Id))
+        {
+            SetStatus("The final page in a section cannot be moved to Trash.");
+            return;
+        }
+        _page = _section.Pages.Where(value => !BoardsWorkspaceService.IsPageDeleted(_document, value.Id))
+            .OrderBy(value => value.Order).FirstOrDefault();
+        RebuildHierarchy();
+        RebuildPageTabs();
+        RebuildEditor();
+        await SaveAsync("Moved Boards page to recoverable Trash");
+    }
+
+    private async Task RestorePageAsync(Guid pageId)
+    {
+        if (_document is null || !_boards.RestorePage(_document, pageId)) return;
+        var section = _document.Sections.FirstOrDefault(value => value.Pages.Any(page => page.Id == pageId));
+        _section = section ?? _section;
+        _page = section?.Pages.FirstOrDefault(value => value.Id == pageId) ?? _page;
+        RebuildHierarchy();
+        RebuildPageTabs();
+        RebuildEditor();
+        await SaveAsync("Restored Boards page from Trash");
     }
 
     private async Task AddBlockAsync(NotesBlockKind kind)

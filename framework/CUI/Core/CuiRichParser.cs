@@ -1,5 +1,6 @@
 using System.Xml;
 using System.Xml.Linq;
+using System.Text;
 
 namespace CakeOS.Cui.Language;
 
@@ -11,6 +12,7 @@ namespace CakeOS.Cui.Language;
 public sealed class CuiRichParser
 {
     private readonly CuiDiagnosticBag _diagnostics = new();
+    private IReadOnlyDictionary<int, string> _textReferences = new Dictionary<int, string>();
 
     public CuiDiagnosticBag Diagnostics => _diagnostics;
 
@@ -19,10 +21,12 @@ public sealed class CuiRichParser
         ArgumentNullException.ThrowIfNull(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);
         _diagnostics.Clear();
+        var normalized = new CuiSyntaxNormalizer(_diagnostics).Normalize(source, sourceName);
+        _textReferences = normalized.TextReferences;
 
         try
         {
-            var document = XDocument.Parse(source, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace);
+            var document = XDocument.Parse(normalized.XmlSource, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace);
             var root = document.Root;
             if (root is null)
             {
@@ -352,6 +356,9 @@ public sealed class CuiRichParser
         string? repeatKey = null;
         CuiSourceSpan? repeatKeySpan = null;
         var isDefinition = false;
+        string? propertyName = null;
+        string? propertyValue = null;
+        CuiSourceSpan? propertyValueSpan = null;
 
         foreach (var attr in element.Attributes())
         {
@@ -393,6 +400,19 @@ public sealed class CuiRichParser
                     repeatKeySpan = attrSpan;
                     continue;
                 }
+            }
+
+            if (type == "Property" && string.Equals(attrName, "Property", StringComparison.OrdinalIgnoreCase))
+            {
+                propertyName = rawValue;
+                continue;
+            }
+
+            if (type == "Property" && string.Equals(attrName, "Value", StringComparison.OrdinalIgnoreCase))
+            {
+                propertyValue = rawValue;
+                propertyValueSpan = attrSpan;
+                continue;
             }
 
             switch (attrName.ToLowerInvariant())
@@ -488,15 +508,47 @@ public sealed class CuiRichParser
             }
         }
 
+        CuiPropertyRegionDefinition? propertyRegion = null;
+        if (type == "Property")
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                _diagnostics.Error("CUI038", "A Property region requires a Property name.", span);
+            }
+            else
+            {
+                if (propertyValue is null
+                    && element.Attribute(propertyName) is { } namedValueAttribute)
+                {
+                    propertyValue = namedValueAttribute.Value;
+                    propertyValueSpan = SpanOf(namedValueAttribute, sourceName);
+                }
+
+                if (propertyValue is null)
+                {
+                    _diagnostics.Error("CUI039", $"Property region '{propertyName}' requires a value.", span);
+                }
+                else
+                {
+                    propertyRegion = new CuiPropertyRegionDefinition(
+                        propertyName,
+                        ParseMarkupValue(propertyValue, propertyValueSpan ?? span),
+                        span);
+                }
+            }
+        }
+
         return new CuiComponent(
             type, name, classes, properties, actions,
             children, condition, list, span,
             repeat: repeat,
             elseChildren: elseChildren,
             groups: groups,
-            isDefinition: isDefinition)
+            isDefinition: isDefinition,
+            propertyRegion: propertyRegion)
         {
-            Text = string.Concat(element.Nodes().OfType<XText>().Select(node => node.Value)).Trim(),
+            Text = DecodeTextReferences(string.Concat(element.Nodes().OfType<XText>().Select(node => node.Value)).Trim(), span, out var textParts),
+            TextParts = textParts,
         };
     }
 
@@ -577,6 +629,21 @@ public sealed class CuiRichParser
             ? new CuiAddressScope()
             : parentScope;
 
+        if (component.AuthoredId is null)
+        {
+            if (scope.GeneratedIds.TryGetValue(component.StableId, out var firstSpan))
+            {
+                _diagnostics.Error("CUI029",
+                    "Unnamed components have the same generated stable identity. Add distinct authored IDs to disambiguate them.",
+                    component.Span,
+                    firstSpan);
+            }
+            else
+            {
+                scope.GeneratedIds.Add(component.StableId, component.Span);
+            }
+        }
+
         if (component.Name is { Length: > 0 } id)
         {
             if (!scope.Ids.Add(id))
@@ -615,6 +682,7 @@ public sealed class CuiRichParser
     {
         public HashSet<string> Ids { get; } = new(StringComparer.Ordinal);
         public HashSet<string> Groups { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, CuiSourceSpan> GeneratedIds { get; } = new(StringComparer.Ordinal);
     }
 
     private CuiCondition ParseCondition(string rawValue, CuiSourceSpan span)
@@ -632,6 +700,47 @@ public sealed class CuiRichParser
         if (value is CuiInvalidValue invalid)
             _diagnostics.Error(invalid.DiagnosticCode, invalid.Message, invalid.Span);
         return value;
+    }
+
+    private string DecodeTextReferences(string rawText, CuiSourceSpan span, out IReadOnlyList<CuiTextPart> textParts)
+    {
+        var parts = new List<CuiTextPart>();
+        var decodedText = new StringBuilder(rawText.Length);
+        var literal = new StringBuilder();
+
+        void FlushLiteral()
+        {
+            if (literal.Length == 0) return;
+            var value = literal.ToString();
+            parts.Add(new CuiLiteralTextPart(value, span));
+            decodedText.Append(value);
+            literal.Clear();
+        }
+
+        for (var index = 0; index < rawText.Length;)
+        {
+            if (rawText[index] == '\uE000')
+            {
+                var markerEnd = rawText.IndexOf('\uE001', index + 1);
+                if (markerEnd > index + 1
+                    && int.TryParse(rawText[(index + 1)..markerEnd], out var referenceId)
+                    && _textReferences.TryGetValue(referenceId, out var referenceText))
+                {
+                    FlushLiteral();
+                    var value = ParseMarkupValue(referenceText, span);
+                    parts.Add(new CuiExpressionTextPart(value, span));
+                    decodedText.Append(referenceText);
+                    index = markerEnd + 1;
+                    continue;
+                }
+            }
+
+            literal.Append(rawText[index++]);
+        }
+
+        FlushLiteral();
+        textParts = parts;
+        return decodedText.ToString();
     }
 
     #region Value Parsing

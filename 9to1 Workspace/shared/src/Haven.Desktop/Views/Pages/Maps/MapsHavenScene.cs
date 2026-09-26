@@ -27,7 +27,7 @@ internal sealed class MapsHavenScene : IDisposable
 
     public MapsHavenScene()
     {
-        Root = new Page { Name = "Maps.Root", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "auto auto 1fr auto" };
+        Root = new Page { Name = "Maps.Root", Layout = HavenLayout.Grid, Columns = "1fr", Rows = "auto auto 1fr auto auto" };
         Set(Root, HavenProperties.Padding, HavenThickness.Parse("28px 32px"));
         Set(Root, HavenProperties.Gap, HavenLength.Px(14));
         Set(Root, HavenProperties.Background, "Transparent");
@@ -56,6 +56,7 @@ internal sealed class MapsHavenScene : IDisposable
     internal Select SavedPlacesSelect { get; private set; } = null!;
     internal Select RecentSearchesSelect { get; private set; } = null!;
     internal HavenText StatusText { get; private set; } = null!;
+    internal HavenText SafetyDisclaimerText { get; private set; } = null!;
 
     private Container MapCard { get; set; } = null!;
     private Container TileLayer { get; set; } = null!;
@@ -376,6 +377,12 @@ internal sealed class MapsHavenScene : IDisposable
         StatusText.Accessibility.AccessibleName = "Maps status";
         Set(StatusText, HavenProperties.Row, 3);
         Root.Add(StatusText);
+
+        SafetyDisclaimerText = Muted(MapsAttribution.SafetyDisclaimer);
+        SafetyDisclaimerText.Name = "Maps.SafetyDisclaimer";
+        SafetyDisclaimerText.Accessibility.AccessibleName = "Route safety reminder";
+        Set(SafetyDisclaimerText, HavenProperties.Row, 4);
+        Root.Add(SafetyDisclaimerText);
     }
 
     private void RebuildLayers()

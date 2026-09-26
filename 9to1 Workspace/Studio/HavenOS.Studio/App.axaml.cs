@@ -12,10 +12,7 @@ public sealed partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var dataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "9to1", "AIStudio");
-            var api = new AIStudioApi(new JsonStudioProjectStore(dataPath), new UnavailableStudioRuntimeAdapter(),
-                new UnavailableCanonicalAgentBuilderAdapter());
-            desktop.MainWindow = new MainWindow(api);
+            desktop.MainWindow = new MainWindow();
         }
         base.OnFrameworkInitializationCompleted();
     }

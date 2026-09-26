@@ -236,6 +236,24 @@ public sealed class BackgroundLearningScheduler : IBackgroundLearningScheduler
         lock (_gate) return (_privacy?.Current.BackgroundLearningEnabled ?? false) && _globalEnabled && !_disabledCategories.Contains(category);
     }
 
+    public bool CanAcceptContribution(KnowledgeCategory category, string? appId, string? projectId)
+    {
+        if (!IsEnabled(category)) return false;
+        var preferences = _privacy?.Current;
+        return preferences is not null && preferences.BackgroundLearningEnabled &&
+               preferences.BackgroundLearningPolicy?.Allows(appId, projectId) == true;
+    }
+
+    public async Task<bool> CanAcceptContributionAsync(
+        KnowledgeCategory category,
+        string? appId,
+        string? projectId,
+        CancellationToken cancellationToken)
+    {
+        await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        return CanAcceptContribution(category, appId, projectId);
+    }
+
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
         if (_initialized) return;

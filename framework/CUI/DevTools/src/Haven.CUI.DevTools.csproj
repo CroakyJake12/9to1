@@ -10,6 +10,7 @@
     <AssemblyName>Haven.CUI.DevTools</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../Compiler/CakeOS.Cui.Compiler.csproj" />
     <ProjectReference Include="../../Runtime/CakeOS.Cui.Runtime.csproj" />
   </ItemGroup>
 </Project>

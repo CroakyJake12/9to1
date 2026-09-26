@@ -4,11 +4,16 @@ namespace Haven.Application;
 
 public interface IKnowledgeLibrary
 {
-    Task<KnowledgeBank> CreateBankAsync(KnowledgeBank bank, CancellationToken cancellationToken);
-    Task<IReadOnlyList<KnowledgeBank>> SearchBanksAsync(string? query, CancellationToken cancellationToken);
-    Task<KnowledgeBank?> GetBankAsync(Guid id, CancellationToken cancellationToken);
-    Task<bool> SetBankEnabledAsync(Guid id, bool enabled, CancellationToken cancellationToken);
-    Task<bool> ForgetBankAsync(Guid id, CancellationToken cancellationToken);
+    Task<KnowledgeBank> CreateBankAsync(KnowledgeBank bank, CancellationToken cancellationToken)
+        => Task.FromException<KnowledgeBank>(new NotSupportedException("Knowledge Banks are not supported by this library."));
+    Task<IReadOnlyList<KnowledgeBank>> SearchBanksAsync(string? query, CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<KnowledgeBank>>([]);
+    Task<KnowledgeBank?> GetBankAsync(Guid id, CancellationToken cancellationToken)
+        => Task.FromResult<KnowledgeBank?>(null);
+    Task<bool> SetBankEnabledAsync(Guid id, bool enabled, CancellationToken cancellationToken)
+        => Task.FromResult(false);
+    Task<bool> ForgetBankAsync(Guid id, CancellationToken cancellationToken)
+        => Task.FromResult(false);
 
     Task<KnowledgeRecord> UpsertAsync(
         KnowledgeRecord record,
@@ -47,7 +52,17 @@ public interface IBackgroundLearningScheduler
     BackgroundLearningMode Mode { get; }
     bool IsGloballyEnabled { get; }
     bool IsEnabled(KnowledgeCategory category);
-    bool CanAcceptContribution(KnowledgeCategory category, string? appId, string? projectId);
+    bool CanAcceptContribution(KnowledgeCategory category, string? appId, string? projectId)
+        => IsEnabled(category);
+    Task<bool> CanAcceptContributionAsync(
+        KnowledgeCategory category,
+        string? appId,
+        string? projectId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(CanAcceptContribution(category, appId, projectId));
+    }
     Task InitializeAsync(CancellationToken cancellationToken);
     Task SetGlobalEnabledAsync(bool enabled, CancellationToken cancellationToken);
     Task SetModeAsync(BackgroundLearningMode mode, CancellationToken cancellationToken);
@@ -63,6 +78,13 @@ public interface IBackgroundLearningScheduler
     Task<bool> CancelAsync(Guid id, CancellationToken cancellationToken);
     Task<BackgroundLearningSchedulerSnapshot> GetSnapshotAsync(CancellationToken cancellationToken);
     bool CanRun(BackgroundLearningTask task, BackgroundLearningResourceState resources);
+}
+
+public interface IBackgroundLearningCaptureService
+{
+    Task<KnowledgeRecord> CaptureAsync(
+        BackgroundLearningContribution contribution,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

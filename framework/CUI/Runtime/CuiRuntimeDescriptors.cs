@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace CakeOS.Cui.Runtime;
 
 /// <summary>Read-only metadata exposed to the CUI compiler and runtime host.</summary>
@@ -19,4 +21,8 @@ public sealed record CuiRuntimePropertyDescriptor(
     bool IsAnimatable,
     bool SupportsBackdrop,
     bool IsAttached,
-    bool IsWritable);
+    bool IsWritable)
+{
+    /// <summary>Finite authored values for symbol properties; empty means an open value set.</summary>
+    public IReadOnlySet<string> AllowedValues { get; init; } = FrozenSet<string>.Empty;
+}

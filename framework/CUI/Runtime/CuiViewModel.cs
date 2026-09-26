@@ -9,7 +9,7 @@ namespace CakeOS.Cui.Runtime;
 /// Implements ICuiBindingContext for the CUI language model
 /// and INotifyPropertyChanged for live Avalonia bindings.
 /// </summary>
-public sealed class CuiViewModel : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
+public sealed class CuiViewModel : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private readonly Dictionary<string, object?> _properties = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Action<object?>> _commands = new(StringComparer.OrdinalIgnoreCase);
@@ -20,6 +20,8 @@ public sealed class CuiViewModel : ICuiBindingContext, ICuiActionDispatcher, ICu
     /// <summary>Set a property and notify listeners.</summary>
     public void Set(string property, object? value, [CallerMemberName] string? caller = null)
     {
+        if (_properties.TryGetValue(property, out var current) && Equals(current, value))
+            return;
         _properties[property] = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
     }
@@ -48,6 +50,18 @@ public sealed class CuiViewModel : ICuiBindingContext, ICuiActionDispatcher, ICu
         var lastDot = path.LastIndexOf('.');
         var key = lastDot >= 0 ? path[(lastDot + 1)..] : path;
         return _properties.TryGetValue(key, out value);
+    }
+
+    /// <summary>ICuiWritableBindingContext: update a bound value and notify the runtime.</summary>
+    public bool TrySetValue(string path, object? value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var lastDot = path.LastIndexOf('.');
+        var key = lastDot >= 0 ? path[(lastDot + 1)..] : path;
+        if (!_properties.ContainsKey(key))
+            return false;
+        Set(key, value);
+        return true;
     }
 
     /// <summary>Dispatch a command by name (sync).</summary>

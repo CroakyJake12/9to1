@@ -33,6 +33,39 @@ public sealed class GenUiAppSessionServiceTests
         Assert.Equal(7, secondStore.TryGet(instanceId)!.State["count"].GetInt32());
     }
 
+    [Fact]
+    public async Task PromoteAsyncSavesLiveStateAtDurableDestination()
+    {
+        var repository = new MemoryRepository();
+        var store = new GenUiInstanceStore();
+        var session = new GenUiAppSessionService(repository, store);
+        var app = CreateApp();
+        await session.SaveAsync(app, CancellationToken.None);
+        store.ApplyPatch(new GenUiStatePatch(Guid.NewGuid(), app.Document.Origin.InstanceId,
+            GenUiPatchOperation.Replace, "state", "count", JsonSerializer.SerializeToElement(7), DateTimeOffset.UtcNow));
+
+        var promoted = await session.PromoteAsync(app.Document.Origin.InstanceId, GenUiPersistenceScope.User, CancellationToken.None);
+
+        Assert.Equal(7, promoted.Document.State["count"].GetInt32());
+        Assert.All(promoted.StateSchema, field => Assert.Equal(GenUiPersistenceScope.User, field.Persistence));
+        Assert.Equal(GenUiPersistenceScope.User,
+            (await repository.GetAsync(app.Document.Origin.InstanceId, CancellationToken.None))!.StateSchema.Single().Persistence);
+    }
+
+    [Fact]
+    public async Task PromoteAsyncRejectsEphemeralDestinations()
+    {
+        var repository = new MemoryRepository();
+        var store = new GenUiInstanceStore();
+        var session = new GenUiAppSessionService(repository, store);
+        var app = CreateApp();
+        await session.SaveAsync(app, CancellationToken.None);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            session.PromoteAsync(app.Document.Origin.InstanceId,
+                GenUiPersistenceScope.Transient, CancellationToken.None));
+    }
+
     private static GenUiAppDefinition CreateApp()
     {
         var origin = new GenUiOrigin(Guid.NewGuid(), "genui", null, Guid.NewGuid());

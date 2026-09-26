@@ -1,7 +1,8 @@
 using System.Globalization;
-using System.Security.Authentication;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using HavenOS.Mail.Services;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
@@ -15,6 +16,7 @@ namespace HavenOS.Mail.Providers;
 public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials) : IMailProviderAdapter
 {
     private readonly IMailCredentialResolver _credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+    private readonly MailHtmlSanitizer _htmlSanitizer = new();
     public MailProviderKind Provider => MailProviderKind.ImapSmtp;
     public MailCapability Capabilities => MailCapability.Folders | MailCapability.Archive | MailCapability.Push |
         MailCapability.ChangeTokens | MailCapability.Attachments | MailCapability.NativeSearch | MailCapability.Junk;
@@ -52,10 +54,10 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
         }
         catch (OperationCanceledException) { throw; }
         catch (MailProviderException) { throw; }
-        catch (AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected Mail authentication. Reconnect the account and retry sync.", false, ex); }
+        catch (MailKit.Security.AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected Mail authentication. Reconnect the account and retry sync.", false, ex); }
         catch (MailKit.Security.SslHandshakeException ex) { throw new MailProviderException(MailErrorCode.CertificateError, "The provider's TLS certificate could not be verified.", false, ex); }
         catch (MailKit.Net.Imap.ImapCommandException ex) { throw new MailProviderException(MailErrorCode.SyncFailed, "The IMAP server rejected a sync command.", true, ex); }
-        catch (Exception ex) when (ex is IOException or MailKit.ServiceNotConnectedException or MailKit.ServiceUnavailableException)
+        catch (Exception ex) when (ex is IOException or SocketException or TimeoutException or MailKit.ServiceNotConnectedException)
         { throw new MailProviderException(MailErrorCode.ProviderUnavailable, "The mail provider could not be reached. Cached messages remain available.", true, ex); }
         finally
         {
@@ -102,9 +104,9 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
             return new MailProviderSendResult(response, DateTimeOffset.UtcNow);
         }
         catch (OperationCanceledException) { throw; }
-        catch (AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected the sending credentials. Reconnect the account and retry.", false, ex); }
+        catch (MailKit.Security.AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected the sending credentials. Reconnect the account and retry.", false, ex); }
         catch (MailKit.Net.Smtp.SmtpCommandException ex) { throw new MailProviderException(MailErrorCode.SendRejected, "The provider rejected the message. Review the server response and retry from Outbox.", false, ex); }
-        catch (Exception ex) when (ex is IOException or MailKit.ServiceNotConnectedException or MailKit.ServiceUnavailableException)
+        catch (Exception ex) when (ex is IOException or SocketException or TimeoutException or MailKit.ServiceNotConnectedException)
         { throw new MailProviderException(MailErrorCode.SendFailed, "The provider could not accept the message. It remains in Outbox for retry.", true, ex); }
         finally
         {
@@ -131,8 +133,8 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
         }
         catch (OperationCanceledException) { throw; }
         catch (MailProviderException) { throw; }
-        catch (AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected Mail authentication.", false, ex); }
-        catch (Exception ex) when (ex is IOException or MailKit.ServiceNotConnectedException or MailKit.ServiceUnavailableException)
+        catch (MailKit.Security.AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected Mail authentication.", false, ex); }
+        catch (Exception ex) when (ex is IOException or SocketException or TimeoutException or MailKit.ServiceNotConnectedException)
         { throw new MailProviderException(MailErrorCode.ProviderUnavailable, "The provider change stream disconnected; reconnect and resume incremental sync.", true, ex); }
         finally
         {
@@ -160,7 +162,7 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
         var folders = new List<MailFolder>();
         foreach (var ns in client.PersonalNamespaces)
         {
-            var results = await client.GetFoldersAsync(ns, statusItems: StatusItems.Unread | StatusItems.Count, cancellationToken).ConfigureAwait(false);
+            var results = await client.GetFoldersAsync(ns, subscribedOnly: false, cancellationToken).ConfigureAwait(false);
             foreach (var folder in results)
             {
                 var kind = folder.Attributes.HasFlag(FolderAttributes.Inbox) ? MailFolderKind.Inbox :
@@ -169,17 +171,27 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
                     folder.Attributes.HasFlag(FolderAttributes.Archive) ? MailFolderKind.Archive :
                     folder.Attributes.HasFlag(FolderAttributes.Junk) ? MailFolderKind.Junk :
                     folder.Attributes.HasFlag(FolderAttributes.Trash) ? MailFolderKind.Trash : MailFolderKind.Custom;
+                int? unread = null;
+                if (folder.CanOpen)
+                {
+                    try
+                    {
+                        await folder.StatusAsync(StatusItems.Unread, cancellationToken).ConfigureAwait(false);
+                        unread = folder.Unread;
+                    }
+                    catch (MailKit.CommandException) { }
+                }
                 folders.Add(new MailFolder(StableId(account.AccountId, "folder:" + folder.FullName), account.AccountId,
-                    folder.FullName, folder.Name, kind, false, folder.CanOpen, folder.Unread));
+                    folder.FullName, folder.Name, kind, false, folder.CanOpen, unread));
             }
         }
         return folders;
     }
 
-    private static MailMessage ConvertMessage(MailAccount account, IMailFolder folder, IMessageSummary summary, MimeMessage message)
+    private MailMessage ConvertMessage(MailAccount account, IMailFolder folder, IMessageSummary summary, MimeMessage message)
     {
         var providerId = summary.UniqueId.Id.ToString(CultureInfo.InvariantCulture);
-        var messageId = StableId(account.AccountId, $"imap:{folder.FullName}:{summary.UniqueIdValidity}:{providerId}");
+        var messageId = StableId(account.AccountId, $"imap:{folder.FullName}:{folder.UidValidity}:{providerId}");
         var threadIdentity = message.References.FirstOrDefault() ?? message.InReplyTo ?? message.MessageId ?? providerId;
         var threadId = StableId(account.AccountId, "thread:" + threadIdentity);
         var attachments = new List<Guid>();
@@ -187,11 +199,13 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
             attachments.Add(StableId(messageId, part.ContentId ?? part.ContentType.MimeType + ":" + part.ContentDisposition?.FileName));
         var textPart = message.BodyParts.OfType<TextPart>().FirstOrDefault(part => part.IsPlain);
         var htmlPart = message.BodyParts.OfType<TextPart>().FirstOrDefault(part => part.IsHtml);
+        var plainBody = textPart?.Text ?? _htmlSanitizer.ToPlainText(htmlPart?.Text);
+        var safeHtmlBody = htmlPart is null ? null : _htmlSanitizer.Sanitize(htmlPart.Text, allowRemoteContent: false);
         var sender = message.From.Mailboxes.FirstOrDefault();
         var received = summary.InternalDate ?? message.Date;
         return new MailMessage(messageId, account.AccountId, providerId, message.MessageId, threadId, null,
-            folder.FullName, new HashSet<string>(), received, message.Date, ToAddress(sender), ToAddresses(message.To), ToAddresses(message.Cc),
-            message.Subject ?? string.Empty, MakePreview(textPart?.Text ?? htmlPart?.Text ?? string.Empty), textPart?.Text, htmlPart?.Text,
+            folder.FullName, [], received, message.Date, ToAddress(sender), ToAddresses(message.To), ToAddresses(message.Cc),
+            message.Subject ?? string.Empty, MakePreview(plainBody), plainBody, safeHtmlBody,
             summary.Flags?.HasFlag(MessageFlags.Seen) == true, summary.Flags?.HasFlag(MessageFlags.Flagged) == true,
             summary.Flags?.HasFlag(MessageFlags.Answered) == true, summary.ModSeq?.ToString(CultureInfo.InvariantCulture), attachments,
             ReadAuthenticationHeaders(message), RemoteContentPolicy.Blocked, IsLocalThreadGrouping: true);
@@ -224,7 +238,7 @@ public sealed class MailKitImapSmtpProvider(IMailCredentialResolver credentials)
         }
     }
 
-    private static IReadOnlyList<MailAddress> ToAddresses(InternetAddressList items) => items.Mailboxes.Select(ToAddress).ToArray();
+    private static IReadOnlyList<MailAddress> ToAddresses(InternetAddressList items) => items.Mailboxes.Select(item => new MailAddress(item.Address, item.Name)).ToArray();
     private static MailAddress? ToAddress(MailboxAddress? item) => item is null ? null : new MailAddress(item.Address, item.Name);
 
     private static string MakePreview(string value)

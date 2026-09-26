@@ -12,14 +12,18 @@ public sealed class SpaceRegistryTests
 
         var spaces = await registry.GetAllAsync();
 
-        Assert.Equal(4, spaces.Count);
+        Assert.Equal(8, spaces.Count);
+        Assert.Contains(spaces, space => space.Id == SpaceRegistry.ChatSpaceId && space.Kind == SpaceKind.Chat && space.Origin == SpaceOrigin.BuiltIn);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.StudySpaceId && space.Kind == SpaceKind.Study && space.IsBuiltIn);
+        Assert.Contains(spaces, space => space.Id == SpaceRegistry.TasksSpaceId && space.Kind == SpaceKind.Tasks && space.IsBuiltIn);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.ShoppingSpaceId && space.Kind == SpaceKind.Shopping && space.IsBuiltIn);
         Assert.Contains(spaces, space => space.Id == SpaceRegistry.ResearchSpaceId && space.Kind == SpaceKind.Research && space.IsBuiltIn);
         var agent = spaces.Single(space => space.Id == SpaceRegistry.AgentSpaceId);
         Assert.True(agent.IsBuiltIn);
         Assert.Equal(SpaceKind.Agent, agent.Kind);
         Assert.False(string.IsNullOrWhiteSpace(agent.Instructions));
+        Assert.Contains(spaces, space => space.Id == SpaceRegistry.TranslateSpaceId && space.Kind == SpaceKind.Translate);
+        Assert.Contains(spaces, space => space.Id == SpaceRegistry.ExperiencesSpaceId && space.Kind == SpaceKind.Experiences);
     }
 
     [Fact]
@@ -39,12 +43,14 @@ public sealed class SpaceRegistryTests
         Assert.DoesNotContain(await registry.GetAllAsync(), space => space.Id == created.Id);
         Assert.Contains(await registry.GetAllAsync(includeArchived: true), space => space.Id == created.Id && space.IsArchived);
 
-        await registry.SetArchivedAsync(created.Id, false);
         await registry.DeleteAsync(created.Id);
-        Assert.Null(await registry.GetAsync(created.Id));
+        Assert.True((await registry.GetAsync(created.Id))!.IsArchived);
+        await registry.RestoreAsync(created.Id);
+        Assert.False((await registry.GetAsync(created.Id))!.IsArchived);
+        await registry.DeleteAsync(created.Id);
 
         var reloaded = new SpaceRegistry(store);
-        Assert.DoesNotContain(await reloaded.GetAllAsync(includeArchived: true), space => space.Id == created.Id);
+        Assert.Contains(await reloaded.GetAllAsync(includeArchived: true), space => space.Id == created.Id && space.IsArchived);
     }
 
     [Fact]
@@ -142,7 +148,7 @@ public sealed class SpaceRegistryTests
         await registry.DeleteAsync(created.Id);
 
         Assert.Null(await registry.GetCurrentSpaceIdAsync());
-        Assert.Null(await registry.GetAsync(created.Id));
+        Assert.True((await registry.GetAsync(created.Id))!.IsArchived);
     }
 
     [Fact]
@@ -156,6 +162,94 @@ public sealed class SpaceRegistryTests
 
         var agentError = await Assert.ThrowsAsync<InvalidOperationException>(() => registry.DeleteAsync(SpaceRegistry.AgentSpaceId));
         Assert.Contains("Built-in Spaces", agentError.Message);
+    }
+
+    [Fact]
+    public async Task Built_in_graphs_are_protected_and_custom_graphs_are_validated()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            registry.SetLayoutAsync(SpaceRegistry.StudySpaceId, SpaceLayoutDocument.Empty));
+        var space = await registry.CreateAsync("Graph");
+        var source = Guid.NewGuid();
+        var target = Guid.NewGuid();
+        var invalid = new SpaceLayoutDocument(
+        [
+            new SpaceLayoutNode(source, "Input", "Source")
+            {
+                Ports = [new SpaceLayoutPort("in", "Input", SpaceLayoutPortDirection.Input)]
+            },
+            new SpaceLayoutNode(target, "Output", "Target")
+            {
+                Ports = [new SpaceLayoutPort("out", "Output", SpaceLayoutPortDirection.Output)]
+            }
+        ],
+        [new SpaceLayoutEdge(Guid.NewGuid(), source, "in", target, "out")]);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => registry.SetLayoutAsync(space.Id, invalid));
+    }
+
+    [Fact]
+    public async Task Reorder_and_nesting_keep_stable_ids_and_reject_cycles()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var parent = await registry.CreateAsync("Parent");
+        var first = await registry.CreateAsync("First");
+        var second = await registry.CreateAsync("Second");
+        var firstId = first.Id;
+
+        first = await registry.MoveAsync(first.Id, parent.Id);
+        second = await registry.MoveAsync(second.Id, parent.Id, 0);
+
+        Assert.Equal(firstId, first.Id);
+        Assert.Equal(parent.Id, first.ParentSpaceId);
+        Assert.Equal(1, first.Position);
+        Assert.Equal(parent.Id, second.ParentSpaceId);
+        Assert.Equal(0, second.Position);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => registry.MoveAsync(parent.Id, first.Id));
+    }
+
+    [Fact]
+    public async Task Moving_and_archiving_preserve_sibling_positions_and_protect_children()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var first = await registry.CreateAsync("Root first");
+        var second = await registry.CreateAsync("Root second");
+        var parent = await registry.CreateAsync("Parent");
+        var firstBuiltIn = (await registry.GetAsync(SpaceRegistry.ChatSpaceId))!;
+
+        await registry.MoveAsync(second.Id, parent.Id);
+        var roots = (await registry.GetAllAsync()).Where(space => !space.IsBuiltIn && space.ParentSpaceId is null)
+            .OrderBy(space => space.Position).ToArray();
+
+        Assert.Equal([first.Id, parent.Id], roots.Select(space => space.Id));
+        Assert.Equal([0, 1], roots.Select(space => space.Position));
+        var reloadedBuiltIn = (await registry.GetAsync(firstBuiltIn.Id))!;
+        Assert.Equal(firstBuiltIn.Revision, reloadedBuiltIn.Revision);
+        Assert.Equal(firstBuiltIn.Position, reloadedBuiltIn.Position);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => registry.SetArchivedAsync(parent.Id, true));
+    }
+
+    [Fact]
+    public async Task Update_uses_expected_revision_and_built_in_identity_is_protected()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var space = await registry.CreateAsync("Versioned");
+        var updated = await registry.UpdateAsync(space with { Description = "Updated" }, space.Revision);
+        Assert.Equal("Updated", updated.Description);
+        await Assert.ThrowsAsync<SpaceRevisionConflictException>(
+            () => registry.UpdateAsync(updated with { Description = "Stale" }, space.Revision));
+
+        var chat = (await registry.GetAsync(SpaceRegistry.ChatSpaceId))!;
+        var protectedChat = await registry.UpdateAsync(chat with
+        {
+            Name = "Renamed Chat",
+            Instructions = "Replace protected behaviour",
+            Kind = SpaceKind.General
+        });
+        Assert.Equal("Chat", protectedChat.Name);
+        Assert.Equal(SpaceKind.Chat, protectedChat.Kind);
+        Assert.NotEqual("Replace protected behaviour", protectedChat.Instructions);
     }
 
     private sealed class MemorySettingsStore : IVersionedSettingsStore

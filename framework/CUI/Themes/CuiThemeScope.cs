@@ -19,7 +19,7 @@ namespace CakeOS.Cui.Themes;
 public sealed class CuiThemeScope
 {
     /// <summary>
-    /// The theme name from the markup: "Default", "Glow", "Bubble", "Retro", "Playful", "Cinematic".
+    /// The theme name from the markup: "Default", any built-in theme name, or a declared custom theme name.
     /// </summary>
     public string ThemeName { get; }
 

@@ -203,8 +203,8 @@ public static class CuiThemeResourceApplier
         CuiAccessibilitySettings settings,
         CuiLocalizationContext? localization)
     {
-        resources["CuiFontFamilyInterface"] = CuiTypography.InterfaceFontFamily;
-        resources["CuiFontFamilyCode"] = CuiTypography.CodeFontFamily;
+        resources["CuiFontFamilyInterface"] = CuiTypography.ResolveInterfaceFontFamily(settings.InterfaceFontFamilyOverride);
+        resources["CuiFontFamilyCode"] = CuiTypography.ResolveCodeFontFamily(settings.CodeFontFamilyOverride);
         resources["CuiFontSizeBody"] = CuiTypography.BodySize * expression.TypographyScale * settings.DisplayScale;
         resources["CuiFontSizeCaption"] = CuiTypography.CaptionSize * expression.TypographyScale * settings.DisplayScale;
         resources["CuiFontSizeHeading"] = CuiTypography.HeadingSize * expression.TypographyScale * settings.DisplayScale;

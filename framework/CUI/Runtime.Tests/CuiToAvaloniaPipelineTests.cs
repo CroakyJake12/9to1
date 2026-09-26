@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Interactivity;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Xunit;
@@ -107,6 +109,81 @@ public class CuiToAvaloniaPipelineTests
         Assert.NotNull(button);
         Assert.Equal(200, button.Width);
         Assert.Equal(50, button.Height);
+    }
+
+    [Fact]
+    public void Transform_components_compose_and_lifecycle_properties_lower()
+    {
+        var result = CuiHeadlessRenderer.Render(
+            "<Page><Text id='label' rotate='15' scale='2' translate='3,4' hidden='false'>Hello</Text></Page>",
+            "transforms.cui");
+
+        Assert.True(result.Success, string.Join("; ", result.Errors));
+        var text = Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(result.Root).Children));
+        Assert.True(text.IsVisible);
+        var transform = Assert.IsType<Avalonia.Media.TransformGroup>(text.RenderTransform);
+        Assert.Contains(transform.Children, child => child is Avalonia.Media.ScaleTransform { ScaleX: 2, ScaleY: 2 });
+        Assert.Contains(transform.Children, child => child is Avalonia.Media.RotateTransform { Angle: 15 });
+        Assert.Contains(transform.Children, child => child is Avalonia.Media.TranslateTransform { X: 3, Y: 4 });
+    }
+
+    [Fact]
+    public void Scrolling_container_uses_native_scroll_viewer()
+    {
+        var result = CuiHeadlessRenderer.Render(
+            "<Container Type='Vertical Stack' HorizontalScrolling='true'><Text>Scrollable</Text></Container>",
+            "scroll.cui");
+
+        Assert.True(result.Success, string.Join("; ", result.Errors));
+        var scroll = Assert.IsType<ScrollViewer>(result.Root);
+        Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, scroll.HorizontalScrollBarVisibility);
+        Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, scroll.VerticalScrollBarVisibility);
+        Assert.IsType<StackPanel>(scroll.Content);
+    }
+
+    [Fact]
+    public void Linear_and_radial_gradient_values_produce_native_gradient_brushes()
+    {
+        var linearResult = CuiHeadlessRenderer.Render(
+            "<Page background='Gradient(Linear),Red(10%),Blue(20%),Green(70%)' />", "linear-gradient.cui");
+        var radialResult = CuiHeadlessRenderer.Render(
+            "<Page background='Gradient(Radial),Red,Blue,Green' />", "radial-gradient.cui");
+
+        Assert.True(linearResult.Success, string.Join("; ", linearResult.Errors));
+        Assert.True(radialResult.Success, string.Join("; ", radialResult.Errors));
+        var linear = Assert.IsType<Avalonia.Media.LinearGradientBrush>(Assert.IsType<Panel>(linearResult.Root).Background);
+        var radial = Assert.IsType<Avalonia.Media.RadialGradientBrush>(Assert.IsType<Panel>(radialResult.Root).Background);
+        Assert.Equal(new[] { 0.1, 0.2, 0.7 }, linear.GradientStops.Select(stop => stop.Offset));
+        Assert.Equal(new[] { 0d, 0.5, 1d }, radial.GradientStops.Select(stop => stop.Offset));
+    }
+
+    [Fact]
+    public void Effect_blur_uses_native_element_effect_and_backdrop_blur_fails_explicitly()
+    {
+        var effectResult = CuiHeadlessRenderer.Render("<Page><Text Effect='Blur(0.5)'>Soft</Text></Page>", "effect.cui");
+        var backdropResult = CuiHeadlessRenderer.Render("<Page Background='Blur(0.5)'>Behind</Page>", "backdrop.cui");
+
+        Assert.True(effectResult.Success, string.Join("; ", effectResult.Errors));
+        var text = Assert.IsType<TextBlock>(Assert.Single(Assert.IsType<Panel>(effectResult.Root).Children));
+        Assert.Equal(16, Assert.IsType<Avalonia.Media.BlurEffect>(text.Effect).Radius);
+        Assert.False(backdropResult.Success);
+        Assert.Contains(backdropResult.Errors, error => error.Contains("CUIR032", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Layer_order_is_signed_and_inherited_by_descendants()
+    {
+        var result = CuiHeadlessRenderer.Render(
+            "<Page><Text id='low' Layer='-2'>Low</Text><Layer id='group' Layer='4'><Text id='inherited'>Inside</Text></Layer><Text id='high' Layer='7'>High</Text></Page>",
+            "layers.cui");
+
+        Assert.True(result.Success, string.Join("; ", result.Errors));
+        var page = Assert.IsType<Panel>(result.Root);
+        Assert.Equal(-2, page.Children[0].ZIndex);
+        var layer = Assert.IsType<Panel>(page.Children[1]);
+        Assert.Equal(4, layer.ZIndex);
+        Assert.Equal(4, Assert.IsType<TextBlock>(Assert.Single(layer.Children)).ZIndex);
+        Assert.Equal(7, page.Children[2].ZIndex);
     }
 
     [Fact]
@@ -272,6 +349,96 @@ public class CuiToAvaloniaPipelineTests
     }
 
     [Fact]
+    public void Compiler_and_runtime_share_the_canonical_component_and_property_registry()
+    {
+        var registry = CuiControlRegistry.Default;
+
+        Assert.True(registry.TryResolveElement("Container", out var container));
+        Assert.False(container.RequiresSpecializedHost);
+        Assert.True(container.AllowedProperties.Contains("Type"));
+        Assert.True(registry.TryResolveElement("Video", out var video));
+        Assert.True(video.RequiresSpecializedHost);
+        Assert.Contains(registry.Elements, element => element.Name == "Button");
+        Assert.DoesNotContain("Text", registry.Elements.Single(element => element.Name == "Image").AllowedProperties);
+        Assert.Contains("Text", registry.Elements.Single(element => element.Name == "Button").AllowedProperties);
+
+        Assert.True(registry.TryGetProperty("grid-column", out var column));
+        Assert.Equal("GridColumn", column.Name);
+        Assert.Equal(typeof(int), column.RuntimeType);
+        Assert.True(column.IsAttached);
+        Assert.True(registry.TryGetProperty("Opacity", out var opacity));
+        Assert.True(opacity.IsAnimatable);
+        Assert.Contains("Image", registry.Properties.Single(property => property.Name == "Source").SupportedElementTypes);
+        Assert.DoesNotContain("Input", registry.Properties.Single(property => property.Name == "Source").SupportedElementTypes);
+        Assert.Contains("Horizontal", registry.Properties.Single(property => property.Name == "Orientation").AllowedValues);
+    }
+
+    [Fact]
+    public async Task Two_way_text_input_updates_the_host_value_and_notifies_live_bindings()
+    {
+        await RunOnAvaloniaThread(() =>
+        {
+        var viewModel = new CuiViewModel();
+        viewModel.Set("Name", "Before");
+        var loader = new CuiControlLoader();
+        loader.SetBindingContext(viewModel);
+        var (root, diagnostics) = loader.LoadMarkup("""
+            <Cui><Page>
+              <Input Type="Text" Value="{Binding Name, mode=TwoWay, type=string}" />
+              <Text Text="{Binding Name}" />
+            </Page></Cui>
+            """);
+
+        Assert.Empty(diagnostics);
+        var page = Assert.IsType<Panel>(root);
+        var input = Assert.IsType<TextBox>(page.Children[0]);
+        var label = Assert.IsType<TextBlock>(page.Children[1]);
+        Assert.Equal("Before", input.Text);
+        Assert.Equal("Before", label.Text);
+
+        input.Text = "After";
+        input.RaiseEvent(new TextChangedEventArgs(TextBox.TextChangedEvent, input));
+
+        Assert.Equal("After", viewModel.Get("Name"));
+        Assert.Equal("After", label.Text);
+        Assert.False(CuiInputValidationProperties.GetHasError(input));
+        loader.Dispose();
+        });
+    }
+
+    [Fact]
+    public void Invalid_two_way_input_preserves_the_source_and_exposes_validation_state()
+    {
+        var viewModel = new CuiViewModel();
+        viewModel.Set("Age", 42);
+        var loader = new CuiControlLoader();
+        loader.SetBindingContext(viewModel);
+        var (root, diagnostics) = loader.LoadMarkup("""
+            <Cui><Input Type="Text" Value="{Binding Age, mode=TwoWay, type=int}" /></Cui>
+            """);
+
+        Assert.Empty(diagnostics);
+        var input = Assert.IsType<TextBox>(root);
+        input.Text = "forty two";
+        input.RaiseEvent(new TextChangedEventArgs(TextBox.TextChangedEvent, input));
+
+        Assert.Equal(42, viewModel.Get("Age"));
+        Assert.Equal("forty two", input.Text);
+        Assert.True(CuiInputValidationProperties.GetHasError(input));
+        loader.Dispose();
+    }
+
+    [Fact]
+    public void Invalid_parser_diagnostics_prevent_partial_runtime_lowering()
+    {
+        var loader = new CuiControlLoader();
+        var (root, diagnostics) = loader.LoadMarkup("<Cui><If><Text>missing condition</Text></If></Cui>", "invalid-structure.cui");
+
+        Assert.Null(root);
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error);
+    }
+
+    [Fact]
     public void Reused_loader_does_not_resolve_resources_from_a_previous_document()
     {
         var loader = new CuiControlLoader();
@@ -302,14 +469,107 @@ public class CuiToAvaloniaPipelineTests
     }
 
     [Fact]
-    public void Root_must_be_Cui_element()
+    public async Task Live_if_condition_switches_branches_when_its_binding_changes()
+    {
+        await RunOnAvaloniaThread(() =>
+        {
+        var viewModel = new CuiViewModel();
+        viewModel.Set("LoggedIn", false);
+        using var loader = new CuiControlLoader();
+        loader.SetBindingContext(viewModel);
+
+        var (root, diagnostics) = loader.LoadMarkup("""
+            <Cui><Page><If Condition="{Binding LoggedIn}"><Text>Welcome</Text></If><Else><Text>Sign in</Text></Else></Page></Cui>
+            """);
+
+        Assert.Empty(diagnostics);
+        var page = Assert.IsType<Panel>(root);
+        var host = Assert.IsType<ContentControl>(Assert.Single(page.Children));
+        var initialBranch = Assert.IsType<Panel>(host.Content);
+        Assert.Equal("Sign in", Assert.IsType<TextBlock>(Assert.Single(initialBranch.Children)).Text);
+
+        viewModel.Set("LoggedIn", true);
+
+        var activeBranch = Assert.IsType<Panel>(host.Content);
+        Assert.Equal("Welcome", Assert.IsType<TextBlock>(Assert.Single(activeBranch.Children)).Text);
+        });
+    }
+
+    [Fact]
+    public async Task Named_action_dispatches_its_typed_parameter()
+    {
+        await RunOnAvaloniaThread(() =>
+        {
+            var viewModel = new CuiViewModel();
+            var token = new object();
+            viewModel.Set("Draft", token);
+            var dispatcher = new RecordingActionDispatcher();
+            using var loader = new CuiControlLoader();
+            loader.SetBindingContext(viewModel);
+            loader.SetActionDispatcher(dispatcher);
+
+            var (root, diagnostics) = loader.LoadMarkup("""
+                <Cui><Actions><Action name="Save" command="chat.save" parameter="{Binding Draft}" /></Actions><Page><Button action="Save">Save</Button></Page></Cui>
+                """);
+            Assert.Empty(diagnostics);
+            loader.WireBindings(root!);
+            Assert.IsType<Button>(Assert.Single(Assert.IsType<Panel>(root).Children))
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+            Assert.Equal("chat.save", dispatcher.Command);
+            Assert.Same(token, dispatcher.Parameter);
+        });
+    }
+
+    [Fact]
+    public void Runtime_surface_keeps_last_tree_on_failure_and_preserves_input_on_success()
+    {
+        var host = new ContentControl();
+        var surface = new CuiRuntimeSurface(host);
+        var parser = new CuiRichParser();
+        var initial = parser.Parse(
+            "<Page id='surface'><Input id='composer' type='Text' text='starting' /></Page>", "surface.cui");
+        var initialDiagnostics = parser.Diagnostics.Diagnostics.ToArray();
+
+        Assert.DoesNotContain(initialDiagnostics, diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error);
+        Assert.True(surface.TryApply(initial, out var applyDiagnostics), string.Join("; ", applyDiagnostics));
+        var firstRoot = Assert.IsType<Panel>(host.Content);
+        var firstInput = Assert.IsType<TextBox>(Assert.Single(firstRoot.Children));
+        firstInput.Text = "draft kept during refresh";
+
+        var invalid = parser.Parse("<Page><UnknownComponent /></Page>", "bad-surface.cui");
+        Assert.False(surface.TryApply(invalid, out var failureDiagnostics));
+        Assert.NotEmpty(failureDiagnostics);
+        Assert.Same(firstRoot, host.Content);
+
+        var replacement = parser.Parse(
+            "<Page id='surface'><Input id='composer' type='Text' text='new server value' /></Page>", "surface-next.cui");
+        Assert.True(surface.TryApply(replacement, out applyDiagnostics), string.Join("; ", applyDiagnostics));
+        var replacementRoot = Assert.IsType<Panel>(host.Content);
+        var replacementInput = Assert.IsType<TextBox>(Assert.Single(replacementRoot.Children));
+        Assert.NotSame(firstRoot, replacementRoot);
+        Assert.Equal("draft kept during refresh", replacementInput.Text);
+    }
+
+    [Fact]
+    public void Direct_Page_root_is_valid_CUI_markup()
     {
         var parser = new CuiRichParser();
-        var doc = parser.Parse("<Page id='root'><TextBlock /></Page>", "wrong-root.cui");
+        var doc = parser.Parse("<Page id='root'><Text>Hello</Text></Page>", "page-root.cui");
 
-        Assert.Null(doc.Components.FirstOrDefault());
+        Assert.Equal("Page", Assert.Single(doc.Components).Type);
+        Assert.DoesNotContain(parser.Diagnostics.Diagnostics, d => d.Severity == CuiDiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Missing_document_root_is_rejected()
+    {
+        var parser = new CuiRichParser();
+        var doc = parser.Parse("<!-- no CUI root -->", "missing-root.cui");
+
+        Assert.Empty(doc.Components);
         Assert.Contains(parser.Diagnostics.Diagnostics,
-            d => d.Code == "CUI003");
+            d => d.Code == "CUI010");
     }
 
     [Fact]
@@ -381,4 +641,27 @@ public class CuiToAvaloniaPipelineTests
         var rv = (CuiResourceValue)resource;
         Assert.Equal("myKey", rv.Key);
     }
+
+    private static async Task RunOnAvaloniaThread(Action action)
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
+        await session.Dispatch(action, CancellationToken.None);
+    }
+
+    private sealed class RecordingActionDispatcher : ICuiActionDispatcher
+    {
+        public string? Command { get; private set; }
+        public object? Parameter { get; private set; }
+
+        public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
+        {
+            Command = command;
+            Parameter = parameter;
+            return ValueTask.CompletedTask;
+        }
+    }
+}
+
+public sealed class CuiRuntimeTestApplication : Application
+{
 }

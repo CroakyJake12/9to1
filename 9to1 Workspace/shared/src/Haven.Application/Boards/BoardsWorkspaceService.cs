@@ -3,6 +3,9 @@ using Haven.Core;
 
 namespace Haven.Application;
 
+public enum BoardsPageEditMode { Edit, View }
+public enum BoardsPageLayoutMode { Locked, Unlocked }
+
 public interface IBoardsWorkspaceService
 {
     Task<IReadOnlyList<NotesDocumentSummary>> ListNotebooksAsync(CancellationToken cancellationToken);
@@ -23,6 +26,10 @@ public interface IBoardsWorkspaceService
     bool DeletePage(NotesDocument notebook, Guid pageId);
     bool RestorePage(NotesDocument notebook, Guid pageId);
     IReadOnlyList<NotesPage> ListDeletedPages(NotesDocument notebook);
+    BoardsPageEditMode GetEditMode(NotesDocument notebook, Guid pageId);
+    void SetEditMode(NotesDocument notebook, Guid pageId, BoardsPageEditMode mode);
+    BoardsPageLayoutMode GetLayoutMode(NotesDocument notebook, Guid pageId);
+    void SetLayoutMode(NotesDocument notebook, Guid pageId, BoardsPageLayoutMode mode);
     bool UpdateListItem(NotesDocument notebook, Guid pageId, Guid blockId, Guid itemId, string? text = null, bool? isChecked = null);
     bool UpdateTableCell(NotesDocument notebook, Guid pageId, Guid blockId, Guid cellId, string? text);
     bool IsPinned(NotesDocument notebook);
@@ -50,6 +57,8 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
     public const string PlacementIdKey = "boards.placement-id";
     public const string DeletedNotebookKey = "boards.deleted";
     public const string DeletedPagesKey = "boards.deleted-pages.v1";
+    public const string PageEditModesKey = "boards.page-edit-modes.v1";
+    public const string PageLayoutModesKey = "boards.page-layout-modes.v1";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public async Task<IReadOnlyList<NotesDocumentSummary>> ListNotebooksAsync(CancellationToken cancellationToken)
@@ -122,6 +131,51 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
     private static bool IsDeleted(NotesDocument document) =>
         document.Metadata.TryGetValue(DeletedNotebookKey, out var value) && bool.TryParse(value, out var deleted) && deleted;
 
+    public BoardsPageEditMode GetEditMode(NotesDocument notebook, Guid pageId)
+    {
+        EnsureBoards(notebook);
+        if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId))
+            throw new KeyNotFoundException("The requested Boards page was not found.");
+        var modes = Read<Dictionary<Guid, BoardsPageEditMode>>(notebook, PageEditModesKey) ?? [];
+        return modes.TryGetValue(pageId, out var mode) && Enum.IsDefined(mode) ? mode : BoardsPageEditMode.Edit;
+    }
+
+    public void SetEditMode(NotesDocument notebook, Guid pageId, BoardsPageEditMode mode)
+    {
+        EnsureBoards(notebook);
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId))
+            throw new KeyNotFoundException("The requested Boards page was not found.");
+        var modes = Read<Dictionary<Guid, BoardsPageEditMode>>(notebook, PageEditModesKey) ?? [];
+        if (mode == BoardsPageEditMode.Edit) modes.Remove(pageId);
+        else modes[pageId] = mode;
+        Write(notebook, PageEditModesKey, modes);
+        TouchRecovery(notebook);
+    }
+
+    public BoardsPageLayoutMode GetLayoutMode(NotesDocument notebook, Guid pageId)
+    {
+        EnsureBoards(notebook);
+        if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId))
+            throw new KeyNotFoundException("The requested Boards page was not found.");
+        var modes = Read<Dictionary<Guid, BoardsPageLayoutMode>>(notebook, PageLayoutModesKey) ?? [];
+        return modes.TryGetValue(pageId, out var mode) && Enum.IsDefined(mode) ? mode : BoardsPageLayoutMode.Locked;
+    }
+
+    public void SetLayoutMode(NotesDocument notebook, Guid pageId, BoardsPageLayoutMode mode)
+    {
+        EnsureBoards(notebook);
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        _ = GetEditMode(notebook, pageId);
+        if (GetEditMode(notebook, pageId) != BoardsPageEditMode.Edit)
+            throw new InvalidOperationException("Layout mode can only be changed in Edit mode.");
+        var modes = Read<Dictionary<Guid, BoardsPageLayoutMode>>(notebook, PageLayoutModesKey) ?? [];
+        if (mode == BoardsPageLayoutMode.Locked) modes.Remove(pageId);
+        else modes[pageId] = mode;
+        Write(notebook, PageLayoutModesKey, modes);
+        TouchRecovery(notebook);
+    }
+
     public async Task SaveAsync(NotesDocument notebook, string reason, CancellationToken cancellationToken)
     {
         EnsureBoards(notebook);
@@ -177,6 +231,7 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
 
     public bool UpdateComponentItem(NotesDocument notebook, Guid componentId, Guid itemId, Action<BoardsLiveComponentItem> update)
     {
+        EnsureComponentEditable(notebook, componentId);
         var components = Read<List<BoardsLiveComponent>>(notebook, ComponentsKey) ?? [];
         var component = components.SingleOrDefault(item => item.Id == componentId);
         var item = component?.Items.SingleOrDefault(candidate => candidate.Id == itemId);
@@ -222,6 +277,21 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
         EnsureBoards(document);
         if (!document.Sections.SelectMany(s => s.Pages).Any(p => p.Id == page.Id))
             throw new InvalidOperationException("Page does not belong to the Boards notebook.");
+        var modes = Read<Dictionary<Guid, BoardsPageEditMode>>(document, PageEditModesKey) ?? [];
+        if (modes.TryGetValue(page.Id, out var mode) && mode == BoardsPageEditMode.View)
+            throw new InvalidOperationException("The Boards page is in View mode and cannot be modified.");
+    }
+
+    private static void EnsureComponentEditable(NotesDocument notebook, Guid componentId)
+    {
+        EnsureBoards(notebook);
+        var placements = Read<List<BoardsLiveComponentPlacement>>(notebook, PlacementsKey) ?? [];
+        var modes = Read<Dictionary<Guid, BoardsPageEditMode>>(notebook, PageEditModesKey) ?? [];
+        foreach (var pageId in placements.Where(value => value.ComponentId == componentId).Select(value => value.PageId).Distinct())
+        {
+            if (modes.TryGetValue(pageId, out var mode) && mode == BoardsPageEditMode.View)
+                throw new InvalidOperationException("The shared Boards component is visible on a page in View mode and cannot be modified.");
+        }
     }
 
     private static T? Read<T>(NotesDocument document, string key)

@@ -81,7 +81,8 @@ public sealed record ExtensionSkillManifest(
     string? WorkflowJson = null,
     string? ContextRulesJson = null,
     IReadOnlyList<string>? ConflictKeys = null,
-    IReadOnlyList<string>? RequiredCapabilityIds = null)
+    IReadOnlyList<string>? RequiredCapabilityIds = null,
+    IReadOnlyList<string>? ResourcePaths = null)
 {
     [JsonExtensionData] public Dictionary<string, JsonElement>? ExtensionData { get; init; }
 }
@@ -135,7 +136,9 @@ public sealed record InstalledExtensionPackage(
     string? AvailableVersion = null,
     string? SafeLastError = null,
     string EnablementScope = "device",
-    IReadOnlyDictionary<string, string>? RetainedPackageData = null);
+    IReadOnlyDictionary<string, string>? RetainedPackageData = null,
+    IReadOnlyList<string>? EnabledScopes = null,
+    IReadOnlyDictionary<string, IReadOnlyList<string>>? SkillEnablementScopes = null);
 
 public sealed record ExtensionManifestDocument(int SchemaVersion, IReadOnlyList<ExtensionPackageManifest> Packages)
 {
@@ -149,3 +152,36 @@ public sealed record DiscoveredExtensionPackage(
     string ContentHash,
     ExtensionInstallState State,
     string? SafeError = null);
+
+public sealed record SkillResolutionRequest(
+    IReadOnlyList<string> RequestedSkillIds,
+    string Scope,
+    IReadOnlyList<string> AvailableCapabilityIds);
+
+public sealed record ResolvedSkill(
+    string SkillId,
+    string PackageId,
+    string PackageVersion,
+    string Name,
+    string Instructions,
+    string? WorkflowJson,
+    string? ContextRulesJson,
+    IReadOnlyDictionary<string, string> Resources,
+    IReadOnlyList<string> CapabilityIds);
+
+public sealed record ExtensionSkillCatalogEntry(
+    string SkillId,
+    string PackageId,
+    string PackageVersion,
+    string Name,
+    string Description,
+    ExtensionInstallState PackageState,
+    bool IsAvailable,
+    IReadOnlyList<string> EnabledScopes);
+
+public sealed record SkillResolutionResult(
+    bool Succeeded,
+    IReadOnlyList<ResolvedSkill> Skills,
+    IReadOnlyList<string> Provenance,
+    string? ErrorCode = null,
+    string? ErrorMessage = null);

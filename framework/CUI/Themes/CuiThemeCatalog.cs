@@ -7,7 +7,7 @@
 namespace CakeOS.Cui.Themes;
 
 /// <summary>
-/// Catalogue of the five canonical themes. Glow is deliberately the identity
+/// Catalogue of the six canonical themes. Glow is deliberately the identity
 /// transform: when the user has not personalised, every value below
 /// reproduces the pre-theme appearance exactly.
 /// </summary>
@@ -55,7 +55,9 @@ public static class CuiThemeCatalog
 
     /// <summary>Parses a persisted theme name safely, falling back to Glow.</summary>
     public static CuiTheme Parse(string? value) =>
-        Enum.TryParse<CuiTheme>(value, ignoreCase: true, out var parsed) ? parsed : CuiTheme.Glow;
+        Enum.TryParse<CuiTheme>(value, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+            ? parsed
+            : CuiTheme.Glow;
 
     /// <summary>Returns the canonical persisted name for a theme.</summary>
     public static string Name(CuiTheme theme) =>

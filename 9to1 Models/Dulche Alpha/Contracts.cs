@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
-using System.Threading.Channels;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -53,7 +52,7 @@ public enum DulcheErrorCode
     TranslationJobNotResumable, StructuredFormatUnsupported, LayoutPreservationUnavailable,
     PartialTranslationFailure, PrivacyPolicyDenied, VoiceSessionNotFound, VoiceSessionAlreadyActive,
     VoiceSessionNotResumable, VoiceInputUnavailable, VoiceOutputUnavailable, VoiceDeviceUnavailable,
-    VoiceModelUnavailable, VoiceContextUnavailable, TranscriptRetentionDenied, InvalidPersistedState
+    VoiceModelUnavailable, VoiceContextUnavailable, TranscriptRetentionDenied, InvalidPersistedState, AuditUnavailable
 }
 
 public sealed record DulcheError(DulcheErrorCode Code, string Message, string Target, bool Retryable, string? RetryAfter = null, IReadOnlyDictionary<string, string>? Details = null);
@@ -69,23 +68,62 @@ public sealed record ModelIdentity(string ProviderId, string ModelId, string? Ar
     public string StableKey => $"{ProviderId}:{ModelId}:{ArtifactRevision ?? "current"}";
 }
 public sealed record GenerationSettings(double? Temperature = null, int? MaximumOutputTokens = null, double? TopP = null, int? TopK = null, int? Seed = null, IReadOnlyList<string>? StopSequences = null, IReadOnlyDictionary<string, double>? Penalties = null, string? ReasoningLevel = null, string? OutputSchema = null);
+public sealed record GenerativeContainerCapability(IReadOnlySet<string> Schemas, IReadOnlySet<string> Components, IReadOnlySet<string> ActionIds, int MaximumComponents = 100, int MaximumPayloadBytes = 65536);
+public sealed record GeneratedUiActionBinding(string ActionId, System.Text.Json.JsonElement Arguments);
+public sealed record GeneratedUiComponent(string ComponentId, string ComponentType, System.Text.Json.JsonElement Properties, IReadOnlyList<GeneratedUiActionBinding>? Actions = null);
+public sealed record GeneratedUiDocument(int SchemaVersion, string Schema, IReadOnlyList<GeneratedUiComponent> Components);
+public sealed record GeneratedUiPayload(GeneratedUiDocument Document, bool Renderable, IReadOnlyList<string> Warnings);
 public sealed record DulcheMessage(string Role, string? Text = null, IReadOnlyList<AuthorizedInput>? Inputs = null);
 public sealed record AuthorizedInput(string Kind, string Reference, string? PermissionScope);
-public sealed record DulcheRequest(string? Input, IReadOnlyList<DulcheMessage>? Messages = null, string? SessionId = null, ModelIdentity? Model = null, GenerationSettings? Settings = null, IReadOnlySet<string>? PermittedTools = null, string? OutputSchema = null, bool Stream = false, int? ContextLimit = null, int? QueueTimeoutSeconds = null, string? CallerId = null, bool AllowCloudContext = false)
+public enum ContextSensitivity { Public, Private, Unknown }
+public sealed record DulcheRequest(string? Input, IReadOnlyList<DulcheMessage>? Messages = null, string? SessionId = null, ModelIdentity? Model = null, GenerationSettings? Settings = null, IReadOnlySet<string>? PermittedTools = null, string? OutputSchema = null, bool Stream = false, int? ContextLimit = null, int? QueueTimeoutSeconds = null, string? CallerId = null, bool AllowCloudContext = false, ToolCallPolicy? ToolPolicy = null, ExecutionBudget? Budget = null, string? IdempotencyKey = null, GenerativeContainerCapability? GenerativeContainer = null, bool IsContinuation = false, ContextSensitivity ContextSensitivity = ContextSensitivity.Unknown)
 {
     public string? EffectivePrompt => Input ?? (Messages is { Count: > 0 } ? string.Join("\n", Messages.Select(message => message.Text).Where(text => text is not null)) : null);
 }
+public enum ToolCallMode { None, ReadOnly, Selected, AllAuthorized }
+public sealed record ToolCallPolicy(ToolCallMode Mode, IReadOnlySet<string> AllowedTools, string CallerId, string ScopeId, bool RequireApprovalForConsequential = true);
+public sealed record ToolProposal(string InvocationId, string Name, System.Text.Json.JsonElement Arguments, bool IsConsequential = false, string? Version = null);
+public enum ToolInvocationStatus { Proposed, ApprovalRequired, Approved, Denied, Executed, Failed, Cancelled }
+public sealed record ToolInvocationResult(string InvocationId, ToolInvocationStatus Status, System.Text.Json.JsonElement? Result, DulcheError? Error, bool SideEffectCompleted, bool Retryable);
+public sealed record ToolExecutionContext(string RequestId, int Revision, string AttemptId, string SessionId, string EndpointId, ModelIdentity? Model, string CallerId, IReadOnlyList<DulcheMessage> SessionContext, ToolCallPolicy Policy, CancellationToken CancellationToken);
+public sealed record ExecutionBudget(int MaximumSteps = 32, int MaximumDurationSeconds = 300, long? MaximumOutputTokens = null, decimal? MaximumCost = null, string? Currency = null);
+public interface IDulcheToolCoordinator
+{
+    Task<OperationResult<ToolInvocationResult>> ExecuteAsync(ToolProposal proposal, ToolExecutionContext context, CancellationToken cancellationToken);
+}
+public interface IRuntimeRequestAuthorizer
+{
+    Task<OperationResult<Unit>> AuthorizeRemoteContextAsync(DulcheRequest request, DulcheEndpoint endpoint, CancellationToken cancellationToken);
+    Task<OperationResult<Unit>> RecheckBeforeDispatchAsync(DulcheRequest request, DulcheEndpoint endpoint, CancellationToken cancellationToken);
+    Task<OperationResult<Unit>> AuthorizeToolAsync(ToolProposal proposal, ToolExecutionContext context, CancellationToken cancellationToken);
+}
 
 public sealed record DulcheSession(string SessionId, string EndpointId, long Revision, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, IReadOnlyList<DulcheMessage> Messages);
-public sealed record DulcheEndpoint(string EndpointId, string ProviderId, string Target, int? Port, EndpointState State, ModelIdentity? Model, IReadOnlySet<string> Capabilities, bool IsRemote, DateTimeOffset UpdatedAt, DulcheError? LastError = null);
+public sealed record DulcheEndpoint(string EndpointId, string ProviderId, string Target, int? Port, EndpointState State, ModelIdentity? Model, IReadOnlySet<string> Capabilities, bool IsRemote, DateTimeOffset UpdatedAt, DulcheError? LastError = null, RemoteEndpointTarget? RemoteTarget = null);
 public sealed record TokenMetrics(Metric<long> Input, Metric<long> Output, Metric<long> Total, Metric<long> Response, Metric<long> Agentic, Metric<long> Thinking, Metric<long> Cached);
 public sealed record ModelInvocation(ModelIdentity Model, string Role, int CallCount, string EndpointId, Metric<long> Parameters, Metric<long> ActiveParameters, TokenMetrics Tokens);
-public sealed record DulcheResult(string RequestId, string SessionId, string EndpointId, RequestState Status, FinishReason? FinishReason, int Revision, string AttemptId, string? Text, Metric<string> Thinking, IReadOnlyList<string>? Tools, IReadOnlyList<string>? Sources, TokenMetrics Tokens, Metric<double> TimeElapsedSeconds, Metric<double> TimeToFirstOutputSeconds, Metric<double> TokensPerSecond, IReadOnlyList<ModelInvocation> Models, IReadOnlyList<DulcheError> Errors, IReadOnlyList<RuntimeEvent> FullLog, DulcheError? Error = null);
-public sealed record RuntimeEvent(string EventId, DateTimeOffset At, string RequestId, int Revision, string AttemptId, long Sequence, string Type, string? Detail = null, string? ParentEventId = null);
+public sealed record DulcheResult(string RequestId, string SessionId, string EndpointId, RequestState Status, FinishReason? FinishReason, int Revision, string AttemptId, string? Text, Metric<string> Thinking, IReadOnlyList<string>? Tools, IReadOnlyList<string>? Sources, TokenMetrics Tokens, Metric<double> TimeElapsedSeconds, Metric<double> TimeQueuedSeconds, Metric<double> TimePausedSeconds, Metric<double> TimeExecutingSeconds, Metric<double> TimeToFirstOutputSeconds, Metric<double> TokensPerSecond, IReadOnlyList<ModelInvocation> Models, IReadOnlyList<DulcheError> Errors, IReadOnlyList<RuntimeEvent> FullLog, DulcheError? Error = null, GeneratedUiPayload? GeneratedUI = null);
+public sealed record DulcheQueueItem(string RequestId, string SessionId, RequestState State, int Position, DateTimeOffset AcceptedAt, int? TimeoutSeconds);
+public sealed record DulcheQueueSnapshot(string EndpointId, string? RunningRequestId, IReadOnlyList<DulcheQueueItem> Queued, int Capacity, DateTimeOffset CapturedAt);
+public sealed record RemoteEndpointTarget(string ProviderId, Uri BaseUri, ModelIdentity Model, string? CredentialReference, IReadOnlyDictionary<string, string> TransportSettings, IReadOnlySet<string> AdvertisedCapabilities);
+public sealed record RuntimeEvent(string EventId, DateTimeOffset At, string RequestId, int Revision, string AttemptId, long Sequence, string Type, string? Detail = null, string? ParentEventId = null, System.Text.Json.JsonElement? Payload = null);
 public sealed record RuntimeCapabilities(string RuntimeVersion, string ApiVersion, string SchemaVersion, IReadOnlySet<string> Capabilities, int MaximumQueueDepth, bool SupportsExactPause, bool SupportsExactResume, bool SupportsStreaming, bool SupportsCancellation);
 public sealed record ProviderPolicy(bool AllowLocal = true, bool AllowRemote = true, bool AllowCloud = false, bool AllowFallback = true, bool AllowPrivateContextToCloud = false, IReadOnlySet<string>? AllowedProviders = null, IReadOnlySet<string>? RequiredCapabilities = null);
 public sealed record ModelRoute(string RouteId, int Version, IReadOnlyList<ModelIdentity> Candidates, ProviderPolicy Policy);
 public sealed record RouteSelection(ModelIdentity Model, string Reason, IReadOnlyList<string> Skipped);
+public enum ModelRouteScope { User, App, Agent, Task }
+public enum ModelCapabilityCategory { Active, Background, Chat, Image, Voice, Audio, Video }
+public sealed record ModelRouteCandidate(ModelIdentity Model, bool Enabled = true, int Order = 0);
+public sealed record ConfiguredModelRoute(string RouteId, long Revision, ModelRouteScope Scope, string ScopeId, ModelCapabilityCategory Category, IReadOnlyList<ModelRouteCandidate> Candidates, ProviderPolicy Policy);
+public sealed record ModelCatalogueEntry(ModelIdentity Identity, string DisplayName, string ProviderName, bool IsLocal, IReadOnlySet<string> Capabilities, int? ContextWindow, ModelState? State, Metric<long> StorageBytes, string? PrivacyResidency = null, string? Alias = null);
+public sealed record ModelRouteResolutionPreview(ConfiguredModelRoute Route, RouteSelection? Selection, IReadOnlyList<string> Trace, DulcheError? Error);
+public sealed record RouteUpdateResult(ConfiguredModelRoute? Route, DulcheError? Error);
+public interface IVersionedModelRouteRepository
+{
+    Task<ConfiguredModelRoute?> GetAsync(string routeId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ConfiguredModelRoute>> ListAsync(CancellationToken cancellationToken);
+    Task<bool> TrySaveAsync(ConfiguredModelRoute route, long expectedRevision, CancellationToken cancellationToken);
+}
 public sealed record RuntimeHealth(string EndpointId, EndpointState State, DateTimeOffset CheckedAt, string? Message, Metric<double> MemoryBytes, Metric<double> StorageBytes, Metric<double> RateLimitRemaining);
 
 public interface IDulcheAdapter
@@ -99,6 +137,7 @@ public interface IDulcheAdapter
     ValueTask<OperationResult<Unit>> StartAsync(DulcheEndpoint endpoint, CancellationToken cancellationToken);
     ValueTask<OperationResult<Unit>> LoadModelAsync(DulcheEndpoint endpoint, ModelIdentity model, CancellationToken cancellationToken) => ValueTask.FromResult(OperationResult<Unit>.Failure(new(DulcheErrorCode.UnsupportedCapability, "Adapter does not expose model loading.", model.StableKey, false)));
     IAsyncEnumerable<AdapterDelta> GenerateAsync(DulcheEndpoint endpoint, DulcheRequest request, string requestId, CancellationToken cancellationToken);
+    IAsyncEnumerable<AdapterDelta> ContinueWithToolResultAsync(DulcheEndpoint endpoint, DulcheRequest request, string requestId, ToolInvocationResult result, CancellationToken cancellationToken);
     ValueTask<OperationResult<Unit>> CancelAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken);
     ValueTask<OperationResult<Unit>> PauseAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken);
     ValueTask<OperationResult<Unit>> ResumeAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken);
@@ -106,7 +145,21 @@ public interface IDulcheAdapter
     ValueTask<RuntimeHealth> HealthAsync(DulcheEndpoint endpoint, CancellationToken cancellationToken);
 }
 public sealed record Unit { public static Unit Value { get; } = new(); private Unit() { } }
-public sealed record AdapterDelta(string? Text = null, string? Thinking = null, string? Type = null, string? Detail = null, long? InputTokens = null, long? OutputTokens = null, string? FinishReason = null);
+public sealed record AdapterDelta(string? Text = null, string? Thinking = null, string? Type = null, string? Detail = null, long? InputTokens = null, long? OutputTokens = null, string? FinishReason = null, ToolProposal? ToolProposal = null, GeneratedUiDocument? GeneratedUI = null);
+public sealed record ModelArtifact(ModelIdentity Identity, string Source, string Format, long? DeclaredSizeBytes, string? License, string? SourceRevision, string? ArtifactHash, ModelState State, string? PersistentLocation = null, string? OwnerScopeId = null);
+public sealed record AcquisitionProgress(string OperationId, ModelIdentity Model, ModelState State, double? ProgressPercent, long? DownloadedBytes, long? TotalBytes, string? RequiredStoragePath, string? Message, DulcheError? Error);
+public sealed record ModelReplaceResult(ModelArtifact Previous, ModelArtifact Current, string PreservationPolicy, IReadOnlyList<string> PreservedSettings, IReadOnlyList<string> ResetSettings, string RollbackId);
+public interface IDulcheAcquisitionAdapter
+{
+    string ProviderId { get; }
+    Task<IReadOnlyList<ModelArtifact>> ListModelsAsync(CancellationToken cancellationToken);
+    Task<OperationResult<ModelArtifact>> FindModelAsync(string query, CancellationToken cancellationToken);
+    Task<OperationResult<AcquisitionProgress>> PullAsync(ModelArtifact model, string ownerScopeId, IProgress<AcquisitionProgress>? progress, CancellationToken cancellationToken);
+    Task<OperationResult<ModelArtifact>> InstallAsync(ModelArtifact model, string installLocation, CancellationToken cancellationToken);
+    Task<OperationResult<ModelReplaceResult>> ReplaceAsync(ModelArtifact oldModel, ModelArtifact replacement, string policy, CancellationToken cancellationToken);
+    Task<OperationResult<ModelArtifact>> RollbackAsync(string rollbackId, CancellationToken cancellationToken);
+    Task ReleaseTemporaryOwnershipAsync(ModelIdentity model, string ownerScopeId, CancellationToken cancellationToken);
+}
 
 public static class ReasoningLevelMapper
 {

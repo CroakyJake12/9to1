@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.Concurrent;
 
 namespace HavenOS.Home.Core;
 
@@ -19,12 +20,13 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
     };
 
     private readonly string _path;
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly SemaphoreSlim _gate;
 
     public FileHomeCoreStateStore(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("A state file path is required.", nameof(path));
         _path = Path.GetFullPath(path);
+        _gate = PathLocks.GetOrAdd(_path, static _ => new SemaphoreSlim(1, 1));
     }
 
     public static FileHomeCoreStateStore CreateDefault()
@@ -40,6 +42,7 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            await using var processLock = await AcquireProcessLockAsync(cancellationToken).ConfigureAwait(false);
             return await ReadUnlockedAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
@@ -62,6 +65,7 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            await using var processLock = await AcquireProcessLockAsync(cancellationToken).ConfigureAwait(false);
             var read = await ReadUnlockedAsync(cancellationToken).ConfigureAwait(false);
             if (!read.IsSuccess)
                 return HomeStateWriteResult.Failed(read.Failure!);
@@ -151,6 +155,31 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         }
     }
 
+    private async Task<FileStream> AcquireProcessLockAsync(CancellationToken cancellationToken)
+    {
+        var directory = Path.GetDirectoryName(_path)!;
+        Directory.CreateDirectory(directory);
+        var lockPath = _path + ".lock";
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
+                    1, FileOptions.Asynchronous);
+            }
+            catch (IOException) when (DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(40), cancellationToken).ConfigureAwait(false);
+            }
+            catch (IOException exception)
+            {
+                throw new IOException("Home state is currently locked by another Home Core process.", exception);
+            }
+        }
+    }
+
     private async Task<HomeCoreFailure?> WriteAtomicallyAsync(HomeCoreStoredState state, CancellationToken cancellationToken)
     {
         var directory = Path.GetDirectoryName(_path)!;
@@ -210,7 +239,35 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
             return new HomeCoreFailure(HomeCoreErrorCode.HomeStateScopeUnsupported,
                 "Account, workspace and organisation state require a remote-canonical replica or rebuildable cache authority.",
                 record.RecordId, false, "Use the authenticated synchronization owner for non-device state.");
+        if (ContainsSensitiveProperty(record.Payload))
+            return new HomeCoreFailure(HomeCoreErrorCode.HomeSecretPersistenceBlocked,
+                "Credential values cannot be stored in Home state; store an operating-system credential reference instead.",
+                record.RecordId, false, "Replace secret material with a secure credential reference.");
         return null;
+    }
+
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> PathLocks = new(StringComparer.OrdinalIgnoreCase);
+
+    private static bool ContainsSensitiveProperty(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in value.EnumerateObject())
+            {
+                var key = property.Name.Replace("_", string.Empty, StringComparison.Ordinal)
+                    .Replace("-", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
+                if (key is "password" or "secret" or "token" or "accesstoken" or "refreshtoken" or
+                    "apikey" or "clientsecret" or "privatekey" or "authorization" or "cookie" or "credential")
+                    return true;
+                if (ContainsSensitiveProperty(property.Value)) return true;
+            }
+        }
+        else if (value.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in value.EnumerateArray())
+                if (ContainsSensitiveProperty(item)) return true;
+        }
+        return false;
     }
 
     private static HomeStateReadResult Corrupt(string message) => HomeStateReadResult.Failed(new HomeCoreFailure(
@@ -220,4 +277,3 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         false,
         "Preserve the original file and use Home's explicit repair or restore flow."));
 }
-

@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Domain/**/*.cs" />
+    <Compile Include="Catalogue/**/*.cs" />
     <Compile Include="Storage/**/*.cs" />
     <Compile Include="Services/**/*.cs" />
   </ItemGroup>

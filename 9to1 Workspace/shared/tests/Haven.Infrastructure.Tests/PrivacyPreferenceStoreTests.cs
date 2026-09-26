@@ -12,15 +12,30 @@ public sealed class PrivacyPreferenceStoreTests : IDisposable
     {
         var store = new PrivacyPreferenceStore(_paths);
         Assert.False(store.Current.BackgroundLearningEnabled);
+        Assert.False(store.Current.BackgroundLearningCloudDisclosureEnabled);
         Assert.False(store.Current.ModelImprovementSharingEnabled);
 
         await store.UpdateAsync(
-            store.Current with { LocalOnlyMode = true },
+            store.Current with
+            {
+                LocalOnlyMode = true,
+                BackgroundLearningEnabled = true,
+                BackgroundLearningCloudDisclosureEnabled = true,
+                BackgroundLearningPolicy = new BackgroundLearningContributorPolicy(
+                    RestrictApps: true, AllowedAppIds: ["app.docs"],
+                    RestrictProjects: true, AllowedProjectIds: ["project-a"],
+                    AllowCrossDeviceSync: false)
+            },
             CancellationToken.None);
 
         var restarted = new PrivacyPreferenceStore(_paths);
         Assert.True(restarted.Current.LocalOnlyMode);
-        Assert.False(restarted.Current.BackgroundLearningEnabled);
+        Assert.True(restarted.Current.BackgroundLearningEnabled);
+        Assert.True(restarted.Current.BackgroundLearningCloudDisclosureEnabled);
+        Assert.False(restarted.Current.BackgroundLearningPolicy.AllowCrossDeviceSync);
+        Assert.True(restarted.Current.BackgroundLearningPolicy.Allows("app.docs", "project-a"));
+        Assert.False(restarted.Current.BackgroundLearningPolicy.Allows("app.mail", "project-a"));
+        Assert.False(restarted.Current.BackgroundLearningPolicy.Allows("app.docs", "project-b"));
         Assert.False(restarted.Current.ModelImprovementSharingEnabled);
         Assert.True(restarted.Current.UpdatedAt > DateTimeOffset.UnixEpoch);
     }

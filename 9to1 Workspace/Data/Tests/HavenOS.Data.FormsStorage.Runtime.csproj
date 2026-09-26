@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Core/Haven.Core.csproj" />
+    <Compile Include="FormsStorageRuntimeProgram.cs" />
+    <Compile Include="FormsStorageTestContracts.cs" />
+    <Compile Include="../../shared/src/Haven.Application/Forms/IFormsSubmissionStore.cs" Link="Forms/IFormsSubmissionStore.cs" />
+    <Compile Include="../../shared/src/Haven.Infrastructure/Forms/DataWorkbookFormsSubmissionStore.cs" Link="Forms/DataWorkbookFormsSubmissionStore.cs" />
+    <Compile Include="../../shared/src/Haven.Infrastructure/Persistence/FileSystem/DataWorkbookRepository.cs" Link="Data/DataWorkbookRepository.cs" />
+  </ItemGroup>
+</Project>

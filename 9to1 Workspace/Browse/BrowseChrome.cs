@@ -12,7 +12,8 @@ public sealed record BrowseEngineTabRequest(
     Guid TabId,
     BrowserTabPrivacy Privacy,
     string ProfileDirectory,
-    Uri InitialAddress);
+    Uri InitialAddress,
+    BrowseEngineKind Engine = BrowseEngineKind.Gecko);
 
 public sealed record BrowsePopupRequest(Uri Address);
 public sealed record BrowseEngineCrash(string Reason);
@@ -43,7 +44,10 @@ public sealed record BrowseTabSnapshot(
     bool CanGoBack,
     bool CanGoForward,
     bool IsLoading,
-    string Status);
+    string Status)
+{
+    public BrowseEngineKind Engine { get; init; } = BrowseEngineKind.Gecko;
+}
 
 public sealed record BrowseSecuritySnapshot(
     BrowseTransportSecurity Transport,
@@ -82,6 +86,8 @@ public sealed class BrowseChrome : IAsyncDisposable
     private readonly BrowserDataService _data;
     private readonly BrowserSitePermissionStore _permissions;
     private readonly BrowserPrivateProfileManager _privateProfiles;
+    private readonly BrowseEnginePreferencesStore _enginePreferences;
+    private BrowseEngineSelectionPolicy _enginePolicy;
     private readonly IBrowseEngineHostFactory? _engineFactory;
     private readonly IBrowserAutomationService? _automation;
     private readonly BrowserRecoveryLimiter _recovery = new(3, TimeSpan.FromMinutes(1));
@@ -97,11 +103,14 @@ public sealed class BrowseChrome : IAsyncDisposable
     private BrowseChrome(
         IAppPaths paths,
         IBrowseEngineHostFactory? engineFactory,
-        IBrowserAutomationService? automation)
+        IBrowserAutomationService? automation,
+        BrowseEnginePreferences preferences)
     {
         _data = new BrowserDataService(paths);
         _permissions = new BrowserSitePermissionStore(paths);
         _privateProfiles = new BrowserPrivateProfileManager(paths.BrowserProfileDirectory);
+        _enginePreferences = new BrowseEnginePreferencesStore(paths);
+        _enginePolicy = BrowseEngineSelectionPolicy.Restore(preferences);
         _engineFactory = engineFactory;
         _automation = automation;
         StandardProfileDirectory = paths.BrowserProfileDirectory;
@@ -117,12 +126,16 @@ public sealed class BrowseChrome : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(paths);
-        var chrome = new BrowseChrome(paths, engineFactory, automation);
+        var preferenceStore = new BrowseEnginePreferencesStore(paths);
+        var preferences = await preferenceStore.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var chrome = new BrowseChrome(paths, engineFactory, automation, preferences);
         try
         {
             var stored = chrome._data.Settings.RestoreTabs ? chrome._data.Tabs : [];
             foreach (var tab in stored)
             {
+                // Older versions may have left private tabs in the session file; never restore them.
+                if (tab.Privacy == BrowserTabPrivacy.Private) continue;
                 if (!Uri.TryCreate(tab.Address, UriKind.Absolute, out var address)) continue;
                 await chrome.AddRuntimeAsync(tab.Id, tab.Title, address, tab.Privacy, tab.Group, cancellationToken).ConfigureAwait(false);
             }
@@ -154,6 +167,85 @@ public sealed class BrowseChrome : IAsyncDisposable
         ? "Interactive browsing is unavailable because no native browser engine is registered."
         : _engineFactory.UnsupportedReason;
     public BrowseChromeSnapshot State => CaptureState();
+
+    public async Task<BrowseChromeSnapshot> SetDefaultEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        _enginePolicy.SetDefault(engine);
+        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
+        _status = $"Default browser engine set to {engine}. New tabs use this choice unless a site has its own preference.";
+        return Publish();
+    }
+
+    public async Task<BrowseChromeSnapshot> SetSiteEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        var tab = SelectedRuntime();
+        if (tab.Address.Scheme is not ("http" or "https"))
+        {
+            _status = "A site-specific engine preference is available after opening an HTTP or HTTPS page.";
+            return Publish();
+        }
+        _enginePolicy.SetSiteOverride(tab.Address, engine);
+        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
+        return await SetTabEngineAsync(tab, engine, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<BrowseChromeSnapshot> SetSelectedTabEngineAsync(BrowseEngineKind engine, CancellationToken cancellationToken = default) =>
+        SetTabEngineAsync(SelectedRuntime(), engine, cancellationToken);
+
+    private async Task<BrowseChromeSnapshot> SetTabEngineAsync(TabRuntime tab, BrowseEngineKind engine, CancellationToken cancellationToken)
+    {
+        ThrowIfDisposed();
+        if (!Enum.IsDefined(engine)) throw new ArgumentOutOfRangeException(nameof(engine));
+        var hadOverride = _enginePolicy.TabOverrides.TryGetValue(tab.Id, out var previousOverride);
+        if (tab.Engine == engine)
+        {
+            _enginePolicy.SetTabOverride(tab.Id, engine);
+            await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
+            return Publish();
+        }
+        var previous = tab.Engine;
+        await ReleaseHostAsync(tab).ConfigureAwait(false);
+        tab.Engine = engine;
+        try
+        {
+            if (EngineAvailable) await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
+            else
+            {
+                tab.EngineState = BrowseEngineState.Unsupported;
+                tab.Status = EngineUnsupportedReason;
+            }
+            _enginePolicy.SetTabOverride(tab.Id, engine);
+            await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
+            _status = $"This tab now uses {engine}.";
+        }
+        catch
+        {
+            tab.Engine = previous;
+            _enginePolicy.SetTabOverride(tab.Id, hadOverride ? previousOverride : null);
+            try { await AttachHostAsync(tab, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception recoveryFailure) when (recoveryFailure is not OutOfMemoryException)
+            {
+                tab.EngineState = BrowseEngineState.Crashed;
+                tab.Status = "Engine switch failed and the previous renderer could not be restored.";
+            }
+            throw;
+        }
+        return Publish();
+    }
+
+    private Task SaveEnginePreferencesAsync(CancellationToken cancellationToken)
+    {
+        var captured = _enginePolicy.Capture();
+        var standardTabIds = _tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard).Select(tab => tab.Id).ToHashSet();
+        return _enginePreferences.SaveAsync(captured with
+        {
+            TabOverrides = (captured.TabOverrides ?? new Dictionary<Guid, BrowseEngineKind>())
+                .Where(entry => standardTabIds.Contains(entry.Key))
+                .ToDictionary(entry => entry.Key, entry => entry.Value)
+        }, cancellationToken);
+    }
 
     public async Task<BrowseChromeSnapshot> NewTabAsync(bool isPrivate, CancellationToken cancellationToken = default)
     {
@@ -191,10 +283,12 @@ public sealed class BrowseChrome : IAsyncDisposable
         var index = _tabs.IndexOf(tab);
         var wasSelected = tab.Id == _selectedTabId;
         _tabs.Remove(tab);
+        _enginePolicy.SetTabOverride(tab.Id, null);
         await ReleaseHostAsync(tab).ConfigureAwait(false);
         tab.Session.Dispose();
         if (tab.Privacy == BrowserTabPrivacy.Private)
             await _privateProfiles.CleanupAsync(tab.Id, cancellationToken).ConfigureAwait(false);
+        await SaveEnginePreferencesAsync(cancellationToken).ConfigureAwait(false);
 
         if (_tabs.Count == 0)
         {
@@ -422,7 +516,7 @@ public sealed class BrowseChrome : IAsyncDisposable
         CancellationToken cancellationToken)
     {
         var session = new BrowserSessionService(new TabPaths(StandardProfileDirectory));
-        var tab = new TabRuntime(id, title, address, privacy, group, session);
+        var tab = new TabRuntime(id, title, address, privacy, group, session, _enginePolicy.Resolve(address, id));
         _tabs.Add(tab);
         if (EngineAvailable)
             await AttachHostAsync(tab, cancellationToken).ConfigureAwait(false);
@@ -437,11 +531,13 @@ public sealed class BrowseChrome : IAsyncDisposable
     private async Task AttachHostAsync(TabRuntime tab, CancellationToken cancellationToken)
     {
         if (_engineFactory is null) throw new PlatformNotSupportedException(EngineUnsupportedReason);
-        var profile = tab.Privacy == BrowserTabPrivacy.Private
+        var profileRoot = tab.Privacy == BrowserTabPrivacy.Private
             ? await _privateProfiles.CreateAsync(tab.Id, cancellationToken).ConfigureAwait(false)
             : StandardProfileDirectory;
+        var profile = Path.Combine(profileRoot, "engines", tab.Engine.ToString().ToLowerInvariant());
+        Directory.CreateDirectory(profile);
         var host = await _engineFactory.CreateAsync(
-            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, tab.Address), cancellationToken).ConfigureAwait(false);
+            new BrowseEngineTabRequest(tab.Id, tab.Privacy, profile, tab.Address, tab.Engine), cancellationToken).ConfigureAwait(false);
         tab.Host = host;
         tab.Session.Attach(host);
         host.PopupRequested += tab.PopupHandler = (_, request) => _ = HandlePopupFromAsync(tab, request.Address);
@@ -486,7 +582,8 @@ public sealed class BrowseChrome : IAsyncDisposable
                 : BrowserSitePermissionDecision.Ask;
 
     private Task SaveTabsAsync(CancellationToken cancellationToken) => _data.SaveTabsAsync(
-        _tabs.Select(tab => new BrowserTabState(tab.Id, tab.Title, tab.Address.ToString(), tab.Privacy, tab.Group, DateTimeOffset.UtcNow)),
+        _tabs.Where(tab => tab.Privacy == BrowserTabPrivacy.Standard)
+            .Select(tab => new BrowserTabState(tab.Id, tab.Title, tab.Address.ToString(), tab.Privacy, tab.Group, DateTimeOffset.UtcNow)),
         cancellationToken);
 
     private BrowseChromeSnapshot CaptureState()
@@ -495,7 +592,7 @@ public sealed class BrowseChrome : IAsyncDisposable
         var selected = SelectedRuntime();
         var tabs = _tabs.Select(tab => new BrowseTabSnapshot(
             tab.Id, tab.Title, tab.Address, tab.Privacy, tab.EngineState,
-            tab.CanGoBack, tab.CanGoForward, tab.IsLoading, tab.Status)).ToArray();
+            tab.CanGoBack, tab.CanGoForward, tab.IsLoading, tab.Status) { Engine = tab.Engine }).ToArray();
         var security = SecurityFor(selected);
         return new BrowseChromeSnapshot(
             tabs,
@@ -576,7 +673,8 @@ public sealed class BrowseChrome : IAsyncDisposable
         Uri address,
         BrowserTabPrivacy privacy,
         string group,
-        BrowserSessionService session)
+        BrowserSessionService session,
+        BrowseEngineKind engine)
     {
         public Guid Id { get; } = id;
         public string Title { get; set; } = title;
@@ -584,6 +682,7 @@ public sealed class BrowseChrome : IAsyncDisposable
         public BrowserTabPrivacy Privacy { get; } = privacy;
         public string Group { get; } = group;
         public BrowserSessionService Session { get; } = session;
+        public BrowseEngineKind Engine { get; set; } = engine;
         public IBrowseEngineTab? Host { get; set; }
         public EventHandler<BrowsePopupRequest>? PopupHandler { get; set; }
         public EventHandler<BrowseEngineCrash>? CrashHandler { get; set; }

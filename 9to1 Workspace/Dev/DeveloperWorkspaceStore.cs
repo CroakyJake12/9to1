@@ -87,6 +87,10 @@ public sealed class FileDeveloperWorkspaceStore : IDeveloperWorkspaceStore
                 16 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
             using var document = await JsonDocument.ParseAsync(input, cancellationToken: cancellationToken).ConfigureAwait(false);
             var version = ReadSchemaVersion(document.RootElement);
+            if (version < 0)
+                return DeveloperOperationResult<DeveloperWorkspace>.Failure(
+                    DeveloperOperationErrorCode.InvalidStoredData,
+                    "The workspace document is missing a valid schema version and was left unchanged.", workspaceId.ToString("D"));
             if (version != CurrentSchemaVersion)
                 return DeveloperOperationResult<DeveloperWorkspace>.Failure(
                     DeveloperOperationErrorCode.UnsupportedSchemaVersion,

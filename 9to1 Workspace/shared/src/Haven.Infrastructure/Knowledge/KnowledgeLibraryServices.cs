@@ -231,7 +231,9 @@ internal static class KnowledgeContentSafety
 
 public sealed class KnowledgeLibraryService(
     ISqliteConnectionFactory factory,
-    IRetrievalIndexService retrieval) : IKnowledgeLibrary, IMemoryQuerySource
+    IRetrievalIndexService retrieval,
+    IPrivacyPreferenceStore? privacy = null,
+    IBackgroundLearningScheduler? scheduler = null) : IKnowledgeLibrary, IMemoryQuerySource
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -241,6 +243,7 @@ public sealed class KnowledgeLibraryService(
         if (string.IsNullOrWhiteSpace(bank.Topic)) throw new ArgumentException("A topic is required.", nameof(bank));
         if (string.IsNullOrWhiteSpace(bank.Title)) throw new ArgumentException("A title is required.", nameof(bank));
         if (string.IsNullOrWhiteSpace(bank.Scope)) throw new ArgumentException("A scope is required.", nameof(bank));
+        if (bank.Id == Guid.Empty) throw new ArgumentException("A stable bank ID is required.", nameof(bank));
         if (!string.Equals(bank.StoragePolicy, "local", StringComparison.OrdinalIgnoreCase))
             throw new NotSupportedException("Knowledge Banks currently support local storage only.");
         if (!string.Equals(bank.SyncPolicy, "disabled", StringComparison.OrdinalIgnoreCase))
@@ -255,7 +258,8 @@ public sealed class KnowledgeLibraryService(
         command.CommandText = """
             INSERT INTO knowledge_banks(id,topic,title,scope,is_enabled,storage_policy,sync_policy,created_at,updated_at)
             VALUES($id,$topic,$title,$scope,$enabled,'local','disabled',$created,$updated)
-            ON CONFLICT(topic,scope) DO UPDATE SET title=excluded.title,updated_at=excluded.updated_at;
+            ON CONFLICT(topic COLLATE NOCASE,scope COLLATE NOCASE)
+            DO UPDATE SET title=excluded.title,updated_at=excluded.updated_at;
             """;
         command.Parameters.AddWithValue("$id", bank.Id.ToString());
         command.Parameters.AddWithValue("$topic", topic);
@@ -340,7 +344,12 @@ public sealed class KnowledgeLibraryService(
         await using (var records = writeConnection.CreateCommand())
         {
             records.Transaction = transaction;
-            records.CommandText = "DELETE FROM knowledge_records WHERE id IN (SELECT id FROM knowledge_record_details WHERE knowledge_bank_id=$id);";
+            records.CommandText = """
+                DELETE FROM knowledge_rejections
+                WHERE record_id IN (SELECT id FROM knowledge_record_details WHERE knowledge_bank_id=$id);
+                DELETE FROM knowledge_records
+                WHERE id IN (SELECT id FROM knowledge_record_details WHERE knowledge_bank_id=$id);
+                """;
             records.Parameters.AddWithValue("$id", id.ToString());
             await records.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -359,6 +368,12 @@ public sealed class KnowledgeLibraryService(
         if (record.PrivacyClass == KnowledgePrivacyClass.NeverLearn)
             throw new InvalidOperationException("Never Learn records cannot be stored.");
         if (record.Confidence is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(record));
+
+        if (record.Origin == KnowledgeOrigin.Inferred && IsBackgroundLearningCategory(record.Category) &&
+            (privacy?.Current.BackgroundLearningEnabled != true || scheduler is null ||
+             !await scheduler.CanAcceptContributionAsync(record.Category, record.AppId, record.ProjectId, cancellationToken)
+                 .ConfigureAwait(false)))
+            throw new InvalidOperationException("Background Learning consent or contributor policy does not allow this record.");
 
         KnowledgeContentSafety.ThrowIfContainsSecret(
             record.Topic, record.Title, record.Summary, record.LearnedBecause, indexedText, record.UserCorrection);
@@ -589,9 +604,16 @@ public sealed class KnowledgeLibraryService(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if (!context.BackgroundLearningEnabled || context.IsRemoteRequest && !context.MayDiscloseExternally ||
+        var preferences = privacy?.Current;
+        if (!context.BackgroundLearningEnabled || preferences is null || !preferences.BackgroundLearningEnabled ||
+            context.IsRemoteRequest && (preferences.LocalOnlyMode || !context.MayDiscloseExternally ||
+                !preferences.BackgroundLearningCloudDisclosureEnabled) ||
+            preferences.BackgroundLearningPolicy?.Allows(context.AppId, context.ProjectId) != true ||
             string.IsNullOrWhiteSpace(context.RequestText) || context.MaximumResults < 1)
             return [];
+
+        if (scheduler is null) return [];
+        await scheduler.InitializeAsync(cancellationToken).ConfigureAwait(false);
 
         var permittedScopes = (context.PermittedScopes ?? new HashSet<string>())
             .Where(static scope => !string.IsNullOrWhiteSpace(scope))
@@ -645,6 +667,7 @@ public sealed class KnowledgeLibraryService(
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 var record = ReadRecord(reader);
+                if (!scheduler.IsEnabled(record.Category)) continue;
                 var score = RelevanceScore(context.RequestText, record);
                 if (score > 0) candidates.Add((record, score));
             }
@@ -769,11 +792,20 @@ public sealed class KnowledgeLibraryService(
 
     public async Task<int> ForgetCategoryAsync(KnowledgeCategory category, CancellationToken cancellationToken)
     {
-        var records = await SearchMetadataAsync(null, category, cancellationToken).ConfigureAwait(false);
-        var candidates = records.Where(record => !record.IsPinned).ToArray();
-        foreach (var record in candidates)
-            await ForgetAsync(record.Id, cancellationToken).ConfigureAwait(false);
-        return candidates.Length;
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        var ids = new List<Guid>();
+        await using (var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false))
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT id FROM knowledge_records WHERE category=$category;";
+            command.Parameters.AddWithValue("$category", (int)category);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) ids.Add(Guid.Parse(reader.GetString(0)));
+        }
+
+        foreach (var id in ids)
+            await ForgetAsync(id, cancellationToken).ConfigureAwait(false);
+        return ids.Count;
     }
 
     private async Task SetStatusAsync(
@@ -936,6 +968,9 @@ public sealed class KnowledgeLibraryService(
         return score;
     }
 
+    private static bool IsBackgroundLearningCategory(KnowledgeCategory category)
+        => category is not (KnowledgeCategory.LearnMe or KnowledgeCategory.ApiBank);
+
     private static HashSet<string> Tokenize(string value)
         => Regex.Split(value, @"[^\p{L}\p{N}]+")
             .Where(static token => token.Length > 1)
@@ -1040,7 +1075,7 @@ public sealed class KnowledgeMaintenanceService(
         var now = DateTimeOffset.UtcNow;
         var knowledgeRecords = await knowledge.SearchMetadataAsync(null, null, cancellationToken).ConfigureAwait(false);
         var removable = knowledgeRecords
-            .Where(record => !record.IsPinned)
+            .Where(record => !record.IsPinned && !record.IsUserLocked)
             .OrderBy(record => CleanupRank(record, now))
             .ThenBy(record => record.UpdatedAt)
             .ToList();

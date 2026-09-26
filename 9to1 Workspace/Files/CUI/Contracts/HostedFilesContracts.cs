@@ -35,12 +35,15 @@ public enum FilesConflictPolicy { Ask, Replace, KeepBoth, Skip }
 public enum FilesAccessRole { Viewer, Editor, Owner }
 public enum FilesGrantOrigin { Direct, Inherited }
 public enum FilesRiskLevel { Ordinary, Elevated, Destructive, SecuritySensitive }
+public enum FilesPermissionInheritancePolicy { RecomputeEffectiveGrants, PreserveExplicitGrants, RequireApprovalOnChange }
+public enum FilesArtifactType { WriteDocument, Presentation, Spreadsheet, Board, Canvas }
 public enum FilesErrorCode
 {
 	ItemNotFound, RevisionConflict, NameConflict, ConflictRequiresDecision, PermissionDenied,
 	ProviderUnavailable, ProviderCapabilityUnsupported, QuotaExceeded, Offline, TransferInterrupted,
 	IntegrityFailed, SyncConflict, FileInUse, StorageUnavailable, InvalidName,
 	DestinationUnavailable, HomeServiceUnavailable, InvalidCursor, InvalidState,
+	PermissionRequired,
 }
 
 [Flags]
@@ -117,6 +120,25 @@ public sealed record FilesHydrationJob(
 
 public sealed record FilesEvictionResult(HostedItemId ItemId, FilesRevisionId VerifiedCloudRevisionId, long FreedBytes, DateTimeOffset EvictedAt);
 
+public sealed record FilesMaterializationProof(
+	HostedItemId ItemId,
+	FilesRevisionId RemoteRevisionId,
+	string ContentHash,
+	long SizeBytes,
+	DateTimeOffset VerifiedAt);
+
+public sealed record FilesMaterializedFile(
+	string LocalPath,
+	HostedItemId ItemId,
+	FilesRevisionId BaseRemoteRevisionId,
+	FilesRevisionId? CurrentRemoteRevisionId,
+	FilesRevisionId? LocalRevisionId,
+	string? ContentHash,
+	long SizeBytes,
+	SyncAvailability State,
+	DateTimeOffset MaterializedAt,
+	bool IsAlwaysAvailable);
+
 public sealed record FilesOperation(
 	FilesOperationId Id,
 	string ActorId,
@@ -131,7 +153,16 @@ public sealed record FilesOperation(
 	DateTimeOffset UpdatedAt,
 	string? InversePayload,
 	FilesError? Error,
-	long Sequence = 0);
+	long Sequence = 0,
+	FilesPermissionInheritancePolicy? PermissionInheritancePolicy = null,
+	FilesOperationPayload? Payload = null);
+
+public sealed record FilesOperationPayload(
+	string? NewName = null,
+	FilesConflictPolicy? ConflictPolicy = null,
+	SyncAvailability? Availability = null,
+	string? ConflictResolution = null,
+	string? DestinationReference = null);
 
 public sealed record FilesTransfer(
 	FilesTransferId Id,
@@ -169,6 +200,16 @@ public sealed record FilesPrincipalGrant(
 	HostedItemId GrantedOnItemId,
 	DateTimeOffset GrantedAt,
 	string GrantedByPrincipalId);
+
+public sealed record FilesPermissionChangePreview(
+	HostedItemId ItemId,
+	HostedItemId? SourceParentId,
+	HostedItemId? DestinationParentId,
+	FilesPermissionInheritancePolicy Policy,
+	IReadOnlyList<FilesPrincipalGrant> CurrentEffectiveGrants,
+	IReadOnlyList<FilesPrincipalGrant> ResultingEffectiveGrants,
+	IReadOnlyList<string> ChangedPrincipalIds,
+	bool RequiresApproval);
 
 public sealed record FilesShare(
 	FilesShareId Id,
@@ -234,6 +275,39 @@ public sealed record FilesSyncState(
 
 public sealed record FilesSearchQuery(string Text, FilesLocationId? LocationId = null, HostedItemId? ParentId = null, int Limit = 50, string? PageToken = null);
 public sealed record FilesPage<T>(IReadOnlyList<T> Items, string? NextPageToken);
+
+public sealed record FilesArtifactCreateRequest(
+	HostedItemId? ParentFolderId,
+	FilesArtifactType ArtifactType,
+	IReadOnlyDictionary<string, System.Text.Json.JsonElement> Configuration);
+
+public sealed record FilesArtifactReference(
+	string OwnerAppId,
+	string ArtifactId,
+	HostedItemId FileId,
+	HostedItemId? ParentFolderId,
+	string ArtifactType,
+	string DisplayName);
+
+public sealed record FilesStackCreateRequest(HostedItemId FolderId, bool RegisterExistingSource, string? ProjectName = null);
+public sealed record FilesStackProjectReference(string StackProjectId, HostedItemId BackingFolderId, bool RegisteredExistingFolder);
+
+public sealed record FilesAiItemContext(HostedItemId ItemId, string ArtifactType, SyncAvailability SyncState, FilesRevisionId? RevisionId, bool IsPrivateLocal);
+
+/// <summary>Metadata-only selection context. File bytes are requested separately through a permission-checked action.</summary>
+public sealed record FilesAiContextSnapshot(
+	FilesLocationId LocationId,
+	IReadOnlyList<FilesAiItemContext> Items,
+	IReadOnlyList<FilesPrincipalGrant> EffectivePermissions,
+	bool ContainsPrivateLocalContent);
+
+public sealed record FilesPreviewDescriptor(
+	HostedItemId ItemId,
+	FilesRevisionId? RevisionId,
+	string MediaType,
+	string RendererId,
+	bool IsReadOnly,
+	string? ThumbnailReference);
 public sealed record FilesActionDefinition(
 	string Name,
 	string ArgumentsSchema,
@@ -262,6 +336,7 @@ public interface IFilesService
 	Task<FilesPage<HostedItemMetadata>> ListAsync(FilesLocationId locationId, HostedItemId? parentId, FilesSearchQuery? query, string? pageToken, CancellationToken cancellationToken);
 	Task<FilesResult<HostedItemMetadata>> GetAsync(HostedItemId itemId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesOperation>> CreateFolderAsync(HostedItemId? parentId, string name, FilesOperationId operationId, string actorId, CancellationToken cancellationToken);
+	Task<FilesPermissionChangePreview> PreviewMovePermissionsAsync(HostedItemId itemId, HostedItemId? destinationFolderId, FilesPermissionInheritancePolicy policy, CancellationToken cancellationToken);
 	Task<FilesResult<FilesOperation>> RenameAsync(HostedItemId itemId, string name, FilesRevisionId? expectedRevision, FilesOperationId operationId, string actorId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesOperation>> MoveAsync(HostedItemId itemId, HostedItemId? destinationFolderId, FilesRevisionId? expectedRevision, FilesOperationId operationId, string actorId, CancellationToken cancellationToken);
 	Task<FilesSyncState> GetSyncStateAsync(CancellationToken cancellationToken);
@@ -273,6 +348,8 @@ public interface IFilesService
 	Task<FilesResult<FilesOperation>> DeleteAsync(HostedItemId itemId, FilesRevisionId? expectedRevision, FilesOperationId operationId, string actorId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesOperation>> RestoreAsync(HostedItemId itemId, FilesOperationId operationId, string actorId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesOperation>> PurgeAsync(HostedItemId itemId, FilesRevisionId? expectedRevision, FilesOperationId operationId, string actorId, CancellationToken cancellationToken);
+	Task<FilesResult<FilesArtifactReference>> CreateArtifactAsync(FilesArtifactCreateRequest request, CancellationToken cancellationToken);
+	Task<FilesResult<FilesStackProjectReference>> CreateStackAsync(FilesStackCreateRequest request, CancellationToken cancellationToken);
 	Task<FilesResult<FilesTransfer>> UploadAsync(HostedItemId? destinationFolderId, string sourceReference, FilesConflictPolicy? policy, string actorId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesTransfer>> DownloadAsync(HostedItemId itemId, string destinationReference, CancellationToken cancellationToken);
 	Task<FilesResult<FilesTransfer>> GetTransferAsync(FilesTransferId transferId, CancellationToken cancellationToken);
@@ -294,6 +371,8 @@ public interface IFilesService
 	Task<FilesPage<HostedItemMetadata>> SearchAsync(FilesSearchQuery query, string? pageToken, CancellationToken cancellationToken);
 	Task<FilesResult<FilesQuota>> GetQuotaAsync(FilesLocationId locationId, CancellationToken cancellationToken);
 	Task<FilesPage<FilesActionDefinition>> GetActionCatalogAsync(string? pageToken, CancellationToken cancellationToken);
+	Task<FilesResult<FilesAiContextSnapshot>> GetAiContextAsync(FilesLocationId locationId, IReadOnlyList<HostedItemId> selectedItemIds, CancellationToken cancellationToken);
+	Task<FilesResult<FilesPreviewDescriptor>> GetPreviewAsync(HostedItemId itemId, FilesRevisionId? revisionId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesHydrationJob>> HydrateAsync(HostedItemId itemId, CancellationToken cancellationToken);
 	Task<FilesResult<FilesEvictionResult>> FreeUpSpaceAsync(HostedItemId itemId, FilesRevisionId expectedCloudRevisionId, CancellationToken cancellationToken);
 }
@@ -301,6 +380,13 @@ public interface IFilesService
 public interface IFilesOwningAppRevisionSink
 {
 	Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit, CancellationToken cancellationToken);
+}
+
+/// <summary>Routes creation to the canonical owning app; Files never fabricates app-specific internals.</summary>
+public interface IFilesOwningAppCreationRouter
+{
+	Task<FilesResult<FilesArtifactReference>> CreateArtifactAsync(FilesArtifactCreateRequest request, CancellationToken cancellationToken);
+	Task<FilesResult<FilesStackProjectReference>> CreateStackAsync(FilesStackCreateRequest request, CancellationToken cancellationToken);
 }
 
 public static class FilesProviderCapabilityExtensions

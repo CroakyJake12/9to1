@@ -8,6 +8,7 @@ public static class HomeCoreServiceCatalog
     public static IReadOnlyList<HomeServiceDescriptor> CreateUnavailableDefaults() =>
     [
         Unavailable("home.core", "Home Core lifecycle and registry"),
+        Unavailable("home.state", "Versioned Home control-plane state"),
         Unavailable("dulche.runtime", "Shared Dulche broker/runtime"),
         Unavailable("permissions.trust", "Permission and trust broker"),
         Unavailable("productivity.engine", "Shared Productivity Engine"),
@@ -89,6 +90,13 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
             if (_stopped)
                 throw new InvalidOperationException("A stopped Home Core runtime cannot be restarted; create a new runtime instance.");
 
+            UpdateService(_services["home.core"] with
+            {
+                State = HomeServiceLifecycleState.Ready,
+                IsAvailable = true,
+                Diagnostic = null,
+            });
+
             foreach (var serviceId in GetStartOrder())
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -147,6 +155,21 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
             _started = true;
             return Snapshot();
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            foreach (var serviceId in GetStartOrder().Reverse())
+            {
+                if (!_implementations.TryGetValue(serviceId, out var service)) continue;
+                var state = _services[serviceId];
+                if (state.State is not (HomeServiceLifecycleState.Starting or HomeServiceLifecycleState.Ready or HomeServiceLifecycleState.Degraded))
+                    continue;
+                try { await service.StopAsync(CancellationToken.None).ConfigureAwait(false); }
+                catch { /* Startup cancellation must still release every service that may have started. */ }
+                UpdateService(state with { State = HomeServiceLifecycleState.Stopped, IsAvailable = false,
+                    Diagnostic = "Service startup was cancelled and the service was stopped." });
+            }
+            throw;
+        }
         finally
         {
             _lifecycleGate.Release();
@@ -198,7 +221,7 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
         foreach (var requirement in request.RequiredServices)
         {
             var target = $"{request.AppId}:{requirement.ServiceId}";
-            if (!snapshot.Services.FirstOrDefault(item => item.ServiceId == requirement.ServiceId) is { } service)
+            if (snapshot.Services.FirstOrDefault(item => item.ServiceId == requirement.ServiceId) is not { } service)
             {
                 if (requirement.Required)
                     failures.Add(new HomeCoreFailure(HomeCoreErrorCode.HomeServiceUnavailable,
@@ -247,15 +270,23 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
 
         if (!isAvailable)
         {
-            foreach (var dependent in GetDependents(serviceId))
+            var affected = new HashSet<string>(StringComparer.Ordinal);
+            var pending = new Queue<string>();
+            pending.Enqueue(serviceId);
+            while (pending.TryDequeue(out var unavailable))
             {
-                if (_services.TryGetValue(dependent, out var descriptor) && descriptor.IsAvailable)
-                    UpdateService(descriptor with
-                    {
-                        State = HomeServiceLifecycleState.Degraded,
-                        IsAvailable = false,
-                        Diagnostic = $"HomeDependencyUnavailable: '{serviceId}' became unavailable.",
-                    });
+                foreach (var dependent in GetDependents(unavailable))
+                {
+                    if (!affected.Add(dependent)) continue;
+                    pending.Enqueue(dependent);
+                    if (_services.TryGetValue(dependent, out var descriptor) && descriptor.IsAvailable)
+                        UpdateService(descriptor with
+                        {
+                            State = HomeServiceLifecycleState.Degraded,
+                            IsAvailable = false,
+                            Diagnostic = $"HomeDependencyUnavailable: '{unavailable}' became unavailable.",
+                        });
+                }
             }
         }
     }
@@ -280,7 +311,8 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
             _subscribers.Add(id, observer);
             initial = CreateSignal(requiresReconnect: false);
         }
-        observer(initial);
+        try { observer(initial); }
+        catch { /* A subscriber cannot leak its registration or interrupt Home startup. */ }
         return new Subscription(this, id);
     }
 
@@ -321,6 +353,9 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                     });
                 }
             }
+
+            if (_services.TryGetValue("home.core", out var core))
+                UpdateService(core with { State = HomeServiceLifecycleState.Stopped, IsAvailable = false });
 
             _stopped = true;
             return null;
@@ -420,7 +455,7 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
                 throw new ArgumentException($"Duplicate service requirement '{requirement.ServiceId}'.", nameof(request));
             if (requirement.MajorVersion < 0 || requirement.MinimumMinorVersion < 0 ||
                 requirement.MaximumMinorVersionExclusive is < 0 ||
-                requirement.MaximumMinorVersionExclusive <= requirement.MinimumMinorVersion)
+                (requirement.MaximumMinorVersionExclusive is { } maximum && maximum <= requirement.MinimumMinorVersion))
                 throw new ArgumentException($"Invalid version range for service '{requirement.ServiceId}'.", nameof(request));
         }
     }
@@ -467,4 +502,3 @@ public sealed class HomeCoreRuntime : IAsyncDisposable
         public void Dispose() => Interlocked.Exchange(ref _owner, null)?.RemoveSubscription(id);
     }
 }
-

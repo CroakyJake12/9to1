@@ -42,8 +42,41 @@ public sealed class GenerativeUiEventRouter(
         ArgumentNullException.ThrowIfNull(binding);
         var errors = GenerativeUiContractValidator.Validate(semanticEvent);
         if (errors.Count > 0) throw new InvalidOperationException(string.Join(" ", errors));
+        errors = GenerativeUiContractValidator.Validate(binding);
+        if (errors.Count > 0) throw new InvalidOperationException(string.Join(" ", errors));
         if (!binding.ActionId.Equals(semanticEvent.ActionId, StringComparison.Ordinal))
             throw new InvalidOperationException("Event action ID does not match its registered binding.");
+
+        var document = instances.TryGet(semanticEvent.Origin.InstanceId);
+        var component = document is null || document.Origin != semanticEvent.Origin
+            ? null
+            : FindComponent(document.Root, semanticEvent.ComponentId);
+        var registeredBinding = component is null
+            ? null
+            : component.Actions.FirstOrDefault(action => action.ActionId.Equals(binding.ActionId, StringComparison.Ordinal));
+        if (registeredBinding != binding)
+        {
+            var rejected = Result(semanticEvent, GenUiActionStatus.Denied,
+                "The action is not declared by the current generated UI instance.");
+            await audit.RecordAsync(semanticEvent, rejected, cancellationToken).ConfigureAwait(false);
+            return rejected;
+        }
+
+        // App, capability, and external actions always go through the shared
+        // permission decision engine, even when their trusted descriptor does
+        // not require an interactive prompt for this risk class.
+        var requiresBroker = binding.RequiresPermission
+            || binding.RiskClass >= CapabilityRiskClass.Consequential
+            || binding.Route is GenUiRouteKind.App or GenUiRouteKind.Capability or GenUiRouteKind.External;
+        if (requiresBroker && permissions is null)
+        {
+            var unavailable = Result(
+                semanticEvent,
+                GenUiActionStatus.Unavailable,
+                "The permission service is unavailable; the generated action was not executed.");
+            await audit.RecordAsync(semanticEvent, unavailable, cancellationToken).ConfigureAwait(false);
+            return unavailable;
+        }
 
         var decision = permissions?.Evaluate(
             binding.TargetKey,
@@ -68,6 +101,18 @@ public sealed class GenerativeUiEventRouter(
             await audit.RecordAsync(semanticEvent, pending, cancellationToken).ConfigureAwait(false);
             return pending;
         }
+        if (decision?.Kind == PermissionDecisionKind.Denied
+            || decision is not null && !Enum.IsDefined(decision.Kind))
+        {
+            var denied = Result(
+                semanticEvent,
+                GenUiActionStatus.Denied,
+                decision?.Reason is { Length: > 0 } reason
+                    ? reason
+                    : "The generated action was denied by the permission service.");
+            await audit.RecordAsync(semanticEvent, denied, cancellationToken).ConfigureAwait(false);
+            return denied;
+        }
 
         var handler = _handlers.FirstOrDefault(candidate =>
             candidate.RouteKind == binding.Route && candidate.CanHandle(binding.TargetKey));
@@ -78,6 +123,20 @@ public sealed class GenerativeUiEventRouter(
 
         if (result.EventId != semanticEvent.EventId || result.Origin != semanticEvent.Origin)
             throw new InvalidOperationException("Action result lost the originating event or instance identity.");
+        if (!result.ComponentId.Equals(semanticEvent.ComponentId, StringComparison.Ordinal)
+            || !result.ActionId.Equals(semanticEvent.ActionId, StringComparison.Ordinal))
+            throw new InvalidOperationException("Action result changed the originating component or action identity.");
+        if (!Enum.IsDefined(result.Status) || result.Patches is null || result.Summary is null)
+            throw new InvalidOperationException("Action result status, patches, and summary must be valid.");
+        if (result.Status != GenUiActionStatus.Completed && result.Patches.Count > 0)
+            throw new InvalidOperationException("A non-completed action cannot mutate generated UI state.");
+        if (result.Patches.Count > 100)
+            throw new InvalidOperationException("An action result exceeds the patch batch limit.");
+        if (result.Patches.Any(patch => patch.InstanceId != semanticEvent.Origin.InstanceId || patch.PatchId == Guid.Empty))
+            throw new InvalidOperationException("Action result patches must target the originating instance and have stable IDs.");
+        if (result.StructuredResult.ValueKind == JsonValueKind.Undefined
+            || JsonSerializer.SerializeToUtf8Bytes(result.StructuredResult).Length > GenerativeUiContractValidator.MaximumJsonBytes)
+            throw new InvalidOperationException("Action result payload is missing or exceeds the generated UI contract limit.");
 
         await instances.ApplyResultAsync(result, cancellationToken).ConfigureAwait(false);
         await audit.RecordAsync(semanticEvent, result, cancellationToken).ConfigureAwait(false);
@@ -100,6 +159,17 @@ public sealed class GenerativeUiEventRouter(
         structuredResult ?? JsonSerializer.SerializeToElement(new { }),
         patches ?? [],
         DateTimeOffset.UtcNow);
+
+    private static GenUiComponent? FindComponent(GenUiComponent root, string componentId)
+    {
+        if (root.ComponentId.Equals(componentId, StringComparison.Ordinal)) return root;
+        foreach (var child in root.Children)
+        {
+            var match = FindComponent(child, componentId);
+            if (match is not null) return match;
+        }
+        return null;
+    }
 }
 
 /// <summary>Registers deterministic handlers without involving a model.</summary>
@@ -159,6 +229,7 @@ public sealed class BoundedGenUiEventAuditSink : IGenUiEventAuditSink
         var context = semanticEvent.InteractionContext.Length <= 256
             ? semanticEvent.InteractionContext
             : semanticEvent.InteractionContext[..256];
+        var summary = result.Summary.Length <= 512 ? result.Summary : result.Summary[..512];
         lock (_gate)
         {
             _entries.Enqueue(new GenUiAuditEntry(
@@ -170,7 +241,7 @@ public sealed class BoundedGenUiEventAuditSink : IGenUiEventAuditSink
                 semanticEvent.Source,
                 context,
                 result.Status,
-                result.Summary,
+                summary,
                 result.Timestamp));
             while (_entries.Count > MaximumEntries) _entries.Dequeue();
         }

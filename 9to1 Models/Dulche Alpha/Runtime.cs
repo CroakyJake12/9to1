@@ -11,6 +11,9 @@ public sealed record RuntimeRequestHandle(string RequestId, string SessionId, st
 public sealed class DulcheRuntime
 {
     private readonly ConcurrentDictionary<string, IDulcheAdapter> _adapters = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, IDulcheAcquisitionAdapter> _acquisition = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, ConcurrentBag<(string ProviderId, ModelIdentity Model)>> _temporaryOwnership = new(StringComparer.Ordinal);
+    private readonly IDulcheToolCoordinator? _toolCoordinator;
     private readonly ConcurrentDictionary<string, EndpointSlot> _endpoints = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, SessionSlot> _sessions = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, RequestSlot> _requests = new(StringComparer.Ordinal);
@@ -19,12 +22,15 @@ public sealed class DulcheRuntime
     private readonly RuntimeEventHub _eventHub = new();
     private readonly int _maximumQueueDepth;
 
-    public DulcheRuntime(IEnumerable<IDulcheAdapter> adapters, int maximumQueueDepth = 64)
+    public DulcheRuntime(IEnumerable<IDulcheAdapter> adapters, int maximumQueueDepth = 64, IEnumerable<IDulcheAcquisitionAdapter>? acquisitionAdapters = null, IDulcheToolCoordinator? toolCoordinator = null)
     {
         if (maximumQueueDepth < 1) throw new ArgumentOutOfRangeException(nameof(maximumQueueDepth));
         _maximumQueueDepth = maximumQueueDepth;
+        _toolCoordinator = toolCoordinator;
         foreach (var adapter in adapters ?? throw new ArgumentNullException(nameof(adapters)))
             if (!_adapters.TryAdd(adapter.ProviderId, adapter)) throw new ArgumentException($"Duplicate provider '{adapter.ProviderId}'.", nameof(adapters));
+        foreach (var adapter in acquisitionAdapters ?? [])
+            if (!_acquisition.TryAdd(adapter.ProviderId, adapter)) throw new ArgumentException($"Duplicate acquisition provider '{adapter.ProviderId}'.", nameof(acquisitionAdapters));
     }
 
     public RuntimeCapabilities GetCapabilities() => new("1.0.0-alpha", "1", "1", _adapters.Values.SelectMany(adapter => adapter.Capabilities).Append("sessions").Append("streaming").Append("request-controls").Append("endpoint-health").Append("provider-routing").ToHashSet(StringComparer.OrdinalIgnoreCase), _maximumQueueDepth, _adapters.Values.Any(adapter => adapter.SupportsExactPause), _adapters.Values.Any(adapter => adapter.SupportsExactResume), true, true);
@@ -44,10 +50,19 @@ public sealed class DulcheRuntime
         return StartCoreAsync(providerId, target.GetLeftPart(UriPartial.Path), null, true, model, cancellationToken);
     }
 
-    private async Task<OperationResult<DulcheEndpoint>> StartCoreAsync(string providerId, string target, int? port, bool remote, ModelIdentity? model, CancellationToken cancellationToken)
+    public Task<OperationResult<DulcheEndpoint>> StartRemoteAsync(RemoteEndpointTarget target, CancellationToken cancellationToken = default)
+    {
+        if (target is null || target.BaseUri is null || target.Model is null || !StringComparer.OrdinalIgnoreCase.Equals(target.ProviderId, target.Model.ProviderId))
+            return Task.FromResult(Failure<DulcheEndpoint>(DulcheErrorCode.InvalidArgument, "Remote target requires a provider-scoped model identity.", "target"));
+        if (target.BaseUri.Scheme != Uri.UriSchemeHttps && !target.BaseUri.IsLoopback)
+            return Task.FromResult(Failure<DulcheEndpoint>(DulcheErrorCode.PermissionDenied, "Non-loopback remote endpoints require HTTPS.", "target"));
+        return StartCoreAsync(target.ProviderId, target.BaseUri.GetLeftPart(UriPartial.Path), null, true, target.Model, cancellationToken, target);
+    }
+
+    private async Task<OperationResult<DulcheEndpoint>> StartCoreAsync(string providerId, string target, int? port, bool remote, ModelIdentity? model, CancellationToken cancellationToken, RemoteEndpointTarget? remoteTarget = null)
     {
         if (!_adapters.TryGetValue(providerId, out var adapter)) return Failure<DulcheEndpoint>(DulcheErrorCode.ProviderUnavailable, "Provider is not registered.", providerId, true);
-        var endpoint = new DulcheEndpoint(Guid.NewGuid().ToString("N"), adapter.ProviderId, target, port, EndpointState.Starting, model, adapter.Capabilities, remote, DateTimeOffset.UtcNow);
+        var endpoint = new DulcheEndpoint(Guid.NewGuid().ToString("N"), adapter.ProviderId, target, port, EndpointState.Starting, model, adapter.Capabilities, remote, DateTimeOffset.UtcNow, RemoteTarget: remoteTarget);
         var slot = new EndpointSlot(endpoint, adapter, _maximumQueueDepth);
         if (!_endpoints.TryAdd(endpoint.EndpointId, slot)) return Failure<DulcheEndpoint>(DulcheErrorCode.Conflict, "Endpoint identity collision.", endpoint.EndpointId);
         var started = await adapter.StartAsync(endpoint, cancellationToken).ConfigureAwait(false);
@@ -68,6 +83,42 @@ public sealed class DulcheRuntime
             slot.Endpoint = slot.Endpoint with { State = EndpointState.Ready, UpdatedAt = DateTimeOffset.UtcNow };
         }
         return OperationResult<DulcheEndpoint>.Success(slot.Endpoint);
+    }
+
+    public Task<IReadOnlyList<ModelArtifact>> ListModelsAsync(string providerId, CancellationToken cancellationToken = default) =>
+        _acquisition.TryGetValue(providerId, out var adapter) ? adapter.ListModelsAsync(cancellationToken) : Task.FromException<IReadOnlyList<ModelArtifact>>(new InvalidOperationException($"Provider '{providerId}' does not expose model catalogue/acquisition."));
+
+    public Task<OperationResult<ModelArtifact>> FindModelAsync(string providerId, string query, CancellationToken cancellationToken = default) =>
+        _acquisition.TryGetValue(providerId, out var adapter) ? adapter.FindModelAsync(query, cancellationToken) : Task.FromResult(Failure<ModelArtifact>(DulcheErrorCode.ProviderUnavailable, "Provider does not expose model acquisition.", providerId));
+
+    public async Task<OperationResult<AcquisitionProgress>> PullModelAsync(string providerId, ModelArtifact model, string ownerScopeId, IProgress<AcquisitionProgress>? progress = null, CancellationToken cancellationToken = default)
+    {
+        if (!_acquisition.TryGetValue(providerId, out var adapter)) return Failure<AcquisitionProgress>(DulcheErrorCode.ProviderUnavailable, "Provider does not expose model acquisition.", providerId);
+        if (string.IsNullOrWhiteSpace(ownerScopeId) || !StringComparer.OrdinalIgnoreCase.Equals(model.Identity.ProviderId, providerId)) return Failure<AcquisitionProgress>(DulcheErrorCode.InvalidArgument, "Model provider and temporary ownership scope must match.", ownerScopeId);
+        try
+        {
+            var result = await adapter.PullAsync(model, ownerScopeId, progress, cancellationToken).ConfigureAwait(false);
+            if (result.Succeeded) _temporaryOwnership.GetOrAdd(ownerScopeId, _ => new()).Add((providerId, model.Identity));
+            return result;
+        }
+        catch (OperationCanceledException) { return Failure<AcquisitionProgress>(DulcheErrorCode.InvalidState, "Model pull was cancelled and can be resumed through its provider operation.", model.Identity.StableKey, true); }
+        catch (Exception ex) { return OperationResult<AcquisitionProgress>.Failure(new(DulcheErrorCode.ProviderUnavailable, "Model acquisition failed.", model.Identity.StableKey, true, Details: new Dictionary<string, string> { ["exceptionType"] = ex.GetType().Name })); }
+    }
+
+    public Task<OperationResult<ModelArtifact>> InstallModelAsync(string providerId, ModelArtifact model, string location, CancellationToken cancellationToken = default) =>
+        _acquisition.TryGetValue(providerId, out var adapter) ? adapter.InstallAsync(model, location, cancellationToken) : Task.FromResult(Failure<ModelArtifact>(DulcheErrorCode.ProviderUnavailable, "Provider does not expose installation.", providerId));
+
+    public Task<OperationResult<ModelReplaceResult>> ReplaceModelAsync(string providerId, ModelArtifact current, ModelArtifact replacement, string policy, CancellationToken cancellationToken = default) =>
+        _acquisition.TryGetValue(providerId, out var adapter) ? adapter.ReplaceAsync(current, replacement, policy, cancellationToken) : Task.FromResult(Failure<ModelReplaceResult>(DulcheErrorCode.ProviderUnavailable, "Provider does not expose model replacement.", providerId));
+
+    public Task<OperationResult<ModelArtifact>> RollbackModelReplacementAsync(string providerId, string rollbackId, CancellationToken cancellationToken = default) =>
+        _acquisition.TryGetValue(providerId, out var adapter) ? adapter.RollbackAsync(rollbackId, cancellationToken) : Task.FromResult(Failure<ModelArtifact>(DulcheErrorCode.ProviderUnavailable, "Provider does not expose rollback.", providerId));
+
+    private async Task ReleaseTemporaryOwnershipAsync(string ownerScopeId, CancellationToken cancellationToken)
+    {
+        if (!_temporaryOwnership.TryRemove(ownerScopeId, out var models)) return;
+        foreach (var (providerId, model) in models)
+            if (_acquisition.TryGetValue(providerId, out var adapter)) await adapter.ReleaseTemporaryOwnershipAsync(model, ownerScopeId, cancellationToken).ConfigureAwait(false);
     }
 
     public OperationResult<Unit> PreparePrompt(string callerId, DulcheRequest request)
@@ -141,7 +192,9 @@ public sealed class DulcheRuntime
         return OperationResult<DulcheSession>.Success(session);
     }
 
-    public OperationResult<RuntimeRequestHandle> Submit(DulcheRequest request, string endpointId)
+    public OperationResult<RuntimeRequestHandle> Submit(DulcheRequest request, string endpointId) => SubmitCore(request, endpointId);
+
+    private OperationResult<RuntimeRequestHandle> SubmitCore(DulcheRequest request, string endpointId, string? dependencyId = null, bool priority = false)
     {
         if (!_endpoints.TryGetValue(endpointId, out var endpoint)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.EndpointNotFound, "Endpoint not found.", endpointId);
         if (string.IsNullOrWhiteSpace(request.EffectivePrompt)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.MissingPrompt, "Missing prompt.", "request.input");
@@ -162,7 +215,8 @@ public sealed class DulcheRuntime
         var effective = request with { SessionId = sessionId, Settings = SnapshotSettings(request.Settings ?? _endpointSettings.GetValueOrDefault(endpointId) ?? new GenerationSettings()), Model = request.Model ?? endpoint.Endpoint.Model };
         var slot = new RequestSlot(requestId, Guid.NewGuid().ToString("N"), sessionId, endpointId, Snapshot(effective));
         if (!_requests.TryAdd(requestId, slot)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.Conflict, "Request identity collision.", requestId);
-        if (!endpoint.Enqueue(slot))
+        slot.DependsOnRequestId = dependencyId;
+        if (!endpoint.Enqueue(slot, priority, dependencyId))
         {
             _requests.TryRemove(requestId, out _);
             return Failure<RuntimeRequestHandle>(DulcheErrorCode.QueueFull, "Endpoint request queue is full.", endpointId, true);
@@ -173,18 +227,42 @@ public sealed class DulcheRuntime
             (after, cancellationToken) => _eventHub.ReadAsync(requestId, after, cancellationToken)));
     }
 
+    public OperationResult<DulcheQueueSnapshot> GetQueueSnapshot(string endpointId)
+    {
+        if (!_endpoints.TryGetValue(endpointId, out var endpoint)) return Failure<DulcheQueueSnapshot>(DulcheErrorCode.EndpointNotFound, "Endpoint not found.", endpointId);
+        return OperationResult<DulcheQueueSnapshot>.Success(endpoint.SnapshotQueue());
+    }
+
     private async Task ProcessOneAsync(EndpointSlot endpoint, RequestSlot slot)
     {
         if (slot.State is RequestState.Cancelled or RequestState.Replaced) { slot.Complete(); return; }
+        if (slot.DependsOnRequestId is { } dependency && (!_requests.TryGetValue(dependency, out var parent) || parent.State != RequestState.Completed))
+        {
+            slot.State = RequestState.Blocked; slot.FinishReason = FinishReason.Blocked;
+            slot.Errors.Add(new(DulcheErrorCode.Conflict, "Queued request dependency did not complete successfully; input is retained for explicit retry.", dependency, true));
+            Publish(slot, "Blocked", dependency); slot.Complete(); return;
+        }
         if (slot.PauseRequested || endpoint.ManualPause)
         {
             slot.State = RequestState.Paused;
+            slot.PausedAt ??= Stopwatch.GetTimestamp();
             endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Paused, UpdatedAt = DateTimeOffset.UtcNow };
             Publish(slot, "Paused");
             try { await slot.WaitToResumeAsync(endpoint.Stopping.Token).ConfigureAwait(false); }
             catch (OperationCanceledException) { slot.State = RequestState.Cancelled; slot.FinishReason = FinishReason.Cancelled; slot.Complete(); return; }
         }
         if (endpoint.Stopping.IsCancellationRequested) { slot.State = RequestState.Cancelled; slot.FinishReason = FinishReason.Cancelled; slot.Complete(); return; }
+        if (_sessions.TryGetValue(slot.SessionId, out var sessionContext))
+        {
+            lock (sessionContext.Gate)
+                slot.Request = slot.Request with { Messages = sessionContext.Session.Messages.Concat(slot.Request.Messages ?? []).ToArray() };
+        }
+        if (slot.Request.QueueTimeoutSeconds is { } timeout && Stopwatch.GetElapsedTime(slot.AcceptedAt) > TimeSpan.FromSeconds(timeout))
+        {
+            slot.State = RequestState.Blocked; slot.FinishReason = FinishReason.Error;
+            slot.Errors.Add(new(DulcheErrorCode.QueueFull, "Request exceeded its configured queue timeout.", slot.EndpointId, true));
+            Publish(slot, "QueueTimeout"); slot.Complete(); return;
+        }
         await ExecuteAsync(endpoint, slot).ConfigureAwait(false);
     }
 
@@ -196,19 +274,68 @@ public sealed class DulcheRuntime
         slot.StartedAt = Stopwatch.GetTimestamp();
         Publish(slot, "Started");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(endpoint.Stopping.Token, slot.Cancellation.Token);
+        var budget = slot.Request.Budget ?? new ExecutionBudget();
+        if (budget.MaximumSteps < 1 || budget.MaximumDurationSeconds < 1 || budget.MaximumOutputTokens is <= 0 || budget.MaximumCost is < 0)
+        {
+            slot.State = RequestState.Failed; slot.FinishReason = FinishReason.Error;
+            slot.Errors.Add(new(DulcheErrorCode.InvalidArgument, "Execution budgets must be positive and non-negative where applicable.", slot.RequestId, false));
+        }
+        else linked.CancelAfter(TimeSpan.FromSeconds(budget.MaximumDurationSeconds));
         try
         {
-            await foreach (var delta in endpoint.Adapter.GenerateAsync(endpoint.Endpoint, slot.Request, slot.RequestId, linked.Token).WithCancellation(linked.Token).ConfigureAwait(false))
-            {
-                if (slot.State is RequestState.Replaced or RequestState.Cancelled) break;
-                if (delta.Text is { } text) { slot.Text.Append(text); slot.FirstOutputAt ??= Stopwatch.GetTimestamp(); Publish(slot, "TextDelta", text); }
-                if (delta.Thinking is { } thinking) { slot.Thinking.Append(thinking); Publish(slot, "ThinkingDelta", thinking); }
-                if (delta.InputTokens is { } input) slot.InputTokens = input;
-                if (delta.OutputTokens is { } output) slot.OutputTokens = (slot.OutputTokens ?? 0) + output;
-                if (delta.Type is { } type) Publish(slot, type, delta.Detail);
-                if (delta.FinishReason is { } reason) slot.ProviderFinishReason = reason;
-            }
+            if (slot.State == RequestState.Failed) return;
+            var adapterEndpoint = endpoint.Endpoint with { Model = slot.Request.Model };
+            await ConsumeAsync(endpoint.Adapter.GenerateAsync(adapterEndpoint, slot.Request, slot.RequestId, linked.Token), 0).ConfigureAwait(false);
             if (slot.State == RequestState.Running) { slot.State = RequestState.Completed; slot.FinishReason = FinishReason.Completed; }
+
+            async Task ConsumeAsync(IAsyncEnumerable<AdapterDelta> deltas, int step)
+            {
+                await foreach (var delta in deltas.WithCancellation(linked.Token).ConfigureAwait(false))
+                {
+                    if (slot.State is RequestState.Replaced or RequestState.Cancelled or RequestState.Blocked || linked.IsCancellationRequested) break;
+                    if (delta.Text is { } text)
+                    {
+                        slot.Text.Append(text); slot.FirstOutputAt ??= Stopwatch.GetTimestamp(); Publish(slot, "TextDelta", text);
+                    }
+                    if (delta.Thinking is { } thinking) { slot.Thinking.Append(thinking); Publish(slot, "ThinkingDelta", thinking); }
+                    if (delta.InputTokens is { } input) slot.InputTokens = (slot.InputTokens ?? 0) + input;
+                    if (delta.OutputTokens is { } output)
+                    {
+                        slot.OutputTokens = (slot.OutputTokens ?? 0) + output;
+                        var maximum = slot.Request.Settings?.MaximumOutputTokens ?? budget.MaximumOutputTokens;
+                        if (maximum is { } limit && slot.OutputTokens > limit) { slot.FinishReason = FinishReason.OutputLimit; slot.State = RequestState.Cancelled; slot.Cancellation.Cancel(); await endpoint.Adapter.CancelAsync(adapterEndpoint, slot.RequestId, CancellationToken.None).ConfigureAwait(false); break; }
+                    }
+                    if (delta.Type is { } type) Publish(slot, type, delta.Detail);
+                    if (delta.GeneratedUI is { } ui) ValidateGeneratedUi(slot, ui);
+                    if (delta.ToolProposal is { } proposal)
+                    {
+                        if (++slot.ToolSteps > budget.MaximumSteps) { Block(slot, DulcheErrorCode.ToolFailed, "Agent/tool step budget was exhausted.", proposal.Name); break; }
+                        if (_toolCoordinator is null || slot.Request.ToolPolicy is not { } toolPolicy || toolPolicy.Mode == ToolCallMode.None
+                            || string.IsNullOrWhiteSpace(toolPolicy.CallerId) || string.IsNullOrWhiteSpace(toolPolicy.ScopeId)
+                            || !toolPolicy.AllowedTools.Contains(proposal.Name)
+                            || slot.Request.PermittedTools is { } permitted && !permitted.Contains(proposal.Name))
+                        { Block(slot, DulcheErrorCode.PermissionDenied, "Tool call is outside the request's authorised tool scope.", proposal.Name); break; }
+
+                        Publish(slot, "ToolProposed", proposal.Name);
+                        var context = new ToolExecutionContext(slot.RequestId, slot.Revision, slot.AttemptId, slot.SessionId, slot.EndpointId, slot.Request.Model,
+                            toolPolicy.CallerId, _sessions.TryGetValue(slot.SessionId, out var sessionSlot) ? sessionSlot.Session.Messages.ToArray() : [], toolPolicy, linked.Token);
+                        OperationResult<ToolInvocationResult> toolResult;
+                        try { toolResult = await _toolCoordinator.ExecuteAsync(proposal, context, linked.Token).ConfigureAwait(false); }
+                        catch (OperationCanceledException) when (linked.IsCancellationRequested) { throw; }
+                        catch (Exception error) { toolResult = OperationResult<ToolInvocationResult>.Failure(new(DulcheErrorCode.ToolFailed, "Tool coordinator failed.", proposal.Name, true, Details: new Dictionary<string, string> { ["exceptionType"] = error.GetType().Name })); }
+                        if (!toolResult.Succeeded || toolResult.Value!.Status != ToolInvocationStatus.Executed)
+                        {
+                            var failure = toolResult.Error ?? toolResult.Value?.Error ?? new(DulcheErrorCode.PermissionDenied, "Tool was not approved or did not complete.", proposal.Name, false);
+                            slot.Errors.Add(failure); slot.State = RequestState.Blocked; slot.FinishReason = failure.Code == DulcheErrorCode.PermissionDenied ? FinishReason.Blocked : FinishReason.Error;
+                            Publish(slot, toolResult.Value?.Status.ToString() ?? "ToolFailed", proposal.Name);
+                            break;
+                        }
+                        slot.Tools.Add(proposal.Name); Publish(slot, "ToolCompleted", proposal.Name);
+                        await ConsumeAsync(endpoint.Adapter.ContinueWithToolResultAsync(adapterEndpoint, slot.Request, slot.RequestId, toolResult.Value, linked.Token), step + 1).ConfigureAwait(false);
+                    }
+                    if (delta.FinishReason is { } reason) slot.ProviderFinishReason = reason;
+                }
+            }
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested)
         {
@@ -222,12 +349,59 @@ public sealed class DulcheRuntime
         finally
         {
             slot.CompletedAt = Stopwatch.GetTimestamp();
+            if (slot.State == RequestState.Completed && _sessions.TryGetValue(slot.SessionId, out var sessionSlot))
+            {
+                lock (sessionSlot.Gate)
+                    sessionSlot.Session = sessionSlot.Session with { Revision = sessionSlot.Session.Revision + 1, Messages = sessionSlot.Session.Messages.Concat([new DulcheMessage("user", slot.Request.EffectivePrompt), new DulcheMessage("assistant", slot.Text.ToString())]).ToArray(), UpdatedAt = DateTimeOffset.UtcNow };
+            }
             Publish(slot, "Completed", slot.FinishReason?.ToString());
             slot.Complete();
             endpoint.Current = null;
             if (endpoint.Endpoint.State is not (EndpointState.Stopped or EndpointState.Stopping))
                 endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Ready, UpdatedAt = DateTimeOffset.UtcNow };
+            await ReleaseTemporaryOwnershipAsync(slot.RequestId, CancellationToken.None).ConfigureAwait(false);
         }
+    }
+
+    private static void Block(RequestSlot slot, DulcheErrorCode code, string message, string target)
+    {
+        slot.State = RequestState.Blocked; slot.FinishReason = code == DulcheErrorCode.PermissionDenied ? FinishReason.Blocked : FinishReason.Error;
+        slot.Errors.Add(new(code, message, target, false));
+    }
+
+    private void ValidateGeneratedUi(RequestSlot slot, GeneratedUiDocument document)
+    {
+        var warnings = new List<string>();
+        var capability = slot.Request.GenerativeContainer;
+        var size = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(document).Length;
+        var isRenderable = capability is not null;
+        if (document.SchemaVersion < 1 || string.IsNullOrWhiteSpace(document.Schema) || document.Components is null) warnings.Add("Generated UI document has an invalid schema header.");
+        if (document.Components is null)
+        {
+            warnings.Add("Generated UI has no component collection and cannot be rendered.");
+            slot.GeneratedUI = new(document, false, warnings);
+            Publish(slot, "GeneratedUI", System.Text.Json.JsonSerializer.Serialize(new { renderable = false, warnings }), System.Text.Json.JsonSerializer.SerializeToElement(document));
+            slot.Errors.Add(new(DulcheErrorCode.UnsupportedCapability, "Generated UI was retained as data but is not safe to render.", slot.RequestId, false, Details: new Dictionary<string, string> { ["warnings"] = string.Join(" | ", warnings) }));
+            return;
+        }
+        if (capability is null) warnings.Add("No GenerativeContainer is registered; structured UI is returned as data for fallback handling.");
+        else
+        {
+            if (size > capability.MaximumPayloadBytes) warnings.Add("Generated UI payload exceeds the host-advertised size limit.");
+            if (document.Components!.Count > capability.MaximumComponents) warnings.Add("Generated UI component count exceeds the host-advertised limit.");
+            if (!capability.Schemas.Contains(document.Schema)) warnings.Add("Generated UI schema was not advertised by the host.");
+            if (document.Components.Select(component => component.ComponentId).Distinct(StringComparer.Ordinal).Count() != document.Components.Count) warnings.Add("Generated UI contains duplicate component identities.");
+            foreach (var component in document.Components)
+            {
+                if (string.IsNullOrWhiteSpace(component.ComponentId) || string.IsNullOrWhiteSpace(component.ComponentType) || component.ComponentType.Contains("script", StringComparison.OrdinalIgnoreCase)) warnings.Add("Generated UI contains an invalid or executable component type.");
+                if (!capability.Components.Contains(component.ComponentType)) warnings.Add($"Generated UI component '{component.ComponentType}' is not supported by the host.");
+                if (component.Actions?.Any(action => !capability.ActionIds.Contains(action.ActionId)) == true) warnings.Add("Generated UI references an action not advertised by the host.");
+            }
+            isRenderable &= warnings.Count == 0;
+        }
+        if (warnings.Count > 0) slot.Errors.Add(new(DulcheErrorCode.UnsupportedCapability, "Generated UI was retained as data but is not safe to render.", slot.RequestId, false, Details: new Dictionary<string, string> { ["warnings"] = string.Join(" | ", warnings) }));
+        slot.GeneratedUI = new(document, isRenderable, warnings);
+        Publish(slot, "GeneratedUI", System.Text.Json.JsonSerializer.Serialize(new { renderable = isRenderable, warnings }), System.Text.Json.JsonSerializer.SerializeToElement(document));
     }
 
     public async Task<OperationResult<Unit>> StopResponseAsync(string requestId, CancellationToken cancellationToken = default)
@@ -252,7 +426,7 @@ public sealed class DulcheRuntime
             endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Pausing, UpdatedAt = DateTimeOffset.UtcNow };
             var paused = await endpoint.Adapter.PauseAsync(endpoint.Endpoint, requestId, cancellationToken).ConfigureAwait(false);
             if (!paused.Succeeded) { slot.PauseRequested = false; return OperationResult<Unit>.Failure(paused.Error!); }
-            slot.State = RequestState.Paused; endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Paused, UpdatedAt = DateTimeOffset.UtcNow };
+            slot.State = RequestState.Paused; slot.PausedAt ??= Stopwatch.GetTimestamp(); endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Paused, UpdatedAt = DateTimeOffset.UtcNow };
         }
         Publish(slot, "Pausing");
         return OperationResult<Unit>.Success(Unit.Value);
@@ -268,7 +442,9 @@ public sealed class DulcheRuntime
             var resumed = await endpoint.Adapter.ResumeAsync(endpoint.Endpoint, requestId, cancellationToken).ConfigureAwait(false);
             if (!resumed.Succeeded) return OperationResult<Unit>.Failure(resumed.Error!);
         }
-        slot.PauseRequested = false; slot.ResumeSignal.TrySetResult(); slot.State = RequestState.Queued;
+        slot.PauseRequested = false;
+        if (slot.PausedAt is { } pausedAt) { slot.PausedTicks += Stopwatch.GetTimestamp() - pausedAt; slot.PausedAt = null; }
+        slot.ResumeSignal.TrySetResult(); slot.State = RequestState.Queued;
         endpoint.Endpoint = endpoint.Endpoint with { State = EndpointState.Busy, UpdatedAt = DateTimeOffset.UtcNow };
         Publish(slot, "Resumed");
         return OperationResult<Unit>.Success(Unit.Value);
@@ -279,11 +455,7 @@ public sealed class DulcheRuntime
         if (!_requests.TryGetValue(requestId, out var prior)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.RequestNotFound, "Request not found.", requestId);
         if (string.IsNullOrWhiteSpace(prompt)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.MissingPrompt, "Missing prompt.", requestId);
         if (!_endpoints.TryGetValue(prior.EndpointId, out var endpoint)) return Failure<RuntimeRequestHandle>(DulcheErrorCode.EndpointNotFound, "Endpoint not found.", prior.EndpointId);
-        var copy = Submit(prior.Request with { Input = prompt, Messages = null }, prior.EndpointId);
-        if (!copy.Succeeded) return copy;
-        if (_requests.TryGetValue(copy.Value!.RequestId, out var queued)) queued.DependsOnRequestId = requestId;
-        endpoint.MoveAfterDependency(copy.Value!.RequestId, requestId);
-        return copy;
+        return SubmitCore(prior.Request with { Input = prompt, Messages = null, SessionId = prior.SessionId }, prior.EndpointId, dependencyId: requestId, priority: false);
     }
 
     public OperationResult<RuntimeRequestHandle> StackPrompt(string requestId, string prompt)
@@ -380,26 +552,26 @@ public sealed class DulcheRuntime
     private async Task<DulcheResult> AwaitRequestAsync(RequestSlot slot, CancellationToken cancellationToken)
     {
         await slot.Completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-        if (_sessions.TryGetValue(slot.SessionId, out var session) && slot.State == RequestState.Completed)
-        {
-            lock (session.Gate)
-                session.Session = session.Session with { Revision = session.Session.Revision + 1, Messages = session.Session.Messages.Concat([new DulcheMessage("user", slot.Request.EffectivePrompt), new DulcheMessage("assistant", slot.Text.ToString())]).ToArray(), UpdatedAt = DateTimeOffset.UtcNow };
-        }
-        var elapsed = slot.StartedAt is null ? Metric<double>.Empty : Metric<double>.Measured(Stopwatch.GetElapsedTime(slot.StartedAt.Value, slot.CompletedAt ?? Stopwatch.GetTimestamp()).TotalSeconds);
+        var now = slot.CompletedAt ?? Stopwatch.GetTimestamp();
+        var elapsed = Metric<double>.Measured(Stopwatch.GetElapsedTime(slot.AcceptedAt, now).TotalSeconds);
+        var queued = Metric<double>.Measured(Stopwatch.GetElapsedTime(slot.AcceptedAt, slot.StartedAt ?? now).TotalSeconds);
+        var pausedTicks = slot.PausedTicks + (slot.PausedAt is { } pauseStart ? now - pauseStart : 0);
+        var pausedSeconds = Metric<double>.Measured(Stopwatch.GetElapsedTime(0, pausedTicks).TotalSeconds);
+        var executingSeconds = slot.StartedAt is null ? Metric<double>.Empty : Metric<double>.Measured(Math.Max(0, Stopwatch.GetElapsedTime(slot.StartedAt.Value, now).TotalSeconds - pausedSeconds.Value));
         var firstOutput = slot.FirstOutputAt is null || slot.StartedAt is null ? Metric<double>.Empty : Metric<double>.Measured(Stopwatch.GetElapsedTime(slot.StartedAt.Value, slot.FirstOutputAt.Value).TotalSeconds);
         var input = slot.InputTokens is null ? Metric<long>.Na : Metric<long>.Measured(slot.InputTokens.Value);
         var output = slot.OutputTokens is null ? Metric<long>.Na : Metric<long>.Measured(slot.OutputTokens.Value);
         var total = input.Availability == Availability.Value && output.Availability == Availability.Value ? Metric<long>.Measured(input.Value + output.Value) : Metric<long>.Na;
         var tokens = new TokenMetrics(input, output, total, output, Metric<long>.Empty, Metric<long>.Na, Metric<long>.Na);
         return new(slot.RequestId, slot.SessionId, slot.EndpointId, slot.State, slot.FinishReason, slot.Revision, slot.AttemptId, slot.Text.Length == 0 ? null : slot.Text.ToString(),
-            slot.Thinking.Length == 0 ? Metric<string>.Empty : Metric<string>.Measured(slot.Thinking.ToString()), null, null, tokens, elapsed, firstOutput,
-            slot.OutputTokens is > 0 && slot.StartedAt.HasValue && slot.CompletedAt.HasValue ? Metric<double>.Measured(slot.OutputTokens.Value / Math.Max(.0001, Stopwatch.GetElapsedTime(slot.StartedAt.Value, slot.CompletedAt.Value).TotalSeconds)) : Metric<double>.Na,
-            Array.Empty<ModelInvocation>(), slot.Errors.ToArray(), slot.Events.ToArray(), slot.Errors.FirstOrDefault());
+            slot.Thinking.Length == 0 ? Metric<string>.Empty : Metric<string>.Measured(slot.Thinking.ToString()), slot.Tools.Count == 0 ? null : slot.Tools.ToArray(), null, tokens, elapsed, queued, pausedSeconds, executingSeconds, firstOutput,
+            slot.OutputTokens is > 0 && executingSeconds.Availability == Availability.Value ? Metric<double>.Measured(slot.OutputTokens.Value / Math.Max(.0001, executingSeconds.Value)) : Metric<double>.Na,
+            Array.Empty<ModelInvocation>(), slot.Errors.ToArray(), slot.Events.ToArray(), slot.Errors.FirstOrDefault(), slot.GeneratedUI);
     }
 
-    private void Publish(RequestSlot slot, string type, string? detail = null)
+    private void Publish(RequestSlot slot, string type, string? detail = null, System.Text.Json.JsonElement? payload = null)
     {
-        var item = new RuntimeEvent(Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow, slot.RequestId, slot.Revision, slot.AttemptId, Interlocked.Increment(ref slot.Sequence), type, detail);
+        var item = new RuntimeEvent(Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow, slot.RequestId, slot.Revision, slot.AttemptId, Interlocked.Increment(ref slot.Sequence), type, detail, Payload: payload);
         slot.Events.Enqueue(item); _eventHub.Publish(slot.RequestId, item);
     }
     private void PublishEndpoint(EndpointSlot endpoint, string type) { if (endpoint.Current is { } request) Publish(request, type, endpoint.Endpoint.State.ToString()); }
@@ -407,7 +579,14 @@ public sealed class DulcheRuntime
     {
         Messages = request.Messages?.Select(message => message with { Inputs = message.Inputs?.ToArray() }).ToArray(),
         PermittedTools = request.PermittedTools?.ToHashSet(StringComparer.Ordinal),
-        Settings = request.Settings is null ? null : SnapshotSettings(request.Settings)
+        Settings = request.Settings is null ? null : SnapshotSettings(request.Settings),
+        ToolPolicy = request.ToolPolicy is null ? null : request.ToolPolicy with { AllowedTools = request.ToolPolicy.AllowedTools.ToHashSet(StringComparer.Ordinal) },
+        GenerativeContainer = request.GenerativeContainer is null ? null : request.GenerativeContainer with
+        {
+            Schemas = request.GenerativeContainer.Schemas.ToHashSet(StringComparer.Ordinal),
+            Components = request.GenerativeContainer.Components.ToHashSet(StringComparer.Ordinal),
+            ActionIds = request.GenerativeContainer.ActionIds.ToHashSet(StringComparer.Ordinal)
+        }
     };
     private static GenerationSettings SnapshotSettings(GenerationSettings settings) => settings with
     {
@@ -428,9 +607,9 @@ public sealed class DulcheRuntime
     private sealed class SessionSlot(DulcheSession session) { public readonly object Gate = new(); public DulcheSession Session = session; }
     private sealed class RequestSlot(string requestId, string attemptId, string sessionId, string endpointId, DulcheRequest request)
     {
-        public string RequestId { get; } = requestId; public string AttemptId { get; } = attemptId; public string SessionId { get; } = sessionId; public string EndpointId { get; } = endpointId; public DulcheRequest Request { get; } = request;
+        public string RequestId { get; } = requestId; public string AttemptId { get; } = attemptId; public string SessionId { get; } = sessionId; public string EndpointId { get; } = endpointId; public DulcheRequest Request { get; set; } = request;
         public TaskCompletionSource Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously); public Task? RunTask; public CancellationTokenSource Cancellation { get; } = new(); public TaskCompletionSource ResumeSignal { get; set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public ConcurrentQueue<RuntimeEvent> Events { get; } = new(); public List<DulcheError> Errors { get; } = []; public StringBuilder Text { get; } = new(); public StringBuilder Thinking { get; } = new(); public RequestState State = RequestState.Queued; public FinishReason? FinishReason; public int Revision = 1; public long Sequence; public long? OutputTokens; public long? InputTokens; public string? ProviderFinishReason; public long? StartedAt; public long? FirstOutputAt; public long? CompletedAt; public bool PauseRequested; public string? DependsOnRequestId;
+        public ConcurrentQueue<RuntimeEvent> Events { get; } = new(); public List<DulcheError> Errors { get; } = []; public List<string> Tools { get; } = []; public StringBuilder Text { get; } = new(); public StringBuilder Thinking { get; } = new(); public RequestState State = RequestState.Queued; public FinishReason? FinishReason; public int Revision = 1; public long Sequence; public long? OutputTokens; public long? InputTokens; public string? ProviderFinishReason; public long AcceptedAt = Stopwatch.GetTimestamp(); public long? StartedAt; public long? FirstOutputAt; public long? CompletedAt; public long? PausedAt; public long PausedTicks; public int ToolSteps; public GeneratedUiPayload? GeneratedUI; public bool PauseRequested; public string? DependsOnRequestId;
         public bool IsTerminal => State is RequestState.Completed or RequestState.Cancelled or RequestState.Replaced or RequestState.Blocked or RequestState.Failed;
         public void Complete() => Completion.TrySetResult();
         public async Task WaitToResumeAsync(CancellationToken cancellationToken) { await ResumeSignal.Task.WaitAsync(cancellationToken).ConfigureAwait(false); ResumeSignal = new(TaskCreationOptions.RunContinuationsAsynchronously); }
@@ -439,7 +618,8 @@ public sealed class DulcheRuntime
     {
         private readonly object _gate = new(); private readonly LinkedList<RequestSlot> _queue = []; private readonly SemaphoreSlim _signal = new(0); private Task? _worker;
         public DulcheEndpoint Endpoint = endpoint; public IDulcheAdapter Adapter { get; } = adapter; public int MaxQueue { get; } = maxQueue; public CancellationTokenSource Stopping { get; } = new(); public RequestSlot? Current; public bool ManualPause;
-        public bool Enqueue(RequestSlot slot, bool priority = false) { lock (_gate) { if (_queue.Count >= MaxQueue) return false; if (priority) _queue.AddFirst(slot); else _queue.AddLast(slot); _signal.Release(); return true; } }
+        public bool Enqueue(RequestSlot slot, bool priority = false, string? afterRequestId = null) { lock (_gate) { if (_queue.Count >= MaxQueue) return false; var dependency = afterRequestId is null ? null : Find(afterRequestId); if (dependency is not null) _queue.AddAfter(dependency, slot); else if (priority || afterRequestId is not null) _queue.AddFirst(slot); else _queue.AddLast(slot); _signal.Release(); return true; } }
+        public DulcheQueueSnapshot SnapshotQueue() { lock (_gate) return new(Endpoint.EndpointId, Current?.RequestId, _queue.Select((slot, index) => new DulcheQueueItem(slot.RequestId, slot.SessionId, slot.State, index + 1, DateTimeOffset.UtcNow - Stopwatch.GetElapsedTime(slot.AcceptedAt), slot.Request.QueueTimeoutSeconds)).ToArray(), MaxQueue, DateTimeOffset.UtcNow); }
         public bool TryDequeue(out RequestSlot slot) { lock (_gate) { if (_queue.First is null) { slot = null!; return false; } slot = _queue.First.Value; _queue.RemoveFirst(); return true; } }
         public Task EnsureWorker(Func<EndpointSlot, RequestSlot, Task> run) { lock (_gate) { if (_worker is { IsCompleted: false }) { Signal(); return _worker; } _worker = Task.Run(async () => { try { while (!Stopping.IsCancellationRequested) { await _signal.WaitAsync(Stopping.Token).ConfigureAwait(false); if (TryDequeue(out var next)) await run(this, next).ConfigureAwait(false); } } catch (OperationCanceledException) when (Stopping.IsCancellationRequested) { } }, Stopping.Token); return _worker; } }
         public void Signal() { try { _signal.Release(); } catch (SemaphoreFullException) { } }

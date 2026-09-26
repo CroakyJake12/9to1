@@ -35,6 +35,7 @@ public sealed class GenUiSemanticValidatorTests
  {
   var valid=App() with
   {
+   Document=App().Document with { Root=App().Document.Root with { Actions=[new("meal.save",GenUiRouteKind.Local,"meal.save",CapabilityRiskClass.Low,false)] } },
    ResultSchemas=[new("meal.result",[new("mealId",GenUiValueType.String,true)])],
    ErrorSchemas=[new("meal.error","MEAL_INVALID","Meal data is invalid.",true,[new("field",GenUiValueType.String,false)])],
    Actions=[new("meal.save",GenUiActionExecutionKind.Local,[new("name",GenUiValueType.String,true)],"meal.result",["meal.error"])]
@@ -45,6 +46,15 @@ public sealed class GenUiSemanticValidatorTests
   var result=GenUiSemanticValidator.ValidateAndRepair(invalid);
   Assert.Contains(result.Errors,e=>e.Contains("unknown result schema",StringComparison.Ordinal));
   Assert.Contains(result.Errors,e=>e.Contains("unknown error schema",StringComparison.Ordinal));
+ }
+ [Fact] public void RequiresTypedActionDefinitionsToMatchBindingsAndStateTypes()
+ {
+  var source=App().Document;
+  var document=source with { Root=source.Root with { Actions=[new("meal.save",GenUiRouteKind.App,"meal.save",CapabilityRiskClass.Low,false)] }, State=new Dictionary<string,JsonElement> { ["price"]=JsonSerializer.SerializeToElement("wrong"), ["quantity"]=JsonSerializer.SerializeToElement(1) } };
+  var app=App() with { Document=document };
+  var result=GenUiSemanticValidator.ValidateAndRepair(app);
+  Assert.Contains(result.Errors,e=>e.Contains("no typed action definition",StringComparison.Ordinal));
+  Assert.Contains(result.Errors,e=>e.Contains("does not match Number",StringComparison.Ordinal));
  }
  private static GenUiAppDefinition App()
  {

@@ -393,7 +393,7 @@ public sealed partial class MainView
         WorkspaceEditorPage editor => editor.IsDirty,
         WritePage write => write.IsDirty,
         Haven.Desktop.Views.Pages.Notes.NotesPage notes => notes.IsDirty,
-        CanvasPage canvas => canvas.IsDirty,
+        global::Haven.Desktop.Views.Pages.Canvas.CanvasPage canvas => canvas.IsDirty,
         DataPage data => data.IsDirty,
         PresentPage present => present.IsDirty,
         _ => false

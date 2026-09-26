@@ -488,12 +488,13 @@ internal sealed class HavenGenUiSceneSurface : IDisposable
         var document = _instances.TryGet(presentedDocument.Origin.InstanceId);
         if (document is null || document.Origin.ThreadId != presentedDocument.Origin.ThreadId) return;
         var currentComponent = FindComponent(document.Root, component.ComponentId);
-        if (currentComponent is null || currentComponent.Actions.Count == 0) return;
+        if (currentComponent is null) return;
+        var binding = GenerativeUiContractValidator.SelectActionBinding(currentComponent);
+        if (binding is null) return;
         component = currentComponent;
         if (value is null && eventType == GenUiEventType.ActionInvoked)
             value = GetValue(component, "value");
 
-        var binding = component.Actions[0];
         var semanticEvent = new GenUiEvent(
             Guid.NewGuid(), eventType, DateTimeOffset.UtcNow, document.Origin,
             component.ComponentId, binding.ActionId, null, null, value,

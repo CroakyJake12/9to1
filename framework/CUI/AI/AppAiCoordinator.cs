@@ -30,7 +30,11 @@ public sealed class AppAiCoordinator(
     public async ValueTask<bool> SelectModelAsync(string modelId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(modelId);
-        return modelPicker is not null && await modelPicker.SelectAsync(modelId, cancellationToken).ConfigureAwait(false);
+        if (modelPicker is null) return false;
+        var options = await modelPicker.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+        if (!options.Any(option => option.IsAvailable && string.Equals(option.Id, modelId, StringComparison.Ordinal)))
+            return false;
+        return await modelPicker.SelectAsync(modelId, cancellationToken).ConfigureAwait(false);
     }
 
     public async ValueTask<AppAiActionResult> ExecuteAsync(
@@ -50,16 +54,27 @@ public sealed class AppAiCoordinator(
             !string.Equals(snapshot.Revision, request.ExpectedRevision, StringComparison.Ordinal))
             return AppAiActionResult.Rejected("The app content changed before the action could run. Review the current context and try again.", "stale-context", canRetry: true);
 
-        var descriptor = actions.Actions.SingleOrDefault(candidate =>
-            string.Equals(candidate.Id, request.ActionId, StringComparison.Ordinal));
-        if (descriptor is null)
+        var matchingActions = actions.Actions.Where(candidate =>
+            string.Equals(candidate.Id, request.ActionId, StringComparison.Ordinal)).ToArray();
+        if (matchingActions.Length == 0)
             return AppAiActionResult.Rejected("The requested action is not available.", "unknown-action");
+        if (matchingActions.Length != 1)
+            return AppAiActionResult.Rejected("The app provided an ambiguous action contract; the action was not run.", "ambiguous-action");
+        var descriptor = matchingActions[0];
 
         if (!descriptor.IsMutation)
             return AppAiActionResult.Rejected("Read-only app actions are not dispatched through the mutation endpoint.", "action-not-mutable");
 
+        var inputValidation = ValidateInput(descriptor, request.Arguments);
+        if (inputValidation is not null)
+            return AppAiActionResult.Rejected(inputValidation, "invalid-action-arguments");
+
+        if (actionGraph is null)
+            return AppAiActionResult.Rejected("The shared Action Graph is unavailable; the app action was not run.", "action-graph-unavailable", canRetry: true);
+
         var dataMutation = string.Equals(snapshot.AppId, "data", StringComparison.OrdinalIgnoreCase);
         var forcePerActionApproval = dataMutation;
+        string? verifiedApprovalToken = null;
         AppAiDatabasePreparation? databasePreparation = null;
         if (dataMutation && snapshot.IsLiveDatabase)
         {
@@ -75,6 +90,9 @@ public sealed class AppAiCoordinator(
                     databasePreparation.ErrorCode ?? "database-backup-required");
         }
 
+        await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
+            AppAiActionGraphStatus.Started, "AI requested a typed app action", cancellationToken).ConfigureAwait(false);
+
         if (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval)
         {
             if (approvalRequester is null)
@@ -86,7 +104,7 @@ public sealed class AppAiCoordinator(
                 request.AppId,
                 snapshot,
                 descriptor,
-                ImpactUnknown: descriptor.AffectedObjectIds is not { Count: > 0 },
+                ImpactUnknown: descriptor.ImpactUnknown,
                 ForcePerActionApproval: forcePerActionApproval,
                 ChangePreview: databasePreparation?.Preview,
                 BackupId: databasePreparation?.BackupId,
@@ -100,6 +118,8 @@ public sealed class AppAiCoordinator(
                     AppAiApprovalOutcome.Denied => "approval-denied",
                     _ => "approval-unavailable"
                 };
+                await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
+                    AppAiActionGraphStatus.Blocked, "Home did not approve the app action", cancellationToken).ConfigureAwait(false);
                 return AppAiActionResult.Rejected(
                     string.IsNullOrWhiteSpace(decision.Message) ? "Home did not approve this action." : decision.Message,
                     code,
@@ -109,10 +129,11 @@ public sealed class AppAiCoordinator(
             if (string.IsNullOrWhiteSpace(decision.ApprovalToken))
                 return AppAiActionResult.Rejected("Home approval did not include a scoped approval token; the action was not run.", "approval-token-missing");
 
+            verifiedApprovalToken = decision.ApprovalToken;
             var approved = await approvals.VerifyAsync(
                 request.AppId,
                 request.ActionId,
-                decision.ApprovalToken,
+                verifiedApprovalToken,
                 cancellationToken).ConfigureAwait(false);
             if (!approved)
                 return AppAiActionResult.Rejected("The approval is invalid or expired.", "approval-invalid");
@@ -121,14 +142,14 @@ public sealed class AppAiCoordinator(
             var current = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
             ValidateSnapshot(current);
             if (!SameTarget(snapshot, current) ||
-                !actions.Actions.Any(candidate => candidate == descriptor))
+                !HasSameActionScope(descriptor))
                 return AppAiActionResult.Rejected("The app context or action scope changed during approval. Review the new state before retrying.", "stale-context", canRetry: true);
         }
 
         var result = await actions.ExecuteAsync(request with
         {
             ApprovalToken = descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval
-                ? (request.ApprovalToken ?? string.Empty)
+                ? verifiedApprovalToken
                 : null
         }, cancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
@@ -165,39 +186,70 @@ public sealed class AppAiCoordinator(
 
         var snapshot = await CaptureContextAsync(cancellationToken).ConfigureAwait(false);
         var modelSelection = await GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
+        if (modelSelection is not null)
+        {
+            var selectableModels = await GetModelsAsync(cancellationToken).ConfigureAwait(false);
+            if (!selectableModels.Any(model => model.IsAvailable &&
+                string.Equals(model.Id, modelSelection.ModelId, StringComparison.Ordinal)))
+                throw new InvalidOperationException("The selected AI model is no longer available. Choose another model and try again.");
+        }
         var availableActions = accessMode == AppAiAccessMode.Write
             ? actions.Actions.Where(action => action.IsMutation).ToArray()
             : [];
+        ValidateActions(availableActions);
         var selectedActionCalls = 0;
         var selectedModel = modelSelection;
-        await foreach (var chunk in dulche.StreamAsync(
-            new AppAiPrompt(prompt.Trim(), snapshot, correlationId, accessMode, availableActions, selectedModel),
-            cancellationToken).ConfigureAwait(false))
+        await PublishGraphEventAsync(snapshot, "contextual-ai.request", correlationId,
+            AppAiActionGraphStatus.Started, "Contextual AI request started", cancellationToken).ConfigureAwait(false);
+        var completed = false;
+        try
         {
-            if (chunk.RequestedAction is { } requestedAction)
+            await foreach (var chunk in dulche.StreamAsync(
+                new AppAiPrompt(prompt.Trim(), snapshot, correlationId, accessMode, availableActions, selectedModel),
+                cancellationToken).ConfigureAwait(false))
             {
-                selectedActionCalls++;
-                if (selectedActionCalls > 8)
+                if (chunk.RequestedAction is { } requestedAction)
                 {
-                    yield return new AppAiResponseChunk("The request reached the action limit. Review the current state before continuing.", IsFinal: true);
-                    yield break;
-                }
+                    selectedActionCalls++;
+                    if (selectedActionCalls > 8)
+                    {
+                        yield return new AppAiResponseChunk("The request reached the action limit. Review the current state before continuing.", IsFinal: true);
+                        yield break;
+                    }
 
-                var result = await ExecuteAsync(new AppAiActionRequest(
-                    snapshot.AppId,
-                    requestedAction.ActionId,
-                    requestedAction.Arguments,
-                    ApprovalToken: null,
-                    correlationId,
-                    accessMode,
-                    snapshot.Revision), cancellationToken).ConfigureAwait(false);
-                var visible = result.Succeeded
-                    ? $"Action completed: {result.Summary}"
-                    : $"Action not run: {result.Summary}";
-                yield return new AppAiResponseChunk(visible);
-                continue;
+                    var result = await ExecuteAsync(new AppAiActionRequest(
+                        snapshot.AppId,
+                        requestedAction.ActionId,
+                        requestedAction.Arguments,
+                        ApprovalToken: null,
+                        correlationId,
+                        accessMode,
+                        snapshot.Revision), cancellationToken).ConfigureAwait(false);
+                    var visible = result.Succeeded
+                        ? $"Action completed: {result.Summary}"
+                        : $"Action not run: {result.Summary}";
+                    yield return new AppAiResponseChunk(visible);
+                    continue;
+                }
+                yield return chunk;
             }
-            yield return chunk;
+            completed = true;
+        }
+        finally
+        {
+            var status = completed
+                ? AppAiActionGraphStatus.Completed
+                : cancellationToken.IsCancellationRequested
+                    ? AppAiActionGraphStatus.Blocked
+                    : AppAiActionGraphStatus.Failed;
+            var summary = status switch
+            {
+                AppAiActionGraphStatus.Completed => "Contextual AI request completed",
+                AppAiActionGraphStatus.Blocked => "Contextual AI request cancelled",
+                _ => "Contextual AI request failed or stopped before completion"
+            };
+            await PublishGraphEventAsync(snapshot, "contextual-ai.request", correlationId,
+                status, summary, CancellationToken.None).ConfigureAwait(false);
         }
     }
 
@@ -227,11 +279,64 @@ public sealed class AppAiCoordinator(
         string.Equals(before.DocumentId, after.DocumentId, StringComparison.Ordinal) &&
         string.Equals(before.Revision, after.Revision, StringComparison.Ordinal);
 
+    private bool HasSameActionScope(AppAiActionDescriptor approved)
+    {
+        var current = actions.Actions.Where(candidate =>
+            string.Equals(candidate.Id, approved.Id, StringComparison.Ordinal)).ToArray();
+        if (current.Length != 1) return false;
+        var candidate = current[0];
+        return string.Equals(candidate.DisplayName, approved.DisplayName, StringComparison.Ordinal)
+            && string.Equals(candidate.Description, approved.Description, StringComparison.Ordinal)
+            && candidate.Risk == approved.Risk
+            && candidate.RequiresReview == approved.RequiresReview
+            && string.Equals(candidate.InputSchemaJson, approved.InputSchemaJson, StringComparison.Ordinal)
+            && candidate.RequiresPermission == approved.RequiresPermission
+            && candidate.IsMutation == approved.IsMutation
+            && candidate.IsReversible == approved.IsReversible
+            && candidate.HasExternalSideEffects == approved.HasExternalSideEffects
+            && candidate.ImpactUnknown == approved.ImpactUnknown
+            && string.Equals(candidate.ImpactSummary, approved.ImpactSummary, StringComparison.Ordinal)
+            && (candidate.AffectedObjectIds ?? []).SequenceEqual(approved.AffectedObjectIds ?? [], StringComparer.Ordinal);
+    }
+
     private static void ValidateSnapshot(AppAiContextSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentException.ThrowIfNullOrWhiteSpace(snapshot.AppId);
         ArgumentException.ThrowIfNullOrWhiteSpace(snapshot.SurfaceId);
         ArgumentNullException.ThrowIfNull(snapshot.SemanticState);
+    }
+
+    private static string? ValidateInput(AppAiActionDescriptor descriptor, System.Text.Json.JsonElement arguments)
+    {
+        if (arguments.ValueKind != System.Text.Json.JsonValueKind.Object)
+            return "Action arguments must be a JSON object.";
+        if (string.IsNullOrWhiteSpace(descriptor.InputSchemaJson))
+            return "The app did not provide an input schema for this action.";
+
+        try
+        {
+            using var schema = System.Text.Json.JsonDocument.Parse(descriptor.InputSchemaJson);
+            if (schema.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+                return "The app action input schema is invalid.";
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return "The app action input schema is invalid.";
+        }
+        return null;
+    }
+
+    private void ValidateActions(IReadOnlyList<AppAiActionDescriptor> availableActions)
+    {
+        if (availableActions.Any(action => string.IsNullOrWhiteSpace(action.Id) || string.IsNullOrWhiteSpace(action.InputSchemaJson)) ||
+            availableActions.Select(action => action.Id).Distinct(StringComparer.Ordinal).Count() != availableActions.Count)
+            throw new InvalidOperationException("The active app provided missing or duplicate typed AI action contracts.");
+
+        foreach (var action in availableActions)
+        {
+            if (ValidateInput(action, System.Text.Json.JsonSerializer.SerializeToElement(new { })) is not null)
+                throw new InvalidOperationException($"The active app provided an invalid input schema for action '{action.Id}'.");
+        }
     }
 }

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>HavenOS.MiniComputer.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HavenOS.MiniComputer.csproj" />
+    <ProjectReference Include="..\..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+  </ItemGroup>
+</Project>

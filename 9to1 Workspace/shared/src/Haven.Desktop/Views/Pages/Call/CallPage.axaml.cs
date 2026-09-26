@@ -165,8 +165,25 @@ public sealed partial class CallPage : UserControl
 
             InputDeviceCombo.ItemsSource = _inputDevices;
             InputDeviceCombo.ItemTemplate = new FuncDataTemplate<CallAudioDevice>((d, _) => new TextBlock { Text = d?.Name });
-            InputDeviceCombo.SelectionChanged += (_, _) => _selectedInputDevice = InputDeviceCombo.SelectedItem as CallAudioDevice;
+            InputDeviceCombo.SelectionChanged += async (_, _) =>
+            {
+                _selectedInputDevice = InputDeviceCombo.SelectedItem as CallAudioDevice;
+                if (_coordinator.IsActive && _coordinator is ICallDeviceSelection devices)
+                    try { await devices.SelectInputDeviceAsync(_selectedInputDevice?.Id, CancellationToken.None); }
+                    catch (Exception ex) { SpeechInputStatus.Text = $"Microphone could not be changed: {ex.Message}"; }
+            };
             InputDeviceCombo.SelectedItem = _selectedInputDevice;
+
+            OutputDeviceCombo.ItemsSource = _outputDevices;
+            OutputDeviceCombo.ItemTemplate = new FuncDataTemplate<CallAudioDevice>((d, _) => new TextBlock { Text = d?.Name });
+            OutputDeviceCombo.SelectionChanged += async (_, _) =>
+            {
+                _selectedOutputDevice = OutputDeviceCombo.SelectedItem as CallAudioDevice;
+                if (_coordinator.IsActive && _coordinator is ICallDeviceSelection devices)
+                    try { await devices.SelectOutputDeviceAsync(_selectedOutputDevice?.Id, CancellationToken.None); }
+                    catch (Exception ex) { SpeechOutputStatus.Text = $"Speaker could not be changed: {ex.Message}"; }
+            };
+            OutputDeviceCombo.SelectedItem = _selectedOutputDevice;
 
             SpeechModelCombo.ItemsSource = _speechModelsList;
             SpeechModelCombo.ItemTemplate = new FuncDataTemplate<SpeechModelInfo>((s, _) => new TextBlock { Text = s?.DisplayName });

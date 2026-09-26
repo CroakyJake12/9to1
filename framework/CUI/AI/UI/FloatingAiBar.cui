@@ -3,9 +3,9 @@
     <Surface class="ai-bar" dock="bottom" state="{Binding Mode}">
       <Stack direction="horizontal" gap="8" accessibility-name="AI access mode">
         <Text class="mode" value="{Binding AccessModeLabel}" live="polite" />
-        <Button id="ReadOnlyMode" text="Read-only" selected="{Binding IsReadOnly}" action="SetReadOnly" accessibility-name="Set AI access to read-only" />
-        <Button id="WriteMode" text="Write" selected="{Binding IsWriteMode}" action="SetWriteMode" accessibility-name="Set AI access to write mode" />
-        <Select id="AiModel" options="{Binding Models}" value="{Binding SelectedModelLabel}" action="SelectModel" accessibility-name="Choose AI model" />
+        <Button id="ReadOnlyMode" text="Read-only" action="SetReadOnly" accessibility-name="Set AI access to read-only" />
+        <Button id="WriteMode" text="Write" action="SetWriteMode" accessibility-name="Set AI access to write mode" />
+        <Button id="AiModel" text="{Binding ModelPickerLabel}" visible="{Binding ModelPickerAvailable}" action="SelectNextModel" accessibility-name="Choose AI model" />
         <Button id="ExpandAi" visible="{Binding IsCollapsed}" action="Expand" accessibility-name="Open AI assistant">
           <Icon name="sparkle" />
         </Button>
@@ -13,6 +13,7 @@
       <Stack visible="{Binding IsExpanded}" gap="8">
         <Text class="context" value="{Binding ContextLabel}" />
         <Input id="AiPrompt" value="{Binding Prompt, mode=TwoWay}" submit="Submit" accessibility-name="Ask about this app" />
+        <Text class="request-state" value="{Binding RequestStateLabel}" live="polite" />
         <Stack direction="horizontal" gap="8">
           <Button text="Send" action="Submit" default="true" />
           <Button text="Stop" action="Cancel" visible="{Binding IsStreaming}" />

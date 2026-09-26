@@ -41,7 +41,8 @@ public sealed class CuiComponent
         CuiRepeatDefinition? repeat = null,
         IReadOnlyList<CuiComponent>? elseChildren = null,
         IReadOnlyList<string>? groups = null,
-        bool isDefinition = false)
+        bool isDefinition = false,
+        CuiPropertyRegionDefinition? propertyRegion = null)
     {
         Type = type;
         Name = name;
@@ -57,12 +58,16 @@ public sealed class CuiComponent
         ElseChildren = elseChildren ?? Array.Empty<CuiComponent>();
         Groups = groups ?? Array.Empty<string>();
         IsDefinition = isDefinition;
+        PropertyRegion = propertyRegion;
     }
 
     public string Type { get; }
     public string? Name { get; }
     public string? AuthoredId => Name;
-    public string StableId => Name is not null ? $"id:{Name}" : CreateGeneratedStableId();
+    public string StableId
+    {
+        get => Name is not null ? $"id:{Name}" : CreateGeneratedStableId();
+    }
     public IReadOnlyList<string> Classes { get; }
     public IReadOnlyDictionary<string, CuiValue> Properties { get; }
     public IReadOnlyDictionary<string, CuiActionReference> Actions { get; }
@@ -75,6 +80,7 @@ public sealed class CuiComponent
     public IReadOnlyList<CuiComponent> ElseChildren { get; }
     public IReadOnlyList<string> Groups { get; }
     public bool IsDefinition { get; }
+    public CuiPropertyRegionDefinition? PropertyRegion { get; }
     public CuiSourceSpan Span { get; }
 
     /// <summary>
@@ -88,6 +94,7 @@ public sealed class CuiComponent
     /// language model instead of requiring each platform adapter to re-read XML.
     /// </summary>
     public string Text { get; init; } = string.Empty;
+    public IReadOnlyList<CuiTextPart> TextParts { get; init; } = Array.Empty<CuiTextPart>();
 
     /// <summary>Whether this component is a theme scope (DefaultTheme element).</summary>
     public bool IsThemeScope => DefaultTheme is not null;
@@ -158,6 +165,12 @@ public sealed class CuiComponent
             DefaultTheme ?? string.Empty,
             IsDefinition ? "definition" : "instance",
             Text,
+            string.Join("\u001f", TextParts.Select(part => part switch
+            {
+                CuiLiteralTextPart literal => $"text:{literal.Value}",
+                CuiExpressionTextPart expression => $"expression:{DescribeValue(expression.Value)}",
+                _ => part.GetType().FullName ?? part.GetType().Name,
+            })),
             string.Join("\u001f", Classes.Order(StringComparer.Ordinal)),
             string.Join("\u001f", Groups.Order(StringComparer.Ordinal)),
         };
@@ -176,6 +189,10 @@ public sealed class CuiComponent
         if (Repeat is not null)
         {
             semanticParts.Add($"repeat:{Repeat.ItemName}:{DescribeValue(Repeat.Source)}:{DescribeValue(Repeat.Key)}");
+        }
+        if (PropertyRegion is not null)
+        {
+            semanticParts.Add($"property-region:{PropertyRegion.PropertyName}:{DescribeValue(PropertyRegion.Value)}");
         }
         if (List is not null)
         {

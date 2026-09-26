@@ -64,7 +64,7 @@ public sealed record MailSyncConfiguration(
     bool CacheHeaders,
     int RecentBodyDays,
     bool CacheAttachmentsOnDemand,
-    IReadOnlySet<Guid> OfflineFolderIds,
+    IReadOnlyList<Guid> OfflineFolderIds,
     TimeSpan FallbackPollInterval);
 
 public sealed record MailSendingConfiguration(TimeSpan UndoSendDelay, bool RequireConfirmationForExternalRecipients);
@@ -111,7 +111,7 @@ public sealed record MailMessage(
     Guid ThreadId,
     string? ProviderThreadId,
     string FolderKey,
-    IReadOnlySet<string> Labels,
+    IReadOnlyList<string> Labels,
     DateTimeOffset ReceivedAt,
     DateTimeOffset? SentAt,
     MailAddress? Sender,
@@ -164,7 +164,8 @@ public sealed record MailDraft(
     DateTimeOffset UpdatedAt,
     string? ProviderDraftId,
     bool IsConflict,
-    MailDraft? ConflictingRevision = null);
+    MailDraft? ConflictingRevision = null,
+    bool IsDeleted = false);
 
 public sealed record MailScheduledSend(DateTimeOffset SendAt, ScheduledExecutionLocation Location, string Guarantee);
 
@@ -206,13 +207,13 @@ public sealed record MailSearchQuery(
     string? AttachmentName = null,
     DateTimeOffset? From = null,
     DateTimeOffset? To = null,
-    IReadOnlySet<Guid>? AccountIds = null,
-    IReadOnlySet<string>? FolderKeys = null,
-    IReadOnlySet<string>? Labels = null,
+    IReadOnlyList<Guid>? AccountIds = null,
+    IReadOnlyList<string>? FolderKeys = null,
+    IReadOnlyList<string>? Labels = null,
     bool? IsRead = null,
     bool? HasAttachments = null,
     bool? IsStarred = null,
-    IReadOnlySet<string>? Categories = null,
+    IReadOnlyList<string>? Categories = null,
     int Page = 0,
     int PageSize = 50)
 {

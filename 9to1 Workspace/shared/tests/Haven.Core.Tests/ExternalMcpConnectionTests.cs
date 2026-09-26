@@ -40,7 +40,7 @@ public sealed class ExternalMcpConnectionTests
 
         var connection = await service.ConnectUefnAsync(null, CancellationToken.None);
 
-        Assert.Equal(ExternalConnectionState.Offline, connection.State);
+        Assert.Equal(ExternalConnectionState.Failed, connection.State);
         Assert.Contains("unreal-mcp", connection.Status, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(await repository.GetAsync(connection.Id, CancellationToken.None));
     }
@@ -118,7 +118,7 @@ public sealed class ExternalMcpConnectionTests
         var result = await runtime.ExecuteAsync(new OllamaToolCall(definition.Name, new Dictionary<string, JsonElement>()), [active], PermissionMode.Ask, CancellationToken.None);
 
         Assert.False(result.Activity.Succeeded);
-        Assert.Contains("requires approval", result.Output, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("explicit permission grant", result.Output, StringComparison.OrdinalIgnoreCase);
         var failure = Assert.IsType<ToolFailureDescriptor>(result.Failure);
         Assert.Equal(ToolFailureKind.PermissionRequired, failure.Kind);
         Assert.Equal(RemediationType.PermissionRequest, failure.SuggestedRemediation);
@@ -174,6 +174,25 @@ public sealed class ExternalMcpConnectionTests
     }
 
     [Fact]
+    public async Task ChangedMcpCapabilitySnapshotInvalidatesPreviouslyAdvertisedToolRoute()
+    {
+        var repository = new MemoryConnectionRepository();
+        var connection = ReadyConnection("Remote MCP");
+        await repository.UpsertAsync(connection, CancellationToken.None);
+        var client = new FakeMcpClient { Tools = [Tool("read_file", "Read a file")] };
+        var runtime = new McpToolRuntime(repository, client);
+        var active = Active(connection);
+        var definition = Assert.Single(await runtime.GetDefinitionsAsync([active], CancellationToken.None));
+        client.Tools = [Tool("read_file", "Read a file", Element("{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"}},\"required\":[\"path\"]}"))];
+
+        var result = await runtime.ExecuteAsync(new OllamaToolCall(definition.Name, new Dictionary<string, JsonElement>()), [active], PermissionMode.Ask, CancellationToken.None);
+
+        Assert.False(result.Activity.Succeeded);
+        Assert.Contains("capabilities changed", result.Output, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, client.InvocationCount);
+    }
+
+    [Fact]
     public async Task RemoveDeletesSecureOAuthTokensAndRegistryRecord()
     {
         var repository = new MemoryConnectionRepository();
@@ -218,7 +237,7 @@ public sealed class ExternalMcpConnectionTests
             "test-server", "1", "2026-07-28", now, now);
     }
 
-    private static McpExternalTool Tool(string name, string description) => new(name, description, Element("{\"type\":\"object\",\"properties\":{}}"));
+    private static McpExternalTool Tool(string name, string description, JsonElement? schema = null) => new(name, description, schema ?? Element("{\"type\":\"object\",\"properties\":{}}"));
     private static JsonElement Element(string json) { using var document = JsonDocument.Parse(json); return document.RootElement.Clone(); }
 
     private sealed class MemoryConnectionRepository : IExternalConnectionRepository

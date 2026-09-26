@@ -1,5 +1,6 @@
 using Haven.Application;
 using Haven.Core;
+using CakeOS.Cui;
 using Xunit;
 
 namespace HavenOS.Apps.Spaces.Tests;
@@ -9,26 +10,13 @@ public sealed class SpacesAppSurfaceTests
     [Fact]
     public void Built_in_descriptors_have_independent_stable_scopes()
     {
-        Assert.Collection(
-            SpacesModel.BuiltIns,
-            chat =>
-            {
-                Assert.Equal(SpacesDestinationKind.Chat, chat.Destination);
-                Assert.Equal("spaces.chat", chat.Scope.Key);
-                Assert.Null(chat.Scope.RegisteredSpaceId);
-            },
-            study =>
-            {
-                Assert.Equal(SpacesDestinationKind.Study, study.Destination);
-                Assert.Equal(SpaceRegistry.StudySpaceId, study.Scope.RegisteredSpaceId);
-            },
-            tasks =>
-            {
-                Assert.Equal(SpacesDestinationKind.Tasks, tasks.Destination);
-                Assert.Equal(SpaceRegistry.AgentSpaceId, tasks.Scope.RegisteredSpaceId);
-            });
-
-        Assert.Equal(3, SpacesModel.BuiltIns.Select(definition => definition.Scope.Key).Distinct().Count());
+        Assert.Equal(
+            ["Chat", "Study", "Tasks", "Agent", "Shopping", "Research", "Translate", "Experiences"],
+            SpacesModel.BuiltIns.Select(definition => definition.Label));
+        Assert.Equal(8, SpacesModel.BuiltIns.Select(definition => definition.Scope.Key).Distinct().Count());
+        Assert.Equal(SpaceRegistry.ChatSpaceId, SpacesModel.BuiltIns[0].Scope.RegisteredSpaceId);
+        Assert.Equal(SpaceRegistry.TasksSpaceId, SpacesModel.BuiltIns[2].Scope.RegisteredSpaceId);
+        Assert.NotEqual(SpaceRegistry.AgentSpaceId, SpaceRegistry.TasksSpaceId);
     }
 
     [Fact]
@@ -40,18 +28,57 @@ public sealed class SpacesAppSurfaceTests
         var custom = await model.CreateCustomSpaceAsync("Recipes", "Keep dinner plans together.");
         var sidebar = await model.GetSidebarDestinationsAsync();
 
-        Assert.Collection(
-            sidebar,
-            chat => Assert.Equal(SpacesDestinationKind.Chat, chat.Destination),
-            study => Assert.Equal(SpacesDestinationKind.Study, study.Destination),
-            tasks => Assert.Equal(SpacesDestinationKind.Tasks, tasks.Destination),
-            recipes =>
+        Assert.Equal(
+            ["Chat", "Study", "Tasks", "Agent", "Shopping", "Research", "Translate", "Experiences", "Recipes"],
+            sidebar.Select(item => item.Label));
+        var recipes = Assert.Single(sidebar, item => item.Label == "Recipes");
+        Assert.Equal(SpacesDestinationKind.Custom, recipes.Destination);
+        Assert.Equal(custom.Scope, recipes.Scope);
+        Assert.Equal(custom.Scope.RegisteredSpaceId, recipes.Scope.RegisteredSpaceId);
+    }
+
+    [Fact]
+    public void Spaces_home_surface_exposes_accessible_built_in_and_custom_space_actions()
+    {
+        var document = SpacesHomeCuiDocument.Load();
+        var components = document.Components.SelectMany(component => component.DescendantsAndSelf()).ToArray();
+        var actions = components
+            .Where(component => component.TryGetLiteralAttribute("action", out _))
+            .Select(component =>
             {
-                Assert.Equal(SpacesDestinationKind.Custom, recipes.Destination);
-                Assert.Equal("Recipes", recipes.Label);
-                Assert.Equal(custom.Scope, recipes.Scope);
-                Assert.Equal(custom.Scope.RegisteredSpaceId, recipes.Scope.RegisteredSpaceId);
-            });
+                component.TryGetLiteralAttribute("action", out var action);
+                return action;
+            })
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("spaces.open", actions);
+        Assert.Contains("spaces.create", actions);
+        Assert.Contains("spaces.rename", actions);
+        Assert.Contains("spaces.move", actions);
+        Assert.Contains("spaces.fork", actions);
+        Assert.Contains("spaces.archive", actions);
+        Assert.Contains(components, component => component.Name == "custom-spaces");
+        Assert.Contains(components, component => component.Name == "space-context-items");
+    }
+
+    [Fact]
+    public async Task Sidebar_exposes_custom_hierarchy_and_stable_sibling_positions()
+    {
+        var registry = new SpaceRegistry(new MemorySettingsStore());
+        var model = new SpacesModel(registry);
+        var parent = await model.CreateCustomSpaceAsync("Projects");
+        var first = await model.CreateCustomSpaceAsync("Alpha", null, parent.Scope.RegisteredSpaceId);
+        var second = await model.CreateCustomSpaceAsync("Beta", null, parent.Scope.RegisteredSpaceId);
+        await registry.MoveAsync(second.Scope.RegisteredSpaceId!.Value, null);
+
+        var sidebar = await model.GetSidebarDestinationsAsync();
+        var alpha = Assert.Single(sidebar, item => item.Label == "Alpha");
+        var beta = Assert.Single(sidebar, item => item.Label == "Beta");
+        Assert.Equal(parent.Scope.RegisteredSpaceId, alpha.ParentSpaceId);
+        Assert.Equal(0, alpha.Position);
+        Assert.Null(beta.ParentSpaceId);
+        Assert.Equal(1, beta.Position);
+        Assert.Equal(1, first.Revision);
     }
 
     [Fact]
@@ -107,7 +134,11 @@ public sealed class SpacesAppSurfaceTests
                 SpacesDestination.Chat,
                 SpacesDestination.Study,
                 SpacesDestination.Tasks,
-                SpacesDestination.Research
+                SpacesDestination.Agent,
+                SpacesDestination.Shopping,
+                SpacesDestination.Research,
+                SpacesDestination.Translate,
+                SpacesDestination.Experiences
             ],
             SpacesAppSurface.Navigation.Select(item => item.Destination));
     }
@@ -141,14 +172,18 @@ public sealed class SpacesAppSurfaceTests
 
         Assert.Equal(HavenMode.Chat, host.Mode);
         Assert.Null(host.Space);
-        Assert.Null(await registry.GetCurrentSpaceIdAsync());
+        Assert.Equal(SpaceRegistry.ChatSpaceId, await registry.GetCurrentSpaceIdAsync());
         Assert.Equal(SpacesDestination.Chat, surface.CurrentDestination);
     }
 
     [Theory]
     [InlineData(SpacesDestination.Study, "b1000000-0000-0000-0000-000000000001", SpaceKind.Study)]
-    [InlineData(SpacesDestination.Tasks, "b1000000-0000-0000-0000-000000000004", SpaceKind.Agent)]
+    [InlineData(SpacesDestination.Tasks, "b1000000-0000-0000-0000-000000000006", SpaceKind.Tasks)]
+    [InlineData(SpacesDestination.Agent, "b1000000-0000-0000-0000-000000000004", SpaceKind.Agent)]
+    [InlineData(SpacesDestination.Shopping, "b1000000-0000-0000-0000-000000000002", SpaceKind.Shopping)]
     [InlineData(SpacesDestination.Research, "b1000000-0000-0000-0000-000000000003", SpaceKind.Research)]
+    [InlineData(SpacesDestination.Translate, "b1000000-0000-0000-0000-000000000007", SpaceKind.Translate)]
+    [InlineData(SpacesDestination.Experiences, "b1000000-0000-0000-0000-000000000008", SpaceKind.Experiences)]
     public async Task Built_in_destinations_open_existing_space_records(
         SpacesDestination destination,
         string expectedSpaceId,
@@ -204,7 +239,7 @@ public sealed class SpacesAppSurfaceTests
         Assert.True(host.ModeLaunchStarted.Task.IsCompletedSuccessfully);
         Assert.Equal(HavenMode.Chat, host.Mode);
         Assert.Equal(SpaceRegistry.StudySpaceId, host.Space!.Id);
-        Assert.Null(await registry.GetCurrentSpaceIdAsync());
+        Assert.Equal(SpaceRegistry.ChatSpaceId, await registry.GetCurrentSpaceIdAsync());
         Assert.Equal(SpacesDestination.Chat, surface.CurrentDestination);
     }
 

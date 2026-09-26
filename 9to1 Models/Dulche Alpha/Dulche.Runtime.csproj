@@ -6,12 +6,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Haven.Core"><HintPath>..\..\9to1 Workspace\shared\src\Haven.Core\bin\Release\net10.0\Haven.Core.dll</HintPath></Reference>
     <Reference Include="Haven.Application"><HintPath>..\..\9to1 Workspace\shared\src\Haven.Application\bin\Release\net10.0\Haven.Application.dll</HintPath></Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Domain\Den*.cs;Services\*Den*.cs;Storage\Den*.cs;Tests\**\*.cs" />
+    <Compile Include="Contracts.cs" />
+    <Compile Include="ModelRouteRegistry.cs" />
+    <Compile Include="ModelRouteResolver.cs" />
+    <Compile Include="Runtime.cs" />
+    <Compile Include="ActionSecurity.cs" />
+    <Compile Include="TranslateContracts.cs" />
+    <Compile Include="TranslateRepository.cs" />
+    <Compile Include="LanguageResolver.cs" />
+    <Compile Include="DulcheTranslateRuntime.cs" />
+    <Compile Include="Agents/**/*.cs" />
   </ItemGroup>
 </Project>

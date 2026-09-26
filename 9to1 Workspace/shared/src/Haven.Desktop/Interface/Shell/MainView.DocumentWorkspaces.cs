@@ -34,7 +34,7 @@ public sealed partial class MainView
                 services.GetRequiredService<INotesImportExportService>(), services.GetService<INotesAttachmentStore>(),
                 ai: services.GetService<INotesAiService>(), aiModels: services.GetService<IOllamaClient>(),
                 readAloud: services.GetRequiredService<NotesReadAloudController>()),
-            "canvas" => new CanvasPage(_bus, services.GetRequiredService<INotesRepository>(),
+            "canvas" => new global::Haven.Desktop.Views.Pages.Canvas.CanvasPage(_bus, services.GetRequiredService<INotesRepository>(),
                 services.GetRequiredService<INotesImportExportService>(), services.GetRequiredService<UserPreferencesService>()),
             "present" => new PresentPage(_bus, services.GetRequiredService<IPresentRepository>(),
                 services.GetRequiredService<IPresentExportService>(), services.GetRequiredService<IPresentImportService>()),

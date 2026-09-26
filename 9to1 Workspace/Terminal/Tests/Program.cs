@@ -6,6 +6,7 @@
  */
 using Haven.Application;
 using Haven.Core;
+using Haven.Infrastructure.Terminal;
 using HavenOS.Apps.Terminal;
 
 try

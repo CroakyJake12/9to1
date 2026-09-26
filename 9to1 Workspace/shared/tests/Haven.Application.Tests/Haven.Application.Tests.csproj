@@ -1,0 +1,23 @@
+<!--
+  FILE DOCUMENTATION
+  Where: tests/Haven.Application.Tests/Haven.Application.Tests.csproj in the automated test suite.
+  What: This project runs focused Haven.Application tests without building unrelated desktop/native adapters.
+  Why: Vision & Voice session contracts are application-layer behavior and should be validated at that boundary.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Haven.Application\Haven.Application.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <PackageReference Include="coverlet.collector"><PrivateAssets>all</PrivateAssets></PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

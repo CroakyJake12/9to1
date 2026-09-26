@@ -11,7 +11,9 @@ public enum BrowseCuiActionKind
 {
     Navigate, Back, Forward, Reload, Stop, NewTab, NewPrivateTab, CloseTab, SelectTab,
     ToggleBookmark, ClearHistory, RefreshDownloads, FindNext, FindPrevious,
-    ZoomIn, ZoomOut, ZoomReset, AllowPopups, DenyPopups, Recover
+    ZoomIn, ZoomOut, ZoomReset, AllowPopups, DenyPopups, Recover,
+    EngineGeckoTab, EngineChromiumTab, EngineGeckoSite, EngineChromiumSite,
+    EngineDefaultGecko, EngineDefaultChromium
 }
 
 public sealed record BrowseCuiAction(BrowseCuiActionKind Kind, string? Value = null, Guid? TabId = null);
@@ -71,6 +73,12 @@ public sealed class BrowseCuiScene
         tools.Add(Tool("Browse.Cui.ClearHistory", "Clear history", BrowseCuiActionKind.ClearHistory));
         tools.Add(Tool("Browse.Cui.AllowPopups", "Allow popups", BrowseCuiActionKind.AllowPopups));
         tools.Add(Tool("Browse.Cui.DenyPopups", "Block popups", BrowseCuiActionKind.DenyPopups));
+        tools.Add(Tool("Browse.Cui.Engine.GeckoTab", "Use Gecko in tab", BrowseCuiActionKind.EngineGeckoTab));
+        tools.Add(Tool("Browse.Cui.Engine.ChromiumTab", "Use Chromium in tab", BrowseCuiActionKind.EngineChromiumTab));
+        tools.Add(Tool("Browse.Cui.Engine.GeckoSite", "Prefer Gecko for site", BrowseCuiActionKind.EngineGeckoSite));
+        tools.Add(Tool("Browse.Cui.Engine.ChromiumSite", "Prefer Chromium for site", BrowseCuiActionKind.EngineChromiumSite));
+        tools.Add(Tool("Browse.Cui.Engine.DefaultGecko", "Set Gecko default", BrowseCuiActionKind.EngineDefaultGecko));
+        tools.Add(Tool("Browse.Cui.Engine.DefaultChromium", "Set Chromium default", BrowseCuiActionKind.EngineDefaultChromium));
         Root.Add(tools);
 
         var content = new Container { Name = "Browse.Cui.Content", Layout = HavenLayout.Grid, Columns = "1fr Auto", Rows = "1fr" };
@@ -172,7 +180,7 @@ public sealed class BrowseCuiScene
             DataText.Content = $"{snapshot.Bookmarks.Count} bookmarks · {snapshot.History.Count} history · {snapshot.Downloads.Items.Count} downloads · {snapshot.Permissions.Count} saved permissions";
             EngineText.Content = selected.EngineState switch
             {
-                BrowseEngineState.Ready => "Native web renderer ready.",
+                BrowseEngineState.Ready => $"{selected.Engine} renderer ready.",
                 BrowseEngineState.Crashed => "Native web renderer crashed.",
                 _ => selected.Status
             };
@@ -266,6 +274,12 @@ public sealed class BrowseCuiController : IAsyncDisposable
             BrowseCuiActionKind.AllowPopups => await _chrome.SetPermissionAsync(BrowserSitePermissionKind.WindowManagement, BrowserSitePermissionDecision.Allow, cancellationToken).ConfigureAwait(false),
             BrowseCuiActionKind.DenyPopups => await _chrome.SetPermissionAsync(BrowserSitePermissionKind.WindowManagement, BrowserSitePermissionDecision.Deny, cancellationToken).ConfigureAwait(false),
             BrowseCuiActionKind.Recover => await _chrome.RecoverSelectedTabAsync(cancellationToken).ConfigureAwait(false),
+            BrowseCuiActionKind.EngineGeckoTab => await _chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Gecko, cancellationToken).ConfigureAwait(false),
+            BrowseCuiActionKind.EngineChromiumTab => await _chrome.SetSelectedTabEngineAsync(BrowseEngineKind.Chromium, cancellationToken).ConfigureAwait(false),
+            BrowseCuiActionKind.EngineGeckoSite => await _chrome.SetSiteEngineAsync(BrowseEngineKind.Gecko, cancellationToken).ConfigureAwait(false),
+            BrowseCuiActionKind.EngineChromiumSite => await _chrome.SetSiteEngineAsync(BrowseEngineKind.Chromium, cancellationToken).ConfigureAwait(false),
+            BrowseCuiActionKind.EngineDefaultGecko => await _chrome.SetDefaultEngineAsync(BrowseEngineKind.Gecko, cancellationToken).ConfigureAwait(false),
+            BrowseCuiActionKind.EngineDefaultChromium => await _chrome.SetDefaultEngineAsync(BrowseEngineKind.Chromium, cancellationToken).ConfigureAwait(false),
             _ => throw new ArgumentOutOfRangeException(nameof(action))
         };
         Scene.ApplySnapshot(snapshot);

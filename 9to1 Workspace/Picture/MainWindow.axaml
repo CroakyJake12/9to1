@@ -25,10 +25,16 @@
       <TextBlock x:Name="StatusText" Grid.Row="1" Grid.ColumnSpan="7" VerticalAlignment="Center" Text="No image open" TextWrapping="Wrap" />
     </Grid>
 
-    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-      <TextBox x:Name="CropBoundsBox" PlaceholderText="Crop: x, y, width, height" AutomationProperties.Name="Crop bounds in current image pixels" />
-      <Button x:Name="ApplyCropButton" Grid.Column="1" IsEnabled="False">Apply crop</Button>
-      <Button x:Name="ExportCropButton" Grid.Column="2" IsEnabled="False">Export PNG…</Button>
+    <Grid Grid.Row="2" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+      <TextBox Grid.Row="0" Grid.Column="0" x:Name="CropBoundsBox" PlaceholderText="Crop: x, y, width, height" AutomationProperties.Name="Crop bounds in current image pixels" />
+      <Button Grid.Row="0" Grid.Column="1" x:Name="ApplyCropButton" IsEnabled="False">Apply crop</Button>
+      <Button Grid.Row="0" Grid.Column="2" x:Name="ExportCropButton" IsEnabled="False">Export PNG…</Button>
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="Export metadata" VerticalAlignment="Center" />
+      <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="MetadataExportModeBox" SelectedIndex="0" AutomationProperties.Name="Export metadata privacy">
+        <ComboBoxItem Content="Preserve supported metadata" />
+        <ComboBoxItem Content="Remove location (strips all metadata)" />
+        <ComboBoxItem Content="Remove all metadata" />
+      </ComboBox>
     </Grid>
 
     <Border Grid.Row="3" BorderBrush="#55808080" BorderThickness="1" CornerRadius="18" Padding="18" ClipToBounds="True">
@@ -45,9 +51,10 @@
       </Grid>
     </Border>
 
-    <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+    <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
       <TextBlock x:Name="FileNameText" Text="Nothing selected" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-      <TextBlock x:Name="MetadataText" Grid.Column="1" Text="—" Opacity="0.72" />
+      <TextBlock x:Name="MetadataText" Grid.Column="1" Text="—" Opacity="0.72" VerticalAlignment="Center" />
+      <Button x:Name="InfoButton" Grid.Column="2" IsEnabled="False" AutomationProperties.Name="View image metadata">Info</Button>
     </Grid>
   </Grid>
 </Window>

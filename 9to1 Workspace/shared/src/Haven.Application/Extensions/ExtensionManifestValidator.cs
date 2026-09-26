@@ -86,6 +86,11 @@ public sealed partial class ExtensionManifestValidator
             if (skill.WorkflowJson is not null) ValidateJson(skill.WorkflowJson, $"{prefix}: Skill '{skill.Id}' workflow", errors);
             if (skill.ContextRulesJson is not null) ValidateJson(skill.ContextRulesJson, $"{prefix}: Skill '{skill.Id}' context rules", errors);
             ValidateUnique(skill.ConflictKeys ?? [], $"{prefix}: Skill conflict key", errors);
+            foreach (var resource in skill.ResourcePaths ?? [])
+                if (!IsSafeRelativePath(resource)) errors.Add($"{prefix}: Skill resource path '{resource}' must be a safe relative path.");
+            foreach (var capabilityId in skill.RequiredCapabilityIds ?? [])
+                if (string.IsNullOrWhiteSpace(capabilityId) || capabilityId.Length > 256)
+                    errors.Add($"{prefix}: Skill '{skill.Id}' has an invalid required capability identity.");
         }
         foreach (var dependency in package.DependencyDefinitions ?? [])
         {
@@ -118,16 +123,8 @@ public sealed partial class ExtensionManifestValidator
 
     private static void ValidateObjectSchema(string json, string label, ICollection<string> errors)
     {
-        try
-        {
-            using var document = JsonDocument.Parse(json);
-            if (document.RootElement.ValueKind != JsonValueKind.Object ||
-                (document.RootElement.TryGetProperty("type", out var type) && type.GetString() != "object"))
-                errors.Add($"{label} must be a JSON object schema with object root type.");
-            if (document.RootElement.TryGetProperty("required", out var required) && required.ValueKind != JsonValueKind.Array)
-                errors.Add($"{label} has an invalid required list.");
-        }
-        catch (JsonException) { errors.Add($"{label} is not valid JSON."); }
+        if (!ExtensionJsonSchemaValidator.IsSupported(json))
+            errors.Add($"{label} is malformed, unsupported, or does not use a supported JSON object schema.");
     }
 
     private static void ValidateJson(string json, string label, ICollection<string> errors)

@@ -1,4 +1,4 @@
-namespace HavenOS.Home;
+namespace HavenOS.Home.PermissionsTrustNotifications;
 
 public enum HomePermissionRisk
 {
@@ -60,14 +60,14 @@ public enum HomePermissionAuditKind
     ExecutionCompleted,
 }
 
-public sealed record HomeCallerIdentity(
+public sealed record HomePermissionCallerIdentity(
     string CallerId,
     string DisplayName,
     string? Origin,
     string? IdentityVersion,
     bool IsVerified)
 {
-    public HomeCallerIdentity Validate()
+    public HomePermissionCallerIdentity Validate()
     {
         if (string.IsNullOrWhiteSpace(CallerId)) throw new ArgumentException("Caller identity is required.", nameof(CallerId));
         if (string.IsNullOrWhiteSpace(DisplayName)) throw new ArgumentException("Caller display name is required.", nameof(DisplayName));
@@ -127,14 +127,14 @@ public sealed record HomePermissionActionPolicy(
 
 public sealed record HomePermissionRequestSubmission(
     string? RequestId,
-    HomeCallerIdentity Caller,
+    HomePermissionCallerIdentity Caller,
     string SessionId,
     HomePermissionScope Scope,
     HomePermissionImpactPreview Impact);
 
 public sealed record HomePermissionRequest(
     string RequestId,
-    HomeCallerIdentity Caller,
+    HomePermissionCallerIdentity Caller,
     string SessionId,
     HomePermissionScope Scope,
     HomePermissionActionPolicy Policy,
@@ -144,11 +144,12 @@ public sealed record HomePermissionRequest(
     bool AlwaysTrustWarningShown,
     HomeTrustLevel? AppliedTrustLevel,
     string? ResultCode,
-    string? ResultMessage);
+    string? ResultMessage,
+    string? AppliedGrantId = null);
 
 public sealed record HomePermissionGrant(
     string GrantId,
-    HomeCallerIdentity Caller,
+    HomePermissionCallerIdentity Caller,
     HomePermissionScope Scope,
     HomeTrustLevel TrustLevel,
     DateTimeOffset CreatedAt,

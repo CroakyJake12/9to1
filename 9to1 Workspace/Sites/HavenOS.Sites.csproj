@@ -7,6 +7,5 @@
   <ItemGroup>
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
-    <Content Include="UI\SitesWorkspace.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

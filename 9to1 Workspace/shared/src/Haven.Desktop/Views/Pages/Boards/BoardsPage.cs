@@ -23,14 +23,19 @@ public sealed partial class BoardsPage : UserControl, IDisposable
     private readonly Grid _root = new();
     private readonly StackPanel _library = new() { Spacing = 6 };
     private readonly StackPanel _sections = new() { Spacing = 5 };
+    private readonly Button _boardSwitcher = new() { Content = "▤ Select a board", HorizontalContentAlignment = HorizontalAlignment.Left };
     private readonly StackPanel _editor = new() { Spacing = 10 };
     private readonly TextBox _search = new() { PlaceholderText = "Search notebooks..." };
     private readonly TextBlock _status = new() { Text = "Opening Boards...", FontSize = 11 };
     private readonly TextBox _notebookTitle = new() { Text = "Boards", FontSize = 24, FontWeight = Avalonia.Media.FontWeight.SemiBold };
+    private readonly Button _pageModeToggle = new() { Content = "View mode" };
+    private readonly Button _layoutModeToggle = new() { Content = "Locked layout" };
+    private readonly WrapPanel _toolbar = new();
     private readonly NativeTabStrip _pageTabs = new() { Name = "Boards.PageTabs" };
     private readonly HavenSceneControl _pageTabHost;
     private readonly Haven.UI.Components.Page _pageTabScene = new() { Name = "Boards.PageTabs.Scene" };
     private IReadOnlyList<NotesDocumentSummary> _notebooks = [];
+    private bool _showingTrash;
     private NotesDocument? _document;
     private DomainSection? _section;
     private DomainPage? _page;
@@ -50,6 +55,9 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         _pageTabHost = new HavenSceneControl { Root = _pageTabScene };
         _pageTabs.ItemInvoked += OnPageTabInvoked;
         _notebookTitle.LostFocus += async (_, _) => await RenameCurrentNotebookAsync();
+        _pageModeToggle.Click += async (_, _) => await TogglePageModeAsync();
+        _layoutModeToggle.Click += async (_, _) => await ToggleLayoutModeAsync();
+        _boardSwitcher.Click += async (_, _) => await OpenBoardPickerAsync();
 
         BuildShell();
         Content = _root;
@@ -71,14 +79,17 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         var libraryPane = Pane("Notebooks");
         Grid.SetColumn(libraryPane, 0);
         var newNotebook = ActionButton("+ New notebook", async () => await CreateNotebookAsync());
+        var trashToggle = ActionButton("Trash", async () => await ToggleTrashAsync());
         _search.TextChanged += (_, _) => RebuildLibrary();
         libraryPane.Children.Add(newNotebook);
+        libraryPane.Children.Add(trashToggle);
         libraryPane.Children.Add(_search);
         libraryPane.Children.Add(new ScrollViewer { Content = _library });
         _root.Children.Add(libraryPane);
 
         var hierarchyPane = Pane("Sections");
         Grid.SetColumn(hierarchyPane, 1);
+        hierarchyPane.Children.Add(_boardSwitcher);
         hierarchyPane.Children.Add(ActionButton("+ Section", async () => await AddSectionAsync()));
         hierarchyPane.Children.Add(new ScrollViewer { Content = _sections });
         _root.Children.Add(hierarchyPane);
@@ -90,12 +101,17 @@ public sealed partial class BoardsPage : UserControl, IDisposable
             Margin = new Thickness(14, 10, 14, 10)
         };
         Grid.SetColumn(workspace, 2);
-        workspace.Children.Add(_notebookTitle);
+        var titleChrome = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto"), ColumnSpacing = 8 };
+        titleChrome.Children.Add(_notebookTitle);
+        Grid.SetColumn(_pageModeToggle, 1);
+        titleChrome.Children.Add(_pageModeToggle);
+        Grid.SetColumn(_layoutModeToggle, 2);
+        titleChrome.Children.Add(_layoutModeToggle);
+        workspace.Children.Add(titleChrome);
 
         Grid.SetRow(_pageTabHost, 1);
         workspace.Children.Add(_pageTabHost);
 
-        var toolbar = new WrapPanel();
         foreach (var button in new[]
         {
             ActionButton("+ Page", async () => await AddPageAsync()),
@@ -103,6 +119,7 @@ public sealed partial class BoardsPage : UserControl, IDisposable
             ActionButton("Section ↓", async () => await MoveCurrentSectionAsync(1)),
             ActionButton("Page ↑", async () => await MoveCurrentPageAsync(-1)),
             ActionButton("Page ↓", async () => await MoveCurrentPageAsync(1)),
+            ActionButton("Move page to Trash", async () => await DeleteCurrentPageAsync()),
             ActionButton("Text", async () => await AddBlockAsync(NotesBlockKind.Paragraph)),
             ActionButton("Checklist", async () => await AddBlockAsync(NotesBlockKind.List)),
             ActionButton("Table", async () => await AddBlockAsync(NotesBlockKind.Table)),
@@ -117,9 +134,9 @@ public sealed partial class BoardsPage : UserControl, IDisposable
             ActionButton("Shared list", async () => await AddLiveComponentAsync(BoardsLiveComponentKind.List)),
             ActionButton("Shared table", async () => await AddLiveComponentAsync(BoardsLiveComponentKind.Table)),
             ActionButton("Save", async () => await SaveAsync("Manual Boards save"))
-        }) toolbar.Children.Add(button);
-        Grid.SetRow(toolbar, 2);
-        workspace.Children.Add(toolbar);
+        }) _toolbar.Children.Add(button);
+        Grid.SetRow(_toolbar, 2);
+        workspace.Children.Add(_toolbar);
 
         var editorScroll = new ScrollViewer { Content = _editor };
         Grid.SetRow(editorScroll, 3);
@@ -163,12 +180,15 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         SetStatus("Loading notebooks...");
         try
         {
-            _notebooks = await _boards.ListNotebooksAsync(CancellationToken.None);
+            _notebooks = _showingTrash
+                ? await _boards.ListDeletedNotebooksAsync(CancellationToken.None)
+                : await _boards.ListNotebooksAsync(CancellationToken.None);
             await RefreshPinnedAsync();
             RebuildLibrary();
-            if (_document is null && _notebooks.Count > 0)
+            _search.PlaceholderText = _showingTrash ? "Search deleted boards..." : "Search boards...";
+            if (_document is null && !_showingTrash && _notebooks.Count > 0)
                 await OpenNotebookAsync(_notebooks[0].Id);
-            else if (_notebooks.Count == 0)
+            else if (_notebooks.Count == 0 && !_showingTrash)
                 ShowEmptyState();
         }
         catch (Exception)
@@ -191,7 +211,9 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         {
             _library.Children.Add(new TextBlock
             {
-                Text = filter.Length == 0 ? "No notebooks yet." : "No matching notebooks.",
+                Text = _showingTrash
+                    ? (filter.Length == 0 ? "Trash is empty." : "No matching deleted boards.")
+                    : (filter.Length == 0 ? "No boards yet." : "No matching boards."),
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap
             });
             return;
@@ -208,10 +230,43 @@ public sealed partial class BoardsPage : UserControl, IDisposable
 
     private async Task CreateNotebookAsync()
     {
+        _showingTrash = false;
         SetStatus("Creating notebook...");
         var created = await _boards.CreateNotebookAsync("New board", CancellationToken.None);
         await RefreshLibraryAsync();
         await OpenNotebookAsync(created.Id);
+    }
+
+    private async Task ToggleTrashAsync()
+    {
+        _showingTrash = !_showingTrash;
+        _search.Text = string.Empty;
+        await RefreshLibraryAsync();
+    }
+
+    private async Task OpenBoardPickerAsync()
+    {
+        var boards = await _boards.ListNotebooksAsync(CancellationToken.None);
+        var picker = new MenuFlyout();
+        foreach (var summary in boards.OrderBy(value => value.Title, StringComparer.CurrentCultureIgnoreCase))
+        {
+            var item = new MenuItem { Header = (_document?.Id == summary.Id ? "✓ " : "") + summary.Title };
+            item.Click += async (_, _) => await OpenNotebookAsync(summary.Id);
+            picker.Items.Add(item);
+        }
+        if (boards.Count == 0)
+        {
+            picker.Items.Add(new MenuItem { Header = "No available boards", IsEnabled = false });
+        }
+        picker.ShowAt(_boardSwitcher);
+    }
+
+    private void UpdateBoardSwitcher()
+    {
+        _boardSwitcher.Content = _document is null ? "▤ Select a board" : $"▤ {_document.Title} ▾";
+        AutomationProperties.SetName(_boardSwitcher, _document is null
+            ? "Board switcher. Select a board"
+            : $"Board switcher. Current board: {_document.Title}. Open board picker");
     }
 
     public async Task<bool> OpenDeepLinkAsync(string value, CancellationToken cancellationToken = default)
@@ -245,6 +300,7 @@ public sealed partial class BoardsPage : UserControl, IDisposable
 
         _section = notebook.Sections.FirstOrDefault(item => item.Id == sectionId) ?? notebook.Sections.FirstOrDefault();
         _page = _section?.Pages.FirstOrDefault(item => item.Id == pageId) ?? _section?.Pages.OrderBy(item => item.Order).FirstOrDefault();
+        UpdatePageModePresentation();
         RebuildHierarchy();
         RebuildPageTabs();
         RebuildEditor();
@@ -270,6 +326,46 @@ public sealed partial class BoardsPage : UserControl, IDisposable
             TextWrapping = Avalonia.Media.TextWrapping.Wrap
         });
         SetStatus("Boards is ready.");
+        _pageModeToggle.IsEnabled = false;
+        _layoutModeToggle.IsEnabled = false;
+        _toolbar.IsEnabled = false;
+    }
+
+    private async Task TogglePageModeAsync()
+    {
+        if (_document is null || _page is null) return;
+        var next = _boards.GetEditMode(_document, _page.Id) == BoardsPageEditMode.Edit
+            ? BoardsPageEditMode.View : BoardsPageEditMode.Edit;
+        _boards.SetEditMode(_document, _page.Id, next);
+        await SaveAsync(next == BoardsPageEditMode.View ? "Switched Boards page to View mode" : "Switched Boards page to Edit mode");
+        UpdatePageModePresentation();
+        RebuildEditor();
+    }
+
+    private async Task ToggleLayoutModeAsync()
+    {
+        if (_document is null || _page is null) return;
+        var next = _boards.GetLayoutMode(_document, _page.Id) == BoardsPageLayoutMode.Locked
+            ? BoardsPageLayoutMode.Unlocked : BoardsPageLayoutMode.Locked;
+        _boards.SetLayoutMode(_document, _page.Id, next);
+        await SaveAsync(next == BoardsPageLayoutMode.Locked ? "Locked Boards page layout" : "Unlocked Boards page layout");
+        UpdatePageModePresentation();
+        RebuildEditor();
+    }
+
+    private void UpdatePageModePresentation()
+    {
+        var editable = _document is not null && _page is not null && _boards.GetEditMode(_document, _page.Id) == BoardsPageEditMode.Edit;
+        _pageModeToggle.IsEnabled = _document is not null && _page is not null;
+        _pageModeToggle.Content = editable ? "Edit mode · switch to View" : "View mode · switch to Edit";
+        AutomationProperties.SetName(_pageModeToggle, editable ? "Page mode: Edit. Switch to View" : "Page mode: View. Switch to Edit");
+        _toolbar.IsEnabled = editable;
+        _editor.IsEnabled = editable;
+        var unlocked = editable && _document is not null && _page is not null &&
+            _boards.GetLayoutMode(_document, _page.Id) == BoardsPageLayoutMode.Unlocked;
+        _layoutModeToggle.IsEnabled = editable && _document is not null && _page is not null;
+        _layoutModeToggle.Content = unlocked ? "Unlocked layout · lock" : "Locked layout · unlock";
+        AutomationProperties.SetName(_layoutModeToggle, unlocked ? "Layout mode: Unlocked. Lock layout" : "Layout mode: Locked. Unlock layout");
     }
 
     private void SetStatus(string text) => _status.Text = text;

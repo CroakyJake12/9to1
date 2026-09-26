@@ -1,5 +1,6 @@
 using System.Text;
 using HavenOS.AIStudio;
+using Xunit;
 
 namespace HavenOS.AIStudio.Tests;
 
@@ -10,8 +11,7 @@ public sealed class StudioProjectApiTests : IAsyncLifetime
 
     public Task InitializeAsync()
     {
-        _api = new AIStudioApi(new JsonStudioProjectStore(_root), new UnavailableStudioRuntimeAdapter(),
-            new UnavailableCanonicalAgentBuilderAdapter());
+        _api = CreateApi();
         return Task.CompletedTask;
     }
 
@@ -31,8 +31,7 @@ public sealed class StudioProjectApiTests : IAsyncLifetime
         Assert.Equal("harness.assistant.v1", created.Value.TemplateId);
         Assert.False(string.IsNullOrWhiteSpace(created.Value.ReadDefinition<HarnessDefinition>()!.Prompt));
 
-        var reopened = await new AIStudioApi(new JsonStudioProjectStore(_root), new UnavailableStudioRuntimeAdapter(),
-            new UnavailableCanonicalAgentBuilderAdapter()).OpenProjectAsync(created.Value.ProjectId);
+        var reopened = await CreateApi().OpenProjectAsync(created.Value.ProjectId);
         Assert.True(reopened.IsSuccess);
         Assert.Equal("Support helper", reopened.Value!.Name);
     }
@@ -138,4 +137,130 @@ public sealed class StudioProjectApiTests : IAsyncLifetime
         Assert.Single(second.Value!.Items);
         Assert.Empty(first.Value.Items.Select(item => item.ProjectId).Intersect(second.Value.Items.Select(item => item.ProjectId)));
     }
+
+    [Fact]
+    public async Task EvaluationSuitesRequireStableIdentityProvenanceAndTargetRevision()
+    {
+        var suite = new EvaluationSuite(Guid.NewGuid(), "Quality gate", "not-registered", "Harness", 4,
+            [new EvaluationCase(Guid.NewGuid(), "case", "input", "{}", null, null, [], [], null, null, null, "test-file", 4)],
+            [new EvaluationGrader(Guid.NewGuid(), EvaluationGraderType.RequiredActions, "{}", true)], null, null, DateTimeOffset.UtcNow, 1);
+        var created = await _api.CreateEvaluationSuiteAsync(suite.Name, suite);
+        Assert.True(created.IsSuccess);
+        Assert.Equal(StudioResourceKind.EvaluationSuite, created.Value!.Kind);
+        Assert.Equal(created.Value.ResourceId, (await CreateApi().OpenResourceAsync(created.Value.ResourceId)).Value!.ResourceId);
+
+        var invalid = suite with { Cases = [suite.Cases[0] with { SourceProvenance = "", TargetRevision = 3 }] };
+        var rejected = await _api.CreateEvaluationSuiteAsync("Invalid", invalid);
+        Assert.Equal("InvalidDefinition", rejected.Error!.Code);
+    }
+
+    [Fact]
+    public async Task FailedEvaluationTargetIsPersistedWithExactCaseAndStructuredFailure()
+    {
+        var suite = new EvaluationSuite(Guid.NewGuid(), "Unavailable target", "missing-id", "Harness", 1,
+            [new EvaluationCase(Guid.NewGuid(), "failure reproduction", "try", "{}", null, null, [], [], null, null, null, "suite.json", 1)],
+            [new EvaluationGrader(Guid.NewGuid(), EvaluationGraderType.ExactOutput, "{}", true)], null, null, DateTimeOffset.UtcNow, 1);
+        var resource = await _api.CreateEvaluationSuiteAsync(suite.Name, suite);
+        var run = await _api.RunEvaluationAsync(resource.Value!.ResourceId);
+        Assert.True(run.IsSuccess);
+        Assert.Equal("Failed", run.Value!.Results.Single().Status);
+        Assert.Equal("EvaluationTargetUnavailable", run.Value.Results.Single().StructuredErrorCode);
+        Assert.Single((await _api.ListEvaluationRunsAsync(suite.EvalSuiteId)).Value!);
+    }
+
+    [Fact]
+    public async Task TestSuiteRetainsReproducibleFailedCaseAndAssertionDefinition()
+    {
+        var test = new TestSuite(Guid.NewGuid(), "Runtime boundary", "missing-id", "Harness", 7,
+            [new StudioTestCase(Guid.NewGuid(), "missing target", "input", "{}",
+                [new TestAssertion("a1", "outputEquals", "$", "\"expected\"")], 7, "test-contract")], null, 1);
+        var resource = await _api.CreateTestSuiteAsync(test.Name, test);
+        var run = await _api.RunTestSuiteAsync(resource.Value!.ResourceId);
+        Assert.True(run.IsSuccess);
+        Assert.Equal("Failed", run.Value!.Results.Single().Status);
+        Assert.Equal("EvaluationTargetUnavailable", run.Value.Results.Single().StructuredErrorCode);
+        Assert.Contains("test-contract", run.Value.Results.Single().ReproductionJson);
+        Assert.Single((await _api.ListTestRunsAsync(test.TestSuiteId)).Value!);
+    }
+
+    [Fact]
+    public async Task ReusableResourcesValidateStableIdentityAndExplicitSafetyAllowLists()
+    {
+        var noIdentity = await _api.CreateSchemaAsync("Contract", "{\"version\":1}");
+        Assert.Equal("InvalidDefinition", noIdentity.Error!.Code);
+        var schema = await _api.CreateSchemaAsync("Contract", "{\"schemaId\":\"person.v1\",\"version\":1,\"fields\":[]}");
+        Assert.True(schema.IsSuccess);
+        var genUi = await _api.CreateGenerativeUiAsync("Cards", "{\"components\":[],\"actions\":[]}");
+        Assert.True(genUi.IsSuccess);
+        var unsafeUi = await _api.CreateGenerativeUiAsync("Unbounded", "{\"components\":[]}");
+        Assert.Equal("InvalidDefinition", unsafeUi.Error!.Code);
+    }
+
+    [Fact]
+    public async Task PermissionAndContextDiagnosticsDoNotInventRuntimeTruth()
+    {
+        var permission = await _api.SimulatePermissionsAsync("{\"capability\":\"file.write\"}");
+        Assert.Equal("CapabilityUnavailable", permission.Error!.Code);
+        var context = await _api.InspectContextAsync(Guid.NewGuid());
+        Assert.Equal("ContextUnavailable", context.Error!.Code);
+        var replay = await _api.RestartReplayAsync(Guid.NewGuid(), "node-1", "{}");
+        Assert.Equal("ReplayPointUnavailable", replay.Error!.Code);
+    }
+
+    [Fact]
+    public async Task DependencyInspectorReportsMissingStableReferences()
+    {
+        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Harness");
+        var changed = await _api.SaveProjectAsync(created.Value!.ProjectId, 1, created.Value.DefinitionJson,
+            [new StudioDependency("Plugin", "plugin:missing", "1.2.*")]);
+        var dependencies = await _api.InspectDependenciesAsync(changed.Value!.ProjectId);
+        Assert.True(dependencies.IsSuccess);
+        Assert.Equal("missing", dependencies.Value!.Nodes.Single(item => item.StableId == "plugin:missing").State);
+    }
+
+    [Fact]
+    public async Task ProjectPinAndProjectFilesAreVersionedAndRejectEscapingPaths()
+    {
+        var created = await _api.CreateHarnessFromTemplateAsync("harness.assistant.v1", "Pinned");
+        var pinned = await _api.SetProjectPinnedAsync(created.Value!.ProjectId, 1, true);
+        Assert.True(pinned.IsSuccess);
+        Assert.Single((await _api.ListProjectsAsync(pinnedOnly: true)).Value!.Items);
+        Assert.Equal("InvalidProjectPath", (await _api.SetProjectFileAsync(pinned.Value!.ProjectId, 2, "../outside.txt", "x")).Error!.Code);
+        var file = await _api.SetProjectFileAsync(pinned.Value.ProjectId, 2, "src/main.txt", "safe");
+        Assert.True(file.IsSuccess);
+        Assert.Equal("safe", file.Value!.ProjectFiles!["src/main.txt"]);
+    }
+
+    [Fact]
+    public async Task ResourceRenameUpdateHistoryDeleteAndRecoveryAreVersioned()
+    {
+        var created = await _api.CreateSchemaAsync("Person", "{\"schemaId\":\"person.v1\",\"type\":\"object\"}");
+        var renamed = await _api.RenameResourceAsync(created.Value!.ResourceId, 1, "Person schema");
+        Assert.True(renamed.IsSuccess);
+        var changed = await _api.UpdateResourceAsync(renamed.Value!.ResourceId, 2, "{\"schemaId\":\"person.v2\",\"type\":\"object\"}");
+        Assert.True(changed.IsSuccess);
+        Assert.Equal(2, (await _api.ResourceHistoryAsync(changed.Value!.ResourceId)).Value!.Count);
+        var deleted = await _api.DeleteResourceAsync(changed.Value.ResourceId, 3);
+        Assert.True(deleted.IsSuccess);
+        Assert.Empty((await _api.ListResourcesAsync(StudioResourceKind.Schema)).Value!);
+        var recovered = await _api.RecoverResourceAsync(changed.Value.ResourceId);
+        Assert.True(recovered.IsSuccess);
+        Assert.Equal("Person schema", recovered.Value!.Name);
+    }
+
+    [Fact]
+    public async Task InvalidResourceSaveDoesNotPartiallyRenameOrAdvanceRevision()
+    {
+        var created = await _api.CreateSchemaAsync("Person", "{\"schemaId\":\"person.v1\",\"type\":\"object\"}");
+        var rejected = await _api.SaveResourceAsync(created.Value!.ResourceId, 1, "Changed", "not-json");
+        Assert.Equal("InvalidDefinition", rejected.Error!.Code);
+        var reopened = await _api.OpenResourceAsync(created.Value.ResourceId);
+        Assert.Equal(1, reopened.Value!.Version);
+        Assert.Equal("Person", reopened.Value.Name);
+    }
+
+    private AIStudioApi CreateApi() => new(new JsonStudioProjectStore(_root), new UnavailableStudioRuntimeAdapter(),
+        new UnavailableCanonicalAgentBuilderAdapter(), new JsonStudioResourceStore(_root),
+        new UnavailableStudioPermissionSimulationAdapter(), new UnavailableStudioContextInspectorAdapter(),
+        new UnavailableStudioReplayAdapter());
 }

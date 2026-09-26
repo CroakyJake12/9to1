@@ -8,6 +8,21 @@ namespace Haven.Desktop.Tests;
 public sealed class MapsFormsDonorTests
 {
     [Fact]
+    public void MapsSafetyDisclaimerRemainsVisibleAndAccessibleAlongsideTransientStatus()
+    {
+        using var scene = new MapsHavenScene();
+
+        Assert.Equal(MapsAttribution.SafetyDisclaimer, scene.SafetyDisclaimerText.Content);
+        Assert.Equal("Route safety reminder", scene.SafetyDisclaimerText.Accessibility.AccessibleName);
+        Assert.NotSame(scene.StatusText, scene.SafetyDisclaimerText);
+
+        scene.SetStatus("Directions loaded");
+
+        Assert.Equal("Directions loaded", scene.StatusText.Content);
+        Assert.Equal(MapsAttribution.SafetyDisclaimer, scene.SafetyDisclaimerText.Content);
+    }
+
+    [Fact]
     public void MapsStructuredResponseBecomesAPlaceWithoutLosingProviderCoordinates()
     {
         var place = new MapPlace("osm-1", "Original result", "City centre", new GeoPoint(51.5, -0.12), "city");

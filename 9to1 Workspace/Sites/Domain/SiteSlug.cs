@@ -9,6 +9,7 @@ public static partial class SiteAddressRules
 {
     public const string FirstPartyHost = "sites.9to1.uk";
     public const int MaximumPathLength = 2048;
+    public const int MaximumSlugLength = 63;
 
     private static readonly HashSet<string> ReservedSegments = new(StringComparer.Ordinal)
     {
@@ -24,6 +25,8 @@ public static partial class SiteAddressRules
         var slug = input.Trim();
         if (!SlugPattern().IsMatch(slug))
             throw Invalid("A first-party site slug must contain lowercase letters and single internal hyphens only.", "slug");
+        if (slug.Length > MaximumSlugLength)
+            throw Invalid($"A first-party site slug cannot exceed {MaximumSlugLength} characters.", "slug");
         if (IsReserved(slug))
             throw Invalid("This first-party site slug is reserved by the platform.", "slug");
         return slug;
@@ -77,6 +80,8 @@ public static partial class SiteAddressRules
         {
             var idn = new IdnMapping { UseStd3AsciiRules = true };
             var labels = value.Split('.');
+            if (labels.Length < 2)
+                throw new ArgumentException("A custom domain must include a registrable DNS suffix.");
             var asciiLabels = labels.Select(label =>
             {
                 if (label.Length == 0) throw new ArgumentException("Empty hostname label.");

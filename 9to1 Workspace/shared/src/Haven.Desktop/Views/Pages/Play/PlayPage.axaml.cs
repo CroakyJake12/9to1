@@ -22,6 +22,9 @@ public sealed partial class PlayPage : UserControl
     private readonly PlaySessionService _sessions;
     private readonly GenerativeUiEventRouter _router;
     private PlaySessionSnapshot? _active;
+    private PlayGameDefinition? _generatedGame;
+    private Guid? _activeMatchId;
+    private Guid? _activeContestantId;
     private int? _selectedSquare;
     private string _category = "All";
     private bool _activated;
@@ -33,6 +36,7 @@ public sealed partial class PlayPage : UserControl
         InitializeComponent();
 
         CreateButton.Click += (_, _) => CreateRequested?.Invoke(this, EventArgs.Empty);
+        GenerateGameButton.Click += async (_, _) => await GenerateMathsGameAsync();
         BackButton.Click += (_, _) => ShowHome();
         RestartButton.Click += async (_, _) => await RestartActiveAsync();
         SearchBox.TextChanged += (_, _) => RenderFeatured();
@@ -48,6 +52,7 @@ public sealed partial class PlayPage : UserControl
         try
         {
             await RefreshLibraryAsync(cancellationToken);
+            await RefreshFormalLibraryAsync(cancellationToken);
             _activated = true;
             PageStatus.Text = "Play runs deterministic rules locally. Model reasoning is only needed for experiences that explicitly ask for it.";
         }
@@ -59,6 +64,204 @@ public sealed partial class PlayPage : UserControl
         {
             PageStatus.Text = "Play could not load your saved sessions: " + exception.Message;
         }
+    }
+
+    private async Task GenerateMathsGameAsync()
+    {
+        GenerateGameButton.IsEnabled = false;
+        GameBuildStatus.Text = "Building and validating the game definition…";
+        try
+        {
+            var result = await _sessions.Matches.GenerateGameAsync(GamePromptBox.Text ?? string.Empty, CancellationToken.None);
+            if (!result.Succeeded)
+            {
+                _generatedGame = null;
+                GeneratedGamesPanel.Children.Clear();
+                GameBuildStatus.Text = result.Error?.Message ?? "The game could not be built.";
+                return;
+            }
+            _generatedGame = result.Value;
+            GameBuildStatus.Text = $"{_generatedGame!.Questions.Count} rounds · deterministic scoring · revision {_generatedGame.Revision}";
+            RenderGeneratedGame(_generatedGame);
+            await RefreshFormalLibraryAsync(CancellationToken.None);
+        }
+        catch (OperationCanceledException)
+        {
+            GameBuildStatus.Text = "Game creation was cancelled.";
+        }
+        catch (Exception exception)
+        {
+            GameBuildStatus.Text = "Play could not create the game: " + exception.Message;
+        }
+        finally
+        {
+            GenerateGameButton.IsEnabled = true;
+        }
+    }
+
+    private void RenderGeneratedGame(PlayGameDefinition game, bool clear = true)
+    {
+        if (clear) GeneratedGamesPanel.Children.Clear();
+        var start = new HavenPrimaryButton { Content = "Start solo", HorizontalAlignment = HorizontalAlignment.Left };
+        start.Click += async (_, _) => await StartGeneratedSoloAsync(game);
+        var note = game.MaximumContestants > 1
+            ? "This definition supports session-scoped Agent opponents. This page starts solo until the shared Agent turn runtime is connected."
+            : "Play this deterministic game locally.";
+        GeneratedGamesPanel.Children.Add(new HavenCard
+        {
+            Width = 350,
+            MinHeight = 150,
+            Margin = new Thickness(0, 0, 12, 8),
+            Padding = new Thickness(16),
+            Child = new StackPanel
+            {
+                Spacing = 8,
+                Children =
+                {
+                    new TextBlock { Text = game.Title, FontSize = 18, FontWeight = FontWeight.ExtraBold },
+                    new TextBlock { Text = $"{game.Category} · {game.Questions.Count} rounds · up to {game.MaximumContestants} contestants", Classes = { "muted" } },
+                    new TextBlock { Text = note, TextWrapping = TextWrapping.Wrap },
+                    start
+                }
+            }
+        });
+    }
+
+    private async Task StartGeneratedSoloAsync(PlayGameDefinition game)
+    {
+        var result = await _sessions.Matches.StartMatchAsync(game.GameDefinitionId, new PlayMatchConfiguration(SessionAgentCount: 0), CancellationToken.None);
+        if (!result.Succeeded)
+        {
+            GameBuildStatus.Text = result.Error?.Message ?? "The match could not start.";
+            return;
+        }
+        var match = result.Value!;
+        var human = match.Contestants.FirstOrDefault(item => item.Kind == PlayContestantKind.Human);
+        if (human is null)
+        {
+            GameBuildStatus.Text = "A player contestant could not be created.";
+            return;
+        }
+        _active = null;
+        _activeMatchId = match.MatchId;
+        _activeContestantId = human.ContestantId;
+        HomeSection.IsVisible = false;
+        ExperienceSection.IsVisible = true;
+        RestartButton.IsVisible = false;
+        ExperienceTitle.Text = match.PinnedGame.Title;
+        await RenderFormalMatchAsync();
+        await RefreshFormalLibraryAsync(CancellationToken.None);
+    }
+
+    private async Task RefreshFormalLibraryAsync(CancellationToken cancellationToken)
+    {
+        var games = await _sessions.Matches.ListGamesAsync(cancellationToken);
+        if (!games.Succeeded)
+        {
+            GameBuildStatus.Text = games.Error?.Message ?? "Saved games could not be loaded.";
+            return;
+        }
+        if (_generatedGame is null) GeneratedGamesPanel.Children.Clear();
+        foreach (var game in games.Value!.Take(8))
+        {
+            if (_generatedGame?.GameDefinitionId == game.GameDefinitionId) continue;
+            RenderGeneratedGame(game, clear: false);
+        }
+
+        var matches = await _sessions.Matches.ListMatchesAsync(0, 8, cancellationToken);
+        FormalMatchesPanel.Children.Clear();
+        var active = matches.Succeeded ? matches.Value!.Where(item => item.Status is PlayMatchStatus.Active or PlayMatchStatus.Paused).ToArray() : [];
+        FormalMatchesSection.IsVisible = active.Length > 0;
+        foreach (var match in active)
+        {
+            var contestant = match.Contestants.FirstOrDefault(item => item.Kind == PlayContestantKind.Human);
+            var open = new HavenTertiaryButton { Content = "Resume", IsEnabled = contestant is not null };
+            open.Click += async (_, _) => await OpenFormalMatchAsync(match.MatchId, contestant!.ContestantId);
+            FormalMatchesPanel.Children.Add(new HavenCard
+            {
+                Width = 250,
+                Margin = new Thickness(0, 0, 10, 8),
+                Padding = new Thickness(12),
+                Child = new StackPanel
+                {
+                    Spacing = 6,
+                    Children = { new TextBlock { Text = match.PinnedGame.Title, FontWeight = FontWeight.Bold }, new TextBlock { Text = $"Round {match.MatchState.RoundIndex + 1} · {match.Status}", Classes = { "muted" } }, open }
+                }
+            });
+        }
+    }
+
+    private async Task OpenFormalMatchAsync(Guid matchId, Guid contestantId)
+    {
+        _active = null;
+        _activeMatchId = matchId;
+        _activeContestantId = contestantId;
+        HomeSection.IsVisible = false;
+        ExperienceSection.IsVisible = true;
+        RestartButton.IsVisible = false;
+        var match = await _sessions.Matches.GetMatchAsync(matchId, CancellationToken.None);
+        ExperienceTitle.Text = match.Succeeded ? match.Value!.PinnedGame.Title : "Play match";
+        await RenderFormalMatchAsync();
+    }
+
+    private async Task RenderFormalMatchAsync()
+    {
+        if (_activeMatchId is not Guid matchId || _activeContestantId is not Guid contestantId) return;
+        var viewResult = await _sessions.Matches.GetContestantViewAsync(matchId, contestantId, CancellationToken.None);
+        if (!viewResult.Succeeded)
+        {
+            ExperienceStatus.Text = viewResult.Error?.Message ?? "The match could not be opened.";
+            ExperienceHost.Content = new TextBlock { Text = ExperienceStatus.Text, TextWrapping = TextWrapping.Wrap };
+            return;
+        }
+        var view = viewResult.Value!;
+        var leaderboard = await _sessions.Matches.GetLeaderboardAsync(matchId, CancellationToken.None);
+        var matchResult = await _sessions.Matches.GetMatchAsync(matchId, CancellationToken.None);
+        if (!matchResult.Succeeded) return;
+        var match = matchResult.Value!;
+        ExperienceStatus.Text = match.Status == PlayMatchStatus.Completed
+            ? "Match complete · " + string.Join(" · ", match.Contestants.OrderByDescending(item => item.Score).Select(item => $"{item.DisplayName}: {item.Score}"))
+            : $"Round {view.QuestionIndex + 1} of {match.PinnedGame.Questions.Count} · {view.Phase} · {view.PublicScores.GetValueOrDefault(contestantId)} points";
+        var content = new StackPanel { MaxWidth = 700, HorizontalAlignment = HorizontalAlignment.Center, Spacing = 14 };
+        if (view.Prompt is null)
+        {
+            content.Children.Add(new TextBlock { Text = match.Status == PlayMatchStatus.Completed ? "All rounds are resolved. Your score has been saved in the match history." : "This round is waiting for its contestants. Submissions remain sealed until resolution.", FontSize = 20, FontWeight = FontWeight.Bold, TextWrapping = TextWrapping.Wrap });
+        }
+        else
+        {
+            content.Children.Add(new TextBlock { Text = view.Prompt, FontSize = 21, FontWeight = FontWeight.ExtraBold, TextWrapping = TextWrapping.Wrap });
+            if (view.HasSubmitted) content.Children.Add(new TextBlock { Text = "Answer locked. Waiting for the remaining contestants before reveal.", Classes = { "muted" }, TextWrapping = TextWrapping.Wrap });
+            else foreach (var (optionText, index) in view.Options.Select((text, index) => (text, index)))
+            {
+                var selectedOption = index;
+                var answer = new HavenSecondaryButton { Content = optionText, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left };
+                AutomationProperties.SetName(answer, $"Answer {index + 1}: {optionText}");
+                answer.Click += async (_, _) => await SubmitFormalAnswerAsync(selectedOption);
+                content.Children.Add(answer);
+            }
+            if (view.Deadline is DateTimeOffset deadline) content.Children.Add(new TextBlock { Text = $"Closes {deadline.LocalDateTime:g}", Classes = { "muted" } });
+        }
+        if (leaderboard.Succeeded)
+            content.Children.Add(new TextBlock { Text = "Leaderboard · " + string.Join(" · ", match.Contestants.OrderByDescending(item => item.Score).Select(item => $"{item.DisplayName}: {item.Score}")), Classes = { "muted" }, TextWrapping = TextWrapping.Wrap });
+        ExperienceHost.Content = content;
+    }
+
+    private async Task SubmitFormalAnswerAsync(int selectedOption)
+    {
+        if (_activeMatchId is not Guid matchId || _activeContestantId is not Guid contestantId) return;
+        var answer = await _sessions.Matches.SubmitAnswerAsync(matchId, contestantId, selectedOption, CancellationToken.None);
+        if (!answer.Succeeded)
+        {
+            PageStatus.Text = answer.Error?.Message ?? "The answer could not be submitted.";
+            return;
+        }
+        if (answer.Value!.MatchState.Phase == PlayRoundPhase.Resolving)
+        {
+            var resolved = await _sessions.Matches.ResolveRoundAsync(matchId, CancellationToken.None);
+            if (!resolved.Succeeded) PageStatus.Text = resolved.Error?.Message ?? "The round could not be resolved.";
+        }
+        await RenderFormalMatchAsync();
+        await RefreshFormalLibraryAsync(CancellationToken.None);
     }
 
     private void BuildCategories()
@@ -172,6 +375,8 @@ public sealed partial class PlayPage : UserControl
     private async Task OpenSessionAsync(PlaySessionSnapshot session)
     {
         _active = session;
+        _activeMatchId = null;
+        _activeContestantId = null;
         _selectedSquare = null;
         HomeSection.IsVisible = false;
         ExperienceSection.IsVisible = true;
@@ -183,7 +388,10 @@ public sealed partial class PlayPage : UserControl
     private void ShowHome()
     {
         _active = null;
+        _activeMatchId = null;
+        _activeContestantId = null;
         _selectedSquare = null;
+        RestartButton.IsVisible = true;
         ExperienceSection.IsVisible = false;
         HomeSection.IsVisible = true;
         ExperienceHost.Content = null;

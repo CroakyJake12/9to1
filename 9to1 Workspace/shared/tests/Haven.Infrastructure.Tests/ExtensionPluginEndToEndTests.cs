@@ -117,6 +117,9 @@ public sealed class ExtensionPluginEndToEndTests
         await manager.AddSourceAsync(source, CancellationToken.None);
         var candidate = Assert.Single(await manager.RefreshAsync(source.Id, CancellationToken.None));
         var installed = await manager.InstallAsync(candidate, RequiredPermissions, CancellationToken.None);
+        Assert.False(installed.IsEnabled);
+        Assert.Equal(ExtensionInstallState.Installed, installed.State);
+        await manager.SetEnabledAsync(installed.Id, true, CancellationToken.None);
 
         var persisted = Assert.Single(await extensionRepository.GetInstalledAsync(CancellationToken.None));
         Assert.Equal(candidate.ContentHash, persisted.ContentHash);
@@ -142,7 +145,9 @@ public sealed class ExtensionPluginEndToEndTests
                 null,
                 CancellationToken.None));
         Assert.False(File.Exists(deniedMarker));
-        Assert.Empty(await executionRepository.GetExecutionAsync(deniedExecution, CancellationToken.None));
+        var deniedEvents = await WaitForEventsAsync(executionRepository, deniedExecution, 2);
+        Assert.Equal(new[] { ExecutionActionStatus.Running, ExecutionActionStatus.Failed }, deniedEvents.Select(item => item.Status).ToArray());
+        Assert.DoesNotContain(deniedEvents, item => item.Output?.Contains("must-not-run", StringComparison.Ordinal) == true);
 
         const string rawSecret = "worker28-input-secret-123";
         var successMarker = NewMarker();
@@ -282,7 +287,11 @@ public sealed class ExtensionPluginEndToEndTests
 
         await manager.AddSourceAsync(source, CancellationToken.None);
         var candidate = Assert.Single(await manager.RefreshAsync(source.Id, CancellationToken.None));
-        var installed = await manager.InstallAsync(candidate, RequiredPermissions, CancellationToken.None);
+        var installed = await manager.InstallAsync(candidate, CancellationToken.None);
+        Assert.False(installed.IsEnabled);
+        Assert.Equal(ExtensionPermission.None, installed.GrantedPermissions);
+        await manager.SetGrantedPermissionsAsync(installed.Id, RequiredPermissions, CancellationToken.None);
+        await manager.SetEnabledAsync(installed.Id, true, CancellationToken.None);
         var pluginPath = Path.Combine(installed.InstallPath, "bin", "Haven.PluginFixture.dll");
         await File.AppendAllTextAsync(pluginPath, "tampered");
 
@@ -360,14 +369,24 @@ public sealed class ExtensionPluginEndToEndTests
                             "Echoes safe fixture input.",
                             entryPoint,
                             ["echo"],
-                            required),
+                            required,
+                            "{\"type\":\"object\",\"properties\":{\"message\":{\"type\":\"string\"}}}",
+                            "{\"type\":\"object\"}",
+                            "consequential",
+                            "cancellation-token",
+                            "external-side-effect:none"),
                         new ExtensionCapabilityManifest(
                             "fixture.crash",
                             "Fixture crash",
                             "Fails deterministically to validate truthful execution provenance.",
                             entryPoint,
                             ["test failure"],
-                            required)
+                            required,
+                            "{\"type\":\"object\"}",
+                            "{\"type\":\"object\"}",
+                            "consequential",
+                            "cancellation-token",
+                            "external-side-effect:none")
                     ],
                     [],
                     null)

@@ -10,4 +10,8 @@
     <AssemblyName>HavenOS.Motion</AssemblyName>
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+  </ItemGroup>
 </Project>

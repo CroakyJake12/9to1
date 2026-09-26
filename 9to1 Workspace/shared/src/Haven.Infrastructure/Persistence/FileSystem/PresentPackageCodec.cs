@@ -189,11 +189,15 @@ internal static class PresentPackageCodec
     private static Dictionary<string, string> CollectAssetReferences(PresentDocument document)
     {
         var references = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (document.Theme?.Background is { Kind: PresentBackgroundKind.Image } themeBackground &&
+            !string.IsNullOrWhiteSpace(themeBackground.AssetId))
+            AddReference(themeBackground.AssetId);
         foreach (var slide in document.Slides)
         {
-            if (!string.IsNullOrWhiteSpace(slide.Background.AssetId))
-                AddReference(slide.Background.AssetId);
-            foreach (var element in slide.Elements)
+            if (slide.Background is { Kind: PresentBackgroundKind.Image } background &&
+                !string.IsNullOrWhiteSpace(background.AssetId))
+                AddReference(background.AssetId);
+            foreach (var element in slide.Elements ?? [])
             {
                 if (element.Kind is PresentElementKind.Image or PresentElementKind.Media && !string.IsNullOrWhiteSpace(element.AssetId))
                     AddReference(element.AssetId);
@@ -211,12 +215,15 @@ internal static class PresentPackageCodec
     {
         foreach (var slide in document.Slides)
         {
-            if (!string.IsNullOrWhiteSpace(slide.Background.AssetId))
-                slide.Background.AssetId = Resolve(slide.Background.AssetId);
-            foreach (var element in slide.Elements)
+            if (slide.Background is { Kind: PresentBackgroundKind.Image } background && !string.IsNullOrWhiteSpace(background.AssetId))
+                background.AssetId = Resolve(background.AssetId);
+            foreach (var element in slide.Elements ?? [])
                 if (element.Kind is PresentElementKind.Image or PresentElementKind.Media && !string.IsNullOrWhiteSpace(element.AssetId))
                     element.AssetId = Resolve(element.AssetId);
         }
+        if (document.Theme?.Background is { Kind: PresentBackgroundKind.Image } themeBackground &&
+            !string.IsNullOrWhiteSpace(themeBackground.AssetId))
+            themeBackground.AssetId = Resolve(themeBackground.AssetId);
 
         string Resolve(string value)
         {
@@ -252,23 +259,38 @@ internal static class PresentPackageCodec
             throw new InvalidDataException($"Unsupported presentation schema version {manifest.SchemaVersion}.");
         if (!string.Equals(manifest.DocumentEntry, DocumentPath, StringComparison.Ordinal))
             throw new InvalidDataException("The native package manifest has an unsupported document entry path.");
-        if (manifest.Assets.Count > MaximumAssets)
+        if (manifest.Assets is null || manifest.Assets.Count > MaximumAssets)
             throw new InvalidDataException("The native package contains too many assets.");
 
         var seenEntries = new HashSet<string>(StringComparer.Ordinal) { ManifestPath, DocumentPath };
+        var archiveEntries = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var archiveEntry in archive.Entries)
+        {
+            if (!archiveEntries.Add(archiveEntry.FullName))
+                throw new InvalidDataException($"The native package contains a duplicate entry: {archiveEntry.FullName}");
+        }
         long total = 0;
         foreach (var asset in manifest.Assets)
         {
+            if (asset is null || string.IsNullOrWhiteSpace(asset.EntryPath) ||
+                string.IsNullOrWhiteSpace(asset.ReferenceKey) || string.IsNullOrWhiteSpace(asset.Sha256))
+                throw new InvalidDataException("The native package contains an incomplete asset record.");
             if (asset.ReferenceKey.Length != 64 || asset.ReferenceKey.Any(ch => !Uri.IsHexDigit(ch)) ||
                 asset.Sha256.Length != 64 || asset.Sha256.Any(ch => !Uri.IsHexDigit(ch)))
                 throw new InvalidDataException("The native package contains an invalid asset identity or digest.");
             if (asset.Length < 0 || asset.Length > MaximumAssetBytes || checked(total + asset.Length) > MaximumTotalBytes)
                 throw new InvalidDataException("The native package assets exceed the supported size limits.");
             total += asset.Length;
-            if (!asset.EntryPath.StartsWith("assets/", StringComparison.Ordinal) ||
-                asset.EntryPath.Contains("..", StringComparison.Ordinal) ||
-                asset.EntryPath.Contains('\\') || !seenEntries.Add(asset.EntryPath))
+            var isDirectAssetEntry = asset.EntryPath.StartsWith("assets/", StringComparison.Ordinal) &&
+                asset.EntryPath.IndexOf('/', "assets/".Length) < 0;
+            if (!isDirectAssetEntry || asset.EntryPath.Contains("..", StringComparison.Ordinal) ||
+                asset.EntryPath.Contains('\\') || asset.EntryPath.Contains(':') || !seenEntries.Add(asset.EntryPath))
                 throw new InvalidDataException("The native package contains an unsafe or duplicate asset entry path.");
+            var fileName = asset.EntryPath["assets/".Length..];
+            var extension = Path.GetExtension(fileName);
+            if (!string.Equals(Path.GetFileNameWithoutExtension(fileName), asset.ReferenceKey, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(SafeExtension(extension), extension, StringComparison.Ordinal))
+                throw new InvalidDataException("The native package asset entry does not match its declared identity.");
             var entry = archive.GetEntry(asset.EntryPath)
                 ?? throw new InvalidDataException("The native package is missing an asset listed in its manifest.");
             if (entry.Length != asset.Length)
@@ -290,6 +312,7 @@ internal static class PresentPackageCodec
             throw new InvalidDataException($"This Present build cannot read schema version {document.SchemaVersion}.");
         if (document.SchemaVersion <= 0 || document.Id == Guid.Empty || document.Slides is null || document.Slides.Count == 0)
             throw new InvalidDataException("The native package does not contain a valid presentation document.");
+        document.Normalize();
     }
 
     private static void ValidateExportedPackage(string path, int expectedAssets, long expectedAssetBytes)

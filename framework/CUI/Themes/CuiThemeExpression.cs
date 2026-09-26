@@ -5,10 +5,9 @@ namespace CakeOS.Cui.Themes;
 
 /// <summary>
 /// The visual personality of one canonical CUI theme: how the shared
-/// component system expresses radius, borders, shadows, motion and interaction
-/// feedback on top of a resolved surface palette. Layout, spacing rhythm,
-/// navigation and control identity are intentionally absent — themes never
-/// change information architecture.
+/// component system expresses radius, borders, shadows, motion, typography,
+/// spacing, control sizing, elevation and interaction feedback on top of a
+/// resolved surface palette. Themes never change navigation or control identity.
 /// </summary>
 public sealed record CuiThemeExpression(
     CuiTheme Theme,

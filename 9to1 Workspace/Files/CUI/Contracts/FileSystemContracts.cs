@@ -18,6 +18,14 @@ public enum FileItemCapabilities
 	Trash = 1 << 3,
 	Drag = 1 << 4,
 	Drop = 1 << 5,
+	Copy = 1 << 6,
+	Move = 1 << 7,
+	Restore = 1 << 8,
+	Share = 1 << 9,
+	Versions = 1 << 10,
+	SetAvailability = 1 << 11,
+	SetFolderColor = 1 << 12,
+	PermanentDelete = 1 << 13,
 }
 
 public enum FileOperationKind
@@ -27,6 +35,16 @@ public enum FileOperationKind
 	Copy,
 	Move,
 	Trash,
+	Restore,
+	Purge,
+	Create,
+	Upload,
+	Download,
+	Sync,
+	Share,
+	SetFolderColor,
+	CreateArtifact,
+	CreateStack,
 }
 
 [Flags]
@@ -48,7 +66,8 @@ public sealed record FileEntry(
 	HostedItemId? ItemId = null,
 	string? ContentType = null,
 	string? Revision = null,
-	SyncAvailability? SyncState = null);
+	SyncAvailability? SyncState = null,
+	FilesLocationId? LocationId = null);
 
 public sealed record FilePlace(string Key, string Label, string Path, string IconKey);
 
@@ -65,28 +84,41 @@ public sealed record FileOperationResult(
 	string SourcePath,
 	string? DestinationPath,
 	DateTimeOffset ObservedAt,
-	string Message);
+	string Message,
+	FilesError? Error = null,
+	FilesOperationId? OperationId = null,
+	FilesRevisionId? BaseRevisionId = null,
+	FilesRevisionId? ResultRevisionId = null);
 
-public sealed record FileDragItem(string Path, string DisplayName, FileItemKind Kind);
+public sealed record FileDragItem(
+	string Path,
+	string DisplayName,
+	FileItemKind Kind,
+	HostedItemId? ItemId = null,
+	FilesLocationId? LocationId = null);
 
 public sealed record FileDragDescriptor(
 	string Format,
 	IReadOnlyList<FileDragItem> Items,
-	FileDropEffect AllowedEffects)
+	FileDropEffect AllowedEffects,
+	FilesLocationId? SourceLocationId = null,
+	string? OperationIdempotencyKey = null)
 {
 	public const string FilesFormat = "application/vnd.haven.files+json";
 
 	public static FileDragDescriptor Create(
 		IEnumerable<FileEntry> entries,
-		FileDropEffect allowedEffects = FileDropEffect.Copy | FileDropEffect.Move)
+		FileDropEffect allowedEffects = FileDropEffect.Copy | FileDropEffect.Move,
+	FilesLocationId? sourceLocationId = null,
+	string? operationIdempotencyKey = null)
 	{
 		ArgumentNullException.ThrowIfNull(entries);
 		var items = entries
-			.Select(entry => new FileDragItem(entry.Path, entry.Name, entry.Kind))
+			.Select(entry => new FileDragItem(entry.Path, entry.Name, entry.Kind, entry.ItemId, entry.LocationId))
 			.ToArray();
 		if (items.Length == 0)
 			throw new ArgumentException("A file drag must contain at least one item.", nameof(entries));
-		return new FileDragDescriptor(FilesFormat, items, allowedEffects);
+		return new FileDragDescriptor(FilesFormat, items, allowedEffects, sourceLocationId, operationIdempotencyKey);
 	}
 }
 

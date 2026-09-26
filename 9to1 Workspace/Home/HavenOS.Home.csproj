@@ -7,12 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="HavenOS.Home.Core" />
     <Compile Include="Source\Home\HomeDashboard.cs" />
     <Compile Include="Source\Home\HomeCuiScene.cs" />
     <Compile Include="Source\Home\HomeEcosystem.cs" />
+    <Compile Include="Source\Home\HomePermissionModels.cs" />
+    <Compile Include="Source\Home\HomePermissionTrustService.cs" />
     <Compile Include="Source\Home\Core\*.cs" />
+    <Compile Include="Source\Home\ModelPicker\*.cs" />
+    <Compile Include="Source\Home\PermissionsTrustNotifications\*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="..\shared\src\Haven.Core\Haven.Core.csproj" />
+    <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
+    <ProjectReference Include="..\..\9to1 Models\Dulche Alpha\Dulche.Runtime.csproj" />
+    <ProjectReference Include="..\..\9to1 Models\Dulche Alpha\Den.csproj" />
     <Content Include="UI\Home.cui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UI\ModelPicker.cui">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

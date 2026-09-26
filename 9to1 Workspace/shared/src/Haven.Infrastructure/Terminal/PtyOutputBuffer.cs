@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("HavenOS.Terminal.Specs")]
 
-namespace HavenOS.Apps.Terminal;
+namespace Haven.Infrastructure.Terminal;
 
 /// <summary>
 /// Preserves output produced while a PTY process is being created and before its first consumer
@@ -10,11 +10,16 @@ namespace HavenOS.Apps.Terminal;
 /// </summary>
 internal sealed class PtyOutputBuffer
 {
+    private const int MaximumPendingBytes = 4 * 1024 * 1024;
     private readonly object _sync = new();
     private readonly Queue<PendingOutput> _pending = new();
     private EventHandler<PtyOutputChunk>? _handlers;
     private bool _hasSubscriber;
     private bool _isDraining;
+    private int _pendingBytes;
+
+    /// <summary>Bytes dropped from the pre-subscription queue after its memory bound was reached.</summary>
+    public long DroppedPendingBytes { get; private set; }
 
     public event EventHandler<PtyOutputChunk>? OutputReceived
     {
@@ -53,7 +58,24 @@ internal sealed class PtyOutputBuffer
         {
             if (_handlers is null && _hasSubscriber) return;
 
+            var outputBytes = output.Bytes.Length;
+            while (_pendingBytes + outputBytes > MaximumPendingBytes && _pending.Count > 0)
+            {
+                var discarded = _pending.Dequeue();
+                _pendingBytes -= discarded.Chunk.Bytes.Length;
+                DroppedPendingBytes += discarded.Chunk.Bytes.Length;
+            }
+
+            if (outputBytes > MaximumPendingBytes)
+            {
+                var skip = outputBytes - MaximumPendingBytes;
+                output = new PtyOutputChunk(output.Bytes[^MaximumPendingBytes..]);
+                outputBytes = output.Bytes.Length;
+                DroppedPendingBytes += skip;
+            }
+
             _pending.Enqueue(new PendingOutput(sender, output));
+            _pendingBytes += outputBytes;
             if (_handlers is not null && !_isDraining)
             {
                 _isDraining = true;
@@ -79,6 +101,7 @@ internal sealed class PtyOutputBuffer
                 }
 
                 output = _pending.Dequeue();
+                _pendingBytes -= output.Chunk.Bytes.Length;
                 handlers = _handlers;
             }
 

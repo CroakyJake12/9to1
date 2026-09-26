@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 
-namespace HavenOS.Apps.Terminal;
+namespace Haven.Infrastructure.Terminal;
 
 /// <summary>Windows ConPTY adapter for real interactive console processes.</summary>
 public sealed class WindowsConPtyProcessFactory : IPtyProcessFactory

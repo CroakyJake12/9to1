@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Haven.Application;
 
 namespace Haven.Infrastructure;
@@ -146,6 +147,21 @@ public sealed class ApkLaunchService : IApkLaunchService
 
         if (!File.Exists(canonicalPath))
             return (null, "The APK file does not exist at the requested local path.");
+
+        try
+        {
+            using var file = File.OpenRead(canonicalPath);
+            using var archive = new ZipArchive(file, ZipArchiveMode.Read, leaveOpen: false);
+            var manifest = archive.GetEntry("AndroidManifest.xml");
+            if (manifest is null || manifest.Length == 0)
+            {
+                return (null, "The APK archive does not contain a non-empty AndroidManifest.xml entry.");
+            }
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            return (null, "The APK file is not a readable ZIP package.");
+        }
 
         return (canonicalPath, null);
     }

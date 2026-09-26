@@ -3,11 +3,22 @@
 # Usage (morning validation, ONE command): sudo cakeos-diagnostics
 # Output: timestamped tar.gz in /var/log/cakeos-diagnostics/
 set -eu
+umask 077
 
 outdir="/var/log/cakeos-diagnostics"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 work="$(mktemp -d)"
-trap 'rm -rf "$work"' EXIT
+archive_tmp=""
+cleanup() {
+    rm -rf "$work"
+    if [ -n "$archive_tmp" ]; then
+        rm -f "$archive_tmp"
+    fi
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 collect() {
     # $1 = filename, $@ = command (run, capture stdout+stderr, never fail)
@@ -49,5 +60,12 @@ if command -v cakeos-boards >/dev/null 2>&1; then
 fi
 
 mkdir -p "$outdir"
-tar -czf "$outdir/cakeos-diagnostics-$stamp.tar.gz" -C "$work" .
-echo "Diagnostics bundle: $outdir/cakeos-diagnostics-$stamp.tar.gz"
+chmod 0700 "$outdir"
+archive_tmp="$(mktemp "$outdir/.cakeos-diagnostics-$stamp.XXXXXX")"
+archive_token="${archive_tmp##*.}"
+archive="$outdir/cakeos-diagnostics-$stamp-$archive_token.tar.gz"
+tar -czf "$archive_tmp" -C "$work" .
+chmod 0600 "$archive_tmp"
+mv -- "$archive_tmp" "$archive"
+archive_tmp=""
+echo "Diagnostics bundle: $archive"

@@ -3,12 +3,31 @@ using System.Text.Json;
 using Dulche.Runtime;
 using Haven.Application;
 using Haven.Core;
+using Dulche.Runtime.Translate;
 using Xunit;
 
 namespace Dulche.Runtime.Tests;
 
 public sealed class RuntimeTests
 {
+    [Fact]
+    public void CanonicalLanguageResolutionDoesNotGuessUnknownOrAutoLanguage()
+    {
+        var resolver = new CanonicalLanguageResolver();
+        Assert.Equal(LanguageResolutionState.Resolved, resolver.Resolve("en").State);
+        Assert.Equal("en", resolver.Resolve("en").Language!.Code);
+        Assert.Equal(LanguageResolutionState.Unsupported, resolver.Resolve("%%%").State);
+        Assert.Equal(LanguageResolutionState.Invalid, resolver.Resolve("auto").State);
+        Assert.Equal(LanguageResolutionState.Resolved, resolver.Resolve("auto", allowAutoDetect: true).State);
+    }
+
+    [Fact]
+    public void MissingTranslationVoicePairEvidenceRemainsUnknown()
+    {
+        var catalog = new UnknownTranslationCapabilityCatalog();
+        Assert.Equal(TranslationCapabilityState.Unknown, catalog.GetState("provider", "en", "fr", TranslationMediaKind.Audio));
+    }
+
     [Fact]
     public async Task EndpointSessionStreamingAndMetricsAreScoped()
     {
@@ -24,7 +43,7 @@ public sealed class RuntimeTests
         var response = await request.Value!.AwaitResult(CancellationToken.None);
         Assert.Equal(RequestState.Completed, response.Status);
         Assert.Equal("reply:hello", response.Text);
-        Assert.NotEqual(firstSession.SessionId, response.SessionId);
+        Assert.Equal(firstSession.SessionId, response.SessionId);
         Assert.True(response.Tokens.Input.Availability == Availability.Value);
         Assert.Equal(1L, response.Tokens.Input.Value);
         Assert.Equal(2L, response.Tokens.Output.Value);
@@ -97,20 +116,39 @@ public sealed class RuntimeTests
     [Fact]
     public async Task RouteFiltersCapabilitiesAndCloudPolicyBeforePriority()
     {
-        var local = Descriptor("local", true, []);
-        var cloud = Descriptor("cloud", false, [ToolCapability.WebSearch]);
+        var local = Descriptor("local", true, new HashSet<ToolCapability>());
+        var cloud = Descriptor("cloud", false, new HashSet<ToolCapability> { ToolCapability.WebSearch });
         var registry = new StubRegistry([local, cloud]);
         var resolver = new ModelRouteResolver(registry);
         var route = new ModelRoute("active", 1, [new("cloud", "cloud"), new("local", "local")], new(AllowCloud: true, RequiredCapabilities: new HashSet<string> { "WebSearch" }));
         var result = await resolver.ResolveAsync(route, null);
         Assert.True(result.Succeeded);
         Assert.Equal("cloud:cloud:current", result.Value!.Model.StableKey);
-        var denied = await resolver.ResolveAsync(route with { Policy = route.Policy with { AllowPrivateContextToCloud = false } }, null);
+        var denied = await resolver.ResolveAsync(route with { Policy = route.Policy with { AllowPrivateContextToCloud = false } }, null, containsPrivateContext: true);
         Assert.Equal(DulcheErrorCode.PermissionDenied, denied.Error!.Code);
     }
 
+    [Fact]
+    public async Task ScopedRoutesUseRevisionChecksAndPreviewTrace()
+    {
+        var registryProvider = new StubRegistry([Descriptor("local", true, new HashSet<ToolCapability>()), Descriptor("cloud", false, new HashSet<ToolCapability> { ToolCapability.WebSearch })]);
+        var repository = new InMemoryModelRouteRepository();
+        var registry = new ModelRouteRegistry(registryProvider, repository, new ModelRouteResolver(registryProvider));
+        var route = new ConfiguredModelRoute("agent-chat", 0, ModelRouteScope.Agent, "agent:writer", ModelCapabilityCategory.Chat,
+            [new(new("cloud", "cloud"), false, 0), new(new("local", "local"), true, 1)], new(AllowCloud: false));
+        var saved = await registry.SaveRouteAsync(route, expectedRevision: 0);
+        Assert.NotNull(saved.Route);
+        Assert.Equal(1, saved.Route!.Revision);
+        var stale = await registry.SaveRouteAsync(route, expectedRevision: 0);
+        Assert.Equal(DulcheErrorCode.Conflict, stale.Error!.Code);
+        var preview = await registry.PreviewAsync(saved.Route);
+        Assert.Equal("local:local:current", preview.Selection!.Model.StableKey);
+        Assert.Contains(preview.Trace, item => item.Contains("disabled by user", StringComparison.Ordinal));
+        Assert.Equal(2, (await registry.GetCatalogueAsync()).Count);
+    }
+
     private static ProviderModelDescriptor Descriptor(string name, bool local, IReadOnlySet<ToolCapability> capabilities) =>
-        new(name, local, new(new(name, 1, "test", "1B", "q4", capabilities, DateTimeOffset.UtcNow)));
+        new(name, local, new(name, 1, "test", "1B", "q4", capabilities, DateTimeOffset.UtcNow));
 
     private sealed class StubRegistry(IReadOnlyList<ProviderModelDescriptor> models) : IModelProviderRegistry
     {
@@ -140,6 +178,11 @@ public sealed class RuntimeTests
                 yield return new(Text: $"reply:{request.EffectivePrompt}", InputTokens: 1, OutputTokens: 2);
             }
             finally { Interlocked.Decrement(ref _active); }
+        }
+        public async IAsyncEnumerable<AdapterDelta> ContinueWithToolResultAsync(DulcheEndpoint endpoint, DulcheRequest request, string requestId, ToolInvocationResult result, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            yield return new(Text: "continued");
         }
         public ValueTask<OperationResult<Unit>> CancelAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken) => ValueTask.FromResult(OperationResult<Unit>.Success(Unit.Value));
         public ValueTask<OperationResult<Unit>> PauseAsync(DulcheEndpoint endpoint, string requestId, CancellationToken cancellationToken) => ValueTask.FromResult(OperationResult<Unit>.Failure(new(DulcheErrorCode.UnsupportedCapability, "pause unsupported", requestId, false)));

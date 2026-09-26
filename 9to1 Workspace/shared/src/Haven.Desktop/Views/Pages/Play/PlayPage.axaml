@@ -14,6 +14,23 @@
             <hui:HavenPrimaryButton x:Name="CreateButton" Grid.Column="1" Content="Create with Haven" Padding="20,11" VerticalAlignment="Center"/>
           </Grid>
 
+          <hui:HavenCard Padding="18">
+            <StackPanel Spacing="12">
+              <TextBlock Text="Build a structured maths game" FontSize="19" FontWeight="ExtraBold"/>
+              <TextBlock Text="Describe the quiz, question count and opponents. The local game definition is validated before it can start." Classes="muted" TextWrapping="Wrap"/>
+              <hui:HavenTextInput x:Name="GamePromptBox" PlaceholderText="For example: a 15-question A-Level maths quiz against 10 Agents"/>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <TextBlock x:Name="GameBuildStatus" Classes="muted" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                <hui:HavenPrimaryButton x:Name="GenerateGameButton" Grid.Column="1" Content="Build quiz" Padding="18,10" VerticalAlignment="Center"/>
+              </Grid>
+              <WrapPanel x:Name="GeneratedGamesPanel" Orientation="Horizontal"/>
+              <StackPanel x:Name="FormalMatchesSection" Spacing="8" IsVisible="False">
+                <TextBlock Text="Continue a match" FontSize="16" FontWeight="Bold"/>
+                <WrapPanel x:Name="FormalMatchesPanel" Orientation="Horizontal"/>
+              </StackPanel>
+            </StackPanel>
+          </hui:HavenCard>
+
           <hui:HavenTextInput x:Name="SearchBox" PlaceholderText="Search Play"/>
           <WrapPanel x:Name="CategoryPanel" Orientation="Horizontal"/>
 

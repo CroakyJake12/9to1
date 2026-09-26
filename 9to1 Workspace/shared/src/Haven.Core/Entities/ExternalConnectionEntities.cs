@@ -37,6 +37,12 @@ public sealed record ExternalConnection(
 {
     /// <summary>Stable MCP server identity for this saved connection; it is independent of the mutable name and transport endpoint.</summary>
     public Guid ServerId => Id;
+
+    /// <summary>Last negotiated MCP capability set, encoded as an untrusted snapshot for display/cache comparison only.</summary>
+    public string? CapabilitySnapshotJson { get; init; }
+
+    /// <summary>Content hash of the last negotiated capability set; a changed value invalidates cached routes/schemas.</summary>
+    public string? CapabilitySnapshotVersion { get; init; }
 }
 
 /// <summary>MCP transport configuration. Secrets are referenced separately and never stored here.</summary>
@@ -86,6 +92,8 @@ public sealed record McpResourceContent(string? MimeType, string? Text, string? 
 public sealed record McpPromptGetResult(string Name, IReadOnlyList<McpPromptMessage> Messages);
 public sealed record McpPromptMessage(string Role, IReadOnlyList<McpPromptContent> Contents);
 public sealed record McpPromptContent(string Kind, string? Text, string? MimeType, string? Uri, string? Base64Data);
+public sealed record McpOperationError(string Code, string Message, string TargetId, bool Retryable);
+public sealed record McpOperationResult<T>(bool Succeeded, T? Value, McpOperationError? Error = null);
 
 public sealed record McpExternalTool(
     string Name,

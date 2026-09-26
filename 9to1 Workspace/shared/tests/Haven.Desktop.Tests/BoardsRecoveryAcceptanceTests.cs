@@ -23,6 +23,7 @@ public sealed class BoardsRecoveryAcceptanceTests
         var sources = boards.AddPage(notebook, research.Id, "Sources");
         var notes = boards.AddPage(notebook, research.Id, "Notes");
         boards.MovePage(notebook, notes.Id, research.Id, 0);
+        boards.SetLayoutMode(notebook, notes.Id, BoardsPageLayoutMode.Unlocked);
 
         var checklist = boards.AddBlock(notebook, notes.Id, NotesBlockKind.List, "Verify source");
         var checklistItem = checklist.List!.Items[0];
@@ -121,6 +122,7 @@ public sealed class BoardsRecoveryAcceptanceTests
         var boards = new BoardsWorkspaceService(repository);
         var notebook = await boards.CreateNotebookAsync("Large board", TestContext.Current.CancellationToken);
         var page = notebook.Sections[0].Pages[0];
+        boards.SetLayoutMode(notebook, page.Id, BoardsPageLayoutMode.Unlocked);
         for (var i = 0; i < 600; i++)
             boards.AddBlock(notebook, page.Id, NotesBlockKind.Paragraph, $"Block {i}");
         for (var i = 0; i < 300; i++)

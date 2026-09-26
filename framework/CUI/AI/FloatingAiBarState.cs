@@ -21,6 +21,17 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
     public bool IsReadOnly => AccessMode == AppAiAccessMode.ReadOnly;
     public bool IsWriteMode => AccessMode == AppAiAccessMode.Write;
     public string AccessModeLabel => IsReadOnly ? "Read-only" : "Write mode";
+    public string RequestStateLabel => RequestState switch
+    {
+        AppAiRequestState.CapturingContext => "Reading authorised app context…",
+        AppAiRequestState.Generating => "Thinking…",
+        AppAiRequestState.WaitingForApproval => "Waiting for approval…",
+        AppAiRequestState.ExecutingAction => "Applying an approved app action…",
+        AppAiRequestState.Completed => "Ready",
+        AppAiRequestState.Cancelled => "Stopped",
+        AppAiRequestState.Failed => "Could not complete the request",
+        _ => string.Empty
+    };
     public string Prompt { get; set; } = string.Empty;
     public string Response { get; private set; } = string.Empty;
     public string? ContextLabel { get; private set; }
@@ -28,7 +39,23 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
     public AppAiRequestState RequestState { get; private set; } = AppAiRequestState.Idle;
     public IReadOnlyList<AppAiModelOption> Models { get; private set; } = [];
     public AppAiModelSelection? ModelSelection { get; private set; }
-    public string SelectedModelLabel => ModelSelection?.ModelId ?? "Use current model";
+    public bool ModelPickerAvailable => Models.Count > 0;
+    public string? SelectedModelId
+    {
+        get => ModelSelection?.ModelId;
+        set
+        {
+            if (!string.IsNullOrWhiteSpace(value) && !string.Equals(value, ModelSelection?.ModelId, StringComparison.Ordinal))
+                _ = SelectModelAsync(value);
+        }
+    }
+    public string SelectedModelLabel => ModelSelection is null
+        ? "Use current model"
+        : Models.FirstOrDefault(model => string.Equals(model.Id, ModelSelection.ModelId, StringComparison.Ordinal))?.DisplayName
+            ?? ModelSelection.ModelId;
+    public string ModelPickerLabel => ModelPickerAvailable
+        ? $"Model: {SelectedModelLabel} · change"
+        : "Model selection unavailable";
 
     public event EventHandler? Changed;
 
@@ -49,26 +76,63 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 
     public async ValueTask RefreshModelsAsync(CancellationToken cancellationToken = default)
     {
-        Models = await coordinator.GetModelsAsync(cancellationToken).ConfigureAwait(false);
-        ModelSelection = await coordinator.GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
-        Changed?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            Models = await coordinator.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+            ModelSelection = await coordinator.GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            Error = "AI model options could not be loaded.";
+            SetMode(FloatingAiBarMode.Error);
+        }
     }
 
     public async ValueTask<bool> SelectModelAsync(string modelId, CancellationToken cancellationToken = default)
     {
-        var selected = await coordinator.SelectModelAsync(modelId, cancellationToken).ConfigureAwait(false);
-        if (selected)
+        try
         {
-            ModelSelection = await coordinator.GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
-            Changed?.Invoke(this, EventArgs.Empty);
+            var selected = await coordinator.SelectModelAsync(modelId, cancellationToken).ConfigureAwait(false);
+            if (selected)
+            {
+                ModelSelection = await coordinator.GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+            return selected;
         }
-        return selected;
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            Error = "That model could not be selected.";
+            Changed?.Invoke(this, EventArgs.Empty);
+            return false;
+        }
+    }
+
+    public async ValueTask SelectNextModelAsync(CancellationToken cancellationToken = default)
+    {
+        var available = Models.Where(model => model.IsAvailable).ToArray();
+        if (available.Length == 0) return;
+        var currentIndex = Array.FindIndex(available, model =>
+            string.Equals(model.Id, ModelSelection?.ModelId, StringComparison.Ordinal));
+        var next = available[(currentIndex + 1) % available.Length];
+        await SelectModelAsync(next.Id, cancellationToken).ConfigureAwait(false);
     }
 
     public void Expand()
     {
         if (Mode == FloatingAiBarMode.Collapsed)
             SetMode(FloatingAiBarMode.Ready);
+        _ = RefreshModelsAsync();
+        _ = RefreshContextAsync();
     }
 
     public void Collapse()
@@ -81,10 +145,26 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
     {
         RequestState = AppAiRequestState.CapturingContext;
         Changed?.Invoke(this, EventArgs.Empty);
-        var snapshot = await coordinator.CaptureContextAsync(cancellationToken).ConfigureAwait(false);
-        ContextLabel = string.IsNullOrWhiteSpace(snapshot.Summary) ? snapshot.AppId : snapshot.Summary;
-        RequestState = AppAiRequestState.Idle;
-        Changed?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            var snapshot = await coordinator.CaptureContextAsync(cancellationToken).ConfigureAwait(false);
+            ContextLabel = string.IsNullOrWhiteSpace(snapshot.Summary) ? snapshot.AppId : snapshot.Summary;
+            Error = null;
+            RequestState = AppAiRequestState.Idle;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            RequestState = AppAiRequestState.Cancelled;
+            Changed?.Invoke(this, EventArgs.Empty);
+            throw;
+        }
+        catch (Exception)
+        {
+            Error = "App context is unavailable. Try again when the app is ready.";
+            RequestState = AppAiRequestState.Failed;
+            SetMode(FloatingAiBarMode.Error);
+        }
     }
 
     public async Task SubmitAsync(CancellationToken cancellationToken = default)
@@ -137,12 +217,12 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
                 SetMode(FloatingAiBarMode.Ready);
             }
         }
-        catch (Exception exception)
+        catch (Exception)
         {
             if (version != Volatile.Read(ref _requestVersion))
                 return;
 
-            Error = exception.Message;
+            Error = "The AI request could not be completed. Check model availability and try again.";
             RequestState = AppAiRequestState.Failed;
             SetMode(FloatingAiBarMode.Error);
         }
@@ -157,6 +237,9 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 
         cancellation.Cancel();
         cancellation.Dispose();
+        RequestState = AppAiRequestState.Cancelled;
+        if (Mode == FloatingAiBarMode.Streaming)
+            SetMode(FloatingAiBarMode.Ready);
     }
 
     public void Dispose() => Cancel();

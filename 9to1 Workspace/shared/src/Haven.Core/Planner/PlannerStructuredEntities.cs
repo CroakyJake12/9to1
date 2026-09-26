@@ -51,7 +51,11 @@ public sealed record PlannerAssignment(
 
     public decimal GetProgress()
     {
-        if (ManualProgress is { } manual) return Math.Clamp(manual, 0m, 1m);
+        if (ManualProgress is { } manual)
+        {
+            if (manual is < 0m or > 1m) throw new InvalidOperationException("Manual assignment progress must be between 0 and 1.");
+            return manual;
+        }
         var required = RequiredItems;
         if (required.Count == 0) return Status == PlannerAssignmentStatus.Completed ? 1m : 0m;
         var hasAnyWeights = required.Any(item => item.Weight.HasValue);
@@ -118,8 +122,11 @@ public static class PlannerScheduleProgressCalculator
     {
         ArgumentNullException.ThrowIfNull(scheduleItems);
         var items = scheduleItems.OrderBy(item => item.StartsAt).ThenBy(item => item.EndsAt).ToArray();
-        if (items.Any(item => item.ScheduleItemId == Guid.Empty || item.EndsAt <= item.StartsAt))
+        if (items.Any(item => item.ScheduleItemId == Guid.Empty || item.EndsAt <= item.StartsAt)
+            || items.Select(item => item.ScheduleItemId).Distinct().Count() != items.Length)
             throw new ArgumentException("Schedule items require stable IDs and an end time after their start time.", nameof(scheduleItems));
+        if (items.Zip(items.Skip(1), (left, right) => left.EndsAt > right.StartsAt).Any(overlap => overlap))
+            throw new ArgumentException("Schedule items cannot overlap because a schedule has only one current item at a time.", nameof(scheduleItems));
         var currentIndex = Array.FindIndex(items, item => item.StartsAt <= now && now < item.EndsAt);
         if (currentIndex < 0)
             return new(null, null, items.FirstOrDefault(item => item.StartsAt > now), TimeSpan.Zero, TimeSpan.Zero, 0m, 0m);
@@ -158,20 +165,28 @@ public sealed record PlannerCountdownEntity(
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt);
 
+public sealed record PlannerCountdownTarget(
+    PlannerCountdownDateKind DateKind,
+    DateOnly? Date,
+    DateTimeOffset? DateTime,
+    string TimeZoneId);
+
 public static class PlannerCountdownTargetResolver
 {
-    public static DateTimeOffset? Resolve(
+    public static PlannerCountdownTarget? Resolve(
         PlannerCountdownEntity countdown,
-        Func<PlannerEntityReference, DateTimeOffset?> resolveCanonicalTarget)
+        Func<PlannerEntityReference, PlannerCountdownTarget?> resolveCanonicalTarget)
     {
         ArgumentNullException.ThrowIfNull(countdown);
         ArgumentNullException.ThrowIfNull(resolveCanonicalTarget);
-        if (countdown.LinkedTarget is not null) return resolveCanonicalTarget(countdown.LinkedTarget);
+        if (countdown.LinkedTarget is not null)
+            return resolveCanonicalTarget(countdown.LinkedTarget);
         return countdown.DateKind switch
         {
             PlannerCountdownDateKind.Date when countdown.TargetDate is { } date =>
-                new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified), TimeSpan.Zero),
-            PlannerCountdownDateKind.DateTime => countdown.TargetDateTime,
+                new PlannerCountdownTarget(PlannerCountdownDateKind.Date, date, null, countdown.TimeZoneId),
+            PlannerCountdownDateKind.DateTime when countdown.TargetDateTime is { } dateTime =>
+                new PlannerCountdownTarget(PlannerCountdownDateKind.DateTime, null, dateTime, countdown.TimeZoneId),
             _ => null
         };
     }

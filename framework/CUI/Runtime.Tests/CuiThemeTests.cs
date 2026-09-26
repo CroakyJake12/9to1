@@ -373,6 +373,78 @@ public sealed class CuiThemeTests
     }
 
     [Fact]
+    public void Unknown_numeric_theme_names_do_not_escape_the_fallback()
+    {
+        Assert.Equal(CuiTheme.Glow, CuiThemeCatalog.Parse("999"));
+        Assert.Equal(CuiTheme.Glow, CuiThemeCatalog.Parse("-1"));
+    }
+
+    [Fact]
+    public void Custom_theme_inheritance_merges_element_and_type_defaults_base_first()
+    {
+        var catalog = new CuiThemeDefinitionCatalog();
+        catalog.Add(new CuiThemeDefinition("Rainbow", "Professional",
+        [
+            new("Button", null, new Dictionary<string, object?>
+            {
+                ["Padding"] = 8d,
+                ["Background"] = "blue"
+            }),
+            new("Button", "Primary", new Dictionary<string, object?>
+            {
+                ["Foreground"] = "white"
+            })
+        ]));
+        catalog.Add(new CuiThemeDefinition("Ocean", "Rainbow",
+        [
+            new("button", null, new Dictionary<string, object?>
+            {
+                ["Background"] = "navy"
+            })
+        ]));
+
+        var resolved = catalog.Resolve("Ocean");
+        Assert.Equal(CuiTheme.Professional, resolved.BaseTheme);
+        Assert.Equal("Ocean", resolved.Expression.DisplayName);
+        Assert.Equal(8d, resolved.Rules[new("BUTTON", null)]["padding"]);
+        Assert.Equal("navy", resolved.Rules[new("Button", null)]["background"]);
+        Assert.Equal("white", resolved.Rules[new("Button", "Primary")]["foreground"]);
+    }
+
+    [Fact]
+    public void Custom_theme_catalog_rejects_shadowing_unknown_bases_and_inheritance_cycles()
+    {
+        var catalog = new CuiThemeDefinitionCatalog();
+        Assert.Equal("CUI_THEME_BUILTIN_SHADOW", Assert.Throws<CuiThemeDefinitionException>(() =>
+            catalog.Add(new CuiThemeDefinition("Professional", "Glow", Array.Empty<CuiThemeElementRule>()))).Code);
+
+        catalog.Add(new CuiThemeDefinition("A", "B", Array.Empty<CuiThemeElementRule>()));
+        catalog.Add(new CuiThemeDefinition("B", "A", Array.Empty<CuiThemeElementRule>()));
+        Assert.Equal("CUI_THEME_INHERITANCE_CYCLE", Assert.Throws<CuiThemeDefinitionException>(() => catalog.Resolve("A")).Code);
+        Assert.False(catalog.TryResolve("Missing", out var missing));
+        Assert.Null(missing);
+
+        var unknownBase = new CuiThemeDefinitionCatalog();
+        unknownBase.Add(new CuiThemeDefinition("Orphan", "Missing", Array.Empty<CuiThemeElementRule>()));
+        Assert.Equal("CUI_THEME_UNKNOWN_BASE", Assert.Throws<CuiThemeDefinitionException>(() => unknownBase.Resolve("Orphan")).Code);
+
+        var emptyRule = new CuiThemeDefinitionCatalog();
+        Assert.Equal("CUI_THEME_EMPTY_RULE", Assert.Throws<CuiThemeDefinitionException>(() =>
+            emptyRule.Add(new CuiThemeDefinition("Empty", "Glow",
+            [new("Button", null, new Dictionary<string, object?>())]))).Code);
+
+        var duplicateProperties = new CuiThemeDefinitionCatalog();
+        var caseSensitiveProperties = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["Color"] = "red",
+            ["color"] = "blue"
+        };
+        Assert.Equal("CUI_THEME_DUPLICATE_PROPERTY", Assert.Throws<CuiThemeDefinitionException>(() =>
+            duplicateProperties.Add(new CuiThemeDefinition("Duplicate", "Glow",
+            [new("Button", null, caseSensitiveProperties)]))).Code);
+    }
+
+    [Fact]
     public void ThemeScopeStack_push_pop_restores_parent()
     {
         var stack = new CuiThemeScopeStack(CuiTheme.Glow);
@@ -569,7 +641,9 @@ public sealed class CuiThemeTests
         {
             HighContrast = true,
             ReduceMotion = true,
-            DisplayScale = 1.5d
+            DisplayScale = 1.5d,
+            InterfaceFontFamilyOverride = "Atkinson Hyperlegible",
+            CodeFontFamilyOverride = "JetBrains Mono"
         };
         var source = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Bubble);
 
@@ -584,6 +658,27 @@ public sealed class CuiThemeTests
             Assert.IsType<double>(resources["CuiFontSizeBody"]));
         Assert.Equal(3d, Assert.IsType<double>(resources["CuiFocusIndicatorThickness"]));
         Assert.Equal("IconAndLabel", Assert.IsType<string>(resources["CuiStateCommunication"]));
+        Assert.StartsWith("Atkinson Hyperlegible, Montserrat,",
+            Assert.IsType<string>(resources["CuiFontFamilyInterface"]));
+        Assert.StartsWith("JetBrains Mono, Cascadia Mono,",
+            Assert.IsType<string>(resources["CuiFontFamilyCode"]));
+    }
+
+    [Fact]
+    public void High_contrast_palette_has_distinct_nontransparent_focus_and_readable_text_in_every_appearance()
+    {
+        foreach (var theme in Enum.GetValues<CuiTheme>())
+        foreach (var appearance in Enum.GetValues<CuiAppearance>())
+        {
+            var source = CuiSurfacePaletteCatalog.For("Home", appearance, theme);
+            var palette = CuiAccessibilityPalette.Resolve(source, new CuiAccessibilitySettings { HighContrast = true });
+
+            Assert.True(CuiContrast.Ratio(palette.Text, palette.TideBase) >= 7d, $"Text contrast failed for {theme}/{appearance}.");
+            Assert.True(CuiContrast.Ratio(palette.TextSoft, palette.Panel) >= 7d, $"Soft-text contrast failed for {theme}/{appearance}.");
+            Assert.True(CuiContrast.Ratio(palette.Muted, palette.Panel2) >= 7d, $"Muted-text contrast failed for {theme}/{appearance}.");
+            Assert.True(CuiContrast.Ratio(palette.Focus, palette.TideBase) >= 3d, $"Focus contrast failed for {theme}/{appearance}.");
+            Assert.Equal<byte>(0xFF, palette.Focus.A);
+        }
     }
 
     [Fact]
@@ -594,6 +689,9 @@ public sealed class CuiThemeTests
         Assert.Contains("sans-serif", CuiTypography.InterfaceFontFamily);
         Assert.Contains("Cascadia Mono", CuiTypography.CodeFontFamily);
         Assert.Contains("monospace", CuiTypography.CodeFontFamily);
+        Assert.StartsWith("Atkinson Hyperlegible, Montserrat,", CuiTypography.ResolveInterfaceFontFamily("Atkinson Hyperlegible"));
+        Assert.StartsWith("JetBrains Mono, Cascadia Mono,", CuiTypography.ResolveCodeFontFamily("JetBrains Mono"));
+        Assert.Throws<ArgumentException>(() => CuiTypography.ResolveInterfaceFontFamily("Font A, Font B"));
     }
 
     [Fact]

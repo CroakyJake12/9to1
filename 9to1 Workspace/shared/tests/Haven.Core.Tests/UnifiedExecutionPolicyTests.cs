@@ -41,7 +41,8 @@ public sealed class UnifiedExecutionPolicyTests
     {
         var validator = new ExtensionManifestValidator();
         var permission = ExtensionPermission.ProcessExecution | ExtensionPermission.ProjectRead;
-        var capability = new ExtensionCapabilityManifest("build.run", "Run build", "Runs an authorised build", "bin/plugin.exe", ["build"], permission);
+        var capability = new ExtensionCapabilityManifest("build.run", "Run build", "Runs an authorised build", "bin/plugin.exe", ["build"], permission,
+            "{\"type\":\"object\",\"properties\":{}}", "{\"type\":\"object\"}", "consequential", "cancellation-token", "external-side-effect:none");
         var plugin = new ExtensionPackageManifest("example.plugin", "packages/plugin", "Example", ExtensionPackageType.Plugin, "1.2.3", ">=0.2", "Example package", "Author", "Publisher", null, "MIT", permission, [], [capability], [], null);
         var skill = new ExtensionPackageManifest("example.skill", "packages/skill", "Example Skill", ExtensionPackageType.Skill, "1.0.0", ">=0.2", "Skill", "Author", "Publisher", null, "MIT", ExtensionPermission.None, [], [], [new ExtensionSkillManifest("example.instructions", "Example", "Instructions", "SKILL.md", true)], null);
 
@@ -53,6 +54,65 @@ public sealed class UnifiedExecutionPolicyTests
         Assert.Contains(result.Errors, error => error.Contains("safe relative path", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(result.Errors, error => error.Contains("not declared", StringComparison.OrdinalIgnoreCase));
     }
+
+    [Fact]
+    public void Extension_dependency_resolution_checks_required_optional_versions_and_cycles()
+    {
+        var app = Package("example.app", "1.2.0", [new ExtensionDependency("example.lib", "[1.0.0,2.0.0)")]);
+        var lib = Package("example.lib", "1.5.0", [new ExtensionDependency("example.optional", "*", ExtensionDependencyType.Optional)]);
+        var resolved = ExtensionDependencyResolver.ValidateGraph([app, lib]);
+        Assert.Empty(resolved);
+
+        var outsideRange = ExtensionDependencyResolver.ValidateGraph([app, Package("example.lib", "2.0.0", [])]);
+        Assert.Contains(outsideRange["example.app"], item => item.Contains("does not satisfy", StringComparison.Ordinal));
+
+        var cycle = ExtensionDependencyResolver.ValidateGraph([
+            Package("example.a", "1.0.0", [new ExtensionDependency("example.b", "*")]),
+            Package("example.b", "1.0.0", [new ExtensionDependency("example.a", "*")])]);
+        Assert.Contains(cycle["example.a"], item => item.Contains("cycle", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(cycle["example.b"], item => item.Contains("cycle", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Extension_schema_validation_is_fail_closed_and_checks_nested_values()
+    {
+        const string schema = """{"type":"object","properties":{"name":{"type":"string","minLength":2,"pattern":"^[a-z]+$"},"count":{"type":"integer","minimum":1}},"required":["name"],"additionalProperties":false}""";
+        using var valid = System.Text.Json.JsonDocument.Parse("{\"name\":\"tool\",\"count\":2}");
+        using var invalid = System.Text.Json.JsonDocument.Parse("{\"name\":\"1\",\"unexpected\":true}");
+        Assert.True(ExtensionJsonSchemaValidator.Validate(schema, valid.RootElement, out _));
+        Assert.False(ExtensionJsonSchemaValidator.Validate(schema, invalid.RootElement, out _));
+        Assert.False(ExtensionJsonSchemaValidator.IsSupported("{\"type\":\"object\",\"$ref\":\"#/$defs/input\"}"));
+        Assert.False(ExtensionJsonSchemaValidator.IsSupported("{\"properties\":{}}"));
+    }
+
+    [Fact]
+    public void Extension_manifest_preserves_unknown_optional_fields_but_rejects_unknown_required_fields()
+    {
+        var package = Package("example.plugin", "1.0.0", []) with
+        {
+            ExtensionData = new Dictionary<string, System.Text.Json.JsonElement>
+            {
+                ["futureOptional"] = System.Text.Json.JsonDocument.Parse("{\"enabled\":true}").RootElement.Clone()
+            }
+        };
+        var validator = new ExtensionManifestValidator();
+        Assert.True(validator.Validate(new ExtensionManifestDocument(1, [package])).IsValid);
+
+        var unsupported = package with
+        {
+            ExtensionData = new Dictionary<string, System.Text.Json.JsonElement>
+            {
+                ["requiredPermissionsV2"] = System.Text.Json.JsonDocument.Parse("[]").RootElement.Clone()
+            }
+        };
+        var result = validator.Validate(new ExtensionManifestDocument(1, [unsupported]));
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, item => item.Contains("unknown required manifest field", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static ExtensionPackageManifest Package(string id, string version, IReadOnlyList<ExtensionDependency> dependencies) => new(
+        id, "packages/" + id, id, ExtensionPackageType.Skill, version, ">=0.2", "test", "tests", "tests", null, "MIT",
+        ExtensionPermission.None, [], [], [], null, DependencyDefinitions: dependencies);
 
     [Fact]
     public void Task_locators_are_user_friendly_but_not_credentials()

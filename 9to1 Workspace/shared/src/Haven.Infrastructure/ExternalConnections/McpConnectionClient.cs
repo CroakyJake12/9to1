@@ -110,19 +110,14 @@ public sealed class McpConnectionClient(IProviderSecretStore secrets) : IMcpConn
         var messages = new List<McpPromptMessage>(result.Messages.Count);
         foreach (var message in result.Messages)
         {
-            var contents = new List<McpPromptContent>(message.Content.Length);
-            foreach (var content in message.Content)
+            var content = message.Content switch
             {
-                if (content is TextContentBlock text)
-                    contents.Add(new McpPromptContent("text", Bound(text.Text, MaxResultCharacters), null, null, null));
-                else if (content is ImageContentBlock image)
-                    contents.Add(new McpPromptContent("image", null, Bound(image.MimeType ?? string.Empty, 200), null, Convert.ToBase64String(image.Data.ToArray())));
-                else if (content is EmbeddedResourceBlock resource)
-                    contents.Add(new McpPromptContent("resource", null, Bound(resource.Resource?.MimeType ?? string.Empty, 200), Bound(resource.Resource?.Uri ?? string.Empty, 2_000), null));
-                else
-                    throw new NotSupportedException("The MCP prompt returned an unsupported content block.");
-            }
-            messages.Add(new McpPromptMessage(message.Role.ToString(), contents));
+                TextContentBlock text => new McpPromptContent("text", Bound(text.Text, MaxResultCharacters), null, null, null),
+                ImageContentBlock image => new McpPromptContent("image", null, Bound(image.MimeType ?? string.Empty, 200), null, Convert.ToBase64String(image.Data.ToArray())),
+                EmbeddedResourceBlock resource => new McpPromptContent("resource", null, Bound(resource.Resource?.MimeType ?? string.Empty, 200), Bound(resource.Resource?.Uri ?? string.Empty, 2_000), null),
+                _ => throw new NotSupportedException("The MCP prompt returned an unsupported content block.")
+            };
+            messages.Add(new McpPromptMessage(message.Role.ToString(), [content]));
         }
         if (JsonSerializer.Serialize(messages).Length > MaxResultCharacters)
             throw new InvalidOperationException("MCP prompt content exceeded Haven's safety size limit.");

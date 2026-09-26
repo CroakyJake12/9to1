@@ -13,7 +13,11 @@ public enum SpacesDestination
     Chat,
     Study,
     Tasks,
-    Research
+    Agent,
+    Shopping,
+    Research,
+    Translate,
+    Experiences
 }
 
 public sealed record SpacesNavigationItem(
@@ -43,7 +47,11 @@ public sealed class SpacesAppSurface
         new(SpacesDestination.Chat, "Chat", "chat"),
         new(SpacesDestination.Study, "Study", "book"),
         new(SpacesDestination.Tasks, "Tasks", "tasks"),
-        new(SpacesDestination.Research, "Research", "search")
+        new(SpacesDestination.Agent, "Agent", "agents"),
+        new(SpacesDestination.Shopping, "Shopping", "cart"),
+        new(SpacesDestination.Research, "Research", "search"),
+        new(SpacesDestination.Translate, "Translate", "translate"),
+        new(SpacesDestination.Experiences, "Experiences", "experiences")
     ]);
 
     private readonly SpaceRegistry _spaces;
@@ -78,7 +86,7 @@ public sealed class SpacesAppSurface
                     break;
                 case SpacesDestination.Chat:
                     await NavigateWithScopeAsync(
-                        nextSpaceId: null,
+                        nextSpaceId: SpaceRegistry.ChatSpaceId,
                         token => _host.OpenModeAsync(HavenMode.Chat, token),
                         cancellationToken).ConfigureAwait(false);
                     break;
@@ -86,12 +94,22 @@ public sealed class SpacesAppSurface
                     await NavigateToBuiltInSpaceAsync(SpaceRegistry.StudySpaceId, cancellationToken).ConfigureAwait(false);
                     break;
                 case SpacesDestination.Tasks:
-                    // The existing Agent built-in Space is intentionally used here. SpaceLaunchPolicy
-                    // already maps that Space kind onto HavenMode.Tasks.
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.TasksSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Agent:
                     await NavigateToBuiltInSpaceAsync(SpaceRegistry.AgentSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Shopping:
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.ShoppingSpaceId, cancellationToken).ConfigureAwait(false);
                     break;
                 case SpacesDestination.Research:
                     await NavigateToBuiltInSpaceAsync(SpaceRegistry.ResearchSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Translate:
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.TranslateSpaceId, cancellationToken).ConfigureAwait(false);
+                    break;
+                case SpacesDestination.Experiences:
+                    await NavigateToBuiltInSpaceAsync(SpaceRegistry.ExperiencesSpaceId, cancellationToken).ConfigureAwait(false);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(destination), destination, "Unknown Spaces destination.");

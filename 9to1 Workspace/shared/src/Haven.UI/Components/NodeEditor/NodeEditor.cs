@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Haven.UI.Components;
 
 /// <summary>Canonical retained-mode graph surface shared by Haven features.</summary>
-public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenScrollInputTarget, IHavenKeyboardInputTarget, IHavenClipboardInputTarget
+public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCommandSource, IHavenPointerInputTarget, IHavenScrollInputTarget, IHavenKeyboardInputTarget, IHavenClipboardInputTarget
 {
     private const double MinZoom = 0.2;
     private const double MaxZoom = 3.0;
@@ -68,6 +68,74 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
     public event Action<NodeEditorDocument>? DocumentChanged;
     public event Action<IReadOnlyCollection<Guid>>? SelectionChanged;
     public event Action<HavenPoint>? EmptySpaceContextRequested;
+    public event Action<IReadOnlyList<Guid>>? SemanticContextChanged;
+
+    public NodeEditorDocument GetGraph() => _document;
+
+    public bool TryActivate(long expectedRevision, out NodeEditorDocument activeGraph)
+    {
+        if (_document.Revision != expectedRevision || ValidateDocument().Count != 0)
+        { activeGraph = _document; return false; }
+        SetDocument(_document with { State = NodeEditorRevisionState.Active, Revision = checked(_document.Revision + 1) }, true);
+        activeGraph = _document;
+        return true;
+    }
+
+    public bool TryApplyExecutionState(Guid nodeId, NodeEditorExecutionState state)
+    {
+        if (!_document.Nodes.Any(node => node.Id == nodeId)) return false;
+        var states = new Dictionary<Guid, NodeEditorExecutionState>(_document.ExecutionStates) { [nodeId] = state };
+        _document = _document with { ExecutionStates = states };
+        Invalidate();
+        return true;
+    }
+
+    public IReadOnlyList<NodeEditorDiagnostic> Validate() => ValidateDocument();
+
+    public IReadOnlyList<NodeEditorDiagnostic> ValidateAgainst(NodeEditorSchemaRegistry registry)
+    {
+        ArgumentNullException.ThrowIfNull(registry);
+        var diagnostics = ValidateDocument().ToList();
+        foreach (var node in _document.Nodes)
+        {
+            if (string.IsNullOrWhiteSpace(node.TypeId)) continue;
+            var schema = registry.GetSchema(node.TypeId);
+            if (schema is null || node.SchemaVersion > schema.SchemaVersion)
+                diagnostics.Add(new("schema-needs-attention", $"Node type '{node.TypeId}' schema version {node.SchemaVersion} is unsupported.", node.Id));
+            else if (!schema.Ports.SequenceEqual(node.Ports))
+                diagnostics.Add(new("node-port-schema", $"Node '{node.TypeId}' ports differ from its registered schema.", node.Id));
+        }
+        if (_document.ConnectionProfileId is { } profileId && registry.GetProfile(profileId) is null)
+            diagnostics.Add(new("profile-needs-attention", $"Connection profile '{profileId}' is unavailable."));
+        else if (_document.ConnectionProfileId is { } activeProfileId && registry.GetProfile(activeProfileId) is { } activeProfile)
+        {
+            foreach (var edge in _document.Edges)
+            {
+                var from = FindNode(edge.FromNodeId); var to = FindNode(edge.ToNodeId);
+                var output = from is null ? null : FindPort(from, edge.FromPortId);
+                if (output is not null && !activeProfile.AllowedTypes.Contains(output.DataType))
+                    diagnostics.Add(new("profile-needs-attention", $"Type '{output.DataType}' is unavailable in profile '{activeProfile.Id}'.", edge.FromNodeId, edge.Id));
+            }
+        }
+        return diagnostics;
+    }
+
+    public bool AddGroup(string title, IEnumerable<Guid> nodeIds, out Guid groupId)
+    {
+        var members = nodeIds.Distinct().Where(id => _document.Nodes.Any(node => node.Id == id)).ToArray();
+        if (string.IsNullOrWhiteSpace(title) || members.Length == 0) { groupId = Guid.Empty; return false; }
+        groupId = Guid.NewGuid();
+        SetDocument(_document with { Groups = [.. _document.Groups, new NodeEditorGroup(groupId, title.Trim(), members)], Revision = checked(_document.Revision + 1), State = NodeEditorRevisionState.Draft }, true);
+        return true;
+    }
+
+    public bool AddComment(string text, double x, double y, out Guid commentId)
+    {
+        if (string.IsNullOrWhiteSpace(text) || !double.IsFinite(x) || !double.IsFinite(y)) { commentId = Guid.Empty; return false; }
+        commentId = Guid.NewGuid();
+        SetDocument(_document with { Comments = [.. _document.Comments, new NodeEditorComment(commentId, text.Trim(), x, y)], Revision = checked(_document.Revision + 1), State = NodeEditorRevisionState.Draft }, true);
+        return true;
+    }
 
     public void PanBy(double deltaX, double deltaY) { PanX += deltaX; PanY += deltaY; Invalidate(); }
 
@@ -156,7 +224,7 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
             Subtitle = template.Subtitle, X = x, Y = y, Ports = template.Ports.ToArray(),
             Metadata = template.Metadata is null ? new Dictionary<string, string>(StringComparer.Ordinal) : new Dictionary<string, string>(template.Metadata, StringComparer.Ordinal)
         };
-        SetDocument(new NodeEditorDocument([.. _document.Nodes, node], _document.Edges), true);
+        SetDocument(WithContent([.. _document.Nodes, node], _document.Edges), true);
         _selected.Clear(); _selectedEdges.Clear(); _selected.Add(node.Id); RaiseSelectionChanged();
         return node.Id;
     }
@@ -178,7 +246,7 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
         if (Equals(current, updated)) return false;
         var nodes = _document.Nodes.ToArray();
         nodes[index] = updated;
-        SetDocument(new NodeEditorDocument(nodes, _document.Edges), true);
+        SetDocument(WithContent(nodes, _document.Edges), true);
         return true;
     }
 
@@ -186,20 +254,20 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
     {
         if (_selected.Count == 0 || (Math.Abs(deltaX) < .001 && Math.Abs(deltaY) < .001)) return;
         var nodes = _document.Nodes.Select(node => _selected.Contains(node.Id) ? node with { X = node.X + deltaX, Y = node.Y + deltaY } : node).ToArray();
-        SetDocument(new NodeEditorDocument(nodes, _document.Edges), true);
+        SetDocument(WithContent(nodes, _document.Edges), true);
     }
 
     public bool Connect(Guid fromNodeId, string fromPortId, Guid toNodeId, string toPortId)
     {
         if (!CanConnect(fromNodeId, fromPortId, toNodeId, toPortId)) return false;
-        SetDocument(new NodeEditorDocument(_document.Nodes, [.. _document.Edges, new NodeEditorEdge(Guid.NewGuid(), fromNodeId, fromPortId, toNodeId, toPortId)]), true);
+        SetDocument(WithContent(_document.Nodes, [.. _document.Edges, new NodeEditorEdge(Guid.NewGuid(), fromNodeId, fromPortId, toNodeId, toPortId)]), true);
         return true;
     }
 
     public bool Disconnect(Guid edgeId)
     {
         if (!_document.Edges.Any(edge => edge.Id == edgeId)) return false;
-        SetDocument(new NodeEditorDocument(_document.Nodes, _document.Edges.Where(edge => edge.Id != edgeId).ToArray()), true);
+        SetDocument(WithContent(_document.Nodes, _document.Edges.Where(edge => edge.Id != edgeId).ToArray()), true);
         return true;
     }
 
@@ -235,7 +303,7 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
         var idMap = payload.Nodes.ToDictionary(node => node.Id, _ => Guid.NewGuid());
         var nodes = payload.Nodes.Select(node => node with { Id = idMap[node.Id], X = node.X + 28, Y = node.Y + 28 }).ToArray();
         var edges = payload.Edges.Where(edge => idMap.ContainsKey(edge.FromNodeId) && idMap.ContainsKey(edge.ToNodeId)).Select(edge => edge with { Id = Guid.NewGuid(), FromNodeId = idMap[edge.FromNodeId], ToNodeId = idMap[edge.ToNodeId] }).ToArray();
-        SetDocument(new NodeEditorDocument([.. _document.Nodes, .. nodes], [.. _document.Edges, .. edges]), true);
+        SetDocument(WithContent([.. _document.Nodes, .. nodes], [.. _document.Edges, .. edges]), true);
         _selected.Clear(); foreach (var node in nodes) _selected.Add(node.Id); RaiseSelectionChanged();
         return nodes.Select(node => node.Id).ToArray();
     }
@@ -247,7 +315,7 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
         if (_selected.Count == 0 && _selectedEdges.Count == 0) return;
         var removedNodes = _selected.ToHashSet();
         var removedEdges = _selectedEdges.ToHashSet();
-        SetDocument(new NodeEditorDocument(
+        SetDocument(WithContent(
             _document.Nodes.Where(node => !removedNodes.Contains(node.Id)).ToArray(),
             _document.Edges.Where(edge => !removedEdges.Contains(edge.Id) && !removedNodes.Contains(edge.FromNodeId) && !removedNodes.Contains(edge.ToNodeId)).ToArray()), true);
         _selected.Clear(); _selectedEdges.Clear(); RaiseSelectionChanged();
@@ -256,13 +324,13 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
     public bool Undo()
     {
         if (_undo.Count == 0) return false;
-        _redo.Push(_document); _document = _undo.Pop(); TrimSelection(); DocumentChanged?.Invoke(_document); RaiseSelectionChanged(); Invalidate(); return true;
+        _redo.Push(_document); _document = _undo.Pop() with { Revision = checked(_document.Revision + 1), State = NodeEditorRevisionState.Draft }; TrimSelection(); DocumentChanged?.Invoke(_document); RaiseSelectionChanged(); Invalidate(); return true;
     }
 
     public bool Redo()
     {
         if (_redo.Count == 0) return false;
-        _undo.Push(_document); _document = _redo.Pop(); TrimSelection(); DocumentChanged?.Invoke(_document); RaiseSelectionChanged(); Invalidate(); return true;
+        _undo.Push(_document); _document = _redo.Pop() with { Revision = checked(_document.Revision + 1), State = NodeEditorRevisionState.Draft }; TrimSelection(); DocumentChanged?.Invoke(_document); RaiseSelectionChanged(); Invalidate(); return true;
     }
 
     public IReadOnlyList<NodeEditorDiagnostic> ValidateDocument()
@@ -320,7 +388,7 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
         {
             case NodeEditorGesture.Pan: PanX += dx; PanY += dy; break;
             case NodeEditorGesture.Move when _selected.Count > 0:
-                _document = new NodeEditorDocument(_document.Nodes.Select(node => _selected.Contains(node.Id) ? node with { X = node.X + dx / Zoom, Y = node.Y + dy / Zoom } : node).ToArray(), _document.Edges); DocumentChanged?.Invoke(_document); break;
+                _document = WithContent(_document.Nodes.Select(node => _selected.Contains(node.Id) ? node with { X = node.X + dx / Zoom, Y = node.Y + dy / Zoom } : node).ToArray(), _document.Edges); DocumentChanged?.Invoke(_document); break;
             case NodeEditorGesture.Marquee: _marqueeEnd = ScreenToWorld(input.LocalPosition); break;
             case NodeEditorGesture.Connect: break;
             default: return false;
@@ -490,7 +558,15 @@ public sealed class NodeEditor : HavenElement, IHavenDrawCommandSource, IHavenPo
         _selected.RemoveWhere(id => !_document.Nodes.Any(node => node.Id == id));
         _selectedEdges.RemoveWhere(id => !_document.Edges.Any(edge => edge.Id == id));
     }
-    private void RaiseSelectionChanged() { SelectionChanged?.Invoke(_selected.ToArray()); Invalidate(); }
+    private void RaiseSelectionChanged()
+    {
+        var selected = _selected.ToArray();
+        SelectionChanged?.Invoke(selected);
+        SemanticContextChanged?.Invoke(selected);
+        Invalidate();
+    }
+    private NodeEditorDocument WithContent(IReadOnlyList<NodeEditorNode> nodes, IReadOnlyList<NodeEditorEdge> edges) =>
+        _document with { Nodes = nodes, Edges = edges, Revision = checked(_document.Revision + 1), State = NodeEditorRevisionState.Draft };
     private NodeEditorNode? FindNode(Guid id) => _document.Nodes.FirstOrDefault(node => node.Id == id);
     private static NodeEditorPort? FindPort(NodeEditorNode node, string portId) => node.Ports.FirstOrDefault(port => string.Equals(port.Id, portId, StringComparison.Ordinal));
 

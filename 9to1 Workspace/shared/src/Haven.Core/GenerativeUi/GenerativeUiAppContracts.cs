@@ -6,7 +6,7 @@ public enum GenUiBindingMode { OneWay, TwoWay, Computed }
 public enum GenUiNavigationKind { Root, Push, Tab, Modal, Sheet, WizardStep, Detail }
 public enum GenUiRenderingLayer { Native, Composite, Scene, GeneratedSandbox }
 public sealed record GenUiRenderingDecision(GenUiRenderingLayer Layer, string Reason, bool AllowsExecutableCode = false);
-public enum GenUiActionExecutionKind { Local, App, Capability, External }
+public enum GenUiActionExecutionKind { Local, App, Capability, External, Agent }
 public sealed record GenUiStateFieldDefinition(string Key, GenUiValueType Type, GenUiPersistenceScope Persistence, bool Required, object? DefaultValue = null);
 public sealed record GenUiDerivedStateDefinition(string Key, GenUiValueType Type, string Expression, IReadOnlyList<string> Dependencies);
 public sealed record GenUiBindingDefinition(string ComponentId, string Property, string StateKey, GenUiBindingMode Mode);

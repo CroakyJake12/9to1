@@ -1,6 +1,15 @@
 using System.Text.Json;
+using System.Collections.Concurrent;
 
 namespace HavenOS.Files;
+
+internal static class FilesStatePathLocks
+{
+	private static readonly ConcurrentDictionary<string, SemaphoreSlim> Gates = new(
+		OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
+	public static SemaphoreSlim Get(string fullPath) => Gates.GetOrAdd(fullPath, static _ => new SemaphoreSlim(1, 1));
+}
 
 /// <summary>
 /// Small crash-conscious state store for Files-owned durable metadata. The envelope is versioned;
@@ -12,7 +21,7 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 	private readonly string _path;
 	private readonly int _schemaVersion;
 	private readonly Func<TState> _createInitialState;
-	private readonly SemaphoreSlim _gate = new(1, 1);
+	private readonly SemaphoreSlim _gate;
 
 	public VersionedJsonStateStore(string path, int schemaVersion, Func<TState> createInitialState)
 	{
@@ -21,6 +30,7 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 			throw new ArgumentOutOfRangeException(nameof(schemaVersion));
 		ArgumentNullException.ThrowIfNull(createInitialState);
 		_path = Path.GetFullPath(path);
+		_gate = FilesStatePathLocks.Get(_path);
 		_schemaVersion = schemaVersion;
 		_createInitialState = createInitialState;
 	}

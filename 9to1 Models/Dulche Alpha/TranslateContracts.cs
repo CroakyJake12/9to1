@@ -1,4 +1,5 @@
 using Haven.Core;
+using System.Text.Json.Serialization;
 
 namespace Dulche.Runtime.Translate;
 
@@ -26,6 +27,7 @@ public sealed record TranslationSource(
     TranslationMediaKind? MediaKind = null,
     string? ExtractionNotice = null)
 {
+    [JsonIgnore]
     public IReadOnlyList<TranslationSourceSegment> EffectiveSegments => Segments is { Count: > 0 }
         ? Segments
         : string.IsNullOrEmpty(Text) ? [] : [new("text:0", Text, TranslationContentKind.HumanLanguage)];
@@ -88,7 +90,8 @@ public sealed record TranslationSet(
     IReadOnlyList<TranslationVariant> Variants,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
-    IReadOnlyList<string>? Warnings = null);
+    IReadOnlyList<string>? Warnings = null,
+    IReadOnlyList<TranslationGlossary>? RequestGlossaries = null);
 
 public sealed record TranslationGlossaryEntry(
     string SourceTerm,
@@ -96,7 +99,7 @@ public sealed record TranslationGlossaryEntry(
     IReadOnlyDictionary<string, string>? TargetTerms = null,
     string? Notes = null,
     string? Context = null,
-    IReadOnlySet<string>? Applicability = null);
+    IReadOnlyList<string>? Applicability = null);
 
 public sealed record TranslationGlossary(
     string GlossaryId,
@@ -104,7 +107,7 @@ public sealed record TranslationGlossary(
     string? Description,
     long Revision,
     IReadOnlyList<TranslationGlossaryEntry> Entries,
-    IReadOnlySet<string>? Applicability = null,
+    IReadOnlyList<string>? Applicability = null,
     DateTimeOffset CreatedAt = default,
     DateTimeOffset ModifiedAt = default);
 
@@ -114,7 +117,7 @@ public sealed record TranslationGlossaryPatch(
     IReadOnlyList<TranslationGlossaryEntry>? Entries = null,
     IReadOnlySet<string>? Applicability = null);
 
-public sealed record ScopedTranslationGlossary(string Name, IReadOnlyList<TranslationGlossaryEntry> Entries, IReadOnlySet<string>? Applicability = null);
+public sealed record ScopedTranslationGlossary(string Name, IReadOnlyList<TranslationGlossaryEntry> Entries, IReadOnlyList<string>? Applicability = null);
 
 public sealed record TranslationOptions(
     string? SourceLanguage = null,
@@ -124,10 +127,11 @@ public sealed record TranslationOptions(
     TranslationPrivacyPolicy PrivacyPolicy = TranslationPrivacyPolicy.FollowRoute,
     string? ModelRouteId = null,
     string? SelectedModelKey = null,
+    ModelRoutingPolicy? RoutingPolicy = null,
     string? CallerId = null,
     string? IdempotencyKey = null,
     string? ConversationId = null,
-    IReadOnlySet<string>? RequiredCapabilities = null);
+    IReadOnlyList<string>? RequiredCapabilities = null);
 
 public sealed record TranslationJobConfiguration(
     TranslationSource Source,
@@ -157,6 +161,9 @@ public sealed record TranslationSourceRevisionResult(string TranslationSetId, st
 public sealed record TranslationUpdateResult(TranslationSet? Set, IReadOnlyList<string> UpdatedSegmentIds, IReadOnlyList<string> PreservedSegmentIds, IReadOnlyList<string> ConflictedSegmentIds, DulcheError? Error = null);
 public sealed record TranslationMediaExtraction(TranslationSource Source, bool LayoutPreserved, IReadOnlyList<string> Warnings);
 public sealed record TranslationDetection(string LanguageName, string? LanguageCode, double? Confidence, IReadOnlyList<string> Alternatives);
+public sealed record TranslationLanguageEvidence(TranslationLanguage Language, LanguageResolutionState State, string Evidence);
+public sealed record DulcheTranslateVoiceCapability(string ProviderId, string SourceLanguage, string TargetLanguage,
+    TranslationMediaKind? Modality, TranslationCapabilityState State, string Evidence);
 
 public interface ILanguageResolver
 {
@@ -194,4 +201,3 @@ public sealed record TranslationDatabaseState(
 {
     public static TranslationDatabaseState Empty { get; } = new(1, [], [], []);
 }
-

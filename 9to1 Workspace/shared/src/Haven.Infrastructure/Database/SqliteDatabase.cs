@@ -923,6 +923,11 @@ internal static class Migrations
                 UPDATE workspace_versions SET haven_sequence = rowid WHERE rowid = NEW.rowid AND haven_sequence IS NULL;
             END;
             CREATE INDEX ix_workspace_versions_sequence ON workspace_versions(workspace_root,haven_sequence);
-        """)
+        """),
+        new(26, """
+            ALTER TABLE external_connections ADD COLUMN capability_snapshot_json TEXT NULL;
+            ALTER TABLE external_connections ADD COLUMN capability_snapshot_version TEXT NULL;
+        """),
+        new(27, PlannerRichEntitiesMigration.Sql)
     ];
 }

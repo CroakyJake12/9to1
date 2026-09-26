@@ -27,6 +27,12 @@ public interface IMailProviderAdapter
     Task WaitForChangesAsync(MailAccount account, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Home-mediated permission gate. A missing or failed authorizer must never submit a message.</summary>
+public interface IMailExternalActionAuthorizer
+{
+    Task<MailResult<bool>> AuthorizeSendAsync(MailAccount account, MailDraft draft, CancellationToken cancellationToken = default);
+}
+
 public sealed class MailProviderException(MailErrorCode code, string message, bool isRetryable, Exception? innerException = null)
     : Exception(message, innerException)
 {

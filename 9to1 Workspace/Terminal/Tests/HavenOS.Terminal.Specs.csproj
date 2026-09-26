@@ -11,5 +11,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HavenOS.Terminal.csproj" />
+    <ProjectReference Include="..\..\shared\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

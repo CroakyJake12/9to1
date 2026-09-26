@@ -8,7 +8,9 @@
  */
 
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Haven.Application;
 using Haven.Core;
 using Microsoft.Data.Sqlite;
@@ -18,7 +20,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents planner repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlannerRepository, ICalendarSyncStore
+public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlannerRepository, ICalendarSyncStore, IPlannerStructuredEntityRepository
 {
     /// <summary>
     /// Performs ensure defaults asynchronously so I/O does not block the caller's thread.
@@ -499,6 +501,326 @@ public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlann
         command.Parameters.AddWithValue("$occurrenceAt", Timestamp(reminder.OccurrenceAt));
         command.Parameters.AddWithValue("$deliveredAt", Timestamp(deliveredAt));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PlannerStructuredEntityEnvelope?> GetAsync(PlannerStructuredEntityKind kind, Guid id, CancellationToken cancellationToken)
+    {
+        ValidateStructuredKind(kind);
+        if (id == Guid.Empty) throw new ArgumentException("A stable entity ID is required.", nameof(id));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM planner_rich_entities WHERE entity_type=$kind AND id=$id AND deleted_at IS NULL;";
+        command.Parameters.AddWithValue("$kind", (int)kind);
+        command.Parameters.AddWithValue("$id", id.ToString());
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? ReadStructuredEntity(reader) : null;
+    }
+
+    public async Task<PlannerStructuredEntityPage> ListAsync(PlannerStructuredEntityQuery query, CancellationToken cancellationToken)
+    {
+        ValidateStructuredKind(query.Kind);
+        if (query.PageSize is < 1 or > 200) throw new ArgumentOutOfRangeException(nameof(query), "Page size must be between 1 and 200.");
+        if (query.DueBefore is { } before && query.DueAfter is { } after && before <= after)
+            throw new ArgumentException("DueBefore must be later than DueAfter.", nameof(query));
+
+        var filterHash = StructuredQueryHash(query);
+        var cursor = ParseStructuredCursor(query.ContinuationToken, query.Kind, filterHash);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        var clauses = new List<string> { "entity_type=$kind" };
+        command.Parameters.AddWithValue("$kind", (int)query.Kind);
+        if (!query.IncludeDeleted) clauses.Add("deleted_at IS NULL");
+        if (query.Status is { } status) { clauses.Add("status=$status"); command.Parameters.AddWithValue("$status", status); }
+        if (query.DueAfter is { } dueAfter) { clauses.Add("due_at >= $dueAfter"); command.Parameters.AddWithValue("$dueAfter", Timestamp(dueAfter)); }
+        if (query.DueBefore is { } dueBefore) { clauses.Add("due_at < $dueBefore"); command.Parameters.AddWithValue("$dueBefore", Timestamp(dueBefore)); }
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            clauses.Add("name LIKE $search ESCAPE '\\'");
+            command.Parameters.AddWithValue("$search", $"%{EscapeLike(query.Search.Trim())}%");
+        }
+        if (cursor is not null)
+        {
+            clauses.Add("(modified_at < $cursorTime OR (modified_at = $cursorTime AND id > $cursorId))");
+            command.Parameters.AddWithValue("$cursorTime", cursor.ModifiedAt);
+            command.Parameters.AddWithValue("$cursorId", cursor.Id);
+        }
+        command.CommandText = $"SELECT * FROM planner_rich_entities WHERE {string.Join(" AND ", clauses)} ORDER BY modified_at DESC,id ASC LIMIT $limit;";
+        command.Parameters.AddWithValue("$limit", query.PageSize + 1);
+        var rows = new List<PlannerStructuredEntityEnvelope>(query.PageSize + 1);
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) rows.Add(ReadStructuredEntity(reader));
+
+        var hasMore = rows.Count > query.PageSize;
+        if (hasMore) rows.RemoveAt(rows.Count - 1);
+        var next = hasMore && rows.Count > 0
+            ? SerializeStructuredCursor(new StructuredEntityCursor(query.Kind, filterHash, Timestamp(rows[^1].ModifiedAt), rows[^1].Id.ToString()))
+            : null;
+        return new PlannerStructuredEntityPage(rows, next);
+    }
+
+    public async Task<PlannerStructuredEntityEnvelope> UpsertAsync(
+        PlannerStructuredEntityEnvelope entity,
+        long? expectedRevision,
+        string? eventType,
+        string? occurrenceId,
+        string eventPayloadJson,
+        CancellationToken cancellationToken)
+    {
+        ValidateStructuredEntity(entity);
+        if (!IsJsonObject(entity.PayloadJson)) throw new ArgumentException("Entity payload must be a JSON object.", nameof(entity));
+        if (!IsValidJson(eventPayloadJson)) throw new ArgumentException("Automation event payload must be valid JSON.", nameof(eventPayloadJson));
+        if (!string.IsNullOrWhiteSpace(eventType) && string.IsNullOrWhiteSpace(eventType.Trim()))
+            throw new ArgumentException("Event type cannot be blank.", nameof(eventType));
+
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var current = await GetStructuredEntityAsync(connection, transaction, entity.Kind, entity.Id, cancellationToken).ConfigureAwait(false);
+        if (expectedRevision is null)
+        {
+            if (current is not null) throw new PlannerRevisionConflictException(entity.Kind, entity.Id, expectedRevision, current.Revision);
+            entity = entity with { Revision = 1, DeletedAt = null };
+            await using var insert = connection.CreateCommand();
+            insert.Transaction = transaction;
+            insert.CommandText = "INSERT INTO planner_rich_entities(id,entity_type,schema_version,name,status,due_at,revision,payload_json,created_at,modified_at,deleted_at) VALUES($id,$kind,$schemaVersion,$name,$status,$dueAt,$revision,$payload,$createdAt,$modifiedAt,NULL);";
+            AddStructuredEntityParameters(insert, entity);
+            await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            if (current is null || current.Revision != expectedRevision.Value)
+                throw new PlannerRevisionConflictException(entity.Kind, entity.Id, expectedRevision, current?.Revision);
+            entity = entity with { Revision = checked(current.Revision + 1), CreatedAt = current.CreatedAt, DeletedAt = null };
+            await using var update = connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE planner_rich_entities SET schema_version=$schemaVersion,name=$name,status=$status,due_at=$dueAt,revision=$revision,payload_json=$payload,modified_at=$modifiedAt,deleted_at=NULL WHERE id=$id AND entity_type=$kind AND revision=$expectedRevision AND deleted_at IS NULL;";
+            AddStructuredEntityParameters(update, entity);
+            update.Parameters.AddWithValue("$expectedRevision", expectedRevision.Value);
+            if (await update.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+                throw new PlannerRevisionConflictException(entity.Kind, entity.Id, expectedRevision, current.Revision);
+        }
+        if (!string.IsNullOrWhiteSpace(eventType))
+            await InsertPlannerAutomationEventAsync(connection, transaction, entity, eventType.Trim(), occurrenceId, eventPayloadJson, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return entity;
+    }
+
+    public async Task<PlannerStructuredEntityEnvelope> SetDeletedAsync(
+        PlannerStructuredEntityKind kind,
+        Guid id,
+        long expectedRevision,
+        DateTimeOffset? deletedAt,
+        CancellationToken cancellationToken)
+    {
+        ValidateStructuredKind(kind);
+        if (id == Guid.Empty) throw new ArgumentException("A stable entity ID is required.", nameof(id));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var current = await GetStructuredEntityAsync(connection, transaction, kind, id, cancellationToken).ConfigureAwait(false);
+        if (current is null || current.Revision != expectedRevision)
+            throw new PlannerRevisionConflictException(kind, id, expectedRevision, current?.Revision);
+        var modifiedAt = deletedAt ?? DateTimeOffset.UtcNow;
+        var updated = current with { Revision = checked(current.Revision + 1), ModifiedAt = modifiedAt, DeletedAt = deletedAt,
+            PayloadJson = UpdateStructuredPayloadMetadata(current.PayloadJson, checked(current.Revision + 1), deletedAt) };
+        await using (var update = connection.CreateCommand())
+        {
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE planner_rich_entities SET revision=$revision,modified_at=$modifiedAt,deleted_at=$deletedAt,payload_json=$payload WHERE id=$id AND entity_type=$kind AND revision=$expectedRevision AND (($restore=0 AND deleted_at IS NULL) OR ($restore=1 AND deleted_at IS NOT NULL));";
+            update.Parameters.AddWithValue("$revision", updated.Revision);
+            update.Parameters.AddWithValue("$modifiedAt", Timestamp(updated.ModifiedAt));
+            update.Parameters.AddWithValue("$deletedAt", Db(updated.DeletedAt));
+            update.Parameters.AddWithValue("$payload", updated.PayloadJson);
+            update.Parameters.AddWithValue("$id", id.ToString());
+            update.Parameters.AddWithValue("$kind", (int)kind);
+            update.Parameters.AddWithValue("$expectedRevision", expectedRevision);
+            update.Parameters.AddWithValue("$restore", deletedAt is null ? 1 : 0);
+            if (await update.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+                throw new PlannerRevisionConflictException(kind, id, expectedRevision, current.Revision);
+        }
+        var eventType = deletedAt is null ? "PlannerEntityRestored" : "PlannerEntityDeleted";
+        var payload = JsonSerializer.Serialize(new { entityId = id, entityKind = kind, revision = updated.Revision });
+        await InsertPlannerAutomationEventAsync(connection, transaction, updated, eventType, null, payload, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return updated;
+    }
+
+    public async Task<IReadOnlyList<PlannerAutomationEventRecord>> GetPendingAutomationEventsAsync(int limit, CancellationToken cancellationToken)
+    {
+        if (limit is < 1 or > 1000) throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM planner_automation_event_outbox WHERE published_at IS NULL ORDER BY created_at,event_id LIMIT $limit;";
+        command.Parameters.AddWithValue("$limit", limit);
+        var events = new List<PlannerAutomationEventRecord>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) events.Add(ReadPlannerAutomationEvent(reader));
+        return events;
+    }
+
+    public async Task MarkAutomationEventPublishedAsync(Guid eventId, DateTimeOffset publishedAt, CancellationToken cancellationToken)
+    {
+        if (eventId == Guid.Empty) throw new ArgumentException("A stable event ID is required.", nameof(eventId));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE planner_automation_event_outbox SET published_at=$publishedAt,last_error=NULL WHERE event_id=$id AND published_at IS NULL;";
+        command.Parameters.AddWithValue("$publishedAt", Timestamp(publishedAt));
+        command.Parameters.AddWithValue("$id", eventId.ToString());
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task RecordAutomationEventFailureAsync(Guid eventId, string error, CancellationToken cancellationToken)
+    {
+        if (eventId == Guid.Empty) throw new ArgumentException("A stable event ID is required.", nameof(eventId));
+        if (string.IsNullOrWhiteSpace(error)) throw new ArgumentException("An error description is required.", nameof(error));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE planner_automation_event_outbox SET attempt_count=attempt_count+1,last_error=$error WHERE event_id=$id AND published_at IS NULL;";
+        command.Parameters.AddWithValue("$error", error.Trim());
+        command.Parameters.AddWithValue("$id", eventId.ToString());
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private const int CurrentStructuredSchemaVersion = 1;
+    private sealed record StructuredEntityCursor(PlannerStructuredEntityKind Kind, string FilterHash, string ModifiedAt, string Id);
+
+    private static void ValidateStructuredKind(PlannerStructuredEntityKind kind)
+    {
+        if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+    }
+
+    private static void ValidateStructuredEntity(PlannerStructuredEntityEnvelope entity)
+    {
+        ValidateStructuredKind(entity.Kind);
+        if (entity.Id == Guid.Empty) throw new ArgumentException("A stable entity ID is required.", nameof(entity));
+        if (entity.SchemaVersion != CurrentStructuredSchemaVersion) throw new InvalidDataException($"Unsupported Planner entity schema version {entity.SchemaVersion}.");
+        if (string.IsNullOrWhiteSpace(entity.Name)) throw new ArgumentException("Entity name is required.", nameof(entity));
+        if (entity.Revision < 1) throw new ArgumentOutOfRangeException(nameof(entity), "Entity revision must be positive.");
+    }
+
+    private static string StructuredQueryHash(PlannerStructuredEntityQuery query)
+    {
+        var canonical = JsonSerializer.Serialize(new
+        {
+            kind = (int)query.Kind,
+            query.Status,
+            dueBefore = query.DueBefore is null ? null : Timestamp(query.DueBefore.Value),
+            dueAfter = query.DueAfter is null ? null : Timestamp(query.DueAfter.Value),
+            search = query.Search?.Trim(),
+            query.IncludeDeleted
+        });
+        return Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonical)));
+    }
+
+    private static string SerializeStructuredCursor(StructuredEntityCursor cursor) =>
+        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cursor)));
+
+    private static StructuredEntityCursor? ParseStructuredCursor(string? token, PlannerStructuredEntityKind kind, string filterHash)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return null;
+        try
+        {
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(token));
+            var cursor = JsonSerializer.Deserialize<StructuredEntityCursor>(json);
+            if (cursor is null || cursor.Kind != kind || !string.Equals(cursor.FilterHash, filterHash, StringComparison.Ordinal)
+                || !Guid.TryParse(cursor.Id, out _))
+                throw new ArgumentException("Continuation token does not match this Planner query.", nameof(token));
+            return cursor;
+        }
+        catch (FormatException exception) { throw new ArgumentException("Continuation token is invalid.", nameof(token), exception); }
+        catch (JsonException exception) { throw new ArgumentException("Continuation token is invalid.", nameof(token), exception); }
+    }
+
+    private static PlannerStructuredEntityEnvelope ReadStructuredEntity(SqliteDataReader reader)
+    {
+        var version = reader.Int32("schema_version");
+        if (version != CurrentStructuredSchemaVersion) throw new InvalidDataException($"Unsupported Planner entity schema version {version}.");
+        var kind = (PlannerStructuredEntityKind)reader.Int32("entity_type");
+        ValidateStructuredKind(kind);
+        return new PlannerStructuredEntityEnvelope(
+            reader.Guid("id"),
+            kind,
+            version,
+            reader.String("name"),
+            NullableInt32(reader, "status"),
+            reader.NullableDateTimeOffset("due_at"),
+            Convert.ToInt64(reader["revision"], CultureInfo.InvariantCulture),
+            reader.String("payload_json"),
+            reader.DateTimeOffset("created_at"),
+            reader.DateTimeOffset("modified_at"),
+            reader.NullableDateTimeOffset("deleted_at"));
+    }
+
+    private static void AddStructuredEntityParameters(SqliteCommand command, PlannerStructuredEntityEnvelope entity)
+    {
+        command.Parameters.AddWithValue("$id", entity.Id.ToString());
+        command.Parameters.AddWithValue("$kind", (int)entity.Kind);
+        command.Parameters.AddWithValue("$schemaVersion", entity.SchemaVersion);
+        command.Parameters.AddWithValue("$name", entity.Name.Trim());
+        command.Parameters.AddWithValue("$status", entity.Status is null ? DBNull.Value : entity.Status.Value);
+        command.Parameters.AddWithValue("$dueAt", Db(entity.DueAt));
+        command.Parameters.AddWithValue("$revision", entity.Revision);
+        command.Parameters.AddWithValue("$payload", entity.PayloadJson);
+        command.Parameters.AddWithValue("$createdAt", Timestamp(entity.CreatedAt));
+        command.Parameters.AddWithValue("$modifiedAt", Timestamp(entity.ModifiedAt));
+    }
+
+    private static string UpdateStructuredPayloadMetadata(string payloadJson, long revision, DateTimeOffset? deletedAt)
+    {
+        var payload = JsonNode.Parse(payloadJson) as JsonObject
+            ?? throw new InvalidDataException("Structured Planner payload must be a JSON object.");
+        payload["revision"] = revision;
+        payload["deletedAt"] = deletedAt?.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+        return payload.ToJsonString();
+    }
+
+    private static async Task<PlannerStructuredEntityEnvelope?> GetStructuredEntityAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        PlannerStructuredEntityKind kind,
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT * FROM planner_rich_entities WHERE entity_type=$kind AND id=$id;";
+        command.Parameters.AddWithValue("$kind", (int)kind);
+        command.Parameters.AddWithValue("$id", id.ToString());
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? ReadStructuredEntity(reader) : null;
+    }
+
+    private static async Task InsertPlannerAutomationEventAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        PlannerStructuredEntityEnvelope entity,
+        string eventType,
+        string? occurrenceId,
+        string payload,
+        CancellationToken cancellationToken)
+    {
+        var eventIdentity = $"{(int)entity.Kind}|{entity.Id:N}|{entity.Revision}|{eventType}|{occurrenceId ?? string.Empty}";
+        var eventId = new Guid(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(eventIdentity)).AsSpan(0, 16));
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "INSERT OR IGNORE INTO planner_automation_event_outbox(event_id,entity_type,entity_id,entity_revision,event_type,occurrence_id,payload_json,created_at,published_at,attempt_count,last_error) VALUES($eventId,$kind,$entityId,$revision,$eventType,$occurrenceId,$payload,$createdAt,NULL,0,NULL);";
+        command.Parameters.AddWithValue("$eventId", eventId.ToString());
+        command.Parameters.AddWithValue("$kind", (int)entity.Kind);
+        command.Parameters.AddWithValue("$entityId", entity.Id.ToString());
+        command.Parameters.AddWithValue("$revision", entity.Revision);
+        command.Parameters.AddWithValue("$eventType", eventType);
+        command.Parameters.AddWithValue("$occurrenceId", Db(occurrenceId));
+        command.Parameters.AddWithValue("$payload", payload);
+        command.Parameters.AddWithValue("$createdAt", Timestamp(entity.ModifiedAt));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static PlannerAutomationEventRecord ReadPlannerAutomationEvent(SqliteDataReader reader)
+    {
+        var kind = (PlannerStructuredEntityKind)reader.Int32("entity_type");
+        ValidateStructuredKind(kind);
+        return new(reader.Guid("event_id"), kind, reader.Guid("entity_id"),
+            Convert.ToInt64(reader["entity_revision"], CultureInfo.InvariantCulture), reader.String("event_type"),
+            reader.NullableString("occurrence_id"), reader.String("payload_json"), reader.DateTimeOffset("created_at"),
+            reader.NullableDateTimeOffset("published_at"), reader.Int32("attempt_count"), reader.NullableString("last_error"));
     }
 
     /// <summary>
@@ -1199,6 +1521,25 @@ public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlann
     /// Performs the nullable int32 step owned by this component.
     /// </summary>
     private static int? NullableInt32(SqliteDataReader reader, string name) { var ordinal = reader.GetOrdinal(name); return reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal); }
+    /// <summary>
+    /// Reports whether a JSON document is syntactically valid.
+    /// </summary>
+    private static bool IsValidJson(string json)
+    {
+        try { using var document = JsonDocument.Parse(json); return true; }
+        catch (JsonException) { return false; }
+    }
+
+    private static bool IsJsonObject(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement.ValueKind == JsonValueKind.Object;
+        }
+        catch (JsonException) { return false; }
+    }
+
     /// <summary>
     /// Performs the timestamp step owned by this component.
     /// </summary>

@@ -135,4 +135,12 @@ public sealed record SpaceDefinition(
 
 public enum SpaceOrigin { BuiltIn = 0, UserCreated = 1 }
 
+public sealed class SpaceRevisionConflictException(Guid spaceId, long expectedRevision, long actualRevision)
+    : InvalidOperationException($"Space '{spaceId}' changed from revision {expectedRevision} to revision {actualRevision}.")
+{
+    public Guid SpaceId { get; } = spaceId;
+    public long ExpectedRevision { get; } = expectedRevision;
+    public long ActualRevision { get; } = actualRevision;
+}
+
 internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces);

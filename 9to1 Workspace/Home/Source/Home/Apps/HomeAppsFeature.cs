@@ -139,7 +139,7 @@ public sealed record HomePackageActionResult(
 /// Feature boundary consumed by Home's shell and API host. Implementations must use the
 /// canonical Home package service and permission broker; UI code must not mutate package state.
 /// </summary>
-public interface IHomeAppsFeatureProvider
+public interface IHomeAppsFeatureSource
 {
     Task<HomeAppsSnapshot> GetSnapshotAsync(HomeAppsQuery query, CancellationToken cancellationToken);
 
@@ -152,10 +152,11 @@ public interface IHomeAppsFeatureProvider
 /// Coordinates catalogue reads and package actions for the Apps surface. It never retries a
 /// consequential action automatically: an ambiguous result must be refreshed before retry.
 /// </summary>
-public sealed class HomeAppsFeature(IHomeAppsFeatureProvider provider)
+public sealed class HomeAppsFeature(IHomeAppsFeatureSource provider)
 {
-    private readonly IHomeAppsFeatureProvider _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+    private readonly IHomeAppsFeatureSource _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private HomeAppsQuery _lastQuery = new();
     private HomeAppsSnapshot _current = new(
         string.Empty,
         HomeAppsDataState.Loading,
@@ -177,6 +178,7 @@ public sealed class HomeAppsFeature(IHomeAppsFeatureProvider provider)
             var snapshot = await _provider.GetSnapshotAsync(validated, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("The Home package service returned no catalogue result.");
             ValidateSnapshot(snapshot);
+            _lastQuery = validated;
             Publish(snapshot);
             return snapshot;
         }
@@ -231,6 +233,8 @@ public sealed class HomeAppsFeature(IHomeAppsFeatureProvider provider)
             (request.Action is HomePackageAction.SelectChannel && string.IsNullOrWhiteSpace(request.RequestedChannel)))
             return Rejected(request, "HomeApps.SelectionRequired", "Choose a version or update channel first.");
 
+        HomePackageActionResult result;
+        var refreshAfterOperation = false;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -240,22 +244,23 @@ public sealed class HomeAppsFeature(IHomeAppsFeatureProvider provider)
             if (entry is null || current.IsStale || !entry.SupportedActions.Contains(request.Action))
                 return Rejected(request, "HomeApps.StateChanged", "The app state changed. Refresh and try again.");
 
-            var result = await _provider.ExecuteAsync(request, cancellationToken).ConfigureAwait(false)
+            result = await _provider.ExecuteAsync(request, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("The Home package service returned no operation result.");
             ValidateActionResult(request, result);
-            if (result.State is HomePackageOperationState.Succeeded or HomePackageOperationState.PartiallySucceeded)
-                await RefreshAsync(new HomeAppsQuery(), cancellationToken).ConfigureAwait(false);
+            if (result.State is HomePackageOperationState.Succeeded or HomePackageOperationState.PartiallySucceeded or
+                HomePackageOperationState.Failed or HomePackageOperationState.Cancelled)
+                refreshAfterOperation = true;
             else if (result.State is HomePackageOperationState.Unknown or HomePackageOperationState.Pending)
                 Publish(current with { IsStale = true, State = HomeAppsDataState.Partial });
-            return result;
         }
         catch (OperationCanceledException)
         {
+            Publish(Current with { IsStale = true, State = HomeAppsDataState.Partial });
             throw;
         }
         catch (Exception)
         {
-            var result = new HomePackageActionResult(
+            result = new HomePackageActionResult(
                 Guid.NewGuid().ToString("N"),
                 request.PackageId,
                 request.Action,
@@ -271,12 +276,15 @@ public sealed class HomeAppsFeature(IHomeAppsFeatureProvider provider)
                 Array.Empty<string>(),
                 new HomeAppsError("HomeApps.OperationOutcomeUnknown", "Refresh to check the current app state.", "HomeApps.Execute", false, true));
             Publish(Current with { IsStale = true, State = HomeAppsDataState.Partial });
-            return result;
         }
         finally
         {
             _gate.Release();
         }
+
+        if (refreshAfterOperation)
+            await RefreshAsync(_lastQuery, cancellationToken).ConfigureAwait(false);
+        return result;
     }
 
     private static void ValidateSnapshot(HomeAppsSnapshot snapshot)

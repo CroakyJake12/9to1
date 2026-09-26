@@ -4,10 +4,26 @@ public static class GenUiSemanticValidator
  public const int CurrentSchemaVersion = 1;
  public static GenUiSemanticValidationResult ValidateAndRepair(GenUiAppDefinition app)
  {
+  ArgumentNullException.ThrowIfNull(app);
+  ArgumentNullException.ThrowIfNull(app.Document);
   var errors=GenerativeUiContractValidator.Validate(app.Document).ToList();
+  if(app.StateSchema is null||app.DerivedState is null||app.Bindings is null||app.Actions is null||app.ResultSchemas is null||app.ErrorSchemas is null||app.Routes is null||app.Document.State is null||app.Document.Root is null||app.Rendering is null)
+  {
+   errors.Add("Generated app definition is missing a required schema, route, state, or document collection.");
+   return new(errors,[],app);
+  }
+  if(errors.Count>0) return new(errors,[],app);
+  if(string.IsNullOrWhiteSpace(app.AppId)||app.SchemaVersion!=CurrentSchemaVersion||string.IsNullOrWhiteSpace(app.RuntimeVersion)) errors.Add("Generated app identity, schema version, and runtime version are required and supported.");
   var repairs=new List<string>();
   var state=app.StateSchema.Select(x=>x.Key).ToHashSet(StringComparer.Ordinal);
   if(state.Count!=app.StateSchema.Count||state.Contains("")) errors.Add("State field keys must be unique and non-empty.");
+  foreach(var field in app.StateSchema)
+  {
+   if(!Enum.IsDefined(field.Type)||!Enum.IsDefined(field.Persistence)) errors.Add($"State field '{field.Key}' has an unsupported type or persistence scope.");
+   if(!string.IsNullOrWhiteSpace(field.Key)&&field.DefaultValue is System.Text.Json.JsonElement defaultElement&&!Matches(defaultElement,field.Type)) errors.Add($"State field '{field.Key}' default does not match {field.Type}.");
+   if(!string.IsNullOrWhiteSpace(field.Key)&&app.Document.State.TryGetValue(field.Key,out var value)&&!Matches(value,field.Type)) errors.Add($"State field '{field.Key}' value does not match {field.Type}.");
+   if(field.Required&&!app.Document.State.ContainsKey(field.Key)&&field.DefaultValue is null) errors.Add($"Required state field '{field.Key}' has no value or default.");
+  }
   var derived=app.DerivedState.Select(x=>x.Key).ToHashSet(StringComparer.Ordinal);
   if(derived.Count!=app.DerivedState.Count||derived.Overlaps(state)) errors.Add("Derived state keys must be unique.");
   foreach(var item in app.DerivedState)
@@ -26,12 +42,32 @@ public static class GenUiSemanticValidator
   if(resultSchemaIds.Count!=app.ResultSchemas.Count||resultSchemaIds.Contains("")) errors.Add("Result schema IDs must be unique and non-empty.");
   var errorSchemaIds=app.ErrorSchemas.Select(x=>x.ErrorId).ToHashSet(StringComparer.Ordinal);
   if(errorSchemaIds.Count!=app.ErrorSchemas.Count||errorSchemaIds.Contains("")) errors.Add("Error schema IDs must be unique and non-empty.");
-  foreach(var schema in app.ResultSchemas) if(schema.Fields.Select(x=>x.Key).Distinct(StringComparer.Ordinal).Count()!=schema.Fields.Count) errors.Add($"Result schema '{schema.SchemaId}' has duplicate field keys.");
-  foreach(var schema in app.ErrorSchemas) if(schema.Details.Select(x=>x.Key).Distinct(StringComparer.Ordinal).Count()!=schema.Details.Count) errors.Add($"Error schema '{schema.ErrorId}' has duplicate detail keys.");
+  foreach(var schema in app.ResultSchemas)
+  {
+   ValidateFields(schema.Fields,$"Result schema '{schema.SchemaId}'",errors);
+   if(schema.Fields.Select(x=>x.Key).Distinct(StringComparer.Ordinal).Count()!=schema.Fields.Count) errors.Add($"Result schema '{schema.SchemaId}' has duplicate field keys.");
+  }
+  foreach(var schema in app.ErrorSchemas)
+  {
+   if(string.IsNullOrWhiteSpace(schema.Code)||string.IsNullOrWhiteSpace(schema.Message)) errors.Add($"Error schema '{schema.ErrorId}' requires a code and message.");
+   ValidateFields(schema.Details,$"Error schema '{schema.ErrorId}'",errors);
+   if(schema.Details.Select(x=>x.Key).Distinct(StringComparer.Ordinal).Count()!=schema.Details.Count) errors.Add($"Error schema '{schema.ErrorId}' has duplicate detail keys.");
+  }
   var actionIds=app.Actions.Select(x=>x.ActionId).ToHashSet(StringComparer.Ordinal);
   if(actionIds.Count!=app.Actions.Count||actionIds.Contains("")) errors.Add("Action IDs must be unique and non-empty.");
+  var componentActions=Flatten(app.Document.Root).SelectMany(component=>component.Actions).ToArray();
+  foreach(var binding in componentActions)
+  {
+   var definition=app.Actions.FirstOrDefault(action=>action.ActionId==binding.ActionId);
+   if(definition is null) errors.Add($"Component action '{binding.ActionId}' has no typed action definition.");
+   else if(definition.ExecutionKind!=ExecutionKind(binding.Route)) errors.Add($"Action '{binding.ActionId}' execution kind does not match its component route.");
+  }
+  foreach(var action in app.Actions)
+   if(!componentActions.Any(binding=>binding.ActionId==action.ActionId)) errors.Add($"Typed action '{action.ActionId}' is not bound to a component.");
   foreach(var action in app.Actions)
   {
+   if(!Enum.IsDefined(action.ExecutionKind)) errors.Add($"Action '{action.ActionId}' has an unsupported execution kind.");
+   ValidateFields(action.Inputs,$"Action '{action.ActionId}' input",errors);
    if(action.Inputs.Select(x=>x.Key).Distinct(StringComparer.Ordinal).Count()!=action.Inputs.Count) errors.Add($"Action '{action.ActionId}' has duplicate input keys.");
    if(action.ResultSchemaId is { } resultId&&!resultSchemaIds.Contains(resultId)) errors.Add($"Action '{action.ActionId}' references unknown result schema '{resultId}'.");
    foreach(var errorId in action.ErrorSchemaIds) if(!errorSchemaIds.Contains(errorId)) errors.Add($"Action '{action.ActionId}' references unknown error schema '{errorId}'.");
@@ -63,8 +99,33 @@ public static class GenUiSemanticValidator
     foreach(var route in routes.Where(x=>!reachable.Contains(x.RouteId))) errors.Add($"Route '{route.RouteId}' is unreachable from start route '{start}'.");
    }
   }
-  return new(errors,repairs,app with { Routes=routes });
+ return new(errors,repairs,app with { Routes=routes });
  }
+ private static GenUiActionExecutionKind? ExecutionKind(GenUiRouteKind route)=>route switch
+ {
+  GenUiRouteKind.Local=>GenUiActionExecutionKind.Local,
+  GenUiRouteKind.App=>GenUiActionExecutionKind.App,
+  GenUiRouteKind.Agent=>GenUiActionExecutionKind.Agent,
+  GenUiRouteKind.Capability=>GenUiActionExecutionKind.Capability,
+  GenUiRouteKind.External=>GenUiActionExecutionKind.External,
+  _=>null
+ };
+ private static void ValidateFields(IReadOnlyList<GenUiSchemaField> fields,string owner,List<string> errors)
+ {
+  foreach(var field in fields)
+   if(string.IsNullOrWhiteSpace(field.Key)||!Enum.IsDefined(field.Type)) errors.Add($"{owner} fields require a key and supported value type.");
+ }
+ private static bool Matches(System.Text.Json.JsonElement value,GenUiValueType type)=>type switch
+ {
+  GenUiValueType.String=>value.ValueKind==System.Text.Json.JsonValueKind.String,
+  GenUiValueType.Integer=>value.ValueKind==System.Text.Json.JsonValueKind.Number&&value.TryGetInt64(out _),
+  GenUiValueType.Number=>value.ValueKind==System.Text.Json.JsonValueKind.Number,
+  GenUiValueType.Boolean=>value.ValueKind is System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False,
+  GenUiValueType.Array=>value.ValueKind==System.Text.Json.JsonValueKind.Array,
+  GenUiValueType.Object=>value.ValueKind==System.Text.Json.JsonValueKind.Object,
+  GenUiValueType.DateTime=>value.ValueKind==System.Text.Json.JsonValueKind.String&&DateTimeOffset.TryParse(value.GetString(),out _),
+  _=>false
+ };
  private static IEnumerable<GenUiComponent> Flatten(GenUiComponent root)
  {
   yield return root; foreach(var child in root.Children) foreach(var item in Flatten(child)) yield return item;

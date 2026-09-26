@@ -15,7 +15,7 @@ namespace Haven.Application;
 /// Preserves the normal call coordinator contract while reducing cold-start delay
 /// and preventing an enabled spoken call from sitting silently on a slow turn.
 /// </summary>
-public sealed class ResponsiveCallCoordinator : ICallCoordinator, IVoiceReactionSource, IVoiceInputStatusSource
+public sealed class ResponsiveCallCoordinator : ICallCoordinator, IVoiceReactionSource, IVoiceInputStatusSource, ICallDeviceSelection
 {
     private static readonly TimeSpan CueDelay = TimeSpan.FromMilliseconds(1250);
 
@@ -112,6 +112,15 @@ public sealed class ResponsiveCallCoordinator : ICallCoordinator, IVoiceReaction
 
     public Task SetMutedAsync(bool muted, CancellationToken cancellationToken) =>
         _inner.SetMutedAsync(muted, cancellationToken);
+
+    public Task SelectInputDeviceAsync(string? deviceId, CancellationToken cancellationToken) =>
+        _inner.SelectInputDeviceAsync(deviceId, cancellationToken);
+
+    public async Task SelectOutputDeviceAsync(string? deviceId, CancellationToken cancellationToken)
+    {
+        await _inner.SelectOutputDeviceAsync(deviceId, cancellationToken).ConfigureAwait(false);
+        _outputDeviceId = deviceId;
+    }
 
     public async Task PauseAsync(CancellationToken cancellationToken)
     {

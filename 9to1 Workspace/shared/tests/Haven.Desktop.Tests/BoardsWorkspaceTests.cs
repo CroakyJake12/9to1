@@ -23,6 +23,117 @@ public sealed class BoardsWorkspaceTests
     }
 
     [Fact]
+    public async Task DeleteNotebook_IsRecoverableAndPreservesCanonicalIdentityAndContents()
+    {
+        var repository = new FakeNotesRepository();
+        var boards = new BoardsWorkspaceService(repository);
+        var notebook = await boards.CreateNotebookAsync("Recoverable", CancellationToken.None);
+        var stableId = notebook.Id;
+        var originalBlockId = notebook.Sections[0].Pages[0].Blocks[0].Id;
+
+        Assert.True(await boards.DeleteNotebookAsync(stableId, CancellationToken.None));
+        Assert.Null(await boards.OpenNotebookAsync(stableId, CancellationToken.None));
+        Assert.Empty(await boards.ListNotebooksAsync(CancellationToken.None));
+        var trashed = Assert.Single(await boards.ListDeletedNotebooksAsync(CancellationToken.None));
+        Assert.Equal(stableId, trashed.Id);
+
+        Assert.True(await boards.RestoreNotebookAsync(stableId, CancellationToken.None));
+        var restored = Assert.IsType<NotesDocument>(await boards.OpenNotebookAsync(stableId, CancellationToken.None));
+        Assert.Equal(stableId, restored.Id);
+        Assert.Equal(originalBlockId, restored.Sections[0].Pages[0].Blocks[0].Id);
+        Assert.Single(await boards.ListNotebooksAsync(CancellationToken.None));
+        Assert.Empty(await boards.ListDeletedNotebooksAsync(CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task DeleteAndRestorePage_UsesRecoverableMetadataAndKeepsPagePayload()
+    {
+        var boards = new BoardsWorkspaceService(new FakeNotesRepository());
+        var notebook = await boards.CreateNotebookAsync("Pages", CancellationToken.None);
+        var section = notebook.Sections[0];
+        var first = section.Pages[0];
+        var second = boards.AddPage(notebook, section.Id, "Second");
+        var block = boards.AddBlock(notebook, second.Id, NotesBlockKind.Heading, "Retain me");
+
+        Assert.True(boards.DeletePage(notebook, second.Id));
+        Assert.True(BoardsWorkspaceService.IsPageDeleted(notebook, second.Id));
+        Assert.Single(boards.ListDeletedPages(notebook));
+        Assert.Throws<KeyNotFoundException>(() => boards.AddBlock(notebook, second.Id, NotesBlockKind.Paragraph));
+        Assert.False(boards.DeletePage(notebook, first.Id));
+
+        Assert.True(boards.RestorePage(notebook, second.Id));
+        Assert.False(BoardsWorkspaceService.IsPageDeleted(notebook, second.Id));
+        Assert.Equal("Retain me", second.Blocks.Single(value => value.Id == block.Id).PlainText);
+        Assert.Empty(boards.ListDeletedPages(notebook));
+    }
+
+    [Fact]
+    public async Task TypedOperations_CanDeleteAndRestoreNotebookWithoutPurgingIt()
+    {
+        var boards = new BoardsWorkspaceService(new FakeNotesRepository());
+        var executor = new BoardsOperationExecutor(boards);
+        var notebook = await boards.CreateNotebookAsync("API", CancellationToken.None);
+
+        await executor.ExecuteAsync(notebook.Id, new BoardsOperation(BoardsOperationKind.DeleteNotebook), CancellationToken.None);
+        Assert.Null(await boards.OpenNotebookAsync(notebook.Id, CancellationToken.None));
+        await executor.ExecuteAsync(notebook.Id, new BoardsOperation(BoardsOperationKind.RestoreNotebook), CancellationToken.None);
+
+        Assert.NotNull(await boards.OpenNotebookAsync(notebook.Id, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ViewMode_IsPersistedAndBlocksServiceAndTypedApiMutationsUntilEditModeReturns()
+    {
+        var repository = new FakeNotesRepository();
+        var boards = new BoardsWorkspaceService(repository);
+        var executor = new BoardsOperationExecutor(boards);
+        var notebook = await boards.CreateNotebookAsync("Modes", CancellationToken.None);
+        var section = notebook.Sections[0];
+        var page = section.Pages[0];
+        boards.SetEditMode(notebook, page.Id, BoardsPageEditMode.View);
+
+        Assert.Equal(BoardsPageEditMode.View, boards.GetEditMode(notebook, page.Id));
+        await boards.SaveAsync(notebook, "save view mode", CancellationToken.None);
+        var reopened = await boards.OpenNotebookAsync(notebook.Id, CancellationToken.None);
+        Assert.Equal(BoardsPageEditMode.View, boards.GetEditMode(reopened!, page.Id));
+        Assert.Throws<InvalidOperationException>(() => boards.AddBlock(reopened!, page.Id, NotesBlockKind.Paragraph));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => executor.ExecuteAsync(
+            reopened!.Id,
+            new BoardsOperation(BoardsOperationKind.AddBlock, SectionId: section.Id, PageId: page.Id,
+                Text: "must not mutate", BlockKind: NotesBlockKind.Paragraph),
+            CancellationToken.None));
+
+        await executor.ExecuteAsync(reopened!.Id,
+            new BoardsOperation(BoardsOperationKind.SetEditMode, PageId: page.Id, Text: "Edit"), CancellationToken.None);
+        var editable = await boards.OpenNotebookAsync(notebook.Id, CancellationToken.None);
+        Assert.Equal(BoardsPageEditMode.Edit, boards.GetEditMode(editable!, page.Id));
+        Assert.NotNull(boards.AddBlock(editable!, page.Id, NotesBlockKind.Paragraph, "allowed"));
+    }
+
+    [Fact]
+    public async Task LockedLayoutPreservesAbsoluteCoordinatesAndBlocksPlacementIndependentlyOfEditMode()
+    {
+        var boards = new BoardsWorkspaceService(new FakeNotesRepository());
+        var notebook = await boards.CreateNotebookAsync("Layout", CancellationToken.None);
+        var page = notebook.Sections[0].Pages[0];
+        Assert.Equal(BoardsPageLayoutMode.Locked, boards.GetLayoutMode(notebook, page.Id));
+        Assert.Throws<InvalidOperationException>(() => boards.AddCanvasObject(
+            notebook, page.Id, NotesCanvasObjectKind.Text, "locked", 100, 200));
+
+        boards.SetLayoutMode(notebook, page.Id, BoardsPageLayoutMode.Unlocked);
+        var card = boards.AddCanvasObject(notebook, page.Id, NotesCanvasObjectKind.Text, "placed", 100, 200);
+        Assert.True(boards.MoveCanvasObject(notebook, page.Id, card.Id, 340, 510));
+        boards.SetLayoutMode(notebook, page.Id, BoardsPageLayoutMode.Locked);
+        Assert.Throws<InvalidOperationException>(() => boards.MoveCanvasObject(notebook, page.Id, card.Id, 0, 0));
+        Assert.Throws<InvalidOperationException>(() => boards.ResizeCanvasObject(notebook, page.Id, card.Id, 400, 300));
+        Assert.Equal((340d, 510d, card.Width, card.Height), (card.X, card.Y, card.Width, card.Height));
+
+        boards.SetEditMode(notebook, page.Id, BoardsPageEditMode.View);
+        Assert.Throws<InvalidOperationException>(() => boards.SetLayoutMode(notebook, page.Id, BoardsPageLayoutMode.Unlocked));
+        Assert.Equal(BoardsPageLayoutMode.Locked, boards.GetLayoutMode(notebook, page.Id));
+    }
+
+    [Fact]
     public void DeepLink_RoundTripsNotebookSectionAndPage()
     {
         var expected = new BoardsDeepLink(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
@@ -84,7 +195,8 @@ public sealed class BoardsWorkspaceTests
             CancellationToken.None);
         var pageResult = await executor.ExecuteAsync(
             notebook.Id,
-            new BoardsOperation(BoardsOperationKind.AddPage, SectionId: sectionResult.SectionId, Text: "Sources"),
+            new BoardsOperation(BoardsOperationKind.AddPage, SectionId: sectionResult.SectionId,
+                PageId: notebook.Sections[0].Pages[0].Id, Text: "Sources"),
             CancellationToken.None);
         var blockResult = await executor.ExecuteAsync(
             notebook.Id,

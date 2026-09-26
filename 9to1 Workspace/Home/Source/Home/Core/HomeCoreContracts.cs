@@ -3,12 +3,19 @@ using System.Text.Json;
 namespace HavenOS.Home.Core;
 
 /// <summary>Contract versions are independent from the Home product version.</summary>
-public readonly record struct HomeContractVersion(int Major, int Minor, int Patch) : IComparable<HomeContractVersion>
+public readonly record struct HomeContractVersion : IComparable<HomeContractVersion>
 {
-    public HomeContractVersion
+    public int Major { get; }
+    public int Minor { get; }
+    public int Patch { get; }
+
+    public HomeContractVersion(int major, int minor, int patch)
     {
-        if (Major < 0 || Minor < 0 || Patch < 0)
+        if (major < 0 || minor < 0 || patch < 0)
             throw new ArgumentOutOfRangeException(nameof(Major), "Contract version components cannot be negative.");
+        Major = major;
+        Minor = minor;
+        Patch = patch;
     }
 
     public int CompareTo(HomeContractVersion other)
@@ -42,6 +49,7 @@ public enum HomeCoreErrorCode
     HomeStateIncompatible,
     HomeStateConflict,
     HomeStateScopeUnsupported,
+    HomeSecretPersistenceBlocked,
     HomeDependencyUnavailable,
     HomeServiceStartFailed,
     HomeShutdownBlocked,
@@ -183,9 +191,21 @@ public interface IHomeCoreAuthorization
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>Authenticated Home API used by native apps; transports must establish caller identity from trusted OS/package evidence.</summary>
+public interface IHomeCoreApi
+{
+    Task<HomeCoreOperationResult<HomeCoreStateSnapshot>> GetStateAsync(HomeCallerIdentity caller,
+        CancellationToken cancellationToken = default);
+    Task<HomeCoreOperationResult<IReadOnlyList<HomeServiceDescriptor>>> GetServicesAsync(HomeCallerIdentity caller,
+        CancellationToken cancellationToken = default);
+    Task<HomeCoreOperationResult<HomeServiceDescriptor>> GetServiceAsync(HomeCallerIdentity caller, string serviceId,
+        CancellationToken cancellationToken = default);
+    Task<HomeCompatibilityResult> GetCompatibilityAsync(HomeCallerIdentity caller, HomeCompatibilityRequest request,
+        CancellationToken cancellationToken = default);
+}
+
 public sealed record HomeCoreDependencySignal(
     long Revision,
     IReadOnlyList<HomeServiceDescriptor> Services,
     bool RequiresReconnect,
     DateTimeOffset OccurredAtUtc);
-

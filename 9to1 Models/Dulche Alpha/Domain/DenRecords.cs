@@ -65,6 +65,12 @@ public sealed class DenException(DenErrorCode code, string message, bool recover
 [JsonDerivedType(typeof(QueueItemRecord), "queueItem")]
 [JsonDerivedType(typeof(BlockerRecord), "blocker")]
 [JsonDerivedType(typeof(RunEventRecord), "runEvent")]
+[JsonDerivedType(typeof(BlobReferenceRecord), "blobReference")]
+[JsonDerivedType(typeof(StorageQuotaRecord), "storageQuota")]
+[JsonDerivedType(typeof(AgentDefinitionRecord), "agentDefinition")]
+[JsonDerivedType(typeof(WorkflowDefinitionRecord), "workflowDefinition")]
+[JsonDerivedType(typeof(MessageRevisionRecord), "messageRevision")]
+[JsonDerivedType(typeof(RequestResultRecord), "requestResult")]
 public abstract record DenRecord
 {
     public required string Id { get; init; }
@@ -72,6 +78,7 @@ public abstract record DenRecord
     public long Revision { get; init; } = 1;
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
+    public string? OriginDeviceId { get; init; }
     [JsonExtensionData] public Dictionary<string, JsonElement>? ExtensionData { get; init; }
 }
 
@@ -123,7 +130,6 @@ public sealed record ModelRecord : DenRecord
     public PortableMetric ActiveMoeParameters { get; init; } = PortableMetric.Empty();
     public PortableMetric StorageBytes { get; init; } = PortableMetric.Empty();
     public PortableMetric HardwareMemoryBytes { get; init; } = PortableMetric.Empty();
-    public string? DeviceLocalPath { get; init; }
 }
 
 public sealed record ModelReplacement(string PreviousArtifactRevision, string NewArtifactRevision,
@@ -216,6 +222,52 @@ public sealed record ApprovalRecord : DenRecord
     public DateTimeOffset? ExpiresAtUtc { get; init; }
 }
 
+public sealed record AgentDefinitionRecord : DenRecord
+{
+    public required string DisplayName { get; init; }
+    public required string Version { get; init; }
+    public string? Instructions { get; init; }
+    public IReadOnlyList<string> ToolIds { get; init; } = [];
+    public IReadOnlyList<string> SkillIds { get; init; } = [];
+    public IReadOnlyList<string> PluginIds { get; init; } = [];
+    public IReadOnlyList<string> McpCapabilityIds { get; init; } = [];
+    public IReadOnlyList<string> AllowedPermissions { get; init; } = [];
+    public string? ModelPolicyJson { get; init; }
+    public string? BudgetJson { get; init; }
+    public bool Enabled { get; init; }
+}
+
+public sealed record WorkflowDefinitionRecord : DenRecord
+{
+    public required string DisplayName { get; init; }
+    public required string Version { get; init; }
+    public required string DefinitionJson { get; init; }
+    public string? PermissionManifestJson { get; init; }
+}
+
+public sealed record MessageRevisionRecord : DenRecord
+{
+    public required string ConversationId { get; init; }
+    public required string MessageId { get; init; }
+    public required string BranchId { get; init; }
+    public string? PreviousRevisionId { get; init; }
+    public required string AuthorKind { get; init; }
+    public required string Content { get; init; }
+    public IReadOnlyList<string> ContextRecordIds { get; init; } = [];
+    public IReadOnlyList<string> AttachmentReferenceIds { get; init; } = [];
+}
+
+public sealed record RequestResultRecord : DenRecord
+{
+    public required string RequestId { get; init; }
+    public required string Status { get; init; }
+    public string? ResultJson { get; init; }
+    public string? ErrorCode { get; init; }
+    public string? ErrorMessage { get; init; }
+    public bool Retryable { get; init; }
+    public IReadOnlyList<string> CompletedActionIds { get; init; } = [];
+}
+
 public sealed record ConflictRecord : DenRecord
 {
     public required string ObjectId { get; init; }
@@ -279,6 +331,25 @@ public sealed record RunEventRecord : DenRecord
     public required string PayloadJson { get; init; }
 }
 
+public sealed record BlobReferenceRecord : DenRecord
+{
+    public required string Sha256 { get; init; }
+    public required string MediaType { get; init; }
+    public required long Length { get; init; }
+    public required string OwnerId { get; init; }
+    public required string OwnerKind { get; init; }
+    public bool Deleted { get; init; }
+}
+
+public sealed record StorageQuotaRecord : DenRecord
+{
+    public long MetadataBytes { get; init; } = 64L * 1024 * 1024;
+    public long JournalBytes { get; init; } = 32L * 1024 * 1024;
+    public long CacheBytes { get; init; } = 256L * 1024 * 1024;
+    public long AttachmentBytes { get; init; } = 128L * 1024 * 1024;
+    public long ModelWeightBytes { get; init; } = 8L * 1024 * 1024 * 1024;
+}
+
 public sealed record DenPrincipal(string Id, IReadOnlySet<string> ReadNamespaces,
     IReadOnlySet<string> WriteNamespaces, IReadOnlySet<string> AdminNamespaces);
 
@@ -302,7 +373,7 @@ public sealed class NamespaceAccessPolicy(IEnumerable<DenAccessRule> rules) : ID
         cancellationToken.ThrowIfCancellationRequested();
         var allowed = _rules.Any(rule => rule.PrincipalId == principalId && rule.NamespaceId == namespaceId &&
             (rule.Permission == permission || rule.Permission == DenPermission.Administer) &&
-            (rule.ObjectIds is null || rule.ObjectIds.Contains(objectId)));
+            (rule.ObjectIds is null || rule.ObjectIds.Contains("*") || rule.ObjectIds.Contains(objectId)));
         return ValueTask.FromResult(allowed);
     }
 }
@@ -312,6 +383,8 @@ public sealed record DenNamespace(string Id, string Kind, bool Shared = false);
 public sealed record DenManifest
 {
     public required string DenId { get; init; }
+    public string DeviceId { get; init; } = Guid.NewGuid().ToString("D");
+    public long Revision { get; init; } = 1;
     public int FormatVersion { get; init; } = 1;
     public int SchemaVersion { get; init; } = 1;
     public string MinimumReaderVersion { get; init; } = "1.0";
@@ -319,6 +392,7 @@ public sealed record DenManifest
     public IReadOnlyList<DenNamespace> Namespaces { get; init; } = [];
     public IReadOnlyDictionary<string, string> StorageLocations { get; init; } = new Dictionary<string, string>();
     public IReadOnlySet<string> RequiredCapabilities { get; init; } = new HashSet<string>();
+    public IReadOnlyDictionary<string, string> OperationReceipts { get; init; } = new Dictionary<string, string>();
     [JsonExtensionData] public Dictionary<string, JsonElement>? ExtensionData { get; init; }
 }
 
@@ -326,7 +400,7 @@ public sealed record MemoryPolicyRecord : DenRecord
 {
     public MemoryFrequency Frequency { get; init; } = MemoryFrequency.Sometimes;
     public bool BackgroundLearningEnabled { get; init; }
-    public IReadOnlyDictionary<string, string> RetentionDaysByCategory { get; init; } = new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, int?> RetentionDaysByCategory { get; init; } = new Dictionary<string, int?> { ["default"] = 365 };
 }
 
 public sealed record DenSearchQuery(string Query, string NamespaceId, MemoryScopeKind? ScopeKind = null,
@@ -338,3 +412,16 @@ public sealed record DenOperationResult<T>(bool Success, T? Value, DenErrorCode?
     public static DenOperationResult<T> Ok(T value) => new(true, value);
     public static DenOperationResult<T> Fail(DenException ex) => new(false, default, ex.Code, ex.Message, ex.Recoverable, ex.Retryable);
 }
+
+public sealed record DenImportItemResult(string NamespaceId, string RecordId, string Status,
+    DenRecord? Record = null, DenErrorCode? ErrorCode = null, string? Message = null,
+    bool Recoverable = false, bool Retryable = false);
+public sealed record DenImportResult(IReadOnlyList<DenImportItemResult> Items)
+{
+    public bool Success => Items.All(item => item.ErrorCode is null);
+    public IReadOnlyList<DenImportItemResult> Succeeded => Items.Where(item => item.ErrorCode is null).ToArray();
+    public IReadOnlyList<DenImportItemResult> Failed => Items.Where(item => item.ErrorCode is not null).ToArray();
+}
+public sealed record DenStorageUsage(long MetadataBytes, long HistoryBytes, long JournalBytes,
+    long AttachmentBytes, long CacheBytes, long ModelWeightBytes,
+    StorageQuotaRecord Limits);

@@ -51,7 +51,7 @@ public sealed class ExperienceStateRepository
 
             var now = _clock();
             var revision = new ExperienceStateRevision(
-                Guid.NewGuid(), 1, conversationBranchId, null, state, "Experience created", now);
+                Guid.NewGuid(), 1, conversationBranchId, null, CloneState(state), "Experience created", now);
             var timeline = new ExperienceTimeline(
                 Guid.NewGuid(), spaceId, conversationId, title.Trim(), [revision], revision.RevisionId, [], now, now);
             return (snapshot with { Experiences = [.. snapshot.Experiences, timeline] }, timeline);
@@ -87,7 +87,7 @@ public sealed class ExperienceStateRepository
             RequireExpectedRevision(timeline, conversationBranchId, expectedRevisionId);
             var revision = new ExperienceStateRevision(
                 Guid.NewGuid(), checked(timeline.Revisions.Max(item => item.RevisionNumber) + 1),
-                conversationBranchId, current.RevisionId, nextState, transition.Trim(), _clock());
+                conversationBranchId, current.RevisionId, CloneState(nextState), transition.Trim(), _clock());
             var updated = timeline with
             {
                 Revisions = [.. timeline.Revisions, revision],
@@ -250,8 +250,12 @@ public sealed class ExperienceStateRepository
             var current = await ReadCoreAsync(cancellationToken).ConfigureAwait(false);
             var (next, result) = mutation(current);
             if (!ReferenceEquals(current, next))
-                await _settings.SetAsync(SettingsKey, next, cancellationToken).ConfigureAwait(false);
-            return result;
+                await _settings.SetAsync(SettingsKey, CloneSnapshot(next), cancellationToken).ConfigureAwait(false);
+            return result switch
+            {
+                ExperienceTimeline timeline => (TResult)(object)CloneTimeline(timeline),
+                _ => result
+            };
         }
         finally
         {
@@ -275,7 +279,16 @@ public sealed class ExperienceStateRepository
                 $"Unsupported Experience state schema version {snapshot.Version}; expected {CurrentSchemaVersion}.");
         if (snapshot.Experiences is null)
             throw new InvalidDataException("Experience state storage has no experience collection.");
-        return snapshot;
+        try
+        {
+            ValidateSnapshot(snapshot);
+            return CloneSnapshot(snapshot);
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or
+                                          NullReferenceException or JsonException)
+        {
+            throw new InvalidDataException("Stored Experience state is invalid.", exception);
+        }
     }
 
     private static ExperienceTimeline Find(ExperienceStateSnapshot snapshot, Guid experienceId) =>
@@ -284,6 +297,71 @@ public sealed class ExperienceStateRepository
 
     private static ExperienceStateSnapshot Replace(ExperienceStateSnapshot snapshot, ExperienceTimeline updated) =>
         snapshot with { Experiences = [.. snapshot.Experiences.Select(item => item.ExperienceId == updated.ExperienceId ? updated : item)] };
+
+    private static ExperienceStateSnapshot CloneSnapshot(ExperienceStateSnapshot snapshot) =>
+        snapshot with { Experiences = snapshot.Experiences.Select(CloneTimeline).ToArray() };
+
+    private static ExperienceTimeline CloneTimeline(ExperienceTimeline timeline) => timeline with
+    {
+        Revisions = timeline.Revisions.Select(revision => revision with { State = CloneState(revision.State) }).ToArray(),
+        ExternalEffects = timeline.ExternalEffects.ToArray()
+    };
+
+    private static ExperienceStateDocument CloneState(ExperienceStateDocument state) => state with
+    {
+        Actors = state.Actors.Select(actor => actor with { VisibleToActorIds = actor.VisibleToActorIds.ToArray() }).ToArray(),
+        Relationships = state.Relationships.ToArray(),
+        Inventory = state.Inventory.ToArray(),
+        Objectives = state.Objectives.ToArray(),
+        Flags = state.Flags.ToArray(),
+        Events = state.Events.ToArray(),
+        PrivateFacts = state.PrivateFacts.Select(fact => fact with { VisibleToActorIds = fact.VisibleToActorIds.ToArray() }).ToArray()
+    };
+
+    private static void ValidateSnapshot(ExperienceStateSnapshot snapshot)
+    {
+        var experienceIds = new HashSet<Guid>();
+        var conversationIds = new HashSet<Guid>();
+        foreach (var timeline in snapshot.Experiences)
+        {
+            if (timeline is null) throw Invalid("Stored Experience timeline cannot be null.");
+            RequireId(timeline.ExperienceId, nameof(timeline.ExperienceId));
+            RequireId(timeline.SpaceId, nameof(timeline.SpaceId));
+            RequireId(timeline.ConversationId, nameof(timeline.ConversationId));
+            if (!experienceIds.Add(timeline.ExperienceId) || !conversationIds.Add(timeline.ConversationId))
+                throw Invalid("Stored Experience and conversation IDs must be unique.");
+            ArgumentException.ThrowIfNullOrWhiteSpace(timeline.Title);
+            if (timeline.Revisions is null || timeline.Revisions.Count == 0 || timeline.ExternalEffects is null)
+                throw Invalid("Stored Experience timeline has missing collections.");
+            var revisionIds = new HashSet<Guid>();
+            var branchIds = new HashSet<Guid>();
+            foreach (var revision in timeline.Revisions)
+            {
+                RequireId(revision.RevisionId, nameof(revision.RevisionId));
+                RequireId(revision.ConversationBranchId, nameof(revision.ConversationBranchId));
+                if (revision.RevisionNumber < 1 || !revisionIds.Add(revision.RevisionId))
+                    throw Invalid("Stored Experience revisions have invalid or duplicate IDs/numbers.");
+                branchIds.Add(revision.ConversationBranchId);
+                Validate(revision.State);
+            }
+            if (timeline.Revisions.Select(item => item.RevisionNumber).Distinct().Count() != timeline.Revisions.Count ||
+                timeline.Revisions.Any(item => item.ParentRevisionId is { } parent && !revisionIds.Contains(parent)) ||
+                !revisionIds.Contains(timeline.ActiveRevisionId))
+                throw Invalid("Stored Experience revision graph is inconsistent.");
+            var effectIds = new HashSet<Guid>();
+            foreach (var effect in timeline.ExternalEffects)
+            {
+                if (effect is null) throw Invalid("Stored external action record cannot be null.");
+                RequireId(effect.ActionId, nameof(effect.ActionId));
+                RequireId(effect.ConversationBranchId, nameof(effect.ConversationBranchId));
+                if (!effectIds.Add(effect.ActionId) || !branchIds.Contains(effect.ConversationBranchId))
+                    throw Invalid("Stored external action records must be unique and attached to a known branch.");
+                ArgumentException.ThrowIfNullOrWhiteSpace(effect.TargetApp);
+                ArgumentException.ThrowIfNullOrWhiteSpace(effect.ActionName);
+                ValidateJson(effect.ResultJson, "external action result");
+            }
+        }
+    }
 
     private static void RequireExpectedRevision(
         ExperienceTimeline timeline,
@@ -324,6 +402,10 @@ public sealed class ExperienceStateRepository
             if (actor.PersistentAgentId == Guid.Empty) throw Invalid("Persistent Agent IDs cannot be empty GUIDs.");
             ValidateVisibility(actor.Visibility, actor.VisibleToActorIds);
         }
+
+        foreach (var actor in state.Actors)
+            if (actor.VisibleToActorIds.Any(id => !actorIds.Contains(id)))
+                throw Invalid($"Actor '{actor.Name}' references an unknown visibility audience.");
 
         foreach (var relationship in state.Relationships)
         {
@@ -385,6 +467,7 @@ public sealed class ExperienceStateRepository
 
     private static void ValidateJson(string json, string field)
     {
+        if (json is null) throw Invalid($"The {field} must contain valid JSON.");
         try { using var _ = JsonDocument.Parse(json); }
         catch (JsonException exception) { throw Invalid($"The {field} must contain valid JSON: {exception.Message}"); }
     }

@@ -32,11 +32,12 @@ public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factor
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO external_connections(id,name,provider_key,kind,preset_key,is_enabled,state,status,configuration_json,server_name,server_version,protocol_version,created_at,updated_at)
-            VALUES($id,$name,$provider,$kind,$preset,$enabled,$state,$status,$config,$serverName,$serverVersion,$protocol,$created,$updated)
+            INSERT INTO external_connections(id,name,provider_key,kind,preset_key,is_enabled,state,status,configuration_json,server_name,server_version,protocol_version,created_at,updated_at,capability_snapshot_json,capability_snapshot_version)
+            VALUES($id,$name,$provider,$kind,$preset,$enabled,$state,$status,$config,$serverName,$serverVersion,$protocol,$created,$updated,$snapshot,$snapshotVersion)
             ON CONFLICT(id) DO UPDATE SET name=excluded.name,provider_key=excluded.provider_key,kind=excluded.kind,preset_key=excluded.preset_key,
             is_enabled=excluded.is_enabled,state=excluded.state,status=excluded.status,configuration_json=excluded.configuration_json,
-            server_name=excluded.server_name,server_version=excluded.server_version,protocol_version=excluded.protocol_version,updated_at=excluded.updated_at;
+            server_name=excluded.server_name,server_version=excluded.server_version,protocol_version=excluded.protocol_version,updated_at=excluded.updated_at,
+            capability_snapshot_json=excluded.capability_snapshot_json,capability_snapshot_version=excluded.capability_snapshot_version;
             """;
         command.Parameters.AddWithValue("$id", item.Id.ToString());
         command.Parameters.AddWithValue("$name", item.Name);
@@ -52,6 +53,8 @@ public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factor
         command.Parameters.AddWithValue("$protocol", (object?)item.ProtocolVersion ?? DBNull.Value);
         command.Parameters.AddWithValue("$created", item.CreatedAt.ToString("O"));
         command.Parameters.AddWithValue("$updated", item.UpdatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$snapshot", (object?)item.CapabilitySnapshotJson ?? DBNull.Value);
+        command.Parameters.AddWithValue("$snapshotVersion", (object?)item.CapabilitySnapshotVersion ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -73,6 +76,10 @@ public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factor
             (ExternalConnectionState)reader.GetInt32(reader.GetOrdinal("state")), reader.GetString(reader.GetOrdinal("status")), reader.GetString(reader.GetOrdinal("configuration_json")),
             Nullable("server_name"), Nullable("server_version"), Nullable("protocol_version"),
             DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("created_at")), System.Globalization.CultureInfo.InvariantCulture),
-            DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("updated_at")), System.Globalization.CultureInfo.InvariantCulture));
+            DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("updated_at")), System.Globalization.CultureInfo.InvariantCulture))
+        {
+            CapabilitySnapshotJson = Nullable("capability_snapshot_json"),
+            CapabilitySnapshotVersion = Nullable("capability_snapshot_version")
+        };
     }
 }

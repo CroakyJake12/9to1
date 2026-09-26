@@ -18,6 +18,8 @@ public sealed record CuiAccessibilitySettings
     public bool ReduceMotion { get; init; }
     public bool HighContrast { get; init; }
     public double DisplayScale { get; init; } = 1d;
+    public string? InterfaceFontFamilyOverride { get; init; }
+    public string? CodeFontFamilyOverride { get; init; }
 
     public CuiAccessibilitySettings Validate()
     {
@@ -45,6 +47,25 @@ public static class CuiTypography
     public const double CaptionSize = 12d;
     public const double HeadingSize = 24d;
     public const double CodeSize = 13d;
+
+    public static string ResolveInterfaceFontFamily(string? preferredFamily = null) =>
+        ResolveFamily(preferredFamily, InterfaceFontFamily);
+
+    public static string ResolveCodeFontFamily(string? preferredFamily = null) =>
+        ResolveFamily(preferredFamily, CodeFontFamily);
+
+    private static string ResolveFamily(string? preferredFamily, string fallbacks)
+    {
+        if (string.IsNullOrWhiteSpace(preferredFamily))
+            return fallbacks;
+
+        var preferred = preferredFamily.Trim();
+        if (preferred.Contains(','))
+            throw new ArgumentException("A font override must be one family name; fallbacks are supplied by CUI.", nameof(preferredFamily));
+        return string.Equals(preferred, "Montserrat", StringComparison.OrdinalIgnoreCase)
+            ? fallbacks
+            : $"{preferred}, {fallbacks}";
+    }
 }
 
 /// <summary>

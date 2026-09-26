@@ -76,4 +76,7 @@ public static class MapsAttribution
 
     /// <summary>Link target describing the OpenStreetMap licence and contributors.</summary>
     public const string LicenceUrl = "https://www.openstreetmap.org/copyright";
+
+    /// <summary>Safety reminder kept visible while users review provider-supplied route data.</summary>
+    public const string SafetyDisclaimer = "Map data is sourced by third party providers and community volunteers. Check important routes.";
 }

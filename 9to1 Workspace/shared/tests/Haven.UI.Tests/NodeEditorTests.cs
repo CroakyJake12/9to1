@@ -6,6 +6,25 @@ namespace Haven.UI.Tests;
 public sealed class NodeEditorTests
 {
     [Fact]
+    public void Graph_identity_revision_draft_activation_and_execution_overlay_are_stable()
+    {
+        var node = Node(0, 0, "First");
+        var editor = Editor(new NodeEditorDocument([node], []));
+        var graphId = editor.Document.GraphId;
+        var initialRevision = editor.Document.Revision;
+        Assert.True(editor.AddGroup("Group", [node.Id], out var groupId));
+        Assert.Equal(graphId, editor.Document.GraphId);
+        Assert.Contains(editor.Document.Groups, group => group.Id == groupId);
+        Assert.True(editor.Document.Revision > initialRevision);
+        var revision = editor.Document.Revision;
+        Assert.True(editor.TryActivate(revision, out var active));
+        Assert.Equal(NodeEditorRevisionState.Active, active.State);
+        Assert.False(editor.AddComment("Note", double.NaN, 0, out _));
+        Assert.True(editor.TryApplyExecutionState(node.Id, NodeEditorExecutionState.Running));
+        Assert.Equal(NodeEditorExecutionState.Running, editor.Document.ExecutionStates[node.Id]);
+    }
+
+    [Fact]
     public void Large_graph_culls_offscreen_nodes_and_keeps_minimap_retained()
     {
         var nodes = Enumerable.Range(0, 150).Select(index => Node(index * 260, (index % 5) * 150, $"Node {index}")).ToArray();

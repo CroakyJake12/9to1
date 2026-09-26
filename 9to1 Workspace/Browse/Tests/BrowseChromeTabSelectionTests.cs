@@ -1,4 +1,6 @@
 using Haven.Application;
+using Haven.Browser;
+using Haven.Core;
 using HavenOS.Apps.Browse;
 using Xunit;
 
@@ -35,6 +37,30 @@ public sealed class BrowseChromeTabSelectionTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => chrome.SelectTabAsync(active, cancellation.Token));
 
         Assert.Equal(other, chrome.State.SelectedTabId);
+    }
+
+    [Fact]
+    public async Task DefaultEnginePreferenceSurvivesBrowseRestartAndAppliesToNewTab()
+    {
+        using var paths = new TestPaths();
+        await using (var first = await BrowseChrome.CreateAsync(paths))
+            await first.SetDefaultEngineAsync(BrowseEngineKind.Chromium);
+
+        await using var restored = await BrowseChrome.CreateAsync(paths);
+
+        Assert.Equal(BrowseEngineKind.Chromium, restored.State.SelectedTab.Engine);
+    }
+
+    [Fact]
+    public async Task PrivateTabsAreNotRestoredFromTheStandardSessionFile()
+    {
+        using var paths = new TestPaths();
+        await using (var chrome = await BrowseChrome.CreateAsync(paths))
+            await chrome.NewTabAsync(isPrivate: true);
+
+        await using var restored = await BrowseChrome.CreateAsync(paths);
+
+        Assert.All(restored.State.Tabs, tab => Assert.Equal(BrowserTabPrivacy.Standard, tab.Privacy));
     }
 
     private sealed class TestPaths : IAppPaths, IDisposable

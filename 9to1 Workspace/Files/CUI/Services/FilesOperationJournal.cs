@@ -12,15 +12,16 @@ public sealed class FilesOperationJournal
 	private readonly VersionedJsonStateStore<FilesOperationJournalState> _store;
 
 	public FilesOperationJournal(string path) =>
-		_store = new VersionedJsonStateStore<FilesOperationJournalState>(path, 2, static () => new FilesOperationJournalState());
+		_store = new VersionedJsonStateStore<FilesOperationJournalState>(path, 3, static () => new FilesOperationJournalState());
 
 	public async Task<FilesOperation> EnqueueAsync(FilesOperation operation, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(operation);
 		if (operation.State is not FilesOperationState.Pending)
 			throw new ArgumentException("New journal operations must begin Pending.", nameof(operation));
-		if (string.IsNullOrWhiteSpace(operation.ActorId) || string.IsNullOrWhiteSpace(operation.Operation))
-			throw new ArgumentException("A journal operation requires actor and operation identities.", nameof(operation));
+		if (operation.Id.Value == Guid.Empty || operation.ItemId.Value == Guid.Empty ||
+			string.IsNullOrWhiteSpace(operation.ActorId) || string.IsNullOrWhiteSpace(operation.Operation))
+			throw new ArgumentException("A journal operation requires stable operation/item IDs, actor and operation identities.", nameof(operation));
 
 		FilesOperation? accepted = null;
 		await _store.UpdateAsync(state =>
@@ -60,6 +61,12 @@ public sealed class FilesOperationJournal
 				throw new KeyNotFoundException($"Files operation {key} was not found.");
 			if (!CanTransition(current.State, nextState))
 				throw new InvalidOperationException($"Files operation cannot transition from {current.State} to {nextState}.");
+			if (updatedAt < current.UpdatedAt)
+				throw new InvalidOperationException("Files operation timestamps cannot move backwards.");
+			if (nextState is FilesOperationState.Rejected or FilesOperationState.Conflict && error is null)
+				throw new ArgumentException("Rejected and conflicted Files operations require a structured error.", nameof(error));
+			if (nextState is FilesOperationState.Committed && error is not null)
+				throw new ArgumentException("A committed Files operation cannot retain an error.", nameof(error));
 
 			updated = current with
 			{
@@ -93,7 +100,9 @@ public sealed class FilesOperationJournal
 		first.DestinationParentId == second.DestinationParentId &&
 		first.Operation == second.Operation &&
 		first.BaseRevisionId == second.BaseRevisionId &&
-		first.InversePayload == second.InversePayload;
+		first.InversePayload == second.InversePayload &&
+		first.PermissionInheritancePolicy == second.PermissionInheritancePolicy &&
+		first.Payload == second.Payload;
 
 	private static bool CanTransition(FilesOperationState current, FilesOperationState next) => current switch
 	{

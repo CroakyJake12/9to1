@@ -19,10 +19,12 @@ public sealed partial class MainWindow : Window
     private readonly TextBlock _statusText;
     private readonly TextBlock _fileNameText;
     private readonly TextBlock _metadataText;
+    private readonly Button _infoButton;
     private readonly TextBlock _zoomText;
     private readonly TextBox _cropBoundsBox;
     private readonly Button _applyCropButton;
     private readonly Button _exportCropButton;
+    private readonly ComboBox _metadataExportModeBox;
     private readonly Image _previewImage;
     private readonly StackPanel _emptyState;
     private readonly ImageViewportState _viewport = new();
@@ -33,6 +35,7 @@ public sealed partial class MainWindow : Window
 
     private Bitmap? _bitmap;
     private PictureDocument? _document;
+    private ImageMetadataSnapshot? _metadata;
     private ImageNavigationSession? _navigation;
     private bool _isPanning;
     private Point _lastPanPosition;
@@ -50,10 +53,12 @@ public sealed partial class MainWindow : Window
         _statusText = this.FindControl<TextBlock>("StatusText") ?? throw new InvalidOperationException("StatusText was not created from XAML.");
         _fileNameText = this.FindControl<TextBlock>("FileNameText") ?? throw new InvalidOperationException("FileNameText was not created from XAML.");
         _metadataText = this.FindControl<TextBlock>("MetadataText") ?? throw new InvalidOperationException("MetadataText was not created from XAML.");
+        _infoButton = this.FindControl<Button>("InfoButton") ?? throw new InvalidOperationException("InfoButton was not created from XAML.");
         _zoomText = this.FindControl<TextBlock>("ZoomText") ?? throw new InvalidOperationException("ZoomText was not created from XAML.");
         _cropBoundsBox = this.FindControl<TextBox>("CropBoundsBox") ?? throw new InvalidOperationException("CropBoundsBox was not created from XAML.");
         _applyCropButton = this.FindControl<Button>("ApplyCropButton") ?? throw new InvalidOperationException("ApplyCropButton was not created from XAML.");
         _exportCropButton = this.FindControl<Button>("ExportCropButton") ?? throw new InvalidOperationException("ExportCropButton was not created from XAML.");
+        _metadataExportModeBox = this.FindControl<ComboBox>("MetadataExportModeBox") ?? throw new InvalidOperationException("MetadataExportModeBox was not created from XAML.");
         _previewImage = this.FindControl<Image>("PreviewImage") ?? throw new InvalidOperationException("PreviewImage was not created from XAML.");
         _emptyState = this.FindControl<StackPanel>("EmptyState") ?? throw new InvalidOperationException("EmptyState was not created from XAML.");
 
@@ -67,6 +72,7 @@ public sealed partial class MainWindow : Window
         _nextButton.Click += NextButton_Click;
         _applyCropButton.Click += ApplyCropButton_Click;
         _exportCropButton.Click += ExportCropButton_Click;
+        _infoButton.Click += InfoButton_Click;
         _zoomOutButton.Click += (_, _) => ZoomAtViewportCenter(1 / 1.25);
         _zoomInButton.Click += (_, _) => ZoomAtViewportCenter(1.25);
         _fitButton.Click += (_, _) =>
@@ -149,12 +155,14 @@ public sealed partial class MainWindow : Window
         try
         {
             using var stream = File.OpenRead(path);
-            var nextDocument = _cropService.OpenSource(path);
             var nextBitmap = new Bitmap(stream);
+            var nextDocument = _cropService.OpenSource(path);
+            var nextMetadata = ImageMetadataSnapshot.Read(path, nextBitmap);
             var previousBitmap = _bitmap;
 
             _bitmap = nextBitmap;
             _document = nextDocument;
+            _metadata = nextMetadata;
             _previewImage.Source = nextBitmap;
             previousBitmap?.Dispose();
             _viewport.Reset();
@@ -164,10 +172,11 @@ public sealed partial class MainWindow : Window
             _previewImage.IsVisible = true;
             _emptyState.IsVisible = false;
             _fileNameText.Text = Path.GetFileName(path);
-            _metadataText.Text = $"{nextBitmap.PixelSize.Width} × {nextBitmap.PixelSize.Height} · {Path.GetExtension(path).TrimStart('.').ToUpperInvariant()}";
+            _metadataText.Text = FormatMetadataSummary(nextMetadata);
             _statusText.Text = path;
             UpdateNavigationButtons();
             UpdateCropButtons();
+            _infoButton.IsEnabled = true;
         }
         catch (Exception exception)
         {
@@ -201,7 +210,11 @@ public sealed partial class MainWindow : Window
             previous?.Dispose();
             _viewport.Reset();
             ApplyViewport();
-            _metadataText.Text = $"{rendered.PixelSize.Width} × {rendered.PixelSize.Height} · crop preview";
+            if (_metadata is not null)
+            {
+                _metadata = _metadata with { PixelWidth = rendered.PixelSize.Width, PixelHeight = rendered.PixelSize.Height };
+                _metadataText.Text = FormatMetadataSummary(_metadata);
+            }
             _statusText.Text = "Crop applied non-destructively; source image is unchanged.";
             UpdateCropButtons();
         }
@@ -229,13 +242,46 @@ public sealed partial class MainWindow : Window
                 ShowError("Choose a local destination for this PNG export.");
                 return;
             }
-            _cropService.ExportPng(_document, destination.Path.LocalPath);
+            var mode = _metadataExportModeBox.SelectedIndex switch
+            {
+                1 => PictureMetadataExportMode.RemoveLocation,
+                2 => PictureMetadataExportMode.RemoveAll,
+                _ => PictureMetadataExportMode.Preserve,
+            };
+            _cropService.ExportPng(_document, destination.Path.LocalPath, mode);
             _statusText.Text = $"Cropped PNG exported to {destination.Name}; source image unchanged.";
         }
         catch (Exception exception)
         {
             ShowError($"PNG export failed: {exception.Message}");
         }
+    }
+
+    private async void InfoButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_metadata is null)
+            return;
+        await new ImageMetadataWindow(_metadata).ShowDialog(this);
+    }
+
+    private static string FormatMetadataSummary(ImageMetadataSnapshot metadata)
+    {
+        var size = metadata.FileSizeBytes is long bytes ? FormatFileSize(bytes) : "file size unavailable";
+        var format = metadata.Format ?? "format unavailable";
+        return $"{metadata.PixelWidth} × {metadata.PixelHeight} · {format} · {size}";
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        double size = bytes;
+        var unit = 0;
+        while (size >= 1024 && unit < units.Length - 1)
+        {
+            size /= 1024;
+            unit++;
+        }
+        return $"{size:0.#} {units[unit]}";
     }
 
     private bool TryReadCrop(out int x, out int y, out int width, out int height)

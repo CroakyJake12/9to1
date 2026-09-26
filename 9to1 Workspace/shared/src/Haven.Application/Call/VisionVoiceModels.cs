@@ -158,13 +158,16 @@ public sealed record MultimodalSession(
         if (Revision < 1) return "A multimodal session revision must be positive.";
         if (string.IsNullOrWhiteSpace(EffectiveModelPolicy)) return "A multimodal session requires an effective model policy.";
         if (Retention is null) return "A multimodal session requires an explicit retention policy.";
-        if (VoiceMode is VisionVoiceMode.LiveListener or VisionVoiceMode.LiveTranslate && (Retention.RetainAudio || Retention.RetainTranscript) && Retention.ExplicitlyEnabledAt is null)
+        if ((VoiceMode is VisionVoiceMode.LiveListener or VisionVoiceMode.LiveTranslate) &&
+            (Retention.RetainAudio || Retention.RetainTranscript) && Retention.ExplicitlyEnabledAt is null)
             return "Ambient audio or transcript retention requires a separate explicit opt-in timestamp.";
+        if (VisualSources is null) return "VisualSources must be an explicit collection, including when empty.";
         if (VisualSources.Any(source => source.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(source.Provenance)))
             return "Each visual source requires a stable identity and provenance.";
         if (VisualSources.Select(source => source.SourceId).Distinct().Count() != VisualSources.Count)
             return "Visual source identities must be unique within a session.";
-        if (VisualSources.Any(source => source.IsContinuous && !source.IsEphemeral && source.Type is VisualSourceType.Camera or VisualSourceType.WindowShare or VisualSourceType.DisplayShare))
+        if (VisualSources.Any(source => source.IsContinuous && !source.IsEphemeral &&
+            (source.Type is VisualSourceType.Camera or VisualSourceType.WindowShare or VisualSourceType.DisplayShare)))
             return "Continuous camera and screen frames must remain ephemeral.";
         if (VoiceMode == VisionVoiceMode.LiveTranslate)
         {

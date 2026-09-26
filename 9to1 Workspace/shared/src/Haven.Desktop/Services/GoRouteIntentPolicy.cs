@@ -152,7 +152,12 @@ public static class GoRouteIntentPolicy
         => new(GoRouteDestination.App, instruction, context, TargetKey: targetKey);
 
     private static GoRouteDecision Project(string instruction, GoRoutingContext context, GoProjectTarget target)
-        => new(GoRouteDestination.Project, instruction, context, ProjectName: target.Name, ProjectId: target.Id);
+        => new(
+            GoRouteDestination.Project,
+            instruction,
+            context,
+            ProjectName: target.Name,
+            ProjectId: target.Id == Guid.Empty ? null : target.Id);
 
     private static GoRouteDecision Clarify(string instruction, GoRoutingContext context, string clarification)
         => new(GoRouteDestination.Clarify, instruction, context, Clarification: clarification);

@@ -114,6 +114,29 @@ public sealed record KnowledgeBank(
     DateTimeOffset UpdatedAt,
     int EntryCount = 0);
 
+/// <summary>
+/// A semantic learning result ready for local persistence. Callers send a structured result and
+/// provenance, never an unbounded raw activity/clickstream payload.
+/// </summary>
+public sealed record BackgroundLearningContribution(
+    KnowledgeCategory Category,
+    string Topic,
+    string Title,
+    string LearnedValue,
+    string IndexedText,
+    string LearnedBecause,
+    string Scope,
+    KnowledgePrivacyClass PrivacyClass,
+    double Confidence,
+    KnowledgeFreshnessClass Freshness,
+    IReadOnlyList<KnowledgeSource> Sources,
+    DateTimeOffset? ExpiresAt = null,
+    string? AppId = null,
+    string? ProjectId = null,
+    string? AgentId = null,
+    bool CreateOrUseKnowledgeBank = false,
+    string? KnowledgeBankTitle = null);
+
 public sealed record ApiBankRecord(
     Guid Id,
     string Application,

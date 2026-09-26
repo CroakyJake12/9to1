@@ -110,6 +110,33 @@ public sealed class CuiMarkupTests
         Assert.Equal("int", binding.TargetType);
     }
 
+    [Fact]
+    public void ParserRepresentsLongFormPropertyRegionAsNonVisualSemanticScope()
+    {
+        var parser = new CuiRichParser();
+        var document = parser.Parse(
+            "<Cui><Property Property=\"Color\" Color=\"Green\" ID=\"greenText\" Group=\"labels\"><Text>Hello</Text></Property></Cui>",
+            "property-region.cui");
+
+        Assert.Empty(parser.Diagnostics.Diagnostics);
+        var property = Assert.Single(document.Components);
+        Assert.Equal("Property", property.Type);
+        Assert.Equal("Color", property.PropertyRegion!.PropertyName);
+        Assert.Equal("Green", Assert.IsType<CuiLiteralValue>(property.PropertyRegion.Value).Value);
+        Assert.Equal("greenText", property.AuthoredId);
+        Assert.Equal(new[] { "labels" }, property.Groups);
+        Assert.Equal("Hello", Assert.Single(property.Children).Text);
+    }
+
+    [Fact]
+    public void ParserRejectsIncompleteLongFormPropertyRegion()
+    {
+        var parser = new CuiRichParser();
+        _ = parser.Parse("<Cui><Property Property=\"Color\"/></Cui>", "invalid-property-region.cui");
+
+        Assert.Contains(parser.Diagnostics.Diagnostics, diagnostic => diagnostic.Code == "CUI039");
+    }
+
     [Theory]
     [InlineData("{Binding Age, mode=TwowayTypo}", "CUI036")]
     [InlineData("{Binding Age, fallback=first, fallback=second}", "CUI035")]
@@ -119,6 +146,46 @@ public sealed class CuiMarkupTests
         _ = parser.Parse($"<Cui><Text Value=\"{value}\"/></Cui>", "invalid-binding.cui");
 
         Assert.Contains(parser.Diagnostics.Diagnostics, diagnostic => diagnostic.Code == diagnosticCode);
+    }
+
+    [Fact]
+    public void StableGeneratedIdsIgnoreSourceLocationsAndSiblingOrder()
+    {
+        var first = new CuiRichParser().Parse(
+            "<Cui><Page><Text>Alpha</Text><Button Content=\"Save\"/></Page></Cui>",
+            "first.cui");
+        var second = new CuiRichParser().Parse(
+            "<Cui>\n  <Page>\n    <Button Content=\"Save\"/>\n    <Text>Alpha</Text>\n  </Page>\n</Cui>",
+            "second.cui");
+
+        var firstPage = Assert.Single(first.Components);
+        var secondPage = Assert.Single(second.Components);
+        var firstText = firstPage.Children.Single(component => component.Type == "Text");
+        var secondText = secondPage.Children.Single(component => component.Type == "Text");
+        var firstButton = firstPage.Children.Single(component => component.Type == "Button");
+        var secondButton = secondPage.Children.Single(component => component.Type == "Button");
+
+        Assert.Equal(firstText.StableId, secondText.StableId);
+        Assert.Equal(firstButton.StableId, secondButton.StableId);
+        Assert.StartsWith("gen:v1:", firstText.StableId, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StableIdUsesAuthoredIdAndDuplicateGeneratedIdsCarryBothLocations()
+    {
+        var parser = new CuiRichParser();
+        var document = parser.Parse(
+            "<Cui><Page><Text ID=\"CaseSensitive\">First</Text><Text>Same</Text>\n<Text>Same</Text></Page></Cui>",
+            "identity.cui");
+
+        var page = Assert.Single(document.Components);
+        var authored = page.Children[0];
+        Assert.Equal("CaseSensitive", authored.AuthoredId);
+        Assert.Equal("id:CaseSensitive", authored.StableId);
+
+        var duplicate = Assert.Single(parser.Diagnostics.Diagnostics, diagnostic => diagnostic.Code == "CUI029");
+        Assert.NotNull(duplicate.RelatedSpan);
+        Assert.True(duplicate.Span.Start.Line > duplicate.RelatedSpan!.Value.Start.Line);
     }
 
     [Fact]
@@ -177,6 +244,69 @@ public sealed class CuiMarkupTests
         Assert.Equal("user", repeat.Repeat.ItemName);
         Assert.Equal("user.ID", Assert.IsType<CuiBindingValue>(repeat.Repeat.Key).Path);
         Assert.Equal("{Binding user.Name}", Assert.Single(repeat.Children).Text);
+    }
+
+    [Fact]
+    public void ParserNormalizesCompactBindingsConditionsRepeatsAndTextReferences()
+    {
+        var parser = new CuiRichParser();
+        var document = parser.Parse(
+            "<Page><Container Type:Vertical_Stack ColumnSizes:1fr_2fr_200><If Condition=<:LoggedIn:>><Text>Hello <:Name:></Text></If><Else><Text>Sign in</Text></Else><Repeat Source=<:Users:> As:user Key=<:user.ID:>><Text><:user.Name:></Text></Repeat></Container></Page>",
+            "compact.cui");
+
+        Assert.Empty(parser.Diagnostics.Diagnostics);
+        var page = Assert.Single(document.Components);
+        var container = Assert.Single(page.Children);
+        Assert.True(container.TryGetLiteralAttribute("Type", out var type));
+        Assert.Equal("Vertical Stack", type);
+        Assert.True(container.TryGetLiteralAttribute("ColumnSizes", out var columns));
+        Assert.Equal("1fr 2fr 200", columns);
+
+        var conditional = container.Children[0];
+        Assert.Equal("LoggedIn", Assert.IsType<CuiBindingValue>(conditional.Condition!.Test).Path);
+        Assert.Equal("Sign in", Assert.Single(conditional.ElseChildren).Text);
+        var greeting = Assert.Single(conditional.Children);
+        Assert.Equal("Hello <:Name:>", greeting.Text);
+        Assert.Collection(greeting.TextParts,
+            part => Assert.Equal("Hello ", Assert.IsType<CuiLiteralTextPart>(part).Value),
+            part => Assert.Equal("Name", Assert.IsType<CuiBindingValue>(Assert.IsType<CuiExpressionTextPart>(part).Value).Path));
+
+        var repeat = container.Children[1];
+        Assert.Equal("Users", Assert.IsType<CuiBindingValue>(repeat.Repeat!.Source).Path);
+        Assert.Equal("user", repeat.Repeat.ItemName);
+        Assert.Equal("user.ID", Assert.IsType<CuiBindingValue>(repeat.Repeat.Key).Path);
+        Assert.Equal("user.Name", Assert.IsType<CuiBindingValue>(Assert.IsType<CuiExpressionTextPart>(Assert.Single(repeat.Children[0].TextParts)).Value).Path);
+    }
+
+    [Fact]
+    public void ParserNormalizesCompactIdentityPropertyEventKeyframeAndComments()
+    {
+        var parser = new CuiRichParser();
+        var document = parser.Parse(
+            "<# ignored <Text> markup #><Page><!Text::submit:::actions>Save</Text><$Color:Light_Green><Text>Green</Text></$><Property=Opacity Opacity:0.5/><&Submit{::submit}/><@Fade Duration:250/><Text (Definition)>Shared</Text></Page>",
+            "compact-declarations.cui");
+
+        Assert.Empty(parser.Diagnostics.Diagnostics);
+        var page = Assert.Single(document.Components);
+        var button = page.Children[0];
+        Assert.Equal("Text", button.Type);
+        Assert.Equal("submit", button.AuthoredId);
+        Assert.Equal(new[] { "actions" }, button.Groups);
+        Assert.True(button.TryGetLiteralAttribute("ActiveIndependently", out var independent));
+        Assert.Equal("True", independent);
+
+        var property = page.Children[1];
+        Assert.Equal("Color", property.PropertyRegion!.PropertyName);
+        Assert.Equal("Light Green", Assert.IsType<CuiLiteralValue>(property.PropertyRegion.Value).Value);
+        Assert.Equal("Green", Assert.Single(property.Children).Text);
+        var opacityProperty = page.Children[2].PropertyRegion!;
+        Assert.Equal("Opacity", opacityProperty.PropertyName);
+        Assert.Equal("0.5", Assert.IsType<CuiLiteralValue>(opacityProperty.Value).Value);
+        Assert.Equal("Submit", page.Children[3].TryGetLiteralAttribute("Type", out var eventName) ? eventName : null);
+        Assert.Equal("submit", page.Children[3].TryGetLiteralAttribute("TargetID", out var targetId) ? targetId : null);
+        Assert.True(page.Children[4].TryGetLiteralAttribute("Name", out var keyframeName));
+        Assert.Equal("Fade", keyframeName);
+        Assert.True(page.Children[5].IsDefinition);
     }
 
     [Theory]

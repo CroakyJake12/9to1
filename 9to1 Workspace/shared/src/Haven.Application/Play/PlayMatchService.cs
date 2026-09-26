@@ -47,6 +47,8 @@ public sealed record PlayContestant(
 
 public sealed record PlaySubmission(Guid ContestantId, int SelectedOption, DateTimeOffset SubmittedAt, bool IsSealed);
 public sealed record PlayQuestionReveal(int QuestionIndex, IReadOnlyDictionary<Guid, bool> CorrectByContestant, DateTimeOffset RevealedAt);
+public sealed record PlayRoundSnapshot(Guid MatchId, int RoundIndex, PlayRoundPhase Phase, string? Prompt, IReadOnlyList<string> Options,
+    DateTimeOffset? PresentedAt, DateTimeOffset? Deadline, int SealedSubmissionCount, bool IsRevealed);
 public sealed record PlayMatchState(
     int RoundIndex,
     PlayRoundPhase Phase,
@@ -55,7 +57,10 @@ public sealed record PlayMatchState(
     IReadOnlyDictionary<Guid, PlaySubmission> Submissions,
     IReadOnlyDictionary<Guid, string> TeamPrivateState,
     IReadOnlyList<PlayQuestionReveal> Reveals,
-    string? CompletionReason = null);
+    string? CompletionReason = null,
+    DateTimeOffset? PausedAt = null,
+    TimeSpan? RemainingOnPause = null,
+    TimeSpan? SubmissionLimit = null);
 
 public sealed record PlayMatchSnapshot(
     Guid MatchId,
@@ -78,7 +83,9 @@ public sealed record PlayMatchConfiguration(
     IReadOnlyList<Guid>? TeamIds = null,
     TimeSpan? SubmissionLimit = null,
     string SessionAgentStrategy = "balanced",
-    string? ModelPolicy = null);
+    string? ModelPolicy = null,
+    IReadOnlyList<PlayContestantInput>? ManualContestants = null);
+public sealed record PlayContestantInput(PlayContestantKind Kind, string DisplayName, Guid? AgentId = null, int? AgentDefinitionRevision = null, Guid? TeamId = null);
 
 public sealed record PlayContestantView(
     Guid MatchId,
@@ -95,7 +102,7 @@ public sealed record PlayContestantView(
     bool IsSpectator);
 
 public sealed record PlayActionDescriptor(string ActionId, string Name, string InputSchema, PlayOperationRisk Risk, bool Reversible, bool ExternalSideEffect);
-public sealed record PlayDomainEvent(Guid EventId, Guid MatchId, long Sequence, string EventType, Guid? ContestantId, DateTimeOffset OccurredAt, string PublicPayload);
+public sealed record PlayDomainEvent(Guid EventId, Guid MatchId, Guid ActionGraphId, long Sequence, string EventType, Guid? ContestantId, DateTimeOffset OccurredAt, string PublicPayload);
 public sealed record PlayCheckpoint(Guid MatchId, long Revision, PlayMatchSnapshot Snapshot, DateTimeOffset CreatedAt);
 public sealed record PlayHandoffPayload(Guid MatchId, Guid GameDefinitionId, int GameRevision, string Summary, IReadOnlyDictionary<string, string> PermittedArtifacts);
 public sealed record PlayApiError(string Code, string Message, string Target, string Action, bool Recoverable, bool Retryable);
@@ -124,15 +131,16 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
     public async Task<PlayApiResult<IReadOnlyList<PlayGameDefinition>>> ListGamesAsync(CancellationToken cancellationToken)
     {
         var loaded = await ReadAsync(cancellationToken).ConfigureAwait(false);
-        return loaded.Error is not null ? Fail<IReadOnlyList<PlayGameDefinition>>(loaded.Error) : PlayApiResult<IReadOnlyList<PlayGameDefinition>>.Success(loaded.Library!.Games.OrderBy(game => game.Title, StringComparer.CurrentCultureIgnoreCase).ToArray());
+        return loaded.Error is not null ? Fail<IReadOnlyList<PlayGameDefinition>>(loaded.Error) : PlayApiResult<IReadOnlyList<PlayGameDefinition>>.Success(loaded.Library!.Games.GroupBy(game => game.GameDefinitionId).Select(group => group.MaxBy(game => game.Revision)!).OrderBy(game => game.Title, StringComparer.CurrentCultureIgnoreCase).Select(PublicGame).ToArray());
     }
 
     public async Task<PlayApiResult<PlayGameDefinition>> GetGameAsync(Guid id, int? revision, CancellationToken cancellationToken)
     {
         var loaded = await ReadAsync(cancellationToken).ConfigureAwait(false);
         if (loaded.Error is not null) return Fail<PlayGameDefinition>(loaded.Error);
-        var game = loaded.Library!.Games.FirstOrDefault(item => item.GameDefinitionId == id && (revision is null || item.Revision == revision));
-        return game is null ? Error<PlayGameDefinition>(revision is null ? "GameNotFound" : "GameRevisionUnavailable", "The requested game definition revision is unavailable.", "GetGame", true) : PlayApiResult<PlayGameDefinition>.Success(game);
+        var candidates = loaded.Library!.Games.Where(item => item.GameDefinitionId == id);
+        var game = revision is int requested ? candidates.FirstOrDefault(item => item.Revision == requested) : candidates.MaxBy(item => item.Revision);
+        return game is null ? Error<PlayGameDefinition>(revision is null ? "GameNotFound" : "GameRevisionUnavailable", "The requested game definition revision is unavailable.", "GetGame", true) : PlayApiResult<PlayGameDefinition>.Success(PublicGame(game));
     }
 
     public Task<PlayApiResult<PlayGameDefinition>> CreateGameAsync(PlayGameDefinition definition, CancellationToken cancellationToken)
@@ -140,11 +148,11 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         ArgumentNullException.ThrowIfNull(definition);
         return MutateAsync(library =>
         {
-            var validation = Validate(definition);
-            if (validation is not null) return Failed<PlayGameDefinition>("InvalidGameDefinition", validation, "CreateGame");
-            if (library.Games.Count >= MaximumGames) return Failed<PlayGameDefinition>("LimitReached", "The saved game limit has been reached.", "CreateGame");
             var now = DateTimeOffset.UtcNow;
             var created = definition with { GameDefinitionId = definition.GameDefinitionId == Guid.Empty ? Guid.NewGuid() : definition.GameDefinitionId, Revision = 1, CreatedAt = now, UpdatedAt = now };
+            var validation = Validate(created);
+            if (validation is not null) return Failed<PlayGameDefinition>("InvalidGameDefinition", validation, "CreateGame");
+            if (library.Games.Count >= MaximumGames) return Failed<PlayGameDefinition>("LimitReached", "The saved game limit has been reached.", "CreateGame");
             if (library.Games.Any(game => game.GameDefinitionId == created.GameDefinitionId)) return Failed<PlayGameDefinition>("RevisionConflict", "That game definition ID already exists.", "CreateGame", true);
             return Updated(library with { Games = library.Games.Append(created).ToArray() }, PlayApiResult<PlayGameDefinition>.Success(created));
         }, cancellationToken);
@@ -159,7 +167,7 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         var count = ParseBoundedNumber(prompt, @"(?<n>\d{1,3})\s*(?:-question|question|questions|round|rounds)", 15, 1, 100);
         var agents = ParseBoundedNumber(prompt, @"(?<n>\d{1,2})\s*(?:AI\s*)?(?:agents?|opponents?|contestants?)", 10, 0, 63);
         var now = DateTimeOffset.UtcNow;
-        var seed = StringComparer.Ordinal.GetHashCode(prompt);
+        var seed = StableHash(prompt);
         var questions = Enumerable.Range(0, count).Select(index => CreateMathQuestion(index, seed)).ToArray();
         var game = new PlayGameDefinition(Guid.NewGuid(), 1, "Generated maths quiz", "Quiz", 1, Math.Clamp(agents + 1, 1, MaximumContestants), false, true,
             PlayTimingModel.Simultaneous, new PlayScoringPolicy("deterministic.maths.v1", true, false, false, "Exact deterministic option validation."),
@@ -171,37 +179,54 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
     public Task<PlayApiResult<PlayGameDefinition>> UpdateGameAsync(PlayGameDefinition updated, int expectedRevision, CancellationToken cancellationToken) =>
         MutateAsync(library =>
         {
-            var current = library.Games.FirstOrDefault(game => game.GameDefinitionId == updated.GameDefinitionId);
+            var current = library.Games.Where(game => game.GameDefinitionId == updated.GameDefinitionId).MaxBy(game => game.Revision);
             if (current is null) return Failed<PlayGameDefinition>("GameNotFound", "The game definition was not found.", "UpdateGame", true);
             if (current.Revision != expectedRevision) return Failed<PlayGameDefinition>("RevisionConflict", "The game definition changed since it was read.", "UpdateGame", true, true);
             var validation = Validate(updated);
             if (validation is not null) return Failed<PlayGameDefinition>("InvalidGameDefinition", validation, "UpdateGame");
             var next = updated with { Revision = current.Revision + 1, CreatedAt = current.CreatedAt, UpdatedAt = DateTimeOffset.UtcNow };
-            return Updated(library with { Games = library.Games.Select(game => game.GameDefinitionId == next.GameDefinitionId ? next : game).ToArray() }, PlayApiResult<PlayGameDefinition>.Success(next));
+            if (library.Games.Count >= MaximumGames) return Failed<PlayGameDefinition>("LimitReached", "The saved game revision limit has been reached.", "UpdateGame");
+            return Updated(library with { Games = library.Games.Append(next).ToArray() }, PlayApiResult<PlayGameDefinition>.Success(next));
         }, cancellationToken);
 
     public async Task<PlayApiResult<string>> ValidateGameAsync(Guid id, int? revision, CancellationToken cancellationToken)
     {
-        var found = await GetGameAsync(id, revision, cancellationToken).ConfigureAwait(false);
-        if (!found.Succeeded) return new(false, default, found.Error);
-        var error = Validate(found.Value!);
+        var loaded = await ReadAsync(cancellationToken).ConfigureAwait(false);
+        if (loaded.Error is not null) return Fail<string>(loaded.Error);
+        var candidates = loaded.Library!.Games.Where(item => item.GameDefinitionId == id);
+        var game = revision is int requested ? candidates.FirstOrDefault(item => item.Revision == requested) : candidates.MaxBy(item => item.Revision);
+        if (game is null) return Error<string>(revision is null ? "GameNotFound" : "GameRevisionUnavailable", "The requested game definition revision is unavailable.", "ValidateGame", true);
+        var error = Validate(game);
         return error is null ? PlayApiResult<string>.Success("Valid") : Error<string>("InvalidGameDefinition", error, "ValidateGame");
     }
 
     public Task<PlayApiResult<PlayMatchSnapshot>> StartMatchAsync(Guid gameId, PlayMatchConfiguration? configuration, CancellationToken cancellationToken) =>
         MutateAsync(library =>
         {
-            var game = library.Games.FirstOrDefault(item => item.GameDefinitionId == gameId);
+            var game = library.Games.Where(item => item.GameDefinitionId == gameId).MaxBy(item => item.Revision);
             if (game is null) return Failed<PlayMatchSnapshot>("GameNotFound", "The game definition was not found.", "StartMatch", true);
             var config = configuration ?? new PlayMatchConfiguration();
             if (config.SpectatorOnly && !game.AllowsSpectators) return Failed<PlayMatchSnapshot>("InvalidGameDefinition", "This game does not allow spectator matches.", "StartMatch");
             if (config.SessionAgentCount < 0 || config.SessionAgentCount > MaximumContestants - 1) return Failed<PlayMatchSnapshot>("InvalidGameDefinition", "The requested opponent count is outside the supported range.", "StartMatch");
+            if (config.SubmissionLimit is TimeSpan limit && (limit <= TimeSpan.Zero || limit > TimeSpan.FromHours(24))) return Failed<PlayMatchSnapshot>("InvalidGameDefinition", "A submission limit must be between one tick and 24 hours.", "StartMatch");
+            if (config.SpectatorOnly && (config.IncludeHuman || config.ManualContestants?.Any(item => item.Kind == PlayContestantKind.Human) == true)) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "A spectator-only match cannot include a human contestant.", "StartMatch");
             var contestants = new List<PlayContestant>();
             if (config.IncludeHuman && !config.SpectatorOnly) contestants.Add(new(Guid.NewGuid(), PlayContestantKind.Human, "You", null, null, null, TeamAt(config.TeamIds, 0), 0, true, true));
+            foreach (var input in config.ManualContestants ?? [])
+            {
+                if (input.Kind == PlayContestantKind.DulcheAgent && input.AgentId is null) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "A persistent Agent contestant requires its canonical AgentID.", "StartMatch");
+                if (input.Kind != PlayContestantKind.DulcheAgent && input.AgentId is not null) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "Only persistent Agent contestants may reference a canonical AgentID.", "StartMatch");
+                if (!game.AllowsTeams && input.TeamId is not null) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "This game does not allow teams.", "StartMatch");
+                var name = CleanName(input.DisplayName);
+                contestants.Add(new(Guid.NewGuid(), input.Kind, name, input.AgentId,
+                    input.Kind == PlayContestantKind.DulcheAgent ? input.AgentDefinitionRevision : null,
+                    input.Kind == PlayContestantKind.SessionAgent ? new PlaySessionAgentProfile(name, "balanced", config.ModelPolicy) : null,
+                    input.TeamId, 0, true, input.Kind == PlayContestantKind.Human));
+            }
             for (var i = 0; i < config.SessionAgentCount; i++)
                 contestants.Add(new(Guid.NewGuid(), PlayContestantKind.SessionAgent, $"Opponent {i + 1}", null, null,
                     new PlaySessionAgentProfile($"Opponent {i + 1}", NormalizeStrategy(config.SessionAgentStrategy), config.ModelPolicy), TeamAt(config.TeamIds, i + (config.IncludeHuman ? 1 : 0)), 0, true, false));
-            if (contestants.Count < game.MinimumContestants || contestants.Count > Math.Min(game.MaximumContestants, MaximumContestants))
+            if ((!game.AllowsTeams && contestants.Any(item => item.TeamId is not null)) || contestants.Count < game.MinimumContestants || contestants.Count > Math.Min(game.MaximumContestants, MaximumContestants))
                 return Failed<PlayMatchSnapshot>("MatchNotJoinable", "The selected contestant count does not fit this game.", "StartMatch");
             var now = DateTimeOffset.UtcNow;
             var match = new PlayMatchSnapshot(Guid.NewGuid(), game.GameDefinitionId, game.Revision, game, contestants,
@@ -212,17 +237,66 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
 
     public async Task<PlayApiResult<PlayMatchSnapshot>> GetMatchAsync(Guid id, CancellationToken cancellationToken)
     {
-        var loaded = await ReadAsync(cancellationToken).ConfigureAwait(false);
-        if (loaded.Error is not null) return Fail<PlayMatchSnapshot>(loaded.Error);
-        var match = loaded.Library!.Matches.FirstOrDefault(item => item.MatchId == id);
-        return match is null ? Error<PlayMatchSnapshot>("MatchNotFound", "The match was not found.", "GetMatch", true) : PlayApiResult<PlayMatchSnapshot>.Success(match);
+        var match = await FindMatchAsync(id, cancellationToken).ConfigureAwait(false);
+        return match.Match is null ? match.Error is not null ? Fail<PlayMatchSnapshot>(match.Error) : Error<PlayMatchSnapshot>("MatchNotFound", "The match was not found.", "GetMatch", true)
+            : PlayApiResult<PlayMatchSnapshot>.Success(PublicMatch(match.Match));
     }
 
     public async Task<PlayApiResult<IReadOnlyList<PlayContestant>>> ListContestantsAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var match = await GetMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
-        return match.Succeeded ? PlayApiResult<IReadOnlyList<PlayContestant>>.Success(match.Value!.Contestants.ToArray()) : new(false, default, match.Error);
+        var match = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        return match.Match is not null ? PlayApiResult<IReadOnlyList<PlayContestant>>.Success(match.Match.Contestants.ToArray()) : match.Error is not null ? Fail<IReadOnlyList<PlayContestant>>(match.Error) : Error<IReadOnlyList<PlayContestant>>("MatchNotFound", "The match was not found.", "ListContestants", true);
     }
+
+    public Task<PlayApiResult<PlayMatchSnapshot>> CreateMatchLobbyAsync(Guid gameId, PlayMatchConfiguration? configuration, CancellationToken cancellationToken) =>
+        MutateAsync(library =>
+        {
+            var game = library.Games.Where(item => item.GameDefinitionId == gameId).MaxBy(item => item.Revision);
+            if (game is null) return Failed<PlayMatchSnapshot>("GameNotFound", "The game definition was not found.", "StartMatch", true);
+            var config = configuration ?? new PlayMatchConfiguration();
+            if (config.SpectatorOnly && (!game.AllowsSpectators || config.IncludeHuman)) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "A spectator-only lobby cannot include the user as a contestant.", "StartMatch");
+            if (!game.AllowsTeams && (config.TeamIds?.Count ?? 0) > 0) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "This game does not allow teams.", "StartMatch");
+            var now = DateTimeOffset.UtcNow;
+            var contestants = config.IncludeHuman && !config.SpectatorOnly
+                ? new[] { new PlayContestant(Guid.NewGuid(), PlayContestantKind.Human, "You", null, null, null, TeamAt(config.TeamIds, 0), 0, true, true) }
+                : [];
+            var match = new PlayMatchSnapshot(Guid.NewGuid(), game.GameDefinitionId, game.Revision, game, contestants,
+                new PlayMatchState(0, PlayRoundPhase.Pending, null, null, new Dictionary<Guid, PlaySubmission>(), new Dictionary<Guid, string>(), [], SubmissionLimit: config.SubmissionLimit),
+                PlayMatchStatus.Lobby, Guid.NewGuid(), now, now, config.SpectatorOnly, 0);
+            return Updated(library with { Matches = library.Matches.Append(match).ToArray() }, PlayApiResult<PlayMatchSnapshot>.Success(match));
+        }, cancellationToken);
+
+    public Task<PlayApiResult<PlayMatchSnapshot>> StartLobbyMatchAsync(Guid matchId, int sessionAgentCount, string strategy, CancellationToken cancellationToken) =>
+        MutateMatchAsync(matchId, "StartMatch", (library, match) =>
+        {
+            if (match.Status != PlayMatchStatus.Lobby) return Failed<PlayMatchSnapshot>("MatchAlreadyStarted", "This match has already started.", "StartMatch", true);
+            if (sessionAgentCount < 0 || match.Contestants.Count + sessionAgentCount > Math.Min(match.PinnedGame.MaximumContestants, MaximumContestants)) return Failed<PlayMatchSnapshot>("MatchNotJoinable", "The requested Agent count does not fit the remaining contestant slots.", "StartMatch");
+            var agents = Enumerable.Range(0, sessionAgentCount).Select(i => new PlayContestant(Guid.NewGuid(), PlayContestantKind.SessionAgent, $"Opponent {i + 1}", null, null,
+                new PlaySessionAgentProfile($"Opponent {i + 1}", NormalizeStrategy(strategy)), null, 0, true, false)).ToArray();
+            var contestants = match.Contestants.Concat(agents).ToArray();
+            if (contestants.Length < match.PinnedGame.MinimumContestants) return Failed<PlayMatchSnapshot>("MatchNotJoinable", "Add eligible contestants before starting this match.", "StartMatch");
+            var now = DateTimeOffset.UtcNow;
+            var started = match with { Contestants = contestants, Status = PlayMatchStatus.Active, MatchState = match.MatchState with { Phase = PlayRoundPhase.Active, PresentedAt = now, Deadline = GetDeadline(match.MatchState.SubmissionLimit, now) }, UpdatedAt = now };
+            return UpdatedMatch(library, started, PlayApiResult<PlayMatchSnapshot>.Success(started), null, "MatchStarted");
+        }, cancellationToken);
+
+    public async Task<PlayApiResult<IReadOnlyList<PlayMatchSnapshot>>> ListMatchesAsync(int offset, int limit, CancellationToken cancellationToken)
+    {
+        if (offset < 0 || limit is < 1 or > 100) return Error<IReadOnlyList<PlayMatchSnapshot>>("InvalidPage", "Match history pages use offsets ≥ 0 and limits from 1 to 100.", "ListMatches");
+        var loaded = await ReadAsync(cancellationToken).ConfigureAwait(false);
+        return loaded.Error is not null ? Fail<IReadOnlyList<PlayMatchSnapshot>>(loaded.Error) : PlayApiResult<IReadOnlyList<PlayMatchSnapshot>>.Success(loaded.Library!.Matches.OrderByDescending(item => item.UpdatedAt).Skip(offset).Take(limit).Select(PublicMatch).ToArray());
+    }
+
+    public Task<PlayApiResult<PlayMatchSnapshot>> SetTeamPrivateStateAsync(Guid matchId, Guid contestantId, string value, CancellationToken cancellationToken) =>
+        MutateMatchAsync(matchId, "SetTeamPrivateState", (library, match) =>
+        {
+            var contestant = match.Contestants.FirstOrDefault(item => item.ContestantId == contestantId);
+            if (contestant is null) return Failed<PlayMatchSnapshot>("ContestantNotFound", "The contestant was not found.", "SetTeamPrivateState", true);
+            if (!match.PinnedGame.AllowsTeams || contestant.TeamId is not Guid teamId) return Failed<PlayMatchSnapshot>("ContestantNotEligible", "This contestant is not on a team in this game.", "SetTeamPrivateState");
+            var teamState = new Dictionary<Guid, string>(match.MatchState.TeamPrivateState) { [teamId] = value.Length > 4000 ? value[..4000] : value };
+            var updated = match with { MatchState = match.MatchState with { TeamPrivateState = teamState }, UpdatedAt = DateTimeOffset.UtcNow };
+            return UpdatedMatch(library, updated, PlayApiResult<PlayMatchSnapshot>.Success(updated), contestant, "TeamStateChanged");
+        }, cancellationToken);
 
     public Task<PlayApiResult<PlayContestant>> AddContestantAsync(Guid matchId, PlayContestantKind kind, string name, Guid? agentId, int? agentRevision, Guid? teamId, CancellationToken cancellationToken) =>
         MutateMatchAsync(matchId, "AddContestant", (library, match) =>
@@ -256,9 +330,9 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
 
     public async Task<PlayApiResult<PlayContestantView>> GetContestantViewAsync(Guid matchId, Guid contestantId, CancellationToken cancellationToken)
     {
-        var found = await GetMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
-        if (!found.Succeeded) return new(false, default, found.Error);
-        var match = found.Value!;
+        var found = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        if (found.Match is null) return found.Error is not null ? Fail<PlayContestantView>(found.Error) : Error<PlayContestantView>("MatchNotFound", "The match was not found.", "GetContestantView", true);
+        var match = found.Match;
         var contestant = match.Contestants.FirstOrDefault(item => item.ContestantId == contestantId);
         if (contestant is null) return Error<PlayContestantView>("ContestantNotFound", "The contestant was not found.", "GetContestantView", true);
         return PlayApiResult<PlayContestantView>.Success(CreateView(match, contestant, false));
@@ -266,10 +340,10 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
 
     public async Task<PlayApiResult<PlayContestantView>> GetSpectatorViewAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var found = await GetMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
-        if (!found.Succeeded) return new(false, default, found.Error);
-        if (!found.Value!.PinnedGame.AllowsSpectators) return Error<PlayContestantView>("ContestantViewDenied", "Spectator access is not allowed for this game.", "GetContestantView");
-        return PlayApiResult<PlayContestantView>.Success(CreateView(found.Value, null, true));
+        var found = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        if (found.Match is null) return found.Error is not null ? Fail<PlayContestantView>(found.Error) : Error<PlayContestantView>("MatchNotFound", "The match was not found.", "GetContestantView", true);
+        if (!found.Match.PinnedGame.AllowsSpectators) return Error<PlayContestantView>("ContestantViewDenied", "Spectator access is not allowed for this game.", "GetContestantView");
+        return PlayApiResult<PlayContestantView>.Success(CreateView(found.Match, null, true));
     }
 
     public async Task<PlayApiResult<IReadOnlyList<PlayActionDescriptor>>> ListActionsAsync(Guid matchId, Guid contestantId, CancellationToken cancellationToken)
@@ -280,7 +354,7 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
             return PlayApiResult<IReadOnlyList<PlayActionDescriptor>>.Success([]);
         var match = await GetMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
         var actions = new List<PlayActionDescriptor>();
-        if (match.Value!.PinnedGame.Questions.Count > view.Value.QuestionIndex)
+        if (view.Value.Options.Count > 0)
             actions.Add(new("play.submit-answer", "Submit answer", "{\"selectedOption\":\"integer 0..optionCount-1\"}", PlayOperationRisk.Low, false, false));
         return PlayApiResult<IReadOnlyList<PlayActionDescriptor>>.Success(actions);
     }
@@ -307,8 +381,8 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
 
     public async Task<PlayApiResult<IReadOnlyDictionary<Guid, int>>> GetLeaderboardAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var match = await GetMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
-        return match.Succeeded ? PlayApiResult<IReadOnlyDictionary<Guid, int>>.Success(match.Value!.Contestants.ToDictionary(item => item.ContestantId, item => item.Score)) : new(false, default, match.Error);
+        var match = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        return match.Match is not null ? PlayApiResult<IReadOnlyDictionary<Guid, int>>.Success(match.Match.Contestants.ToDictionary(item => item.ContestantId, item => item.Score)) : match.Error is not null ? Fail<IReadOnlyDictionary<Guid, int>>(match.Error) : Error<IReadOnlyDictionary<Guid, int>>("MatchNotFound", "The match was not found.", "GetLeaderboard", true);
     }
 
     public Task<PlayApiResult<PlayMatchSnapshot>> PauseMatchAsync(Guid matchId, CancellationToken cancellationToken) => SetStatusAsync(matchId, PlayMatchStatus.Active, PlayMatchStatus.Paused, "PauseMatch", cancellationToken);
@@ -336,23 +410,67 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         var loaded = await ReadAsync(cancellationToken).ConfigureAwait(false);
         if (loaded.Error is not null) return Fail<IReadOnlyList<PlayDomainEvent>>(loaded.Error);
         if (!loaded.Library!.Matches.Any(match => match.MatchId == matchId)) return Error<IReadOnlyList<PlayDomainEvent>>("MatchNotFound", "The match was not found.", "GetReplay", true);
-        return PlayApiResult<IReadOnlyList<PlayDomainEvent>>.Success(loaded.Library.Events.Where(item => item.MatchId == matchId).OrderBy(item => item.Sequence).ToArray());
+        var graphId = loaded.Library.Matches.First(match => match.MatchId == matchId).ActionGraphId;
+        return PlayApiResult<IReadOnlyList<PlayDomainEvent>>.Success(loaded.Library.Events.Where(item => item.MatchId == matchId && item.ActionGraphId == graphId).OrderBy(item => item.Sequence).ToArray());
+    }
+
+    public async Task<PlayApiResult<PlayRoundSnapshot>> GetRoundAsync(Guid matchId, int? roundIndex, Guid? contestantId, CancellationToken cancellationToken)
+    {
+        var found = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        if (found.Match is null) return found.Error is not null ? Fail<PlayRoundSnapshot>(found.Error) : Error<PlayRoundSnapshot>("MatchNotFound", "The match was not found.", "GetRound", true);
+        var match = found.Match;
+        if (contestantId is Guid id && !match.Contestants.Any(item => item.ContestantId == id)) return Error<PlayRoundSnapshot>("ContestantNotFound", "The contestant was not found.", "GetRound", true);
+        if (contestantId is null && !match.PinnedGame.AllowsSpectators) return Error<PlayRoundSnapshot>("ContestantViewDenied", "Spectator access is not allowed for this game.", "GetRound");
+        var index = roundIndex ?? match.MatchState.RoundIndex;
+        if (index < 0 || index >= match.PinnedGame.Questions.Count) return Error<PlayRoundSnapshot>("RoundNotActive", "The requested round is unavailable.", "GetRound", true);
+        var revealed = match.MatchState.Reveals.Any(item => item.QuestionIndex == index);
+        var question = revealed ? null : match.PinnedGame.Questions[index];
+        return PlayApiResult<PlayRoundSnapshot>.Success(new(matchId, index, revealed ? PlayRoundPhase.Revealed : match.MatchState.Phase,
+            question?.Prompt, question?.Options ?? [], index == match.MatchState.RoundIndex ? match.MatchState.PresentedAt : null,
+            index == match.MatchState.RoundIndex ? match.MatchState.Deadline : null,
+            revealed || index != match.MatchState.RoundIndex ? 0 : match.MatchState.Submissions.Count, revealed));
+    }
+
+    public Task<PlayApiResult<PlayMatchSnapshot>> PerformActionAsync(Guid matchId, Guid contestantId, string actionId, JsonElement input, CancellationToken cancellationToken)
+    {
+        if (string.Equals(actionId, "play.submit-answer", StringComparison.Ordinal))
+        {
+            if (input.ValueKind != JsonValueKind.Object || !input.TryGetProperty("selectedOption", out var option) || !option.TryGetInt32(out var selected))
+                return Task.FromResult(Error<PlayMatchSnapshot>("IllegalAction", "The submit-answer action needs an integer selectedOption.", "PerformAction", true));
+            return SubmitAnswerAsync(matchId, contestantId, selected, cancellationToken);
+        }
+        return Task.FromResult(Error<PlayMatchSnapshot>("ActionUnavailable", "That typed action is not available in this Play match.", "PerformAction", true));
+    }
+
+    public async Task<PlayApiResult<bool>> RequestCapabilityAsync(Guid matchId, Guid contestantId, string capabilityId, CancellationToken cancellationToken)
+    {
+        var found = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        if (found.Match is null) return found.Error is not null ? Fail<bool>(found.Error) : Error<bool>("MatchNotFound", "The match was not found.", "RequestCapability", true);
+        if (!found.Match.Contestants.Any(item => item.ContestantId == contestantId)) return Error<bool>("ContestantNotFound", "The contestant was not found.", "RequestCapability", true);
+        var rule = found.Match.PinnedGame.Capabilities.FirstOrDefault(item => string.Equals(item.CapabilityId, capabilityId, StringComparison.Ordinal));
+        if (rule is null || rule.Access == PlayCapabilityAccess.Denied) return Error<bool>("CapabilityDeniedByGame", "This capability is denied by the game rules.", "RequestCapability");
+        if (rule.Access == PlayCapabilityAccess.Constrained) return Error<bool>("CapabilityDeniedByGame", "This capability requires a game-specific constraint that is not satisfied.", "RequestCapability", true);
+        return Error<bool>("CapabilityDeniedByGame", "External capability execution requires the shared Home permission and capability brokers; Play does not execute it directly.", "RequestCapability", true);
     }
 
     public async Task<PlayApiResult<PlayHandoffPayload>> CreateExperiencesHandoffAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var match = await GetMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
-        if (!match.Succeeded) return new(false, default, match.Error);
-        if (match.Value!.Status != PlayMatchStatus.Completed) return Error<PlayHandoffPayload>("MatchNotJoinable", "Finish the Play match before handing its permitted summary to Experiences.", "ContinueInExperiences", true);
-        return PlayApiResult<PlayHandoffPayload>.Success(new(matchId, match.Value.GameDefinitionId, match.Value.GameRevision,
-            $"{match.Value.PinnedGame.Title}: {match.Value.MatchState.Reveals.Count} rounds resolved.", new Dictionary<string, string> { ["play.matchId"] = matchId.ToString("D"), ["play.gameRevision"] = match.Value.GameRevision.ToString() }));
+        var match = await FindMatchAsync(matchId, cancellationToken).ConfigureAwait(false);
+        if (match.Match is null) return match.Error is not null ? Fail<PlayHandoffPayload>(match.Error) : Error<PlayHandoffPayload>("MatchNotFound", "The match was not found.", "ContinueInExperiences", true);
+        if (match.Match.Status != PlayMatchStatus.Completed) return Error<PlayHandoffPayload>("MatchNotJoinable", "Finish the Play match before handing its permitted summary to Experiences.", "ContinueInExperiences", true);
+        return PlayApiResult<PlayHandoffPayload>.Success(new(matchId, match.Match.GameDefinitionId, match.Match.GameRevision,
+            $"{match.Match.PinnedGame.Title}: {match.Match.MatchState.Reveals.Count} rounds resolved.", new Dictionary<string, string> { ["play.matchId"] = matchId.ToString("D"), ["play.gameRevision"] = match.Match.GameRevision.ToString() }));
     }
 
     private Task<PlayApiResult<PlayMatchSnapshot>> SetStatusAsync(Guid id, PlayMatchStatus from, PlayMatchStatus to, string action, CancellationToken token) =>
         MutateMatchAsync(id, action, (library, match) =>
         {
             if (match.Status != from) return Failed<PlayMatchSnapshot>("MatchAlreadyStarted", $"The match cannot be {(action == "PauseMatch" ? "paused" : "resumed")} from its current state.", action, true);
-            var updated = match with { Status = to, UpdatedAt = DateTimeOffset.UtcNow };
+            var now = DateTimeOffset.UtcNow;
+            var state = to == PlayMatchStatus.Paused
+                ? match.MatchState with { PausedAt = now, RemainingOnPause = match.MatchState.Deadline is DateTimeOffset deadline ? (deadline > now ? deadline - now : TimeSpan.Zero) : null, Deadline = null }
+                : match.MatchState with { PausedAt = null, Deadline = match.MatchState.RemainingOnPause is TimeSpan remaining ? now + remaining : null, RemainingOnPause = null };
+            var updated = match with { Status = to, MatchState = state, UpdatedAt = now };
             return UpdatedMatch(library, updated, PlayApiResult<PlayMatchSnapshot>.Success(updated), null, to.ToString());
         }, token);
 
@@ -385,6 +503,12 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         finally { _gate.Release(); }
     }
 
+    private async Task<(PlayMatchSnapshot? Match, PlayApiError? Error)> FindMatchAsync(Guid id, CancellationToken token)
+    {
+        var loaded = await ReadAsync(token).ConfigureAwait(false);
+        return loaded.Error is not null ? (null, loaded.Error) : (loaded.Library!.Matches.FirstOrDefault(item => item.MatchId == id), null);
+    }
+
     private async Task<PlayApiResult<T>> MutateAsync<T>(Func<PlayLibraryV1, (PlayLibraryV1 Library, PlayApiResult<T> Result, PlayMatchSnapshot? Match, string? EventType)> mutate, CancellationToken token)
     {
         await _gate.WaitAsync(token).ConfigureAwait(false);
@@ -400,6 +524,10 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
                 next = AppendEvent(next, match, eventType, null, eventType);
             await settings.SetAsync(StateKey, next, token).ConfigureAwait(false);
             _library = next;
+            if (result.Value is PlayMatchSnapshot matchSnapshot)
+                return PlayApiResult<T>.Success((T)(object)PublicMatch(matchSnapshot));
+            if (result.Value is PlayCheckpoint checkpoint)
+                return PlayApiResult<T>.Success((T)(object)(checkpoint with { Snapshot = PublicMatch(checkpoint.Snapshot) }));
             return result;
         }
         catch (OperationCanceledException) { throw; }
@@ -455,6 +583,17 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
             match.Contestants.ToDictionary(item => item.ContestantId, item => item.Score), teamState, spectator);
     }
 
+    private static PlayGameDefinition PublicGame(PlayGameDefinition game) => game with
+    {
+        Questions = game.Questions.Select(question => question with { CorrectOption = -1, Explanation = string.Empty }).ToArray()
+    };
+
+    private static PlayMatchSnapshot PublicMatch(PlayMatchSnapshot match) => match with
+    {
+        PinnedGame = PublicGame(match.PinnedGame),
+        MatchState = match.MatchState with { Submissions = new Dictionary<Guid, PlaySubmission>(), TeamPrivateState = new Dictionary<Guid, string>() }
+    };
+
     private static string? Validate(PlayGameDefinition game)
     {
         if (game.GameDefinitionId == Guid.Empty) return "GameDefinitionID must be stable and non-empty.";
@@ -472,7 +611,10 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
     private static PlayLibraryV1 AppendEvent(PlayLibraryV1 library, PlayMatchSnapshot match, string type, Guid? contestant, string payload)
     {
         var sequence = library.NextSequence + 1;
-        var item = new PlayDomainEvent(Guid.NewGuid(), match.MatchId, sequence, type, contestant, DateTimeOffset.UtcNow, payload);
+        var publicPayload = type == "RoundRevealed" && match.MatchState.Reveals.Count > 0
+            ? JsonSerializer.Serialize(new { match.MatchState.Reveals[^1].QuestionIndex, match.MatchState.Reveals[^1].CorrectByContestant, scores = match.Contestants.ToDictionary(contestant => contestant.ContestantId, contestant => contestant.Score) })
+            : JsonSerializer.Serialize(new { eventType = type, phase = match.MatchState.Phase.ToString(), roundIndex = match.MatchState.RoundIndex });
+        var item = new PlayDomainEvent(Guid.NewGuid(), match.MatchId, match.ActionGraphId, sequence, type, contestant, DateTimeOffset.UtcNow, publicPayload);
         return library with { Events = library.Events.Append(item).ToArray(), NextSequence = sequence };
     }
 
@@ -497,6 +639,15 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
     private static string CleanName(string name) => string.IsNullOrWhiteSpace(name) ? "Contestant" : name.Trim()[..Math.Min(name.Trim().Length, 80)];
     private static string NormalizeStrategy(string strategy) => strategy?.Trim().ToLowerInvariant() is "careful" or "accurate" or "fast" or "risky" or "balanced" ? strategy.Trim().ToLowerInvariant() : "balanced";
     private static int ParseBoundedNumber(string text, string pattern, int fallback, int minimum, int maximum) => int.TryParse(Regex.Match(text, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant).Groups["n"].Value, out var value) ? Math.Clamp(value, minimum, maximum) : fallback;
+    private static int StableHash(string value)
+    {
+        unchecked
+        {
+            uint hash = 2166136261;
+            foreach (var character in value) hash = (hash ^ character) * 16777619;
+            return (int)(hash & 0x7fffffff);
+        }
+    }
 
     private static PlayQuestionDefinition CreateMathQuestion(int index, int seed)
     {

@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
+using HavenOS.Home.Core;
 
 namespace HavenOS.Home;
 
@@ -12,14 +14,18 @@ public sealed class HomeNavigationState
     public HomeDestinationState State(HomeRoute route) => _destinations.TryGetValue(route, out var state)
         ? state : _destinations[route] = new HomeDestinationState();
     public void Navigate(HomeRoute route) => Current = route;
-    public bool OpenDeepLink(HomeDeepLink link, IHomeDeepLinkRouter router)
+    public async Task<bool> OpenDeepLinkAsync(HomeDeepLink link, IHomeDeepLinkRouter router, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(link);
         ArgumentNullException.ThrowIfNull(router);
-        if (!router.CanOpen(link)) return false;
-        Current = link.Destination;
-        State(link.Destination).SelectedObjectId = link.ObjectId;
-        return router.Open(link);
+        var result = await router.OpenAsync(link, ct).ConfigureAwait(false);
+        if (!result.Succeeded) return false;
+        if (link.TargetRouteId is null || link.TargetRouteId == HomeRouteIds.For(link.Destination))
+        {
+            Current = link.Destination;
+            State(link.Destination).SelectedObjectId = link.ObjectId;
+        }
+        return true;
     }
 }
 
@@ -31,8 +37,30 @@ public sealed class HomeDestinationState
     public int ScrollOffset { get; set; }
 }
 
-public sealed record HomeDeepLink(HomeRoute Destination, string OwnerApp, string ObjectId, string? Action = null);
-public interface IHomeDeepLinkRouter { bool CanOpen(HomeDeepLink link); bool Open(HomeDeepLink link); }
+public sealed record HomeDeepLink(HomeRoute Destination, string OwnerApp, string ObjectId, string? Action = null, string? TargetRouteId = null);
+public interface IHomeDeepLinkRouter { Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken cancellationToken = default); }
+public sealed class HomeFeatureDeepLinkRouter(IHomeFeatureNavigationHost host) : IHomeDeepLinkRouter
+{
+    public Task<HomeFeatureNavigationResult> OpenAsync(HomeDeepLink link, CancellationToken cancellationToken = default) =>
+        host.NavigateAsync(new HomeFeatureNavigationRequest(link.TargetRouteId ?? HomeRouteIds.For(link.Destination), link.OwnerApp, link.ObjectId, link.Action), cancellationToken);
+}
+public static class HomeRouteIds
+{
+    public static string For(HomeRoute route) => route switch
+    {
+        HomeRoute.Dashboard => HomeFeatureRouteIds.Dashboard,
+        HomeRoute.Apps => HomeFeatureRouteIds.Apps,
+        HomeRoute.Library => HomeFeatureRouteIds.Library,
+        HomeRoute.Events => HomeFeatureRouteIds.Events,
+        HomeRoute.Discover => HomeFeatureRouteIds.Discover,
+        HomeRoute.Mesh => HomeFeatureRouteIds.Mesh,
+        HomeRoute.Settings => HomeFeatureRouteIds.Settings,
+        HomeRoute.Permissions => HomeFeatureRouteIds.Permissions,
+        HomeRoute.Notifications => HomeFeatureRouteIds.Notifications,
+        HomeRoute.Spaces => HomeFeatureRouteIds.Spaces,
+        _ => throw new ArgumentOutOfRangeException(nameof(route)),
+    };
+}
 
 public enum HomeTileSize { Small, Medium, Large, Wide }
 public enum HomeTileVisibility { Visible, Hidden }
@@ -40,13 +68,14 @@ public enum HomeTileLifetime { Session, Until, Persistent }
 public enum HomeTileChangeKind { Manual, Ai }
 public sealed record HomeTileAction(string ActionName, string OwnerApp, string? ObjectId, string RiskLevel, bool Reversible, bool HasExternalSideEffects);
 public sealed record HomeTileProviderDescriptor(
-    int ContractVersion, string TileType, string SourceApp, IReadOnlySet<HomeTileSize> SupportedSizes,
-    IReadOnlyList<string> RequiredPermissions, TimeSpan RefreshInterval, IReadOnlyList<HomeTileAction> Actions,
-    bool CanInstantiateManually, bool AllowsGeneratedContent);
+    int ContractVersion, string ProviderId, string TileType, string SourceApp, IReadOnlySet<HomeTileSize> SupportedSizes,
+    IReadOnlyList<string> DataDependencies, IReadOnlyList<string> RequiredPermissions, TimeSpan RefreshInterval,
+    IReadOnlyList<HomeTileAction> Actions, bool CanInstantiateManually, bool AllowsGeneratedContent);
 public sealed record HomeTileInstance(
     string TileInstanceId, string TileType, string ProviderId, int Order, HomeTileSize Size,
     HomeTileVisibility Visibility, bool Pinned, bool Locked, IReadOnlyDictionary<string, string> Configuration,
-    string? Provenance, IReadOnlyList<string> SourceEntityIds, HomeTileLifetime Lifetime, DateTimeOffset? ExpiresAt = null);
+    string? Provenance, IReadOnlyList<string> SourceEntityIds, HomeTileLifetime Lifetime,
+    DateTimeOffset? ExpiresAt = null, string? GroupId = null);
 public sealed record HomeDashboardLayout(int SchemaVersion, long Revision, IReadOnlyList<HomeTileInstance> Tiles,
     bool AllowAiGeneratedTiles, bool AllowAiReorder, string? ParentRevision = null, HomeTileChangeKind ChangeKind = HomeTileChangeKind.Manual);
 public sealed record HomeLayoutResult(bool Succeeded, string Code, string Message, HomeDashboardLayout Layout,
@@ -151,6 +180,88 @@ public interface IHomeTilePermissionGate
     Task<bool> CanReadProviderAsync(string providerId, IReadOnlyList<string> permissions, CancellationToken cancellationToken);
 }
 public interface IHomeDashboardLayoutHistory { Task<HomeDashboardLayout?> GetRevisionAsync(long revision, CancellationToken cancellationToken = default); }
+
+/// <summary>Stores dashboard layout and recoverable revisions in Home's canonical core state service.</summary>
+public sealed class HomeCoreDashboardLayoutStore(IHomeCoreStateStore stateStore) : IHomeDashboardLayoutStore, IHomeDashboardLayoutHistory
+{
+    private const string RecordId = "home.dashboard.layout";
+    private const string RecordType = "home.dashboard.layout";
+    private const string RevisionType = "home.dashboard.layout.revision";
+    private const string ConflictType = "home.dashboard.layout.conflict";
+    private const int SchemaVersion = 1;
+    private readonly SemaphoreSlim _gate = new(1, 1);
+
+    public async Task<HomeDashboardLayout?> LoadAsync(CancellationToken cancellationToken)
+    {
+        var state = await ReadStateAsync(cancellationToken).ConfigureAwait(false);
+        var record = state.Records.FirstOrDefault(x => x.RecordId == RecordId);
+        return record is null ? null : Deserialize(record.Payload);
+    }
+
+    public async Task<bool> TrySaveAsync(long expectedRevision, HomeDashboardLayout layout, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await ReadStateAsync(cancellationToken).ConfigureAwait(false);
+            var existing = state.Records.FirstOrDefault(x => x.RecordId == RecordId);
+            var actual = existing is null ? 0 : Deserialize(existing.Payload).Revision;
+            if (actual != expectedRevision)
+            {
+                await SaveArchiveAsync(layout, ConflictType, $"{ConflictType}.{Guid.NewGuid():N}", cancellationToken).ConfigureAwait(false);
+                return false;
+            }
+            if (existing is not null)
+                await SaveArchiveAsync(Deserialize(existing.Payload), RevisionType, $"{RevisionType}.{actual}", cancellationToken).ConfigureAwait(false);
+            var record = new HomeCoreStateRecord(RecordId, RecordType, SchemaVersion, HomeDataScope.DeviceLocal,
+                HomeRecordAuthority.LocalCanonical, 0, JsonSerializer.SerializeToElement(layout));
+            var write = await stateStore.WriteAsync(record, existing?.Revision ?? 0, cancellationToken).ConfigureAwait(false);
+            if (write.IsSuccess) return true;
+            if (write.Failure?.Code == HomeCoreErrorCode.HomeStateConflict)
+                await SaveArchiveAsync(layout, ConflictType, $"{ConflictType}.{Guid.NewGuid():N}", cancellationToken).ConfigureAwait(false);
+            else
+                throw new HomeFeatureProviderException(write.Failure?.Code.ToString() ?? "HomeStateWriteFailed",
+                    write.Failure?.Message ?? "Home could not save dashboard state.", write.Failure?.Retryable ?? true);
+            return false;
+        }
+        finally { _gate.Release(); }
+    }
+
+    public async Task<HomeDashboardLayout?> GetRevisionAsync(long revision, CancellationToken cancellationToken = default)
+    {
+        var state = await ReadStateAsync(cancellationToken).ConfigureAwait(false);
+        var revisionRecord = state.Records.FirstOrDefault(x => x.RecordId == $"{RevisionType}.{revision}");
+        if (revisionRecord is not null) return Deserialize(revisionRecord.Payload);
+        var current = state.Records.FirstOrDefault(x => x.RecordId == RecordId);
+        if (current is not null && Deserialize(current.Payload).Revision == revision) return Deserialize(current.Payload);
+        return state.Records.Where(x => x.RecordType == ConflictType)
+            .Select(x => Deserialize(x.Payload)).FirstOrDefault(x => x.Revision == revision);
+    }
+
+    private async Task SaveArchiveAsync(HomeDashboardLayout layout, string type, string id, CancellationToken ct)
+    {
+        var existing = (await ReadStateAsync(ct).ConfigureAwait(false)).Records.FirstOrDefault(x => x.RecordId == id);
+        if (existing is not null) return;
+        var record = new HomeCoreStateRecord(id, type, SchemaVersion, HomeDataScope.DeviceLocal,
+            HomeRecordAuthority.LocalCanonical, 0, JsonSerializer.SerializeToElement(layout));
+        var result = await stateStore.WriteAsync(record, 0, ct).ConfigureAwait(false);
+        if (!result.IsSuccess && result.Failure?.Code != HomeCoreErrorCode.HomeStateConflict)
+            throw new HomeFeatureProviderException(result.Failure?.Code.ToString() ?? "HomeStateWriteFailed",
+                result.Failure?.Message ?? "Home could not preserve a dashboard revision.", result.Failure?.Retryable ?? true);
+    }
+
+    private async Task<HomeCoreStoredState> ReadStateAsync(CancellationToken ct)
+    {
+        var result = await stateStore.ReadAsync(ct).ConfigureAwait(false);
+        if (!result.IsSuccess) throw new HomeFeatureProviderException(result.Failure?.Code.ToString() ?? "HomeStateUnavailable",
+            result.Failure?.Message ?? "Home state is unavailable.", result.Failure?.Retryable ?? true);
+        return result.State!;
+    }
+
+    private static HomeDashboardLayout Deserialize(JsonElement payload) =>
+        payload.Deserialize<HomeDashboardLayout>() ?? throw new InvalidDataException("Saved dashboard layout has an invalid payload.");
+}
 public interface IHomeDashboardAuditSink { Task RecordLayoutChangeAsync(HomeDashboardLayout before, HomeDashboardLayout after, string actor, CancellationToken cancellationToken); }
 
 /// <summary>One domain surface for CUI and automation callers. Mutations use optimistic revision checks.</summary>
@@ -164,14 +275,16 @@ public sealed class HomeDashboardLayoutService(IHomeDashboardLayoutStore store, 
         var layout = await store.LoadAsync(cancellationToken).ConfigureAwait(false);
         return Validate(layout ?? new HomeDashboardLayout(1, 0, [], false, false));
     }
-    public IReadOnlyList<HomeTileProviderDescriptor> ListProviders() => providers.GetProviders().Select(x => x.Descriptor).ToArray();
+    public IReadOnlyList<HomeTileProviderDescriptor> ListProviders() => providers.GetProviders().Select(x => x.Descriptor)
+        .Where(x => x.ContractVersion == 1 && !string.IsNullOrWhiteSpace(x.ProviderId) &&
+            !string.IsNullOrWhiteSpace(x.TileType) && !string.IsNullOrWhiteSpace(x.SourceApp) && x.SupportedSizes.Count > 0).ToArray();
     public async Task<HomeTileContent> RefreshTileAsync(string tileInstanceId, CancellationToken ct = default)
     {
         var layout = await GetAsync(ct).ConfigureAwait(false);
         var tile = layout.Tiles.FirstOrDefault(x => x.TileInstanceId == tileInstanceId);
         if (tile is null) return new("unavailable", "This tile is no longer available.", [], new Dictionary<string, string>(), [], "TileNotFound");
         var provider = providers.Find(tile.ProviderId);
-        if (provider is null || provider.Descriptor.ContractVersion != 1 || provider.Descriptor.TileType != tile.TileType)
+        if (provider is null || provider.Descriptor.ContractVersion != 1 || provider.Descriptor.ProviderId != tile.ProviderId || provider.Descriptor.TileType != tile.TileType)
             return new("unavailable", "The tile provider is unavailable or incompatible.", tile.SourceEntityIds, new Dictionary<string, string>(), [], "ProviderUnavailable");
         if (provider.Descriptor.RequiredPermissions.Count > 0 &&
             (permissionGate is null || !await permissionGate.CanReadProviderAsync(tile.ProviderId, provider.Descriptor.RequiredPermissions, ct).ConfigureAwait(false)))
@@ -194,7 +307,8 @@ public sealed class HomeDashboardLayoutService(IHomeDashboardLayoutStore store, 
         MutateAsync(revision, layout =>
         {
             var provider = providers.Find(providerId);
-            if (provider is null || !provider.Descriptor.CanInstantiateManually) return (layout, "ProviderUnavailable", "This tile provider is unavailable.");
+            if (provider is null || provider.Descriptor.ContractVersion != 1 || provider.Descriptor.ProviderId != providerId ||
+                !provider.Descriptor.CanInstantiateManually) return (layout, "ProviderUnavailable", "This tile provider is unavailable.");
             if (layout.Tiles.Any(x => x.TileInstanceId == tileId)) return (layout, "DuplicateTileId", "TileInstanceID is already present.");
             var descriptor = provider.Descriptor;
             var size = descriptor.SupportedSizes.OrderBy(x => x).FirstOrDefault();
@@ -260,7 +374,9 @@ public sealed class HomeDashboardLayoutService(IHomeDashboardLayoutStore store, 
             foreach (var item in changes)
             {
                 var provider = providers.Find(item.ProviderId);
-                if (provider is null || !provider.Descriptor.SupportedSizes.Contains(item.Size) || string.IsNullOrWhiteSpace(item.Provenance) || item.SourceEntityIds.Count == 0)
+                if (provider is null || provider.Descriptor.ContractVersion != 1 || provider.Descriptor.ProviderId != item.ProviderId ||
+                    provider.Descriptor.TileType != item.TileType || !provider.Descriptor.SupportedSizes.Contains(item.Size) ||
+                    string.IsNullOrWhiteSpace(item.Provenance) || item.SourceEntityIds.Count == 0)
                     return (layout, "InvalidGeneratedTile", "Generated tiles require a registered provider, supported size, provenance and source entities.");
                 var old = layout.Tiles.FirstOrDefault(x => x.TileInstanceId == item.TileInstanceId);
                 if (old is not null && (old.Pinned || old.Locked || old.Visibility == HomeTileVisibility.Hidden) && !SameLayout(old, item))
@@ -332,8 +448,11 @@ public sealed record HomeArtifactReference(string OwnerApp, string ArtifactId, s
     string? Location, string? Owner, string? SharedBy, DateTimeOffset LastModified, bool IsRecent, bool IsPinned,
     bool IsShared, bool IsGenerated, IReadOnlyList<string> Tags, HomeDeepLink OpenLink);
 public sealed record HomeLibraryQuery(string? Text = null, string? OwnerApp = null, string? ArtifactType = null,
-    bool? Pinned = null, bool? Shared = null, bool? Generated = null, string Sort = "recent", int Offset = 0, int Limit = 50);
-public sealed record HomeLibraryPage(IReadOnlyList<HomeArtifactReference> Items, int Offset, int Limit, bool HasMore);
+    bool? Pinned = null, bool? Shared = null, bool? Generated = null, string Sort = "recent", int Offset = 0, int Limit = 50,
+    string? Cursor = null);
+public sealed record HomeLibraryPage(IReadOnlyList<HomeArtifactReference> Items, int Offset, int Limit, bool HasMore,
+    string Code = "Succeeded", string Message = "Library results loaded.", bool Recoverable = true)
+{ public bool Succeeded => Code == "Succeeded"; }
 public sealed record HomeDomainResult<T>(bool Succeeded, string Code, string Message, T? Value = default, bool Recoverable = true);
 public interface IHomeArtifactSearchIndex
 {
@@ -397,16 +516,83 @@ public sealed class HomeJsonLibraryPreferences(string filePath) : IHomeLibraryPr
         return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(ownerApp + "\0" + artifactId));
     }
 }
+
+/// <summary>Persists user pins as a versioned Home-owned device-local state record.</summary>
+public sealed class HomeCoreLibraryPreferences(IHomeCoreStateStore stateStore) : IHomeLibraryPreferences
+{
+    private const string RecordId = "home.library.preferences";
+    private const string RecordType = "home.library.preferences";
+    private const int SchemaVersion = 1;
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    public async Task<bool> IsPinnedAsync(string ownerApp, string artifactId, CancellationToken cancellationToken)
+    {
+        var state = await ReadAsync(cancellationToken).ConfigureAwait(false);
+        return state?.PinnedArtifactKeys.Contains(Key(ownerApp, artifactId), StringComparer.Ordinal) ?? false;
+    }
+    public async Task SetPinnedAsync(string ownerApp, string artifactId, bool pinned, CancellationToken cancellationToken)
+    {
+        var key = Key(ownerApp, artifactId);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            for (var attempt = 0; attempt < 3; attempt++)
+            {
+                var result = await stateStore.ReadAsync(cancellationToken).ConfigureAwait(false);
+                if (!result.IsSuccess) throw new HomeFeatureProviderException(result.Failure?.Code.ToString() ?? "HomeStateUnavailable",
+                    result.Failure?.Message ?? "Home state is unavailable.", result.Failure?.Retryable ?? true);
+                var state = result.State!;
+                var record = state.Records.FirstOrDefault(x => x.RecordId == RecordId);
+                var values = record is null ? new HashSet<string>(StringComparer.Ordinal) : ReadDocument(record.Payload);
+                if (pinned) values.Add(key); else values.Remove(key);
+                var next = new HomeCoreStateRecord(RecordId, RecordType, SchemaVersion, HomeDataScope.DeviceLocal,
+                    HomeRecordAuthority.LocalCanonical, 0, JsonSerializer.SerializeToElement(new HomeLibraryPreferenceDocument(1, values.OrderBy(x => x, StringComparer.Ordinal).ToArray())));
+                var written = await stateStore.WriteAsync(next, record?.Revision ?? 0, cancellationToken).ConfigureAwait(false);
+                if (written.IsSuccess) return;
+                if (written.Failure?.Code != HomeCoreErrorCode.HomeStateConflict)
+                    throw new HomeFeatureProviderException(written.Failure?.Code.ToString() ?? "HomeStateWriteFailed",
+                        written.Failure?.Message ?? "Home could not save Library preferences.", written.Failure?.Retryable ?? true);
+            }
+            throw new HomeFeatureProviderException("HomeStateConflict", "Library preferences changed concurrently; retry the action.");
+        }
+        finally { _gate.Release(); }
+    }
+    private async Task<HomeLibraryPreferenceDocument?> ReadAsync(CancellationToken ct)
+    {
+        var state = await stateStore.ReadAsync(ct).ConfigureAwait(false);
+        if (!state.IsSuccess) throw new HomeFeatureProviderException(state.Failure?.Code.ToString() ?? "HomeStateUnavailable",
+            state.Failure?.Message ?? "Home state is unavailable.", state.Failure?.Retryable ?? true);
+        var record = state.State!.Records.FirstOrDefault(x => x.RecordId == RecordId);
+        return record is null ? null : ReadDocument(record.Payload);
+    }
+    private static HomeLibraryPreferenceDocument ReadDocument(JsonElement payload)
+    {
+        var document = payload.Deserialize<HomeLibraryPreferenceDocument>() ?? throw new InvalidDataException("Library preferences have an invalid payload.");
+        if (document.SchemaVersion != 1) throw new InvalidDataException($"Unsupported Library preference schema version {document.SchemaVersion}.");
+        return document;
+    }
+    private static string Key(string ownerApp, string artifactId)
+    {
+        if (string.IsNullOrWhiteSpace(ownerApp) || string.IsNullOrWhiteSpace(artifactId)) throw new ArgumentException("Owner app and stable artifact ID are required.");
+        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(ownerApp + "\0" + artifactId));
+    }
+}
 public sealed class HomeLibraryService(IHomeArtifactSearchIndex index, IHomeArtifactAuthorization authorization,
     IHomeDeepLinkRouter router, IHomeLibraryPreferences preferences)
 {
     public async Task<HomeLibraryPage> SearchAsync(HomeLibraryQuery query, CancellationToken ct = default)
     {
-        if (query.Offset < 0 || query.Limit is < 1 or > 200) throw new ArgumentOutOfRangeException(nameof(query));
-        var all = await index.SearchAsync(query, ct).ConfigureAwait(false);
+        if (query.Offset < 0 || query.Limit is < 1 or > 200 || query.Cursor is not null && query.Offset != 0)
+            return new([], query.Offset, query.Limit, false, "InvalidQuery", "Library pagination values are invalid.", false);
+        IReadOnlyList<HomeArtifactReference> all;
+        try { all = await index.SearchAsync(query, ct).ConfigureAwait(false); }
+        catch (OperationCanceledException) { throw; }
+        catch (HomeFeatureProviderException exception)
+        { return new([], query.Offset, query.Limit, false, exception.Code, exception.Message, exception.Recoverable); }
+        catch (Exception)
+        { return new([], query.Offset, query.Limit, false, "SearchUnavailable", "The shared search service could not return Library results."); }
         var unique = all.Where(x => !string.IsNullOrWhiteSpace(x.OwnerApp) && !string.IsNullOrWhiteSpace(x.ArtifactId) &&
                 !string.IsNullOrWhiteSpace(x.DisplayName) && !string.IsNullOrWhiteSpace(x.ArtifactType) &&
-                x.OpenLink.OwnerApp == x.OwnerApp && x.OpenLink.ObjectId == x.ArtifactId)
+                x.OpenLink.OwnerApp == x.OwnerApp && x.OpenLink.ObjectId == x.ArtifactId && !string.IsNullOrWhiteSpace(x.OpenLink.TargetRouteId))
             .GroupBy(x => (x.OwnerApp, x.ArtifactId)).Select(g => g.OrderByDescending(x => x.LastModified).First())
             .Where(x => (query.OwnerApp is null || x.OwnerApp == query.OwnerApp) && (query.ArtifactType is null || x.ArtifactType == query.ArtifactType));
         var permitted = new List<HomeArtifactReference>();
@@ -429,18 +615,26 @@ public sealed class HomeLibraryService(IHomeArtifactSearchIndex index, IHomeArti
     }
     public async Task<HomeDomainResult<HomeDeepLink>> OpenAsync(string ownerApp, string artifactId, CancellationToken ct = default)
     {
-        var item = await index.GetByIdAsync(ownerApp, artifactId, ct).ConfigureAwait(false);
-        if (item is null || item.OwnerApp != ownerApp || item.ArtifactId != artifactId ||
+        HomeArtifactReference? item;
+        try { item = await index.GetByIdAsync(ownerApp, artifactId, ct).ConfigureAwait(false); }
+        catch (OperationCanceledException) { throw; }
+        catch (HomeFeatureProviderException exception) { return new(false, exception.Code, exception.Message, Recoverable: exception.Recoverable); }
+        catch (Exception) { return new(false, "SearchUnavailable", "The shared search service could not resolve this artifact."); }
+        if (item is null || item.OwnerApp != ownerApp || item.ArtifactId != artifactId || string.IsNullOrWhiteSpace(item.OpenLink.TargetRouteId) ||
             !await authorization.CanReadAsync(ownerApp, artifactId, ct).ConfigureAwait(false) ||
             !await authorization.CanOpenAsync(item.OpenLink, ct).ConfigureAwait(false))
             return new(false, "ArtifactUnavailable", "This artifact is unavailable or access was revoked.");
-        if (!router.CanOpen(item.OpenLink) || !router.Open(item.OpenLink)) return new(false, "OwnerUnavailable", "The owning app could not open this artifact.");
+        var navigation = await router.OpenAsync(item.OpenLink, ct).ConfigureAwait(false);
+        if (!navigation.Succeeded) return new(false, navigation.Code, navigation.Message, item.OpenLink, navigation.Recoverable);
         return new(true, "Succeeded", "Opened in the owning app.", item.OpenLink);
     }
     public async Task<HomeDomainResult<bool>> SetPinnedAsync(string ownerApp, string artifactId, bool pinned, CancellationToken ct = default)
     {
         if (!await authorization.CanReadAsync(ownerApp, artifactId, ct).ConfigureAwait(false)) return new(false, "ArtifactUnavailable", "This artifact is unavailable or access was revoked.");
-        await preferences.SetPinnedAsync(ownerApp, artifactId, pinned, ct).ConfigureAwait(false);
+        try { await preferences.SetPinnedAsync(ownerApp, artifactId, pinned, ct).ConfigureAwait(false); }
+        catch (OperationCanceledException) { throw; }
+        catch (HomeFeatureProviderException exception) { return new(false, exception.Code, exception.Message, Recoverable: exception.Recoverable); }
+        catch (Exception) { return new(false, "LibraryStateWriteFailed", "The Library could not save this preference."); }
         return new(true, "Succeeded", pinned ? "Artifact pinned." : "Artifact unpinned.", pinned);
     }
 }
@@ -450,7 +644,10 @@ public sealed record HomeActivityEvent(string EventId, DateTimeOffset Timestamp,
     string Category, string Summary, string? RequestId = null, string? ActionGraphId = null);
 public sealed record HomeEventsQuery(DateTimeOffset? From = null, DateTimeOffset? To = null, string? SourceApp = null,
     string? Category = null, string? Severity = null, int Offset = 0, int Limit = 50);
-public sealed record HomeEventsPage(IReadOnlyList<HomeActivityEvent> Items, int Offset, int Limit, bool HasMore);
+public sealed record HomeActivitySourceStatus(string SourceId, string State, string Code, string Message, bool Recoverable = true);
+public sealed record HomeEventsPage(IReadOnlyList<HomeActivityEvent> Items, int Offset, int Limit, bool HasMore,
+    IReadOnlyList<HomeActivitySourceStatus>? Sources = null, string Code = "Succeeded", string Message = "Events loaded.")
+{ public bool Succeeded => Code is "Succeeded" or "Partial"; }
 public interface IHomeActivitySource
 {
     string SourceId { get; }
@@ -461,11 +658,25 @@ public interface IHomeActivityAuthorization { Task<bool> CanReadAsync(HomeActivi
 public interface IHomeEventDigest { Task<string?> SummarizeAsync(IReadOnlyList<HomeActivityEvent> sourceEvents, CancellationToken cancellationToken); }
 public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, IHomeActivityAuthorization authorization)
 {
+    private readonly IHomeActivitySource[] _sources = sources.ToArray();
     public async Task<HomeEventsPage> ListAsync(HomeEventsQuery query, CancellationToken ct = default)
     {
-        if (query.Offset < 0 || query.Limit is < 1 or > 200) throw new ArgumentOutOfRangeException(nameof(query));
-        var read = await Task.WhenAll(sources.Select(async source => (Source: source.SourceId, Events: await source.ReadAsync(query, ct).ConfigureAwait(false))))
-            .ConfigureAwait(false);
+        if (query.Offset < 0 || query.Limit is < 1 or > 200)
+            return new([], query.Offset, query.Limit, false, [], "InvalidQuery", "Events pagination values are invalid.");
+        var read = await Task.WhenAll(_sources.Select(async source =>
+        {
+            try
+            {
+                var events = await source.ReadAsync(query, ct).ConfigureAwait(false);
+                return (Source: source.SourceId, Events: events, Status: new HomeActivitySourceStatus(source.SourceId, "available", "Succeeded", "Activity source loaded."));
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (HomeFeatureProviderException exception)
+            { return (source.SourceId, (IReadOnlyList<HomeActivityEvent>)[], new HomeActivitySourceStatus(source.SourceId, "unavailable", exception.Code, exception.Message, exception.Recoverable)); }
+            catch (Exception)
+            { return (source.SourceId, (IReadOnlyList<HomeActivityEvent>)[], new HomeActivitySourceStatus(source.SourceId, "unavailable", "SourceUnavailable", "An activity source could not be read.")); }
+        })).ConfigureAwait(false);
+        var sourceStatus = read.Select(x => x.Status).ToArray();
         var records = read.SelectMany(x => x.Events.Select(e => (x.Source, Event: e)))
             .Where(x => x.Event.SourceApp == x.Source && !string.IsNullOrWhiteSpace(x.Event.EventId) &&
                 !string.IsNullOrWhiteSpace(x.Event.EventType) && !string.IsNullOrWhiteSpace(x.Event.Summary) &&
@@ -474,17 +685,30 @@ public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, 
             .GroupBy(x => x.Event.EventId, StringComparer.Ordinal).Select(x => x.First().Event);
         var permitted = new List<HomeActivityEvent>();
         foreach (var record in records)
-            if (await authorization.CanReadAsync(record, ct).ConfigureAwait(false)) permitted.Add(record);
+        {
+            try { if (await authorization.CanReadAsync(record, ct).ConfigureAwait(false)) permitted.Add(record); }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception) { }
+        }
         var filtered = permitted.Where(e => (query.From is null || e.Timestamp >= query.From) && (query.To is null || e.Timestamp <= query.To) &&
             (query.SourceApp is null || e.SourceApp == query.SourceApp) && (query.Category is null || e.Category == query.Category) &&
             (query.Severity is null || e.Severity == query.Severity)).OrderByDescending(e => e.Timestamp).ToArray();
         var page = filtered.Skip(query.Offset).Take(query.Limit).ToArray();
-        return new(page, query.Offset, query.Limit, query.Offset + page.Length < filtered.Length);
+        var failedSources = sourceStatus.Count(x => x.State != "available");
+        var resultCode = failedSources == 0 ? "Succeeded" : failedSources == sourceStatus.Length ? "Unavailable" : "Partial";
+        var resultMessage = resultCode switch
+        {
+            "Unavailable" => "No Events sources could be read.",
+            "Partial" => "Some Events sources could not be read.",
+            _ => "Events loaded.",
+        };
+        return new(page, query.Offset, query.Limit, query.Offset + page.Length < filtered.Length, sourceStatus, resultCode, resultMessage);
     }
     public async Task<string?> DigestAsync(HomeEventsQuery query, IHomeEventDigest digest, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(digest);
         var page = await ListAsync(query with { Offset = 0, Limit = 200 }, ct).ConfigureAwait(false);
+        if (!page.Succeeded) return null;
         return await digest.SummarizeAsync(page.Items, ct).ConfigureAwait(false);
     }
 
@@ -493,16 +717,25 @@ public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, 
         if (string.IsNullOrWhiteSpace(eventId) || objectIndex < 0) return new(false, "InvalidEventReference", "A valid event and object reference are required.");
         ArgumentNullException.ThrowIfNull(router);
         HomeActivityEvent? activity = null;
-        foreach (var source in sources)
+        foreach (var source in _sources)
         {
-            var candidate = await source.GetByIdAsync(eventId, ct).ConfigureAwait(false);
-            if (candidate is not null && candidate.SourceApp == source.SourceId &&
-                (await authorization.CanReadAsync(candidate, ct).ConfigureAwait(false))) { activity = candidate; break; }
+            try
+            {
+                var candidate = await source.GetByIdAsync(eventId, ct).ConfigureAwait(false);
+                if (candidate is not null && candidate.SourceApp == source.SourceId && !string.IsNullOrWhiteSpace(candidate.Summary) &&
+                    candidate.EventId == eventId && await authorization.CanReadAsync(candidate, ct).ConfigureAwait(false)) { activity = candidate; break; }
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception) { }
         }
         if (activity is null || objectIndex >= activity.Objects.Count || !await authorization.CanReadAsync(activity, ct).ConfigureAwait(false))
             return new(false, "EventUnavailable", "This event or linked object is unavailable.");
         var link = activity.Objects[objectIndex];
-        if (!router.CanOpen(link) || !router.Open(link)) return new(false, "OwnerUnavailable", "The linked app could not open this object.");
+        var navigation = await router.OpenAsync(link, ct).ConfigureAwait(false);
+        if (!navigation.Succeeded) return new(false, navigation.Code, navigation.Message, link, navigation.Recoverable);
         return new(true, "Succeeded", "Opened the event object in its owning app.", link);
     }
 }
+
+public sealed class HomeFeatureProviderException(string code, string message, bool recoverable = true, Exception? inner = null) : Exception(message, inner)
+{ public string Code { get; } = code; public bool Recoverable { get; } = recoverable; }

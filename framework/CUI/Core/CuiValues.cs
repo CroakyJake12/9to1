@@ -4,6 +4,12 @@ namespace CakeOS.Cui;
 
 public abstract record CuiValue(CuiSourceSpan Span);
 
+public abstract record CuiTextPart(CuiSourceSpan Span);
+
+public sealed record CuiLiteralTextPart(string Value, CuiSourceSpan Span) : CuiTextPart(Span);
+
+public sealed record CuiExpressionTextPart(CuiValue Value, CuiSourceSpan Span) : CuiTextPart(Span);
+
 public sealed record CuiLiteralValue(string Value, CuiSourceSpan Span) : CuiValue(Span);
 
 public sealed record CuiInvalidValue(
@@ -41,6 +47,11 @@ public sealed record CuiRepeatDefinition(
     CuiValue Source,
     string ItemName,
     CuiValue Key,
+    CuiSourceSpan Span);
+
+public sealed record CuiPropertyRegionDefinition(
+    string PropertyName,
+    CuiValue Value,
     CuiSourceSpan Span);
 
 public sealed record CuiListDefinition(

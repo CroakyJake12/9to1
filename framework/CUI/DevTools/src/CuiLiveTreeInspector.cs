@@ -13,17 +13,27 @@ public sealed class CuiLiveTreeInspector
 {
     private readonly IReadOnlyDictionary<ElementId, Control> _controls;
     private readonly CuiControlLoader? _loader;
+    private readonly CuiSourceMap? _sourceMap;
 
-    private CuiLiveTreeInspector(CuiElementTree tree, Dictionary<ElementId, Control> controls, CuiControlLoader? loader)
+    private CuiLiveTreeInspector(
+        CuiElementTree tree,
+        Dictionary<ElementId, Control> controls,
+        CuiControlLoader? loader,
+        CuiSourceMap? sourceMap)
     {
         Tree = tree;
         _controls = controls;
         _loader = loader;
+        _sourceMap = sourceMap;
     }
 
     public CuiElementTree Tree { get; }
 
-    public static CuiLiveTreeInspector Capture(Control root, CuiControlLoader? loader = null, long revision = 0)
+    public static CuiLiveTreeInspector Capture(
+        Control root,
+        CuiControlLoader? loader = null,
+        long revision = 0,
+        CuiSourceMap? sourceMap = null)
     {
         ArgumentNullException.ThrowIfNull(root);
         var controls = new Dictionary<ElementId, Control>();
@@ -38,10 +48,16 @@ public sealed class CuiLiveTreeInspector
                 TextBox box => box.Text,
                 _ => null
             };
-            return new CuiElementNode(id, control.GetType().Name, control.Name, control.Classes, text, children);
+            var peer = ControlAutomationPeer.CreatePeerForElement(control);
+            var accessibleName = AutomationProperties.GetName(control);
+            if (string.IsNullOrWhiteSpace(accessibleName)) accessibleName = peer?.GetName();
+            var role = peer?.GetAutomationControlType().ToString();
+            return new CuiElementNode(id, control.GetType().Name, control.Name, control.Classes, text, children,
+                AutomationProperties.GetAutomationId(control), accessibleName, role,
+                peer?.IsKeyboardFocusable() ?? false, !control.IsVisible);
         }
 
-        return new CuiLiveTreeInspector(new CuiElementTree(CaptureNode(root, "root"), revision), controls, loader);
+        return new CuiLiveTreeInspector(new CuiElementTree(CaptureNode(root, "root"), revision), controls, loader, sourceMap);
     }
 
     public LayoutSnapshot? GetLayout(ElementId id)
@@ -65,26 +81,34 @@ public sealed class CuiLiveTreeInspector
         if (!_controls.TryGetValue(id, out var control)) return null;
         var peer = ControlAutomationPeer.CreatePeerForElement(control);
         var name = AutomationProperties.GetName(control);
-        if (string.IsNullOrWhiteSpace(name)) name = peer.GetName();
+        if (string.IsNullOrWhiteSpace(name)) name = peer?.GetName();
         if (string.IsNullOrWhiteSpace(name)) name = AutomationProperties.GetAutomationId(control);
         if (string.IsNullOrWhiteSpace(name)) name = control.Name;
+        var role = peer?.GetAutomationControlType().ToString() ?? control.GetType().Name;
         return new AccessibilitySnapshot(
-            peer.GetAutomationControlType().ToString(), name, AutomationProperties.GetHelpText(control),
+            role, name, AutomationProperties.GetHelpText(control),
             control is TextBlock block ? block.Text : null,
             [], new Dictionary<string, string>
             {
-                ["Enabled"] = peer.IsEnabled().ToString(),
-                ["KeyboardFocusable"] = peer.IsKeyboardFocusable().ToString(),
-                ["Offscreen"] = peer.IsOffscreen().ToString()
+                ["Enabled"] = (peer?.IsEnabled() ?? control.IsEnabled).ToString(),
+                ["KeyboardFocusable"] = (peer?.IsKeyboardFocusable() ?? false).ToString(),
+                ["Offscreen"] = (peer?.IsOffscreen() ?? !control.IsVisible).ToString()
             }, !control.IsVisible);
     }
 
     public CuiAuthoredControlTrace? GetSource(ElementId id)
     {
         var diagnostic = GetAuthored(id);
-        if (diagnostic is null) return null;
-        return new CuiAuthoredControlTrace(Source(diagnostic.Source, diagnostic.AuthoredId),
-            diagnostic.ComponentType, diagnostic.AuthoredId);
+        if (diagnostic is not null)
+            return new CuiAuthoredControlTrace(Source(diagnostic.Source, diagnostic.AuthoredId),
+                diagnostic.ComponentType, diagnostic.AuthoredId);
+        if (!_controls.TryGetValue(id, out var control) || _sourceMap is null)
+            return null;
+        var authoredId = AutomationProperties.GetAutomationId(control);
+        if (string.IsNullOrWhiteSpace(authoredId)) authoredId = control.Name;
+        var location = _sourceMap.GetLocationByAuthoredId(authoredId);
+        return location is null ? null : new CuiAuthoredControlTrace(
+            location, control.GetType().Name, location.AuthoredId);
     }
 
     public BindingSnapshot GetBindings(ElementId id)

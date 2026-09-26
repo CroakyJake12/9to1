@@ -1,6 +1,7 @@
 using System.Text;
+using Haven.Application;
 
-namespace HavenOS.Apps.Terminal;
+namespace Haven.Infrastructure.Terminal;
 
 /// <summary>Character dimensions for a pseudo-terminal.</summary>
 public readonly record struct PtySize

@@ -6,7 +6,7 @@ work — and how apps consume them.
 ## Architecture
 
 ```text
-Theme (Glow | Bubble | Retro | Playful | Cinematic)
+Theme (Professional | Glow | Bubble | Retro | Playful | Cinematic | custom)
    ↓  expression: radius/motion/shadow scales + interaction treatment
 Appearance (SuperBright | Bright | Dark | SuperDark)   ← the shared light/dark control
    ↓  colour branch
@@ -23,8 +23,10 @@ application resources (brushes, radii, motion scale) → Avalonia controls
 | File | Purpose | Original Source |
 |---|---|---|
 | `CuiThemeEnums.cs` | CuiTheme, CuiAppearance, CuiAccentColour enums | `HavenPersonalisationModels.cs`, `GenerativeUiModels.cs` |
-| `CuiThemeExpression.cs` | Theme personality record (radius/motion/shadow scales) | `HavenThemeCatalog.cs` |
-| `CuiThemeCatalog.cs` | Catalogue of five canonical themes with fallback logic | `HavenThemeCatalog.cs` |
+| `CuiThemeExpression.cs` | Theme personality record (visual scales) | `HavenThemeCatalog.cs` |
+| `CuiThemeCatalog.cs` | Catalogue of six canonical themes with fallback logic | `HavenThemeCatalog.cs` |
+| `CuiThemeDefinitions.cs` | Custom theme inheritance and element-rule resolution | CUI-native |
+| `CuiAccessibilitySettings.cs` | Shared accessibility, typography, localization and contrast contracts | CUI-native |
 | `CuiAccentPalette.cs` | Three-tier accent gradient system | `HavenAccentPalette.cs` |
 | `CuiAccentCatalog.cs` | 13 semantic accent palettes (light/dark) | `AccentColourCatalog.cs` |
 | `CuiMotion.cs` | Canonical motion durations | `HavenUiMotion.cs` |
@@ -58,7 +60,7 @@ Four brightness variants, separate from themes:
 
 ### Theme Expressions
 
-Each theme has six scale factors:
+Each theme has ten scale factors:
 
 | Factor | Glow | Bubble | Retro | Playful | Cinematic | Professional |
 |---|---|---|---|---|---|---|
@@ -68,6 +70,10 @@ Each theme has six scale factors:
 | MotionDurationScale | 1.0 | 1.15 | 0.7 | 0.9 | 1.25 | 1.0 |
 | ShadowOpacityScale | 1.0 | 1.35 | 0.75 | 0.9 | 1.7 | 1.0 |
 | BorderIntensity | 1.0 | 0.8 | 1.25 | 1.1 | 0.95 | 1.0 |
+| SpacingScale | 1.0 | 1.08 | 0.9 | 1.05 | 1.05 | 1.0 |
+| TypographyScale | 1.0 | 1.02 | 0.96 | 1.04 | 1.02 | 1.0 |
+| ControlHeightScale | 1.0 | 1.08 | 0.92 | 1.08 | 1.0 | 1.0 |
+| ElevationScale | 1.0 | 1.3 | 0.75 | 0.9 | 1.7 | 1.0 |
 
 Base radii: Control=10, Card=16, Popup=20.
 
@@ -75,8 +81,23 @@ Themes also provide spacing, typography, control-height and elevation scales.
 The shared Montserrat-first interface font and code font stacks are exposed as
 `CuiFontFamilyInterface` and `CuiFontFamilyCode`; user display scaling is applied
 to typography, spacing and control sizing without changing application state.
+Hosts can set one preferred font family through `InterfaceFontFamilyOverride`
+or `CodeFontFamilyOverride`; the CUI fallback stack is always retained.
 Reduced-motion and high-contrast preferences are framework resources and can be
 passed to the theme applier as `CuiAccessibilitySettings`.
+
+`CuiAccessibilitySemantics` supplies typed name, description, role, tab index,
+focusability and shortcut metadata for CUI hosts; shortcut metadata is stored
+as the `CuiAccessibilityProperties.Shortcut` attached property for keyboard
+input integration. `CuiLocalizationContext` provides culture-aware number/date
+formatting, resource lookup with invariant fallback, and RTL flow direction;
+hosts apply that direction to the CUI root with `ApplyTo`.
+
+Custom theme definitions are resolved per compiler/catalog instance. Built-in
+themes cannot be shadowed; duplicate custom names, unknown bases, empty rules,
+inheritance cycles and duplicate properties return stable `CUI_THEME_*`
+diagnostics. Base rules merge from the inherited theme toward the child, with
+the child's properties taking precedence case-insensitively.
 
 ## DefaultTheme Scoping
 
@@ -103,6 +124,7 @@ subtree. It does NOT create a visual control.
 | `Retro` | Explicitly pins to Retro |
 | `Playful` | Explicitly pins to Playful |
 | `Cinematic` | Explicitly pins to Cinematic |
+| `Professional` | Explicitly pins to Professional |
 | (empty/null) | Global default |
 | (unknown) | Global default (safe fallback) |
 

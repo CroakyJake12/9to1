@@ -9,7 +9,15 @@
     <RootNamespace>HavenOS.Mail</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
     <PackageReference Include="MailKit" VersionOverride="4.18.0" />
+    <PackageReference Include="HtmlSanitizer" VersionOverride="9.2.1039" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="..\..\framework\CUI\AI\NineToOne.Cui.AI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="UI\MailWorkspace.cui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

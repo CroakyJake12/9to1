@@ -41,6 +41,30 @@ public sealed class GenUiAppSessionService(IGenUiAppRepository repository, GenUi
         return true;
     }
 
+    /// <summary>Promotes a live generated experience into a durable thread, app, or user artifact.</summary>
+    public async Task<GenUiAppDefinition> PromoteAsync(
+        Guid instanceId,
+        GenUiPersistenceScope destination,
+        CancellationToken cancellationToken)
+    {
+        if (destination is not (GenUiPersistenceScope.Thread or GenUiPersistenceScope.App or GenUiPersistenceScope.User))
+            throw new ArgumentOutOfRangeException(nameof(destination), "Promotion must target Thread, App, or User persistence.");
+        var document = instances.TryGet(instanceId)
+            ?? throw new KeyNotFoundException($"Generated UI instance '{instanceId}' is not open.");
+        var definition = _openDefinitions.TryGetValue(instanceId, out var open)
+            ? open
+            : await repository.GetAsync(instanceId, cancellationToken)
+                ?? throw new KeyNotFoundException($"Generated UI instance '{instanceId}' has no saved definition to promote.");
+        var promoted = RequireValid(definition with
+        {
+            Document = document,
+            StateSchema = definition.StateSchema.Select(field => field with { Persistence = destination }).ToArray()
+        });
+        await repository.UpsertAsync(promoted, cancellationToken);
+        _openDefinitions[instanceId] = promoted;
+        return promoted;
+    }
+
     public async Task CloseAsync(Guid instanceId, bool persist, CancellationToken cancellationToken)
     {
         if (persist) await PersistCurrentStateAsync(instanceId, cancellationToken);

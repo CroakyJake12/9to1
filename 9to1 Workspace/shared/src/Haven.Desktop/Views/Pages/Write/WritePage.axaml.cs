@@ -19,6 +19,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     private readonly HavenEventBus _bus;
     private readonly INotesRepository _repository;
     private readonly INotesImportExportService _formats;
+    private readonly IWriteNativeDocumentPackageStore? _nativePackageStore;
     private readonly WordWriteHavenScene _route;
     private readonly DispatcherTimer _autosaveTimer;
     private readonly Guid? _initialDocumentId;
@@ -42,11 +43,13 @@ public sealed partial class WritePage : UserControl, IDisposable
         Guid? initialDocumentId = null,
         INotesAiService? ai = null,
         IOllamaClient? aiModels = null,
-        NotesReadAloudController? readAloud = null)
+        NotesReadAloudController? readAloud = null,
+        IWriteNativeDocumentPackageStore? nativePackageStore = null)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _formats = formats ?? throw new ArgumentNullException(nameof(formats));
+        _nativePackageStore = nativePackageStore;
         _wordAttachments = attachments;
         _initialDocumentId = initialDocumentId;
         _ai = ai;
@@ -421,7 +424,32 @@ public sealed partial class WritePage : UserControl, IDisposable
 
         try
         {
-            var imported = await _formats.ImportAsync(sourcePath, cancellationToken);
+            NotesDocument imported;
+            if (Path.GetExtension(sourcePath).Equals(WriteNativeDocumentPackageMetadata.Extension, StringComparison.OrdinalIgnoreCase))
+            {
+                if (_nativePackageStore is null)
+                {
+                    _route.SetStatus("Native .9to1w import is unavailable because its package service is not registered.");
+                    return false;
+                }
+                var package = await _nativePackageStore.OpenAsync(sourcePath, cancellationToken);
+                if (!package.IsSuccess)
+                {
+                    var error = package.Error;
+                    if (error is null)
+                    {
+                        _route.SetStatus("Couldn’t import this document because the package service returned no document.");
+                        return false;
+                    }
+                    _route.SetStatus($"Couldn’t import this document ({error.Code}): {error.Message}");
+                    return false;
+                }
+                imported = package.Value ?? throw new InvalidDataException("The native package service returned no document.");
+            }
+            else
+            {
+                imported = await _formats.ImportAsync(sourcePath, cancellationToken);
+            }
             var save = await _repository.SaveAsync(
                 imported,
                 "Imported " + Path.GetFileName(sourcePath),
@@ -460,7 +488,30 @@ public sealed partial class WritePage : UserControl, IDisposable
 
         try
         {
-            await _formats.ExportAsync(Document, destinationPath, cancellationToken);
+            if (Path.GetExtension(destinationPath).Equals(WriteNativeDocumentPackageMetadata.Extension, StringComparison.OrdinalIgnoreCase))
+            {
+                if (_nativePackageStore is null)
+                {
+                    _route.SetStatus("Native .9to1w export is unavailable because its package service is not registered.");
+                    return false;
+                }
+                var package = await _nativePackageStore.SaveAsync(Document, destinationPath, cancellationToken);
+                if (!package.IsSuccess)
+                {
+                    var error = package.Error;
+                    if (error is null)
+                    {
+                        _route.SetStatus("Couldn’t export this document because the package service returned no saved path.");
+                        return false;
+                    }
+                    _route.SetStatus($"Couldn’t export this document ({error.Code}): {error.Message}");
+                    return false;
+                }
+            }
+            else
+            {
+                await _formats.ExportAsync(Document, destinationPath, cancellationToken);
+            }
             _route.SetStatus(BuildExportStatus(destinationPath));
             _bus.Fire("Write.Document.Exported");
             return true;
@@ -489,7 +540,7 @@ public sealed partial class WritePage : UserControl, IDisposable
         {
             Title = "Import a Write document",
             AllowMultiple = false,
-            FileTypeFilter = BuildFileTypes(_formats.ImportExtensions)
+            FileTypeFilter = BuildFileTypes(GetImportExtensions())
         });
         var file = files.FirstOrDefault();
         if (file is null)
@@ -532,16 +583,18 @@ public sealed partial class WritePage : UserControl, IDisposable
             return;
         }
 
-        var defaultExtension = _formats.ExportExtensions
+        var exportExtensions = GetExportExtensions();
+        var defaultExtension = (_nativePackageStore is not null ? WriteNativeDocumentPackageMetadata.Extension : null)
+            ?? exportExtensions
             .FirstOrDefault(extension => extension.Equals(".docx", StringComparison.OrdinalIgnoreCase))
-            ?? _formats.ExportExtensions.FirstOrDefault()
+            ?? exportExtensions.FirstOrDefault()
             ?? ".haven-notes.json";
         var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = "Export Write document",
             SuggestedFileName = SanitizeFileName(Document.Title) + defaultExtension,
             DefaultExtension = defaultExtension.TrimStart('.'),
-            FileTypeChoices = BuildFileTypes(_formats.ExportExtensions),
+            FileTypeChoices = BuildFileTypes(exportExtensions),
             ShowOverwritePrompt = true
         });
         if (file is null)
@@ -582,7 +635,8 @@ public sealed partial class WritePage : UserControl, IDisposable
     {
         var name = Path.GetFileName(path);
         var extension = Path.GetExtension(path);
-        var native = extension.Equals(".json", StringComparison.OrdinalIgnoreCase)
+        var native = extension.Equals(WriteNativeDocumentPackageMetadata.Extension, StringComparison.OrdinalIgnoreCase)
+                     || extension.Equals(".json", StringComparison.OrdinalIgnoreCase)
                      || path.EndsWith(".haven-notes.json", StringComparison.OrdinalIgnoreCase);
         return native
             ? "Exported " + name
@@ -600,6 +654,18 @@ public sealed partial class WritePage : UserControl, IDisposable
                 Patterns = ["*" + extension]
             })
             .ToArray();
+
+    private IReadOnlyCollection<string> GetImportExtensions() =>
+        _nativePackageStore is null
+            ? _formats.ImportExtensions
+            : _formats.ImportExtensions.Append(WriteNativeDocumentPackageMetadata.Extension)
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+    private IReadOnlyCollection<string> GetExportExtensions() =>
+        _nativePackageStore is null
+            ? _formats.ExportExtensions
+            : _formats.ExportExtensions.Append(WriteNativeDocumentPackageMetadata.Extension)
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
 
     private static string SanitizeFileName(string title)
     {

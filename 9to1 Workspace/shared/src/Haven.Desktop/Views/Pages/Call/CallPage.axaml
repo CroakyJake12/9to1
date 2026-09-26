@@ -83,6 +83,11 @@
                 </StackPanel>
 
                 <StackPanel Spacing="5">
+                  <TextBlock Text="Speaker" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
+                  <hui:HavenComboBox x:Name="OutputDeviceCombo" IsEnabled="True"/>
+                </StackPanel>
+
+                <StackPanel Spacing="5">
                   <TextBlock Text="Speech model" FontSize="12" Foreground="{DynamicResource HavenMutedBrush}"/>
                   <hui:HavenComboBox x:Name="SpeechModelCombo" IsEnabled="True"/>
                   <TextBlock x:Name="SpeechModelStatus" FontSize="11"

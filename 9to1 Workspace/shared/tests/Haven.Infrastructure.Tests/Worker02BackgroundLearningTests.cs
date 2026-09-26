@@ -38,13 +38,19 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
     public async Task Scheduler_is_off_without_explicit_privacy_opt_in_and_snapshot_reports_effective_state()
     {
         var database = await CreateDatabaseAsync();
+        var withoutConsent = new BackgroundLearningScheduler(database);
+        await withoutConsent.InitializeAsync(CancellationToken.None);
+        Assert.False(withoutConsent.IsGloballyEnabled);
+        Assert.False(await withoutConsent.CanAcceptContributionAsync(
+            KnowledgeCategory.Project, "app", "project", CancellationToken.None));
+
         var privacy = new TestPrivacy(backgroundLearning: false);
         var scheduler = new BackgroundLearningScheduler(privacy, database);
         await scheduler.InitializeAsync(CancellationToken.None);
 
         var optedOut = await scheduler.GetSnapshotAsync(CancellationToken.None);
         Assert.False(optedOut.IsGloballyEnabled);
-        Assert.All(optedOut.Categories.Values, Assert.False);
+        Assert.All(optedOut.Categories.Values, enabled => Assert.False(enabled));
         Assert.False(scheduler.IsEnabled(KnowledgeCategory.LearnMe));
         await Assert.ThrowsAsync<InvalidOperationException>(() => scheduler.EnqueueAsync(
             "Do not learn while opted out", KnowledgeCategory.LearnMe, BackgroundLearningPriority.Low, CancellationToken.None));
@@ -64,13 +70,244 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
 
         var disabledAgain = await scheduler.GetSnapshotAsync(CancellationToken.None);
         Assert.False(disabledAgain.IsGloballyEnabled);
-        Assert.All(disabledAgain.Categories.Values, Assert.False);
+        Assert.All(disabledAgain.Categories.Values, enabled => Assert.False(enabled));
         Assert.Contains(disabledAgain.Tasks, task => task.Id == queued.Id);
 
         await privacy.UpdateAsync(
             privacy.Current with { BackgroundLearningEnabled = true },
             CancellationToken.None);
         Assert.Contains(await scheduler.ListAsync(CancellationToken.None), task => task.Id == queued.Id);
+    }
+
+    [Fact]
+    public async Task Contributor_policy_filters_app_and_project_sources()
+    {
+        var database = await CreateDatabaseAsync();
+        var privacy = new TestPrivacy(backgroundLearning: true)
+        {
+            Current = PrivacyPreferences.Default with
+            {
+                BackgroundLearningEnabled = true,
+                BackgroundLearningPolicy = new BackgroundLearningContributorPolicy(
+                    RestrictApps: true,
+                    AllowedAppIds: ["app.docs"],
+                    RestrictProjects: true,
+                    AllowedProjectIds: ["project-a"])
+            }
+        };
+        var scheduler = new BackgroundLearningScheduler(privacy, database);
+        await scheduler.InitializeAsync(CancellationToken.None);
+
+        Assert.True(await scheduler.CanAcceptContributionAsync(
+            KnowledgeCategory.Project, "app.docs", "project-a", CancellationToken.None));
+        Assert.False(await scheduler.CanAcceptContributionAsync(
+            KnowledgeCategory.Project, "app.mail", "project-a", CancellationToken.None));
+        Assert.False(await scheduler.CanAcceptContributionAsync(
+            KnowledgeCategory.Project, "app.docs", "project-b", CancellationToken.None));
+
+        await scheduler.SetCategoryEnabledAsync(KnowledgeCategory.Project, false, CancellationToken.None);
+        Assert.False(await scheduler.CanAcceptContributionAsync(
+            KnowledgeCategory.Project, "app.docs", "project-a", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Structured_capture_is_opt_in_local_and_idempotent_with_provenance()
+    {
+        var database = await CreateDatabaseAsync();
+        var privacy = new TestPrivacy(backgroundLearning: true);
+        var scheduler = new BackgroundLearningScheduler(privacy, database);
+        await scheduler.InitializeAsync(CancellationToken.None);
+        var library = new KnowledgeLibraryService(
+            database, new RetrievalIndexService(database, new LocalHashEmbeddingService()), privacy, scheduler);
+        var capture = new BackgroundLearningCaptureService(scheduler, privacy, library);
+        var now = DateTimeOffset.UtcNow;
+        var contribution = new BackgroundLearningContribution(
+            KnowledgeCategory.WorldKnowledge,
+            "electric vehicle charging",
+            "Level two charging",
+            "Level two vehicle charging uses alternating current.",
+            "Level two vehicle charging uses alternating current and commonly uses a 240-volt circuit.",
+            "Recurring authorised local reference use",
+            "global",
+            KnowledgePrivacyClass.Normal,
+            .86,
+            KnowledgeFreshnessClass.Changing,
+            [new KnowledgeSource("guide-42", "Charging reference", "local-document", null, null, now, now, now.AddDays(90), "user-approved")],
+            ExpiresAt: now.AddDays(90),
+            CreateOrUseKnowledgeBank: true,
+            KnowledgeBankTitle: "Electric Vehicles");
+
+        var first = await capture.CaptureAsync(contribution, CancellationToken.None);
+        var second = await capture.CaptureAsync(contribution, CancellationToken.None);
+        Assert.Equal(first.Id, second.Id);
+        Assert.NotNull(first.KnowledgeBankId);
+        Assert.Equal(contribution.Sources, first.Sources);
+        Assert.Equal(now.AddDays(90), first.ExpiresAt);
+        Assert.Equal(first.UpdatedAt, first.LastReinforcedAt);
+        Assert.Single(await library.SearchMetadataAsync(null, KnowledgeCategory.WorldKnowledge, CancellationToken.None));
+
+        await privacy.UpdateAsync(privacy.Current with { BackgroundLearningEnabled = false }, CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => capture.CaptureAsync(
+            contribution with { Title = "Must not be captured while opted out" }, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Knowledge_banks_persist_entries_filter_retrieval_and_delete_the_whole_topic()
+    {
+        var (_, library, _, _) = await CreateServicesAsync();
+        var now = DateTimeOffset.UtcNow;
+        var bank = await library.CreateBankAsync(
+            new KnowledgeBank(Guid.NewGuid(), "vehicle systems", "Vehicle Systems", "project:project-a", true,
+                "local", "disabled", now, now), CancellationToken.None);
+        var duplicateBank = await library.CreateBankAsync(
+            new KnowledgeBank(Guid.NewGuid(), "Vehicle Systems", "Vehicles", "project:project-a", true,
+                "local", "disabled", now, now), CancellationToken.None);
+        Assert.Equal(bank.Id, duplicateBank.Id);
+        var record = NewKnowledge("Electric vehicle charging", "Level two charging uses alternating current.", now) with
+        {
+            Category = KnowledgeCategory.Project,
+            Topic = bank.Topic,
+            Scope = bank.Scope,
+            KnowledgeBankId = bank.Id,
+            AppId = "app.docs",
+            ProjectId = "project-a",
+            Sources = [new KnowledgeSource("guide-1", "EV charging guide", "document", null, null, now, now, null, "user-provided")]
+        };
+        await library.UpsertAsync(record, record.Summary, CancellationToken.None);
+
+        var foundBank = await library.GetBankAsync(bank.Id, CancellationToken.None);
+        Assert.NotNull(foundBank);
+        Assert.Equal(1, foundBank.EntryCount);
+        Assert.Equal(record.Sources, (await library.GetAsync(record.Id, CancellationToken.None))!.Sources);
+
+        var context = new KnowledgeRetrievalContext(
+            "How does level two vehicle charging work?", "agent-a", "app.docs", "project-a",
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { bank.Scope },
+            BackgroundLearningEnabled: true, IsRemoteRequest: false, MayDiscloseExternally: false);
+        var relevant = await library.GetRelevantBackgroundLearningAsync(context, CancellationToken.None);
+        Assert.Contains(relevant, item => item.Id == record.Id);
+        Assert.Empty(await library.GetRelevantBackgroundLearningAsync(
+            context with { ProjectId = "project-b" }, CancellationToken.None));
+        Assert.Empty(await library.GetRelevantBackgroundLearningAsync(
+            context with { RequestText = "unrelated astronomy" }, CancellationToken.None));
+
+        Assert.True(await library.SetBankEnabledAsync(bank.Id, false, CancellationToken.None));
+        Assert.Empty(await library.GetRelevantBackgroundLearningAsync(context, CancellationToken.None));
+        Assert.True(await library.SetBankEnabledAsync(bank.Id, true, CancellationToken.None));
+
+        await library.ForgetBankAsync(bank.Id, CancellationToken.None);
+        Assert.Null(await library.GetBankAsync(bank.Id, CancellationToken.None));
+        Assert.Null(await library.GetAsync(record.Id, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Knowledge_schema_migrates_existing_records_without_losing_metadata()
+    {
+        var database = await CreateDatabaseAsync();
+        var now = DateTimeOffset.UtcNow;
+        var legacyId = Guid.NewGuid();
+        await using (var connection = await database.OpenAsync(CancellationToken.None))
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                CREATE TABLE knowledge_records(
+                    id TEXT PRIMARY KEY,category INTEGER NOT NULL,topic TEXT NOT NULL,title TEXT NOT NULL,summary TEXT NOT NULL,
+                    privacy_class INTEGER NOT NULL,confidence REAL NOT NULL,is_pinned INTEGER NOT NULL,created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,expires_at TEXT NULL,learned_because TEXT NOT NULL,sources_json TEXT NOT NULL);
+                CREATE TABLE knowledge_record_details(
+                    id TEXT PRIMARY KEY REFERENCES knowledge_records(id) ON DELETE CASCADE,freshness INTEGER NOT NULL DEFAULT 0,
+                    last_confirmed_at TEXT NULL,scope TEXT NOT NULL DEFAULT 'global',status INTEGER NOT NULL DEFAULT 0,
+                    origin INTEGER NOT NULL DEFAULT 0,user_correction TEXT NULL,supersedes_id TEXT NULL);
+                INSERT INTO knowledge_records(id,category,topic,title,summary,privacy_class,confidence,is_pinned,created_at,updated_at,expires_at,learned_because,sources_json)
+                VALUES($id,$category,'legacy topic','Legacy title','Legacy summary',$privacy,.73,1,$created,$updated,NULL,'legacy source','[]');
+                INSERT INTO knowledge_record_details(id,freshness,scope,status,origin) VALUES($id,1,'project:old',0,2);
+                """;
+            command.Parameters.AddWithValue("$id", legacyId.ToString());
+            command.Parameters.AddWithValue("$category", (int)KnowledgeCategory.Project);
+            command.Parameters.AddWithValue("$privacy", (int)KnowledgePrivacyClass.Private);
+            command.Parameters.AddWithValue("$created", now.ToString("O"));
+            command.Parameters.AddWithValue("$updated", now.ToString("O"));
+            await command.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+
+        var privacy = new TestPrivacy(backgroundLearning: true);
+        var scheduler = new BackgroundLearningScheduler(privacy, database);
+        var library = new KnowledgeLibraryService(
+            database, new RetrievalIndexService(database, new LocalHashEmbeddingService()), privacy, scheduler);
+        var migrated = await library.GetAsync(legacyId, CancellationToken.None);
+
+        Assert.NotNull(migrated);
+        Assert.Equal("Legacy summary", migrated.Summary);
+        Assert.Equal("project:old", migrated.Scope);
+        Assert.Equal(KnowledgePrivacyClass.Private, migrated.PrivacyClass);
+        Assert.Null(migrated.KnowledgeBankId);
+        Assert.False(migrated.IsUserLocked);
+    }
+
+    [Fact]
+    public async Task Remote_learning_context_requires_both_request_permission_and_separate_disclosure_consent()
+    {
+        var database = await CreateDatabaseAsync();
+        var privacy = new TestPrivacy(backgroundLearning: true);
+        var scheduler = new BackgroundLearningScheduler(privacy, database);
+        await scheduler.InitializeAsync(CancellationToken.None);
+        var library = new KnowledgeLibraryService(
+            database, new RetrievalIndexService(database, new LocalHashEmbeddingService()), privacy, scheduler);
+        var now = DateTimeOffset.UtcNow;
+        var bank = await library.CreateBankAsync(
+            new KnowledgeBank(Guid.NewGuid(), "database guide", "Database Guide", "global", true,
+                "local", "disabled", now, now), CancellationToken.None);
+        var record = NewKnowledge("Database transactions", "SQLite commits are atomic.", now) with
+        {
+            Category = KnowledgeCategory.WorldKnowledge,
+            Topic = bank.Topic,
+            Scope = bank.Scope,
+            KnowledgeBankId = bank.Id
+        };
+        await library.UpsertAsync(record, record.Summary, CancellationToken.None);
+
+        var remoteContext = new KnowledgeRetrievalContext(
+            "SQLite database transactions", null, null, null,
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "global" },
+            BackgroundLearningEnabled: true, IsRemoteRequest: true, MayDiscloseExternally: true);
+        Assert.Empty(await library.GetRelevantBackgroundLearningAsync(remoteContext, CancellationToken.None));
+
+        await privacy.UpdateAsync(
+            privacy.Current with { BackgroundLearningCloudDisclosureEnabled = true }, CancellationToken.None);
+        Assert.Empty(await library.GetRelevantBackgroundLearningAsync(
+            remoteContext with { MayDiscloseExternally = false }, CancellationToken.None));
+        await privacy.UpdateAsync(
+            privacy.Current with { LocalOnlyMode = true }, CancellationToken.None);
+        Assert.Empty(await library.GetRelevantBackgroundLearningAsync(remoteContext, CancellationToken.None));
+        await privacy.UpdateAsync(
+            privacy.Current with { LocalOnlyMode = false }, CancellationToken.None);
+        Assert.Contains(await library.GetRelevantBackgroundLearningAsync(remoteContext, CancellationToken.None),
+            item => item.Id == record.Id);
+    }
+
+    [Fact]
+    public async Task Clear_category_deletes_pinned_and_unpinned_learning_without_touching_other_categories()
+    {
+        var (_, library, _, _) = await CreateServicesAsync();
+        var now = DateTimeOffset.UtcNow;
+        var pinned = NewKnowledge("Pinned vehicle fact", "Retain source", now) with
+        {
+            Category = KnowledgeCategory.WorldKnowledge,
+            IsPinned = true
+        };
+        var ordinary = NewKnowledge("Ordinary vehicle fact", "Retain source", now) with
+        {
+            Category = KnowledgeCategory.WorldKnowledge
+        };
+        var memory = NewKnowledge("Persistent memory", "Preserve independent memory", now);
+        await library.UpsertAsync(pinned, pinned.Summary, CancellationToken.None);
+        await library.UpsertAsync(ordinary, ordinary.Summary, CancellationToken.None);
+        await library.UpsertAsync(memory, memory.Summary, CancellationToken.None);
+
+        Assert.Equal(2, await library.ForgetCategoryAsync(KnowledgeCategory.WorldKnowledge, CancellationToken.None));
+        Assert.Null(await library.GetAsync(pinned.Id, CancellationToken.None));
+        Assert.Null(await library.GetAsync(ordinary.Id, CancellationToken.None));
+        Assert.NotNull(await library.GetAsync(memory.Id, CancellationToken.None));
     }
 
     [Fact]
@@ -133,6 +370,36 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
     }
 
     [Fact]
+    public async Task Explicit_correction_remains_authoritative_over_later_inference()
+    {
+        var (_, library, _, _) = await CreateServicesAsync();
+        var now = DateTimeOffset.UtcNow;
+        var inferred = NewKnowledge("Preferred vehicle", "The user prefers petrol cars.", now) with
+        {
+            Category = KnowledgeCategory.Project,
+            ProjectId = "project-a",
+            AppId = "app.docs"
+        };
+        await library.UpsertAsync(inferred, inferred.Summary, CancellationToken.None);
+        var correction = await library.CorrectAsync(
+            inferred.Id, "The user prefers electric cars.", "Explicit correction", CancellationToken.None);
+        Assert.True(correction.IsUserLocked);
+
+        var laterInference = inferred with
+        {
+            Id = Guid.NewGuid(),
+            Summary = "The user prefers petrol cars.",
+            UpdatedAt = now.AddMinutes(5),
+            LastReinforcedAt = now.AddMinutes(5)
+        };
+        var accepted = await library.UpsertAsync(laterInference, laterInference.Summary, CancellationToken.None);
+
+        Assert.Equal(correction.Id, accepted.Id);
+        Assert.Equal(KnowledgeRecordStatus.Superseded, (await library.GetAsync(inferred.Id, CancellationToken.None))!.Status);
+        Assert.Null(await library.GetAsync(laterInference.Id, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Secrets_are_rejected_and_api_metadata_persists()
     {
         var (_, library, apiBank, _) = await CreateServicesAsync();
@@ -179,7 +446,11 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
     private async Task<(SqliteDatabase, KnowledgeLibraryService, ApiBankService, KnowledgeMaintenanceService)> CreateServicesAsync()
     {
         var database = await CreateDatabaseAsync();
-        var library = new KnowledgeLibraryService(database, new RetrievalIndexService(database, new LocalHashEmbeddingService()));
+        var privacy = new TestPrivacy(backgroundLearning: true);
+        var scheduler = new BackgroundLearningScheduler(privacy, database);
+        await scheduler.InitializeAsync(CancellationToken.None);
+        var library = new KnowledgeLibraryService(
+            database, new RetrievalIndexService(database, new LocalHashEmbeddingService()), privacy, scheduler);
         var apiBank = new ApiBankService(database);
         return (database, library, apiBank, new KnowledgeMaintenanceService(database, library, apiBank));
     }
@@ -189,7 +460,7 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
 
     private sealed class TestPrivacy(bool backgroundLearning) : IPrivacyPreferenceStore
     {
-        public PrivacyPreferences Current { get; private set; } =
+        public PrivacyPreferences Current { get; set; } =
             PrivacyPreferences.Default with { BackgroundLearningEnabled = backgroundLearning };
 
         public Task UpdateAsync(PrivacyPreferences preferences, CancellationToken cancellationToken)

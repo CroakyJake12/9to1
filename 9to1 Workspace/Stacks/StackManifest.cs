@@ -34,6 +34,7 @@ public sealed class StackManifest
 public sealed class StackDomainRecord
 {
     public Guid Id { get; set; }
+    public Guid ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public StackDomainKind Kind { get; set; }
     public Guid? ParentId { get; set; }
@@ -98,22 +99,31 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (File.Exists(ManifestPath) || Directory.Exists(ProjectDirectory) && Directory.EnumerateFileSystemEntries(ProjectDirectory).Any())
+            if (Directory.Exists(ProjectDirectory) || File.Exists(ProjectDirectory))
             {
                 throw new StackFailureException(StackFailureCode.DuplicateIdentity,
-                    "The selected project folder already contains data and cannot be initialized as a new Stack project.", ProjectDirectory, recoverable: true);
+                    "The selected project folder already exists and cannot be initialized as a new Stack project. Existing data has been preserved.", ProjectDirectory, recoverable: true);
             }
 
-            Directory.CreateDirectory(ProjectDirectory);
-            Directory.CreateDirectory(Path.Combine(ProjectDirectory, ".branches"));
-            Directory.CreateDirectory(Path.Combine(ProjectDirectory, ".branches", "domains"));
-            Directory.CreateDirectory(Path.Combine(ProjectDirectory, ".source"));
-            Directory.CreateDirectory(Path.Combine(ProjectDirectory, ".roots"));
-
-            await WriteAtomicallyAsync(ManifestPath, Serialize(manifest), cancellationToken).ConfigureAwait(false);
-            await WriteAtomicallyAsync(RootsPath, JsonSerializer.SerializeToUtf8Bytes(new StackRootsDocument(), JsonOptions), cancellationToken).ConfigureAwait(false);
-            await WriteAtomicallyAsync(Path.Combine(ProjectDirectory, ".branches", "README.md"),
-                "# Stack-managed storage\n\nThis folder contains versioned Stack metadata. Do not edit or delete it through ordinary project editing.\n"u8.ToArray(), cancellationToken).ConfigureAwait(false);
+            Directory.CreateDirectory(Path.GetDirectoryName(ProjectDirectory)!);
+            string stagingDirectory = ProjectDirectory + ".stack-initialize-" + Guid.NewGuid().ToString("N");
+            try
+            {
+                Directory.CreateDirectory(stagingDirectory);
+                Directory.CreateDirectory(Path.Combine(stagingDirectory, ".branches", "domains"));
+                Directory.CreateDirectory(Path.Combine(stagingDirectory, ".source"));
+                Directory.CreateDirectory(Path.Combine(stagingDirectory, ".roots"));
+                await WriteAtomicallyAsync(Path.Combine(stagingDirectory, ManifestRelativePath.Replace('/', Path.DirectorySeparatorChar)), Serialize(manifest), cancellationToken).ConfigureAwait(false);
+                await WriteAtomicallyAsync(Path.Combine(stagingDirectory, RootsRelativePath.Replace('/', Path.DirectorySeparatorChar)),
+                    JsonSerializer.SerializeToUtf8Bytes(new StackRootsDocument { SchemaVersion = StackManifest.CurrentSchemaVersion }, JsonOptions), cancellationToken).ConfigureAwait(false);
+                await WriteAtomicallyAsync(Path.Combine(stagingDirectory, ".branches", "README.md"),
+                    "# Stack-managed storage\n\nThis folder contains versioned Stack metadata. Do not edit or delete it through ordinary project editing.\n"u8.ToArray(), cancellationToken).ConfigureAwait(false);
+                Directory.Move(stagingDirectory, ProjectDirectory);
+            }
+            finally
+            {
+                if (Directory.Exists(stagingDirectory)) Directory.Delete(stagingDirectory, recursive: true);
+            }
         }
         catch (StackFailureException)
         {
@@ -156,6 +166,7 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
             }
 
             ValidateManifest(manifest);
+            await ValidateRootsDocumentAsync(manifest, cancellationToken).ConfigureAwait(false);
             return manifest;
         }
         catch (StackFailureException)
@@ -181,13 +192,13 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         try
         {
             ValidateManagedLayout();
-            await WriteAtomicallyAsync(ManifestPath, Serialize(manifest), cancellationToken).ConfigureAwait(false);
             var roots = new StackRootsDocument
             {
                 SchemaVersion = StackManifest.CurrentSchemaVersion,
                 Roots = manifest.Roots.ToList(),
             };
             await WriteAtomicallyAsync(RootsPath, JsonSerializer.SerializeToUtf8Bytes(roots, JsonOptions), cancellationToken).ConfigureAwait(false);
+            await WriteAtomicallyAsync(ManifestPath, Serialize(manifest), cancellationToken).ConfigureAwait(false);
         }
         catch (StackFailureException)
         {
@@ -232,6 +243,29 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         }
     }
 
+    private async Task ValidateRootsDocumentAsync(StackManifest manifest, CancellationToken cancellationToken)
+    {
+        try
+        {
+            byte[] bytes = await File.ReadAllBytesAsync(RootsPath, cancellationToken).ConfigureAwait(false);
+            StackRootsDocument roots = JsonSerializer.Deserialize<StackRootsDocument>(bytes, JsonOptions)
+                ?? throw new JsonException("Root metadata was empty.");
+            if (roots.SchemaVersion != StackManifest.CurrentSchemaVersion)
+            {
+                throw new StackFailureException(StackFailureCode.SchemaVersionUnsupported, "Root metadata uses an unsupported schema version.", RootsRelativePath, recoverable: true);
+            }
+
+            if (!roots.Roots.Select(static root => root.Id).Order().SequenceEqual(manifest.Roots.Select(static root => root.Id).Order()))
+            {
+                throw new StackFailureException(StackFailureCode.ManagedMetadataMissing, "The derived roots.json index does not match the canonical manifest; project recovery is required.", RootsRelativePath, recoverable: true);
+            }
+        }
+        catch (JsonException exception)
+        {
+            throw new StackFailureException(StackFailureCode.SourceCorrupt, "Root metadata is not valid JSON; project recovery is required.", RootsRelativePath, recoverable: true, innerException: exception);
+        }
+    }
+
     private static void ValidateManifest(StackManifest manifest)
     {
         if (manifest.ProjectId == Guid.Empty || manifest.MainDomainId == Guid.Empty || manifest.Domains.Count == 0)
@@ -248,7 +282,7 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         var ids = new HashSet<Guid>();
         foreach (StackDomainRecord domain in manifest.Domains)
         {
-            if (domain.Id == Guid.Empty || !ids.Add(domain.Id))
+            if (domain.Id == Guid.Empty || domain.ProjectId != manifest.ProjectId || !ids.Add(domain.Id))
             {
                 throw new StackFailureException(StackFailureCode.SourceCorrupt, "The Stack manifest contains an empty or duplicate DomainID.", ManifestRelativePath, recoverable: true);
             }

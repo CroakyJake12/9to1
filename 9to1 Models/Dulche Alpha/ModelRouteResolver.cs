@@ -6,7 +6,7 @@ namespace Dulche.Runtime;
 /// <summary>Eligibility-first routing over the canonical shared provider catalogue.</summary>
 public sealed class ModelRouteResolver(IModelProviderRegistry providers)
 {
-    public async Task<OperationResult<RouteSelection>> ResolveAsync(ModelRoute route, ModelIdentity? explicitModel, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<RouteSelection>> ResolveAsync(ModelRoute route, ModelIdentity? explicitModel, bool containsPrivateContext = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(route);
         if (route.Version <= 0 || string.IsNullOrWhiteSpace(route.RouteId))
@@ -31,7 +31,7 @@ public sealed class ModelRouteResolver(IModelProviderRegistry providers)
             var required = policy.RequiredCapabilities ?? new HashSet<string>();
             var unsupported = required.Where(capability => !actual.Descriptor.Capabilities.Any(value => StringComparer.OrdinalIgnoreCase.Equals(value.ToString(), capability))).ToArray();
             if (unsupported.Length > 0) { skipped.Add($"{candidate.StableKey}: unsupported capabilities {string.Join(", ", unsupported)}"); continue; }
-            if (!actual.Descriptor.IsLocal && !policy.AllowPrivateContextToCloud && policy.AllowCloud)
+            if (!actual.Descriptor.IsLocal && containsPrivateContext && !policy.AllowPrivateContextToCloud)
                 return Fail<RouteSelection>(DulcheErrorCode.PermissionDenied, "Cloud routing requires explicit permission for private context.", candidate.StableKey);
             return OperationResult<RouteSelection>.Success(new(actual.Identity, skipped.Count == 0 ? "Selected first eligible configured model." : "Selected next eligible model after policy/capability filtering.", skipped));
         }
