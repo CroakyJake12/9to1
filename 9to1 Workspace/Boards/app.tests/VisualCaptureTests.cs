@@ -5,8 +5,10 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Apps.Boards.App;
 using CakeOS.Apps.Boards.Contract;
 using CakeOS.Cui.Runtime;
@@ -42,11 +44,11 @@ public sealed class VisualCaptureTests
         throw new FileNotFoundException("Boards.cui was not found from the test output directory.");
     }
 
-    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false) =>
+    private static string Capture(string boardPath, int width, int height, string shotName, bool dark = false, bool openStyleMenu = false) =>
         // Funnelled through the shared test UI thread like every other suite.
-        TestUiThread.Run(() => CaptureOnUiThread(boardPath, width, height, shotName, dark));
+        TestUiThread.Run(() => CaptureOnUiThread(boardPath, width, height, shotName, dark, openStyleMenu));
 
-    private static string CaptureOnUiThread(string boardPath, int width, int height, string shotName, bool dark)
+    private static string CaptureOnUiThread(string boardPath, int width, int height, string shotName, bool dark, bool openStyleMenu)
     {
         var priorMode = BoardsTheme.Mode;
         BoardsTheme.SetMode(dark ? BoardsThemeMode.Dark : BoardsThemeMode.Light);
@@ -60,9 +62,11 @@ public sealed class VisualCaptureTests
         Directory.CreateDirectory(storeRoot);
         var store = new JsonFileHavenBoardStore(storeRoot);
         var adapter = ContractSessionAdapter.OpenAsync(store, boardPath).GetAwaiter().GetResult();
+        BoardsViewModel? viewModel = null;
+        Window? window = null;
         try
         {
-            var viewModel = new BoardsViewModel(adapter);
+            viewModel = new BoardsViewModel(adapter);
 
             var loader = new CuiControlLoader();
             loader.SetBindingContext(viewModel);
@@ -95,7 +99,7 @@ public sealed class VisualCaptureTests
             if (context is not null)
                 ContextPanels.Rebuild(context, viewModel);
 
-        var window = new Window
+        window = new Window
         {
             Width = width,
             Height = height,
@@ -107,6 +111,21 @@ public sealed class VisualCaptureTests
         window.Arrange(new Rect(0, 0, width, height));
         root.Measure(new Size(width, height));
         root.Arrange(new Rect(0, 0, width, height));
+        if (openStyleMenu)
+        {
+            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().FirstOrDefault(combo =>
+                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
+            Assert.NotNull(styleMenu);
+            Assert.Equal(viewModel.StyleList.Count, styleMenu.Items.Count);
+            foreach (var name in new[] { "Header 4", "Header 5", "Header 6" })
+                Assert.Contains(styleMenu.Items.Cast<ComboBoxItem>(), item =>
+                    item.Content is TextBlock preview && preview.Text == name);
+            styleMenu.Focus();
+            Assert.True(styleMenu.IsFocused, "The style menu must be keyboard-focusable.");
+            window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(styleMenu.IsDropDownOpen, "Space should open the focused style menu.");
+        }
         var pageCard = FindByAutomationId<Border>(root, "PageCard");
         Assert.NotNull(pageCard);
         Assert.True(root.Bounds.Width >= width - 1,
@@ -139,15 +158,37 @@ public sealed class VisualCaptureTests
 
         var pixelSize = new PixelSize(width, height);
         var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
-        bitmap.Render(root);
+        bitmap.Render(window);
         var shotPath = Path.Combine(ShotsDirectory(), shotName);
         bitmap.Save(shotPath);
-        window.Close();
+        if (openStyleMenu)
+        {
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, "Escape");
+            Dispatcher.UIThread.RunJobs();
+            var styleMenu = root.GetVisualDescendants().OfType<ComboBox>().Single(combo =>
+                Avalonia.Automation.AutomationProperties.GetName(combo) == "Paragraph style");
+            Assert.False(styleMenu.IsDropDownOpen, "Escape should close the style menu.");
+            Assert.True(styleMenu.IsFocused, "Closing the menu should restore focus to the style control.");
+        }
         return shotPath;
         }
         finally
         {
-            adapter.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            try
+            {
+                window?.Close();
+
+                // TextBox raises TextChanged through Dispatcher jobs. Drain those jobs while
+                // the view model's session is still alive, then detach static CUI handlers and
+                // durably merge/save any legitimate final edit before disposing the adapter.
+                Dispatcher.UIThread.RunJobs();
+                viewModel?.Detach();
+                adapter.SaveAsync().AsTask().GetAwaiter().GetResult();
+            }
+            finally
+            {
+                adapter.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
         }
         }
         finally
@@ -253,6 +294,18 @@ public sealed class VisualCaptureTests
     {
         var dir = await FixtureDirAsync();
         var shot = Capture(Path.Combine(dir, "A-Level Maths.9to1board"), 1280, 720, "maths-1280x720.png");
+        Assert.True(File.Exists(shot));
+        Assert.True(new FileInfo(shot).Length > 4096);
+    }
+
+    [Theory]
+    [InlineData(1440, 900, "style-menu-1440x900.png")]
+    [InlineData(1280, 720, "style-menu-1280x720.png")]
+    public async Task Capture_open_style_menu_at_requested_sizes(int width, int height, string shotName)
+    {
+        var dir = await FixtureDirAsync();
+        var shot = Capture(Path.Combine(dir, "A-Level Maths.9to1board"), width, height, shotName,
+            openStyleMenu: true);
         Assert.True(File.Exists(shot));
         Assert.True(new FileInfo(shot).Length > 4096);
     }

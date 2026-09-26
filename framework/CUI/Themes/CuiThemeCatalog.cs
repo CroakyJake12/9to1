@@ -22,19 +22,23 @@ public static class CuiThemeCatalog
         new(
             CuiTheme.Bubble, "Bubble",
             "Soft glassy surfaces, atmospheric tint and gentle bloom.",
-            1.35, 1.3, 1.25, 1.15, 1.35, 0.8),
+            1.35, 1.3, 1.25, 1.15, 1.35, 0.8, 1.08, 1.02, 1.08, 1.3),
         new(
             CuiTheme.Retro, "Retro",
             "Engineered technical surfaces with fast edge illumination.",
-            0.45, 0.55, 0.6, 0.7, 0.75, 1.25),
+            0.45, 0.55, 0.6, 0.7, 0.75, 1.25, 0.9, 0.96, 0.92, 0.75),
         new(
             CuiTheme.Playful, "Playful",
             "Tactile tonal shapes with springy, friendly feedback.",
-            1.5, 1.35, 1.3, 0.9, 0.9, 1.1),
+            1.5, 1.35, 1.3, 0.9, 0.9, 1.1, 1.05, 1.04, 1.08, 0.9),
         new(
             CuiTheme.Cinematic, "Cinematic",
             "Immersive layered depth with contextual light and smooth fades.",
-            1.0, 1.05, 1.1, 1.25, 1.7, 0.95)
+            1.0, 1.05, 1.1, 1.25, 1.7, 0.95, 1.05, 1.02, 1.0, 1.7),
+        new(
+            CuiTheme.Professional, "Professional",
+            "A restrained, balanced interface with clear hierarchy and familiar controls.",
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     ];
 
     /// <summary>

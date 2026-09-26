@@ -67,6 +67,36 @@ public sealed class GoRouteIntentPolicyTests
         Assert.Same(context, decision.Context);
     }
 
+    [Fact]
+    public void Project_intent_carries_the_stable_project_id_when_available()
+    {
+        var projectId = Guid.NewGuid();
+        var project = new GoProjectTarget(projectId, "Haven");
+        var context = new GoRoutingContext([], [project.Name]) { ProjectTargets = [project] };
+
+        var decision = GoRouteIntentPolicy.Resolve("open the Haven project", context);
+
+        Assert.Equal(GoRouteDestination.Project, decision.Destination);
+        Assert.Equal(projectId, decision.ProjectId);
+        Assert.Equal(project.Name, decision.ProjectName);
+    }
+
+    [Fact]
+    public void Duplicate_project_names_are_clarified_instead_of_selecting_by_display_order()
+    {
+        var context = new GoRoutingContext([], ["Haven", "Haven"])
+        {
+            ProjectTargets = [
+                new GoProjectTarget(Guid.NewGuid(), "Haven"),
+                new GoProjectTarget(Guid.NewGuid(), "Haven")]
+        };
+
+        var decision = GoRouteIntentPolicy.Resolve("open the Haven project", context);
+
+        Assert.Equal(GoRouteDestination.Clarify, decision.Destination);
+        Assert.Contains("Which project", decision.Clarification);
+    }
+
     [Theory]
     [InlineData("edit this image")]
     [InlineData("remove the background")]
@@ -118,6 +148,19 @@ public sealed class GoRouteIntentPolicyTests
 
         Assert.Equal(GoRouteDestination.Project, decision.Destination);
         Assert.Equal("Haven", decision.ProjectName);
+    }
+
+    [Fact]
+    public void Generic_project_intent_carries_the_only_available_stable_project_id()
+    {
+        var projectId = Guid.NewGuid();
+        var project = new GoProjectTarget(projectId, "Haven");
+        var context = new GoRoutingContext([], [project.Name]) { ProjectTargets = [project] };
+
+        var decision = GoRouteIntentPolicy.Resolve("work on the project", context);
+
+        Assert.Equal(GoRouteDestination.Project, decision.Destination);
+        Assert.Equal(projectId, decision.ProjectId);
     }
 
     [Fact]

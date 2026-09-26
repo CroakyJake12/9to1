@@ -38,18 +38,23 @@ public sealed class CuiRichParser
                 return CreateFailedDocument(sourceName);
             }
 
-            if (!string.Equals(root.Name.LocalName, "Cui", StringComparison.Ordinal))
-            {
-                _diagnostics.Error("CUI003", "CUI root element must be <Cui>.",
-                    SpanOf(root, sourceName));
-                return CreateFailedDocument(sourceName);
-            }
+            var hasCuiDocumentRoot = IsKeyword(root, "Cui");
 
-            var resources = ParseResources(root, sourceName);
-            var styles = ParseStyles(root, sourceName);
-            var actions = ParseActions(root, sourceName);
-            var templates = ParseTemplates(root, sourceName);
-            var components = ParseComponents(root, sourceName, isRoot: true);
+            var resources = hasCuiDocumentRoot
+                ? ParseResources(root, sourceName)
+                : new Dictionary<string, CuiResourceDefinition>(StringComparer.Ordinal);
+            var styles = hasCuiDocumentRoot ? ParseStyles(root, sourceName) : Array.Empty<CuiStyleDefinition>();
+            var actions = hasCuiDocumentRoot
+                ? ParseActions(root, sourceName)
+                : new Dictionary<string, CuiActionDefinition>(StringComparer.Ordinal);
+            var templates = hasCuiDocumentRoot
+                ? ParseTemplates(root, sourceName)
+                : new Dictionary<string, CuiTemplateDefinition>(StringComparer.Ordinal);
+            var components = hasCuiDocumentRoot
+                ? ParseComponents(root, sourceName, isRoot: true)
+                : [ParseComponent(root, sourceName)!];
+
+            ValidateAddressScopes(components);
 
             return new CuiDocument(
                 sourceName,
@@ -60,7 +65,9 @@ public sealed class CuiRichParser
                 components,
                 SpanOf(root, sourceName))
             {
-                RootProperties = ParseRootProperties(root, sourceName),
+                RootProperties = hasCuiDocumentRoot
+                    ? ParseRootProperties(root, sourceName)
+                    : new Dictionary<string, CuiValue>(StringComparer.Ordinal),
             };
         }
         catch (XmlException ex)
@@ -97,7 +104,7 @@ public sealed class CuiRichParser
             new Dictionary<string, CuiTemplateDefinition>(),
             [], CuiSourceSpan.At(sourceName, 1, 1));
 
-    private static IReadOnlyDictionary<string, CuiValue> ParseRootProperties(
+    private IReadOnlyDictionary<string, CuiValue> ParseRootProperties(
         XElement root,
         string sourceName)
     {
@@ -107,7 +114,7 @@ public sealed class CuiRichParser
             if (attribute.IsNamespaceDeclaration || attribute.Name.Namespace != XNamespace.None)
                 continue;
 
-            properties[attribute.Name.LocalName] = ParseValue(
+            properties[attribute.Name.LocalName] = ParseMarkupValue(
                 attribute.Value,
                 SpanOf(attribute, sourceName));
         }
@@ -122,8 +129,7 @@ public sealed class CuiRichParser
     {
         var result = new Dictionary<string, CuiResourceDefinition>(StringComparer.Ordinal);
 
-        var resourcesElement = root.Elements()
-            .FirstOrDefault(e => string.Equals(e.Name.LocalName, "Resources", StringComparison.Ordinal));
+        var resourcesElement = root.Elements().FirstOrDefault(e => IsKeyword(e, "Resources"));
         if (resourcesElement is null) return result;
 
         foreach (var child in resourcesElement.Elements())
@@ -139,7 +145,7 @@ public sealed class CuiRichParser
             if (string.IsNullOrWhiteSpace(key)) continue;
 
             var span = SpanOf(child, sourceName);
-            var value = ParseValue(valueAttr.Value, span);
+            var value = ParseMarkupValue(valueAttr.Value, span);
             result[key] = new CuiResourceDefinition(key, value, span);
         }
 
@@ -160,20 +166,20 @@ public sealed class CuiRichParser
 
         foreach (var styleChild in stylesElement.Elements())
         {
-            if (!string.Equals(styleChild.Name.LocalName, "Style", StringComparison.Ordinal)) continue;
+            if (!IsKeyword(styleChild, "Style")) continue;
             var selector = styleChild.Attribute("selector")?.Value ?? string.Empty;
             var span = SpanOf(styleChild, sourceName);
             var setters = new List<CuiStyleSetter>();
 
             foreach (var setter in styleChild.Elements())
             {
-                if (!string.Equals(setter.Name.LocalName, "Setter", StringComparison.Ordinal)) continue;
+                if (!IsKeyword(setter, "Setter")) continue;
                 var property = setter.Attribute("property")?.Value;
                 var val = setter.Attribute("value")?.Value;
                 if (property is null || val is null) continue;
 
                 var setterSpan = SpanOf(setter, sourceName);
-                setters.Add(new CuiStyleSetter(property, ParseValue(val, setterSpan), setterSpan));
+                setters.Add(new CuiStyleSetter(property, ParseMarkupValue(val, setterSpan), setterSpan));
             }
 
             result.Add(new CuiStyleDefinition(selector, setters, span));
@@ -197,14 +203,14 @@ public sealed class CuiRichParser
 
         foreach (var child in actionsElement.Elements())
         {
-            if (!string.Equals(child.Name.LocalName, "Action", StringComparison.Ordinal)) continue;
+            if (!IsKeyword(child, "Action")) continue;
             var name = child.Attribute("name")?.Value;
             var command = child.Attribute("command")?.Value;
             if (name is null || command is null) continue;
 
             var span = SpanOf(child, sourceName);
             var paramAttr = child.Attribute("parameter");
-            var parameter = paramAttr is not null ? ParseValue(paramAttr.Value, span) : null;
+            var parameter = paramAttr is not null ? ParseMarkupValue(paramAttr.Value, span) : null;
 
             result[name] = new CuiActionDefinition(name, command, parameter, span);
         }
@@ -227,7 +233,7 @@ public sealed class CuiRichParser
 
         foreach (var child in templatesElement.Elements())
         {
-            if (!string.Equals(child.Name.LocalName, "Template", StringComparison.Ordinal)) continue;
+            if (!IsKeyword(child, "Template")) continue;
             var name = child.Attribute("name")?.Value;
             if (string.IsNullOrWhiteSpace(name)) continue;
 
@@ -251,7 +257,7 @@ public sealed class CuiRichParser
     private IReadOnlyList<CuiComponent> ParseComponents(
         XElement parent, string sourceName, bool isRoot)
     {
-        var result = new List<CuiComponent>();
+        var elements = new List<XElement>();
         foreach (var child in parent.Elements())
         {
             if (child.Name.Namespace != XNamespace.None) continue;
@@ -259,30 +265,61 @@ public sealed class CuiRichParser
             {
                 // Inside <Cui>, top-level sections are Resources/Styles/Actions/Templates
                 var localName = child.Name.LocalName;
-                if (localName is "Resources" or "Styles" or "Actions" or "Templates")
+                if (IsKeyword(child, "Resources") || IsKeyword(child, "Styles")
+                    || IsKeyword(child, "Actions") || IsKeyword(child, "Templates"))
                     continue;
             }
-
-            var component = ParseComponent(child, sourceName);
-            if (component is not null) result.Add(component);
+            elements.Add(child);
         }
-        return result;
+        return ParseComponentSiblings(elements, sourceName);
     }
 
     private IReadOnlyList<CuiComponent> ParseChildComponents(
         XElement parent, string sourceName)
     {
-        var result = new List<CuiComponent>();
-        foreach (var child in parent.Elements())
+        return ParseComponentSiblings(
+            parent.Elements().Where(child => child.Name.Namespace == XNamespace.None),
+            sourceName);
+    }
+
+    private IReadOnlyList<CuiComponent> ParseComponentSiblings(
+        IEnumerable<XElement> elements,
+        string sourceName)
+    {
+        var siblings = elements.ToArray();
+        var result = new List<CuiComponent>(siblings.Length);
+        for (var index = 0; index < siblings.Length; index++)
         {
-            if (child.Name.Namespace != XNamespace.None) continue;
-            var component = ParseComponent(child, sourceName);
+            var element = siblings[index];
+            if (IsKeyword(element, "Else"))
+            {
+                _diagnostics.Error("CUI021", "<Else> must immediately follow an <If> sibling.",
+                    SpanOf(element, sourceName));
+                continue;
+            }
+
+            XElement? elseElement = null;
+            if (IsKeyword(element, "If") && index + 1 < siblings.Length
+                && IsKeyword(siblings[index + 1], "Else"))
+            {
+                elseElement = siblings[++index];
+            }
+
+            var component = ParseComponent(element, sourceName, elseElement);
             if (component is not null) result.Add(component);
         }
+
         return result;
     }
 
-    private CuiComponent? ParseComponent(XElement element, string sourceName)
+    private static bool IsKeyword(XElement element, string keyword) =>
+        element.Name.Namespace == XNamespace.None
+        && string.Equals(element.Name.LocalName, keyword, StringComparison.OrdinalIgnoreCase);
+
+    private CuiComponent? ParseComponent(
+        XElement element,
+        string sourceName,
+        XElement? elseElement = null)
     {
         if (element.Name.Namespace != XNamespace.None)
         {
@@ -291,7 +328,7 @@ public sealed class CuiRichParser
             return null;
         }
 
-        var type = element.Name.LocalName;
+        var type = CanonicalBuiltInName(element.Name.LocalName);
         var span = SpanOf(element, sourceName);
 
         // === DefaultTheme is a first-class CUI construct, not a visual control ===
@@ -302,11 +339,19 @@ public sealed class CuiRichParser
 
         // Parse attributes
         string? name = null;
+        var idNameConflict = false;
         var classes = new List<string>();
+        var groups = new List<string>();
         var properties = new Dictionary<string, CuiValue>(StringComparer.Ordinal);
         var actions = new Dictionary<string, CuiActionReference>(StringComparer.Ordinal);
         CuiCondition? condition = null;
         CuiListDefinition? list = null;
+        string? repeatSource = null;
+        CuiSourceSpan? repeatSourceSpan = null;
+        string? repeatItemName = null;
+        string? repeatKey = null;
+        CuiSourceSpan? repeatKeySpan = null;
+        var isDefinition = false;
 
         foreach (var attr in element.Attributes())
         {
@@ -322,10 +367,40 @@ public sealed class CuiRichParser
             var attrSpan = SpanOf(attr, sourceName);
             var rawValue = attr.Value;
 
-            switch (attrName)
+            if ((type == "If" && string.Equals(attrName, "Condition", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(attrName, "condition", StringComparison.OrdinalIgnoreCase))
+            {
+                condition = ParseCondition(rawValue, attrSpan);
+                continue;
+            }
+
+            if (type == "Repeat")
+            {
+                if (string.Equals(attrName, "Source", StringComparison.OrdinalIgnoreCase))
+                {
+                    repeatSource = rawValue;
+                    repeatSourceSpan = attrSpan;
+                    continue;
+                }
+                if (string.Equals(attrName, "As", StringComparison.OrdinalIgnoreCase))
+                {
+                    repeatItemName = rawValue;
+                    continue;
+                }
+                if (string.Equals(attrName, "Key", StringComparison.OrdinalIgnoreCase))
+                {
+                    repeatKey = rawValue;
+                    repeatKeySpan = attrSpan;
+                    continue;
+                }
+            }
+
+            switch (attrName.ToLowerInvariant())
             {
                 case "id":
                 case "name":
+                    if (name is not null && !string.Equals(name, rawValue, StringComparison.Ordinal))
+                        idNameConflict = true;
                     name = rawValue;
                     break;
 
@@ -334,15 +409,21 @@ public sealed class CuiRichParser
                         StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
                     break;
 
+                case "group":
+                    groups.AddRange(rawValue.Split(',',
+                        StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
+                    break;
+
+                case "definition":
+                    isDefinition = bool.TryParse(rawValue, out var definitionValue) && definitionValue;
+                    break;
+
                 case "action":
                     actions[attrName] = new CuiActionReference(rawValue, attrSpan);
                     break;
 
                 case "condition":
-                    condition = new CuiCondition(
-                        new CuiLiteralValue(rawValue, attrSpan),
-                        rawValue.StartsWith('!'),
-                        attrSpan);
+                    condition = ParseCondition(rawValue, attrSpan);
                     break;
 
                 case "items":
@@ -350,7 +431,7 @@ public sealed class CuiRichParser
                     {
                         var emptyTemplate = element.Attribute("empty-template")?.Value;
                         list = new CuiListDefinition(
-                            ParseValue(rawValue, attrSpan),
+                            ParseMarkupValue(rawValue, attrSpan),
                             itemTemplateAttr.Value,
                             emptyTemplate,
                             attrSpan);
@@ -365,17 +446,55 @@ public sealed class CuiRichParser
                     }
                     else
                     {
-                        properties[attrName] = ParseValue(rawValue, attrSpan);
+                        properties[attrName] = ParseMarkupValue(rawValue, attrSpan);
                     }
                     break;
             }
         }
 
         var children = ParseChildComponents(element, sourceName);
+        var elseChildren = elseElement is null
+            ? Array.Empty<CuiComponent>()
+            : ParseChildComponents(elseElement, sourceName);
+
+        if (type == "If" && condition is null)
+        {
+            _diagnostics.Error("CUI022", "<If> requires a Condition attribute.", span);
+        }
+        if (idNameConflict)
+        {
+            _diagnostics.Error("CUI026", "ID and Name are aliases; an element can declare only one identity value.", span);
+        }
+
+        CuiRepeatDefinition? repeat = null;
+        if (type == "Repeat")
+        {
+            if (string.IsNullOrWhiteSpace(repeatSource))
+                _diagnostics.Error("CUI023", "<Repeat> requires a Source attribute.", span);
+            if (string.IsNullOrWhiteSpace(repeatItemName))
+                _diagnostics.Error("CUI024", "<Repeat> requires an As item name.", span);
+            if (string.IsNullOrWhiteSpace(repeatKey))
+                _diagnostics.Error("CUI025", "<Repeat> requires a stable Key expression.", span);
+
+            if (!string.IsNullOrWhiteSpace(repeatSource)
+                && !string.IsNullOrWhiteSpace(repeatItemName)
+                && !string.IsNullOrWhiteSpace(repeatKey))
+            {
+                repeat = new CuiRepeatDefinition(
+                    ParseMarkupValue(repeatSource, repeatSourceSpan ?? span),
+                    repeatItemName,
+                    ParseMarkupValue(repeatKey, repeatKeySpan ?? span),
+                    span);
+            }
+        }
 
         return new CuiComponent(
             type, name, classes, properties, actions,
-            children, condition, list, span)
+            children, condition, list, span,
+            repeat: repeat,
+            elseChildren: elseChildren,
+            groups: groups,
+            isDefinition: isDefinition)
         {
             Text = string.Concat(element.Nodes().OfType<XText>().Select(node => node.Value)).Trim(),
         };
@@ -442,6 +561,79 @@ public sealed class CuiRichParser
 
     #endregion
 
+    private void ValidateAddressScopes(IReadOnlyList<CuiComponent> components)
+    {
+        var documentScope = new CuiAddressScope();
+        foreach (var component in components)
+            ValidateAddressComponent(component, documentScope, startsPageScope: false);
+    }
+
+    private void ValidateAddressComponent(
+        CuiComponent component,
+        CuiAddressScope parentScope,
+        bool startsPageScope)
+    {
+        var scope = startsPageScope || component.Type == "Page" || component.Type == "Prefab" || component.IsDefinition
+            ? new CuiAddressScope()
+            : parentScope;
+
+        if (component.Name is { Length: > 0 } id)
+        {
+            if (!scope.Ids.Add(id))
+                _diagnostics.Error("CUI027", $"ID '{id}' is duplicated in the same CUI scope.", component.Span);
+            if (scope.Groups.Contains(id))
+                _diagnostics.Error("CUI028", $"ID '{id}' conflicts with a Group of the same name in the same CUI scope.", component.Span);
+        }
+
+        foreach (var group in component.Groups)
+        {
+            if (scope.Ids.Contains(group))
+                _diagnostics.Error("CUI028", $"Group '{group}' conflicts with an ID of the same name in the same CUI scope.", component.Span);
+            scope.Groups.Add(group);
+        }
+
+        foreach (var child in component.Children)
+            ValidateAddressComponent(child, scope, startsPageScope: false);
+        foreach (var child in component.ElseChildren)
+            ValidateAddressComponent(child, scope, startsPageScope: false);
+    }
+
+    private static string CanonicalBuiltInName(string name)
+    {
+        var builtInNames = new[]
+        {
+            "Cui", "Page", "Container", "Text", "Image", "Audio", "Video", "Object",
+            "Button", "Input", "Layer", "Anchor", "Theme", "Style", "Property", "Variable",
+            "Prefab", "If", "Else", "Repeat", "Import", "Keyframe", "ActionEvent",
+            "Resources", "Styles", "Actions", "Templates", "DefaultTheme",
+        };
+        return builtInNames.FirstOrDefault(candidate =>
+            string.Equals(candidate, name, StringComparison.OrdinalIgnoreCase)) ?? name;
+    }
+
+    private sealed class CuiAddressScope
+    {
+        public HashSet<string> Ids { get; } = new(StringComparer.Ordinal);
+        public HashSet<string> Groups { get; } = new(StringComparer.Ordinal);
+    }
+
+    private CuiCondition ParseCondition(string rawValue, CuiSourceSpan span)
+    {
+        var negate = rawValue.StartsWith('!');
+        var expression = negate ? rawValue[1..] : rawValue;
+        var test = ParseMarkupValue(expression, span);
+        var isLive = test is not CuiBindingValue { Mode: CuiBindingMode.OneTime };
+        return new CuiCondition(test, negate, span, isLive);
+    }
+
+    private CuiValue ParseMarkupValue(string raw, CuiSourceSpan span)
+    {
+        var value = ParseValue(raw, span);
+        if (value is CuiInvalidValue invalid)
+            _diagnostics.Error(invalid.DiagnosticCode, invalid.Message, invalid.Span);
+        return value;
+    }
+
     #region Value Parsing
 
     /// <summary>
@@ -450,7 +642,17 @@ public sealed class CuiRichParser
     /// </summary>
     public static CuiValue ParseValue(string raw, CuiSourceSpan span)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(raw);
+        ArgumentNullException.ThrowIfNull(raw);
+        if (string.IsNullOrWhiteSpace(raw))
+            return new CuiInvalidValue(raw, "CUI030", "CUI values cannot be empty.", span);
+
+        if (raw[0] == '<' && raw[^1] == '>')
+        {
+            if (TryParseVariableReference(raw, span, out var reference, out var error))
+                return reference;
+            if (error is not null)
+                return new CuiInvalidValue(raw, "CUI031", error, span);
+        }
 
         if (raw.Length > 2 && raw[0] == '{' && raw[^1] == '}')
         {
@@ -466,49 +668,101 @@ public sealed class CuiRichParser
                 inner.StartsWith("resource ", StringComparison.OrdinalIgnoreCase))
             {
                 var key = inner["Resource ".Length..].Trim();
-                return new CuiResourceValue(key, span);
+                return string.IsNullOrWhiteSpace(key)
+                    ? new CuiInvalidValue(raw, "CUI032", "A Resource value requires a non-empty key.", span)
+                    : new CuiResourceValue(key, span);
             }
         }
 
         return new CuiLiteralValue(raw, span);
     }
 
-    private static CuiBindingValue ParseBindingValue(string inner, CuiSourceSpan span)
+    private static CuiValue ParseBindingValue(string inner, CuiSourceSpan span)
     {
-        // Format: Binding path[, mode=OneWay|TwoWay|OneTime][, fallback=default]
+        // Format: Binding path[, mode=OneWay|TwoWay|OneTime][, fallback=default][, type=Type]
         var parts = inner.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         var path = parts[0].Trim();
         // Strip leading "Binding " or "binding "
         if (path.StartsWith("Binding ", StringComparison.OrdinalIgnoreCase))
             path = path["Binding ".Length..].Trim();
-        else if (path.StartsWith("binding ", StringComparison.OrdinalIgnoreCase))
-            path = path["binding ".Length..].Trim();
+        if (string.IsNullOrWhiteSpace(path))
+            return new CuiInvalidValue(inner, "CUI033", "A Binding value requires a non-empty path.", span);
 
         var mode = CuiBindingMode.OneWay;
         string? fallback = null;
+        string? targetType = null;
+        var seenOptions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var part in parts.Skip(1))
         {
-            var kv = part.Split('=', StringSplitOptions.TrimEntries);
-            if (kv.Length != 2) continue;
+            var separator = part.IndexOf('=');
+            if (separator <= 0 || separator == part.Length - 1)
+                return new CuiInvalidValue(inner, "CUI034", $"Binding option '{part}' must use name=value syntax.", span);
+            var optionName = part[..separator].Trim();
+            var optionValue = part[(separator + 1)..].Trim();
+            if (!seenOptions.Add(optionName))
+                return new CuiInvalidValue(inner, "CUI035", $"Binding option '{optionName}' is repeated.", span);
 
-            if (string.Equals(kv[0], "mode", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(optionName, "mode", StringComparison.OrdinalIgnoreCase))
             {
-                mode = kv[1] switch
+                mode = optionValue.ToLowerInvariant() switch
                 {
-                    "OneWay" or "oneway" => CuiBindingMode.OneWay,
-                    "TwoWay" or "twoway" => CuiBindingMode.TwoWay,
-                    "OneTime" or "onetime" => CuiBindingMode.OneTime,
-                    _ => CuiBindingMode.OneWay,
+                    "oneway" => CuiBindingMode.OneWay,
+                    "twoway" => CuiBindingMode.TwoWay,
+                    "onetime" or "static" => CuiBindingMode.OneTime,
+                    _ => CuiBindingMode.Invalid,
                 };
+                if (mode == CuiBindingMode.Invalid)
+                    return new CuiInvalidValue(inner, "CUI036", $"Unknown Binding mode '{optionValue}'.", span);
             }
-            else if (string.Equals(kv[0], "fallback", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(optionName, "fallback", StringComparison.OrdinalIgnoreCase))
             {
-                fallback = kv[1];
+                fallback = optionValue;
             }
+            else if (string.Equals(optionName, "type", StringComparison.OrdinalIgnoreCase))
+                targetType = optionValue;
+            else
+                return new CuiInvalidValue(inner, "CUI037", $"Unknown Binding option '{optionName}'.", span);
         }
 
-        return new CuiBindingValue(path, mode, fallback, span);
+        return new CuiBindingValue(path, mode, fallback, span, targetType);
+    }
+
+    private static bool TryParseVariableReference(
+        string raw,
+        CuiSourceSpan span,
+        out CuiBindingValue reference,
+        out string? error)
+    {
+        reference = null!;
+        error = null;
+        if (!raw.StartsWith('<') || !raw.EndsWith('>')) return false;
+
+        var parts = raw[1..^1].Split(':');
+        if (parts.Length != 3) return false;
+        var targetType = parts[0].Length == 0 ? null : parts[0];
+        var path = parts[1];
+        var modeName = parts[2];
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            error = "A variable reference requires a non-empty name or path.";
+            return false;
+        }
+
+        var mode = modeName.ToLowerInvariant() switch
+        {
+            "" or "live" => CuiBindingMode.OneWay,
+            "static" => CuiBindingMode.OneTime,
+            _ => CuiBindingMode.Invalid,
+        };
+        if (mode == CuiBindingMode.Invalid)
+        {
+            error = $"Unknown variable-reference mode '{modeName}'. Use live or static.";
+            return false;
+        }
+
+        reference = new CuiBindingValue(path, mode, null, span, targetType);
+        return true;
     }
 
     #endregion

@@ -17,7 +17,8 @@ public enum CuiTheme
     Bubble = 1,
     Retro = 2,
     Playful = 3,
-    Cinematic = 4
+    Cinematic = 4,
+    Professional = 5
 }
 
 /// <summary>

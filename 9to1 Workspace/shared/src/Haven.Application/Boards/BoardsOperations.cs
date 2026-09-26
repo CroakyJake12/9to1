@@ -10,7 +10,11 @@ public enum BoardsOperationKind
     AddComponent = 3,
     PlaceComponent = 4,
     UpdateComponentItem = 5,
-    SetPinned = 6
+    SetPinned = 6,
+    DeleteNotebook = 7,
+    RestoreNotebook = 8,
+    DeletePage = 9,
+    RestorePage = 10
 }
 
 public sealed record BoardsOperation(
@@ -52,6 +56,20 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        if (operation.Kind == BoardsOperationKind.RestoreNotebook)
+        {
+            if (!await boards.RestoreNotebookAsync(notebookId, cancellationToken).ConfigureAwait(false))
+                throw new KeyNotFoundException($"Deleted Boards notebook {notebookId:D} was not found.");
+            return new BoardsOperationResult(notebookId, null, null, null, null, null,
+                new BoardsDeepLink(notebookId).ToString());
+        }
+        if (operation.Kind == BoardsOperationKind.DeleteNotebook)
+        {
+            if (!await boards.DeleteNotebookAsync(notebookId, cancellationToken).ConfigureAwait(false))
+                throw new KeyNotFoundException($"Boards notebook {notebookId:D} was not found.");
+            return new BoardsOperationResult(notebookId, null, null, null, null, null,
+                new BoardsDeepLink(notebookId).ToString());
+        }
         var notebook = await boards.OpenNotebookAsync(notebookId, cancellationToken).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Boards notebook {notebookId:D} was not found.");
 
@@ -113,6 +131,21 @@ public sealed class BoardsOperationExecutor(IBoardsWorkspaceService boards) : IB
 
             case BoardsOperationKind.SetPinned:
                 boards.SetPinned(notebook, operation.Pinned ?? true);
+                break;
+
+            case BoardsOperationKind.DeletePage:
+                page ??= RequirePage(notebook, operation.SectionId, operation.PageId);
+                if (!boards.DeletePage(notebook, page.Id))
+                    throw new InvalidOperationException("The final page in a section cannot be deleted, or the page is already in trash.");
+                break;
+
+            case BoardsOperationKind.RestorePage:
+                var restorePageId = operation.PageId
+                    ?? throw new ArgumentException("RestorePage requires PageId.", nameof(operation));
+                if (!boards.RestorePage(notebook, restorePageId))
+                    throw new KeyNotFoundException("The requested deleted Boards page was not found.");
+                page = notebook.Sections.SelectMany(value => value.Pages).First(value => value.Id == restorePageId);
+                section = notebook.Sections.First(value => value.Pages.Contains(page));
                 break;
 
             default:

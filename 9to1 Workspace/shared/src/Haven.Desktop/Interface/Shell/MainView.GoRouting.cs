@@ -16,9 +16,15 @@ public sealed partial class MainView
             var projects = (await _containers.GetByModeAsync(HavenMode.Studio, CancellationToken.None))
                 .Where(project => !project.IsArchived)
                 .ToArray();
+            var projectTargets = projects
+                .Select(project => new GoProjectTarget(project.Id, project.Name))
+                .ToArray();
             var decision = GoRouteIntentPolicy.Resolve(
                 instruction,
-                new GoRoutingContext(taskContext.Attachments.Files, projects.Select(project => project.Name).ToArray()));
+                new GoRoutingContext(taskContext.Attachments.Files, projectTargets.Select(project => project.Name).ToArray())
+                {
+                    ProjectTargets = projectTargets
+                });
 
             switch (decision.Destination)
             {
@@ -58,8 +64,10 @@ public sealed partial class MainView
         GoTaskSnapshot taskContext,
         IReadOnlyList<ContainerDefinition> projects)
     {
-        var project = projects.FirstOrDefault(item =>
-            item.Name.Equals(decision.ProjectName, StringComparison.OrdinalIgnoreCase));
+        var project = decision.ProjectId is Guid projectId
+            ? projects.FirstOrDefault(item => item.Id == projectId)
+            : projects.FirstOrDefault(item =>
+                item.Name.Equals(decision.ProjectName, StringComparison.OrdinalIgnoreCase));
         if (project is null)
         {
             RestoreGoTask(page, decision.Instruction, taskContext, "That project is not available anymore. Choose another project and try again.");

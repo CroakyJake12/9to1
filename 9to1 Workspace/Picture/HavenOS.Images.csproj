@@ -11,5 +11,6 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
   </ItemGroup>
 </Project>

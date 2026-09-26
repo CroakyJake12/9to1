@@ -17,12 +17,53 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
     private long _requestVersion;
 
     public FloatingAiBarMode Mode { get; private set; } = FloatingAiBarMode.Collapsed;
+    public AppAiAccessMode AccessMode { get; private set; } = AppAiAccessMode.ReadOnly;
+    public bool IsReadOnly => AccessMode == AppAiAccessMode.ReadOnly;
+    public bool IsWriteMode => AccessMode == AppAiAccessMode.Write;
+    public string AccessModeLabel => IsReadOnly ? "Read-only" : "Write mode";
     public string Prompt { get; set; } = string.Empty;
     public string Response { get; private set; } = string.Empty;
     public string? ContextLabel { get; private set; }
     public string? Error { get; private set; }
+    public AppAiRequestState RequestState { get; private set; } = AppAiRequestState.Idle;
+    public IReadOnlyList<AppAiModelOption> Models { get; private set; } = [];
+    public AppAiModelSelection? ModelSelection { get; private set; }
+    public string SelectedModelLabel => ModelSelection?.ModelId ?? "Use current model";
 
     public event EventHandler? Changed;
+
+    public void SetAccessMode(AppAiAccessMode accessMode)
+    {
+        if (!Enum.IsDefined(accessMode)) throw new ArgumentOutOfRangeException(nameof(accessMode));
+        if (AccessMode == accessMode) return;
+
+        // A mode change cancels any in-flight model turn before it can dispatch a later action.
+        Cancel();
+        AccessMode = accessMode;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetReadOnly() => SetAccessMode(AppAiAccessMode.ReadOnly);
+
+    public void SetWriteMode() => SetAccessMode(AppAiAccessMode.Write);
+
+    public async ValueTask RefreshModelsAsync(CancellationToken cancellationToken = default)
+    {
+        Models = await coordinator.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+        ModelSelection = await coordinator.GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public async ValueTask<bool> SelectModelAsync(string modelId, CancellationToken cancellationToken = default)
+    {
+        var selected = await coordinator.SelectModelAsync(modelId, cancellationToken).ConfigureAwait(false);
+        if (selected)
+        {
+            ModelSelection = await coordinator.GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        return selected;
+    }
 
     public void Expand()
     {
@@ -38,8 +79,11 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 
     public async ValueTask RefreshContextAsync(CancellationToken cancellationToken = default)
     {
+        RequestState = AppAiRequestState.CapturingContext;
+        Changed?.Invoke(this, EventArgs.Empty);
         var snapshot = await coordinator.CaptureContextAsync(cancellationToken).ConfigureAwait(false);
         ContextLabel = string.IsNullOrWhiteSpace(snapshot.Summary) ? snapshot.AppId : snapshot.Summary;
+        RequestState = AppAiRequestState.Idle;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -60,6 +104,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         var response = new StringBuilder();
         Response = string.Empty;
         Error = null;
+        RequestState = AppAiRequestState.Generating;
         SetMode(FloatingAiBarMode.Streaming);
 
         try
@@ -67,6 +112,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
             await foreach (var chunk in coordinator.StreamAsync(
                 submittedPrompt,
                 Guid.NewGuid().ToString("N"),
+                AccessMode,
                 token).ConfigureAwait(false))
             {
                 if (version != Volatile.Read(ref _requestVersion))
@@ -78,12 +124,18 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
             }
 
             if (version == Volatile.Read(ref _requestVersion))
+            {
+                RequestState = AppAiRequestState.Completed;
                 SetMode(FloatingAiBarMode.Ready);
+            }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             if (version == Volatile.Read(ref _requestVersion))
+            {
+                RequestState = AppAiRequestState.Cancelled;
                 SetMode(FloatingAiBarMode.Ready);
+            }
         }
         catch (Exception exception)
         {
@@ -91,6 +143,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
                 return;
 
             Error = exception.Message;
+            RequestState = AppAiRequestState.Failed;
             SetMode(FloatingAiBarMode.Error);
         }
     }

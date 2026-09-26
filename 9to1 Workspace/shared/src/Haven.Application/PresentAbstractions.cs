@@ -49,6 +49,61 @@ public interface IPresentExportService
         CancellationToken cancellationToken);
 }
 
+public enum PresentCompatibilitySeverity
+{
+    Info,
+    Warning,
+    Error
+}
+
+public enum PresentCompatibilityDirection
+{
+    Import,
+    Export
+}
+
+public enum PresentCompatibilityResolution
+{
+    Translated,
+    Degraded,
+    Omitted,
+    Blocked
+}
+
+public sealed record PresentCompatibilityIssue(
+    Guid IssueId,
+    PresentCompatibilitySeverity Severity,
+    PresentCompatibilityDirection Direction,
+    string FeatureType,
+    Guid? SourceTargetId,
+    string Description,
+    PresentCompatibilityResolution Resolution);
+
+public sealed record PresentCompatibilityReport(
+    string Format,
+    PresentCompatibilityDirection Direction,
+    IReadOnlyList<PresentCompatibilityIssue> Issues)
+{
+    public bool HasBlockingIssues => Issues.Any(issue =>
+        issue.Severity == PresentCompatibilitySeverity.Error ||
+        issue.Resolution == PresentCompatibilityResolution.Blocked);
+
+    public int WarningCount => Issues.Count(issue => issue.Severity == PresentCompatibilitySeverity.Warning);
+}
+
+public sealed record PresentExportResult(string Path, PresentCompatibilityReport CompatibilityReport);
+
+/// <summary>Provides a previewable, structured account of format degradation.</summary>
+public interface IPresentReportExportService : IPresentExportService
+{
+    PresentCompatibilityReport PreviewExport(PresentDocument document, string destinationPath);
+
+    Task<PresentExportResult> ExportWithReportAsync(
+        PresentDocument document,
+        string destinationPath,
+        CancellationToken cancellationToken);
+}
+
 public sealed record PresentImportSupport(
     string Format,
     string Description,

@@ -14,6 +14,14 @@ public interface IMemoryQuerySource
     /// freshness. Returns an empty list when nothing qualifies.
     /// </summary>
     Task<IReadOnlyList<KnowledgeRecord>> GetActiveLearnMeAsync(int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns only relevant, active background-learning records inside the caller-authorised
+    /// scopes. This is separate from Persistent Memory and must be empty when learning is disabled.
+    /// </summary>
+    Task<IReadOnlyList<KnowledgeRecord>> GetRelevantBackgroundLearningAsync(
+        KnowledgeRetrievalContext context,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

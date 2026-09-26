@@ -202,6 +202,76 @@ public class CuiToAvaloniaPipelineTests
     }
 
     [Fact]
+    public void Compact_CUI_elements_lower_to_native_Avalonia_controls()
+    {
+        var result = CuiHeadlessRenderer.Render("""
+            <Cui>
+              <Page>
+                <Container Type="Vertical Stack">
+                  <Text>Hello</Text>
+                  <Button>Continue</Button>
+                  <Input Type="Checkbox" />
+                  <Image />
+                </Container>
+              </Page>
+            </Cui>
+            """);
+
+        Assert.True(result.Success, string.Join("; ", result.Errors));
+        var page = Assert.IsType<Panel>(result.Root);
+        var stack = Assert.IsType<StackPanel>(Assert.Single(page.Children));
+        Assert.Equal(Avalonia.Layout.Orientation.Vertical, stack.Orientation);
+        Assert.IsType<TextBlock>(stack.Children[0]);
+        Assert.IsType<Button>(stack.Children[1]);
+        Assert.IsType<CheckBox>(stack.Children[2]);
+        Assert.IsType<Image>(stack.Children[3]);
+    }
+
+    [Theory]
+    [InlineData("Grid", typeof(Grid))]
+    [InlineData("Vertical Stack", typeof(StackPanel))]
+    [InlineData("Horizontal Stack", typeof(StackPanel))]
+    [InlineData("Absolute", typeof(Canvas))]
+    public void Container_types_lower_to_their_declared_native_layout_type(string type, Type expectedType)
+    {
+        var result = CuiHeadlessRenderer.Render($"<Cui><Container Type=\"{type}\" /></Cui>");
+
+        Assert.True(result.Success, string.Join("; ", result.Errors));
+        var container = Assert.IsAssignableFrom<Control>(result.Root);
+        Assert.IsType(expectedType, container);
+        if (type == "Vertical Stack")
+            Assert.Equal(Avalonia.Layout.Orientation.Vertical, Assert.IsType<StackPanel>(container).Orientation);
+        if (type == "Horizontal Stack")
+            Assert.Equal(Avalonia.Layout.Orientation.Horizontal, Assert.IsType<StackPanel>(container).Orientation);
+    }
+
+    [Fact]
+    public void Unknown_component_types_fail_with_a_source_mapped_runtime_diagnostic()
+    {
+        var result = CuiHeadlessRenderer.Render("<Cui><AdaptiveSplit /></Cui>", "unknown-component.cui");
+
+        Assert.False(result.Success);
+        Assert.Null(result.Root);
+        Assert.Contains(result.Errors, error => error.Contains("CUIR001", StringComparison.Ordinal)
+            && error.Contains("unknown-component.cui(1,7)", StringComparison.Ordinal)
+            && error.Contains("AdaptiveSplit", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Object_requires_a_registered_specialised_renderer()
+    {
+        var missing = CuiHeadlessRenderer.Render("<Cui><Object Type=\"chart\" /></Cui>");
+        Assert.False(missing.Success);
+        Assert.Contains(missing.Errors, error => error.Contains("CUIR002", StringComparison.Ordinal));
+
+        var registry = new CuiControlRegistry();
+        registry.RegisterObjectRenderer("chart", _ => new Border());
+        var registered = CuiHeadlessRenderer.Render("<Cui><Object Type=\"chart\" /></Cui>", registry);
+        Assert.True(registered.Success, string.Join("; ", registered.Errors));
+        Assert.IsType<Border>(registered.Root);
+    }
+
+    [Fact]
     public void Reused_loader_does_not_resolve_resources_from_a_previous_document()
     {
         var loader = new CuiControlLoader();
@@ -270,7 +340,11 @@ public class CuiToAvaloniaPipelineTests
             </Cui>
             """;
 
-        var result = CuiHeadlessRenderer.Render(cui, "ChatSpace.cui");
+        var registry = new CuiControlRegistry();
+        foreach (var type in new[] { "AdaptiveSplit", "Aside", "Heading", "SearchField", "List", "Main", "Toolbar", "Transcript", "Composer", "StatusBar", "Select" })
+            registry.RegisterControlType(type, _ => new Panel());
+
+        var result = CuiHeadlessRenderer.Render(cui, registry, "ChatSpace.cui");
 
         Assert.True(result.Success, $"ChatSpace render failed: {string.Join("; ", result.Errors)}");
         Assert.NotNull(result.Root);

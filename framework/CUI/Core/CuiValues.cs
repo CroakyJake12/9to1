@@ -6,24 +6,42 @@ public abstract record CuiValue(CuiSourceSpan Span);
 
 public sealed record CuiLiteralValue(string Value, CuiSourceSpan Span) : CuiValue(Span);
 
+public sealed record CuiInvalidValue(
+    string RawValue,
+    string DiagnosticCode,
+    string Message,
+    CuiSourceSpan Span) : CuiValue(Span);
+
 public enum CuiBindingMode
 {
-    OneWay,
-    TwoWay,
-    OneTime
+    Invalid = -1,
+    OneWay = 0,
+    TwoWay = 1,
+    OneTime = 2
 }
 
 public sealed record CuiBindingValue(
     string Path,
     CuiBindingMode Mode,
     string? Fallback,
-    CuiSourceSpan Span) : CuiValue(Span);
+    CuiSourceSpan Span,
+    string? TargetType = null) : CuiValue(Span);
 
 public sealed record CuiResourceValue(string Key, CuiSourceSpan Span) : CuiValue(Span);
 
 public sealed record CuiActionReference(string Name, CuiSourceSpan Span);
 
-public sealed record CuiCondition(CuiValue Test, bool Negate, CuiSourceSpan Span);
+public sealed record CuiCondition(
+    CuiValue Test,
+    bool Negate,
+    CuiSourceSpan Span,
+    bool IsLive = true);
+
+public sealed record CuiRepeatDefinition(
+    CuiValue Source,
+    string ItemName,
+    CuiValue Key,
+    CuiSourceSpan Span);
 
 public sealed record CuiListDefinition(
     CuiValue Items,

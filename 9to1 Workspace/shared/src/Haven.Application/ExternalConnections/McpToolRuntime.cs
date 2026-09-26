@@ -23,7 +23,7 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
                 foreach (var tool in discovery.Tools)
                 {
                     var localName = LocalToolName(connection.Id, tool.Name);
-                    var risk = Classify(tool.Name, tool.Description);
+                    var risk = Classify(tool.Name);
                     lock (_routes) _routes[localName] = new Route(connection.Id, tool.Name, risk);
                     var sanitizedSchema = SanitizeSchema(tool.InputSchema);
                     var (properties, required) = LegacyShape(sanitizedSchema);
@@ -47,14 +47,9 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
         if (!ParseActiveConnectionIds(activeCapabilities).Contains(route.ConnectionId)) return Failure(call.Name, "The MCP connection is not attached to this conversation.", started);
         var connection = await connections.GetAsync(route.ConnectionId, cancellationToken).ConfigureAwait(false);
         if (connection is null || !connection.IsEnabled || connection.State != ExternalConnectionState.Ready) return Failure(call.Name, "The MCP connection is disabled or unavailable.", started);
-        if (route.Risk != McpActionRisk.ReadOnly && mutationPermission == PermissionMode.Ask)
+        if (route.Risk != McpActionRisk.ReadOnly && mutationPermission != PermissionMode.FullAccess)
         {
-            const string detail = "This MCP action can change external state and requires approval before execution.";
-            return Failure(call.Name, detail, started, PermissionFailure(connection, route.Risk, detail));
-        }
-        if (route.Risk == McpActionRisk.Destructive && mutationPermission != PermissionMode.FullAccess)
-        {
-            const string detail = "This destructive MCP action requires one-action approval or Full Access permission.";
+            const string detail = "This MCP action can change external state. An explicit permission grant is required before execution.";
             return Failure(call.Name, detail, started, PermissionFailure(connection, route.Risk, detail));
         }
         try
@@ -67,7 +62,9 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
         {
-            var detail = "MCP invocation failed: " + Bound(ex.Message, 1000);
+            var detail = ex is OperationCanceledException
+                ? "MCP invocation timed out. The remote action may have completed before cancellation was observed."
+                : "MCP invocation failed. Review the connection status and audit details for a safe diagnosis.";
             return Failure(call.Name, detail, started, RuntimeFailure(connection, route.Risk, detail));
         }
     }
@@ -102,12 +99,20 @@ public sealed class McpToolRuntime(IExternalConnectionRepository connections, IM
         return (properties, required);
     }
 
-    private static McpActionRisk Classify(string name, string description)
+    private static McpActionRisk Classify(string name)
     {
-        var value = (name + " " + description).ToLowerInvariant();
-        if (new[] { "delete", "remove", "destroy", "terminate", "drop", "reset" }.Any(value.Contains)) return McpActionRisk.Destructive;
-        if (new[] { "write", "create", "update", "edit", "set", "compile", "start", "stop", "push", "place", "launch", "execute" }.Any(value.Contains)) return McpActionRisk.Mutating;
-        return McpActionRisk.ReadOnly;
+        var value = name.Trim().ToLowerInvariant();
+        if (new[] { "delete", "remove", "destroy", "terminate", "drop", "reset", "purge", "revoke" }.Any(value.Contains))
+            return McpActionRisk.Destructive;
+        if (new[] { "write", "create", "update", "edit", "set", "compile", "start", "stop", "push", "place", "launch", "execute", "send", "submit", "approve", "install", "uninstall", "transfer" }.Any(value.Contains))
+            return McpActionRisk.Mutating;
+
+        // Only an unambiguous read verb at the start of the tool name is considered safe.
+        // Descriptions and annotations are supplied by the remote server and cannot lower risk.
+        var verb = value.Split(['_', '-', '.', ':'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        return verb is "get" or "list" or "search" or "read" or "inspect" or "query" or "describe" or "fetch" or "status" or "discover"
+            ? McpActionRisk.ReadOnly
+            : McpActionRisk.Mutating;
     }
 
     private static WorkspaceToolResult Failure(string name, string detail, DateTimeOffset started, ToolFailureDescriptor? failure = null) =>

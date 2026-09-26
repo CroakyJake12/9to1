@@ -183,6 +183,9 @@ public sealed class HomeDashboard : IDisposable
         try
         {
             var inventory = await _packages.GetInventoryAsync(cancellationToken).ConfigureAwait(false);
+            // Backends are expected to observe cancellation, but don't let a late successful
+            // response overwrite the dashboard after the caller has abandoned this refresh.
+            cancellationToken.ThrowIfCancellationRequested();
             inventory = ValidateInventory(inventory);
             var current = Current;
             var operation = StatusForInventory(inventory);
@@ -248,6 +251,8 @@ public sealed class HomeDashboard : IDisposable
 
             var result = await _packages.InstallAllAsync(packageIds, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("Package backend returned no install result.");
+            // Installation has external side effects: once the backend returns its observed
+            // outcome, preserve and publish it even if cancellation raced with completion.
             ArgumentNullException.ThrowIfNull(result.Status);
             var inventory = result.UpdatedInventory is null
                 ? new HomePackageInventory(current.Catalog, current.InstalledApps, current.Updates)

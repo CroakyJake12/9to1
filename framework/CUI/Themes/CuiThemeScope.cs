@@ -57,6 +57,7 @@ public sealed class CuiThemeScope
             "Retro" or "retro" => CuiTheme.Retro,
             "Playful" or "playful" => CuiTheme.Playful,
             "Cinematic" or "cinematic" => CuiTheme.Cinematic,
+            "Professional" or "professional" => CuiTheme.Professional,
             _ => globalDefault // Unknown themes fall back to default, not crash
         };
     }
@@ -121,14 +122,19 @@ public static class CuiThemeScopeApplier
     /// Creates a ResourceDictionary with theme values and merges it into
     /// the control's resources, allowing theme values to cascade to children.
     /// </summary>
-    public static void ApplyThemeToControl(Control control, CuiTheme theme, string surface = "Home")
+    public static void ApplyThemeToControl(
+        Control control,
+        CuiTheme theme,
+        string surface = "Home",
+        CuiAccessibilitySettings? accessibility = null,
+        CuiLocalizationContext? localization = null)
     {
         var appearance = DetectAppearance();
         var palette = CuiSurfacePaletteCatalog.For(surface, appearance, theme);
 
         // Create a new ResourceDictionary with the theme resources
         var themeResources = new ResourceDictionary();
-        CuiThemeResourceApplier.ApplyToResources(themeResources, palette);
+        CuiThemeResourceApplier.ApplyToResources(themeResources, palette, accessibility, localization);
 
         // Merge into the control's existing resources
         control.Resources.MergedDictionaries.Add(themeResources);
@@ -138,12 +144,16 @@ public static class CuiThemeScopeApplier
     /// Applies the current global theme to Application.Current.Resources.
     /// Called once at startup and whenever the global theme changes.
     /// </summary>
-    public static void ApplyGlobalTheme(CuiTheme theme, string surface = "Home")
+    public static void ApplyGlobalTheme(
+        CuiTheme theme,
+        string surface = "Home",
+        CuiAccessibilitySettings? accessibility = null,
+        CuiLocalizationContext? localization = null)
     {
         CuiSurfacePaletteCatalog.ActiveTheme = theme;
         var appearance = DetectAppearance();
         var palette = CuiSurfacePaletteCatalog.For(surface, appearance, theme);
-        CuiThemeResourceApplier.Apply(palette);
+        CuiThemeResourceApplier.Apply(palette, accessibility, localization);
     }
 
     /// <summary>Detects the current appearance from application resources.</summary>

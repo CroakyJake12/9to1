@@ -1,6 +1,6 @@
 # CUI Theming
 
-How CUI's five themes, four appearances, accent override, and DefaultTheme scoping
+How CUI's six themes, four appearances, accent override, and DefaultTheme scoping
 work — and how apps consume them.
 
 ## Architecture
@@ -36,7 +36,7 @@ application resources (brushes, radii, motion scale) → Avalonia controls
 
 ### Themes
 
-Five canonical themes. **Glow is the baseline identity transform** — with default
+Six canonical themes. **Glow is the baseline identity transform** — with default
 personalisation, every value is byte-identical to the pre-theme appearance.
 
 | Theme | Personality | Signature |
@@ -46,6 +46,7 @@ personalisation, every value is byte-identical to the pre-theme appearance.
 | Retro | engineered, technical | hairline illuminated borders, veil hover, sharp corners, fast motion |
 | Playful | tactile, tonal, friendly | opaque tonal fills, bold hover fills, pill radii |
 | Cinematic | immersive, depth-driven | tinted translucent layers, heavier shadows, slow fades |
+| Professional | restrained, balanced | familiar controls, clear hierarchy, neutral geometry |
 
 ### Appearances
 
@@ -59,16 +60,23 @@ Four brightness variants, separate from themes:
 
 Each theme has six scale factors:
 
-| Factor | Glow | Bubble | Retro | Playful | Cinematic |
-|---|---|---|---|---|---|
-| ControlRadiusScale | 1.0 | 1.35 | 0.45 | 1.5 | 1.0 |
-| CardRadiusScale | 1.0 | 1.3 | 0.55 | 1.35 | 1.05 |
-| PopupRadiusScale | 1.0 | 1.25 | 0.6 | 1.3 | 1.1 |
-| MotionDurationScale | 1.0 | 1.15 | 0.7 | 0.9 | 1.25 |
-| ShadowOpacityScale | 1.0 | 1.35 | 0.75 | 0.9 | 1.7 |
-| BorderIntensity | 1.0 | 0.8 | 1.25 | 1.1 | 0.95 |
+| Factor | Glow | Bubble | Retro | Playful | Cinematic | Professional |
+|---|---|---|---|---|---|---|
+| ControlRadiusScale | 1.0 | 1.35 | 0.45 | 1.5 | 1.0 | 1.0 |
+| CardRadiusScale | 1.0 | 1.3 | 0.55 | 1.35 | 1.05 | 1.0 |
+| PopupRadiusScale | 1.0 | 1.25 | 0.6 | 1.3 | 1.1 | 1.0 |
+| MotionDurationScale | 1.0 | 1.15 | 0.7 | 0.9 | 1.25 | 1.0 |
+| ShadowOpacityScale | 1.0 | 1.35 | 0.75 | 0.9 | 1.7 | 1.0 |
+| BorderIntensity | 1.0 | 0.8 | 1.25 | 1.1 | 0.95 | 1.0 |
 
 Base radii: Control=10, Card=16, Popup=20.
+
+Themes also provide spacing, typography, control-height and elevation scales.
+The shared Montserrat-first interface font and code font stacks are exposed as
+`CuiFontFamilyInterface` and `CuiFontFamilyCode`; user display scaling is applied
+to typography, spacing and control sizing without changing application state.
+Reduced-motion and high-contrast preferences are framework resources and can be
+passed to the theme applier as `CuiAccessibilitySettings`.
 
 ## DefaultTheme Scoping
 

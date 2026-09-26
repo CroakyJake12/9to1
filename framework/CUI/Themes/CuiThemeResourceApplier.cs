@@ -22,8 +22,13 @@ public static class CuiThemeResourceApplier
     /// Applies the given palette to Avalonia Application.Current.Resources.
     /// Sets all semantic brushes, corner radii, motion scale, and accent gradients.
     /// </summary>
-    public static void Apply(CuiPalette palette)
+    public static void Apply(
+        CuiPalette palette,
+        CuiAccessibilitySettings? accessibility = null,
+        CuiLocalizationContext? localization = null)
     {
+        var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
+        palette = CuiAccessibilityPalette.Resolve(palette, settings);
         var isDark = Luminance(palette.Text) > Luminance(palette.Panel);
         var disabledText = WithAlpha(palette.Muted, 0x88);
         var overlay = WithAlpha(palette.Panel, isDark ? (byte)0xF2 : (byte)0xF7);
@@ -100,10 +105,12 @@ public static class CuiThemeResourceApplier
         var resources = Application.Current?.Resources;
         if (resources is not null)
         {
-            resources["CuiMotionDurationScale"] = expression.MotionDurationScale;
-            resources["HavenMotionDurationScale"] = expression.MotionDurationScale;
+            var effectiveMotionScale = settings.EffectiveMotionScale(expression.MotionDurationScale);
+            resources["CuiMotionDurationScale"] = effectiveMotionScale;
+            resources["HavenMotionDurationScale"] = effectiveMotionScale;
             resources["CuiTheme"] = palette.Theme;
             resources["CuiAppearance"] = isDark ? "Dark" : "Bright";
+            ApplyAccessibilityResources(resources, expression, settings, localization);
         }
 
         PaletteChanged?.Invoke(null, EventArgs.Empty);
@@ -150,8 +157,15 @@ public static class CuiThemeResourceApplier
     /// Pushes theme resources into a ResourceDictionary (e.g. a newly created one
     /// that will be merged into a control's resources). Used by DefaultTheme scoping.
     /// </summary>
-    public static void ApplyToResources(ResourceDictionary resources, CuiPalette palette)
+    public static void ApplyToResources(
+        ResourceDictionary resources,
+        CuiPalette palette,
+        CuiAccessibilitySettings? accessibility = null,
+        CuiLocalizationContext? localization = null)
     {
+        ArgumentNullException.ThrowIfNull(resources);
+        var settings = (accessibility ?? CuiAccessibilitySettings.Default).Validate();
+        palette = CuiAccessibilityPalette.Resolve(palette, settings);
         var isDark = Luminance(palette.Text) > Luminance(palette.Panel);
         var expression = CuiThemeCatalog.Resolve(palette.Theme);
         var shadowBase = Color.Parse(isDark ? "#B8000000" : "#52000000");
@@ -175,11 +189,38 @@ public static class CuiThemeResourceApplier
         resources["CuiControlRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseControlRadius * expression.ControlRadiusScale)));
         resources["CuiCardRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BaseCardRadius * expression.CardRadiusScale)));
         resources["CuiPopupRadius"] = new CornerRadius(Math.Max(0d, Math.Round(CuiThemeExpression.BasePopupRadius * expression.PopupRadiusScale)));
-        resources["CuiMotionDurationScale"] = expression.MotionDurationScale;
+        resources["CuiMotionDurationScale"] = settings.EffectiveMotionScale(expression.MotionDurationScale);
         resources["CuiTheme"] = palette.Theme;
+        ApplyAccessibilityResources(resources, expression, settings, localization);
 
         var accents = palette.AccentPalette;
         ApplyAccentToResources(resources, accents);
+    }
+
+    private static void ApplyAccessibilityResources(
+        IResourceDictionary resources,
+        CuiThemeExpression expression,
+        CuiAccessibilitySettings settings,
+        CuiLocalizationContext? localization)
+    {
+        resources["CuiFontFamilyInterface"] = CuiTypography.InterfaceFontFamily;
+        resources["CuiFontFamilyCode"] = CuiTypography.CodeFontFamily;
+        resources["CuiFontSizeBody"] = CuiTypography.BodySize * expression.TypographyScale * settings.DisplayScale;
+        resources["CuiFontSizeCaption"] = CuiTypography.CaptionSize * expression.TypographyScale * settings.DisplayScale;
+        resources["CuiFontSizeHeading"] = CuiTypography.HeadingSize * expression.TypographyScale * settings.DisplayScale;
+        resources["CuiFontSizeCode"] = CuiTypography.CodeSize * expression.TypographyScale * settings.DisplayScale;
+        resources["CuiSpacingScale"] = expression.SpacingScale * settings.DisplayScale;
+        resources["CuiControlHeightScale"] = expression.ControlHeightScale * settings.DisplayScale;
+        resources["CuiElevationScale"] = expression.ElevationScale;
+        resources["CuiDisplayScale"] = settings.DisplayScale;
+        resources["CuiReduceMotion"] = settings.ReduceMotion;
+        resources["CuiHighContrast"] = settings.HighContrast;
+        resources["CuiFocusIndicatorThickness"] = settings.HighContrast ? 3d : 2d;
+        resources["CuiStateCommunication"] = "IconAndLabel";
+
+        var culture = localization ?? new CuiLocalizationContext();
+        resources["CuiCultureName"] = culture.Culture.Name;
+        resources["CuiFlowDirection"] = culture.FlowDirection;
     }
 
     private static void ApplyAccentToResources(ResourceDictionary resources, CuiAccentPalette accents)

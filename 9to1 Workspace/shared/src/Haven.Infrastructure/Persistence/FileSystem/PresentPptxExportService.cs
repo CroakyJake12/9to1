@@ -7,13 +7,32 @@ using Haven.Core;
 
 namespace Haven.Infrastructure;
 
-public sealed class PresentPptxExportService : IPresentExportService
+public sealed class PresentPptxExportService : IPresentReportExportService
 {
     private const double EmuPerInch = 914_400d;
 
-    public IReadOnlyList<string> ExportExtensions { get; } = [".pptx"];
+    public IReadOnlyList<string> ExportExtensions { get; } = [".9to1p", ".pptx"];
 
     public async Task<string> ExportAsync(
+        PresentDocument document,
+        string destinationPath,
+        CancellationToken cancellationToken) =>
+        (await ExportWithReportAsync(document, destinationPath, cancellationToken).ConfigureAwait(false)).Path;
+
+    public PresentCompatibilityReport PreviewExport(PresentDocument document, string destinationPath)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
+        var extension = Path.GetExtension(destinationPath);
+        if (extension.Equals(".9to1p", StringComparison.OrdinalIgnoreCase))
+            return new PresentCompatibilityReport(".9to1p", PresentCompatibilityDirection.Export, []);
+        if (!extension.Equals(".pptx", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("Present exports .9to1p and .pptx presentations.");
+
+        return CreatePptxCompatibilityReport(document);
+    }
+
+    public async Task<PresentExportResult> ExportWithReportAsync(
         PresentDocument document,
         string destinationPath,
         CancellationToken cancellationToken)
@@ -21,8 +40,14 @@ public sealed class PresentPptxExportService : IPresentExportService
         ArgumentNullException.ThrowIfNull(document);
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
         cancellationToken.ThrowIfCancellationRequested();
-        if (!Path.GetExtension(destinationPath).Equals(".pptx", StringComparison.OrdinalIgnoreCase))
-            throw new NotSupportedException("Present currently exports conventional presentations as .pptx files.");
+        var extension = Path.GetExtension(destinationPath);
+        var report = PreviewExport(document, destinationPath);
+
+        if (extension.Equals(".9to1p", StringComparison.OrdinalIgnoreCase))
+        {
+            await PresentPackageCodec.ExportAsync(document, destinationPath, cancellationToken).ConfigureAwait(false);
+            return new PresentExportResult(Path.GetFullPath(destinationPath), report);
+        }
 
         document.Normalize();
         var fullDestination = Path.GetFullPath(destinationPath);
@@ -36,12 +61,67 @@ public sealed class PresentPptxExportService : IPresentExportService
             await WritePackageAsync(document, temporary, cancellationToken).ConfigureAwait(false);
             ValidatePackage(temporary, document.Slides.Count);
             File.Move(temporary, fullDestination, overwrite: true);
-            return fullDestination;
+            return new PresentExportResult(fullDestination, report);
         }
         finally
         {
             TryDelete(temporary);
         }
+    }
+
+    private static PresentCompatibilityReport CreatePptxCompatibilityReport(PresentDocument document)
+    {
+        var issues = new List<PresentCompatibilityIssue>();
+        foreach (var slide in document.Slides)
+        {
+            if (slide.Hidden)
+                Add(PresentCompatibilitySeverity.Warning, "hidden-slide", slide.Id,
+                    "The PPTX writer does not preserve the hidden-slide flag.");
+            if (!string.IsNullOrWhiteSpace(slide.SpeakerNotes))
+                Add(PresentCompatibilitySeverity.Warning, "speaker-notes", slide.Id,
+                    "Speaker notes are not included in this PPTX export.");
+            if (slide.Transition.Kind != PresentTransitionKind.None)
+                Add(PresentCompatibilitySeverity.Warning, "transition", slide.Id,
+                    "The transition is not compiled into a destination-native transition.");
+            if (slide.Animations.Count > 0)
+                Add(PresentCompatibilitySeverity.Warning, "animation", slide.Id,
+                    "Slide animation cues are not compiled into the PPTX output.");
+            if (slide.Background.Kind != PresentBackgroundKind.Theme)
+                Add(PresentCompatibilitySeverity.Warning, "slide-background", slide.Id,
+                    "The slide background is replaced by the destination theme background.");
+            if (slide.LayoutId is not null)
+                Add(PresentCompatibilitySeverity.Warning, "slide-layout", slide.Id,
+                    "The source slide layout relationship is replaced by a blank PPTX layout.");
+
+            foreach (var element in slide.Elements.Where(item => item.Visible))
+            {
+                if (element.Kind != PresentElementKind.Text)
+                {
+                    Add(PresentCompatibilitySeverity.Warning, "object-type", element.Id,
+                        $"The {element.Kind} object is represented by explanatory text; its interactive or visual behavior is not preserved.");
+                }
+                else if (element.TextStyle.Italic || element.TextStyle.Underline ||
+                         element.TextStyle.HorizontalAlignment != PresentTextHorizontalAlignment.Left ||
+                         element.TextStyle.VerticalAlignment != PresentTextVerticalAlignment.Top ||
+                         !string.IsNullOrWhiteSpace(element.TextStyle.Color) ||
+                         !string.IsNullOrWhiteSpace(element.TextStyle.FontFamily))
+                {
+                    Add(PresentCompatibilitySeverity.Warning, "text-formatting", element.Id,
+                        "Some source text formatting is not represented by the PPTX writer.");
+                }
+            }
+        }
+
+        if (document.Layouts.Count > 1 || document.Sections.Count > 0)
+            Add(PresentCompatibilitySeverity.Warning, "presentation-structure", document.Id,
+                "Source themes, masters, layouts, and sections are not preserved by the PPTX writer.");
+
+        return new PresentCompatibilityReport(".pptx", PresentCompatibilityDirection.Export, issues);
+
+        void Add(PresentCompatibilitySeverity severity, string feature, Guid? target, string description) =>
+            issues.Add(new PresentCompatibilityIssue(
+                Guid.NewGuid(), severity, PresentCompatibilityDirection.Export, feature, target,
+                description, PresentCompatibilityResolution.Degraded));
     }
 
     private static async Task WritePackageAsync(

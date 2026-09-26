@@ -122,6 +122,55 @@ public sealed partial class BoardsWorkspaceService
         return true;
     }
 
+    /// <summary>Moves a page to recoverable trash while keeping its canonical blocks and identity intact.</summary>
+    public bool DeletePage(NotesDocument notebook, Guid pageId)
+    {
+        EnsureBoards(notebook);
+        var section = notebook.Sections.FirstOrDefault(value => value.Pages.Any(page => page.Id == pageId));
+        if (section is null) return false;
+        if (section.Pages.Count(page => !IsPageDeleted(notebook, page.Id)) <= 1) return false;
+        var deleted = GetDeletedPageIds(notebook);
+        if (!deleted.Add(pageId)) return false;
+        SetDeletedPageIds(notebook, deleted);
+        TouchRecovery(notebook);
+        return true;
+    }
+
+    public bool RestorePage(NotesDocument notebook, Guid pageId)
+    {
+        EnsureBoards(notebook);
+        if (!notebook.Sections.SelectMany(section => section.Pages).Any(page => page.Id == pageId)) return false;
+        var deleted = GetDeletedPageIds(notebook);
+        if (!deleted.Remove(pageId)) return false;
+        SetDeletedPageIds(notebook, deleted);
+        TouchRecovery(notebook);
+        return true;
+    }
+
+    public IReadOnlyList<NotesPage> ListDeletedPages(NotesDocument notebook)
+    {
+        EnsureBoards(notebook);
+        var deleted = GetDeletedPageIds(notebook);
+        return notebook.Sections.SelectMany(section => section.Pages).Where(page => deleted.Contains(page.Id))
+            .OrderBy(page => page.Order).ToArray();
+    }
+
+    public static bool IsPageDeleted(NotesDocument notebook, Guid pageId) =>
+        GetDeletedPageIds(notebook).Contains(pageId);
+
+    private static HashSet<Guid> GetDeletedPageIds(NotesDocument notebook)
+    {
+        if (!notebook.Metadata.TryGetValue(DeletedPagesKey, out var json)) return [];
+        try { return System.Text.Json.JsonSerializer.Deserialize<HashSet<Guid>>(json) ?? []; }
+        catch (System.Text.Json.JsonException) { return []; }
+    }
+
+    private static void SetDeletedPageIds(NotesDocument notebook, HashSet<Guid> deleted)
+    {
+        if (deleted.Count == 0) notebook.Metadata.Remove(DeletedPagesKey);
+        else notebook.Metadata[DeletedPagesKey] = System.Text.Json.JsonSerializer.Serialize(deleted.Order().ToArray());
+    }
+
     public bool UpdateListItem(NotesDocument notebook, Guid pageId, Guid blockId, Guid itemId, string? text = null, bool? isChecked = null)
     {
         var page = RequireRecoveryPage(notebook, pageId);
@@ -402,7 +451,7 @@ public sealed partial class BoardsWorkspaceService
         EnsureBoards(notebook);
         return notebook.Sections
             .SelectMany(section => section.Pages)
-            .FirstOrDefault(page => page.Id == pageId)
+            .FirstOrDefault(page => page.Id == pageId && !IsPageDeleted(notebook, page.Id))
             ?? throw new KeyNotFoundException("The requested Boards page was not found.");
     }
 

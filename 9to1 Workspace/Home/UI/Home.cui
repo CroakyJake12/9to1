@@ -11,18 +11,26 @@
         <Border id="navigation-rail" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="14" width="176" margin="0 0 20 0">
           <StackPanel orientation="Vertical">
             <Button id="nav-home" action="NavigateHome" content="Home" />
-            <Button id="nav-spaces" action="NavigateSpaces" content="Spaces" />
             <Button id="nav-apps" action="NavigateApps" content="Apps" />
             <Button id="nav-library" action="NavigateLibrary" content="Library" />
             <Button id="nav-events" action="NavigateEvents" content="Events" />
-            <Button id="nav-automations" action="NavigateAutomations" content="Automations" />
             <Button id="nav-discover" action="NavigateDiscover" content="Discover" />
+            <Button id="nav-mesh" action="NavigateMesh" content="Mesh" />
             <Button id="nav-settings" action="NavigateSettings" content="Settings" />
+            <Button id="nav-permissions" action="NavigatePermissions" content="Permissions" />
+            <Button id="nav-notifications" action="NavigateNotifications" content="Notifications" />
+            <Button id="nav-spaces" action="NavigateSpaces" content="Spaces" />
+            <Button id="nav-automations" action="NavigateAutomations" content="Automations" />
           </StackPanel>
         </Border>
         <StackPanel id="home-content" orientation="Vertical">
           <TextBlock id="welcome-heading" text="Welcome to 9-1" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
-          <TextBlock id="welcome-copy" text="Your apps, spaces and settings in one place." font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
+          <TextBlock id="welcome-copy" text="Your day across 9-1" font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
+          <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
+            <TextBlock text="Your briefing" font-size="20" font-weight="SemiBold" foreground="{Resource CuiTextBrush}" />
+            <TextBlock id="dashboard-brief-status" text="{Binding BriefSummary, fallback=Your authorised activity will appear here}" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 12" />
+            <WrapPanel id="dashboard-tiles" margin="0 0 0 8" />
+          </StackPanel>
           <Border id="home-hero" background="{Resource CuiPanel2Brush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" corner-radius="14" padding="24" margin="0 0 18 0">
             <StackPanel orientation="Horizontal">
               <StackPanel orientation="Vertical" width="420">

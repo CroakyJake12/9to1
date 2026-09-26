@@ -9,6 +9,8 @@
   <ItemGroup>
     <Compile Include="Source\Home\HomeDashboard.cs" />
     <Compile Include="Source\Home\HomeCuiScene.cs" />
+    <Compile Include="Source\Home\HomeEcosystem.cs" />
+    <Compile Include="Source\Home\Core\*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <Content Include="UI\Home.cui">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

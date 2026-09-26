@@ -266,6 +266,15 @@ public static class CuiSurfacePaletteCatalog
                 ButtonPressed = WithAlpha(Blend(palette.AccentSoft, palette.AccentStrong, 0.55), 0xFF),
                 Focus = WithAlpha(palette.AccentSecondary, 0xE6)
             },
+            CuiTheme.Professional => palette with
+            {
+                Panel = WithAlpha(palette.Panel, 0xFF),
+                Panel2 = WithAlpha(palette.Panel2, 0xFF),
+                Line = Blend(palette.LineStrong, palette.Panel3, 0.35),
+                ButtonHover = Blend(palette.ButtonHover, palette.AccentSoft, 0.25),
+                ButtonPressed = Blend(palette.ButtonPressed, palette.AccentStrong, 0.20),
+                Focus = WithAlpha(palette.AccentSecondary, 0xFF)
+            },
             CuiTheme.Cinematic => palette with
             {
                 Panel = WithAlpha(Blend(palette.Panel, palette.TideColour, isDark ? 0.18 : 0.10), isDark ? (byte)0xEC : (byte)0xF0),

@@ -14,9 +14,27 @@ public enum AutomationGraphTraceStatus
 }
 
 public sealed record AutomationGraphValidationIssue(string Code, string Message, Guid? NodeId = null, Guid? EdgeId = null);
-public sealed record AutomationGraphNodeExecutionContext(AutomationGraphNodeDefinition Node, AutomationGraphRunMode Mode, IReadOnlyDictionary<Guid, string?> Inputs);
-public sealed record AutomationGraphNodeExecutionResult(bool Succeeded, string Message, string? Output = null, string? Branch = null);
-public sealed record AutomationGraphNodeTrace(Guid NodeId, string Category, AutomationGraphTraceStatus Status, string Message, string? Output = null, string? Branch = null, Dictionary<Guid, string?>? Inputs = null);
+public sealed record AutomationGraphNodeExecutionContext(
+    AutomationGraphNodeDefinition Node,
+    AutomationGraphRunMode Mode,
+    IReadOnlyDictionary<Guid, string?> Inputs,
+    IReadOnlyDictionary<string, IReadOnlyList<AutomationGraphValue>>? TypedInputs = null);
+public sealed record AutomationGraphNodeExecutionResult(
+    bool Succeeded,
+    string Message,
+    string? Output = null,
+    string? Branch = null,
+    IReadOnlyDictionary<string, AutomationGraphValue>? TypedOutputs = null);
+public sealed record AutomationGraphNodeTrace(
+    Guid NodeId,
+    string Category,
+    AutomationGraphTraceStatus Status,
+    string Message,
+    string? Output = null,
+    string? Branch = null,
+    Dictionary<Guid, string?>? Inputs = null,
+    IReadOnlyDictionary<string, IReadOnlyList<AutomationGraphValue>>? TypedInputs = null,
+    IReadOnlyDictionary<string, AutomationGraphValue>? TypedOutputs = null);
 public sealed record AutomationGraphRunResult(AutomationGraphRunMode Mode, bool Succeeded, DateTimeOffset StartedAt, DateTimeOffset CompletedAt, IReadOnlyList<AutomationGraphValidationIssue> ValidationIssues, IReadOnlyList<AutomationGraphNodeTrace> Trace, string? FailureMessage = null);
 
 public interface IAutomationGraphNodeExecutor
@@ -109,6 +127,7 @@ public sealed class AutomationGraphRunner(IEnumerable<IAutomationGraphNodeExecut
         var order = TopologicalOrder(graph.Nodes, graph.Edges);
         var activatedEdges = new HashSet<Guid>();
         var outputs = new Dictionary<Guid, string?>();
+        var typedOutputs = new Dictionary<(Guid NodeId, string PortId), AutomationGraphValue>();
         var trace = new List<AutomationGraphNodeTrace>(graph.Nodes.Count);
         foreach (var node in order)
         {
@@ -119,23 +138,100 @@ public sealed class AutomationGraphRunner(IEnumerable<IAutomationGraphNodeExecut
                 trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Skipped, "Skipped because no incoming branch was selected."));
                 continue;
             }
-            var inputs = incoming.Where(edge => activatedEdges.Contains(edge.Id) && outputs.ContainsKey(edge.FromNodeId)).GroupBy(edge => edge.FromNodeId).ToDictionary(group => group.Key, group => outputs[group.Key]);
+            var activeIncoming = incoming.Where(edge => activatedEdges.Contains(edge.Id)).ToArray();
+            var inputs = activeIncoming.Where(edge => outputs.ContainsKey(edge.FromNodeId)).GroupBy(edge => edge.FromNodeId).ToDictionary(group => group.Key, group => outputs[group.Key]);
+            var typedInputs = BuildTypedInputs(activeIncoming, typedOutputs, node);
             AutomationGraphNodeExecutionResult result;
-            try { result = await ExecuteNodeAsync(new(node, mode, inputs), cancellationToken).ConfigureAwait(false); }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-            catch (Exception ex) { result = new(false, ex.Message); }
+            IReadOnlyDictionary<string, AutomationGraphValue> nodeTypedOutputs;
+            var invalidTypedInput = typedInputs.Values.SelectMany(values => values)
+                .FirstOrDefault(value => value.State == AutomationGraphValueState.Error);
+            if (invalidTypedInput is not null)
+            {
+                result = new(false, invalidTypedInput.Message ?? "A graph input is invalid.");
+                nodeTypedOutputs = new Dictionary<string, AutomationGraphValue>();
+            }
+            else
+            {
+                try
+                {
+                    result = await ExecuteNodeAsync(new(node, mode, inputs, typedInputs), cancellationToken).ConfigureAwait(false);
+                    nodeTypedOutputs = result.Succeeded ? ResolveTypedOutputs(node, result) : new Dictionary<string, AutomationGraphValue>();
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex)
+                {
+                    result = new(false, ex.Message);
+                    nodeTypedOutputs = new Dictionary<string, AutomationGraphValue>();
+                }
+            }
             if (!result.Succeeded)
             {
-                trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Failed, result.Message, result.Output, result.Branch, new Dictionary<Guid, string?>(inputs)));
+                trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Failed, result.Message, result.Output, result.Branch, new Dictionary<Guid, string?>(inputs), typedInputs, result.TypedOutputs));
                 foreach (var remaining in order.Where(candidate => trace.All(item => item.NodeId != candidate.Id))) trace.Add(new(remaining.Id, remaining.Category, AutomationGraphTraceStatus.Skipped, $"Not run because workflow failed at node {node.Id}."));
                 return new(mode, false, startedAt, DateTimeOffset.UtcNow, [], trace, result.Message);
             }
             outputs[node.Id] = result.Output;
-            trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Succeeded, result.Message, result.Output, result.Branch, new Dictionary<Guid, string?>(inputs)));
+            foreach (var pair in nodeTypedOutputs)
+                typedOutputs[(node.Id, pair.Key)] = pair.Value;
+            trace.Add(new(node.Id, node.Category, AutomationGraphTraceStatus.Succeeded, result.Message, result.Output, result.Branch, new Dictionary<Guid, string?>(inputs), typedInputs, nodeTypedOutputs));
             foreach (var edge in graph.Edges.Where(edge => edge.FromNodeId == node.Id))
                 if (string.IsNullOrWhiteSpace(edge.Branch) || (!string.IsNullOrWhiteSpace(result.Branch) && string.Equals(edge.Branch, result.Branch, StringComparison.OrdinalIgnoreCase))) activatedEdges.Add(edge.Id);
         }
         return new(mode, true, startedAt, DateTimeOffset.UtcNow, [], trace);
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<AutomationGraphValue>> BuildTypedInputs(
+        IReadOnlyList<AutomationGraphEdgeDefinition> incoming,
+        IReadOnlyDictionary<(Guid NodeId, string PortId), AutomationGraphValue> outputs,
+        AutomationGraphNodeDefinition node)
+    {
+        var values = new Dictionary<string, List<AutomationGraphValue>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var edge in incoming)
+        {
+            var targetPort = node.EffectivePorts.FirstOrDefault(port => string.Equals(port.Id, edge.ToPortId, StringComparison.OrdinalIgnoreCase));
+            var declaredType = targetPort?.DataType ?? "any";
+            if (!values.TryGetValue(edge.ToPortId, out var list)) values[edge.ToPortId] = list = [];
+            if (outputs.TryGetValue((edge.FromNodeId, edge.FromPortId), out var value))
+            {
+                if (!string.Equals(declaredType, "any", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(value.DataType, "any", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(value.DataType, declaredType, StringComparison.OrdinalIgnoreCase))
+                    list.Add(AutomationGraphValue.Failure(declaredType, "ConnectionTypeMismatch", $"Connected value type '{value.DataType}' does not match input type '{declaredType}'."));
+                else
+                    list.Add(value);
+            }
+            else
+                list.Add(AutomationGraphValue.Unavailable(declaredType, "The connected node did not produce a value for this port."));
+        }
+        return values.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<AutomationGraphValue>)pair.Value.ToArray(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyDictionary<string, AutomationGraphValue> ResolveTypedOutputs(
+        AutomationGraphNodeDefinition node,
+        AutomationGraphNodeExecutionResult result)
+    {
+        var declaredPorts = node.EffectivePorts.Where(port => port.Direction == AutomationGraphPortDirection.Output)
+            .ToDictionary(port => port.Id, StringComparer.OrdinalIgnoreCase);
+        var values = new Dictionary<string, AutomationGraphValue>(StringComparer.OrdinalIgnoreCase);
+        if (result.TypedOutputs is not null)
+        {
+            foreach (var (portId, value) in result.TypedOutputs)
+            {
+                if (!declaredPorts.TryGetValue(portId, out var port))
+                    throw new InvalidOperationException($"Node '{node.Id}' produced an undeclared output port '{portId}'.");
+                if (!string.Equals(port.DataType, "any", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(port.DataType, value.DataType, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"Node '{node.Id}' produced type '{value.DataType}' for port '{portId}', which declares '{port.DataType}'.");
+                values.Add(portId, value);
+            }
+        }
+        else if (result.Output is not null)
+        {
+            var legacyPort = declaredPorts.GetValueOrDefault("out");
+            if (legacyPort is not null && !string.Equals(legacyPort.DataType, "flow", StringComparison.OrdinalIgnoreCase))
+                values[legacyPort.Id] = AutomationGraphValue.FromString(result.Output) with { DataType = legacyPort.DataType == "any" ? "string" : legacyPort.DataType };
+        }
+        return values;
     }
 
     private async Task<AutomationGraphNodeExecutionResult> ExecuteNodeAsync(AutomationGraphNodeExecutionContext context, CancellationToken cancellationToken)

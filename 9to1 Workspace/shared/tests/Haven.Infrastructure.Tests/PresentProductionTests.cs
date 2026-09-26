@@ -272,6 +272,92 @@ public sealed class PresentProductionTests : IDisposable
             using var stream = entry.Open();
             _ = XDocument.Load(stream);
         }
+
+        var report = new PresentPptxExportService().PreviewExport(document, destination);
+        Assert.Contains(report.Issues, issue => issue.FeatureType == "object-type" && issue.SourceTargetId == first.Elements[1].Id);
+        Assert.Contains(report.Issues, issue => issue.FeatureType == "speaker-notes" && issue.SourceTargetId == first.Id);
+        Assert.False(report.HasBlockingIssues);
+    }
+
+    [Fact]
+    public async Task Native_package_round_trips_presentation_state_and_embedded_assets()
+    {
+        var sourceAsset = Path.Combine(_paths.DataDirectory, "illustration.png");
+        var assetBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3, 4 };
+        await File.WriteAllBytesAsync(sourceAsset, assetBytes);
+
+        var document = PresentDocument.Create("Package round trip");
+        document.Theme.Name = "Warm editorial";
+        document.Sections.Add(new PresentSection { Name = "Opening" });
+        var slide = document.Slides[0];
+        slide.Title = "Stable slide";
+        slide.SpeakerNotes = "Notes with a decomposed accent: e\u0301 and emoji 👩🏽‍💻";
+        slide.Hidden = true;
+        slide.Elements.Add(new PresentElement
+        {
+            Kind = PresentElementKind.Image,
+            AssetId = sourceAsset,
+            AlternativeText = "A sample illustration",
+            Order = 1
+        });
+        slide.Elements.Add(new PresentElement
+        {
+            Kind = PresentElementKind.Chart,
+            AlternativeText = "Quarterly results",
+            Order = 2
+        });
+
+        var destination = Path.Combine(_paths.DataDirectory, "round-trip.9to1p");
+        var exporter = new PresentPptxExportService();
+        var exportResult = await exporter.ExportWithReportAsync(document, destination, CancellationToken.None);
+        Assert.Empty(exportResult.CompatibilityReport.Issues);
+        Assert.True(File.Exists(destination));
+
+        await using var package = File.OpenRead(destination);
+        using var archive = new ZipArchive(package, ZipArchiveMode.Read, leaveOpen: false);
+        Assert.NotNull(archive.GetEntry("manifest.json"));
+        Assert.NotNull(archive.GetEntry("presentation.json"));
+        Assert.Single(archive.Entries.Where(entry => entry.FullName.StartsWith("assets/", StringComparison.Ordinal)));
+
+        var imported = await new PresentPptxImportService(_paths).ImportAsync(destination, CancellationToken.None);
+        Assert.NotEqual(document.Id, imported.Id);
+        Assert.Equal(document.Slides[0].Id, imported.Slides[0].Id);
+        Assert.Equal(document.Slides[0].NotesId, imported.Slides[0].NotesId);
+        Assert.Equal("Warm editorial", imported.Theme.Name);
+        Assert.Equal("Stable slide", imported.Slides[0].Title);
+        Assert.Equal(document.Slides[0].SpeakerNotes, imported.Slides[0].SpeakerNotes);
+        Assert.True(imported.Slides[0].Hidden);
+        Assert.Equal(PresentElementKind.Chart, imported.Slides[0].Elements.Single(element => element.Kind == PresentElementKind.Chart).Kind);
+
+        var importedAsset = imported.Slides[0].Elements.Single(element => element.Kind == PresentElementKind.Image).AssetId;
+        Assert.True(Path.IsPathFullyQualified(importedAsset));
+        Assert.Equal(assetBytes, await File.ReadAllBytesAsync(importedAsset));
+
+        var repository = new PresentRepository(_paths);
+        var saved = await repository.SaveAsync(imported, "Imported native package", CancellationToken.None);
+        var reopened = await repository.LoadAsync(imported.Id, CancellationToken.None);
+        Assert.NotNull(reopened);
+        Assert.Equal(imported.Id, reopened!.Id);
+        Assert.Equal(importedAsset, reopened.Slides[0].Elements.Single(element => element.Kind == PresentElementKind.Image).AssetId);
+        Assert.True(File.Exists(saved.CurrentPath));
+    }
+
+    [Fact]
+    public async Task Native_package_refuses_to_omit_an_unavailable_asset()
+    {
+        var document = PresentDocument.Create("Missing asset");
+        document.Slides[0].Elements.Add(new PresentElement
+        {
+            Kind = PresentElementKind.Image,
+            AssetId = Path.Combine(_paths.DataDirectory, "missing.png")
+        });
+        var destination = Path.Combine(_paths.DataDirectory, "missing.9to1p");
+
+        await Assert.ThrowsAsync<FileNotFoundException>(() =>
+            new PresentPptxExportService().ExportAsync(document, destination, CancellationToken.None));
+
+        Assert.False(File.Exists(destination));
+        Assert.Empty(Directory.EnumerateFiles(_paths.DataDirectory, "*.tmp"));
     }
 
     private static XDocument ReadXml(ZipArchive archive, string path)

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Apps.Stacks</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Stacks</RootNamespace>
+  </PropertyGroup>
+</Project>

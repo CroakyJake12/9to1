@@ -1,4 +1,6 @@
 using CakeOS.Cui.Language;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CakeOS.Cui;
 
@@ -35,7 +37,11 @@ public sealed class CuiComponent
         CuiCondition? condition,
         CuiListDefinition? list,
         CuiSourceSpan span,
-        string? defaultTheme = null)
+        string? defaultTheme = null,
+        CuiRepeatDefinition? repeat = null,
+        IReadOnlyList<CuiComponent>? elseChildren = null,
+        IReadOnlyList<string>? groups = null,
+        bool isDefinition = false)
     {
         Type = type;
         Name = name;
@@ -47,10 +53,16 @@ public sealed class CuiComponent
         List = list;
         Span = span;
         DefaultTheme = defaultTheme;
+        Repeat = repeat;
+        ElseChildren = elseChildren ?? Array.Empty<CuiComponent>();
+        Groups = groups ?? Array.Empty<string>();
+        IsDefinition = isDefinition;
     }
 
     public string Type { get; }
     public string? Name { get; }
+    public string? AuthoredId => Name;
+    public string StableId => Name is not null ? $"id:{Name}" : CreateGeneratedStableId();
     public IReadOnlyList<string> Classes { get; }
     public IReadOnlyDictionary<string, CuiValue> Properties { get; }
     public IReadOnlyDictionary<string, CuiActionReference> Actions { get; }
@@ -59,6 +71,10 @@ public sealed class CuiComponent
 
     public CuiCondition? Condition { get; }
     public CuiListDefinition? List { get; }
+    public CuiRepeatDefinition? Repeat { get; }
+    public IReadOnlyList<CuiComponent> ElseChildren { get; }
+    public IReadOnlyList<string> Groups { get; }
+    public bool IsDefinition { get; }
     public CuiSourceSpan Span { get; }
 
     /// <summary>
@@ -113,6 +129,10 @@ public sealed class CuiComponent
     {
         if (Name is not null)
             yield return "id";
+        if (Groups.Count > 0)
+            yield return "group";
+        if (IsDefinition)
+            yield return "definition";
         foreach (var property in Properties.Keys)
             yield return property;
         foreach (var action in Actions.Keys)
@@ -125,7 +145,59 @@ public sealed class CuiComponent
         foreach (var child in Children)
         foreach (var descendant in child.DescendantsAndSelf())
             yield return descendant;
+        foreach (var child in ElseChildren)
+        foreach (var descendant in child.DescendantsAndSelf())
+            yield return descendant;
     }
+
+    private string CreateGeneratedStableId()
+    {
+        var semanticParts = new List<string>
+        {
+            Type,
+            DefaultTheme ?? string.Empty,
+            IsDefinition ? "definition" : "instance",
+            Text,
+            string.Join("\u001f", Classes.Order(StringComparer.Ordinal)),
+            string.Join("\u001f", Groups.Order(StringComparer.Ordinal)),
+        };
+
+        semanticParts.AddRange(Properties
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => $"property:{pair.Key}={DescribeValue(pair.Value)}"));
+        semanticParts.AddRange(Actions
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => $"action:{pair.Key}={pair.Value.Name}"));
+
+        if (Condition is not null)
+        {
+            semanticParts.Add($"condition:{DescribeValue(Condition.Test)}:{Condition.Negate}:{Condition.IsLive}");
+        }
+        if (Repeat is not null)
+        {
+            semanticParts.Add($"repeat:{Repeat.ItemName}:{DescribeValue(Repeat.Source)}:{DescribeValue(Repeat.Key)}");
+        }
+        if (List is not null)
+        {
+            semanticParts.Add($"list:{DescribeValue(List.Items)}:{List.ItemTemplate}:{List.EmptyTemplate}");
+        }
+
+        semanticParts.AddRange(Children.Select(child => child.StableId).Order(StringComparer.Ordinal));
+        semanticParts.AddRange(ElseChildren.Select(child => child.StableId).Order(StringComparer.Ordinal));
+
+        var canonical = string.Join("\u001e", semanticParts.Select(part => $"{part.Length}:{part}"));
+        var digest = SHA256.HashData(Encoding.UTF8.GetBytes(canonical));
+        return $"gen:v1:{Convert.ToHexString(digest).ToLowerInvariant()}";
+    }
+
+    private static string DescribeValue(CuiValue value) => value switch
+    {
+        CuiLiteralValue literal => $"literal:{literal.Value}",
+        CuiBindingValue binding => $"binding:{binding.Path}:{binding.Mode}:{binding.Fallback}:{binding.TargetType}",
+        CuiResourceValue resource => $"resource:{resource.Key}",
+        CuiInvalidValue invalid => $"invalid:{invalid.DiagnosticCode}:{invalid.RawValue}",
+        _ => value.GetType().FullName ?? value.GetType().Name,
+    };
 }
 
 public sealed record CuiDocument(

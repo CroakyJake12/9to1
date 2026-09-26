@@ -44,7 +44,11 @@ public sealed record FileEntry(
 	long? Size,
 	DateTimeOffset Modified,
 	FileItemCapabilities Capabilities,
-	string? LinkTarget = null);
+	string? LinkTarget = null,
+	HostedItemId? ItemId = null,
+	string? ContentType = null,
+	string? Revision = null,
+	SyncAvailability? SyncState = null);
 
 public sealed record FilePlace(string Key, string Label, string Path, string IconKey);
 

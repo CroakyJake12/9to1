@@ -88,7 +88,31 @@ public sealed record KnowledgeRecord(
     KnowledgeRecordStatus Status = KnowledgeRecordStatus.Active,
     KnowledgeOrigin Origin = KnowledgeOrigin.Inferred,
     string? UserCorrection = null,
-    Guid? SupersedesId = null);
+    Guid? SupersedesId = null,
+    Guid? KnowledgeBankId = null,
+    DateTimeOffset? LastReinforcedAt = null,
+    DateTimeOffset? LastUsedAt = null,
+    bool IsUserLocked = false,
+    string? AppId = null,
+    string? ProjectId = null,
+    string? AgentId = null);
+
+/// <summary>
+/// A user-manageable topic collection for reusable knowledge. Bank state is independent from
+/// individual records so a user can pause retrieval or forget one complete topic without
+/// affecting Persistent Memory or other learned categories.
+/// </summary>
+public sealed record KnowledgeBank(
+    Guid Id,
+    string Topic,
+    string Title,
+    string Scope,
+    bool IsEnabled,
+    string StoragePolicy,
+    string SyncPolicy,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    int EntryCount = 0);
 
 public sealed record ApiBankRecord(
     Guid Id,

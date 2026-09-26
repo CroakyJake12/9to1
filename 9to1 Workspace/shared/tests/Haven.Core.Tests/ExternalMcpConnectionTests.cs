@@ -45,6 +45,22 @@ public sealed class ExternalMcpConnectionTests
         Assert.NotNull(await repository.GetAsync(connection.Id, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task ProviderFailureStatusDoesNotPersistRawExceptionDetails()
+    {
+        var repository = new MemoryConnectionRepository();
+        var connection = ReadyConnection("Remote MCP");
+        await repository.UpsertAsync(connection, CancellationToken.None);
+        var client = new FakeMcpClient { DiscoveryException = new InvalidOperationException("access_token=private-secret") };
+        var service = new ExternalConnectionRegistryService(repository, client);
+
+        var updated = await service.RefreshMcpAsync(connection, CancellationToken.None);
+
+        Assert.Equal(ExternalConnectionState.Offline, updated.State);
+        Assert.DoesNotContain("private-secret", updated.Status, StringComparison.Ordinal);
+        Assert.Contains("Check the endpoint and authentication", updated.Status, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("http://example.com/mcp")]
     [InlineData("ftp://example.com/mcp")]
@@ -110,6 +126,40 @@ public sealed class ExternalMcpConnectionTests
         Assert.True(failure.Risk.ExpandsPermissions);
         Assert.Equal(ExternalConnectionNaming.CapabilityKey(connection.Id), failure.ComponentId);
         Assert.Equal(0, client.InvocationCount);
+    }
+
+    [Theory]
+    [InlineData("execute", "Read-only lookup")]
+    [InlineData("custom_operation", "Read-only lookup")]
+    public async Task AutoSafeAndUntrustedDescriptionsCannotAuthoriseUnknownOrMutatingMcpActions(string toolName, string description)
+    {
+        var repository = new MemoryConnectionRepository();
+        var connection = ReadyConnection("Remote MCP");
+        await repository.UpsertAsync(connection, CancellationToken.None);
+        var client = new FakeMcpClient { Tools = [Tool(toolName, description)] };
+        var runtime = new McpToolRuntime(repository, client);
+        var active = Active(connection);
+        var definition = Assert.Single(await runtime.GetDefinitionsAsync([active], CancellationToken.None));
+
+        var result = await runtime.ExecuteAsync(new OllamaToolCall(definition.Name, new Dictionary<string, JsonElement>()), [active], PermissionMode.AutoSafe, CancellationToken.None);
+
+        Assert.False(result.Activity.Succeeded);
+        Assert.Contains("explicit permission grant", result.Output, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, client.InvocationCount);
+    }
+
+    [Fact]
+    public void ServerIdentityIsStableAcrossMutableConnectionNameAndEndpoint()
+    {
+        var connection = ReadyConnection("Original name");
+        var changed = connection with
+        {
+            Name = "Renamed server",
+            ConfigurationJson = JsonSerializer.Serialize(new McpConnectionConfiguration(McpTransportKind.StreamableHttp, "http://127.0.0.1:9876/mcp", LocalOnly: true))
+        };
+
+        Assert.Equal(connection.Id, connection.ServerId);
+        Assert.Equal(connection.ServerId, changed.ServerId);
     }
 
     [Fact]
@@ -203,9 +253,11 @@ public sealed class ExternalMcpConnectionTests
     {
         public McpServerIdentity Identity { get; set; } = new("test-server", "1", "2026-07-28", "{}");
         public IReadOnlyList<McpExternalTool> Tools { get; set; } = [];
+        public Exception? DiscoveryException { get; set; }
         public int InvocationCount { get; private set; }
         public string? LastToolName { get; private set; }
-        public Task<(McpServerIdentity Identity, IReadOnlyList<McpExternalTool> Tools)> DiscoverAsync(ExternalConnection connection, CancellationToken cancellationToken) => Task.FromResult((Identity, Tools));
+        public Task<(McpServerIdentity Identity, IReadOnlyList<McpExternalTool> Tools)> DiscoverAsync(ExternalConnection connection, CancellationToken cancellationToken) =>
+            DiscoveryException is null ? Task.FromResult((Identity, Tools)) : Task.FromException<(McpServerIdentity Identity, IReadOnlyList<McpExternalTool> Tools)>(DiscoveryException);
         public Task<McpToolInvocationResult> InvokeAsync(ExternalConnection connection, string toolName, IReadOnlyDictionary<string, JsonElement> arguments, CancellationToken cancellationToken)
         {
             InvocationCount++; LastToolName = toolName;

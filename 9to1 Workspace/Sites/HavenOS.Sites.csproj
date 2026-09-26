@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Sites</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Sites</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
+    <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
+    <Content Include="UI\SitesWorkspace.cui" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

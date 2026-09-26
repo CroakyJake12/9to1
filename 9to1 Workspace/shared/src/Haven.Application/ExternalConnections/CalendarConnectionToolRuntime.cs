@@ -78,7 +78,7 @@ public sealed class CalendarConnectionToolRuntime(IPlannerRepository planner, IC
 
             if (route.Kind == CalendarRouteKind.Sync)
             {
-                if (mutationPermission == PermissionMode.Ask)
+                if (mutationPermission != PermissionMode.FullAccess)
                 {
                     const string detail = "Calendar synchronization can change external state and requires one-action approval before execution.";
                     return Failure(call.Name, detail, started, PermissionFailure(account, detail));
@@ -86,10 +86,20 @@ public sealed class CalendarConnectionToolRuntime(IPlannerRepository planner, IC
                 var sync = await providers.Get(account.Provider)
                     .SyncAsync(new CalendarSyncRequest(account.Id, Boolean(call, "full_sync"), start, end), cancellationToken)
                     .ConfigureAwait(false);
-                var output = JsonSerializer.Serialize(new { sync.Succeeded, sync.Status, sync.Added, sync.Updated, sync.Deleted, sync.Conflicts, sync.Message });
+                var output = JsonSerializer.Serialize(new
+                {
+                    source = "untrusted calendar provider result",
+                    sync.Succeeded,
+                    sync.Status,
+                    sync.Added,
+                    sync.Updated,
+                    sync.Deleted,
+                    sync.Conflicts,
+                    message = sync.Succeeded ? "Calendar synchronization completed." : "Calendar provider synchronization failed."
+                });
                 if (!sync.Succeeded)
                 {
-                    var detail = string.IsNullOrWhiteSpace(sync.Message) ? "Calendar synchronization reported a failure." : Bound(sync.Message, 1000);
+                    const string detail = "Calendar provider synchronization failed. Check connection health and retry.";
                     return Result(call.Name, "Calendar synchronization reported a failure.", output, false, started, ExternalFailure(account, detail));
                 }
                 return Result(call.Name, "Calendar synchronization completed.", output, true, started);
@@ -115,9 +125,12 @@ public sealed class CalendarConnectionToolRuntime(IPlannerRepository planner, IC
             var detail = Bound(ex.Message, 1000);
             return Failure(call.Name, "Calendar Connection action failed: " + detail, started, InvalidInputFailure(account, detail));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            var detail = Bound(ex.Message, 1000);
+            // Provider and transport exceptions can contain private endpoint or credential data.
+            var detail = route.Kind == CalendarRouteKind.ListEvents
+                ? "Calendar provider data could not be read. Check connection health and retry."
+                : "Calendar provider synchronization failed. Check connection health and retry.";
             var failure = route.Kind == CalendarRouteKind.ListEvents ? TransientFailure(account, detail) : ExternalFailure(account, detail);
             return Failure(call.Name, "Calendar Connection action failed: " + detail, started, failure);
         }

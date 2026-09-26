@@ -1,18 +1,20 @@
 // CUI Theme Regression Tests — ported from PersonalisationTests.cs.
 // Original source: 9to1 Workspace/shared/tests/Haven.Desktop.Tests/PersonalisationTests.cs
 //
-// Proves: all five themes resolve across all four appearances, accent override
+// Proves: all six themes resolve across all four appearances, accent override
 // precedence, safe fallbacks, Glow baseline parity, nested DefaultTheme scoping,
 // and that theme changes don't alter the control tree structure.
 
 using Avalonia.Media;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using CakeOS.Cui.Themes;
 using Xunit;
 
 namespace CakeOS.Cui.Runtime.Tests;
 
 /// <summary>
-/// Covers the CUI personalisation pipeline: five themes across all four
+/// Covers the CUI personalisation pipeline: six themes across all four
 /// appearances, accent override precedence, safe fallbacks, Glow baseline parity,
 /// nested DefaultTheme scoping, and theme expression scaling.
 /// </summary>
@@ -97,6 +99,11 @@ public sealed class CuiThemeTests
 
         var cinematic = For(CuiTheme.Cinematic, "Chat", CuiAppearance.Dark);
         Assert.NotEqual(glow.Panel, cinematic.Panel);
+
+        var professional = For(CuiTheme.Professional, "Chat", CuiAppearance.Dark);
+        Assert.NotEqual(glow.Panel, professional.Panel);
+        Assert.Equal<byte>(0xFF, professional.Panel.A);
+        Assert.Equal<byte>(0xFF, professional.Focus.A);
 
         CuiSurfacePaletteCatalog.ActiveTheme = CuiTheme.Glow;
     }
@@ -330,6 +337,8 @@ public sealed class CuiThemeTests
     [InlineData("Retro", CuiTheme.Retro)]
     [InlineData("Playful", CuiTheme.Playful)]
     [InlineData("Cinematic", CuiTheme.Cinematic)]
+    [InlineData("professional", CuiTheme.Professional)]
+    [InlineData("Professional", CuiTheme.Professional)]
     [InlineData("glow", CuiTheme.Glow)]
     [InlineData("bubble", CuiTheme.Bubble)]
     [InlineData("default", CuiTheme.Glow)] // "default" uses global
@@ -424,7 +433,7 @@ public sealed class CuiThemeTests
     public void Theme_expression_values_are_distinct_per_theme()
     {
         var expressions = CuiThemeCatalog.All;
-        Assert.Equal(5, expressions.Count);
+        Assert.Equal(6, expressions.Count);
 
         var radii = expressions.Select(e => e.ControlRadiusScale).Distinct().ToList();
         Assert.True(radii.Count >= 3, "At least 3 distinct control radius scales expected");
@@ -434,6 +443,13 @@ public sealed class CuiThemeTests
 
         var shadows = expressions.Select(e => e.ShadowOpacityScale).Distinct().ToList();
         Assert.True(shadows.Count >= 3, "At least 3 distinct shadow opacity scales expected");
+        Assert.All(expressions, expression =>
+        {
+            Assert.True(double.IsFinite(expression.SpacingScale) && expression.SpacingScale > 0d);
+            Assert.True(double.IsFinite(expression.TypographyScale) && expression.TypographyScale > 0d);
+            Assert.True(double.IsFinite(expression.ControlHeightScale) && expression.ControlHeightScale > 0d);
+            Assert.True(double.IsFinite(expression.ElevationScale) && expression.ElevationScale >= 0d);
+        });
     }
 
     [Fact]
@@ -542,6 +558,100 @@ public sealed class CuiThemeTests
         Assert.Equal("Retro", CuiThemeCatalog.Name(CuiTheme.Retro));
         Assert.Equal("Playful", CuiThemeCatalog.Name(CuiTheme.Playful));
         Assert.Equal("Cinematic", CuiThemeCatalog.Name(CuiTheme.Cinematic));
+        Assert.Equal("Professional", CuiThemeCatalog.Name(CuiTheme.Professional));
+    }
+
+    [Fact]
+    public void Accessibility_profile_applies_high_contrast_reduced_motion_and_display_scaling()
+    {
+        var resources = new Avalonia.Controls.ResourceDictionary();
+        var settings = new CuiAccessibilitySettings
+        {
+            HighContrast = true,
+            ReduceMotion = true,
+            DisplayScale = 1.5d
+        };
+        var source = CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark, CuiTheme.Bubble);
+
+        CuiThemeResourceApplier.ApplyToResources(resources, source, settings);
+
+        var text = Assert.IsType<SolidColorBrush>(resources["CuiTextBrush"]).Color;
+        var background = Assert.IsType<SolidColorBrush>(resources["CuiBackgroundBrush"]).Color;
+        Assert.True(CuiContrast.Ratio(text, background) >= 7d);
+        Assert.Equal(0d, Assert.IsType<double>(resources["CuiMotionDurationScale"]));
+        Assert.Equal(1.5d, Assert.IsType<double>(resources["CuiDisplayScale"]));
+        Assert.Equal(CuiTypography.BodySize * CuiThemeCatalog.Resolve(CuiTheme.Bubble).TypographyScale * 1.5d,
+            Assert.IsType<double>(resources["CuiFontSizeBody"]));
+        Assert.Equal(3d, Assert.IsType<double>(resources["CuiFocusIndicatorThickness"]));
+        Assert.Equal("IconAndLabel", Assert.IsType<string>(resources["CuiStateCommunication"]));
+    }
+
+    [Fact]
+    public void Accessibility_defaults_include_interface_and_code_font_fallbacks()
+    {
+        Assert.StartsWith("Montserrat,", CuiTypography.InterfaceFontFamily);
+        Assert.Contains("Segoe UI", CuiTypography.InterfaceFontFamily);
+        Assert.Contains("sans-serif", CuiTypography.InterfaceFontFamily);
+        Assert.Contains("Cascadia Mono", CuiTypography.CodeFontFamily);
+        Assert.Contains("monospace", CuiTypography.CodeFontFamily);
+    }
+
+    [Fact]
+    public void Contrast_correction_meets_requested_ratio_without_changing_background()
+    {
+        var background = Color.Parse("#FFE3E3E3");
+        var corrected = CuiContrast.EnsureForegroundContrast(Color.Parse("#FFBEBEBE"), background);
+
+        Assert.True(CuiContrast.Ratio(corrected, background) >= 7d);
+        Assert.Equal(255, corrected.A);
+        Assert.Equal(Color.Parse("#FFE3E3E3"), background);
+    }
+
+    [Fact]
+    public void Localization_context_formats_culture_and_selects_rtl_flow_direction()
+    {
+        var culture = System.Globalization.CultureInfo.GetCultureInfo("ar-EG");
+        var context = new CuiLocalizationContext(culture);
+        var resources = new TestStringResources();
+
+        Assert.Equal(Avalonia.Media.FlowDirection.RightToLeft, context.FlowDirection);
+        Assert.Equal("مرحبا", context.GetString(resources, "greeting"));
+        Assert.Equal("", context.GetString(resources, "empty"));
+        Assert.Equal("fallback", context.GetString(resources, "fallback"));
+        Assert.Contains(culture.NumberFormat.NumberDecimalSeparator, context.FormatNumber(12.5d));
+        var root = new Avalonia.Controls.Grid();
+        context.ApplyTo(root);
+        Assert.Equal(Avalonia.Media.FlowDirection.RightToLeft, root.FlowDirection);
+    }
+
+    [Fact]
+    public void Accessibility_semantics_apply_name_description_role_focus_order_and_shortcut()
+    {
+        var button = new Avalonia.Controls.Button();
+        new CuiAccessibilitySemantics(
+            AccessibleName: "Save document",
+            AccessibleDescription: "Saves the current document",
+            Role: AutomationControlType.Button,
+            TabIndex: 4,
+            Focusable: false,
+            Shortcut: "Ctrl+S").ApplyTo(button);
+
+        Assert.Equal("Save document", AutomationProperties.GetName(button));
+        Assert.Equal("Saves the current document", AutomationProperties.GetHelpText(button));
+        Assert.Equal(AutomationControlType.Button, AutomationProperties.GetControlTypeOverride(button));
+        Assert.Equal(4, button.TabIndex);
+        Assert.False(button.Focusable);
+        Assert.False(button.IsTabStop);
+        Assert.Equal("Ctrl+S", CuiAccessibilityProperties.GetShortcut(button));
+    }
+
+    [Fact]
+    public void Accessibility_settings_reject_invalid_display_scales()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new CuiAccessibilitySettings { DisplayScale = 0d }.Validate());
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new CuiAccessibilitySettings { DisplayScale = double.NaN }.Validate());
     }
 
     // === DefaultTheme parsing in CUI markup ===
@@ -675,5 +785,16 @@ public sealed class CuiThemeTests
             (byte)Math.Round(first.R + (second.R - first.R) * weight),
             (byte)Math.Round(first.G + (second.G - first.G) * weight),
             (byte)Math.Round(first.B + (second.B - first.B) * weight));
+    }
+
+    private sealed class TestStringResources : ICuiStringResources
+    {
+        public string? GetString(string key, System.Globalization.CultureInfo culture) => key switch
+        {
+            "greeting" when culture.Name == "ar-EG" => "مرحبا",
+            "empty" => string.Empty,
+            "fallback" when culture == System.Globalization.CultureInfo.InvariantCulture => "fallback",
+            _ => null
+        };
     }
 }

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
@@ -55,6 +56,21 @@ internal static class KnowledgeSchema
                     reason TEXT NULL,
                     rejected_at TEXT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS knowledge_banks(
+                    id TEXT PRIMARY KEY,
+                    topic TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    scope TEXT NOT NULL,
+                    is_enabled INTEGER NOT NULL DEFAULT 1,
+                    storage_policy TEXT NOT NULL DEFAULT 'local',
+                    sync_policy TEXT NOT NULL DEFAULT 'disabled',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ix_knowledge_banks_topic_scope
+                    ON knowledge_banks(topic COLLATE NOCASE,scope COLLATE NOCASE);
+                CREATE INDEX IF NOT EXISTS ix_knowledge_banks_enabled ON knowledge_banks(is_enabled,updated_at);
 
                 CREATE TABLE IF NOT EXISTS api_bank_records(
                     id TEXT PRIMARY KEY,
@@ -117,8 +133,34 @@ internal static class KnowledgeSchema
                 """;
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
+            var detailColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            await using (var columns = connection.CreateCommand())
+            {
+                columns.CommandText = "PRAGMA table_info(knowledge_record_details);";
+                await using var reader = await columns.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    detailColumns.Add(reader.GetString(1));
+            }
+
+            foreach (var (name, definition) in new (string Name, string Definition)[]
+            {
+                ("knowledge_bank_id", "TEXT NULL REFERENCES knowledge_banks(id) ON DELETE SET NULL"),
+                ("last_reinforced_at", "TEXT NULL"),
+                ("last_used_at", "TEXT NULL"),
+                ("is_user_locked", "INTEGER NOT NULL DEFAULT 0"),
+                ("app_id", "TEXT NULL"),
+                ("project_id", "TEXT NULL"),
+                ("agent_id", "TEXT NULL")
+            })
+            {
+                if (detailColumns.Contains(name)) continue;
+                await using var addColumn = connection.CreateCommand();
+                addColumn.CommandText = $"ALTER TABLE knowledge_record_details ADD COLUMN {name} {definition};";
+                await addColumn.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             await using var migration = connection.CreateCommand();
-            migration.CommandText = "INSERT OR IGNORE INTO schema_migrations(version,applied_at) VALUES(11,$now);";
+            migration.CommandText = "INSERT OR IGNORE INTO schema_migrations(version,applied_at) VALUES(12,$now);";
             migration.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
             await migration.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -193,6 +235,124 @@ public sealed class KnowledgeLibraryService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    public async Task<KnowledgeBank> CreateBankAsync(KnowledgeBank bank, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(bank);
+        if (string.IsNullOrWhiteSpace(bank.Topic)) throw new ArgumentException("A topic is required.", nameof(bank));
+        if (string.IsNullOrWhiteSpace(bank.Title)) throw new ArgumentException("A title is required.", nameof(bank));
+        if (string.IsNullOrWhiteSpace(bank.Scope)) throw new ArgumentException("A scope is required.", nameof(bank));
+        if (!string.Equals(bank.StoragePolicy, "local", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("Knowledge Banks currently support local storage only.");
+        if (!string.Equals(bank.SyncPolicy, "disabled", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("Knowledge Bank sync is unavailable until authenticated encrypted sync is configured.");
+
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        var topic = bank.Topic.Trim();
+        var title = bank.Title.Trim();
+        var scope = bank.Scope.Trim();
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO knowledge_banks(id,topic,title,scope,is_enabled,storage_policy,sync_policy,created_at,updated_at)
+            VALUES($id,$topic,$title,$scope,$enabled,'local','disabled',$created,$updated)
+            ON CONFLICT(topic,scope) DO UPDATE SET title=excluded.title,updated_at=excluded.updated_at;
+            """;
+        command.Parameters.AddWithValue("$id", bank.Id.ToString());
+        command.Parameters.AddWithValue("$topic", topic);
+        command.Parameters.AddWithValue("$title", title);
+        command.Parameters.AddWithValue("$scope", scope);
+        command.Parameters.AddWithValue("$enabled", bank.IsEnabled ? 1 : 0);
+        command.Parameters.AddWithValue("$created", bank.CreatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$updated", bank.UpdatedAt.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await GetBankByTopicAsync(connection, topic, scope, cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Knowledge Bank could not be read after creation.");
+    }
+
+    public async Task<IReadOnlyList<KnowledgeBank>> SearchBanksAsync(string? query, CancellationToken cancellationToken)
+    {
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT b.id,b.topic,b.title,b.scope,b.is_enabled,b.storage_policy,b.sync_policy,b.created_at,b.updated_at,
+                   (SELECT COUNT(*) FROM knowledge_record_details d WHERE d.knowledge_bank_id=b.id)
+            FROM knowledge_banks b
+            WHERE $query='' OR b.topic LIKE $like OR b.title LIKE $like
+            ORDER BY b.updated_at DESC,b.title COLLATE NOCASE
+            LIMIT 300;
+            """;
+        var value = query?.Trim() ?? string.Empty;
+        command.Parameters.AddWithValue("$query", value);
+        command.Parameters.AddWithValue("$like", $"%{value}%");
+        var result = new List<KnowledgeBank>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) result.Add(ReadBank(reader));
+        return result;
+    }
+
+    public async Task<KnowledgeBank?> GetBankAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT b.id,b.topic,b.title,b.scope,b.is_enabled,b.storage_policy,b.sync_policy,b.created_at,b.updated_at,
+                   (SELECT COUNT(*) FROM knowledge_record_details d WHERE d.knowledge_bank_id=b.id)
+            FROM knowledge_banks b WHERE b.id=$id;
+            """;
+        command.Parameters.AddWithValue("$id", id.ToString());
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? ReadBank(reader) : null;
+    }
+
+    public async Task<bool> SetBankEnabledAsync(Guid id, bool enabled, CancellationToken cancellationToken)
+    {
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE knowledge_banks SET is_enabled=$enabled,updated_at=$updated WHERE id=$id;";
+        command.Parameters.AddWithValue("$enabled", enabled ? 1 : 0);
+        command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$id", id.ToString());
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) > 0;
+    }
+
+    public async Task<bool> ForgetBankAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        var recordIds = new List<Guid>();
+        await using (var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false))
+        await using (var select = connection.CreateCommand())
+        {
+            select.CommandText = "SELECT id FROM knowledge_record_details WHERE knowledge_bank_id=$id;";
+            select.Parameters.AddWithValue("$id", id.ToString());
+            await using var reader = await select.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) recordIds.Add(Guid.Parse(reader.GetString(0)));
+        }
+
+        foreach (var recordId in recordIds)
+            await retrieval.RemoveSourceAsync(new RetrievalScope(RetrievalScopeKind.Collection, recordId), "knowledge", recordId.ToString(), cancellationToken)
+                .ConfigureAwait(false);
+
+        await using var writeConnection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = (SqliteTransaction)await writeConnection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using (var records = writeConnection.CreateCommand())
+        {
+            records.Transaction = transaction;
+            records.CommandText = "DELETE FROM knowledge_records WHERE id IN (SELECT id FROM knowledge_record_details WHERE knowledge_bank_id=$id);";
+            records.Parameters.AddWithValue("$id", id.ToString());
+            await records.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        await using var delete = writeConnection.CreateCommand();
+        delete.Transaction = transaction;
+        delete.CommandText = "DELETE FROM knowledge_banks WHERE id=$id;";
+        delete.Parameters.AddWithValue("$id", id.ToString());
+        var changed = await delete.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) > 0;
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return changed;
+    }
+
     public async Task<KnowledgeRecord> UpsertAsync(KnowledgeRecord record, string indexedText, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(record);
@@ -204,16 +364,30 @@ public sealed class KnowledgeLibraryService(
             record.Topic, record.Title, record.Summary, record.LearnedBecause, indexedText, record.UserCorrection);
 
         await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+
+        if (record.Origin == KnowledgeOrigin.Inferred &&
+            await FindExplicitCorrectionAsync(record, cancellationToken).ConfigureAwait(false) is { } authority)
+        {
+            await SupersedeMatchingInferencesAsync(record, authority, cancellationToken).ConfigureAwait(false);
+            return authority;
+        }
+
         if (record.Origin == KnowledgeOrigin.Inferred &&
             await IsRejectedAsync(KnowledgeContentSafety.Fingerprint(record.Summary), cancellationToken).ConfigureAwait(false))
         {
             throw new InvalidOperationException("Previously rejected knowledge cannot be re-learned without an explicit user correction.");
         }
 
+        if (record.KnowledgeBankId is { } bankId && await GetBankAsync(bankId, cancellationToken).ConfigureAwait(false) is null)
+            throw new InvalidOperationException("The selected Knowledge Bank does not exist.");
+
         var existingSources = await ReadExistingSourcesAsync(record.Id, cancellationToken).ConfigureAwait(false);
         record = record with
         {
-            Sources = MergeSourcesByIdentity(existingSources, record.Sources)
+            Sources = MergeSourcesByIdentity(existingSources, record.Sources),
+            LastReinforcedAt = record.Origin == KnowledgeOrigin.Inferred
+                ? record.LastReinforcedAt ?? record.UpdatedAt
+                : record.LastReinforcedAt
         };
 
         var sourcesJson = JsonSerializer.Serialize(record.Sources, JsonOptions);
@@ -271,11 +445,15 @@ public sealed class KnowledgeLibraryService(
         {
             details.Transaction = transaction;
             details.CommandText = """
-                INSERT INTO knowledge_record_details(id,freshness,last_confirmed_at,scope,status,origin,user_correction,supersedes_id)
-                VALUES($id,$freshness,$confirmed,$scope,$status,$origin,$correction,$supersedes)
+                INSERT INTO knowledge_record_details(id,freshness,last_confirmed_at,scope,status,origin,user_correction,supersedes_id,
+                    knowledge_bank_id,last_reinforced_at,last_used_at,is_user_locked,app_id,project_id,agent_id)
+                VALUES($id,$freshness,$confirmed,$scope,$status,$origin,$correction,$supersedes,
+                    $bank,$reinforced,$used,$locked,$app,$project,$agent)
                 ON CONFLICT(id) DO UPDATE SET freshness=excluded.freshness,last_confirmed_at=excluded.last_confirmed_at,
                   scope=excluded.scope,status=excluded.status,origin=excluded.origin,user_correction=excluded.user_correction,
-                  supersedes_id=excluded.supersedes_id;
+                  supersedes_id=excluded.supersedes_id,knowledge_bank_id=excluded.knowledge_bank_id,
+                  last_reinforced_at=excluded.last_reinforced_at,last_used_at=excluded.last_used_at,
+                  is_user_locked=excluded.is_user_locked,app_id=excluded.app_id,project_id=excluded.project_id,agent_id=excluded.agent_id;
                 """;
             details.Parameters.AddWithValue("$id", record.Id.ToString());
             details.Parameters.AddWithValue("$freshness", (int)record.Freshness);
@@ -285,6 +463,13 @@ public sealed class KnowledgeLibraryService(
             details.Parameters.AddWithValue("$origin", (int)record.Origin);
             details.Parameters.AddWithValue("$correction", record.UserCorrection ?? (object)DBNull.Value);
             details.Parameters.AddWithValue("$supersedes", record.SupersedesId?.ToString() ?? (object)DBNull.Value);
+            details.Parameters.AddWithValue("$bank", record.KnowledgeBankId?.ToString() ?? (object)DBNull.Value);
+            details.Parameters.AddWithValue("$reinforced", record.LastReinforcedAt?.ToString("O") ?? (object)DBNull.Value);
+            details.Parameters.AddWithValue("$used", record.LastUsedAt?.ToString("O") ?? (object)DBNull.Value);
+            details.Parameters.AddWithValue("$locked", record.IsUserLocked ? 1 : 0);
+            details.Parameters.AddWithValue("$app", record.AppId ?? (object)DBNull.Value);
+            details.Parameters.AddWithValue("$project", record.ProjectId ?? (object)DBNull.Value);
+            details.Parameters.AddWithValue("$agent", record.AgentId ?? (object)DBNull.Value);
             await details.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -343,7 +528,8 @@ public sealed class KnowledgeLibraryService(
             SELECT r.id,r.category,r.topic,r.title,r.summary,r.privacy_class,r.confidence,r.is_pinned,
                    r.created_at,r.updated_at,r.expires_at,r.learned_because,r.sources_json,
                    COALESCE(d.freshness,0),d.last_confirmed_at,COALESCE(d.scope,'global'),
-                   COALESCE(d.status,0),COALESCE(d.origin,0),d.user_correction,d.supersedes_id
+                   COALESCE(d.status,0),COALESCE(d.origin,0),d.user_correction,d.supersedes_id,
+                   d.knowledge_bank_id,d.last_reinforced_at,d.last_used_at,COALESCE(d.is_user_locked,0),d.app_id,d.project_id,d.agent_id
             FROM knowledge_records r
             LEFT JOIN knowledge_record_details d ON d.id=r.id
             WHERE ($query='' OR r.title LIKE $like OR r.topic LIKE $like OR r.summary LIKE $like)
@@ -378,7 +564,8 @@ public sealed class KnowledgeLibraryService(
             SELECT r.id,r.category,r.topic,r.title,r.summary,r.privacy_class,r.confidence,r.is_pinned,
                    r.created_at,r.updated_at,r.expires_at,r.learned_because,r.sources_json,
                    COALESCE(d.freshness,0),d.last_confirmed_at,COALESCE(d.scope,'global'),
-                   COALESCE(d.status,0),COALESCE(d.origin,0),d.user_correction,d.supersedes_id
+                   COALESCE(d.status,0),COALESCE(d.origin,0),d.user_correction,d.supersedes_id,
+                   d.knowledge_bank_id,d.last_reinforced_at,d.last_used_at,COALESCE(d.is_user_locked,0),d.app_id,d.project_id,d.agent_id
             FROM knowledge_records r
             LEFT JOIN knowledge_record_details d ON d.id=r.id
             WHERE r.category=$category
@@ -395,6 +582,83 @@ public sealed class KnowledgeLibraryService(
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             result.Add(ReadRecord(reader));
         return result;
+    }
+
+    public async Task<IReadOnlyList<KnowledgeRecord>> GetRelevantBackgroundLearningAsync(
+        KnowledgeRetrievalContext context,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (!context.BackgroundLearningEnabled || context.IsRemoteRequest && !context.MayDiscloseExternally ||
+            string.IsNullOrWhiteSpace(context.RequestText) || context.MaximumResults < 1)
+            return [];
+
+        var permittedScopes = (context.PermittedScopes ?? new HashSet<string>())
+            .Where(static scope => !string.IsNullOrWhiteSpace(scope))
+            .Select(static scope => scope.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (permittedScopes.Length == 0) return [];
+
+        await KnowledgeSchema.EnsureAsync(factory, cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        var scopeParameters = permittedScopes.Select((_, index) => "$scope" + index).ToArray();
+        command.CommandText = $"""
+            SELECT r.id,r.category,r.topic,r.title,r.summary,r.privacy_class,r.confidence,r.is_pinned,
+                   r.created_at,r.updated_at,r.expires_at,r.learned_because,r.sources_json,
+                   COALESCE(d.freshness,0),d.last_confirmed_at,COALESCE(d.scope,'global'),
+                   COALESCE(d.status,0),COALESCE(d.origin,0),d.user_correction,d.supersedes_id,
+                   d.knowledge_bank_id,d.last_reinforced_at,d.last_used_at,COALESCE(d.is_user_locked,0),d.app_id,d.project_id,d.agent_id
+            FROM knowledge_records r
+            LEFT JOIN knowledge_record_details d ON d.id=r.id
+            LEFT JOIN knowledge_banks b ON b.id=d.knowledge_bank_id
+            WHERE r.category NOT IN ($learnMe,$apiBank)
+              AND r.privacy_class NOT IN ($sensitive,$neverLearn)
+              AND COALESCE(d.status,0) IN ($active,$corrected)
+              AND COALESCE(d.scope,'global') COLLATE NOCASE IN ({string.Join(',', scopeParameters)})
+              AND (d.app_id IS NULL OR d.app_id=$app)
+              AND (d.project_id IS NULL OR d.project_id=$project)
+              AND (d.agent_id IS NULL OR d.agent_id=$agent)
+              AND (d.knowledge_bank_id IS NULL OR b.is_enabled=1)
+              AND NOT (r.expires_at IS NOT NULL AND r.expires_at <= $now AND COALESCE(d.freshness,0) <> $durable)
+            ORDER BY r.is_pinned DESC,r.confidence DESC,r.updated_at DESC
+            LIMIT 300;
+            """;
+        command.Parameters.AddWithValue("$learnMe", (int)KnowledgeCategory.LearnMe);
+        command.Parameters.AddWithValue("$apiBank", (int)KnowledgeCategory.ApiBank);
+        command.Parameters.AddWithValue("$sensitive", (int)KnowledgePrivacyClass.Sensitive);
+        command.Parameters.AddWithValue("$neverLearn", (int)KnowledgePrivacyClass.NeverLearn);
+        command.Parameters.AddWithValue("$active", (int)KnowledgeRecordStatus.Active);
+        command.Parameters.AddWithValue("$corrected", (int)KnowledgeRecordStatus.Corrected);
+        command.Parameters.AddWithValue("$durable", (int)KnowledgeFreshnessClass.Durable);
+        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$app", context.AppId ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$project", context.ProjectId ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$agent", context.AgentId ?? (object)DBNull.Value);
+        for (var index = 0; index < permittedScopes.Length; index++)
+            command.Parameters.AddWithValue(scopeParameters[index], permittedScopes[index]);
+
+        var candidates = new List<(KnowledgeRecord Record, int Score)>();
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                var record = ReadRecord(reader);
+                var score = RelevanceScore(context.RequestText, record);
+                if (score > 0) candidates.Add((record, score));
+            }
+        }
+
+        var limit = Math.Min(context.MaximumResults, MemoryInjection.MaximumRecords);
+        return candidates
+            .OrderByDescending(static candidate => candidate.Score)
+            .ThenByDescending(static candidate => candidate.Record.IsPinned)
+            .ThenByDescending(static candidate => candidate.Record.Confidence)
+            .ThenByDescending(static candidate => candidate.Record.UpdatedAt)
+            .Take(limit)
+            .Select(static candidate => candidate.Record)
+            .ToArray();
     }
 
     public async Task<bool> SetPinnedAsync(Guid id, bool pinned, CancellationToken cancellationToken)
@@ -441,6 +705,7 @@ public sealed class KnowledgeLibraryService(
             Origin = KnowledgeOrigin.Explicit,
             UserCorrection = string.IsNullOrWhiteSpace(reason) ? "User correction" : reason.Trim(),
             SupersedesId = current.Id,
+            IsUserLocked = true,
             ExpiresAt = current.Freshness == KnowledgeFreshnessClass.Durable ? current.ExpiresAt : null
         };
         return await UpsertAsync(corrected, corrected.Summary, cancellationToken).ConfigureAwait(false);
@@ -553,6 +818,90 @@ public sealed class KnowledgeLibraryService(
         return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture) > 0;
     }
 
+    private async Task<KnowledgeRecord?> FindExplicitCorrectionAsync(
+        KnowledgeRecord incoming,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT r.id,r.category,r.topic,r.title,r.summary,r.privacy_class,r.confidence,r.is_pinned,
+                   r.created_at,r.updated_at,r.expires_at,r.learned_because,r.sources_json,
+                   COALESCE(d.freshness,0),d.last_confirmed_at,COALESCE(d.scope,'global'),
+                   COALESCE(d.status,0),COALESCE(d.origin,0),d.user_correction,d.supersedes_id,
+                   d.knowledge_bank_id,d.last_reinforced_at,d.last_used_at,COALESCE(d.is_user_locked,0),d.app_id,d.project_id,d.agent_id
+            FROM knowledge_records r
+            JOIN knowledge_record_details d ON d.id=r.id
+            WHERE r.category=$category AND r.topic=$topic COLLATE NOCASE AND r.title=$title COLLATE NOCASE
+              AND d.scope=$scope COLLATE NOCASE AND d.origin=$explicit AND d.status=$corrected
+              AND d.app_id IS $app AND d.project_id IS $project AND d.agent_id IS $agent
+            ORDER BY r.updated_at DESC LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$category", (int)incoming.Category);
+        command.Parameters.AddWithValue("$topic", incoming.Topic.Trim());
+        command.Parameters.AddWithValue("$title", incoming.Title.Trim());
+        command.Parameters.AddWithValue("$scope", incoming.Scope);
+        command.Parameters.AddWithValue("$explicit", (int)KnowledgeOrigin.Explicit);
+        command.Parameters.AddWithValue("$corrected", (int)KnowledgeRecordStatus.Corrected);
+        command.Parameters.AddWithValue("$app", incoming.AppId ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$project", incoming.ProjectId ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$agent", incoming.AgentId ?? (object)DBNull.Value);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? ReadRecord(reader) : null;
+    }
+
+    private async Task SupersedeMatchingInferencesAsync(
+        KnowledgeRecord incoming,
+        KnowledgeRecord authority,
+        CancellationToken cancellationToken)
+    {
+        var ids = new List<Guid>();
+        await using (var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false))
+        await using (var select = connection.CreateCommand())
+        {
+            select.CommandText = """
+                SELECT r.id FROM knowledge_records r
+                JOIN knowledge_record_details d ON d.id=r.id
+                WHERE r.category=$category AND r.topic=$topic COLLATE NOCASE AND r.title=$title COLLATE NOCASE
+                  AND d.scope=$scope COLLATE NOCASE AND d.origin=$inferred AND d.status IN ($active,$corrected)
+                  AND d.app_id IS $app AND d.project_id IS $project AND d.agent_id IS $agent;
+                """;
+            select.Parameters.AddWithValue("$category", (int)incoming.Category);
+            select.Parameters.AddWithValue("$topic", incoming.Topic.Trim());
+            select.Parameters.AddWithValue("$title", incoming.Title.Trim());
+            select.Parameters.AddWithValue("$scope", incoming.Scope);
+            select.Parameters.AddWithValue("$inferred", (int)KnowledgeOrigin.Inferred);
+            select.Parameters.AddWithValue("$active", (int)KnowledgeRecordStatus.Active);
+            select.Parameters.AddWithValue("$corrected", (int)KnowledgeRecordStatus.Corrected);
+            select.Parameters.AddWithValue("$app", incoming.AppId ?? (object)DBNull.Value);
+            select.Parameters.AddWithValue("$project", incoming.ProjectId ?? (object)DBNull.Value);
+            select.Parameters.AddWithValue("$agent", incoming.AgentId ?? (object)DBNull.Value);
+            await using var reader = await select.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) ids.Add(Guid.Parse(reader.GetString(0)));
+        }
+
+        if (ids.Count == 0) return;
+        await using (var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false))
+        await using (var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false))
+        {
+            foreach (var id in ids)
+            {
+                await using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = "UPDATE knowledge_record_details SET status=$status,supersedes_id=$authority WHERE id=$id;";
+                command.Parameters.AddWithValue("$status", (int)KnowledgeRecordStatus.Superseded);
+                command.Parameters.AddWithValue("$authority", authority.Id.ToString());
+                command.Parameters.AddWithValue("$id", id.ToString());
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var id in ids)
+            await retrieval.RemoveSourceAsync(new RetrievalScope(RetrievalScopeKind.Collection, id), "knowledge", id.ToString(), cancellationToken)
+                .ConfigureAwait(false);
+    }
+
     private async Task<long> GetKnowledgeBytesExcludingAsync(Guid id, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -568,6 +917,60 @@ public sealed class KnowledgeLibraryService(
         command.Parameters.AddWithValue("$id", id.ToString());
         return Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
     }
+
+    private static int RelevanceScore(string request, KnowledgeRecord record)
+    {
+        var queryTerms = Tokenize(request);
+        if (queryTerms.Count == 0) return 0;
+        var titleTerms = Tokenize(record.Title);
+        var topicTerms = Tokenize(record.Topic);
+        var summaryTerms = Tokenize(record.Summary);
+        var score = 0;
+        foreach (var term in queryTerms)
+        {
+            if (titleTerms.Contains(term)) score += 5;
+            if (topicTerms.Contains(term)) score += 4;
+            if (summaryTerms.Contains(term)) score += 1;
+        }
+        if (request.Contains(record.Topic, StringComparison.OrdinalIgnoreCase)) score += 3;
+        return score;
+    }
+
+    private static HashSet<string> Tokenize(string value)
+        => Regex.Split(value, @"[^\p{L}\p{N}]+")
+            .Where(static token => token.Length > 1)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private async Task<KnowledgeBank?> GetBankByTopicAsync(
+        SqliteConnection connection,
+        string topic,
+        string scope,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT b.id,b.topic,b.title,b.scope,b.is_enabled,b.storage_policy,b.sync_policy,b.created_at,b.updated_at,
+                   (SELECT COUNT(*) FROM knowledge_record_details d WHERE d.knowledge_bank_id=b.id)
+            FROM knowledge_banks b WHERE b.topic=$topic COLLATE NOCASE AND b.scope=$scope COLLATE NOCASE;
+            """;
+        command.Parameters.AddWithValue("$topic", topic);
+        command.Parameters.AddWithValue("$scope", scope);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? ReadBank(reader) : null;
+    }
+
+    private static KnowledgeBank ReadBank(SqliteDataReader reader)
+        => new(
+            Guid.Parse(reader.GetString(0)),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetInt32(4) != 0,
+            reader.GetString(5),
+            reader.GetString(6),
+            DateTimeOffset.Parse(reader.GetString(7)),
+            DateTimeOffset.Parse(reader.GetString(8)),
+            reader.GetInt32(9));
 
     private static KnowledgeRecord ReadRecord(SqliteDataReader reader)
         => new(
@@ -590,7 +993,14 @@ public sealed class KnowledgeLibraryService(
             (KnowledgeRecordStatus)reader.GetInt32(16),
             (KnowledgeOrigin)reader.GetInt32(17),
             reader.IsDBNull(18) ? null : reader.GetString(18),
-            reader.IsDBNull(19) ? null : Guid.Parse(reader.GetString(19)));
+            reader.IsDBNull(19) ? null : Guid.Parse(reader.GetString(19)),
+            reader.IsDBNull(20) ? null : Guid.Parse(reader.GetString(20)),
+            reader.IsDBNull(21) ? null : DateTimeOffset.Parse(reader.GetString(21)),
+            reader.IsDBNull(22) ? null : DateTimeOffset.Parse(reader.GetString(22)),
+            reader.GetInt32(23) != 0,
+            reader.IsDBNull(24) ? null : reader.GetString(24),
+            reader.IsDBNull(25) ? null : reader.GetString(25),
+            reader.IsDBNull(26) ? null : reader.GetString(26));
 }
 
 public sealed class KnowledgeMaintenanceService(

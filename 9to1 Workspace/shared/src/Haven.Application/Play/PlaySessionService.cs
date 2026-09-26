@@ -41,10 +41,12 @@ public sealed class PlaySessionService
     private readonly IVersionedSettingsStore _settings;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private PlayLibraryState? _state;
+    public PlayMatchService Matches { get; }
 
     public PlaySessionService(IVersionedSettingsStore settings, GenUiAppEventHandler appEvents)
     {
         _settings = settings;
+        Matches = new PlayMatchService(settings);
         appEvents.Register(AppTargetKey, HandleSemanticEventAsync);
     }
 

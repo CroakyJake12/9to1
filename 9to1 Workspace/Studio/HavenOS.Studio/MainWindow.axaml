@@ -1,0 +1,57 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HavenOS.AIStudio.MainWindow"
+        Title="9to1 AI Studio" Width="1440" Height="900" MinWidth="960" MinHeight="620"
+        Background="#0B1017" WindowStartupLocation="CenterScreen">
+  <Grid ColumnDefinitions="252,*">
+    <Border Grid.Column="0" Background="#101720" BorderBrush="#25303D" BorderThickness="0,0,1,0">
+      <DockPanel Margin="18,20">
+        <StackPanel DockPanel.Dock="Top" Spacing="24">
+          <StackPanel Spacing="4">
+            <TextBlock Text="9to1" FontSize="14" Foreground="#8E9CAD" FontWeight="SemiBold" />
+            <TextBlock Text="AI Studio" FontSize="23" Foreground="#F3F6FA" FontWeight="Bold" />
+          </StackPanel>
+          <Button Classes="nav selected" Content="Home" Tag="Home" Click="OnNavigate" />
+          <Button Classes="nav" Content="Projects" Tag="Projects" Click="OnNavigate" />
+          <StackPanel Spacing="4">
+            <TextBlock Text="BUILD" Classes="section-label" />
+            <Button Classes="nav" Content="Harnesses" Tag="Harnesses" Click="OnNavigate" />
+            <Button Classes="nav" Content="Agents" Tag="Agents" Click="OnNavigate" />
+            <Button Classes="nav" Content="Tools" Tag="Tools" Click="OnNavigate" />
+          </StackPanel>
+          <StackPanel Spacing="4">
+            <TextBlock Text="TEST &amp; DEBUG" Classes="section-label" />
+            <Button Classes="nav" Content="Playground" Tag="Playground" Click="OnNavigate" />
+            <Button Classes="nav" Content="Evaluations" Tag="Evaluations" Click="OnNavigate" />
+            <Button Classes="nav" Content="Test Suites" Tag="Test Suites" Click="OnNavigate" />
+            <Button Classes="nav" Content="Replay" Tag="Replay" Click="OnNavigate" />
+          </StackPanel>
+          <StackPanel Spacing="4">
+            <TextBlock Text="RESOURCES" Classes="section-label" />
+            <Button Classes="nav" Content="Schemas" Tag="Schemas" Click="OnNavigate" />
+            <Button Classes="nav" Content="Model Routers" Tag="Model Routers" Click="OnNavigate" />
+            <Button Classes="nav" Content="Generative UI" Tag="Generative UI" Click="OnNavigate" />
+            <Button Classes="nav" Content="Run Profiles" Tag="Run Profiles" Click="OnNavigate" />
+          </StackPanel>
+          <Button Classes="nav" Content="Templates" Tag="Templates" Click="OnNavigate" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom" Spacing="5">
+          <TextBlock Text="Authoring environment" Foreground="#AEBBCC" FontSize="12" />
+          <TextBlock Text="Runtime actions require Dulche" Foreground="#77869A" FontSize="11" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+      <Border Grid.Row="0" Background="#0E151E" BorderBrush="#25303D" BorderThickness="0,0,0,1" Padding="28,14">
+        <Grid ColumnDefinitions="*,300,Auto" ColumnSpacing="16">
+          <TextBlock x:Name="Breadcrumb" Text="Home" VerticalAlignment="Center" Foreground="#DDE5EF" FontSize="13" />
+          <TextBox x:Name="SearchBox" Grid.Column="1" Watermark="Search projects and templates" VerticalContentAlignment="Center" />
+          <Button Grid.Column="2" Content="Open / Import" Click="OnImport" />
+        </Grid>
+      </Border>
+      <ScrollViewer Grid.Row="1">
+        <StackPanel x:Name="Content" Margin="36,30" Spacing="20" MaxWidth="1080" HorizontalAlignment="Left" />
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</Window>

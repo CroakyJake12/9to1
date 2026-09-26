@@ -4,6 +4,12 @@ namespace Haven.Application;
 
 public interface IKnowledgeLibrary
 {
+    Task<KnowledgeBank> CreateBankAsync(KnowledgeBank bank, CancellationToken cancellationToken);
+    Task<IReadOnlyList<KnowledgeBank>> SearchBanksAsync(string? query, CancellationToken cancellationToken);
+    Task<KnowledgeBank?> GetBankAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> SetBankEnabledAsync(Guid id, bool enabled, CancellationToken cancellationToken);
+    Task<bool> ForgetBankAsync(Guid id, CancellationToken cancellationToken);
+
     Task<KnowledgeRecord> UpsertAsync(
         KnowledgeRecord record,
         string indexedText,
@@ -41,6 +47,7 @@ public interface IBackgroundLearningScheduler
     BackgroundLearningMode Mode { get; }
     bool IsGloballyEnabled { get; }
     bool IsEnabled(KnowledgeCategory category);
+    bool CanAcceptContribution(KnowledgeCategory category, string? appId, string? projectId);
     Task InitializeAsync(CancellationToken cancellationToken);
     Task SetGlobalEnabledAsync(bool enabled, CancellationToken cancellationToken);
     Task SetModeAsync(BackgroundLearningMode mode, CancellationToken cancellationToken);
@@ -57,6 +64,21 @@ public interface IBackgroundLearningScheduler
     Task<BackgroundLearningSchedulerSnapshot> GetSnapshotAsync(CancellationToken cancellationToken);
     bool CanRun(BackgroundLearningTask task, BackgroundLearningResourceState resources);
 }
+
+/// <summary>
+/// Permission-filtered context used when selecting reusable background-learning knowledge.
+/// The caller must supply only scopes it has already authorised for this request.
+/// </summary>
+public sealed record KnowledgeRetrievalContext(
+    string RequestText,
+    string? AgentId,
+    string? AppId,
+    string? ProjectId,
+    IReadOnlySet<string> PermittedScopes,
+    bool BackgroundLearningEnabled,
+    bool IsRemoteRequest,
+    bool MayDiscloseExternally,
+    int MaximumResults = 8);
 
 public enum BackgroundLearningPriority
 {

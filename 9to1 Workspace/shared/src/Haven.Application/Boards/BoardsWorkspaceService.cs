@@ -6,8 +6,11 @@ namespace Haven.Application;
 public interface IBoardsWorkspaceService
 {
     Task<IReadOnlyList<NotesDocumentSummary>> ListNotebooksAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<NotesDocumentSummary>> ListDeletedNotebooksAsync(CancellationToken cancellationToken);
     Task<NotesDocument> CreateNotebookAsync(string title, CancellationToken cancellationToken);
     Task<NotesDocument?> OpenNotebookAsync(Guid notebookId, CancellationToken cancellationToken);
+    Task<bool> DeleteNotebookAsync(Guid notebookId, CancellationToken cancellationToken);
+    Task<bool> RestoreNotebookAsync(Guid notebookId, CancellationToken cancellationToken);
     Task SaveAsync(NotesDocument notebook, string reason, CancellationToken cancellationToken);
     Task RenameNotebookAsync(NotesDocument notebook, string title, CancellationToken cancellationToken);
     NotesSection AddSection(NotesDocument notebook, string? title = null);
@@ -17,6 +20,9 @@ public interface IBoardsWorkspaceService
     void MoveBlock(NotesDocument notebook, Guid pageId, Guid blockId, int targetIndex);
     NotesBlock AddBlock(NotesDocument notebook, Guid pageId, NotesBlockKind kind, string? text = null);
     bool RenamePage(NotesDocument notebook, Guid pageId, string? title);
+    bool DeletePage(NotesDocument notebook, Guid pageId);
+    bool RestorePage(NotesDocument notebook, Guid pageId);
+    IReadOnlyList<NotesPage> ListDeletedPages(NotesDocument notebook);
     bool UpdateListItem(NotesDocument notebook, Guid pageId, Guid blockId, Guid itemId, string? text = null, bool? isChecked = null);
     bool UpdateTableCell(NotesDocument notebook, Guid pageId, Guid blockId, Guid cellId, string? text);
     bool IsPinned(NotesDocument notebook);
@@ -42,6 +48,8 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
     public const string PlacementsKey = "boards.component-placements";
     public const string ComponentIdKey = "boards.component-id";
     public const string PlacementIdKey = "boards.placement-id";
+    public const string DeletedNotebookKey = "boards.deleted";
+    public const string DeletedPagesKey = "boards.deleted-pages.v1";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public async Task<IReadOnlyList<NotesDocumentSummary>> ListNotebooksAsync(CancellationToken cancellationToken)
@@ -50,10 +58,22 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
         foreach (var summary in await repository.ListAsync(cancellationToken).ConfigureAwait(false))
         {
             var document = await repository.LoadAsync(summary.Id, cancellationToken).ConfigureAwait(false);
-            if (document is not null && IsBoardsNotebook(document))
+            if (document is not null && IsBoardsNotebook(document) && !IsDeleted(document))
                 result.Add(summary);
         }
 
+        return result;
+    }
+
+    public async Task<IReadOnlyList<NotesDocumentSummary>> ListDeletedNotebooksAsync(CancellationToken cancellationToken)
+    {
+        var result = new List<NotesDocumentSummary>();
+        foreach (var summary in await repository.ListAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var document = await repository.LoadAsync(summary.Id, cancellationToken).ConfigureAwait(false);
+            if (document is not null && IsBoardsNotebook(document) && IsDeleted(document))
+                result.Add(summary);
+        }
         return result;
     }
 
@@ -76,8 +96,31 @@ public sealed partial class BoardsWorkspaceService(INotesRepository repository, 
     public async Task<NotesDocument?> OpenNotebookAsync(Guid notebookId, CancellationToken cancellationToken)
     {
         var document = await repository.LoadAsync(notebookId, cancellationToken).ConfigureAwait(false);
-        return document is not null && IsBoardsNotebook(document) ? document : null;
+        return document is not null && IsBoardsNotebook(document) && !IsDeleted(document) ? document : null;
     }
+
+    public async Task<bool> DeleteNotebookAsync(Guid notebookId, CancellationToken cancellationToken)
+    {
+        var document = await repository.LoadAsync(notebookId, cancellationToken).ConfigureAwait(false);
+        if (document is null || !IsBoardsNotebook(document) || IsDeleted(document)) return false;
+        document.Metadata[DeletedNotebookKey] = "true";
+        document.UpdatedAt = DateTimeOffset.UtcNow;
+        await repository.SaveAsync(document, "Moved Boards notebook to recoverable trash", cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    public async Task<bool> RestoreNotebookAsync(Guid notebookId, CancellationToken cancellationToken)
+    {
+        var document = await repository.LoadAsync(notebookId, cancellationToken).ConfigureAwait(false);
+        if (document is null || !IsBoardsNotebook(document) || !IsDeleted(document)) return false;
+        document.Metadata.Remove(DeletedNotebookKey);
+        document.UpdatedAt = DateTimeOffset.UtcNow;
+        await repository.SaveAsync(document, "Restored Boards notebook from trash", cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    private static bool IsDeleted(NotesDocument document) =>
+        document.Metadata.TryGetValue(DeletedNotebookKey, out var value) && bool.TryParse(value, out var deleted) && deleted;
 
     public async Task SaveAsync(NotesDocument notebook, string reason, CancellationToken cancellationToken)
     {

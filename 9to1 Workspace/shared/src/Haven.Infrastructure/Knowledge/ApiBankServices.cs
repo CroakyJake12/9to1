@@ -228,12 +228,12 @@ public sealed class BackgroundLearningScheduler : IBackgroundLearningScheduler
 
     public bool IsGloballyEnabled
     {
-        get { lock (_gate) return _globalEnabled && (_privacy?.Current.BackgroundLearningEnabled ?? true); }
+        get { lock (_gate) return _globalEnabled && (_privacy?.Current.BackgroundLearningEnabled ?? false); }
     }
 
     public bool IsEnabled(KnowledgeCategory category)
     {
-        lock (_gate) return (_privacy?.Current.BackgroundLearningEnabled ?? true) && _globalEnabled && !_disabledCategories.Contains(category);
+        lock (_gate) return (_privacy?.Current.BackgroundLearningEnabled ?? false) && _globalEnabled && !_disabledCategories.Contains(category);
     }
 
     public async Task InitializeAsync(CancellationToken cancellationToken)
@@ -371,12 +371,13 @@ public sealed class BackgroundLearningScheduler : IBackgroundLearningScheduler
     public async Task<BackgroundLearningSchedulerSnapshot> GetSnapshotAsync(CancellationToken cancellationToken)
     {
         await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        var learningEnabled = IsGloballyEnabled;
         lock (_gate)
         {
             var categories = Enum.GetValues<KnowledgeCategory>()
-                .ToDictionary(category => category, category => _globalEnabled && !_disabledCategories.Contains(category));
+                .ToDictionary(category => category, category => learningEnabled && !_disabledCategories.Contains(category));
             return new BackgroundLearningSchedulerSnapshot(
-                _globalEnabled,
+                learningEnabled,
                 _mode,
                 categories,
                 _tasks.Values.OrderByDescending(task => task.CreatedAt).ToArray(),

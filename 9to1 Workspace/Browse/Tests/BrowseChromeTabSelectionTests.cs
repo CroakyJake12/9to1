@@ -22,6 +22,21 @@ public sealed class BrowseChromeTabSelectionTests
         Assert.Contains(result.Tabs, tab => tab.Id == selected);
     }
 
+    [Fact]
+    public async Task CancelledSelectionDoesNotChangeActiveTab()
+    {
+        using var paths = new TestPaths();
+        await using var chrome = await BrowseChrome.CreateAsync(paths);
+        var active = chrome.State.SelectedTabId;
+        var other = (await chrome.NewTabAsync(isPrivate: false)).SelectedTabId;
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => chrome.SelectTabAsync(active, cancellation.Token));
+
+        Assert.Equal(other, chrome.State.SelectedTabId);
+    }
+
     private sealed class TestPaths : IAppPaths, IDisposable
     {
         public TestPaths()

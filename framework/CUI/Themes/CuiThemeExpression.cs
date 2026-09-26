@@ -19,7 +19,11 @@ public sealed record CuiThemeExpression(
     double PopupRadiusScale,
     double MotionDurationScale,
     double ShadowOpacityScale,
-    double BorderIntensity)
+    double BorderIntensity,
+    double SpacingScale = 1d,
+    double TypographyScale = 1d,
+    double ControlHeightScale = 1d,
+    double ElevationScale = 1d)
 {
     /// <summary>Baseline radii matching the pre-theme CUI geometry.</summary>
     public const double BaseControlRadius = 10d;

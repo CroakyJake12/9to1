@@ -12,7 +12,8 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
     public async Task Scheduler_persists_controls_and_task_state()
     {
         var database = await CreateDatabaseAsync();
-        var first = new BackgroundLearningScheduler(database);
+        var privacy = new TestPrivacy(backgroundLearning: true);
+        var first = new BackgroundLearningScheduler(privacy, database);
         await first.InitializeAsync(CancellationToken.None);
         await first.SetModeAsync(BackgroundLearningMode.Proactive, CancellationToken.None);
         await first.SetCategoryEnabledAsync(KnowledgeCategory.LearnMe, false, CancellationToken.None);
@@ -21,16 +22,55 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
         var task = await first.EnqueueAsync("Learn preference", KnowledgeCategory.LearnMe, BackgroundLearningPriority.Low, CancellationToken.None);
         Assert.True(await first.PauseAsync(task.Id, CancellationToken.None));
 
-        var reopened = new BackgroundLearningScheduler(database);
+        var reopened = new BackgroundLearningScheduler(privacy, database);
         await reopened.InitializeAsync(CancellationToken.None);
         var snapshot = await reopened.GetSnapshotAsync(CancellationToken.None);
         Assert.Equal(BackgroundLearningMode.Proactive, snapshot.Mode);
         Assert.Contains(snapshot.Tasks, item => item.Id == task.Id && item.Status == BackgroundLearningTaskStatus.Paused);
         await reopened.SetGlobalEnabledAsync(false, CancellationToken.None);
 
-        var secondReopen = new BackgroundLearningScheduler(database);
+        var secondReopen = new BackgroundLearningScheduler(privacy, database);
         await secondReopen.InitializeAsync(CancellationToken.None);
         Assert.False(secondReopen.IsGloballyEnabled);
+    }
+
+    [Fact]
+    public async Task Scheduler_is_off_without_explicit_privacy_opt_in_and_snapshot_reports_effective_state()
+    {
+        var database = await CreateDatabaseAsync();
+        var privacy = new TestPrivacy(backgroundLearning: false);
+        var scheduler = new BackgroundLearningScheduler(privacy, database);
+        await scheduler.InitializeAsync(CancellationToken.None);
+
+        var optedOut = await scheduler.GetSnapshotAsync(CancellationToken.None);
+        Assert.False(optedOut.IsGloballyEnabled);
+        Assert.All(optedOut.Categories.Values, Assert.False);
+        Assert.False(scheduler.IsEnabled(KnowledgeCategory.LearnMe));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => scheduler.EnqueueAsync(
+            "Do not learn while opted out", KnowledgeCategory.LearnMe, BackgroundLearningPriority.Low, CancellationToken.None));
+
+        await privacy.UpdateAsync(
+            privacy.Current with { BackgroundLearningEnabled = true },
+            CancellationToken.None);
+        var optedIn = await scheduler.GetSnapshotAsync(CancellationToken.None);
+        Assert.True(optedIn.IsGloballyEnabled);
+        Assert.True(optedIn.Categories[KnowledgeCategory.LearnMe]);
+
+        var queued = await scheduler.EnqueueAsync(
+            "Eligible learning task", KnowledgeCategory.LearnMe, BackgroundLearningPriority.Low, CancellationToken.None);
+        await privacy.UpdateAsync(
+            privacy.Current with { BackgroundLearningEnabled = false },
+            CancellationToken.None);
+
+        var disabledAgain = await scheduler.GetSnapshotAsync(CancellationToken.None);
+        Assert.False(disabledAgain.IsGloballyEnabled);
+        Assert.All(disabledAgain.Categories.Values, Assert.False);
+        Assert.Contains(disabledAgain.Tasks, task => task.Id == queued.Id);
+
+        await privacy.UpdateAsync(
+            privacy.Current with { BackgroundLearningEnabled = true },
+            CancellationToken.None);
+        Assert.Contains(await scheduler.ListAsync(CancellationToken.None), task => task.Id == queued.Id);
     }
 
     [Fact]
@@ -146,6 +186,18 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
 
     private static KnowledgeRecord NewKnowledge(string title, string summary, DateTimeOffset now, KnowledgeFreshnessClass freshness = KnowledgeFreshnessClass.Durable)
         => new(Guid.NewGuid(), KnowledgeCategory.LearnMe, "preferences", title, summary, KnowledgePrivacyClass.Normal, .8, false, now, now, null, "conversation", [], freshness, now, "user", KnowledgeRecordStatus.Active, KnowledgeOrigin.Inferred);
+
+    private sealed class TestPrivacy(bool backgroundLearning) : IPrivacyPreferenceStore
+    {
+        public PrivacyPreferences Current { get; private set; } =
+            PrivacyPreferences.Default with { BackgroundLearningEnabled = backgroundLearning };
+
+        public Task UpdateAsync(PrivacyPreferences preferences, CancellationToken cancellationToken)
+        {
+            Current = preferences;
+            return Task.CompletedTask;
+        }
+    }
 
     public void Dispose() => _paths.Dispose();
 

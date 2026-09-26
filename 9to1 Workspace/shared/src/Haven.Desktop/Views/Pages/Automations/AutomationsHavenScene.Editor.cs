@@ -285,6 +285,10 @@ internal sealed partial class AutomationsHavenScene
                 var title = _graphEditor.Document.Nodes.FirstOrDefault(node => node.Id == trace.NodeId)?.Title ?? trace.Category;
                 var detail = trace.Message;
                 if (trace.Inputs is { Count: > 0 }) detail += " · inputs: " + string.Join(", ", trace.Inputs.Select(pair => $"{NodeLabel(pair.Key)}={pair.Value ?? "null"}"));
+                if (trace.TypedInputs is { Count: > 0 })
+                    detail += " · typed inputs: " + string.Join(", ", trace.TypedInputs.Select(pair => $"{pair.Key}={string.Join(" | ", pair.Value.Select(DescribeTypedValue))}"));
+                if (trace.TypedOutputs is { Count: > 0 })
+                    detail += " · typed outputs: " + string.Join(", ", trace.TypedOutputs.Select(pair => $"{pair.Key}={DescribeTypedValue(pair.Value)}"));
                 if (!string.IsNullOrWhiteSpace(trace.Output)) detail += $" · output: {trace.Output}";
                 if (!string.IsNullOrWhiteSpace(trace.Branch)) detail += $" · branch: {trace.Branch}";
                 _testTrace.Add(TraceCard($"{trace.Status}: {title}", detail));
@@ -293,6 +297,11 @@ internal sealed partial class AutomationsHavenScene
         var failed = result.Trace.FirstOrDefault(trace => trace.Status == AutomationGraphTraceStatus.Failed);
         if (failed is not null) _graphEditor.SelectNode(failed.NodeId);
     }
+
+    private static string DescribeTypedValue(AutomationGraphValue value) =>
+        value.State == AutomationGraphValueState.Error
+            ? $"{value.DataType} ({value.State}: {value.ErrorCode ?? "Error"})"
+            : $"{value.DataType} ({value.State})";
 
     private void OnGraphDocumentChanged(NodeEditorDocument document)
     {

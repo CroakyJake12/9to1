@@ -12,6 +12,12 @@ public sealed record GoRoutingContext(
     IReadOnlyList<string> AttachmentPaths,
     IReadOnlyList<string> ProjectNames)
 {
+    /// <summary>
+    /// Stable project references used by the full Go route. ProjectNames remains
+    /// for existing compact callers that only have a display-name snapshot.
+    /// </summary>
+    public IReadOnlyList<GoProjectTarget> ProjectTargets { get; init; } = [];
+
     public static GoRoutingContext Empty { get; } = new([], []);
 
     public bool HasImageAttachment => AttachmentPaths.Any(IsImagePath);
@@ -28,13 +34,16 @@ public sealed record GoRoutingContext(
     }
 }
 
+public sealed record GoProjectTarget(Guid Id, string Name);
+
 public sealed record GoRouteDecision(
     GoRouteDestination Destination,
     string Instruction,
     GoRoutingContext Context,
     string? TargetKey = null,
     string? ProjectName = null,
-    string? Clarification = null);
+    string? Clarification = null,
+    Guid? ProjectId = null);
 
 /// <summary>
 /// Deterministic first-pass routing for Go. Clear product intents are routed locally,
@@ -88,10 +97,13 @@ public static class GoRouteIntentPolicy
                 : Clarify(instruction, context, "Attach the image you want Haven to inspect.");
         }
 
-        var namedProject = FindNamedProject(normalized, context.ProjectNames);
-        if (namedProject is not null && ContainsAny(normalized, ProjectTerms))
+        if (ContainsAny(normalized, ProjectTerms))
         {
-            return new GoRouteDecision(GoRouteDestination.Project, instruction, context, ProjectName: namedProject);
+            var namedProjects = FindNamedProjects(normalized, context);
+            if (namedProjects.Count > 1)
+                return Clarify(instruction, context, "Which project should Haven open?");
+            if (namedProjects.Count == 1)
+                return Project(instruction, context, namedProjects[0]);
         }
 
         if (ContainsAny(normalized, SpaceTerms)) return App(instruction, context, "spaces");
@@ -112,12 +124,18 @@ public static class GoRouteIntentPolicy
         if (ContainsAny(normalized, CodeTerms)) return App(instruction, context, "studio");
         if (ContainsAny(normalized, TaskTerms)) return App(instruction, context, "tasks");
 
-        if (ContainsAny(normalized, ProjectTerms) && context.ProjectNames.Count > 0)
+        if (ContainsAny(normalized, ProjectTerms) && (context.ProjectTargets.Count > 0 || context.ProjectNames.Count > 0))
         {
-            if (context.ProjectNames.Count == 1)
+            if (context.ProjectTargets.Count == 1)
             {
-                return new GoRouteDecision(GoRouteDestination.Project, instruction, context, ProjectName: context.ProjectNames[0]);
+                return Project(instruction, context, context.ProjectTargets[0]);
             }
+
+            if (context.ProjectTargets.Count > 1)
+                return Clarify(instruction, context, "Which project should Haven open?");
+
+            if (context.ProjectNames.Count == 1)
+                return new GoRouteDecision(GoRouteDestination.Project, instruction, context, ProjectName: context.ProjectNames[0]);
 
             return Clarify(instruction, context, "Which project should Haven open?");
         }
@@ -133,6 +151,9 @@ public static class GoRouteIntentPolicy
     private static GoRouteDecision App(string instruction, GoRoutingContext context, string targetKey)
         => new(GoRouteDestination.App, instruction, context, TargetKey: targetKey);
 
+    private static GoRouteDecision Project(string instruction, GoRoutingContext context, GoProjectTarget target)
+        => new(GoRouteDestination.Project, instruction, context, ProjectName: target.Name, ProjectId: target.Id);
+
     private static GoRouteDecision Clarify(string instruction, GoRoutingContext context, string clarification)
         => new(GoRouteDestination.Clarify, instruction, context, Clarification: clarification);
 
@@ -142,11 +163,31 @@ public static class GoRouteIntentPolicy
     private static bool ContainsAny(string value, IEnumerable<string> terms)
         => terms.Any(term => value.Contains(term, StringComparison.Ordinal));
 
-    private static string? FindNamedProject(string normalizedInstruction, IReadOnlyList<string> projectNames)
-        => projectNames
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .OrderByDescending(name => name.Length)
-            .FirstOrDefault(name => normalizedInstruction.Contains(name.Trim().ToLowerInvariant(), StringComparison.Ordinal));
+    private static IReadOnlyList<GoProjectTarget> FindNamedProjects(string normalizedInstruction, GoRoutingContext context)
+    {
+        if (context.ProjectTargets.Count > 0)
+        {
+            var matches = context.ProjectTargets
+                .Where(project => !string.IsNullOrWhiteSpace(project.Name)
+                    && normalizedInstruction.Contains(project.Name.Trim().ToLowerInvariant(), StringComparison.Ordinal))
+                .ToArray();
+            if (matches.Length == 0) return [];
+
+            var longestMatchLength = matches.Max(project => project.Name.Trim().Length);
+            return matches
+                .Where(project => project.Name.Trim().Length == longestMatchLength)
+                .DistinctBy(project => project.Id)
+                .ToArray();
+        }
+
+        return context.ProjectNames
+            .Where(name => !string.IsNullOrWhiteSpace(name)
+                && normalizedInstruction.Contains(name.Trim().ToLowerInvariant(), StringComparison.Ordinal))
+            .OrderByDescending(name => name.Trim().Length)
+            .Take(1)
+            .Select(name => new GoProjectTarget(Guid.Empty, name))
+            .ToArray();
+    }
 
     private static bool IsAmbiguousOpenRequest(string normalized)
         => normalized is "open it" or "open this" or "go there" or "take me there";

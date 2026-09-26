@@ -354,17 +354,20 @@ public sealed partial class PresentPage
     internal async Task<bool> ImportFromPathAsync(string sourcePath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
-        if (_importer is null) { _route.SetStatus("PPTX import service is unavailable."); return false; }
-        if (Document is not null && _dirty && !await SaveAsync("Autosave before PPTX import", cancellationToken)) return false;
+        if (_importer is null) { _route.SetStatus("Presentation import service is unavailable."); return false; }
+        if (Document is not null && _dirty && !await SaveAsync("Autosave before presentation import", cancellationToken)) return false;
         try
         {
             var imported = await _importer.ImportAsync(sourcePath, cancellationToken);
-            var saved = await _repository.SaveAsync(imported, "Imported PPTX", cancellationToken);
+            var saved = await _repository.SaveAsync(imported, "Imported presentation", cancellationToken);
             imported.Version = saved.Version;
             await RefreshDocumentsAsync(cancellationToken);
             Document = imported; _deckIndex = IndexOfDocument(imported.Id); _slideIndex = 0; _dirty = false;
             AttachEditor(imported); RenderCurrent();
-            _route.SetStatus("Imported " + Path.GetFileName(sourcePath) + " · " + _importer.Support.Description);
+            var nativePackage = Path.GetExtension(sourcePath).Equals(".9to1p", StringComparison.OrdinalIgnoreCase);
+            _route.SetStatus(nativePackage
+                ? "Imported " + Path.GetFileName(sourcePath) + " · native presentation content and embedded assets preserved"
+                : "Imported " + Path.GetFileName(sourcePath) + " · " + _importer.Support.Description);
             _bus.Fire("Present.Document.Imported");
             return true;
         }
@@ -378,13 +381,20 @@ public sealed partial class PresentPage
         if (top?.StorageProvider is null) { _route.SetStatus("Import isn’t available from this platform surface."); return; }
         var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Import PowerPoint presentation", AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("PowerPoint presentation") { Patterns = ["*.pptx"] }]
+            Title = "Open or import presentation", AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("9to1 or PowerPoint presentation") { Patterns = ["*.9to1p", "*.pptx"] }
+            ]
         });
         if (files.Count == 0) return;
         var file = files[0]; var localPath = file.TryGetLocalPath();
         if (!string.IsNullOrWhiteSpace(localPath)) { await ImportFromPathAsync(localPath); return; }
-        var temporary = Path.Combine(Path.GetTempPath(), $"haven-present-import-{Guid.NewGuid():N}.pptx");
+        var temporaryExtension = Path.GetExtension(file.Name);
+        if (!temporaryExtension.Equals(".pptx", StringComparison.OrdinalIgnoreCase) &&
+            !temporaryExtension.Equals(".9to1p", StringComparison.OrdinalIgnoreCase))
+            temporaryExtension = ".9to1p";
+        var temporary = Path.Combine(Path.GetTempPath(), $"haven-present-import-{Guid.NewGuid():N}{temporaryExtension}");
         try
         {
             await using var source = await file.OpenReadAsync();

@@ -13,8 +13,9 @@ namespace CakeOS.Cui.Runtime;
 /// </summary>
 public sealed class CuiControlLoader
 {
-    private readonly Dictionary<string, Func<Control>> _controlFactory;
+    private readonly CuiControlRegistry _controlRegistry;
     private readonly Dictionary<string, string> _resourceScope;
+    private readonly List<CuiDiagnostic> _runtimeDiagnostics = [];
     private readonly List<(Control Control, string PropertyName, CuiBindingValue Binding)> _liveBindings = new();
     private readonly Dictionary<Control, CuiComponent> _authoredControls = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<Control, Dictionary<string, CuiObservedBinding>> _observedBindings = new(ReferenceEqualityComparer.Instance);
@@ -55,40 +56,23 @@ public sealed class CuiControlLoader
     }
 
     public CuiControlLoader()
+        : this(new CuiControlRegistry())
     {
-        _controlFactory = new Dictionary<string, Func<Control>>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Page"] = () => new Panel(),
-            ["Panel"] = () => new Panel(),
-            ["StackPanel"] = () => new StackPanel(),
-            ["Grid"] = () => new Grid(),
-            ["DockPanel"] = () => new DockPanel(),
-            ["WrapPanel"] = () => new WrapPanel(),
-            ["Border"] = () => new Border(),
-            ["ScrollViewer"] = () => new ScrollViewer(),
-            ["TextBlock"] = () => new TextBlock(),
-            ["TextBox"] = () => new TextBox(),
-            ["Button"] = () => new Button(),
-            ["CheckBox"] = () => new CheckBox(),
-            ["RadioButton"] = () => new RadioButton(),
-            ["Slider"] = () => new Slider(),
-            ["ProgressBar"] = () => new ProgressBar(),
-            ["Image"] = () => new Image(),
-            ["Canvas"] = () => new Canvas(),
-            ["TabControl"] = () => new TabControl(),
-            ["TabItem"] = () => new TabItem(),
-            ["ListBox"] = () => new ListBox(),
-            ["ComboBox"] = () => new ComboBox(),
-            ["TreeView"] = () => new TreeView(),
-            ["Menu"] = () => new Menu(),
-            ["MenuItem"] = () => new MenuItem(),
-            ["Separator"] = () => new Separator(),
-            ["ContentControl"] = () => new ContentControl(),
-            ["ItemsControl"] = () => new ItemsControl(),
-            ["UserControl"] = () => new UserControl(),
-        };
+    }
+
+    public CuiControlLoader(CuiControlRegistry controlRegistry)
+    {
+        _controlRegistry = controlRegistry ?? throw new ArgumentNullException(nameof(controlRegistry));
         _resourceScope = new Dictionary<string, string>(StringComparer.Ordinal);
     }
+
+    /// <summary>Register a specialised component host before loading a document.</summary>
+    public void RegisterControlType(string typeName, Func<CuiComponent, Control> factory) =>
+        _controlRegistry.RegisterControlType(typeName, factory);
+
+    /// <summary>Register a typed renderer host for CUI Object components.</summary>
+    public void RegisterObjectRenderer(string objectType, Func<CuiComponent, Control> factory) =>
+        _controlRegistry.RegisterObjectRenderer(objectType, factory);
 
     /// <summary>
     /// Loads a CuiDocument and returns the root Avalonia control tree.
@@ -102,6 +86,7 @@ public sealed class CuiControlLoader
         _authoredControls.Clear();
         _observedBindings.Clear();
         _wiredActions.Clear();
+        _runtimeDiagnostics.Clear();
         _themeStack = new CuiThemeScopeStack(CuiSurfacePaletteCatalog.ActiveTheme);
 
         // Populate resource scope
@@ -131,8 +116,7 @@ public sealed class CuiControlLoader
     {
         var parser = new CuiRichParser();
         var document = parser.ParseFile(filePath);
-        var root = Load(document);
-        return (root, parser.Diagnostics.Diagnostics);
+        return LoadWithDiagnostics(document, parser.Diagnostics.Diagnostics);
     }
 
     /// <summary>
@@ -142,8 +126,29 @@ public sealed class CuiControlLoader
     {
         var parser = new CuiRichParser();
         var document = parser.Parse(cuiMarkup, sourceName);
-        var root = Load(document);
-        return (root, parser.Diagnostics.Diagnostics);
+        return LoadWithDiagnostics(document, parser.Diagnostics.Diagnostics);
+    }
+
+    private (Control? Root, IReadOnlyList<CuiDiagnostic> Diagnostics) LoadWithDiagnostics(
+        CuiDocument document,
+        IReadOnlyList<CuiDiagnostic> parserDiagnostics)
+    {
+        if (parserDiagnostics.Any(diagnostic => diagnostic.Severity == CuiDiagnosticSeverity.Error))
+        {
+            _runtimeDiagnostics.Clear();
+            return (null, parserDiagnostics.ToArray());
+        }
+
+        try
+        {
+            var root = Load(document);
+            return (root, parserDiagnostics.Concat(_runtimeDiagnostics).ToArray());
+        }
+        catch (CuiRuntimeLoadException exception)
+        {
+            _runtimeDiagnostics.Add(exception.Diagnostic);
+            return (null, parserDiagnostics.Concat(_runtimeDiagnostics).ToArray());
+        }
     }
 
     /// <summary>
@@ -262,11 +267,17 @@ public sealed class CuiControlLoader
 
     private Control CreateControl(CuiComponent component)
     {
-        if (_controlFactory.TryGetValue(component.Type, out var factory))
-            return factory();
+        if (_controlRegistry.TryCreate(component, ResolveValue, out var control, out var error))
+            return control!;
 
-        // Fallback: create a ContentControl for unknown types
-        return new ContentControl { Tag = component.Type };
+        var code = component.Type.Equals("Object", StringComparison.OrdinalIgnoreCase)
+            ? "CUIR002"
+            : "CUIR001";
+        throw new CuiRuntimeLoadException(new CuiDiagnostic(
+            code,
+            CuiDiagnosticSeverity.Error,
+            error ?? $"Unable to lower CUI component '{component.Type}'.",
+            component.Span));
     }
 
     private void ApplyProperties(Control control, CuiComponent component)

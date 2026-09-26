@@ -54,10 +54,32 @@ public sealed class CalendarConnectionToolRuntimeTests
         Assert.True(blocker.Risk.ExpandsPermissions);
         Assert.Equal(0, fixture.Provider.SyncCalls);
 
-        var allowed = await runtime.ExecuteAsync(call, [active], PermissionMode.AutoSafe, CancellationToken.None);
+        var autoSafe = await runtime.ExecuteAsync(call, [active], PermissionMode.AutoSafe, CancellationToken.None);
+        Assert.False(autoSafe.Activity.Succeeded);
+        Assert.Equal(ToolFailureKind.PermissionRequired, Assert.IsType<ToolFailureDescriptor>(autoSafe.Failure).Kind);
+        Assert.Equal(0, fixture.Provider.SyncCalls);
+
+        var allowed = await runtime.ExecuteAsync(call, [active], PermissionMode.FullAccess, CancellationToken.None);
         Assert.True(allowed.Activity.Succeeded);
         Assert.Equal(1, fixture.Provider.SyncCalls);
         Assert.Equal(fixture.Account.Id, fixture.Provider.LastRequest?.AccountId);
+    }
+
+    [Fact]
+    public async Task FailedProviderSyncDoesNotExposeRawProviderError()
+    {
+        var fixture = Fixture();
+        fixture.Provider.SyncResult = new CalendarSyncResult(false, CalendarSyncStatus.Error, 0, 0, 0, 0, "access_token=private-secret");
+        var runtime = new CalendarConnectionToolRuntime(fixture.Repository, fixture.Registry);
+        var active = Active(fixture.Account.Id);
+        var definition = (await runtime.GetDefinitionsAsync([active], CancellationToken.None)).Single(item => item.Name.EndsWith("calendar_sync", StringComparison.Ordinal));
+
+        var result = await runtime.ExecuteAsync(Call(definition.Name, "2026-08-22T00:00:00Z", "2026-08-23T00:00:00Z"), [active], PermissionMode.FullAccess, CancellationToken.None);
+
+        Assert.False(result.Activity.Succeeded);
+        Assert.DoesNotContain("private-secret", result.Output, StringComparison.Ordinal);
+        Assert.Contains("Calendar provider synchronization failed.", result.Output, StringComparison.Ordinal);
+        Assert.DoesNotContain("private-secret", result.Failure!.SafeMessage, StringComparison.Ordinal);
     }
 
     private static (FakePlannerRepository Repository, FakeCalendarProviderRegistry Registry, FakeCalendarProvider Provider, CalendarAccount Account) Fixture()
@@ -95,12 +117,13 @@ public sealed class CalendarConnectionToolRuntimeTests
         public string ConfigurationStatus => "Ready";
         public int SyncCalls { get; private set; }
         public CalendarSyncRequest? LastRequest { get; private set; }
+        public CalendarSyncResult SyncResult { get; set; } = new(true, CalendarSyncStatus.Ready, 1, 0, 0, 0, "Synced");
         public Task<CalendarAuthorizationResult> ConnectAsync(CancellationToken cancellationToken) => Task.FromResult(new CalendarAuthorizationResult(true, CalendarSyncStatus.Ready, "Ready"));
         public Task<CalendarSyncResult> SyncAsync(CalendarSyncRequest request, CancellationToken cancellationToken)
         {
             SyncCalls++;
             LastRequest = request;
-            return Task.FromResult(new CalendarSyncResult(true, CalendarSyncStatus.Ready, 1, 0, 0, 0, "Synced"));
+            return Task.FromResult(SyncResult);
         }
         public Task DisconnectAsync(Guid accountId, CancellationToken cancellationToken) => Task.CompletedTask;
     }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Net;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -38,16 +39,33 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
 
     public async Task<ExternalConnection> RefreshMcpAsync(ExternalConnection connection, CancellationToken cancellationToken)
     {
+        var current = await repository.GetAsync(connection.Id, cancellationToken).ConfigureAwait(false);
+        if (current is null)
+            return connection with { IsEnabled = false, State = ExternalConnectionState.Disconnected, Status = "This connection was removed.", UpdatedAt = DateTimeOffset.UtcNow };
+        if (!current.IsEnabled) return current;
+
+        var previousState = current.State;
+        var checking = current with
+        {
+            State = previousState is ExternalConnectionState.Ready or ExternalConnectionState.Offline or ExternalConnectionState.NeedsAttention or ExternalConnectionState.Degraded
+                ? ExternalConnectionState.Reconnecting
+                : ExternalConnectionState.Connecting,
+            Status = "Checking MCP connection...",
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        await repository.UpsertAsync(checking, cancellationToken).ConfigureAwait(false);
         try
         {
-            var discovery = await mcp.DiscoverAsync(connection, cancellationToken).ConfigureAwait(false);
-            if (connection.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase) &&
+            var discovery = await mcp.DiscoverCapabilitiesAsync(checking, cancellationToken).ConfigureAwait(false);
+            if (checking.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(discovery.Identity.Name, "unreal-mcp", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("The endpoint responded, but it is not the UEFN Unreal MCP server (expected server identity 'unreal-mcp').");
-            var updated = connection with
+            if (string.IsNullOrWhiteSpace(discovery.SnapshotVersion))
+                throw new InvalidOperationException("The MCP provider returned an invalid capability snapshot.");
+            var updated = checking with
             {
                 State = ExternalConnectionState.Ready,
-                Status = discovery.Tools.Count == 1 ? "Connected - 1 MCP tool discovered." : $"Connected - {discovery.Tools.Count} MCP tools discovered.",
+                Status = DiscoveryStatus(discovery),
                 ServerName = discovery.Identity.Name,
                 ServerVersion = discovery.Identity.Version,
                 ProtocolVersion = discovery.Identity.ProtocolVersion,
@@ -56,11 +74,16 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
             await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
             return updated;
         }
-        catch (OperationCanceledException) { throw; }
+        catch (OperationCanceledException)
+        {
+            var updated = checking with { State = ExternalConnectionState.Offline, Status = "The connection check was cancelled. Retry when ready.", UpdatedAt = DateTimeOffset.UtcNow };
+            await repository.UpsertAsync(updated, CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
         catch (Exception ex)
         {
-            var message = Diagnose(connection, ex);
-            var updated = connection with { State = ExternalConnectionState.Offline, Status = message, UpdatedAt = DateTimeOffset.UtcNow };
+            var message = Diagnose(checking, ex);
+            var updated = checking with { State = FailureState(ex), Status = message, UpdatedAt = DateTimeOffset.UtcNow };
             await repository.UpsertAsync(updated, cancellationToken).ConfigureAwait(false);
             return updated;
         }
@@ -100,12 +123,35 @@ public sealed class ExternalConnectionRegistryService(IExternalConnectionReposit
     private static string Diagnose(ExternalConnection connection, Exception exception)
     {
         var text = exception.Message;
-        if (!connection.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase)) return "MCP connection unavailable: " + text;
+        if (!connection.PresetKey.Equals("uefn", StringComparison.OrdinalIgnoreCase))
+            return exception is HttpRequestException { StatusCode: HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden }
+                ? "MCP authentication is required. Reconnect the account and review granted scopes."
+                : exception is HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests }
+                    ? "MCP provider rate limit reached. Retry after the provider's cooldown."
+                    : "MCP connection unavailable. Check the endpoint and authentication, then retry.";
         if (text.Contains("refused", StringComparison.OrdinalIgnoreCase) || text.Contains("actively refused", StringComparison.OrdinalIgnoreCase))
             return "UEFN MCP is not reachable. Make sure UEFN is running, Python Editor Scripting and UEFN MCP Toolsets are enabled, and the Unreal MCP server has started.";
         if (text.Contains("timed out", StringComparison.OrdinalIgnoreCase) || text.Contains("timeout", StringComparison.OrdinalIgnoreCase))
             return "UEFN MCP timed out. Check that the editor and MCP server are responsive, then verify the host, port and path in Advanced settings.";
-        if (text.Contains("unreal-mcp", StringComparison.OrdinalIgnoreCase)) return text;
-        return "UEFN MCP could not connect: " + text;
+        if (text.Contains("unreal-mcp", StringComparison.OrdinalIgnoreCase))
+            return "The endpoint responded, but it is not the UEFN Unreal MCP server (expected server identity 'unreal-mcp').";
+        return "UEFN MCP could not connect. Check the editor and server status, then retry.";
+    }
+
+    private static ExternalConnectionState FailureState(Exception exception) => exception switch
+    {
+        HttpRequestException { StatusCode: HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden } => ExternalConnectionState.NeedsAttention,
+        HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests } => ExternalConnectionState.Degraded,
+        InvalidOperationException invalid when invalid.Message.Contains("unreal-mcp", StringComparison.OrdinalIgnoreCase) ||
+            invalid.Message.Contains("invalid capability snapshot", StringComparison.OrdinalIgnoreCase) => ExternalConnectionState.Failed,
+        _ => ExternalConnectionState.Offline
+    };
+
+    private static string DiscoveryStatus(McpServerDiscovery discovery)
+    {
+        static string Describe<T>(IReadOnlyList<T>? values, string itemName) => values is null
+            ? $"{itemName}s unsupported"
+            : $"{values.Count} {itemName}{(values.Count == 1 ? string.Empty : "s")}";
+        return $"Connected - {Describe(discovery.Tools, "tool")}, {Describe(discovery.Resources, "resource")}, {Describe(discovery.Prompts, "prompt")}.";
     }
 }

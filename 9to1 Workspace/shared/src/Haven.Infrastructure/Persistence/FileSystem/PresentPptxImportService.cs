@@ -13,8 +13,12 @@ public sealed class PresentPptxImportService : IPresentImportService
     private static readonly XNamespace Drawing = "http://schemas.openxmlformats.org/drawingml/2006/main";
     private static readonly XNamespace OfficeRelationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private static readonly XNamespace PackageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";
+    private readonly IAppPaths _paths;
 
-    public IReadOnlyList<string> ImportExtensions { get; } = [".pptx"];
+    public PresentPptxImportService(IAppPaths paths) =>
+        _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+
+    public IReadOnlyList<string> ImportExtensions { get; } = [".9to1p", ".pptx"];
 
     public PresentImportSupport Support { get; } = new(
         ".pptx",
@@ -27,8 +31,11 @@ public sealed class PresentPptxImportService : IPresentImportService
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         cancellationToken.ThrowIfCancellationRequested();
         var fullPath = Path.GetFullPath(sourcePath);
-        if (!Path.GetExtension(fullPath).Equals(".pptx", StringComparison.OrdinalIgnoreCase))
-            throw new NotSupportedException("Present currently imports .pptx presentations through its documented editable subset.");
+        var extension = Path.GetExtension(fullPath);
+        if (extension.Equals(".9to1p", StringComparison.OrdinalIgnoreCase))
+            return await PresentPackageCodec.ImportAsync(fullPath, _paths.DataDirectory, cancellationToken).ConfigureAwait(false);
+        if (!extension.Equals(".pptx", StringComparison.OrdinalIgnoreCase))
+            throw new NotSupportedException("Present imports native .9to1p packages and a documented editable subset of .pptx presentations.");
         if (!File.Exists(fullPath)) throw new FileNotFoundException("The PowerPoint presentation was not found.", fullPath);
 
         await using var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);

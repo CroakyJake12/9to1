@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Haven.Application;
 using Haven.Core;
 using ModelContextProtocol.Authentication;
@@ -16,12 +18,40 @@ public sealed class McpConnectionClient(IProviderSecretStore secrets) : IMcpConn
 
     public async Task<(McpServerIdentity Identity, IReadOnlyList<McpExternalTool> Tools)> DiscoverAsync(ExternalConnection connection, CancellationToken cancellationToken)
     {
+        var discovery = await DiscoverCapabilitiesAsync(connection, cancellationToken).ConfigureAwait(false);
+        return (discovery.Identity, discovery.Tools);
+    }
+
+    public async Task<McpServerDiscovery> DiscoverCapabilitiesAsync(ExternalConnection connection, CancellationToken cancellationToken)
+    {
         var configuration = ReadConfiguration(connection);
         await using var client = await CreateClientAsync(connection, configuration, cancellationToken).ConfigureAwait(false);
         var tools = await client.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
         var mapped = tools.Select(tool => MapTool(tool.Name, tool.Description, tool.JsonSchema)).ToArray();
-        return (new McpServerIdentity(client.ServerInfo?.Name, client.ServerInfo?.Version, client.NegotiatedProtocolVersion,
-            BoundedJson(client.ServerCapabilities, MaxSchemaCharacters)), mapped);
+        IReadOnlyList<McpExternalResource>? resources = null;
+        IReadOnlyList<McpExternalPrompt>? prompts = null;
+        if (client.ServerCapabilities.Resources is not null)
+        {
+            var discovered = await client.ListResourcesAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+            resources = discovered.Select(item => new McpExternalResource(
+                Bound(item.Uri, 2_000), Bound(item.Name, 200), Bound(item.Description ?? string.Empty, 2_000),
+                Bound(item.MimeType ?? string.Empty, 200), BoundedJson(item.ProtocolResource, 64_000))).ToArray();
+        }
+        if (client.ServerCapabilities.Prompts is not null)
+        {
+            var discovered = await client.ListPromptsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+            prompts = discovered.Select(item => new McpExternalPrompt(
+                Bound(item.Name, 200), Bound(item.Description ?? string.Empty, 2_000),
+                (item.ProtocolPrompt.Arguments ?? []).Select(argument => new McpExternalPromptArgument(
+                    Bound(argument.Name, 200), Bound(argument.Description ?? string.Empty, 2_000), argument.Required ?? false)).ToArray(),
+                BoundedJson(item.ProtocolPrompt, 64_000))).ToArray();
+        }
+        var identity = new McpServerIdentity(client.ServerInfo?.Name, client.ServerInfo?.Version, client.NegotiatedProtocolVersion,
+            BoundedJson(client.ServerCapabilities, MaxSchemaCharacters));
+        var snapshot = JsonSerializer.Serialize(new { identity, tools = mapped, resources, prompts });
+        if (snapshot.Length > MaxSchemaCharacters) throw new InvalidOperationException("MCP capability snapshot exceeded Haven's safety size limit.");
+        var snapshotVersion = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot))).ToLowerInvariant();
+        return new McpServerDiscovery(identity, mapped, resources, prompts, snapshotVersion);
     }
 
     public async Task<McpToolInvocationResult> InvokeAsync(ExternalConnection connection, string toolName, IReadOnlyDictionary<string, JsonElement> arguments, CancellationToken cancellationToken)
@@ -45,6 +75,68 @@ public sealed class McpConnectionClient(IProviderSecretStore secrets) : IMcpConn
             return new McpToolInvocationResult(result.IsError is not true, text, structured, contentJson, result.IsError is true ? text : null);
         }
         finally { gate?.Release(); }
+    }
+
+    public async Task<McpResourceReadResult> ReadResourceAsync(ExternalConnection connection, string resourceUri, CancellationToken cancellationToken)
+    {
+        var configuration = ReadConfiguration(connection);
+        await using var client = await CreateClientAsync(connection, configuration, cancellationToken).ConfigureAwait(false);
+        if (client.ServerCapabilities.Resources is null) throw new NotSupportedException("The negotiated MCP server does not expose resources.");
+        var resources = await client.ListResourcesAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        if (!resources.Any(item => string.Equals(item.Uri, resourceUri, StringComparison.Ordinal)))
+            throw new KeyNotFoundException("The requested MCP resource is no longer advertised by this server.");
+        var result = await client.ReadResourceAsync(resourceUri, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var contents = result.Contents.Select(content => content switch
+        {
+            TextResourceContents text => new McpResourceContent(Bound(text.MimeType ?? string.Empty, 200), Bound(text.Text, MaxResultCharacters), null),
+            BlobResourceContents blob => new McpResourceContent(Bound(blob.MimeType ?? string.Empty, 200), null, Convert.ToBase64String(blob.Blob.ToArray())),
+            _ => throw new NotSupportedException("The MCP resource returned an unsupported content block.")
+        }).ToArray();
+        if (JsonSerializer.Serialize(contents).Length > MaxResultCharacters)
+            throw new InvalidOperationException("MCP resource content exceeded Haven's safety size limit.");
+        return new McpResourceReadResult(Bound(resourceUri, 2_000), contents);
+    }
+
+    public async Task<McpPromptGetResult> GetPromptAsync(ExternalConnection connection, string promptName, IReadOnlyDictionary<string, string>? arguments, CancellationToken cancellationToken)
+    {
+        var configuration = ReadConfiguration(connection);
+        await using var client = await CreateClientAsync(connection, configuration, cancellationToken).ConfigureAwait(false);
+        if (client.ServerCapabilities.Prompts is null) throw new NotSupportedException("The negotiated MCP server does not expose prompts.");
+        var prompts = await client.ListPromptsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        var prompt = prompts.FirstOrDefault(item => string.Equals(item.Name, promptName, StringComparison.Ordinal))
+            ?? throw new KeyNotFoundException("The requested MCP prompt is no longer advertised by this server.");
+        ValidatePromptArguments(prompt, arguments);
+        var result = await client.GetPromptAsync(promptName, arguments?.ToDictionary(pair => pair.Key, pair => (object?)pair.Value, StringComparer.Ordinal), cancellationToken: cancellationToken).ConfigureAwait(false);
+        var messages = new List<McpPromptMessage>(result.Messages.Count);
+        foreach (var message in result.Messages)
+        {
+            var contents = new List<McpPromptContent>(message.Content.Length);
+            foreach (var content in message.Content)
+            {
+                if (content is TextContentBlock text)
+                    contents.Add(new McpPromptContent("text", Bound(text.Text, MaxResultCharacters), null, null, null));
+                else if (content is ImageContentBlock image)
+                    contents.Add(new McpPromptContent("image", null, Bound(image.MimeType ?? string.Empty, 200), null, Convert.ToBase64String(image.Data.ToArray())));
+                else if (content is EmbeddedResourceBlock resource)
+                    contents.Add(new McpPromptContent("resource", null, Bound(resource.Resource?.MimeType ?? string.Empty, 200), Bound(resource.Resource?.Uri ?? string.Empty, 2_000), null));
+                else
+                    throw new NotSupportedException("The MCP prompt returned an unsupported content block.");
+            }
+            messages.Add(new McpPromptMessage(message.Role.ToString(), contents));
+        }
+        if (JsonSerializer.Serialize(messages).Length > MaxResultCharacters)
+            throw new InvalidOperationException("MCP prompt content exceeded Haven's safety size limit.");
+        return new McpPromptGetResult(Bound(prompt.Name, 200), messages);
+    }
+
+    private static void ValidatePromptArguments(McpClientPrompt prompt, IReadOnlyDictionary<string, string>? arguments)
+    {
+        var supplied = arguments ?? new Dictionary<string, string>();
+        var declared = (prompt.ProtocolPrompt.Arguments ?? []).ToDictionary(item => item.Name, StringComparer.Ordinal);
+        var unknown = supplied.Keys.FirstOrDefault(key => !declared.ContainsKey(key));
+        if (unknown is not null) throw new ArgumentException($"MCP prompt argument '{unknown}' is not declared by the server.", nameof(arguments));
+        var missing = declared.Values.FirstOrDefault(item => item.Required == true && !supplied.ContainsKey(item.Name));
+        if (missing is not null) throw new ArgumentException($"Required MCP prompt argument '{missing.Name}' is missing.", nameof(arguments));
     }
 
     private async Task<McpClient> CreateClientAsync(ExternalConnection connection, McpConnectionConfiguration configuration, CancellationToken cancellationToken)

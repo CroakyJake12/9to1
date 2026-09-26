@@ -43,6 +43,7 @@ public sealed class ExtensionManager(
         var validation = validator.Validate(document);
         if (!validation.IsValid) throw new InvalidDataException(string.Join(Environment.NewLine, validation.Errors));
         var installed = await repository.GetInstalledAsync(cancellationToken).ConfigureAwait(false);
+        var dependencyErrors = ExtensionDependencyResolver.ValidateGraph(document.Packages, installed);
         var discovered = new List<DiscoveredExtensionPackage>(document.Packages.Count);
         foreach (var package in document.Packages)
         {
@@ -53,7 +54,10 @@ public sealed class ExtensionManager(
             var state = current is null ? ExtensionInstallState.Available
                 : Version.TryParse(package.Version, out var available) && Version.TryParse(current.Manifest.Version, out var present) && available > present
                     ? ExtensionInstallState.UpdateAvailable : current.State;
-            discovered.Add(new DiscoveredExtensionPackage(source.Id, package, materialized, hash, state));
+            var packageErrors = dependencyErrors.GetValueOrDefault(package.PackageId) ?? [];
+            discovered.Add(new DiscoveredExtensionPackage(source.Id, package, materialized, hash,
+                packageErrors.Count == 0 ? state : ExtensionInstallState.Incompatible,
+                packageErrors.Count == 0 ? null : string.Join(" ", packageErrors)));
         }
         await repository.UpsertSourceAsync(source with { LastRefreshedAt = DateTimeOffset.UtcNow, SafeLastError = null }, cancellationToken).ConfigureAwait(false);
         return discovered;
@@ -65,6 +69,8 @@ public sealed class ExtensionManager(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(discovered);
+        if (discovered.State == ExtensionInstallState.Incompatible)
+            throw new InvalidDataException(discovered.SafeError ?? "Package dependencies or compatibility requirements are not satisfied.");
         if (explicitlyGrantedPermissions != discovered.Manifest.RequestedPermissions)
             throw new UnauthorizedAccessException("All requested package permissions must be reviewed and granted explicitly.");
         var installed = await repository.GetInstalledAsync(cancellationToken).ConfigureAwait(false);
@@ -125,11 +131,16 @@ public sealed class ExtensionManager(
         var updated = package with
         {
             IsEnabled = enabled,
-            State = enabled ? ExtensionInstallState.Installed : ExtensionInstallState.Disabled,
+            State = enabled ? ExtensionInstallState.Enabled : ExtensionInstallState.Disabled,
             UpdatedAt = DateTimeOffset.UtcNow
         };
         if (enabled)
         {
+            var installed = await repository.GetInstalledAsync(cancellationToken).ConfigureAwait(false);
+            var dependencyErrors = ExtensionDependencyResolver.ValidateGraph(
+                [package.Manifest], installed.Where(item => item.Id != package.Id).ToArray());
+            if (dependencyErrors.TryGetValue(package.Manifest.PackageId, out var errors))
+                throw new InvalidOperationException("Package cannot be enabled: " + string.Join(" ", errors));
             await runtime.LoadAsync(updated, cancellationToken).ConfigureAwait(false);
             try { await repository.UpsertInstalledAsync(updated, cancellationToken).ConfigureAwait(false); }
             catch

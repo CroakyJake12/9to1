@@ -17,8 +17,16 @@ public static class CuiHeadlessRenderer
     /// the headless platform. Returns the control tree and validation diagnostics.
     /// </summary>
     public static CuiRenderResult Render(string cuiMarkup, string sourceName = "test.cui")
+        => Render(cuiMarkup, new CuiControlRegistry(), sourceName);
+
+    /// <summary>Builds a CUI tree using a host's specialised component registrations.</summary>
+    public static CuiRenderResult Render(
+        string cuiMarkup,
+        CuiControlRegistry controlRegistry,
+        string sourceName = "test.cui")
     {
-        var loader = new CuiControlLoader();
+        ArgumentNullException.ThrowIfNull(controlRegistry);
+        var loader = new CuiControlLoader(controlRegistry);
         var (root, parseDiagnostics) = loader.LoadMarkup(cuiMarkup, sourceName);
 
         var errors = new List<string>();

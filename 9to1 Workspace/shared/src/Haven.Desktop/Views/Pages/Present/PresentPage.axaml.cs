@@ -45,6 +45,7 @@ public sealed partial class PresentPage : UserControl, IDisposable
 
     public PresentDocument? Document { get; private set; }
     public bool IsDirty => _dirty;
+    public PresentCompatibilityReport? LastCompatibilityReport { get; private set; }
     internal PresentHavenScene Route => _route;
     internal HavenSceneControl SceneHost => Scene;
     internal Haven.UI.Components.Page SceneRoot => _route.Root;
@@ -154,7 +155,36 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (_dirty && !await SaveAsync("Save before export", cancellationToken)) return false;
         try
         {
-            var path = await _exporter.ExportAsync(Document, destinationPath, cancellationToken); _route.SetStatus("Exported " + Path.GetFileName(path)); _bus.Fire("Present.Document.Exported"); return true;
+            string path;
+            if (_exporter is IPresentReportExportService reportExporter)
+            {
+                LastCompatibilityReport = reportExporter.PreviewExport(Document, destinationPath);
+                if (LastCompatibilityReport.HasBlockingIssues)
+                {
+                    _route.SetStatus("Export blocked by compatibility errors. Remove the unsupported content or select another format.");
+                    return false;
+                }
+                var result = await reportExporter.ExportWithReportAsync(Document, destinationPath, cancellationToken);
+                path = result.Path;
+                LastCompatibilityReport = result.CompatibilityReport;
+                if (LastCompatibilityReport.Issues.Count > 0)
+                {
+                    var firstIssue = LastCompatibilityReport.Issues[0];
+                    _route.SetStatus($"Exported {Path.GetFileName(path)} · {LastCompatibilityReport.Issues.Count} compatibility issue(s): {firstIssue.Description}");
+                }
+                else
+                {
+                    _route.SetStatus("Exported " + Path.GetFileName(path));
+                }
+            }
+            else
+            {
+                LastCompatibilityReport = null;
+                path = await _exporter.ExportAsync(Document, destinationPath, cancellationToken);
+                _route.SetStatus("Exported " + Path.GetFileName(path));
+            }
+            _bus.Fire("Present.Document.Exported");
+            return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex) { _route.SetStatus("Couldn’t export this presentation: " + ex.Message); return false; }
@@ -166,12 +196,21 @@ public sealed partial class PresentPage : UserControl, IDisposable
         if (top?.StorageProvider is null) { _route.SetStatus("Export isn’t available from this platform surface."); return; }
         var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Export presentation", SuggestedFileName = SanitizeFileName(Document.Title) + ".pptx", DefaultExtension = "pptx",
-            FileTypeChoices = [new FilePickerFileType("PowerPoint presentation") { Patterns = ["*.pptx"] }], ShowOverwritePrompt = true
+            Title = "Export presentation", SuggestedFileName = SanitizeFileName(Document.Title) + ".9to1p", DefaultExtension = "9to1p",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("9to1 presentation") { Patterns = ["*.9to1p"] },
+                new FilePickerFileType("PowerPoint presentation") { Patterns = ["*.pptx"] }
+            ],
+            ShowOverwritePrompt = true
         });
         if (file is null) return; var localPath = file.TryGetLocalPath();
         if (!string.IsNullOrWhiteSpace(localPath)) { await ExportToPathAsync(localPath); return; }
-        var temporary = Path.Combine(Path.GetTempPath(), $"haven-present-export-{Guid.NewGuid():N}.pptx");
+        var temporaryExtension = Path.GetExtension(file.Name);
+        if (!temporaryExtension.Equals(".pptx", StringComparison.OrdinalIgnoreCase) &&
+            !temporaryExtension.Equals(".9to1p", StringComparison.OrdinalIgnoreCase))
+            temporaryExtension = ".9to1p";
+        var temporary = Path.Combine(Path.GetTempPath(), $"haven-present-export-{Guid.NewGuid():N}{temporaryExtension}");
         try
         {
             if (!await ExportToPathAsync(temporary)) return;

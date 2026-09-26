@@ -172,6 +172,7 @@ public sealed class BrowseChrome : IAsyncDisposable
     public async Task<BrowseChromeSnapshot> SelectTabAsync(Guid tabId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
         var tab = RequireTab(tabId);
         _selectedTabId = tab.Id;
         _findQuery = string.Empty;
@@ -180,8 +181,6 @@ public sealed class BrowseChrome : IAsyncDisposable
             _status = "This tab's web renderer crashed. Recovery is available.";
         else
             _status = tab.Status;
-        await Task.CompletedTask;
-        cancellationToken.ThrowIfCancellationRequested();
         return Publish();
     }
 
