@@ -45,6 +45,75 @@ public sealed class FormsSubmissionStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Identical_normalised_retry_across_store_restart_does_not_change_workbook_revision_or_bytes()
+    {
+        var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));
+        var submittedAt = DateTimeOffset.UtcNow;
+        var initial = new FormsSubmission(" response-retry ", " feedback ", " Feedback ",
+            new Dictionary<string, string> { ["message"] = " Original " }, submittedAt);
+        await new DataWorkbookFormsSubmissionStore(repository).SaveAsync(initial, CancellationToken.None);
+        var path = Path.Combine(_dataDirectory, "Data", "Workbooks", DataWorkbookAppLinks.FormsResponses.ToString("D"), "current.json");
+        var originalBytes = await File.ReadAllBytesAsync(path);
+        var originalVersion = Assert.IsType<DataWorkbook>(await repository.LoadAsync(DataWorkbookAppLinks.FormsResponses, CancellationToken.None)).Version;
+
+        var retried = new FormsSubmission("response-retry", "feedback", "Feedback",
+            new Dictionary<string, string> { [" message "] = "Original" }, submittedAt);
+        await new DataWorkbookFormsSubmissionStore(repository).SaveAsync(retried, CancellationToken.None);
+
+        var responses = await new DataWorkbookFormsSubmissionStore(repository).GetLatestAsync(CancellationToken.None);
+        var response = Assert.Single(responses);
+        Assert.Equal("response-retry", response.Id);
+        Assert.Equal("Original", response.Values["message"]);
+        Assert.Equal(originalVersion, Assert.IsType<DataWorkbook>(await repository.LoadAsync(DataWorkbookAppLinks.FormsResponses, CancellationToken.None)).Version);
+        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(path));
+    }
+
+    [Fact]
+    public async Task Divergent_reuse_of_response_id_returns_stable_conflict_without_changing_workbook()
+    {
+        var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));
+        var initial = new FormsSubmission("response-conflict", "feedback", "Feedback",
+            new Dictionary<string, string> { ["message"] = "Original" }, DateTimeOffset.UtcNow);
+        await new DataWorkbookFormsSubmissionStore(repository).SaveAsync(initial, CancellationToken.None);
+        var path = Path.Combine(_dataDirectory, "Data", "Workbooks", DataWorkbookAppLinks.FormsResponses.ToString("D"), "current.json");
+        var originalBytes = await File.ReadAllBytesAsync(path);
+        var before = Assert.IsType<DataWorkbook>(await repository.LoadAsync(DataWorkbookAppLinks.FormsResponses, CancellationToken.None));
+        var beforeRow = before.Sheets[0].Cells.Where(cell => cell.Row == 1).OrderBy(cell => cell.Column).Select(cell => (cell.Column, cell.Value)).ToArray();
+
+        var conflict = await Assert.ThrowsAsync<FormsSubmissionConflictException>(() =>
+            new DataWorkbookFormsSubmissionStore(repository).SaveAsync(initial with
+            {
+                Values = new Dictionary<string, string> { ["message"] = "Different result" }
+            }, CancellationToken.None));
+
+        Assert.Equal("FormsResponseIdConflict", conflict.Code);
+        Assert.Equal("response-conflict", conflict.ResponseId);
+        Assert.False(conflict.CanRetry);
+        Assert.Equal(originalBytes, await File.ReadAllBytesAsync(path));
+        var after = Assert.IsType<DataWorkbook>(await repository.LoadAsync(DataWorkbookAppLinks.FormsResponses, CancellationToken.None));
+        Assert.Equal(before.Version, after.Version);
+        Assert.Equal(beforeRow, after.Sheets[0].Cells.Where(cell => cell.Row == 1).OrderBy(cell => cell.Column).Select(cell => (cell.Column, cell.Value)).ToArray());
+        Assert.Equal("Original", Assert.Single(await new DataWorkbookFormsSubmissionStore(repository).GetLatestAsync(CancellationToken.None)).Values["message"]);
+    }
+
+    [Fact]
+    public async Task Concurrent_store_instances_do_not_overwrite_each_others_responses()
+    {
+        var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));
+        var stores = Enumerable.Range(0, 8).Select(_ => new DataWorkbookFormsSubmissionStore(repository)).ToArray();
+        var saves = stores.Select((store, index) => store.SaveAsync(
+            new FormsSubmission($"response-{index}", "feedback", "Feedback",
+                new Dictionary<string, string> { ["message"] = $"Message {index}" }, DateTimeOffset.UtcNow.AddSeconds(index)),
+            CancellationToken.None));
+
+        await Task.WhenAll(saves);
+
+        var reopened = await new DataWorkbookFormsSubmissionStore(repository).GetLatestAsync(CancellationToken.None);
+        Assert.Equal(8, reopened.Count);
+        Assert.Equal(Enumerable.Range(0, 8).Select(index => $"response-{index}").Order(), reopened.Select(item => item.Id).Order());
+    }
+
+    [Fact]
     public async Task Forms_response_fields_are_bounded_and_normalised_before_workbook_storage()
     {
         var repository = new DataWorkbookRepository(new TestPaths(_dataDirectory));

@@ -121,6 +121,12 @@ public sealed class CanvasAppSurface
         ArgumentNullException.ThrowIfNull(samples);
         if (samples.Count < 2)
             throw new ArgumentException("A stroke needs at least two pointer samples.", nameof(samples));
+        if (samples.Any(sample => !double.IsFinite(sample.ViewportX)
+            || !double.IsFinite(sample.ViewportY)
+            || !double.IsFinite(sample.Pressure)
+            || !double.IsFinite(sample.TiltX)
+            || !double.IsFinite(sample.TiltY)))
+            throw new ArgumentException("Pointer samples must contain finite coordinates, pressure, and tilt.", nameof(samples));
 
         var previousTool = _interaction.Tool;
         try
@@ -142,6 +148,10 @@ public sealed class CanvasAppSurface
 
     public bool Pan(double startX, double startY, double endX, double endY)
     {
+        if (!double.IsFinite(startX) || !double.IsFinite(startY)
+            || !double.IsFinite(endX) || !double.IsFinite(endY))
+            throw new ArgumentOutOfRangeException(nameof(startX), "Pan coordinates must be finite.");
+
         var previousTool = _interaction.Tool;
         try
         {

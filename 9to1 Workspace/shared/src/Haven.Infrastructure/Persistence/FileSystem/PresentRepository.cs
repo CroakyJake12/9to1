@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
@@ -6,6 +7,7 @@ namespace Haven.Infrastructure;
 
 public sealed class PresentRepository : IPresentRepository
 {
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> SaveLocks = new(StringComparer.OrdinalIgnoreCase);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
@@ -78,64 +80,105 @@ public sealed class PresentRepository : IPresentRepository
         ArgumentNullException.ThrowIfNull(document);
         cancellationToken.ThrowIfCancellationRequested();
         ValidateForSave(document);
-        document.Normalize();
-        document.UpdatedAt = DateTimeOffset.UtcNow;
-        document.Version = checked(document.Version + 1);
-        document.Metadata["lastSaveReason"] = reason ?? string.Empty;
-
         var directory = DocumentDirectory(document.Id);
-        Directory.CreateDirectory(directory);
         var (currentPath, backupPath) = Paths(document.Id);
+        var saveLock = SaveLocks.GetOrAdd(currentPath, static _ => new SemaphoreSlim(1, 1));
+        await saveLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         var temporaryPath = Path.Combine(directory, $"current-{Guid.NewGuid():N}.tmp");
-
         try
         {
-            if (File.Exists(currentPath))
+            Directory.CreateDirectory(directory);
+            var persisted = await TryLoadAsync(currentPath, document.Id, cancellationToken).ConfigureAwait(false);
+            if (document.Recovery.RecoveredFromBackup)
             {
-                if (document.Recovery.RecoveredFromBackup)
-                {
-                    var corruptPath = Path.Combine(
-                        directory,
-                        $"unreadable-current-{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}.json");
-                    File.Move(currentPath, corruptPath, overwrite: false);
-                }
-                else
-                {
-                    File.Copy(currentPath, backupPath, overwrite: true);
-                }
+                // Recovery is only valid while the unreadable current and the backup we
+                // actually recovered from remain unchanged. Never quarantine a newer,
+                // valid presentation merely because this editor was opened from backup.
+                if (persisted is not null)
+                    throw new PresentRevisionConflictException(document.Id, document.Version, persisted.Version);
+                var backup = await TryLoadAsync(backupPath, document.Id, cancellationToken).ConfigureAwait(false);
+                if (backup is null || backup.Version != document.Version)
+                    throw new PresentRevisionConflictException(document.Id, document.Version, backup?.Version ?? 0);
             }
+            else if (File.Exists(currentPath) && persisted is null)
+                throw new InvalidDataException("The current presentation is unreadable; recover it from the previous valid revision before saving.");
+            else if ((persisted?.Version ?? 0) != document.Version)
+                throw new PresentRevisionConflictException(document.Id, document.Version, persisted?.Version ?? 0);
 
-            document.Recovery.RecoveredFromBackup = false;
-            document.Recovery.RecoveredAt = null;
-            document.Recovery.Message = string.Empty;
-
-            await using (var stream = new FileStream(
-                temporaryPath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                64 * 1024,
-                FileOptions.Asynchronous | FileOptions.WriteThrough))
+            var previousVersion = document.Version;
+            var previousUpdatedAt = document.UpdatedAt;
+            var previousReason = document.Metadata.GetValueOrDefault("lastSaveReason");
+            var previousRecovery = document.Recovery.RecoveredFromBackup;
+            var previousRecoveredAt = document.Recovery.RecoveredAt;
+            var previousMessage = document.Recovery.Message;
+            string? quarantinedCurrent = null;
+            try
             {
-                await JsonSerializer.SerializeAsync(stream, document, JsonOptions, cancellationToken)
-                    .ConfigureAwait(false);
-                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                document.Normalize();
+                document.UpdatedAt = DateTimeOffset.UtcNow;
+                document.Version = checked(document.Version + 1);
+                document.Metadata["lastSaveReason"] = reason ?? string.Empty;
+                document.Recovery.RecoveredFromBackup = false;
+                document.Recovery.RecoveredAt = null;
+                document.Recovery.Message = string.Empty;
+
+                await using (var stream = new FileStream(
+                    temporaryPath,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None,
+                    64 * 1024,
+                    FileOptions.Asynchronous | FileOptions.WriteThrough))
+                {
+                    await JsonSerializer.SerializeAsync(stream, document, JsonOptions, cancellationToken)
+                        .ConfigureAwait(false);
+                    await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                _ = await TryLoadAsync(temporaryPath, document.Id, cancellationToken).ConfigureAwait(false)
+                    ?? throw new InvalidDataException("The presentation did not pass its persistence verification read.");
+                if (File.Exists(currentPath))
+                {
+                    if (previousRecovery)
+                    {
+                        quarantinedCurrent = Path.Combine(
+                            directory,
+                            $"unreadable-current-{Guid.NewGuid():N}.json");
+                        File.Move(currentPath, quarantinedCurrent, overwrite: false);
+                    }
+                    else
+                    {
+                        File.Copy(currentPath, backupPath, overwrite: true);
+                    }
+                }
+
+                File.Move(temporaryPath, currentPath, overwrite: true);
+
+                return new PresentSaveResult(
+                    document.Id,
+                    document.Version,
+                    document.UpdatedAt,
+                    currentPath,
+                    backupPath);
             }
-
-            _ = await TryLoadAsync(temporaryPath, document.Id, cancellationToken).ConfigureAwait(false)
-                ?? throw new InvalidDataException("The presentation did not pass its persistence verification read.");
-            File.Move(temporaryPath, currentPath, overwrite: true);
-
-            return new PresentSaveResult(
-                document.Id,
-                document.Version,
-                document.UpdatedAt,
-                currentPath,
-                backupPath);
+            catch
+            {
+                if (quarantinedCurrent is not null && !File.Exists(currentPath) && File.Exists(quarantinedCurrent))
+                    File.Move(quarantinedCurrent, currentPath);
+                document.Version = previousVersion;
+                document.UpdatedAt = previousUpdatedAt;
+                if (previousReason is null) document.Metadata.Remove("lastSaveReason");
+                else document.Metadata["lastSaveReason"] = previousReason;
+                document.Recovery.RecoveredFromBackup = previousRecovery;
+                document.Recovery.RecoveredAt = previousRecoveredAt;
+                document.Recovery.Message = previousMessage;
+                throw;
+            }
         }
         finally
         {
             TryDelete(temporaryPath);
+            saveLock.Release();
         }
     }
 

@@ -33,15 +33,19 @@ internal static class MotionSurface
             ProductMapping: "Video → Motion",
             Route: Route,
             EngineAvailable: false,
-            TimelineAvailable: false,
+            TimelineAvailable: true,
             RenderAvailable: false,
             ExportAvailable: false,
-            PersistenceAvailable: false,
+            PersistenceAvailable: true,
             MediaInspectionAvailable: true,
-            Message: "Playback, editing, rendering, and export are unavailable; read-only media inspection is supported.");
+            Message: "Project persistence and basic insert/split timeline commands are available; playback, rendering, and export are unavailable.");
 
     public static int SelfTest()
     {
+        var projectTest = MotionProjectWorkflowTest.Run();
+        if (projectTest != 0)
+            return projectTest;
+
         var status = GetStatus();
 
         if (!string.Equals(status.ProductMapping, "Video → Motion", StringComparison.Ordinal))
@@ -51,10 +55,10 @@ internal static class MotionSurface
             return 11;
 
         if (status.EngineAvailable
-            || status.TimelineAvailable
+            || !status.TimelineAvailable
             || status.RenderAvailable
             || status.ExportAvailable
-            || status.PersistenceAvailable)
+            || !status.PersistenceAvailable)
         {
             return 12;
         }
@@ -180,6 +184,9 @@ internal static class Program
         if (args.Length == 1 && string.Equals(args[0], "--self-test", StringComparison.Ordinal))
             return MotionSurface.SelfTest();
 
+        if (args.Length > 0 && string.Equals(args[0], "project", StringComparison.OrdinalIgnoreCase))
+            return MotionProjectCommands.Run(args, Console.In, Console.Out, Console.Error);
+
         if (args.Length == 2 && string.Equals(args[0], "inspect", StringComparison.OrdinalIgnoreCase))
         {
             try
@@ -205,7 +212,7 @@ internal static class Program
         }
 
         Console.Error.WriteLine(
-            "Motion supports status, --self-test, and inspect <media-path>; playback, editing, rendering, and export are unavailable.");
+            "Motion supports status, --self-test, inspect <media-path>, and project create|open|insert|split|save; playback, rendering, and export are unavailable.");
         return 2;
     }
 }

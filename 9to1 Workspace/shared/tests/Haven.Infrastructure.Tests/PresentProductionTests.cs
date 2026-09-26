@@ -87,6 +87,101 @@ public sealed class PresentProductionTests : IDisposable
         Assert.Equal(0.55, genUi.X, 3);
         Assert.Equal("Next steps", loaded.Slides[1].Title);
         Assert.True(File.Exists(saved.CurrentPath));
+        Assert.NotEqual(Guid.Empty, loaded.Slides[0].NotesId);
+        Assert.NotEqual(loaded.Slides[0].NotesId, loaded.Slides[1].NotesId);
+    }
+
+    [Fact]
+    public async Task Repository_rejects_stale_revision_without_overwriting_or_advancing_stale_copy()
+    {
+        var repository = new PresentRepository(_paths);
+        var original = PresentDocument.Create("Shared deck");
+        _ = await repository.SaveAsync(original, "Create", CancellationToken.None);
+        var firstEditor = await repository.LoadAsync(original.Id, CancellationToken.None);
+        var staleEditor = await repository.LoadAsync(original.Id, CancellationToken.None);
+        Assert.NotNull(firstEditor);
+        Assert.NotNull(staleEditor);
+
+        firstEditor!.Title = "First edit";
+        _ = await repository.SaveAsync(firstEditor, "First edit", CancellationToken.None);
+        staleEditor!.Title = "Stale edit";
+        var conflict = await Assert.ThrowsAsync<PresentRevisionConflictException>(
+            () => repository.SaveAsync(staleEditor, "Stale edit", CancellationToken.None));
+
+        Assert.Equal("RevisionConflict", conflict.Code);
+        Assert.Equal(1, conflict.ExpectedVersion);
+        Assert.Equal(2, conflict.ActualVersion);
+        Assert.Equal(1, staleEditor.Version);
+        var reopened = await repository.LoadAsync(original.Id, CancellationToken.None);
+        Assert.NotNull(reopened);
+        Assert.Equal("First edit", reopened!.Title);
+        Assert.Equal(2, reopened.Version);
+    }
+
+    [Fact]
+    public async Task Saving_unreadable_current_requires_explicit_recovery_and_preserves_its_bytes()
+    {
+        var repository = new PresentRepository(_paths);
+        var document = PresentDocument.Create("Original");
+        var saved = await repository.SaveAsync(document, "Create", CancellationToken.None);
+        await File.WriteAllTextAsync(saved.CurrentPath, "{ damaged", CancellationToken.None);
+
+        var unsafelyOpen = PresentDocument.Create("Unrelated");
+        unsafelyOpen.Id = document.Id;
+        unsafelyOpen.Version = document.Version;
+        var error = await Assert.ThrowsAsync<InvalidDataException>(
+            () => repository.SaveAsync(unsafelyOpen, "Save", CancellationToken.None));
+        Assert.Contains("unreadable", error.Message);
+        Assert.Equal("{ damaged", await File.ReadAllTextAsync(saved.CurrentPath));
+    }
+
+    [Fact]
+    public async Task Recovered_editor_cannot_replace_a_newer_valid_current()
+    {
+        var repository = new PresentRepository(_paths);
+        var document = PresentDocument.Create("First");
+        _ = await repository.SaveAsync(document, "First", CancellationToken.None);
+        document.Title = "Second";
+        var second = await repository.SaveAsync(document, "Second", CancellationToken.None);
+        await File.WriteAllTextAsync(second.CurrentPath, "{ damaged", CancellationToken.None);
+        var recovered = (await repository.LoadAsync(document.Id, CancellationToken.None))!;
+        Assert.True(recovered.Recovery.RecoveredFromBackup);
+        var otherRecovery = (await repository.LoadAsync(document.Id, CancellationToken.None))!;
+        otherRecovery.Title = "Restored by another editor";
+        _ = await repository.SaveAsync(otherRecovery, "Restored current", CancellationToken.None);
+
+        await Assert.ThrowsAsync<PresentRevisionConflictException>(
+            () => repository.SaveAsync(recovered, "Stale recovery", CancellationToken.None));
+        Assert.Equal("Restored by another editor", (await repository.LoadAsync(document.Id, CancellationToken.None))!.Title);
+    }
+
+    [Fact]
+    public void Duplicating_slide_allocates_new_slide_and_notes_identities()
+    {
+        var document = PresentDocument.Create("Identity");
+        var source = document.Slides[0];
+        var duplicate = new PresentEditor(document).DuplicateSlide(source.Id);
+
+        Assert.NotEqual(source.Id, duplicate.Id);
+        Assert.NotEqual(source.NotesId, duplicate.NotesId);
+    }
+
+    [Fact]
+    public async Task Legacy_slide_without_notes_id_has_stable_identity_across_reopens()
+    {
+        var repository = new PresentRepository(_paths);
+        var document = PresentDocument.Create("Older deck");
+        var saved = await repository.SaveAsync(document, "Create", CancellationToken.None);
+        var json = await File.ReadAllTextAsync(saved.CurrentPath);
+        json = System.Text.RegularExpressions.Regex.Replace(json,
+            "\\\"notesId\\\"\\s*:\\s*\\\"[^\\\"]+\\\"\\s*,?", string.Empty);
+        await File.WriteAllTextAsync(saved.CurrentPath, json);
+
+        var first = (await repository.LoadAsync(document.Id, CancellationToken.None))!;
+        var second = (await repository.LoadAsync(document.Id, CancellationToken.None))!;
+        Assert.Equal(document.Slides[0].Id, first.Slides[0].Id);
+        Assert.NotEqual(Guid.Empty, first.Slides[0].NotesId);
+        Assert.Equal(first.Slides[0].NotesId, second.Slides[0].NotesId);
     }
 
     [Fact]

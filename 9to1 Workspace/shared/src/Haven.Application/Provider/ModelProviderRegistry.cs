@@ -75,13 +75,24 @@ public sealed class ModelRouter(IModelProviderRegistry providers) : IModelRouter
         if (!request.Policy.AllowCloud) compatible = compatible.Where(model => model.IsLocal);
         var candidates = compatible.ToArray();
 
-        if (request.SelectedModel is { } selected && candidates.Any(model => model.Key.Equals(selected.Key, StringComparison.OrdinalIgnoreCase)))
-            return new(selected, "The selected model supports the required capabilities.", false);
+        if (request.SelectedModel is { } selected)
+        {
+            var eligibleSelection = candidates.FirstOrDefault(model => model.Key.Equals(selected.Key, StringComparison.OrdinalIgnoreCase));
+            if (eligibleSelection is not null)
+                return new(eligibleSelection, "The selected model supports the required capabilities and routing policy.", false);
 
-        if (request.Policy.Mode == ModelRoutingMode.ManualFallback)
-            foreach (var key in request.Policy.PreferredModelKeys)
-                if (candidates.FirstOrDefault(model => model.Matches(key)) is { } fallback)
-                    return new(fallback, $"Selected the next compatible model in the configured fallback chain: {fallback.Label}.", true);
+            if (request.Policy.Mode != ModelRoutingMode.ManualFallback)
+                throw new InvalidOperationException($"The explicitly selected model '{selected.Label}' is unavailable or does not satisfy this request's routing policy; automatic substitution is disabled.");
+        }
+
+        foreach (var key in request.Policy.PreferredModelKeys)
+            if (candidates.FirstOrDefault(model => model.Matches(key)) is { } preferred)
+                return new(preferred, request.SelectedModel is null
+                    ? $"Selected the highest-priority eligible model in the configured route: {preferred.Label}."
+                    : $"The explicit selection was ineligible; selected the next eligible model in the configured fallback chain: {preferred.Label}.", request.SelectedModel is not null);
+
+        if (request.SelectedModel is not null)
+            throw new InvalidOperationException("The explicitly selected model is ineligible and no eligible model is available in the configured fallback chain.");
 
         var automatic = candidates
             .OrderByDescending(model => request.Policy.PreferLocal && model.IsLocal)

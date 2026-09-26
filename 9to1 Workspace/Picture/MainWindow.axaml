@@ -6,7 +6,7 @@
         Height="760"
         MinWidth="720"
         MinHeight="520">
-  <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
+  <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="16">
     <Grid ColumnDefinitions="*,Auto">
       <StackPanel Spacing="4">
         <TextBlock Text="Images" FontSize="28" FontWeight="SemiBold" />
@@ -15,18 +15,23 @@
       <Button x:Name="OpenButton" Grid.Column="1" VerticalAlignment="Center" Padding="18,10">Open image</Button>
     </Grid>
 
-    <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="8">
+    <Grid Grid.Row="1" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" ColumnSpacing="8" RowSpacing="6">
       <Button x:Name="PreviousButton" IsEnabled="False">Previous</Button>
       <Button x:Name="NextButton" Grid.Column="1" IsEnabled="False">Next</Button>
       <Button x:Name="ZoomOutButton" Grid.Column="2" IsEnabled="False">Zoom out</Button>
       <TextBlock x:Name="ZoomText" Grid.Column="3" Text="100%" VerticalAlignment="Center" MinWidth="40" TextAlignment="Center" />
       <Button x:Name="ZoomInButton" Grid.Column="4" IsEnabled="False">Zoom in</Button>
       <Button x:Name="FitButton" Grid.Column="5" IsEnabled="False">Fit</Button>
-      <TextBlock x:Name="StatusText" Grid.Column="6" VerticalAlignment="Center" Text="No image open" TextTrimming="CharacterEllipsis" />
-      <TextBlock Grid.Column="7" Text="Drag to pan · scroll to zoom" VerticalAlignment="Center" Opacity="0.68" />
+      <TextBlock x:Name="StatusText" Grid.Row="1" Grid.ColumnSpan="7" VerticalAlignment="Center" Text="No image open" TextWrapping="Wrap" />
     </Grid>
 
-    <Border Grid.Row="2" BorderBrush="#55808080" BorderThickness="1" CornerRadius="18" Padding="18" ClipToBounds="True">
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+      <TextBox x:Name="CropBoundsBox" PlaceholderText="Crop: x, y, width, height" AutomationProperties.Name="Crop bounds in current image pixels" />
+      <Button x:Name="ApplyCropButton" Grid.Column="1" IsEnabled="False">Apply crop</Button>
+      <Button x:Name="ExportCropButton" Grid.Column="2" IsEnabled="False">Export PNG…</Button>
+    </Grid>
+
+    <Border Grid.Row="3" BorderBrush="#55808080" BorderThickness="1" CornerRadius="18" Padding="18" ClipToBounds="True">
       <Grid>
         <Image x:Name="PreviewImage"
                Stretch="Uniform"
@@ -35,12 +40,12 @@
                IsVisible="False" />
         <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
           <TextBlock Text="Open an image to preview it" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" />
-          <TextBlock Text="Images does not edit, generate, export, or persist changes in this first slice." Opacity="0.68" HorizontalAlignment="Center" />
+          <TextBlock Text="Open an image, enter crop bounds in current image pixels, then export a PNG copy." Opacity="0.68" HorizontalAlignment="Center" />
         </StackPanel>
       </Grid>
     </Border>
 
-    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+    <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="16">
       <TextBlock x:Name="FileNameText" Text="Nothing selected" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
       <TextBlock x:Name="MetadataText" Grid.Column="1" Text="—" Opacity="0.72" />
     </Grid>

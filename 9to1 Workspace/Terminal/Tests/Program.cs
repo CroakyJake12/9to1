@@ -48,6 +48,7 @@ internal static class TerminalAppSurfaceSpecs
         await MissingSessionCapabilityFailsClosedAsync();
         await MissingPermissionCapabilityFailsClosedAsync();
         await AskPermissionRequiresApprovalWithoutExecutingAsync();
+        await CommandTextIsPreservedForNativeShellExecutionAsync();
         await ApprovalUsesTheSamePersistentSessionAsync();
         await WorkingDirectoryAndNewSessionUseHostSessionContractAsync();
         await FailedReplacementPreservesHealthySessionAsync();
@@ -98,6 +99,19 @@ internal static class TerminalAppSurfaceSpecs
         Check(approvedSecond.State == TerminalAppCommandState.Succeeded, "second approved command should execute");
         Check(factory.CreateCount == 1, "multiple commands must reuse one persistent host session");
         Check(factory.LastSession!.ExecuteCount == 2, "both commands must execute through that session");
+    }
+
+    private static async Task CommandTextIsPreservedForNativeShellExecutionAsync()
+    {
+        var factory = new FakeSessionFactory();
+        using var surface = new TerminalAppSurface(new(factory, () => PermissionMode.FullAccess));
+        const string command = "  $value = @'\nline one\nline two\n'@; Write-Output $value  ";
+
+        var result = await surface.SubmitAsync(command);
+
+        Check(result.State == TerminalAppCommandState.Succeeded, "nonblank native command should execute");
+        Check(factory.LastSession!.LastCommand == command, "shell command text must reach the host session byte-for-byte as submitted");
+        Check(surface.History[^1] == command, "command history must preserve non-secret whitespace and multiline input");
     }
 
     private static async Task WorkingDirectoryAndNewSessionUseHostSessionContractAsync()
@@ -192,6 +206,7 @@ internal sealed class FakeSession : ITerminalSession
     }
 
     public int ExecuteCount { get; private set; }
+    public string? LastCommand { get; private set; }
     public TerminalSessionMetadata Metadata => _metadata;
     public int? ProcessId => 1234;
     public event EventHandler<TerminalSessionOutput>? OutputReceived;
@@ -201,6 +216,7 @@ internal sealed class FakeSession : ITerminalSession
     {
         cancellationToken.ThrowIfCancellationRequested();
         ExecuteCount++;
+        LastCommand = command;
         _metadata = _metadata with { State = TerminalSessionLifecycleState.Running };
         MetadataChanged?.Invoke(this, _metadata);
         OutputReceived?.Invoke(this, new(_metadata.SessionId, commandId, TerminalOutputStream.StandardOutput, command, DateTimeOffset.UtcNow));

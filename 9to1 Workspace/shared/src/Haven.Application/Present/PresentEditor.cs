@@ -755,6 +755,7 @@ public sealed partial class PresentEditor
         var clone = JsonSerializer.Deserialize<PresentSlide>(json, SnapshotOptions)
             ?? throw new InvalidDataException("The slide could not be duplicated.");
         clone.Id = Guid.NewGuid();
+        clone.NotesId = Guid.NewGuid();
         var idMap = clone.Elements.ToDictionary(element => element.Id, _ => Guid.NewGuid());
         foreach (var element in clone.Elements)
         {

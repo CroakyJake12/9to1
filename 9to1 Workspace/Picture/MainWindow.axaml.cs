@@ -20,14 +20,19 @@ public sealed partial class MainWindow : Window
     private readonly TextBlock _fileNameText;
     private readonly TextBlock _metadataText;
     private readonly TextBlock _zoomText;
+    private readonly TextBox _cropBoundsBox;
+    private readonly Button _applyCropButton;
+    private readonly Button _exportCropButton;
     private readonly Image _previewImage;
     private readonly StackPanel _emptyState;
     private readonly ImageViewportState _viewport = new();
     private readonly ScaleTransform _scaleTransform = new();
     private readonly TranslateTransform _translateTransform = new();
     private readonly TransformGroup _imageTransform = new();
+    private readonly PictureCropService _cropService = new();
 
     private Bitmap? _bitmap;
+    private PictureDocument? _document;
     private ImageNavigationSession? _navigation;
     private bool _isPanning;
     private Point _lastPanPosition;
@@ -46,6 +51,9 @@ public sealed partial class MainWindow : Window
         _fileNameText = this.FindControl<TextBlock>("FileNameText") ?? throw new InvalidOperationException("FileNameText was not created from XAML.");
         _metadataText = this.FindControl<TextBlock>("MetadataText") ?? throw new InvalidOperationException("MetadataText was not created from XAML.");
         _zoomText = this.FindControl<TextBlock>("ZoomText") ?? throw new InvalidOperationException("ZoomText was not created from XAML.");
+        _cropBoundsBox = this.FindControl<TextBox>("CropBoundsBox") ?? throw new InvalidOperationException("CropBoundsBox was not created from XAML.");
+        _applyCropButton = this.FindControl<Button>("ApplyCropButton") ?? throw new InvalidOperationException("ApplyCropButton was not created from XAML.");
+        _exportCropButton = this.FindControl<Button>("ExportCropButton") ?? throw new InvalidOperationException("ExportCropButton was not created from XAML.");
         _previewImage = this.FindControl<Image>("PreviewImage") ?? throw new InvalidOperationException("PreviewImage was not created from XAML.");
         _emptyState = this.FindControl<StackPanel>("EmptyState") ?? throw new InvalidOperationException("EmptyState was not created from XAML.");
 
@@ -57,6 +65,8 @@ public sealed partial class MainWindow : Window
         _openButton.Click += OpenButton_Click;
         _previousButton.Click += PreviousButton_Click;
         _nextButton.Click += NextButton_Click;
+        _applyCropButton.Click += ApplyCropButton_Click;
+        _exportCropButton.Click += ExportCropButton_Click;
         _zoomOutButton.Click += (_, _) => ZoomAtViewportCenter(1 / 1.25);
         _zoomInButton.Click += (_, _) => ZoomAtViewportCenter(1.25);
         _fitButton.Click += (_, _) =>
@@ -139,10 +149,12 @@ public sealed partial class MainWindow : Window
         try
         {
             using var stream = File.OpenRead(path);
+            var nextDocument = _cropService.OpenSource(path);
             var nextBitmap = new Bitmap(stream);
             var previousBitmap = _bitmap;
 
             _bitmap = nextBitmap;
+            _document = nextDocument;
             _previewImage.Source = nextBitmap;
             previousBitmap?.Dispose();
             _viewport.Reset();
@@ -155,6 +167,7 @@ public sealed partial class MainWindow : Window
             _metadataText.Text = $"{nextBitmap.PixelSize.Width} × {nextBitmap.PixelSize.Height} · {Path.GetExtension(path).TrimStart('.').ToUpperInvariant()}";
             _statusText.Text = path;
             UpdateNavigationButtons();
+            UpdateCropButtons();
         }
         catch (Exception exception)
         {
@@ -166,6 +179,79 @@ public sealed partial class MainWindow : Window
     {
         _previousButton.IsEnabled = _navigation?.CanMovePrevious == true;
         _nextButton.IsEnabled = _navigation?.CanMoveNext == true;
+    }
+
+    private void ApplyCropButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_document is null || _navigation is null || !TryReadCrop(out var x, out var y, out var width, out var height))
+        {
+            ShowError("Enter crop bounds as x, y, width, height using current image pixels.");
+            return;
+        }
+
+        try
+        {
+            var updated = _document.Crop(x, y, width, height);
+            using var source = new Bitmap(_navigation.CurrentPath);
+            var rendered = PictureCropService.Render(source, updated);
+            var previous = _bitmap;
+            _document = updated;
+            _bitmap = rendered;
+            _previewImage.Source = rendered;
+            previous?.Dispose();
+            _viewport.Reset();
+            ApplyViewport();
+            _metadataText.Text = $"{rendered.PixelSize.Width} × {rendered.PixelSize.Height} · crop preview";
+            _statusText.Text = "Crop applied non-destructively; source image is unchanged.";
+            UpdateCropButtons();
+        }
+        catch (Exception exception)
+        {
+            ShowError($"Crop could not be applied: {exception.Message}");
+        }
+    }
+
+    private async void ExportCropButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_document is null || _document.Operations.Count == 0) return;
+        try
+        {
+            var destination = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Export cropped image",
+                SuggestedFileName = $"{Path.GetFileNameWithoutExtension(_navigation?.CurrentPath)}-crop.png",
+                FileTypeChoices = [new FilePickerFileType("PNG image") { Patterns = ["*.png"] }],
+                DefaultExtension = "png",
+            });
+            if (destination is null) return;
+            if (!destination.Path.IsFile)
+            {
+                ShowError("Choose a local destination for this PNG export.");
+                return;
+            }
+            _cropService.ExportPng(_document, destination.Path.LocalPath);
+            _statusText.Text = $"Cropped PNG exported to {destination.Name}; source image unchanged.";
+        }
+        catch (Exception exception)
+        {
+            ShowError($"PNG export failed: {exception.Message}");
+        }
+    }
+
+    private bool TryReadCrop(out int x, out int y, out int width, out int height)
+    {
+        var values = (_cropBoundsBox.Text ?? string.Empty).Split(',', StringSplitOptions.TrimEntries);
+        x = y = width = height = 0;
+        return values.Length == 4
+            && int.TryParse(values[0], out x) && int.TryParse(values[1], out y)
+            && int.TryParse(values[2], out width) && int.TryParse(values[3], out height)
+            && width > 0 && height > 0;
+    }
+
+    private void UpdateCropButtons()
+    {
+        _applyCropButton.IsEnabled = _document is not null;
+        _exportCropButton.IsEnabled = _document?.Operations.Count > 0;
     }
 
     private void ZoomAtViewportCenter(double factor)

@@ -33,10 +33,13 @@ except Exception as exc:  # pragma: no cover - runtime dependency gate
     raise SystemExit(78)
 
 
-READ_ONLY_HEAD = re.compile(r"^\s*(SELECT|EXPLAIN)\b", re.IGNORECASE)
-FORBIDDEN = re.compile(
-    r"\b(ATTACH|DETACH|COPY|EXPORT|IMPORT|INSTALL|LOAD|CREATE|DROP|ALTER|INSERT|UPDATE|DELETE|MERGE|REPLACE|TRUNCATE|VACUUM|CALL|PRAGMA|SET)\b",
-    re.IGNORECASE,
+# Parsed statement types, rather than leading-keyword heuristics, are the
+# authority for whether a query is eligible for this read-only execution path.
+# DuckDB SELECT expressions can still mutate sequence state or invoke SQL
+# dynamically, so those capabilities are denied explicitly as well.
+READ_ONLY_STATEMENT_TYPES = {"SELECT", "EXPLAIN"}
+MUTATING_OR_DYNAMIC_FUNCTIONS = re.compile(
+    r"\b(NEXTVAL|CURRVAL|SETVAL|QUERY|QUERY\_TABLE)\s*\(", re.IGNORECASE
 )
 MEMORY_LIMIT = re.compile(r"^[1-9][0-9]*(?:\.[0-9]+)?\s*(?:KB|MB|GB)$", re.IGNORECASE)
 MAX_PUBLISHED_ROWS = 10_000
@@ -148,17 +151,21 @@ class DuckDbRuntime:
             raise
         return {"ok": True}
 
-    @staticmethod
-    def _validate_read_only(sql: str) -> None:
+    def _validate_read_only(self, sql: str) -> None:
         text = sql.strip()
         if not text:
             raise ValueError("SQL is empty.")
-        if ";" in text.rstrip(";"):
+        try:
+            statements = self._conn().extract_statements(text)
+        except Exception as exc:
+            raise ValueError(f"SQL could not be parsed: {exc}") from exc
+        if len(statements) != 1:
             raise PermissionError("Multiple SQL statements are not allowed in the first slice.")
-        if not READ_ONLY_HEAD.match(text):
-            raise PermissionError("Only SELECT and EXPLAIN are allowed in the first slice.")
-        if FORBIDDEN.search(text):
-            raise PermissionError("SQL contains a statement or capability disabled by Haven Data.")
+        statement_type = str(statements[0].type).rsplit(".", 1)[-1].upper()
+        if statement_type not in READ_ONLY_STATEMENT_TYPES:
+            raise PermissionError("Only parsed SELECT and EXPLAIN statements are allowed in the first slice.")
+        if MUTATING_OR_DYNAMIC_FUNCTIONS.search(text):
+            raise PermissionError("SQL uses a mutating or dynamically executing function disabled by Haven Data.")
 
     def query(self, sql: str, max_rows: int) -> dict:
         self._validate_read_only(sql)

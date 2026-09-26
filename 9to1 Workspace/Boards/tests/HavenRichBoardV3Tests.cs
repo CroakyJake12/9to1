@@ -123,11 +123,52 @@ public sealed class HavenRichBoardV3Tests
         var notes = HavenRichNotes.Create("S");
         Assert.Contains(notes.Styles, s => s.Id == "normal" && s.IsBuiltIn);
         Assert.Contains(notes.Styles, s => s.Id == "heading-1" && s.Name == "Header 1");
+        Assert.Collection(
+            notes.Styles.Where(s => s.Id is "heading-4" or "heading-5" or "heading-6").OrderBy(s => s.Id),
+            style => Assert.Equal(("heading-4", "Header 4", 15d), (style.Id, style.Name, style.FontSize)),
+            style => Assert.Equal(("heading-5", "Header 5", 13d), (style.Id, style.Name, style.FontSize)),
+            style => Assert.Equal(("heading-6", "Header 6", 12d), (style.Id, style.Name, style.FontSize)));
         Assert.Contains(notes.Styles, s => s.Id == "code" && s.FontFamily == "Cascadia Mono");
         var block = notes.Sections[0].Pages[0].Blocks[0];
         var resolved = HavenRichStyleResolver.Resolve(notes, block);
         Assert.Equal("normal", resolved.Id);
         Assert.Equal(HavenRichAlignment.Left, HavenRichStyleResolver.EffectiveAlignment(resolved, block));
+    }
+
+    [Fact]
+    public async Task Heading_4_to_6_style_ids_round_trip_and_v2_migration_seeds_them()
+    {
+        await WithStoreAsync(async (store, root) =>
+        {
+            var path = Path.Combine(root, "heading-levels.9to1board");
+            await using (var session = await RichBoardSession.CreateNewAsync(store, "Heading levels"))
+            {
+                await session.SaveAsAsync(path);
+                var pageId = session.Rich.Sections[0].Pages[0].Id;
+                await session.MutateAsync(rich =>
+                {
+                    foreach (var (id, text) in new[] { ("heading-4", "Fourth"), ("heading-5", "Fifth"), ("heading-6", "Sixth") })
+                    {
+                        var block = HavenRichNotesOps.AddBlock(rich, pageId, HavenRichBlockKind.Heading, text);
+                        HavenRichNotesOps.ApplyStyleToBlock(rich, pageId, block.Id, id);
+                    }
+                });
+                await session.SaveAsync();
+            }
+
+            await using var reopened = await RichBoardSession.OpenAtPathAsync(store, path);
+            var blocks = reopened.Rich.Sections[0].Pages[0].Blocks;
+            Assert.Equal(new[] { "heading-4", "heading-5", "heading-6" },
+                blocks.Skip(1).Select(block => block.StyleId));
+            Assert.Contains(reopened.Rich.Styles, style => style.Id == "heading-6" && style.IsBuiltIn);
+
+            var legacy = HavenRichNotes.Create("Legacy headings");
+            legacy.Styles.RemoveAll(style => style.Id is "heading-4" or "heading-5" or "heading-6");
+            Assert.Equal(0, HavenRichNotesV3Migration.Upgrade(legacy));
+            Assert.Contains(legacy.Styles, style => style.Id == "heading-4" && style.IsBuiltIn);
+            Assert.Contains(legacy.Styles, style => style.Id == "heading-5" && style.IsBuiltIn);
+            Assert.Contains(legacy.Styles, style => style.Id == "heading-6" && style.IsBuiltIn);
+        });
     }
 
     [Fact]

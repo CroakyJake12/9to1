@@ -75,4 +75,41 @@ public sealed class CanvasAppSurfaceTests
         Assert.Equal(40, surface.Board.OffsetY);
         Assert.Same(surface.Board, CanvasDocumentModel.GetBoard(surface.Document));
     }
+
+    [Fact]
+    public void Invalid_stroke_batch_is_rejected_before_changing_an_active_gesture_or_document()
+    {
+        var surface = CanvasAppSurface.Create();
+        surface.Interaction.Tool = CanvasTool.Pen;
+        Assert.True(surface.Interaction.Begin(new CanvasPointerSample(10, 20)));
+        var stroke = Assert.Single(surface.Board.Strokes);
+        var pointsBefore = stroke.Points.ToArray();
+
+        Assert.Throws<ArgumentException>(() => surface.DrawStroke([
+            new CanvasPointerSample(30, 40),
+            new CanvasPointerSample(double.NaN, 50)
+        ]));
+
+        Assert.Same(stroke, Assert.Single(surface.Board.Strokes));
+        Assert.Equal(pointsBefore, stroke.Points);
+        Assert.Same(surface.Board, CanvasDocumentModel.GetBoard(surface.Document));
+        Assert.True(surface.Interaction.Move(new CanvasPointerSample(15, 25)));
+        Assert.Equal(15, stroke.Points[^1].X);
+        Assert.Equal(25, stroke.Points[^1].Y);
+    }
+
+    [Fact]
+    public void Invalid_pan_coordinates_do_not_interrupt_an_active_ink_stroke()
+    {
+        var surface = CanvasAppSurface.Create();
+        surface.Interaction.Tool = CanvasTool.Pen;
+        Assert.True(surface.Interaction.Begin(new CanvasPointerSample(10, 20)));
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => surface.Pan(0, 0, double.PositiveInfinity, 40));
+
+        Assert.True(surface.Interaction.Move(new CanvasPointerSample(20, 30)));
+        Assert.Equal(20, Assert.Single(surface.Board.Strokes).Points[^1].X);
+        Assert.Equal(0, surface.Board.OffsetX);
+        Assert.Equal(0, surface.Board.OffsetY);
+    }
 }

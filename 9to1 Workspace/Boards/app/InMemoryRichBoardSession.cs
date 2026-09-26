@@ -118,6 +118,9 @@ public sealed class InMemoryRichBoardSession : IRichBoardSession
         new() { Id = "heading-1", Name = "Header 1", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 26 },
         new() { Id = "heading-2", Name = "Header 2", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 21 },
         new() { Id = "heading-3", Name = "Header 3", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 17 },
+        new() { Id = "heading-4", Name = "Header 4", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 15 },
+        new() { Id = "heading-5", Name = "Header 5", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 13 },
+        new() { Id = "heading-6", Name = "Header 6", IsBuiltIn = true, BlockKind = "heading", Bold = true, FontSize = 12 },
         new() { Id = "quote", Name = "Quote", IsBuiltIn = true, BlockKind = "paragraph", Italic = true, Foreground = "#FF6B7280" },
         new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = "paragraph", FontFamily = "Cascadia Mono", FontSize = 13, Background = "#FFF1F3F4" },
     ];

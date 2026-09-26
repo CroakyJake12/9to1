@@ -8,17 +8,18 @@ host that executes them; they do not claim CakeOS VM acceptance.
 from __future__ import annotations
 
 import json
+import queue
 import os
-import select
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-CALC_WORKER = ROOT / "apps" / "Data" / "workers" / "calc_worker.py"
-DUCKDB_WORKER = ROOT / "apps" / "Data" / "workers" / "duckdb_worker.py"
+ROOT = Path(__file__).resolve().parents[2]
+CALC_WORKER = ROOT / "Data" / "workers" / "calc_worker.py"
+DUCKDB_WORKER = ROOT / "Data" / "workers" / "duckdb_worker.py"
 
 
 class Worker:
@@ -36,20 +37,29 @@ class Worker:
             env=env,
         )
         self.next_id = 0
+        self.responses: queue.Queue[str | None] = queue.Queue()
+        assert self.process.stdout is not None
+        self.reader = threading.Thread(target=self._read_responses, daemon=True)
+        self.reader.start()
+
+    def _read_responses(self) -> None:
+        assert self.process.stdout is not None
+        for line in self.process.stdout:
+            self.responses.put(line)
+        self.responses.put(None)
 
     def call(self, method: str, params: dict | None = None, timeout: float = 30.0):
         if self.process.poll() is not None:
             raise AssertionError(f"Worker exited early: {self.process.stderr.read() if self.process.stderr else ''}")
         assert self.process.stdin is not None
-        assert self.process.stdout is not None
         self.next_id += 1
         self.process.stdin.write(json.dumps({"id": self.next_id, "method": method, "params": params}) + "\n")
         self.process.stdin.flush()
-        readable, _, _ = select.select([self.process.stdout], [], [], timeout)
-        if not readable:
+        try:
+            line = self.responses.get(timeout=timeout)
+        except queue.Empty:
             self.process.kill()
             raise TimeoutError(f"Worker timed out handling {method}.")
-        line = self.process.stdout.readline()
         if not line:
             stderr = self.process.stderr.read() if self.process.stderr else ""
             raise AssertionError(f"Worker closed stdout handling {method}: {stderr}")
@@ -106,7 +116,7 @@ def test_duckdb() -> None:
             limited = worker.call("query", {"sql": "SELECT * FROM range(5)", "maxRows": 2})
             require(len(limited["rows"]) == 2 and limited["truncated"], "DuckDB result cap was not enforced.")
 
-            require("Only SELECT" in worker.expect_error("query", {"sql": "CREATE TABLE unsafe(i INTEGER)", "maxRows": 20}), "DDL was not rejected.")
+            require("Only parsed" in worker.expect_error("query", {"sql": "CREATE TABLE unsafe(i INTEGER)", "maxRows": 20}), "DDL was not rejected.")
             require("Multiple SQL statements" in worker.expect_error("query", {"sql": "SELECT 1; SELECT 2", "maxRows": 20}), "Multiple statements were not rejected.")
             external_error = worker.expect_error("query", {"sql": "SELECT * FROM read_csv('/etc/passwd')", "maxRows": 20})
             require("external" in external_error.lower() or "permission" in external_error.lower(), "External filesystem access was not rejected.")

@@ -87,8 +87,8 @@ public sealed class TerminalAppSurface : IDisposable
     public async Task<TerminalAppCommandResult> SubmitAsync(string command, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        var value = (command ?? string.Empty).Trim();
-        if (value.Length == 0)
+        var value = command ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
             return new(TerminalAppCommandState.Failed, string.Empty, "Enter a command to run.");
 
         var safeCommand = SensitiveTextRedactor.Redact(value, 8_000);

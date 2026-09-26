@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 namespace Haven.Core;
 
 public enum PresentElementKind
@@ -87,6 +89,9 @@ public sealed class PresentDocument
 public sealed class PresentSlide
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    // Missing in older documents: derive a stable migration identity from SlideID
+    // rather than allocating a different NotesID every time an old file is opened.
+    public Guid NotesId { get; set; }
     public int Order { get; set; }
     public Guid? LayoutId { get; set; }
     public Guid? SectionId { get; set; }
@@ -101,7 +106,7 @@ public sealed class PresentSlide
 
     public static PresentSlide Create(int order)
     {
-        var slide = new PresentSlide { Order = order };
+        var slide = new PresentSlide { Order = order, NotesId = Guid.NewGuid() };
         slide.Elements.Add(PresentElement.CreateBodyText());
         return slide;
     }
@@ -124,6 +129,15 @@ public sealed class PresentSlide
     public void Normalize(int order)
     {
         if (Id == Guid.Empty) Id = Guid.NewGuid();
+        if (NotesId == Guid.Empty)
+        {
+            Span<byte> input = stackalloc byte[34];
+            Id.TryWriteBytes(input);
+            "9to1-present-notes"u8.CopyTo(input[16..]);
+            Span<byte> digest = stackalloc byte[32];
+            SHA256.HashData(input, digest);
+            NotesId = new Guid(digest[..16]);
+        }
         Order = order;
         Title ??= string.Empty;
         SpeakerNotes ??= string.Empty;

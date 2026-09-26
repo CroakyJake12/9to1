@@ -130,7 +130,7 @@ public sealed class BoardsVisualTests
             });
             foreach (var expected in new[]
             {
-                "Paragraph", "Title", "Subtitle", "Header 1", "Header 2", "Header 3",
+                "Paragraph", "Title", "Subtitle", "Header 1", "Header 2", "Header 3", "Header 4", "Header 5", "Header 6",
                 "Quote", "Code", "Key Case",
             })
                 Assert.Contains(expected, names);

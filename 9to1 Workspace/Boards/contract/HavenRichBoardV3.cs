@@ -89,6 +89,9 @@ public static class HavenRichStyles
         new() { Id = "heading-1", Name = "Header 1", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 26, SpaceBefore = 16, SpaceAfter = 8 },
         new() { Id = "heading-2", Name = "Header 2", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 21, SpaceBefore = 12, SpaceAfter = 6 },
         new() { Id = "heading-3", Name = "Header 3", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 17, SpaceBefore = 10, SpaceAfter = 4 },
+        new() { Id = "heading-4", Name = "Header 4", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 15, SpaceBefore = 8, SpaceAfter = 4 },
+        new() { Id = "heading-5", Name = "Header 5", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 13, SpaceBefore = 6, SpaceAfter = 3 },
+        new() { Id = "heading-6", Name = "Header 6", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Heading, Bold = true, FontSize = 12, SpaceBefore = 4, SpaceAfter = 2 },
         new() { Id = "quote", Name = "Quote", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Paragraph, Italic = true, Foreground = "#FF9AA0A6", IndentLevel = 1, SpaceBefore = 8, SpaceAfter = 8 },
         new() { Id = "code", Name = "Code", IsBuiltIn = true, BlockKind = HavenRichBlockKind.Paragraph, FontFamily = "Cascadia Mono", FontSize = 13, Foreground = "#FF24292E", Background = "#FFF1F3F4", SpaceBefore = 8, SpaceAfter = 8 },
     ];

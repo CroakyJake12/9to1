@@ -51,6 +51,71 @@ public sealed class ModelRouterTests
         Assert.True(result.UsedFallback);
     }
 
+    [Fact]
+    public async Task AutomaticRoutingHonorsPreferredOrderAfterEligibilityFiltering()
+    {
+        var first = Descriptor("ollama", true, "text", ToolCapability.Text);
+        var preferredEligible = Descriptor("openai", false, "vision", ToolCapability.Text, ToolCapability.Vision);
+        var otherwiseHigherRanked = Descriptor("anthropic", false, "rich", ToolCapability.Text, ToolCapability.Vision, ToolCapability.Tools);
+        var router = new ModelRouter(new StubRegistry([otherwiseHigherRanked, preferredEligible, first]));
+
+        var result = await router.RouteAsync(new ModelRoutingRequest(null, new HashSet<ToolCapability> { ToolCapability.Vision },
+            new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, true, [first.Key, preferredEligible.Key])), CancellationToken.None);
+
+        Assert.Equal(preferredEligible.Key, result.Model.Key);
+        Assert.Contains("eligible", result.Reason, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExplicitLocalSelectionDoesNotSilentlyFallThroughToCloud()
+    {
+        var local = Descriptor("ollama", true, "private", ToolCapability.Text);
+        var cloud = Descriptor("openai", false, "cloud", ToolCapability.Text, ToolCapability.Vision);
+        var router = new ModelRouter(new StubRegistry([local, cloud]));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => router.RouteAsync(new ModelRoutingRequest(local,
+            new HashSet<ToolCapability> { ToolCapability.Vision }, new ModelRoutingPolicy(ModelRoutingMode.Automatic, true, true, [cloud.Key])), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ExplicitSelectionFallsBackOnlyThroughConfiguredEligibleRoute()
+    {
+        var selected = Descriptor("ollama", true, "pinned", ToolCapability.Text);
+        var ineligible = Descriptor("openai", false, "no-vision", ToolCapability.Text);
+        var eligible = Descriptor("openai", false, "vision", ToolCapability.Text, ToolCapability.Vision);
+        var router = new ModelRouter(new StubRegistry([selected, ineligible, eligible]));
+
+        var result = await router.RouteAsync(new ModelRoutingRequest(selected, new HashSet<ToolCapability> { ToolCapability.Vision },
+            new ModelRoutingPolicy(ModelRoutingMode.ManualFallback, true, true, [ineligible.Key, eligible.Key])), CancellationToken.None);
+
+        Assert.Equal(eligible.Key, result.Model.Key);
+        Assert.True(result.UsedFallback);
+    }
+
+    [Fact]
+    public async Task ExplicitSelectionWithNoConfiguredFallbackFailsInsteadOfChoosingUnrelatedModel()
+    {
+        var selected = Descriptor("ollama", true, "pinned", ToolCapability.Text);
+        var unrelated = Descriptor("openai", false, "unrelated", ToolCapability.Text, ToolCapability.Vision);
+        var router = new ModelRouter(new StubRegistry([selected, unrelated]));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => router.RouteAsync(new ModelRoutingRequest(selected,
+            new HashSet<ToolCapability> { ToolCapability.Vision }, new ModelRoutingPolicy(ModelRoutingMode.ManualFallback, true, true, [])), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CloudCandidatesAreFilteredBeforeOrderedRouteSelectionWhenCloudIsDisallowed()
+    {
+        var cloudFirst = Descriptor("openai", false, "cloud", ToolCapability.Text, ToolCapability.Vision);
+        var localNext = Descriptor("ollama", true, "local", ToolCapability.Text, ToolCapability.Vision);
+        var router = new ModelRouter(new StubRegistry([cloudFirst, localNext]));
+
+        var result = await router.RouteAsync(new ModelRoutingRequest(null, new HashSet<ToolCapability> { ToolCapability.Vision },
+            new ModelRoutingPolicy(ModelRoutingMode.Automatic, false, false, [cloudFirst.Key, localNext.Key])), CancellationToken.None);
+
+        Assert.Equal(localNext.Key, result.Model.Key);
+    }
+
     /// <summary>
     /// Performs the local only policy rejects cloud only capability step owned by this component.
     /// </summary>

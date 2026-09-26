@@ -332,7 +332,51 @@ internal static class WaveSelfTest
             var invalid = WaveSurface.Load(invalidPath);
             Require(!invalid.IsLoaded && invalid.Preview is null, "Corrupt audio must fail closed.");
 
-            Console.WriteLine("Wave self-test passed: PCM waveform load, exact trim/export, overwrite protection, short-file bounds, and fail-closed invalid input.");
+            var projectPath = Path.Combine(directory, "session.waveproject.json");
+            var project = WaveProjectStore.Create("Voice", sampleRate: 8000, channels: 1);
+            var trackId = project.Tracks[0].TrackId;
+            project = WaveProjectStore.AddWavClip(project, trackId, tonePath, .5);
+            WaveProjectStore.Save(projectPath, project);
+            var reopenedProject = WaveProjectStore.Open(projectPath);
+            var clip = reopenedProject.Tracks.Single().Clips.Single();
+            Require(reopenedProject.ProjectId == project.ProjectId && reopenedProject.Revision == 1, "Project identity or revision did not survive reopen.");
+            Require(clip.ClipId != Guid.Empty && clip.SourceReferenceId != Guid.Empty && clip.TimelineStartFrame == 4000 && clip.FrameCount == 8000,
+                "Imported clip identity, source range, or timeline placement was not preserved.");
+            Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Project clip creation modified source audio.");
+            var exportPath = Path.Combine(directory, "project-mix.wav");
+            var exportedFrames = WaveProjectExporter.ExportPcm16(reopenedProject, exportPath);
+            Require(exportedFrames == 12000, "Project export did not include the leading timeline silence and full clip duration.");
+            var exported = WaveSurface.Load(exportPath);
+            Require(exported.IsLoaded && exported.Preview is not null && exported.Preview.DurationSeconds is >= 1.499 and <= 1.501,
+                "Project export did not produce a valid WAV spanning the timeline.");
+            var exportedBytes = File.ReadAllBytes(exportPath);
+            Require(exportedBytes.AsSpan(44, 4000 * sizeof(short)).ToArray().All(value => value == 0), "Project export did not preserve the clip's timeline offset as silence.");
+            Require(exportedBytes.AsSpan(44 + 4000 * sizeof(short)).SequenceEqual(sourceBytes.AsSpan(44, 8000 * sizeof(short))),
+                "Project export did not preserve the imported PCM frames exactly.");
+            var reopenedAfterExport = WaveProjectStore.Open(projectPath);
+            Require(reopenedAfterExport.ProjectId == reopenedProject.ProjectId && reopenedAfterExport.Revision == reopenedProject.Revision
+                && reopenedAfterExport.Tracks[0].Clips[0].ClipId == clip.ClipId, "Export changed canonical project identity or revision.");
+            File.Delete(tonePath);
+            var missingSourceRejected = false;
+            try { _ = WaveProjectExporter.ExportPcm16(reopenedAfterExport, Path.Combine(directory, "missing-source.wav")); }
+            catch (FileNotFoundException exception) when (exception.Message.Contains("SourceUnavailable", StringComparison.Ordinal)) { missingSourceRejected = true; }
+            Require(missingSourceRejected, "Export must explicitly reject a missing/moved source without substituting audio.");
+            var alteredSource = sourceBytes.ToArray();
+            alteredSource[^1] ^= 0x7f;
+            File.WriteAllBytes(tonePath, alteredSource);
+            var changedSourceRejected = false;
+            var rejectedExportPath = Path.Combine(directory, "changed-source.wav");
+            try { _ = WaveProjectExporter.ExportPcm16(reopenedAfterExport, rejectedExportPath); }
+            catch (InvalidDataException exception) when (exception.Message.Contains("SourceChanged", StringComparison.Ordinal)) { changedSourceRejected = true; }
+            Require(changedSourceRejected && !File.Exists(rejectedExportPath), "Export must reject altered source bytes without leaving a partial output.");
+            var unsupportedProjectPath = Path.Combine(directory, "future.waveproject.json");
+            File.WriteAllText(unsupportedProjectPath, "{\"SchemaVersion\":99}");
+            var rejectedFutureSchema = false;
+            try { _ = WaveProjectStore.Open(unsupportedProjectPath); }
+            catch (InvalidDataException) { rejectedFutureSchema = true; }
+            Require(rejectedFutureSchema, "Unknown project schema versions must be rejected explicitly.");
+
+            Console.WriteLine("Wave self-test passed: PCM waveform load, exact trim/export, overwrite protection, short-file bounds, fail-closed invalid input, versioned project save/reopen, timeline mix export, source integrity, and missing-source rejection.");
         }
         finally
         {
@@ -399,13 +443,75 @@ internal static class Program
         }
 
         var isTrimCommand = args.Length == 5 && string.Equals(args[0], "--trim", StringComparison.Ordinal);
-        if (args.Length != 1 && !isTrimCommand)
+        var isCreateProjectCommand = args.Length is 2 or 3 && string.Equals(args[0], "--project-create", StringComparison.Ordinal);
+        var isImportProjectCommand = args.Length == 4 && string.Equals(args[0], "--project-import", StringComparison.Ordinal);
+        var isExportProjectCommand = args.Length == 3 && string.Equals(args[0], "--project-export", StringComparison.Ordinal);
+        if (args.Length != 1 && !isTrimCommand && !isCreateProjectCommand && !isImportProjectCommand && !isExportProjectCommand)
         {
-            Console.WriteLine("HavenOS Wave — first standalone surface");
+            Console.WriteLine("HavenOS Wave — standalone audio surface");
             Console.WriteLine("Usage: HavenOS.Wave <local-pcm-wave-file>");
             Console.WriteLine("       HavenOS.Wave --trim <input.wav> <start-seconds> <end-seconds> <new-output.wav>");
+            Console.WriteLine("       HavenOS.Wave --project-create <project.waveproject.json> <track-name>");
+            Console.WriteLine("       HavenOS.Wave --project-import <project.waveproject.json> <input.wav> <timeline-start-seconds>");
+            Console.WriteLine("       HavenOS.Wave --project-export <project.waveproject.json> <new-output.wav>");
             Console.WriteLine("Validation: HavenOS.Wave --self-test");
             return 2;
+        }
+
+        if (isCreateProjectCommand)
+        {
+            try
+            {
+                var project = WaveProjectStore.Create(args.Length == 3 ? args[2] : null);
+                WaveProjectStore.Save(args[1], project);
+                Console.WriteLine($"Created Wave project {project.ProjectId} with track {project.Tracks[0].TrackId}: {Path.GetFullPath(args[1])}");
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException)
+            {
+                Console.Error.WriteLine($"Wave could not create the project: {exception.Message}");
+                return 1;
+            }
+        }
+
+        if (isImportProjectCommand)
+        {
+            if (!double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out var timelineStart))
+            {
+                Console.Error.WriteLine("Timeline start must be a number of seconds using invariant decimal notation.");
+                return 2;
+            }
+            try
+            {
+                var project = WaveProjectStore.Open(args[1]);
+                if (project.Tracks.Count == 0)
+                    throw new InvalidDataException("The project has no track. Create a track before importing audio.");
+                project = WaveProjectStore.AddWavClip(project, project.Tracks[0].TrackId, args[2], timelineStart);
+                WaveProjectStore.Save(args[1], project);
+                Console.WriteLine($"Imported clip into project {project.ProjectId}; revision {project.Revision}.");
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException or NotSupportedException or OverflowException)
+            {
+                Console.Error.WriteLine($"Wave could not import the clip: {exception.Message}");
+                return 1;
+            }
+        }
+
+        if (isExportProjectCommand)
+        {
+            try
+            {
+                var project = WaveProjectStore.Open(args[1]);
+                var frameCount = WaveProjectExporter.ExportPcm16(project, args[2]);
+                Console.WriteLine($"Exported project {project.ProjectId} ({frameCount} frames) to {Path.GetFullPath(args[2])}.");
+                return 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException or NotSupportedException or OverflowException or InvalidOperationException)
+            {
+                Console.Error.WriteLine($"Wave could not export the project: {exception.Message}");
+                return 1;
+            }
         }
 
         if (args.Length == 5 && string.Equals(args[0], "--trim", StringComparison.Ordinal))

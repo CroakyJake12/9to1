@@ -10,8 +10,9 @@ public sealed class DataWorkbookFormsSubmissionStore : IFormsSubmissionStore
 {
     private static readonly string[] Headers = ["Response ID", "Form ID", "Form Title", "Submitted At (UTC)", "Values (JSON)"];
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    // All instances share one read-modify-write sequence for this stable workbook.
+    private static readonly SemaphoreSlim WorkbookGate = new(1, 1);
     private readonly IDataWorkbookRepository _workbooks;
-    private readonly SemaphoreSlim _gate = new(1, 1);
 
     public DataWorkbookFormsSubmissionStore(IDataWorkbookRepository workbooks) =>
         _workbooks = workbooks ?? throw new ArgumentNullException(nameof(workbooks));
@@ -20,7 +21,7 @@ public sealed class DataWorkbookFormsSubmissionStore : IFormsSubmissionStore
 
     public async Task<IReadOnlyList<FormsSubmission>> GetLatestAsync(CancellationToken cancellationToken)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WorkbookGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var workbook = await LoadOrCreateAsync(cancellationToken).ConfigureAwait(false);
@@ -30,7 +31,7 @@ public sealed class DataWorkbookFormsSubmissionStore : IFormsSubmissionStore
         }
         finally
         {
-            _gate.Release();
+            WorkbookGate.Release();
         }
     }
 
@@ -41,15 +42,21 @@ public sealed class DataWorkbookFormsSubmissionStore : IFormsSubmissionStore
         if (string.IsNullOrWhiteSpace(normalized.Id) || string.IsNullOrWhiteSpace(normalized.FormId))
             throw new ArgumentException("A form submission needs a stable response id and form id.", nameof(submission));
 
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await WorkbookGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var workbook = await LoadOrCreateAsync(cancellationToken).ConfigureAwait(false);
             var sheet = GetResponseSheet(workbook);
             var columns = ReadColumnIndexes(sheet);
             var existing = ReadRows(sheet, columns);
+            var priorResponses = existing.Where(item => item.Submission.Id.Equals(normalized.Id, StringComparison.Ordinal)).ToArray();
+            if (priorResponses.Length > 0)
+            {
+                if (priorResponses.All(item => AreEquivalent(item.Submission, normalized))) return;
+                throw new FormsSubmissionConflictException(normalized.Id);
+            }
+
             var submissions = FormsSubmissionLogic.Normalise(existing
-                .Where(item => !item.Submission.Id.Equals(normalized.Id, StringComparison.Ordinal))
                 .Select(item => item.Submission)
                 .Append(normalized));
 
@@ -95,7 +102,7 @@ public sealed class DataWorkbookFormsSubmissionStore : IFormsSubmissionStore
         }
         finally
         {
-            _gate.Release();
+            WorkbookGate.Release();
         }
     }
 
@@ -219,6 +226,15 @@ public sealed class DataWorkbookFormsSubmissionStore : IFormsSubmissionStore
 
     private static string ReadCell(DataSheet sheet, int row, int column) => sheet.GetCell(row, column)?.Value ?? string.Empty;
     private static void WriteCell(DataSheet sheet, int row, int column, string value) => sheet.SetCell(row, column, value, null, DataCellKind.Text);
+
+    private static bool AreEquivalent(FormsSubmission stored, FormsSubmission retry) =>
+        stored.Id.Equals(retry.Id, StringComparison.Ordinal)
+        && stored.FormId.Equals(retry.FormId, StringComparison.Ordinal)
+        && stored.FormTitle.Equals(retry.FormTitle, StringComparison.Ordinal)
+        && stored.SubmittedAt.Equals(retry.SubmittedAt)
+        && stored.Values.Count == retry.Values.Count
+        && stored.Values.All(pair => retry.Values.TryGetValue(pair.Key, out var value)
+            && pair.Value.Equals(value, StringComparison.Ordinal));
 
     private sealed record StoredResponse(int Row, FormsSubmission Submission, IReadOnlyDictionary<int, string> ExtraCells);
 }

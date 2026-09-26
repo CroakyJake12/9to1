@@ -13,6 +13,15 @@ public sealed record FormsSubmission(
     IReadOnlyDictionary<string, string> Values,
     DateTimeOffset SubmittedAt);
 
+/// <summary>Stable response identity was reused for a different submitted result.</summary>
+public sealed class FormsSubmissionConflictException(string responseId)
+    : InvalidOperationException($"Response id '{responseId}' is already stored with different submission data.")
+{
+    public string Code => "FormsResponseIdConflict";
+    public string ResponseId { get; } = responseId;
+    public bool CanRetry => false;
+}
+
 /// <summary>Stores local form submissions, newest first, without publishing them to a service.</summary>
 public interface IFormsSubmissionStore
 {

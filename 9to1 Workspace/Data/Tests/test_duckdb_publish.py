@@ -29,6 +29,10 @@ def main() -> int:
                 {"sql": 'SELECT SUM(CAST("value" AS INTEGER)) AS total FROM "WorkbookValues"', "maxRows": 20},
             )
             require(result["rows"] == [["5"]], "Published workbook values were not queryable through read-only SQL.")
+            cte = worker.call("query", {"sql": 'WITH totals AS (SELECT COUNT(*) AS n FROM "WorkbookValues") SELECT n FROM totals', "maxRows": 20})
+            require(cte["rows"] == [["2"]], "A parsed read-only CTE query was rejected.")
+            keyword_literal = worker.call("query", {"sql": "SELECT 'UPDATE is text, not SQL' AS note", "maxRows": 20})
+            require(keyword_literal["rows"] == [["UPDATE is text, not SQL"]], "SQL words inside string literals were misclassified.")
 
             # Replacement is an internal typed operation, not exposed as raw DDL.
             worker.call(
@@ -64,9 +68,21 @@ def main() -> int:
             )
             require("duplicated" in duplicate_error.lower(), "Duplicate publication columns were not rejected.")
 
-            # Raw mutation remains unavailable despite the structured publication capability.
+            # Rejected SQL must not change the last valid database state.
+            insert_error = worker.expect_error(
+                "query", {"sql": 'INSERT INTO "WorkbookValues" VALUES (\'injected\', \'99\')', "maxRows": 20}
+            )
+            require("Only parsed" in insert_error, "Parsed DML was not rejected by the read-only query path.")
+            unchanged = worker.call("query", {"sql": 'SELECT "label", "value" FROM "WorkbookValues"', "maxRows": 20})
+            require(unchanged["rows"] == [["C", "7"]], "Rejected SQL changed the previously committed table state.")
+
+            # Raw DDL remains unavailable despite the structured publication capability.
             ddl_error = worker.expect_error("query", {"sql": "DROP TABLE WorkbookValues", "maxRows": 20})
-            require("Only SELECT" in ddl_error or "disabled" in ddl_error, "Raw DDL became reachable after adding publication.")
+            require("Only parsed" in ddl_error, "Raw DDL became reachable after adding publication.")
+            multi_error = worker.expect_error(
+                "query", {"sql": 'SELECT 1; -- second statement follows\nDELETE FROM "WorkbookValues"', "maxRows": 20}
+            )
+            require("Multiple SQL" in multi_error, "A multi-statement plan was not rejected before execution.")
             worker.call("close")
 
         # Persistence gate: a fresh worker/process must be able to reopen the same

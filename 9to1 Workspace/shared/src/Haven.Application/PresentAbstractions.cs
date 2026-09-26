@@ -18,6 +18,16 @@ public sealed record PresentSaveResult(
     string CurrentPath,
     string BackupPath);
 
+public sealed class PresentRevisionConflictException(Guid documentId, int expectedVersion, int actualVersion)
+    : InvalidOperationException($"Presentation {documentId:D} changed since it was opened (expected revision {expectedVersion}, current revision {actualVersion}).")
+{
+    public string Code => "RevisionConflict";
+    public Guid DocumentId { get; } = documentId;
+    public int ExpectedVersion { get; } = expectedVersion;
+    public int ActualVersion { get; } = actualVersion;
+    public bool CanRetry { get; } = false;
+}
+
 public interface IPresentRepository
 {
     Task<IReadOnlyList<PresentDocumentSummary>> ListAsync(CancellationToken cancellationToken);

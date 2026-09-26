@@ -162,15 +162,26 @@ public sealed class ChatSpaceController(IChatSpaceBackend backend)
                     model,
                     attachments.Select(item => item.Id).ToArray()),
                 cancellationToken).ConfigureAwait(false);
-            Publish(State with { Composer = State.Composer with { Draft = string.Empty, Attachments = [] } });
             await _backend.SaveDraftAsync(conversation.Id, conversation.CurrentBranchId, string.Empty, [], cancellationToken)
                 .ConfigureAwait(false);
+            Publish(State with { Composer = State.Composer with { Draft = string.Empty, Attachments = [] } });
             await RefreshConversationAsync("Response complete", cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             Publish(State with { Composer = State.Composer with { IsSending = false } });
             Fail(exception);
+        }
+        catch (OperationCanceledException)
+        {
+            // SaveDraftAsync runs before dispatch, so interruption must leave the user's
+            // prompt/attachments available for retry and must not strand the composer.
+            Publish(State with
+            {
+                Composer = State.Composer with { IsSending = false },
+                Status = new("Sending was interrupted. Your draft is still available.", ChatSpaceStatusTone.Neutral, true)
+            });
+            throw;
         }
     }
 
