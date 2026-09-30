@@ -26,6 +26,9 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     public ShellViewModel()
     {
         _lifetimeToken = _lifetime.Token;
+        _bindings.Set("PageColumns", "*,*,*,*,*,*,*,*"); _bindings.Set("PageRows", "72,72,72,72,72,72");
+        _bindings.Set("PageTitle", "Desktop Page"); _bindings.Set("PagePosition", "Page 1 of 1"); _bindings.Set("PageScope", "Global desktop pages");
+        _bindings.GetOrCreateList<DesktopPageItem>("PageItems");
         _bindings.Set("Status", "Checking Home…"); _bindings.Set("Name", ""); _bindings.Set("Query", "");
         _bindings.Set("Thickness", "56"); _bindings.Set("Spacing", "8"); _bindings.Set("Padding", "8"); _bindings.Set("Radius", "12"); _bindings.Set("Opacity", "1");
         _bindings.Set("SpaceTitle", "Desktop Space"); _bindings.Set("LayerTitle", "Main"); _bindings.Set("LayerPosition", "Layer 1 of 1");
@@ -55,6 +58,13 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     private void Populate(ShellConfigurationSnapshot snapshot)
     {
         _snapshot = snapshot; var config = snapshot.Effective; var space = config.ActiveSpace; var bar = space.Taskbar;
+        var surface = DesktopPageEdits.Effective(config);
+        _bindings.Set("PageTitle", "Desktop Page: " + surface.ActivePage.Name);
+        _bindings.Set("PagePosition", $"Page {surface.Pages.ToList().FindIndex(p => p.Id == surface.ActivePageId) + 1} of {surface.Pages.Count}");
+        _bindings.Set("PageColumns", string.Join(",", Enumerable.Repeat("*", surface.Columns)));
+        _bindings.Set("PageRows", string.Join(",", Enumerable.Repeat("72", surface.Rows)));
+        _bindings.Set("PageScope", space.DesktopSurface is null ? "Global desktop pages" : "Pages for this Desktop Space");
+        var pageItems = _bindings.GetOrCreateList<DesktopPageItem>("PageItems"); pageItems.Clear(); foreach (var pageItem in surface.ActivePage.Items) pageItems.Add(pageItem);
         var layer = bar.Layers.Single(l => l.Id == bar.ActiveLayerId); var p = layer.Presentation;
         _bindings.Set("SpaceTitle", "Desktop Space: " + space.Name); _bindings.Set("LayerTitle", layer.Name);
         _bindings.Set("LayerPosition", $"Layer {bar.Layers.ToList().FindIndex(l => l.Id == layer.Id) + 1} of {bar.Layers.Count}");
@@ -71,6 +81,13 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         {
             (GoResult result, "Reference.Id") => result.Reference.Id,
             (GoResult result, "Label") => result.Label,
+            (DesktopPageItem pageItem, "Column") => pageItem.Column,
+            (DesktopPageItem pageItem, "Row") => pageItem.Row,
+            (DesktopPageItem pageItem, "ColumnSpan") => pageItem.ColumnSpan,
+            (DesktopPageItem pageItem, "RowSpan") => pageItem.RowSpan,
+            (DesktopPageItem pageItem, "Id") => pageItem.Id,
+            (DesktopPageItem pageItem, "Label") => pageItem.Label,
+            (DesktopPageItem pageItem, "CanOpen") => pageItem.Kind == DesktopPageItemKind.Application && pageItem.Target is { Owner: "Home", Kind: "os.installed-application" },
             (TaskbarItem entry, "Id") => entry.Id,
             (TaskbarItem entry, "Label") => entry.Label,
             (TaskbarItem entry, "CanOpen") => entry.Kind == TaskbarItemKind.Go || (entry.Kind == TaskbarItemKind.Application && entry.Target is { Owner: "Home", Kind: "os.installed-application" }),
@@ -89,6 +106,12 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         try
         {
             if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", request.Token); return; }
+            if (command == "OpenPageItem" && parameter is DesktopPageItem pageItem)
+            {
+                if (pageItem.Kind != DesktopPageItemKind.Application || pageItem.Target is not { Owner: "Home", Kind: "os.installed-application" } target || !Guid.TryParse(target.Id, out var id) || _launcher is null)
+                    throw new InvalidOperationException("This desktop item canonical owner action is unavailable.");
+                await _launcher.LaunchCurrentAsync(id, request.Token); return;
+            }
             if (command == "OpenItem" && parameter is TaskbarItem item)
             {
                 if (item.Kind == TaskbarItemKind.Go) { await SearchSafelyAsync(request.Token); return; }
@@ -115,6 +138,13 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
             }
             var candidate = command switch
             {
+                "PreviousPage" => DesktopPageEdits.StepPage(config, -1), "NextPage" => DesktopPageEdits.StepPage(config, 1),
+                "AddPage" => DesktopPageEdits.AddPage(config, name), "RenamePage" => DesktopPageEdits.RenamePage(config, name), "RemovePage" => DesktopPageEdits.RemovePage(config),
+                "MovePageEarlier" => DesktopPageEdits.ReorderPage(config, -1), "MovePageLater" => DesktopPageEdits.ReorderPage(config, 1),
+                "SpaceSpecificPages" => DesktopPageEdits.SetSpaceSpecific(config, true), "GlobalPages" => DesktopPageEdits.SetSpaceSpecific(config, false),
+                "ResetDesktop" => DesktopPageEdits.ResetSurface(config),
+                "PinPage" when parameter is GoResult pagePin && pagePin.Reference is { Owner: "Home", Kind: "os.installed-application" } && Guid.TryParse(pagePin.Reference.Id, out var pageAppId) => DesktopPageEdits.PinApplication(config, pageAppId, pagePin.Label),
+                "RemovePageItem" when parameter is DesktopPageItem removePageItem => DesktopPageEdits.RemoveItem(config, removePageItem.Id),
                 "PreviousLayer" => ShellEdits.StepLayer(config, -1), "NextLayer" => ShellEdits.StepLayer(config, 1),
                 "AddLayer" => ShellEdits.AddLayer(config, name), "RenameLayer" => ShellEdits.RenameLayer(config, name),
                 "RemoveLayer" => ShellEdits.RemoveLayer(config), "MoveLayerEarlier" => ShellEdits.ReorderLayer(config, -1), "MoveLayerLater" => ShellEdits.ReorderLayer(config, 1),

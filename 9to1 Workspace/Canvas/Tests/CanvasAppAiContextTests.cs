@@ -63,6 +63,36 @@ public sealed class CanvasAppAiContextTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => context.CaptureAsync(default).AsTask());
     }
 
+    [Fact]
+    public async Task Typed_new_stroke_options_are_semantic_editor_state_and_concurrent_style_changes_reject_capture()
+    {
+        var artifact = CanvasArtifact.Create();
+        var style = new CanvasRnoteInkStyle(CanvasRnoteInkKind.Marker, "#FF0000FF", 12, 0.25);
+        var target = new CanvasAiTarget(artifact, Guid.NewGuid(), Guid.NewGuid(), artifact.Pages[0].PageId, [], "Pen", true, style);
+        var fixture = new ScopeFixture(target);
+        var context = new CanvasAppAiContext(_ => ValueTask.FromResult<CanvasAiTarget?>(target), fixture.Authorization);
+        var snapshot = await context.CaptureAsync(default);
+        var options = snapshot.SemanticState["Canvas"].GetProperty("InkOptions");
+        Assert.Equal("Marker", options.GetProperty("Kind").GetString());
+        Assert.Equal("#FF0000FF", options.GetProperty("Color").GetString());
+        Assert.Equal(12, options.GetProperty("BaseWidth").GetDouble());
+        Assert.Contains("new strokes only", options.GetProperty("Scope").GetString());
+        var reads = 0;
+        context = new CanvasAppAiContext(_ => ValueTask.FromResult<CanvasAiTarget?>(++reads == 1 ? target : target with { InkStyle = style with { BaseWidth = 18 } }), fixture.Authorization);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => context.CaptureAsync(default).AsTask());
+    }
+
+    [Fact]
+    public async Task Invalid_native_ink_properties_cannot_be_presented_as_supported_model_context()
+    {
+        var artifact = CanvasArtifact.Create();
+        var target = new CanvasAiTarget(artifact, Guid.NewGuid(), Guid.NewGuid(), artifact.Pages[0].PageId, [], "Pen", true,
+            new(BaseWidth: double.NaN));
+        var fixture = new ScopeFixture(target);
+        var context = new CanvasAppAiContext(_ => ValueTask.FromResult<CanvasAiTarget?>(target), fixture.Authorization);
+        await Assert.ThrowsAsync<ArgumentException>(() => context.CaptureAsync(default).AsTask());
+    }
+
     private sealed class ScopeFixture : IAuthenticatedResourceActorSource, ICanonicalResourceAccessResolver
     {
         private readonly CanvasAiTarget _target;

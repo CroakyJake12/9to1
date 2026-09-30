@@ -13,6 +13,51 @@ public sealed class AgentPresentationTests
             [new("idle", "coding", "activity.coding"), new("coding", "idle", "activity.completed")],
             [new("conversation.joke", "laugh")])
     };
+    [Fact] public async Task Save_cannot_persist_assets_injected_while_authorization_is_waiting()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "astra-agent-presentation-" + Guid.NewGuid().ToString("N"));
+        await using var store = await DenStore.CreateAsync(root, [new("personal", "personal")]);
+        var den = new DulcheDen(store, new NamespaceAccessPolicy([new("owner", "personal", DenPermission.Administer)]), "owner");
+        var original = await den.SaveAsync(Agent(), 0, "create-agent");
+        var states = original.Presentation!.States.ToList();
+        var access = new BlockingAssets();
+        var service = new AgentPresentationService(den, access);
+        var pending = service.SetAsync("personal", original.Id, original.Revision, original.Presentation with { States = states }, "save-presentation");
+        await access.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        states[0] = new("idle", "Injected", "asset:unchecked", true);
+        access.Release.SetResult();
+        var saved = await pending;
+        Assert.Equal("asset:idle", saved.Presentation!.States[0].AssetReference);
+        Assert.DoesNotContain("asset:unchecked", access.Observed);
+        var observed = await den.GetAsync<AgentDefinitionRecord>("personal", original.Id);
+        Assert.Equal("asset:idle", observed!.Presentation!.States[0].AssetReference);
+    }
+    private sealed class BlockingAssets : IAgentPresentationAssetAccess
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public List<string> Observed { get; } = [];
+        public async ValueTask<bool> CanReadAsync(string principalId, string namespaceId, string assetReference, CancellationToken cancellationToken)
+        {
+            Observed.Add(assetReference); Entered.TrySetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            return assetReference != "asset:unchecked";
+        }
+    }
+    [Fact] public void Snapshot_detaches_caller_collections_and_rejects_corrupt_shape()
+    {
+        var states = Agent().Presentation!.States.ToList();
+        var definition = Agent().Presentation! with { States = states };
+        var captured = AgentAvatarPresentation.Snapshot(definition);
+        states[0] = new("idle", "Untrusted replacement", "asset:unchecked", true);
+        states.Add(new("injected", "Injected", "asset:unchecked", true));
+        Assert.Equal("asset:idle", captured.States[0].AssetReference); Assert.Equal(3, captured.States.Count);
+        Assert.Throws<DenException>(() => AgentAvatarPresentation.Validate(null));
+        Assert.Throws<DenException>(() => AgentAvatarPresentation.Validate(definition with { States = null! }));
+        Assert.Throws<DenException>(() => AgentAvatarPresentation.Validate(definition with { States = [null!] }));
+        Assert.Throws<DenException>(() => AgentAvatarPresentation.Validate(definition with { Reactions = [null!] }));
+        Assert.Throws<DenException>(() => AgentAvatarPresentation.Validate(definition with { Transitions = [null!] }));
+    }
     [Fact] public void SameCanonicalAgentSurvivesSerializationAndReactsToObservedPresentationEvents()
     {
         var agent = JsonSerializer.Deserialize<AgentDefinitionRecord>(JsonSerializer.Serialize(Agent(), DenJson.Options), DenJson.Options)!;

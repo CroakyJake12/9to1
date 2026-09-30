@@ -4,6 +4,11 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Events;
+using Microsoft.Extensions.DependencyInjection;
+using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
+using Haven.Desktop.Services;
+using Avalonia.Platform.Storage;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -72,6 +77,57 @@ public sealed partial class HomePage : UserControl
 
     private void WireEvents()
     {
+        FilesStorageButton.Click += async (_, _) =>
+        {
+            if (App.Services is not { } services || TopLevel.GetTopLevel(this) is not Window owner) return;
+            var window = new Window { Title = "Files storage", Width = 800, Height = 620, MinWidth = 360, MinHeight = 400 };
+            using var surface = new NativeFilesSetupCuiSurface(services.GetRequiredService<HomeCoreRuntime>(),
+                services.GetRequiredService<HomeLocalProfileIdentity>(), services.GetRequiredService<NativeFilesWorkspaceService>(),
+                services.GetRequiredService<NativeFilesWorkspaceAuthority>(), services.GetRequiredService<HomeLocalStoreOwnership>(),
+                async token =>
+                {
+                    var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                    { Title = "Choose an empty folder for your private Files workspace", AllowMultiple = false });
+                    token.ThrowIfCancellationRequested();
+                    return folders.SingleOrDefault()?.TryGetLocalPath();
+                }, async token =>
+                {
+                    using var permissions = new HomeApprovalCuiSurface(services.GetRequiredService<HomeCoreRuntime>(),
+                        services.GetRequiredService<HomeLocalProfileIdentity>(), services.GetRequiredService<HomePermissionTrustService>());
+                    var review = new Window { Title = "Home permissions", Width = 900, Height = 720, MinWidth = 360, MinHeight = 400, Content = permissions };
+                    await permissions.InitializeAsync(token);
+                    await review.ShowDialog(window);
+                });
+            window.Content = surface;
+            try
+            {
+                await surface.InitializeAsync(CancellationToken.None);
+                await window.ShowDialog(owner);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+            { StatusText.Text = "Files storage could not open: " + exception.Message; }
+        };
+        ApprovalsButton.Click += async (_, _) =>
+        {
+            if (App.Services is not { } services) return;
+            using var surface = new HomeApprovalCuiSurface(services.GetRequiredService<HomeCoreRuntime>(),
+                services.GetRequiredService<HomeLocalProfileIdentity>(), services.GetRequiredService<HomePermissionTrustService>());
+            var window = new Window { Title = "Home permissions", Width = 900, Height = 720, MinWidth = 360, MinHeight = 400, Content = surface };
+            try
+            {
+                await surface.InitializeAsync(CancellationToken.None);
+                if (TopLevel.GetTopLevel(this) is Window owner) await window.ShowDialog(owner);
+                else
+                {
+                    var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    window.Closed += (_, _) => closed.TrySetResult();
+                    window.Show();
+                    await closed.Task;
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+            { StatusText.Text = "Home permissions could not open: " + exception.Message; }
+        };
         _bus.RegisterElement("Home.Header.CustomizeClick", CustomizeButton);
         _bus.WirePointerEvents("Home.Header.CustomizeClick", CustomizeButton);
         CustomizeButton.Click += (_, _) =>

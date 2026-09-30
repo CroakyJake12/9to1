@@ -53,6 +53,9 @@ public sealed class GoAndCuiTests
             var app = new GoResult("test", new("Home", "os.installed-application", Guid.NewGuid().ToString(), "1"), "Native app", "Apps", [new("Open", "Open")]);
             var otherApp = app with { Reference = app.Reference with { Id = Guid.NewGuid().ToString() }, Label = "Other native app" };
             bindings.TrySetValue("Results", new[] { app, otherApp });
+            var firstPageItem = new DesktopPageItem(Guid.NewGuid(), DesktopPageItemKind.Application, "Page app", new("Home", "os.installed-application", app.Reference.Id), 0, 0);
+            Assert.True(bindings.TrySetValue("PageColumns", "*,*")); Assert.True(bindings.TrySetValue("PageRows", "72,72"));
+            bindings.TrySetValue("PageItems", new[] { firstPageItem, firstPageItem with { Id = Guid.NewGuid(), Label = "Other page app", Column = 1, Row = 1 } });
             bindings.TrySetValue("Items", new[] { new TaskbarItem(Guid.NewGuid(), TaskbarItemKind.Widget, "Unavailable widget", new("Owner", "widget", "widget-id")) });
             var dispatcher = new Recorder();
             using var loader = new CuiControlLoader(); loader.SetBindingContext(bindings); loader.SetActionDispatcher(dispatcher);
@@ -74,6 +77,15 @@ public sealed class GoAndCuiTests
             Assert.NotNull(firstPosition); Assert.NotNull(secondPosition);
             Assert.True(secondPosition!.Value.Y >= firstPosition!.Value.Y + button.Bounds.Height, "Repeated Go app rows must lay out without overlap.");
             Assert.True(button.Bounds.Height > 0, "Native primitive theme templates must give buttons a usable height.");
+            var pageButton = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Page app"));
+            var otherPageButton = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Other page app"));
+            Assert.Equal(1, Grid.GetColumn((Control)otherPageButton.Parent!.Parent!));
+            Assert.Equal(1, Grid.GetRow((Control)otherPageButton.Parent!.Parent!));
+            var pageGrid = (Grid)otherPageButton.Parent!.Parent!.Parent!; Assert.Equal(2, pageGrid.ColumnDefinitions.Count); Assert.Equal(2, pageGrid.RowDefinitions.Count);
+            var pagePosition = pageButton.TranslatePoint(default, root!); var otherPagePosition = otherPageButton.TranslatePoint(default, root!);
+            Assert.True(otherPagePosition!.Value.X >= pagePosition!.Value.X + pageButton.Bounds.Width, $"Expected distinct desktop grid columns: first {pagePosition}, width {pageButton.Bounds.Width}, second {otherPagePosition}; parents {pageButton.Parent?.Parent?.GetType().Name}/{otherPageButton.Parent?.Parent?.GetType().Name}");
+            Assert.True(otherPagePosition.Value.Y >= pagePosition.Value.Y + 72);
+            pageButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Equal("OpenPageItem", dispatcher.Command); Assert.Same(firstPageItem, dispatcher.Parameter);
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.Equal("Open", dispatcher.Command); Assert.Same(app, dispatcher.Parameter);
             otherButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Same(otherApp, dispatcher.Parameter);

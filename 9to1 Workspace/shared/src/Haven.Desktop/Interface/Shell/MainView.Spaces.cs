@@ -48,7 +48,6 @@ public sealed partial class MainView
         }
 
         if (_nativeChatSidebar is not null)
-        if (_nativeChatSidebar is not null)
         {
             _nativeChatSidebar.SetMode(HavenMode.Chat);
             await _nativeChatSidebar.SelectSpaceFromShellAsync(space.Id);

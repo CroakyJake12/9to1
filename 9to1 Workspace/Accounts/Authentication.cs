@@ -67,6 +67,10 @@ public sealed class CakeIdentityService
     {
         lock(gate){using var lease=DurableState.Acquire(statePath);return AuthenticateCurrent(Read(),token);}
     }
+    internal T WithCurrentSession<T>(string token,Func<CakeSession,T> operation)
+    {
+        lock(gate){using var lease=DurableState.Acquire(statePath);return operation(AuthenticateCurrent(Read(),token));}
+    }
     private static CakeSession AuthenticateCurrent(AuthenticationState state,string token)
     {
         if(string.IsNullOrWhiteSpace(token))throw new UnauthorizedAccessException("invalid_session");

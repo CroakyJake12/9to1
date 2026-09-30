@@ -66,8 +66,20 @@ public sealed class PictureFilesArtifactBridgeTests
             Assert.Equal(source, reopened.Artifact.SourceAsset);
             Assert.Equal(sourceRevision.ToString(), reopened.Artifact.Document.SourceRevision);
             Assert.Equal(originalSource, await File.ReadAllBytesAsync(Path.Combine(root, "original-source.bin"), TestContext.Current.CancellationToken));
+            Assert.Equal(saved.Id, reopened.CasRevisionId);
+            var rename = new FilesOperation(new(Guid.NewGuid()), owner, backingId, null, null, "Rename", saved.Id, null,
+                FilesOperationState.Pending, now, now, null, null);
+            Assert.True((await provider.MutateAsync(rename, "Renamed in Files.9to1p", TestContext.Current.CancellationToken)).IsSuccess);
+            reopened = await bridge.OpenAsync(backingId, TestContext.Current.CancellationToken);
+            Assert.Equal(saved.Id, reopened.Revision.Id);
+            Assert.NotEqual(saved.Id, reopened.CasRevisionId);
+            Assert.Equal(source, reopened.Artifact.SourceAsset); // raw source identity stays pinned
+            Assert.Equal(saved.Id, (await bridge.SaveAsync(reopened.Artifact, reopened.CasRevisionId, TestContext.Current.CancellationToken)).Id);
             var next = reopened.Artifact with { Document = reopened.Artifact.Document.Flip(true) };
-            Assert.NotEqual(saved.Id, (await bridge.SaveAsync(next, saved.Id, TestContext.Current.CancellationToken)).Id);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.SaveAsync(next, saved.Id, TestContext.Current.CancellationToken));
+            var afterRename = await bridge.SaveAsync(next, reopened.CasRevisionId, TestContext.Current.CancellationToken);
+            Assert.NotEqual(saved.Id, afterRename.Id);
+            Assert.Equal(reopened.CasRevisionId, afterRename.ParentRevisionId);
             var foreign = HostedItemId.New();
             Assert.True((await provider.RegisterArtifactAsync(new("canvas", Guid.NewGuid().ToString(), foreign, folderId, nameof(FilesArtifactType.Canvas), "Canvas artifact"), owner, TestContext.Current.CancellationToken)).IsSuccess);
             await Assert.ThrowsAsync<InvalidDataException>(() => bridge.OpenAsync(foreign, TestContext.Current.CancellationToken));

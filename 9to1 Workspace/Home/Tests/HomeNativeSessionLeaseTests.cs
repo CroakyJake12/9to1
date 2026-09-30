@@ -14,9 +14,12 @@ public sealed class HomeNativeSessionLeaseTests
         var paths = new Paths(root); var actor = new Actors();
         try
         {
+            Guid originalIdentity;
+            HomeNativeSessionLease? original;
             using (var lease = await HomeNativeSessionLease.TryAcquireAsync(actor, paths))
             {
-                Assert.NotNull(lease);
+                Assert.NotNull(lease); original = lease; originalIdentity = lease.LeaseIdentity;
+                Assert.NotEqual(Guid.Empty, originalIdentity); Assert.True(lease.IsHeld);
                 Assert.Null(await HomeNativeSessionLease.TryAcquireAsync(actor, paths));
                 if (OperatingSystem.IsLinux())
                 {
@@ -29,8 +32,9 @@ public sealed class HomeNativeSessionLeaseTests
                     Assert.Equal(UnixFileMode.UserRead | UnixFileMode.UserWrite, File.GetUnixFileMode(file));
                 }
             }
+            Assert.False(original!.IsHeld);
             using var after = await HomeNativeSessionLease.TryAcquireAsync(actor, paths);
-            Assert.NotNull(after);
+            Assert.NotNull(after); Assert.NotEqual(originalIdentity, after.LeaseIdentity);
             actor.Current = null;
             Assert.Null(await HomeNativeSessionLease.TryAcquireAsync(actor, paths));
         }

@@ -9,6 +9,7 @@ public readonly record struct HomeContractVersion : IComparable<HomeContractVers
     public int Minor { get; }
     public int Patch { get; }
 
+    [System.Text.Json.Serialization.JsonConstructor]
     public HomeContractVersion(int major, int minor, int patch)
     {
         if (major < 0 || minor < 0 || patch < 0)

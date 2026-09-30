@@ -656,6 +656,43 @@ pub extern "C" fn cake_canvas_save_rnote(
     })
 }
 
+/// Additive selection API; ABI 3 drawing/lifecycle exports remain compatible.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_selection_api_version() -> u32 { 1 }
+
+/// Owned buffer of little-endian u64 donor keys, released by buffer_release.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_stroke_keys(handle: *const c_void, out_keys: *mut CakeCanvasBuffer) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_keys.is_null() { return CakeCanvasStatus::InvalidArgument; }
+        unsafe { *out_keys = CakeCanvasBuffer::default(); }
+        let Some(keys) = with_engine(handle, HeadlessCanvasEngine::stroke_keys) else { return CakeCanvasStatus::InvalidHandle; };
+        let bytes = keys.iter().flat_map(|key| key.to_le_bytes()).collect::<Vec<_>>();
+        unsafe { *out_keys = owned_buffer(bytes); }
+        CakeCanvasStatus::Ok
+    })
+}
+
+/// Read-only, selected-only structured export. Missing/duplicate keys reject
+/// the request rather than exporting a different selection or entire document.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_export_selected_strokes(handle: *const c_void, keys: *const u64, key_count: usize,
+    out_native: *mut CakeCanvasBuffer) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_native.is_null() { return CakeCanvasStatus::InvalidArgument; }
+        unsafe { *out_native = CakeCanvasBuffer::default(); }
+        if keys.is_null() || key_count == 0 || key_count > 1_000_000 { return CakeCanvasStatus::InvalidArgument; }
+        let keys = unsafe { slice::from_raw_parts(keys, key_count) };
+        let Some(result) = with_engine(handle, |engine| block_on(engine.selected_strokes_rnote(keys))) else {
+            return CakeCanvasStatus::InvalidHandle;
+        };
+        match result {
+            Ok(bytes) => { unsafe { *out_native = owned_buffer(bytes); } CakeCanvasStatus::Ok },
+            Err(_) => CakeCanvasStatus::InvalidArgument,
+        }
+    })
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn cake_canvas_buffer_release(buffer: *mut CakeCanvasBuffer) {
     if buffer.is_null() {

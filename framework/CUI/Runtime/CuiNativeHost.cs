@@ -24,25 +24,26 @@ public static class CuiNativeHost
     public static AppBuilder ConfigureFonts(AppBuilder builder) => builder.WithInterFont()
         .With(new FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" });
 
-    public static void InitialisePrimitiveTheme(Application application)
+    public static void InitialisePrimitiveTheme(Application application, string surface = "Home", CuiAppearance? appearance = null)
     {
         ArgumentNullException.ThrowIfNull(application);
         application.Styles.Add(new FluentTheme());
-        var paletteResources = new ResourceDictionary();
-        CuiThemeResourceApplier.ApplyToResources(paletteResources, CuiSurfacePaletteCatalog.For("Home", CuiAppearance.Dark));
+        var effective = appearance ?? CuiThemeScopeApplier.DetectAppearance();
+        application.RequestedThemeVariant = CuiSceneVisualResources.Variant(effective);
+        var paletteResources = CuiSceneVisualResources.Create(surface, effective);
         application.Resources.MergedDictionaries.Add(paletteResources);
     }
 
     private sealed class NativeApplication(CuiNativeScene scene) : Application
     {
         private readonly CancellationTokenSource _shutdown = new();
-        public override void Initialize() => InitialisePrimitiveTheme(this);
+        public override void Initialize() => InitialisePrimitiveTheme(this, scene.Surface, scene.Appearance);
         public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var host = new CuiSceneHost();
-                var window = new Window { Title = scene.Title, Width = 1100, Height = 760, Content = host };
+                var window = new Window { Title = scene.Title, Width = 1100, Height = 760, Content = host, Background = (Avalonia.Media.IBrush?)Resources["CuiBackgroundBrush"] };
                 window.Closed += (_, _) => { _shutdown.Cancel(); host.Dispose(); };
                 desktop.MainWindow = window;
                 _ = InitialiseAsync(host);

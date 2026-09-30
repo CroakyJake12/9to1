@@ -17,6 +17,9 @@ namespace CakeOS.Cui.Runtime;
 public sealed class CuiControlLoader : IDisposable
 {
     private readonly CuiControlRegistry _controlRegistry;
+    private readonly CancellationTokenSource _lifetime = new();
+    private bool _disposed;
+    public event EventHandler<CuiActionFailure>? ActionFailed;
     private readonly Dictionary<string, string> _resourceScope;
     private readonly List<CuiDiagnostic> _runtimeDiagnostics = [];
     private readonly List<CuiLiveBinding> _liveBindings = [];
@@ -34,6 +37,7 @@ public sealed class CuiControlLoader : IDisposable
         new Dictionary<string, CuiActionDefinition>(StringComparer.Ordinal);
     private CuiThemeScopeStack _themeStack = new(CuiSurfacePaletteCatalog.ActiveTheme);
     private string _currentSurface = "Home";
+    private CuiAppearance? _appearance;
     private int _currentLayer;
     private string? _currentRepeatIdentity;
     private PropertyChangedEventHandler? _bindingChangedHandler;
@@ -58,6 +62,10 @@ public sealed class CuiControlLoader : IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        _lifetime.Cancel();
+        ActionFailed = null;
         if (_bindingContext is INotifyPropertyChanged observable && _bindingChangedHandler is not null)
             observable.PropertyChanged -= _bindingChangedHandler;
         _bindingChangedHandler = null;
@@ -72,6 +80,11 @@ public sealed class CuiControlLoader : IDisposable
 
     /// <summary>Set the surface name for theme resolution (default: "Home").</summary>
     public void SetSurface(string surface) => _currentSurface = surface;
+    public void SetAppearance(CuiAppearance appearance)
+    {
+        if (!Enum.IsDefined(appearance)) throw new ArgumentOutOfRangeException(nameof(appearance));
+        _appearance = appearance;
+    }
 
     /// <summary>The currently active theme at the current point in the tree.</summary>
     public CuiTheme CurrentTheme => _themeStack.Current;
@@ -223,17 +236,32 @@ public sealed class CuiControlLoader : IDisposable
         WireBindingsRecursive(root);
     }
 
+    private async Task DispatchButtonAsync(Button button)
+    {
+        if (_disposed || !button.IsEnabled || !_wiredActions.Contains(button) ||
+            _actionDispatcher is not { } dispatcher || !TryGetActionInvocation(button, out var invocation)) return;
+        try { await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter, _lifetime.Token); }
+        catch (OperationCanceledException)
+        { if (!_disposed) ReportActionFailure(button, new("CUIA_CANCELLED", "The action was cancelled.", true)); }
+        catch (Exception)
+        { if (!_disposed) ReportActionFailure(button, new("CUIA_FAILED", "The action could not complete. Check the current state before trying again.", false)); }
+    }
+    private void ReportActionFailure(Button button, CuiActionFailure failure)
+    {
+        var span = _authoredControls.TryGetValue(button, out var authored) ? authored.Span : default;
+        _runtimeDiagnostics.Add(new(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error, failure.Message, span));
+        try { ActionFailed?.Invoke(this, failure); }
+        catch (Exception)
+        { _runtimeDiagnostics.Add(new("CUIA_OBSERVER_FAILED", CuiDiagnosticSeverity.Error, "The action status could not be displayed.", span)); }
+    }
+
     private void WireBindingsRecursive(Control control)
     {
         // Wire button clicks to actions
         if (control is Button button && _actionDispatcher is not null && !_wiredActions.Contains(button)
             && TryGetActionInvocation(button, out var invocation))
         {
-            EventHandler<RoutedEventArgs> handler = async (_, _) =>
-            {
-                if (_actionDispatcher is { } dispatcher)
-                    await dispatcher.DispatchAsync(invocation.Command, invocation.Parameter);
-            };
+            EventHandler<RoutedEventArgs> handler = (_, _) => { _ = DispatchButtonAsync(button); };
             button.Click += handler;
             _actionHandlers[button] = handler;
             _wiredActions.Add(button);
@@ -311,7 +339,7 @@ public sealed class CuiControlLoader : IDisposable
                 // Apply theme resources to the resulting control
                 if (result is not null)
                 {
-                    CuiThemeScopeApplier.ApplyThemeToControl(result, resolvedTheme, _currentSurface);
+                    CuiThemeScopeApplier.ApplyThemeToControl(result, resolvedTheme, _currentSurface, appearanceOverride: _appearance);
                 }
 
                 return result ?? new Panel();
@@ -462,17 +490,40 @@ public sealed class CuiControlLoader : IDisposable
                 "Repeat elements require a parsed source, item name, and stable key.", component.Span));
 
         var layer = ResolveLayer(component, _currentLayer);
-        var host = new StackPanel { Name = component.Name, ZIndex = layer };
+        var panelValue = component.Properties.FirstOrDefault(pair => pair.Key.Equals("Panel", StringComparison.OrdinalIgnoreCase)).Value;
+        var panelName = panelValue is null ? "StackPanel" : panelValue is CuiLiteralValue literal ? literal.Value :
+            throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel must be a structural literal.", component.Span));
+        Panel host = panelName.ToLowerInvariant() switch
+        {
+            "stackpanel" or "stack" => new StackPanel(),
+            "grid" => new Grid(),
+            _ => throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat Panel supports StackPanel or Grid.", component.Span))
+        };
+        host.Name = component.Name; host.ZIndex = layer;
         CuiRuntimeIdentity.SetStableId(host, ComposeStableId(component.StableId));
         _authoredControls[host] = component;
         ApplyProperties(host, component);
-        var state = new CuiRepeatState(host, component, layer);
+        var state = new CuiRepeatState(host, component, layer, _bindingContext, _currentRepeatIdentity);
         _repeats.Add(state);
         ReconcileRepeat(state);
         return host;
     }
 
+    private static string? RepeatItemPlacement(string property) => property.Replace("-", "", StringComparison.Ordinal).ToLowerInvariant() switch
+    {
+        "itemrow" => "Grid.Row", "itemcolumn" => "Grid.Column",
+        "itemrowspan" => "Grid.RowSpan", "itemcolumnspan" => "Grid.ColumnSpan", _ => null
+    };
+
     private void ReconcileRepeat(CuiRepeatState state)
+    {
+        var previousContext = _bindingContext; var previousIdentity = _currentRepeatIdentity; var previousLayer = _currentLayer;
+        _bindingContext = state.Context; _currentRepeatIdentity = state.IdentityPrefix; _currentLayer = state.Layer;
+        try { ReconcileRepeatCore(state); }
+        finally { _bindingContext = previousContext; _currentRepeatIdentity = previousIdentity; _currentLayer = previousLayer; }
+    }
+
+    private void ReconcileRepeatCore(CuiRepeatState state)
     {
         var definition = state.Component.Repeat!;
         var source = ResolveObject(definition.Source);
@@ -544,6 +595,14 @@ public sealed class CuiControlLoader : IDisposable
             _currentRepeatIdentity = identity;
             try
             {
+                foreach (var (propertyName, value) in state.Component.Properties)
+                {
+                    var placement = RepeatItemPlacement(propertyName);
+                    if (placement is null) continue;
+                    if (state.Host is not Grid) throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR050", CuiDiagnosticSeverity.Error, "Repeat item placement requires Panel Grid.", state.Component.Span));
+                    if (value is CuiBindingValue binding) ApplyLiveBinding(itemRoot, placement, binding, state.Component.Span);
+                    else if (ResolveValue(value) is { } resolved) ApplyLiteralProperty(itemRoot, placement, resolved, state.Component.Span);
+                }
                 foreach (var child in state.Component.Children)
                     itemRoot.Children.Add(LoadComponent(child));
             }
@@ -692,6 +751,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         foreach (var (propName, value) in component.Properties)
         {
+            if (component.Repeat is not null && (propName.Equals("Panel", StringComparison.OrdinalIgnoreCase) || RepeatItemPlacement(propName) is not null)) continue;
             // Type selects the native lowering of core polymorphic elements.
             if (propName.Equals("Type", StringComparison.OrdinalIgnoreCase)
                 && (component.Type.Equals("Container", StringComparison.OrdinalIgnoreCase)
@@ -1695,7 +1755,7 @@ public sealed class CuiControlLoader : IDisposable
         if (control is Panel || control is Border || control is ContentControl || control is Decorator)
         {
             var currentTheme = _themeStack.Current;
-            CuiThemeScopeApplier.ApplyThemeToControl(control, currentTheme, _currentSurface);
+            CuiThemeScopeApplier.ApplyThemeToControl(control, currentTheme, _currentSurface, appearanceOverride: _appearance);
         }
     }
 
@@ -1757,13 +1817,15 @@ public sealed class CuiControlLoader : IDisposable
         private System.Collections.Specialized.INotifyCollectionChanged? _observableSource;
         private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _handler;
 
-        public CuiRepeatState(Panel host, CuiComponent component, int layer)
+        public CuiRepeatState(Panel host, CuiComponent component, int layer, ICuiBindingContext? context, string? identityPrefix)
         {
             Host = host;
             Component = component;
-            Layer = layer;
+            Layer = layer; Context = context; IdentityPrefix = identityPrefix;
         }
 
+        public ICuiBindingContext? Context { get; }
+        public string? IdentityPrefix { get; }
         public Panel Host { get; }
         public CuiComponent Component { get; }
         public int Layer { get; }

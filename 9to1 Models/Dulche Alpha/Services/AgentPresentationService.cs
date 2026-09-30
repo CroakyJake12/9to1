@@ -6,7 +6,7 @@ public sealed class AgentPresentationService(DulcheDen den, IAgentPresentationAs
     public async Task<AgentDefinitionRecord> SetAsync(string namespaceId, string agentId, long expectedRevision,
         AgentPresentationDefinition presentation, string operationId, CancellationToken cancellationToken = default)
     {
-        AgentAvatarPresentation.Validate(presentation);
+        presentation = AgentAvatarPresentation.Snapshot(presentation);
         var agent = await den.GetAsync<AgentDefinitionRecord>(namespaceId, agentId, cancellationToken).ConfigureAwait(false)
             ?? throw new DenException(DenErrorCode.NotFound, "The Agent was not found.");
         if (agent.Revision != expectedRevision) throw new DenException(DenErrorCode.Conflict, "The Agent changed before presentation was saved.");
@@ -21,12 +21,12 @@ public sealed class AgentPresentationService(DulcheDen den, IAgentPresentationAs
     {
         var agent = await den.GetAsync<AgentDefinitionRecord>(namespaceId, agentId, cancellationToken).ConfigureAwait(false)
             ?? throw new DenException(DenErrorCode.NotFound, "The Agent was not found.");
-        var definition = agent.Presentation ?? throw new DenException(DenErrorCode.NotFound, "Presentation is not configured.");
+        var definition = AgentAvatarPresentation.Snapshot(agent.Presentation ?? throw new DenException(DenErrorCode.NotFound, "Presentation is not configured."));
         var available = true;
         foreach (var asset in definition.States.Select(s => s.AssetReference))
             available &= await assets.CanReadAsync(den.PrincipalId, namespaceId, asset, cancellationToken).ConfigureAwait(false);
         if (!await assets.CanReadAsync(den.PrincipalId, namespaceId, definition.StaticFallbackAssetReference, cancellationToken).ConfigureAwait(false))
             throw new DenException(DenErrorCode.Forbidden, "The static fallback asset is inaccessible.");
-        return AgentAvatarPresentation.Present(agent, stateId, presentationEvent, readableActivity, reducedMotion, available);
+        return AgentAvatarPresentation.Present(agent with { Presentation = definition }, stateId, presentationEvent, readableActivity, reducedMotion, available);
     }
 }

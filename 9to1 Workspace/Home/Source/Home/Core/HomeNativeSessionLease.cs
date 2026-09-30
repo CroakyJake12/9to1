@@ -8,6 +8,10 @@ namespace HavenOS.Home.Core;
 public sealed class HomeNativeSessionLease : IDisposable
 {
     private readonly FileStream _handle;
+    private int _disposed;
+    public bool IsHeld => Volatile.Read(ref _disposed) == 0;
+    /// <summary>Identity of this actually held process lease, renewed on each acquisition; it is not a transferable permission token.</summary>
+    public Guid LeaseIdentity { get; } = Guid.NewGuid();
     public string ProfileId { get; }
     private HomeNativeSessionLease(FileStream handle, string profileId) { _handle = handle; ProfileId = profileId; }
 
@@ -36,5 +40,8 @@ public sealed class HomeNativeSessionLease : IDisposable
         }
         catch { handle.Dispose(); throw; }
     }
-    public void Dispose() => _handle.Dispose();
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) == 0) _handle.Dispose();
+    }
 }

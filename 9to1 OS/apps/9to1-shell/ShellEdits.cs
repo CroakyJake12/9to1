@@ -39,7 +39,7 @@ public static class ShellEdits
     {
         var original = config.ActiveSpace;
         var mapping = original.Taskbar.Layers.ToDictionary(l => l.Id, _ => Guid.NewGuid());
-        var space = original with { Id = Guid.NewGuid(), Name = name, Taskbar = original.Taskbar with { Id = Guid.NewGuid(),
+        var space = original with { Id = Guid.NewGuid(), Name = name, DesktopSurface = original.DesktopSurface is null ? null : DesktopPageEdits.Duplicate(original.DesktopSurface), Taskbar = original.Taskbar with { Id = Guid.NewGuid(),
             ActiveLayerId = mapping[original.Taskbar.ActiveLayerId], Layers = original.Taskbar.Layers.Select(l => l with { Id = mapping[l.Id], Items = l.Items.Select(i => i with { Id = Guid.NewGuid() }).ToArray() }).ToArray() } };
         return config with { ActiveSpaceId = space.Id, Spaces = [.. config.Spaces, space] };
     }

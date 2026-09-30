@@ -90,6 +90,14 @@ public sealed class OrganisationService(string statePath,ProfileService profiles
         return ValueTask.FromResult(new OrganisationPolicyDecision(code=="Allowed",code,org.Policy.Revision,[],
             new Dictionary<string,string>(org.Policy.ForcedSettings)));
     }
+    // Internal owning-service boundary: the callback must validate its actual canonical resource belongs to this OrgID.
+    // Lock order is session -> organisation -> owning resource. No client-supplied ACL, role or scope assertion is used.
+    internal T WithCurrentResourceAuthority<T>(Guid accountID,Guid orgID,string action,long expectedPolicyRevision,Func<Organisation,T> operation)
+    {
+        using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.Single(o=>o.OrgID==orgID);
+        if(org.Policy.Revision!=expectedPolicyRevision)throw new InvalidOperationException("organisation_policy_revision_conflict");
+        Demand(org,accountID,action);return operation(org);
+    }
     private static readonly IReadOnlySet<string> OrganisationGlobalActions=new HashSet<string>(StringComparer.Ordinal){
         "Admin.Organisations.Get","Admin.Organisations.Update","Admin.Members.Invite","Admin.Members.List","Admin.Roles.Create","Admin.Roles.List","Admin.Policies.Publish","Admin.Policies.Get","Admin.Policies.Preview","Admin.Billing.GetConfiguration","Admin.Audit.List","Admin.Resources.GetUsage"};
     private static OrganisationPolicyDecision Decision(bool allowed,string code,long revision)=>new(allowed,code,revision,[],new Dictionary<string,string>());

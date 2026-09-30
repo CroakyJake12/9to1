@@ -25,6 +25,8 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
 {
     private ServiceProvider? _services;
     private HomeNativeSessionLease? _lease;
+    private Authority.LinuxSessionDiscoveryServer? _discoveryServer;
+    private readonly SemaphoreSlim _endpointGate = new(1, 1);
     public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken ct)
     {
         if (!OperatingSystem.IsLinux()) return new(CuiSceneAvailabilityState.Unavailable, "LinuxHostRequired", "This session shell requires its Linux platform host.");
@@ -32,6 +34,16 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
             ["home.core", "home.state", "apps.installed"], ct);
         if (result.State != HomeNativeHostState.Ready || result.Services is null)
             return new(CuiSceneAvailabilityState.Unavailable, result.Code, result.Message);
+        await _endpointGate.WaitAsync(ct);
+        try
+        {
+            _discoveryServer ??= await Authority.LinuxSessionDiscoveryServer.StartAsync(_lease ?? throw new InvalidOperationException("The central Home lease is unavailable."),
+                result.Services.GetRequiredService<IAppPaths>(), result.Services.GetRequiredService<IAuthenticatedResourceActorSource>(),
+                result.Services.GetRequiredService<HomeCoreRuntime>(), result.Services.GetRequiredService<HomeNativeDiscoverySession>(), ct);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Net.Sockets.SocketException or InvalidOperationException)
+        { return new(CuiSceneAvailabilityState.Unavailable, "HomeDiscoveryEndpointUnavailable", "The native Home endpoint could not be published safely. Existing Home data was preserved; repair the installed runtime location."); }
+        finally { _endpointGate.Release(); }
         await model.StartAsync(result.Services.GetRequiredService<ShellConfigurationService>(), result.Services.GetRequiredService<GoService>(), result.Services.GetRequiredService<LinuxApplicationLauncher>(), ct);
         return new(CuiSceneAvailabilityState.Ready, "HomeSessionReady", "The canonical OS session Home services are ready.");
     }
@@ -40,6 +52,13 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         var services = new ServiceCollection();
         services.AddHavenInfrastructure();
         services.AddSingleton<IInstalledApplicationObservationProvider, LinuxInstalledApplications>();
+        // No receipt, clean environment, process-local lease or developer output substitutes for trusted launch.
+        services.AddSingleton<IHomeNativeControlledLaunchAuthority, UnavailableHomeNativeControlledLaunchAuthority>();
+        services.AddSingleton<Authority.LinuxControlledLaunchGate>();
+        services.AddSingleton<Authority.LinuxInstallationPeerVerifier>();
+        services.AddSingleton<IHomeNativeInstalledPeerVerifier>(sp => sp.GetRequiredService<Authority.LinuxInstallationPeerVerifier>());
+        services.AddSingleton<IHomeNativeSessionHostVerifier>(sp => sp.GetRequiredService<Authority.LinuxInstallationPeerVerifier>());
+        services.AddSingleton<HomeNativeDiscoverySession>();
         services.AddSingleton<ICanonicalResourceAccessResolver, ShellConfigurationResourceResolver>();
         services.AddSingleton<ICanonicalResourceAccessResolver, InstalledApplicationResourceResolver>();
         services.AddSingleton<IShellConfigurationStore, HomeShellConfigurationStore>();
@@ -52,7 +71,8 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         // No runtime or app authority is started until this process owns the actual profile session lease.
         _lease = await HomeNativeSessionLease.TryAcquireAsync(actors, _services.GetRequiredService<IAppPaths>(), ct);
         if (_lease is null) throw new InvalidOperationException("Another designated Home session host is active. Attach to it or recover Home; a second authority was not started.");
+        _services.GetRequiredService<Authority.LinuxControlledLaunchGate>().BindHeldLease(_lease);
         return new(_services, _services.GetRequiredService<HomeCoreRuntime>(), actors);
     }
-    public void Dispose() { _services?.Dispose(); _lease?.Dispose(); }
+    public void Dispose() { _discoveryServer?.Dispose(); _services?.Dispose(); _lease?.Dispose(); _endpointGate.Dispose(); }
 }

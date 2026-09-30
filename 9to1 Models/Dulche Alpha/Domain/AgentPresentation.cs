@@ -14,8 +14,29 @@ public sealed record AgentPresentationFrame(string AgentId, long DefinitionRevis
 /// <summary>Presentation events are verified observed activity or authorised preview; no task execution or permission changes.</summary>
 public static class AgentAvatarPresentation
 {
-    public static void Validate(AgentPresentationDefinition definition)
+    public static AgentPresentationDefinition Snapshot(AgentPresentationDefinition? definition)
     {
+        if (definition is null || definition.States is null || definition.Transitions is null || definition.Reactions is null ||
+            definition.States.Count > 128 || definition.Transitions.Count > 512 || definition.Reactions.Count > 128)
+            throw new DenException(DenErrorCode.InvalidRecord, "Agent presentation has an invalid or oversized structure.");
+        AgentPresentationDefinition snapshot;
+        try
+        {
+            snapshot = definition with { States = Array.AsReadOnly(definition.States.ToArray()),
+                Transitions = Array.AsReadOnly(definition.Transitions.ToArray()), Reactions = Array.AsReadOnly(definition.Reactions.ToArray()) };
+        }
+        catch (InvalidOperationException)
+        { throw new DenException(DenErrorCode.InvalidRecord, "Agent presentation changed while being captured."); }
+        Validate(snapshot);
+        return snapshot;
+    }
+
+    public static void Validate(AgentPresentationDefinition? definition)
+    {
+        if (definition is null || definition.States is null || definition.Transitions is null || definition.Reactions is null ||
+            definition.States.Count > 128 || definition.Transitions.Count > 512 || definition.Reactions.Count > 128 ||
+            definition.States.Any(state => state is null) || definition.Transitions.Any(transition => transition is null) || definition.Reactions.Any(reaction => reaction is null))
+            throw new DenException(DenErrorCode.InvalidRecord, "Agent presentation has an invalid structure.");
         if (definition.SchemaVersion != 1) throw new DenException(DenErrorCode.InvalidRecord, "Unsupported Agent presentation schema.");
         if (!Enum.IsDefined(definition.Mode) || string.IsNullOrWhiteSpace(definition.StaticFallbackAssetReference) || string.IsNullOrWhiteSpace(definition.AccessibleName))
             throw new DenException(DenErrorCode.InvalidRecord, "A static fallback and accessible identity are required.");

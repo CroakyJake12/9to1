@@ -40,7 +40,13 @@ public sealed class SubscriptionPurchaseService(AccountLedger ledger, Subscripti
     {
         if(verifier is null)throw new InvalidOperationException("billing_provider_verifier_unconfigured");
         if(monthlyPricePolicy is null)throw new InvalidOperationException("entitlement_monthly_price_policy_unconfigured");
-        var receipt=await verifier.VerifyAsync(providerEvent,signatureHeaders,cancellationToken).ConfigureAwait(false)
+        ArgumentNullException.ThrowIfNull(signatureHeaders);
+        // Capture the exact provider envelope before the adapter can await. Caller-owned
+        // buffers and dictionaries must not change the signed event being verified.
+        var capturedEvent=providerEvent.ToArray();
+        var capturedHeaders=new System.Collections.ObjectModel.ReadOnlyDictionary<string,string>(
+            new Dictionary<string,string>(signatureHeaders,StringComparer.Ordinal));
+        var receipt=await verifier.VerifyAsync(capturedEvent,capturedHeaders,cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("billing_event_not_verified");
         if(receipt.AccountID!=authenticatedAccountID)throw new UnauthorizedAccessException("billing_account_mismatch");
         return ledger.ActivateVerifiedPurchase(authenticatedAccountID,receipt,monthlyPricePolicy);

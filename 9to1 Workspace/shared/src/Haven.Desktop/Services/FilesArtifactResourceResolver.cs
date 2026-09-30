@@ -4,8 +4,13 @@ using HavenOS.Files;
 namespace Haven.Desktop.Services;
 
 /// <summary>Host binds actual providers to verified Home actors; caller arguments cannot select a profile or Drive.</summary>
-public sealed class FilesArtifactResourceResolver(Func<AuthenticatedResourceActor, IFilesProvider?> providers) : ICanonicalResourceAccessResolver
+public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessResolver
 {
+    private readonly Func<AuthenticatedResourceActor, CancellationToken, ValueTask<IFilesProvider?>> _providers;
+    public FilesArtifactResourceResolver(Func<AuthenticatedResourceActor, IFilesProvider?> providers)
+        : this((actor, _) => ValueTask.FromResult(providers(actor))) { }
+    public FilesArtifactResourceResolver(Func<AuthenticatedResourceActor, CancellationToken, ValueTask<IFilesProvider?>> providers)
+    { _providers = providers ?? throw new ArgumentNullException(nameof(providers)); }
     public string ResourceKind => "files.item";
     public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId,
         ResourceScope scope, CancellationToken cancellationToken)
@@ -23,7 +28,7 @@ public sealed class FilesArtifactResourceResolver(Func<AuthenticatedResourceActo
         };
         if (!mediaRead && (ownerApp is null || scope.Access != (actionId.EndsWith(".open", StringComparison.Ordinal) ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
-        var provider = providers(actor);
+        var provider = await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
         var result = await provider.GetAsync(new(id), cancellationToken).ConfigureAwait(false);
         if (!result.IsSuccess) return Deny("FilesItemUnavailable");
@@ -40,7 +45,16 @@ public sealed class FilesArtifactResourceResolver(Func<AuthenticatedResourceActo
         {
             if (provider is not DurableDriveProvider durable) return Deny("FilesOwningAppUnavailable");
             var artifact = await durable.GetArtifactAsync(item.Id, cancellationToken).ConfigureAwait(false);
-            if (!artifact.IsSuccess || artifact.Value!.OwnerAppId != ownerApp) return Deny("FilesOwningAppMismatch");
+            var expectedType = ownerApp switch
+            {
+                "write" => nameof(FilesArtifactType.WriteDocument),
+                "canvas" => nameof(FilesArtifactType.Canvas),
+                "picture" => nameof(FilesArtifactType.Picture),
+                _ => null
+            };
+            if (item.Kind != HostedItemKind.Artifact || !artifact.IsSuccess ||
+                artifact.Value!.OwnerAppId != ownerApp || artifact.Value.ArtifactType != expectedType)
+                return Deny("FilesOwningAppMismatch");
         }
         return new(true, "Allowed", actor.ActorId, revision, null);
     }

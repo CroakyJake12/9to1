@@ -218,7 +218,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         IModeRegistry modeRegistry,
         IModeUsageRepository modeUsage,
         IPinRepository pins,
-        AgentTaskRuntimeService? agentRuntime = null)
+        AgentTaskRuntimeService? agentRuntime = null,
+        SpaceRegistry? spacesRegistry = null)
     {
         _eventBus = bus;
         _bus = bus;
@@ -272,6 +273,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _dashboard = dashboard;
         _dashboardLayout = dashboardLayout;
         _versionedSettings = versionedSettings;
+        _spaceRegistry = spacesRegistry ?? new SpaceRegistry(versionedSettings);
         _playSessions = playSessions;
         _dashboardProviders = dashboardProviders.Providers;
         _callCoordinator = callCoordinator;

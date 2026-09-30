@@ -8,7 +8,7 @@
     <AssemblyName>CakeOS.Hui.Renderer</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\vendor\Haven.UI\Haven.UI.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
     <PackageReference Include="Avalonia" Version="12.0.1" />
     <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.17" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\theme\tokens.json">

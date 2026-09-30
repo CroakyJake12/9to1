@@ -6,7 +6,7 @@ namespace HavenOS.Apps.Canvas;
 
 /// <summary>Captured by the trusted host from the current canonical Files-backed document, not model arguments.</summary>
 public sealed record CanvasAiTarget(CanvasArtifact Artifact, Guid FileId, Guid FilesRevisionId, Guid ActivePageId,
-    IReadOnlyList<Guid> SelectedIds, string CurrentTool, bool HostAllowsWrites);
+    IReadOnlyList<Guid> SelectedIds, string CurrentTool, bool HostAllowsWrites, CanvasRnoteInkStyle? InkStyle = null);
 
 /// <summary>Permission-filtered semantic context for the shared Dulche coordinator; never exports donor blobs or renders.</summary>
 public sealed class CanvasAppAiContext(
@@ -29,6 +29,7 @@ public sealed class CanvasAppAiContext(
         var selectionIds = target.SelectedIds.Distinct().ToArray();
         if (selectionIds.Any(id => !ids.Contains(id)))
             throw new InvalidOperationException("Canvas AI selection does not belong to the active page.");
+        target.InkStyle?.ValidateAndResolve();
         // Linked shared-owner contents need that owner's separate permission
         // check. Spatial wrappers and stable references remain inspectable;
         // donor state and arbitrary extensions are never sent to the model.
@@ -57,11 +58,18 @@ public sealed class CanvasAppAiContext(
                 CanonicalRepresentation = "Structured ink; handwriting is not authoritative text",
             }),
             SelectedIds = selectionIds, target.CurrentTool,
+            InkOptions = target.InkStyle is null ? null : new
+            {
+                EngineId = "rnote", Kind = target.InkStyle.Kind.ToString(),
+                target.InkStyle.Color, target.InkStyle.BaseWidth, target.InkStyle.Opacity,
+                Scope = "Transient editor preference; applies to new strokes only",
+            },
         });
         var current = await currentTarget(cancellationToken).ConfigureAwait(false);
         if (current is null || current.FileId != target.FileId || current.FilesRevisionId != target.FilesRevisionId ||
             current.Artifact.ArtifactId != artifact.ArtifactId || current.Artifact.RevisionId != artifact.RevisionId ||
             current.ActivePageId != target.ActivePageId || current.CurrentTool != target.CurrentTool ||
+            current.InkStyle != target.InkStyle ||
             current.HostAllowsWrites != target.HostAllowsWrites || !current.SelectedIds.Distinct().SequenceEqual(selectionIds) ||
             await authorization.AuthorizeAsync("canvas.file.open", [scope], cancellationToken).ConfigureAwait(false) != actor)
             throw new UnauthorizedAccessException("Canvas target, revision or resource authority changed during context capture.");

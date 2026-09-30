@@ -30,6 +30,7 @@ public sealed class CanvasRnoteDocument : IDisposable
         CompatibilityReport = report;
         try
         {
+            ValidateNativeStrokeBindings(artifact, engine);
             artifact.DocumentSettings = SettingsWithEngineState(artifact.DocumentSettings, engine, report);
             _session = new CanvasArtifactSession(artifact);
         }
@@ -119,8 +120,18 @@ public sealed class CanvasRnoteDocument : IDisposable
                 var result = _session.AddStructuredStroke(request, page.PageId, stroke, () =>
                 {
                     candidate = RnoteCanvasEngine.Open(_engine.Save());
+                    var bindings = new Dictionary<Guid, ulong>(ReadPersistedState(artifact).NativeStrokeKeys ?? new Dictionary<Guid, ulong>());
+                    var priorKeys = candidate.SupportsStructuredSelectionExport ? candidate.ReadStrokeKeys().ToHashSet() : null;
                     candidate.DrawCapturedStroke(capturedSamples, inkStyle);
-                    return SettingsWithEngineState(artifact.DocumentSettings, candidate, CompatibilityReport);
+                    if (priorKeys is not null)
+                    {
+                        var currentKeys = candidate.ReadStrokeKeys().ToHashSet();
+                        var added = currentKeys.Except(priorKeys).ToArray();
+                        if (!priorKeys.IsSubsetOf(currentKeys) || added.Length != 1)
+                            throw new InvalidDataException("The donor stroke did not produce exactly one stable native entity.");
+                        bindings.Add(stroke.StrokeId, added[0]);
+                    }
+                    return SettingsWithEngineState(artifact.DocumentSettings, candidate, CompatibilityReport, bindings);
                 });
                 RequireSuccess(result);
                 // Idempotent replays do not invoke the donor and do not replace
@@ -189,6 +200,39 @@ public sealed class CanvasRnoteDocument : IDisposable
     }
     public byte[] Serialize() { lock (_gate) { EnsureOpen(); return CanvasArtifactCodec.Serialize(_session.GetArtifactSnapshot()); } }
     public byte[] ExportRnote() { lock (_gate) { EnsureOpen(); return _engine.Save(); } }
+
+    /// <summary>
+    /// Read-only domain export for an already authorized host. Exact canonical
+    /// IDs and current artifact revision select native entities; missing legacy
+    /// or imported bindings fail explicitly rather than exporting the document.
+    /// This method does not grant Files/Home read authority.
+    /// </summary>
+    public byte[] ExportCanonicalStrokeSelection(IEnumerable<Guid> strokeIds, Guid expectedRevision)
+    {
+        ArgumentNullException.ThrowIfNull(strokeIds);
+        var captured = new List<Guid>();
+        foreach (var id in strokeIds)
+        {
+            if (captured.Count == 1_000_000) throw new ArgumentException("Canvas selection exceeds its entity limit.", nameof(strokeIds));
+            captured.Add(id);
+        }
+        if (captured.Count == 0 || captured.Any(id => id == Guid.Empty) || captured.Distinct().Count() != captured.Count)
+            throw new ArgumentException("Canvas selection requires unique nonempty stroke IDs.", nameof(strokeIds));
+        lock (_gate)
+        {
+            EnsureOpen();
+            var artifact = _session.GetArtifactSnapshot();
+            if (expectedRevision == Guid.Empty || artifact.RevisionId != expectedRevision)
+                throw new InvalidOperationException("Canvas selection targets a stale artifact revision.");
+            var existing = artifact.Pages.SelectMany(page => page.Strokes).Select(stroke => stroke.StrokeId).ToHashSet();
+            if (captured.Any(id => !existing.Contains(id)))
+                throw new InvalidOperationException("Canvas selection contains a stroke outside the current canonical artifact.");
+            var bindings = ReadPersistedState(artifact).NativeStrokeKeys;
+            if (bindings is null || captured.Any(id => !bindings.ContainsKey(id)))
+                throw new NotSupportedException("This Canvas selection has no retained canonical-to-native entity binding.");
+            return _engine.ExportSelectedStrokes(captured.Select(id => bindings[id]));
+        }
+    }
     public void Dispose() { lock (_gate) { if (_disposed) return; _disposed = true; _engine.Dispose(); } }
 
     private static void RequireSuccess(CanvasApiResult<CanvasMutationResult> result)
@@ -201,12 +245,33 @@ public sealed class CanvasRnoteDocument : IDisposable
     private static RnotePersistedState ReadPersistedState(CanvasArtifact artifact) =>
         artifact.DocumentSettings.Properties[StateKey].Deserialize<RnotePersistedState>() ?? throw new InvalidDataException("Canvas Rnote state is empty.");
 
-    private static CanvasDocumentSettings SettingsWithEngineState(CanvasDocumentSettings settings, RnoteCanvasEngine engine, CanvasImportCompatibilityReport report)
+    private static CanvasDocumentSettings SettingsWithEngineState(CanvasDocumentSettings settings, RnoteCanvasEngine engine, CanvasImportCompatibilityReport report,
+        IReadOnlyDictionary<Guid, ulong>? nativeStrokeKeys = null)
     {
         var bytes = engine.Save();
-        var payload = new RnotePersistedState(1, DonorRevision, Convert.ToBase64String(bytes), Convert.ToHexString(SHA256.HashData(bytes)), report);
+        var retained = nativeStrokeKeys ?? (settings.Properties.TryGetValue(StateKey, out var prior)
+            ? prior.Deserialize<RnotePersistedState>()?.NativeStrokeKeys : null);
+        var payload = new RnotePersistedState(1, DonorRevision, Convert.ToBase64String(bytes), Convert.ToHexString(SHA256.HashData(bytes)), report,
+            retained is null ? null : new Dictionary<Guid, ulong>(retained));
         var properties = new Dictionary<string, JsonElement>(settings.Properties, StringComparer.Ordinal) { [StateKey] = JsonSerializer.SerializeToElement(payload) };
         return settings with { Properties = properties };
     }
-    private sealed record RnotePersistedState(int SchemaVersion, string DonorRevision, string PayloadBase64, string Sha256, CanvasImportCompatibilityReport CompatibilityReport);
+
+    private static void ValidateNativeStrokeBindings(CanvasArtifact artifact, RnoteCanvasEngine engine)
+    {
+        if (!artifact.DocumentSettings.Properties.TryGetValue(StateKey, out var state)) return;
+        var bindings = state.Deserialize<RnotePersistedState>()?.NativeStrokeKeys;
+        if (bindings is null || bindings.Count == 0) return;
+        if (bindings.Count > 1_000_000 || bindings.Keys.Any(id => id == Guid.Empty) || bindings.Values.Distinct().Count() != bindings.Count)
+            throw new InvalidDataException("Canvas native stroke bindings have invalid or duplicate identity.");
+        var canonical = artifact.Pages.SelectMany(page => page.Strokes).Select(stroke => stroke.StrokeId).ToHashSet();
+        if (bindings.Keys.Any(id => !canonical.Contains(id)))
+            throw new InvalidDataException("Canvas native stroke binding targets an absent canonical stroke.");
+        var native = engine.ReadStrokeKeys().ToHashSet();
+        if (bindings.Values.Any(key => !native.Contains(key)))
+            throw new InvalidDataException("Canvas native stroke binding targets an absent persisted native entity.");
+    }
+
+    private sealed record RnotePersistedState(int SchemaVersion, string DonorRevision, string PayloadBase64, string Sha256,
+        CanvasImportCompatibilityReport CompatibilityReport, IReadOnlyDictionary<Guid, ulong>? NativeStrokeKeys = null);
 }

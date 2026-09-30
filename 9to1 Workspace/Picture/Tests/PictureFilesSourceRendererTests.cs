@@ -10,8 +10,10 @@ namespace HavenOS.Images.Tests;
 
 public sealed class PictureFilesSourceRendererTests
 {
-    [AvaloniaFact]
-    public async Task Exact_pinned_source_lease_releases_before_actual_raster_replay_and_preserves_green_crop()
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Exact_pinned_source_lease_releases_before_actual_raster_replay_and_preserves_green_crop(bool useControlledGlycin)
     {
         var directory = Path.Combine(Path.GetTempPath(), "picture-lease-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -35,7 +37,9 @@ public sealed class PictureFilesSourceRendererTests
                     return ValueTask.CompletedTask;
                 })));
             }, authority.Service);
-            using var pinned = await resolver.LoadAsync(artifact, authority.Revision, TestContext.Current.CancellationToken);
+            using var pinned = useControlledGlycin
+                ? await resolver.LoadWithGlycinAsync(artifact, authority.Revision, new PictureGlycinDecoder(), TestContext.Current.CancellationToken)
+                : await resolver.LoadAsync(artifact, authority.Revision, TestContext.Current.CancellationToken);
             Assert.True(released);
             Assert.False(File.Exists(path));
             using var frame = pinned.Render();
@@ -100,6 +104,40 @@ public sealed class PictureFilesSourceRendererTests
         finally { Directory.Delete(directory, true); }
     }
 
+    [Fact]
+    public async Task Native_source_pipeline_rejects_corrupt_identified_format_and_authority_revocation_after_decoding()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "picture-native-lease-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "source.bmp");
+            var bytes = TwoPixelBmp();
+            var backing = Guid.NewGuid();
+            var authority = new Authority(backing) { DenyAtAuthorization = 3 };
+            var released = 0;
+            var source = new PictureSourceAssetReference(Guid.NewGuid(), Guid.NewGuid(), Convert.ToHexString(SHA256.HashData(bytes)), bytes.Length, Guid.NewGuid());
+            var artifact = new PictureArtifactEnvelope { BackingFileId = backing, SourceAsset = source,
+                Document = PictureDocument.Create(2, 1, source.FileId.ToString(), source.RevisionId.ToString()) };
+            var renderer = new PictureFilesSourceRenderer((_, _) => Task.FromResult(MediaEngineResult<MediaAssetReadLease>.Success(
+                new(new(new(source.AssetId), source.FileId, new Uri(path), source.RevisionId.ToString()), () =>
+                { released++; return ValueTask.CompletedTask; }))), authority.Service);
+            await File.WriteAllBytesAsync(path, bytes, TestContext.Current.CancellationToken);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => renderer.LoadWithGlycinAsync(artifact, authority.Revision,
+                new PictureGlycinDecoder(), TestContext.Current.CancellationToken));
+            Assert.Equal(3, authority.Authorizations);
+            Assert.Equal(1, released);
+            authority.DenyAtAuthorization = int.MaxValue;
+            var corrupt = bytes.Take(20).ToArray();
+            await File.WriteAllBytesAsync(path, corrupt, TestContext.Current.CancellationToken);
+            var corruptArtifact = artifact with { SourceAsset = source with { SizeBytes = corrupt.Length, ContentHash = Convert.ToHexString(SHA256.HashData(corrupt)) } };
+            await Assert.ThrowsAsync<IOException>(() => renderer.LoadWithGlycinAsync(corruptArtifact, authority.Revision,
+                new PictureGlycinDecoder(), TestContext.Current.CancellationToken));
+            Assert.Equal(2, released);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
     private static byte[] TwoPixelBmp()
     {
         var bytes = new byte[62];
@@ -119,11 +157,16 @@ public sealed class PictureFilesSourceRendererTests
         public Authority(Guid fileId) { _fileId = fileId; Service = new(this, [this]); }
         public Guid Revision { get; } = Guid.NewGuid();
         public bool Deny { get; set; }
+        public int Authorizations { get; private set; }
+        public int DenyAtAuthorization { get; set; } = int.MaxValue;
         public ResourceAuthorizationService Service { get; }
         public string ResourceKind => "files.item";
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken cancellationToken) => ValueTask.FromResult<AuthenticatedResourceActor?>(_actor);
-        public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken cancellationToken) =>
-            ValueTask.FromResult(new ResourceAccessDecision(!Deny && actionId == "picture.file.open" && scope.Access == ResourceAccess.Read
+        public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken cancellationToken)
+        {
+            Authorizations++;
+            return ValueTask.FromResult(new ResourceAccessDecision(!Deny && Authorizations < DenyAtAuthorization && actionId == "picture.file.open" && scope.Access == ResourceAccess.Read
                 && scope.Id == _fileId.ToString() && scope.Revision == Revision.ToString(), "fixture", actor.ActorId, scope.Revision, null));
+        }
     }
 }

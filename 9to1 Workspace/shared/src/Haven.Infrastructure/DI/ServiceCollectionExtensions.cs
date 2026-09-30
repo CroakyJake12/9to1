@@ -42,6 +42,11 @@ public static class ServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeCoreStateService>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeInstalledApplicationsService>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomePermissionsCoreService>());
+        services.TryAddSingleton<HomeProductivityEngine>(provider => new HomeProductivityEngine(
+            handlers: provider.GetServices<IHomeProductivityObjectHandler>(),
+            artifactActions: provider.GetServices<IHomeProductivityArtifactActionProvider>()));
+        services.TryAddSingleton<IHomeProductivityEngine>(provider => provider.GetRequiredService<HomeProductivityEngine>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeProductivityEngineService>());
         services.TryAddSingleton<HomeCoreRuntime>();
         services.AddSingleton<HomeResourceOperationBroker>();
         services.AddSingleton<HomeInvocationCatalogue>();

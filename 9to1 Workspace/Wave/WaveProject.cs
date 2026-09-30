@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Security.Cryptography;
 using System.Text;
+using Haven.Core.Media;
 
 namespace HavenOS.Apps.Wave;
 
@@ -30,11 +31,15 @@ public sealed record WaveClip(
     long FadeInFrames = 0,
     long FadeOutFrames = 0,
     string? SourceFileID = null,
-    string? SourceRevisionID = null);
+    string? SourceRevisionID = null,
+    WaveAudioDerivation? AudioDerivation = null);
+
+/// <summary>Reproducibility evidence for ephemeral audio decoding; original Files bytes remain canonical.</summary>
+public sealed record WaveAudioDerivation(string DecodedSha256, string DecodeProfile, MediaAudioDecoderEvidence Runtime);
 
 public static class WaveProjectStore
 {
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 5;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -118,7 +123,7 @@ public static class WaveProjectStore
                 ?? throw new InvalidDataException("Project file is empty or invalid.");
             // v2 stored clip ranges without mixer/fade fields. Constructor defaults preserve
             // its exact audible output while migration adds editable structured processing.
-            if (project.SchemaVersion is 2 or 3) project = project with { SchemaVersion = CurrentSchemaVersion };
+            if (project.SchemaVersion is 2 or 3 or 4) project = project with { SchemaVersion = CurrentSchemaVersion };
             Validate(project);
             return project;
         }
@@ -128,7 +133,7 @@ public static class WaveProjectStore
         }
     }
 
-    private static void Validate(WaveProject project)
+    public static void Validate(WaveProject project)
     {
         if (project.SchemaVersion != CurrentSchemaVersion)
             throw new InvalidDataException($"Unsupported Wave project schema version {project.SchemaVersion}.");
@@ -149,6 +154,17 @@ public static class WaveProjectStore
             throw new InvalidDataException("Wave project contains an invalid clip.");
         if (clips.Select(clip => clip.ClipId).Distinct().Count() != clips.Count)
             throw new InvalidDataException("Wave project contains duplicate clip identities.");
+        foreach (var clip in clips.Where(clip => clip.AudioDerivation is not null))
+        {
+            var derivation = clip.AudioDerivation!;
+            if (clip.SourceFileID is null || derivation.DecodedSha256 is null || derivation.DecodedSha256.Length != 64
+                || !derivation.DecodedSha256.All(Uri.IsHexDigit) || string.IsNullOrWhiteSpace(derivation.DecodeProfile)
+                || derivation.Runtime is null || string.IsNullOrWhiteSpace(derivation.Runtime.Engine)
+                || string.IsNullOrWhiteSpace(derivation.Runtime.ObservedVersion)
+                || derivation.Runtime.ExecutableSha256 is null || derivation.Runtime.ExecutableSha256.Length != 64
+                || !derivation.Runtime.ExecutableSha256.All(Uri.IsHexDigit))
+                throw new InvalidDataException("Wave project contains invalid decoding evidence.");
+        }
     }
 }
 

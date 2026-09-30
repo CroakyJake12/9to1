@@ -36,5 +36,16 @@ public sealed class CanvasCuiWorkspaceTests
         Assert.False(workspace.IsActionAvailable("9to1.Canvas.History.Undo"));
         Assert.Throws<NotSupportedException>(() => workspace.DispatchAsync("9to1.Canvas.History.Undo", null));
         Assert.False(workspace.TryGetValue("ActorId", out _));
+        Assert.True(workspace.TryGetValue("CanOpen", out var open));
+        Assert.Equal(true, open);
+        foreach (var binding in new[] { "CanImport", "CanFlush", "CanUndo", "CanRedo", "CanEditInk", "CanPenTool", "CanEraserTool" })
+        {
+            Assert.True(workspace.TryGetValue(binding, out var allowed));
+            Assert.Equal(false, allowed);
+        }
+        var notifications = 0;
+        workspace.PropertyChanged += (_, _) => notifications++;
+        workspace.RefreshAvailability();
+        Assert.Equal(1, notifications);
     }
 }

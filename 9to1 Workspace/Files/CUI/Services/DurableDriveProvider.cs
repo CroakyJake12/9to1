@@ -10,6 +10,11 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
     public sealed record Entry(HostedItemMetadata Metadata, bool Deleted = false, DateTimeOffset? DeletedAt = null);
     public sealed record State(IReadOnlyList<Entry> Items, IReadOnlyList<FilesOperation> Operations, IReadOnlyList<FilesChangeEvent> Events)
     {
+        public Guid? StoreId { get; init; }
+        public DateTimeOffset? StoreCreatedAtUtc { get; init; }
+        public Guid? CreationSessionId { get; init; }
+        public string? StoreOwnerPrincipalId { get; init; }
+        public FilesLocationId? StoreLocationId { get; init; }
         public IReadOnlyList<FilesArtifactReference> Artifacts { get; init; } = [];
         public IReadOnlyList<FilesRevision> Revisions { get; init; } = [];
         public IReadOnlyDictionary<string, string?> RevisionContentReferences { get; init; } = new Dictionary<string, string?>();
@@ -17,6 +22,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
     }
     private readonly VersionedJsonStateStore<State> _store;
     private readonly string _owner;
+    private readonly Guid _creationSessionId = Guid.NewGuid();
     private static readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, Channel<bool>>> Subscriptions = new(
         OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private readonly ConcurrentDictionary<Guid, Channel<bool>> _subscribers;
@@ -30,7 +36,11 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
             FilesProviderCapabilities.Read | FilesProviderCapabilities.Write | FilesProviderCapabilities.Rename |
             FilesProviderCapabilities.Move | FilesProviderCapabilities.Trash | FilesProviderCapabilities.Search |
             FilesProviderCapabilities.ChangeFeed, "9to1.drive");
-        _store = new(statePath, 1, () => new State([], [], []));
+        _store = new(statePath, 1, () => new State([], [], [])
+        {
+            StoreId = Guid.NewGuid(), StoreCreatedAtUtc = DateTimeOffset.UtcNow,
+            CreationSessionId = _creationSessionId, StoreOwnerPrincipalId = _owner, StoreLocationId = locationId
+        });
     }
 
     public FilesLocation Location { get; }

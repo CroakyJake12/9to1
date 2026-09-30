@@ -4,6 +4,9 @@
     <Action name="PinApp" command="Pin" parameter="{Binding app}" />
     <Action name="OpenPinned" command="OpenItem" parameter="{Binding item}" />
     <Action name="UnpinItem" command="Unpin" parameter="{Binding item}" />
+    <Action name="PinPageApp" command="PinPage" parameter="{Binding app}" />
+    <Action name="OpenDesktopItem" command="OpenPageItem" parameter="{Binding desktopItem}" />
+    <Action name="RemoveDesktopItem" command="RemovePageItem" parameter="{Binding desktopItem}" />
   </Actions>
   <ScrollViewer id="shell-scroll">
     <StackPanel id="shell" margin="20">
@@ -26,16 +29,20 @@
           </Repeat>
         </StackPanel>
       </Border>
+      <TextBlock text="{Binding PageTitle}" font-size="20" accessible-name="Current Desktop Page" />
+      <TextBlock text="{Binding PageScope}" />
+      <StackPanel orientation="Horizontal"><Button content="Previous page" action="PreviousPage" /><TextBlock text="{Binding PagePosition}" margin="12,4" /><Button content="Next page" action="NextPage" /></StackPanel>
+      <Repeat Source="{Binding PageItems}" As="desktopItem" Key="{Binding desktopItem.Id}" Panel="Grid" columns="{Binding PageColumns}" rows="{Binding PageRows}" ItemColumn="{Binding desktopItem.Column}" ItemRow="{Binding desktopItem.Row}" ItemColumnSpan="{Binding desktopItem.ColumnSpan}" ItemRowSpan="{Binding desktopItem.RowSpan}"><StackPanel margin="4"><Button content="{Binding desktopItem.Label}" action="OpenDesktopItem" is-enabled="{Binding desktopItem.CanOpen}" /><Button content="Remove shortcut" action="RemoveDesktopItem" /></StackPanel></Repeat>
       <TextBlock text="Go · All Apps" font-size="20" />
       <StackPanel orientation="Horizontal">
         <TextBox id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search installed applications" width="420" accessible-name="Go search" />
         <Button content="Search" action="Search" />
       </StackPanel>
       <Repeat Source="{Binding Results}" As="app" Key="{Binding app.Reference.Id}">
-        <StackPanel orientation="Horizontal" margin="0,2"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" /><Button content="Pin to this layer" action="PinApp" /></StackPanel>
+        <StackPanel orientation="Horizontal" margin="0,2"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" /><Button content="Pin to this layer" action="PinApp" /><Button content="Add to desktop page" action="PinPageApp" /></StackPanel>
       </Repeat>
-      <TextBlock text="Desktop Spaces and taskbar settings" font-size="20" margin="0,20,0,8" />
-      <TextBox text="{Binding Name, Mode=TwoWay}" placeholder-text="Layer or Desktop Space name" accessible-name="Layer or Desktop Space name" />
+      <TextBlock text="Desktop Spaces, pages and taskbar settings" font-size="20" margin="0,20,0,8" />
+      <TextBox text="{Binding Name, Mode=TwoWay}" placeholder-text="Layer, Desktop Space or page name" accessible-name="Layer, Desktop Space or page name" />
       <WrapPanel>
         <Button content="Add layer" action="AddLayer" /><Button content="Rename layer" action="RenameLayer" /><Button content="Remove layer" action="RemoveLayer" />
         <Button content="Move layer earlier" action="MoveLayerEarlier" /><Button content="Move layer later" action="MoveLayerLater" />
@@ -45,6 +52,8 @@
         <Button content="Move Desktop Space earlier" action="MoveSpaceEarlier" /><Button content="Move Desktop Space later" action="MoveSpaceLater" />
         <Button content="Copy Desktop Space" action="CopySpace" /><Button content="Paste Desktop Space" action="PasteSpace" />
       </WrapPanel>
+      <WrapPanel><Button content="Add page" action="AddPage" /><Button content="Rename page" action="RenamePage" /><Button content="Remove page" action="RemovePage" /><Button content="Move page earlier" action="MovePageEarlier" /><Button content="Move page later" action="MovePageLater" /></WrapPanel>
+      <WrapPanel><Button content="Pages for this Desktop Space" action="SpaceSpecificPages" /><Button content="Use global pages" action="GlobalPages" /><Button content="Reset desktop pages" action="ResetDesktop" /></WrapPanel>
       <WrapPanel>
         <TextBlock text="Height" /><TextBox text="{Binding Thickness, Mode=TwoWay}" width="70" accessible-name="Taskbar layer height" />
         <TextBlock text="Spacing" /><TextBox text="{Binding Spacing, Mode=TwoWay}" width="70" accessible-name="Taskbar item spacing" />

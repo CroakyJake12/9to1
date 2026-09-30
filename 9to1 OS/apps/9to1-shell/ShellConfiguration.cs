@@ -11,17 +11,19 @@ public sealed record TaskbarPresentation(int Thickness, int IconSize, int Spacin
     double Opacity, TaskbarAlignment Alignment, bool Labels, bool Floating);
 public sealed record TaskbarLayer(Guid Id, string Name, TaskbarPresentation Presentation, IReadOnlyList<TaskbarItem> Items);
 public sealed record TaskbarConfiguration(Guid Id, TaskbarEdge Edge, Guid ActiveLayerId, IReadOnlyList<TaskbarLayer> Layers);
-public sealed record DesktopSpace(Guid Id, string Name, TaskbarConfiguration Taskbar);
+public sealed record DesktopSpace(Guid Id, string Name, TaskbarConfiguration Taskbar)
+{ public DesktopSurfaceConfiguration? DesktopSurface { get; init; } }
 public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, IReadOnlyList<DesktopSpace> Spaces)
 {
-    public const int CurrentSchema = 1;
+    public const int CurrentSchema = 2;
+    public DesktopSurfaceConfiguration? GlobalDesktopSurface { get; init; }
     [JsonIgnore] public DesktopSpace ActiveSpace => Spaces.Single(s => s.Id == ActiveSpaceId);
     public static ShellConfiguration Default()
     {
         var layer = new TaskbarLayer(Guid.NewGuid(), "Main", new(56, 32, 8, 8, 12, 1, TaskbarAlignment.Start, true, false),
             [new(Guid.NewGuid(), TaskbarItemKind.Go, "Go", null)]);
         var space = new DesktopSpace(Guid.NewGuid(), "Standard", new(Guid.NewGuid(), TaskbarEdge.Bottom, layer.Id, [layer]));
-        return new(CurrentSchema, space.Id, [space]);
+        return new(CurrentSchema, space.Id, [space]) { GlobalDesktopSurface = DesktopSurfaceConfiguration.Default() };
     }
 
     public void Validate()
@@ -30,9 +32,34 @@ public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, I
         if (Spaces is null || Spaces.Count is < 1 or > 64 || Spaces.Any(s => s is null)) throw new InvalidDataException("One to 64 Desktop Spaces are required.");
         var identities = new HashSet<Guid>();
         void Identity(Guid id) { if (id == Guid.Empty || !identities.Add(id)) throw new InvalidDataException("Shell identities must be stable and unique."); }
+        void Surface(DesktopSurfaceConfiguration surface)
+        {
+            Identity(surface.Id);
+            if (surface.Columns is < 1 or > 32 || surface.Rows is < 1 or > 32 || surface.Pages is null || surface.Pages.Count is < 1 or > 64 || surface.Pages.Any(p => p is null) || !surface.Pages.Any(p => p.Id == surface.ActivePageId))
+                throw new InvalidDataException("Desktop Pages require a bounded grid and valid active page.");
+            foreach (var page in surface.Pages)
+            {
+                Identity(page.Id); Name(page.Name);
+                if (page.Items is null || page.Items.Count > 1024 || page.Items.Any(i => i is null)) throw new InvalidDataException("Desktop page items exceed supported bounds.");
+                var occupied = new HashSet<(int, int)>();
+                foreach (var item in page.Items)
+                {
+                    Identity(item.Id); Name(item.Label);
+                    if (!Enum.IsDefined(item.Kind) || item.Target is null) throw new InvalidDataException("Desktop items require a typed canonical owner reference.");
+                    Name(item.Target.Owner); Name(item.Target.Kind);
+                    if (string.IsNullOrWhiteSpace(item.Target.Id) || item.Target.Id.Length > 4096 || item.Target.Id.Any(char.IsControl) ||
+                        item.Column < 0 || item.Row < 0 || item.ColumnSpan < 1 || item.RowSpan < 1 || item.ColumnSpan > surface.Columns || item.RowSpan > surface.Rows ||
+                        item.Column > surface.Columns - item.ColumnSpan || item.Row > surface.Rows - item.RowSpan) throw new InvalidDataException("Desktop item identity or placement is invalid.");
+                    for (var row = item.Row; row < item.Row + item.RowSpan; row++) for (var column = item.Column; column < item.Column + item.ColumnSpan; column++)
+                        if (!occupied.Add((column, row))) throw new InvalidDataException("Desktop items cannot overlap.");
+                }
+            }
+        }
+        if (GlobalDesktopSurface is null) throw new InvalidDataException("Global desktop surface requires recovery.");
+        Surface(GlobalDesktopSurface);
         foreach (var space in Spaces)
         {
-            Identity(space.Id); Name(space.Name); var bar = space.Taskbar ?? throw new InvalidDataException("Desktop Space has no taskbar.");
+            Identity(space.Id); Name(space.Name); if (space.DesktopSurface is { } localSurface) Surface(localSurface); var bar = space.Taskbar ?? throw new InvalidDataException("Desktop Space has no taskbar.");
             Identity(bar.Id);
             if (!Enum.IsDefined(bar.Edge) || bar.Layers is null || bar.Layers.Count is < 1 or > 5 || bar.Layers.Any(l => l is null) || !bar.Layers.Any(l => l.Id == bar.ActiveLayerId))
                 throw new InvalidDataException("A taskbar requires one to five complete layers and a valid active layer.");
@@ -52,6 +79,14 @@ public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, I
             }
         }
         if (!Spaces.Any(s => s.Id == ActiveSpaceId)) throw new InvalidDataException("Active Desktop Space is missing.");
+    }
+    public ShellConfiguration UpgradeSupportedLegacy()
+    {
+        if (SchemaVersion == CurrentSchema) { Validate(); return this; }
+        if (SchemaVersion != 1 || GlobalDesktopSurface is not null || Spaces is null || Spaces.Count == 0 || Spaces.Any(s => s is null || s.DesktopSurface is not null))
+            throw new InvalidDataException("Unsupported shell configuration. Preserve it for recovery.");
+        var migrated = this with { SchemaVersion = CurrentSchema, GlobalDesktopSurface = DesktopSurfaceConfiguration.FromLegacy(Spaces[0].Id) };
+        migrated.Validate(); return migrated;
     }
     private static void Name(string value) { if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.Any(char.IsControl)) throw new InvalidDataException("Invalid shell name."); }
 }
@@ -132,6 +167,6 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
         return new(new(stored.Revision, Clone(stored.Current), stored.Previous is null ? null : Clone(stored.Previous), stored.AuthorityId),
             _preview is null ? null : _preview with { Candidate = Clone(_preview.Candidate) });
     }
-    private static ShellConfiguration Clone(ShellConfiguration source) => source with { Spaces = source.Spaces.Select(s => s with { Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
+    private static ShellConfiguration Clone(ShellConfiguration source) => source with { GlobalDesktopSurface = source.GlobalDesktopSurface is null ? null : DesktopPageEdits.Clone(source.GlobalDesktopSurface), Spaces = source.Spaces.Select(s => s with { DesktopSurface = s.DesktopSurface is null ? null : DesktopPageEdits.Clone(s.DesktopSurface), Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
 }
 public sealed class ShellConfigurationConflictException() : IOException("Shell configuration changed concurrently. Reload before editing; existing configuration was preserved.");

@@ -9,6 +9,8 @@ use std::collections::HashSet;
 use std::fs::{self, File};
 use std::path::Path;
 use std::time::Instant;
+use std::sync::Arc;
+use slotmap::{Key, KeyData};
 #[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -439,6 +441,35 @@ impl HeadlessCanvasEngine {
         self.stroke_active
     }
 
+    /// Stable donor keys in the actual persisted snapshot. Trashed strokes are
+    /// excluded by the donor's take_snapshot; keys survive save/reopen.
+    pub fn stroke_keys(&self) -> Vec<u64> {
+        let mut keys = self.engine.take_snapshot().stroke_components.keys()
+            .map(|key| key.data().as_ffi()).collect::<Vec<_>>();
+        keys.sort_unstable();
+        keys
+    }
+
+    /// Export exactly the selected native entities without exporting unrelated
+    /// Canvas content or source document/camera settings. The donor's original
+    /// strokes, paths, styles and chronology remain structured and editable.
+    pub async fn selected_strokes_rnote(&self, keys: &[u64]) -> Result<Vec<u8>> {
+        if self.stroke_active { anyhow::bail!("cannot export a selection during an active stroke"); }
+        if keys.is_empty() || keys.len() > 1_000_000 { anyhow::bail!("native selection must contain 1..=1000000 keys"); }
+        let selected = keys.iter().map(|value| rnote_engine::store::StrokeKey::from(KeyData::from_ffi(*value)))
+            .collect::<HashSet<_>>();
+        if selected.len() != keys.len() { anyhow::bail!("native selection keys must be unique"); }
+        let mut snapshot = self.engine.take_snapshot();
+        if selected.iter().any(|key| !snapshot.stroke_components.contains_key(*key)) {
+            anyhow::bail!("native selection key is not present in the current persisted snapshot");
+        }
+        Arc::make_mut(&mut snapshot.stroke_components).retain(|key, _| selected.contains(&key));
+        Arc::make_mut(&mut snapshot.chrono_components).retain(|key, _| selected.contains(&key));
+        snapshot.document = Default::default();
+        snapshot.camera = Default::default();
+        Self::from_snapshot(snapshot).save_rnote().await
+    }
+
     pub fn can_undo(&self) -> bool {
         self.engine.can_undo()
     }
@@ -763,6 +794,34 @@ mod tests {
             CanvasPointerSample::new(235.0, 190.0, 0.90),
             CanvasPointerSample::new(280.0, 220.0, 0.55),
         ]
+    }
+
+    #[test]
+    fn selected_native_export_preserves_keys_and_original_paths_without_unselected_entities() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            let first = sample_stroke();
+            canvas.begin_stroke(first[0]).unwrap();
+            canvas.update_stroke(first[1]).unwrap();
+            canvas.end_stroke(first[2]).unwrap();
+            let first_key = canvas.stroke_keys()[0];
+            canvas.begin_stroke(CanvasPointerSample::new(900.0, 950.0, 0.3)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(930.0, 980.0, 0.7)).unwrap();
+            assert_eq!(canvas.stroke_keys().len(), 2);
+            let reopened = HeadlessCanvasEngine::from_rnote(canvas.save_rnote().await.unwrap()).await.unwrap();
+            assert_eq!(canvas.stroke_keys(), reopened.stroke_keys());
+            let selected = HeadlessCanvasEngine::from_rnote(reopened.selected_strokes_rnote(&[first_key]).await.unwrap()).await.unwrap();
+            assert_eq!(selected.stroke_keys(), vec![first_key]);
+            let original = reopened.engine.take_snapshot();
+            let exported = selected.engine.take_snapshot();
+            let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(first_key));
+            assert_eq!(serde_json::to_value(original.stroke_components.get(key).unwrap()).unwrap(),
+                       serde_json::to_value(exported.stroke_components.get(key).unwrap()).unwrap());
+            assert!(canvas.selected_strokes_rnote(&[]).await.is_err());
+            assert!(canvas.selected_strokes_rnote(&[first_key, first_key]).await.is_err());
+            assert!(canvas.selected_strokes_rnote(&[u64::MAX]).await.is_err());
+            assert_eq!(canvas.stroke_keys().len(), 2); // read-only export
+        });
     }
 
     fn trashed_stroke_count(canvas: &HeadlessCanvasEngine) -> usize {

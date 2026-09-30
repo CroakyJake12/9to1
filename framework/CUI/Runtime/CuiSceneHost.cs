@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Themes;
 
 namespace CakeOS.Cui.Runtime;
 
@@ -14,13 +15,21 @@ public interface ICuiSceneReadiness
 }
 
 public sealed record CuiNativeScene(string AppId, string Title, string Surface, CuiDocument Document,
-    ICuiBindingContext Bindings, ICuiActionDispatcher Actions, ICuiSceneReadiness Readiness);
+    ICuiBindingContext Bindings, ICuiActionDispatcher Actions, ICuiSceneReadiness Readiness)
+{
+    // Supplied by the host's canonical profile/theme authority; null inherits the current canonical appearance.
+    public CuiAppearance? Appearance { get; init; }
+}
 
 /// <summary>Retained canonical CUI scene adapter, shared by native app windows and embedded Desktop surfaces.</summary>
 public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentControl, IDisposable
 {
     private readonly CuiControlRegistry _registry = registry ?? new();
     private CuiControlLoader? _loader;
+    private CuiControlLoader? _failureLoader;
+    private CuiViewModel? _failureModel;
+    public CuiActionFailure? LastActionFailure { get; private set; }
+    private Avalonia.Controls.ResourceDictionary? _visualResources;
     private readonly CancellationTokenSource _lifetime = new();
     private long _generation;
     private bool _disposed;
@@ -43,8 +52,17 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         {
             request.Token.ThrowIfCancellationRequested();
             if (_disposed || generation != Interlocked.Read(ref _generation)) return;
+            var effectiveAppearance = scene.Appearance ?? CuiThemeScopeApplier.DetectAppearance();
+            var visualResources = CuiSceneVisualResources.Create(scene.Surface, effectiveAppearance);
+            if (_visualResources is not null) Resources.MergedDictionaries.Remove(_visualResources);
+            Resources.MergedDictionaries.Add(visualResources);
+            _visualResources = visualResources;
+            SetValue(ThemeVariantScope.RequestedThemeVariantProperty, CuiSceneVisualResources.Variant(effectiveAppearance));
+            Background = (Avalonia.Media.IBrush?)visualResources["CuiBackgroundBrush"];
+            Foreground = (Avalonia.Media.IBrush?)visualResources["CuiTextBrush"];
             var next = new CuiControlLoader(_registry);
             next.SetSurface(scene.Surface);
+            next.SetAppearance(effectiveAppearance);
             if (availability.State == CuiSceneAvailabilityState.Ready)
             {
                 next.SetBindingContext(scene.Bindings);
@@ -67,6 +85,8 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
             }
             var old = _loader;
             next.WireBindings(loaded.Root);
+            next.ActionFailed += (_, failure) => ShowActionFailure(next, failure);
+            _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null; LastActionFailure = null;
             _loader = next;
             Content = loaded.Root;
             Diagnostics = loaded.Diagnostics;
@@ -74,6 +94,27 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
             old?.Dispose();
         });
         return availability;
+    }
+
+    private void ShowActionFailure(CuiControlLoader sender, CuiActionFailure failure)
+    {
+        if (_disposed || !ReferenceEquals(sender, _loader)) return;
+        LastActionFailure = failure;
+        Diagnostics = Diagnostics.Append(new CuiDiagnostic(failure.Code, failure.Cancelled ? CuiDiagnosticSeverity.Info : CuiDiagnosticSeverity.Error,
+            failure.Message, default)).ToArray();
+        if (_failureModel is null)
+        {
+            _failureModel = new CuiViewModel();
+            _failureLoader = new CuiControlLoader(_registry); _failureLoader.SetBindingContext(_failureModel);
+            var banner = _failureLoader.Load(new CuiRichParser().Parse(
+                "<Cui><TextBlock id=\"scene-action-status\" text=\"{Binding ActionStatus}\" text-wrapping=\"Wrap\" margin=\"12\" /></Cui>")) ?? throw new InvalidDataException("The action status CUI did not produce a control.");
+            var original = Content as Control; Content = null;
+            var layout = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
+            layout.Children.Add(banner);
+            if (original is not null) { Grid.SetRow(original, 1); layout.Children.Add(original); }
+            Content = layout;
+        }
+        _failureModel.Set("ActionStatus", failure.Message);
     }
 
     public static async Task<Window> CreateWindowAsync(CuiNativeScene scene, double width = 1100, double height = 760,
@@ -95,6 +136,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         Interlocked.Increment(ref _generation);
         _lifetime.Cancel();
         _loader?.Dispose();
+        _failureLoader?.Dispose(); _failureLoader = null; _failureModel = null;
         _loader = null;
         _lifetime.Dispose();
     }

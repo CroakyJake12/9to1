@@ -4,7 +4,9 @@ using HavenOS.Files;
 
 namespace HavenOS.Images;
 
-public sealed record PictureFilesOpenResult(PictureArtifactEnvelope Artifact, FilesRevision Revision);
+/// <param name="Revision">Immutable content revision, retained across metadata-only changes.</param>
+/// <param name="CasRevisionId">Current Files item revision for ACL checks and the next write CAS.</param>
+public sealed record PictureFilesOpenResult(PictureArtifactEnvelope Artifact, FilesRevision Revision, FilesRevisionId CasRevisionId);
 
 /// <summary>
 /// Picture-owned codec over an explicitly bound canonical Files folder. Candidates
@@ -45,7 +47,7 @@ public sealed class PictureFilesArtifactBridge(
         var registered = await provider.RegisterArtifactAsync(reference, folder.Value.OwnerPrincipalId, cancellationToken).ConfigureAwait(false);
         if (!registered.IsSuccess) throw new InvalidOperationException(registered.Error!.Message);
         var revision = await SaveAsync(artifact, null, cancellationToken).ConfigureAwait(false);
-        return new(artifact, revision);
+        return new(artifact, revision, revision.Id);
     }
 
     public async Task<PictureFilesOpenResult> OpenAsync(HostedItemId fileId, CancellationToken cancellationToken = default)
@@ -72,7 +74,8 @@ public sealed class PictureFilesArtifactBridge(
         if (revision.OwningAppId != OwnerAppId || revision.OwningAppRevisionId != OwningRevision(artifact))
             throw new InvalidDataException("Picture document revision differs from its owning canonical Files revision.");
         await RecheckAsync(resolved.Actor, resolved.Scope, "picture.file.open", cancellationToken).ConfigureAwait(false);
-        return new(artifact, revision);
+        return new(artifact, revision, resolved.Metadata.CurrentRevisionId
+            ?? throw new InvalidDataException("Picture current Files item has no structural revision."));
     }
 
     public async Task<FilesRevision> SaveAsync(PictureArtifactEnvelope artifact, FilesRevisionId? expectedFileRevision,
@@ -97,7 +100,7 @@ public sealed class PictureFilesArtifactBridge(
             var prior = current.Value.Revision;
             if (prior.ContentHash != hash || prior.SizeBytes != bytes.LongLength)
                 throw new InvalidOperationException("Picture revision identity was reused with different content.");
-            if (expectedFileRevision != prior.Id && expectedFileRevision != prior.ParentRevisionId)
+            if (expectedFileRevision != prior.Id && expectedFileRevision != prior.ParentRevisionId && expectedFileRevision != resolved.Metadata.CurrentRevisionId)
                 throw new InvalidOperationException("Picture Files revision conflict: reload before saving.");
             await RecheckWriteAsync(resolved.Actor, resolved.Scope, cancellationToken).ConfigureAwait(false);
             return prior;

@@ -11,7 +11,13 @@
   <UsingTask TaskName="GenerateAvaloniaResourcesTask" AssemblyFile="$(AvaloniaBuildTasksLocation)" TaskFactory="TaskHostFactory"/>
   <UsingTask TaskName="CompileAvaloniaXamlTask" AssemblyFile="$(AvaloniaBuildTasksLocation)" TaskFactory="TaskHostFactory"/>
   
-  <ItemGroup><ProjectReference Include="$(MSBuildThisFileDirectory)../src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" /></ItemGroup>
+  <!-- Build tasks execute on the build host. App RID/mobile deployment properties
+       must not change their declared netstandard2.0 tool output location. -->
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all"
+                      GlobalPropertiesToRemove="RuntimeIdentifier;RuntimeIdentifiers;SelfContained;TargetPlatformIdentifier;TargetPlatformVersion;TargetPlatformMinVersion;SupportedOSPlatformVersion" />
+  </ItemGroup>
   <Import Project="$(MSBuildThisFileDirectory)\DevSingleProject.targets"/>
   <Import Project="$(MSBuildThisFileDirectory)\upstream-resource-targets\AvaloniaBuildTasks.props"/>
   <Import Project="$(MSBuildThisFileDirectory)\upstream-resource-targets\AvaloniaBuildTasks.targets"/>

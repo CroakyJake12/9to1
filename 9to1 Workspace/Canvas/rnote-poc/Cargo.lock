@@ -320,6 +320,7 @@ dependencies = [
  "rnote-compose",
  "rnote-engine",
  "serde_json",
+ "slotmap",
 ]
 
 [[package]]

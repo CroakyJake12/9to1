@@ -120,6 +120,13 @@ void cake_canvas_render_frame_release(CakeCanvasRenderFrame* frame);
 CakeCanvasStatus cake_canvas_save_rnote(const void* handle, CakeCanvasBuffer* out_buffer);
 void cake_canvas_buffer_release(CakeCanvasBuffer* buffer);
 
+/* Additive selection API v1. Does not change ABI 3 lifecycle/drawing exports. */
+uint32_t cake_canvas_selection_api_version(void);
+/* out_keys owns a packed little-endian u64 array, possibly empty. */
+CakeCanvasStatus cake_canvas_stroke_keys(const void *handle, CakeCanvasBuffer *out_keys);
+CakeCanvasStatus cake_canvas_export_selected_strokes(const void *handle, const uint64_t *keys,
+                                                    size_t key_count, CakeCanvasBuffer *out_native);
+
 #ifdef __cplusplus
 }
 #endif

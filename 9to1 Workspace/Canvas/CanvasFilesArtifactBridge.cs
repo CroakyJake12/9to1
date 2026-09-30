@@ -4,7 +4,9 @@ using HavenOS.Files;
 
 namespace HavenOS.Apps.Canvas;
 
-public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevision Revision);
+/// <param name="Revision">Immutable content revision, retained across metadata-only changes.</param>
+/// <param name="CasRevisionId">Current Files item revision for ACL checks and the next write CAS.</param>
+public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevision Revision, FilesRevisionId CasRevisionId);
 
 /// <summary>
 /// Canvas-owned codec over an explicitly bound canonical Files folder. Candidates
@@ -68,7 +70,8 @@ public sealed class CanvasFilesArtifactBridge(
         if (!Guid.TryParse(resolved.Reference.ArtifactId, out var registeredId) || artifact.ArtifactId != registeredId)
             throw new InvalidDataException("Canvas artifact identity differs from its canonical Files identity.");
         await RecheckAsync(resolved.Actor, resolved.Scope, "canvas.file.open", cancellationToken).ConfigureAwait(false);
-        return new(artifact, revision);
+        return new(artifact, revision, resolved.Metadata.CurrentRevisionId
+            ?? throw new InvalidDataException("Canvas current Files item has no structural revision."));
     }
 
     public async Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
@@ -90,7 +93,7 @@ public sealed class CanvasFilesArtifactBridge(
             var prior = current.Value.Revision;
             if (prior.ContentHash != hash || prior.SizeBytes != bytes.LongLength)
                 throw new InvalidOperationException("Canvas revision identity was reused with different content.");
-            if (expectedFileRevision != prior.Id && expectedFileRevision != prior.ParentRevisionId)
+            if (expectedFileRevision != prior.Id && expectedFileRevision != prior.ParentRevisionId && expectedFileRevision != resolved.Metadata.CurrentRevisionId)
                 throw new InvalidOperationException("Canvas Files revision conflict: reload before saving.");
             await RecheckWriteAsync(resolved.Actor, resolved.Scope, cancellationToken).ConfigureAwait(false);
             return prior;

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "packages": [
+    {
+      "id": "gstreamer1.0-plugins-base-apps",
+      "version": "1.26.2-1+deb13u1",
+      "platform": "linux-debian-trixie-amd64",
+      "repository": "https://deb.debian.org/debian",
+      "url": "https://deb.debian.org/debian/pool/main/g/gst-plugins-base1.0/gstreamer1.0-plugins-base-apps_1.26.2-1+deb13u1_amd64.deb",
+      "sha256": "dc61bf02322d602c1e7ab05526c834995391c8d73ea81ba2d34d2581db61e7ca",
+      "bytes": 94660,
+      "tools": [
+        "gst-discoverer-1.0"
+      ],
+      "purpose": "Optional actual audio-discovery verification prerequisite for Wave canonical compressed Files decoding",
+      "provenance": {
+        "signature": "Debian InRelease authenticated with sqv before Packages digest verification",
+        "signedPackagesSha256": "4f2c68d67001d595fbd343f6dbad44468953a51c4d9dec3a4803249f6e295940",
+        "signedPackagesBytes": 56620099,
+        "packageDigestMatchesSignedIndex": true
+      },
+      "licenseNotice": "eng/provenance/gstreamer1.0-plugins-base-apps-1.26.2-debian-copyright.txt",
+      "controlledSourceVersionParity": "Not established; donor registry pins remain independent",
+      "productionPackaging": "Unconfigured: no release bundling or target-platform availability claim"
+    }
+  ]
+}

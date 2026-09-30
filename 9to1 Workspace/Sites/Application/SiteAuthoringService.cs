@@ -18,10 +18,14 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
         }, ct);
     public Task<SiteApiResult<SiteProject>> AddComponentAsync(Guid siteID, long revision, Guid pageID, Guid? parentID,
         string type, IReadOnlyDictionary<string, JsonElement> properties, CancellationToken ct = default)
-        => projects.UpdateProjectAsync(siteID, revision, project =>
+    {
+        IReadOnlyDictionary<string,JsonElement> snapshot;
+        try{snapshot=SnapshotProperties(properties);}
+        catch(SiteOperationException error){return Task.FromResult(SiteApiResult<SiteProject>.Failure(error.Error));}
+        return projects.UpdateProjectAsync(siteID, revision, project =>
         {
             var page = project.Pages.SingleOrDefault(p => p.PageId == pageID) ?? throw Invalid("Page not found.");
-            var component = new SiteComponent(Guid.NewGuid(), type, properties, [], new Dictionary<string,IReadOnlyList<Guid>>(),
+            var component = new SiteComponent(Guid.NewGuid(), type, snapshot, [], new Dictionary<string,IReadOnlyList<Guid>>(),
                 new(SiteLayoutMode.Flow,new Dictionary<string,JsonElement>(),new Dictionary<string,SiteLayoutOverride>()),
                 new Dictionary<string,string>(), new Dictionary<string,JsonElement>(),new Dictionary<string,JsonElement>(),
                 new Dictionary<string,JsonElement>(),null,null,new Dictionary<string,JsonElement>(),1);
@@ -35,6 +39,7 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
             else page = page with { RootComponentIds = page.RootComponentIds.Append(component.ComponentId).ToArray(), Revision = page.Revision + 1 };
             return project with { Components = components, Pages = project.Pages.Select(p => p.PageId == pageID ? page : p).ToArray() };
         }, ct);
+    }
     public Task<SiteApiResult<SiteProject>> UpdateComponentAsync(Guid siteID, long revision, Guid componentID,
         Func<SiteComponent,SiteComponent> update, CancellationToken ct = default)
         => projects.UpdateProjectAsync(siteID,revision, project =>
@@ -62,12 +67,17 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
         },ct);
     public Task<SiteApiResult<SiteProject>> SetResponsiveOverrideAsync(Guid siteID,long revision,Guid componentID,string breakpoint,
         IReadOnlyDictionary<string,JsonElement>? patch,CancellationToken ct=default)
-        => UpdateComponentAsync(siteID,revision,componentID, component=>
+    {
+        IReadOnlyDictionary<string,JsonElement>? snapshot;
+        try{snapshot=patch is null?null:SnapshotProperties(patch);}
+        catch(SiteOperationException error){return Task.FromResult(SiteApiResult<SiteProject>.Failure(error.Error));}
+        return UpdateComponentAsync(siteID,revision,componentID, component=>
         {
             var overrides=component.Layout.BreakpointOverrides.ToDictionary(p=>p.Key,p=>p.Value);
-            if(patch is null) overrides.Remove(breakpoint); else overrides[breakpoint]=new(patch);
+            if(snapshot is null) overrides.Remove(breakpoint); else overrides[breakpoint]=new(snapshot);
             return component with { Layout=component.Layout with { BreakpointOverrides=overrides } };
         },ct);
+    }
     internal static HashSet<Guid> Reachable(SiteProject project,IEnumerable<Guid> roots)
     {
         var found=new HashSet<Guid>();var queue=new Queue<Guid>(roots);var nodes=project.Components.ToDictionary(c=>c.ComponentId);
@@ -78,6 +88,21 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
             foreach(var child in component.ChildIds.Concat(component.Slots.Values.SelectMany(v=>v)))queue.Enqueue(child);
         }
         return found;
+    }
+    private static IReadOnlyDictionary<string,JsonElement> SnapshotProperties(IReadOnlyDictionary<string,JsonElement>? input)
+    {
+        if(input is null)throw Invalid("Component properties are required.");
+        try
+        {
+            var snapshot=new Dictionary<string,JsonElement>(StringComparer.Ordinal);
+            foreach(var property in input)
+            {
+                if(string.IsNullOrWhiteSpace(property.Key)||property.Value.ValueKind==JsonValueKind.Undefined)throw Invalid("Component properties must have defined values and names.");
+                snapshot.Add(property.Key,property.Value.Clone());
+            }
+            return new System.Collections.ObjectModel.ReadOnlyDictionary<string,JsonElement>(snapshot);
+        }
+        catch(ObjectDisposedException){throw Invalid("Component property data is no longer available.");}
     }
     private static void ValidateRoute(string route) => SiteAddressRules.NormalizeRoutePath(route);
     private static SiteOperationException Invalid(string message)=>new(new("InvalidInput",message,"Sites.Authoring",false));

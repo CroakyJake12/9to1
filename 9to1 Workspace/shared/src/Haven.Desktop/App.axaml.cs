@@ -46,6 +46,25 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenInfrastructure();
         collection.AddHavenPlannerInfrastructure();
         collection.AddHavenDesktopCallServices();
+        collection.AddSingleton<SpaceRegistry>();
+        collection.AddSingleton<NativeFilesWorkspaceService>();
+        collection.AddSingleton<NativeFilesWorkspaceAuthority>();
+        collection.AddSingleton<NativeFilesMediaAssetSourceResolver>();
+        collection.AddSingleton<Haven.Core.Media.IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
+        collection.AddSingleton<ICanonicalResourceAccessResolver>(provider => new FilesArtifactResourceResolver(async (actor, token) =>
+        {
+            var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
+            return workspace?.Actor == actor ? workspace.Provider : null;
+        }));
+        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider => provider.GetRequiredService<NativeFilesWorkspaceService>());
+        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
+            new PlannerLocalStoreEvidenceProvider(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<ISqliteConnectionFactory>()));
+        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
+            new SpacesLocalStoreEvidenceProvider(provider.GetRequiredService<IVersionedSettingsStore>(),
+                (IResourceStoreIdentitySource)provider.GetRequiredService<IVersionedSettingsStore>()));
+        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
+            new MapsLocalStoreEvidenceProvider(provider.GetRequiredService<IVersionedSettingsStore>(),
+                (IResourceStoreIdentitySource)provider.GetRequiredService<IVersionedSettingsStore>()));
 #if ANDROID
         global::Haven.Android.AndroidServiceRegistration.AddHavenAndroidPlatformServices(collection);
 #endif

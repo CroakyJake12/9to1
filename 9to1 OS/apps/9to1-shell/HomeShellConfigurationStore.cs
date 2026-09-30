@@ -65,7 +65,8 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
         try { payload = record.Payload.Deserialize<Payload>() ?? throw new JsonException(); }
         catch (JsonException ex) { throw new InvalidDataException("Corrupt Home shell state. Preserve it for recovery.", ex); }
         if (payload.ProfileId != profile || payload.Current is null) throw new InvalidDataException("Shell state has different profile ownership.");
-        payload.Current.Validate(); payload.Previous?.Validate(); return new(record.Revision, payload.Current, payload.Previous, record.RecordId);
+        var current = payload.Current.UpgradeSupportedLegacy(); var previous = payload.Previous?.UpgradeSupportedLegacy();
+        return new(record.Revision, current, previous, record.RecordId);
     }
 }
 

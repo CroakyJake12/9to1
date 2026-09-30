@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <HavenUiProject Condition="'$(HavenUiProject)' == ''">$(MSBuildThisFileDirectory)../../shared/src/Haven.UI/Haven.UI.csproj</HavenUiProject>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -15,5 +16,12 @@
   <Target Name="RequireHavenUiProject" BeforeTargets="PrepareForBuild">
     <Error Condition="'$(HavenUiProject)' == ''" Text="HavenUiProject must point to the exact staged Haven.UI.csproj selected by the CakeOS HUI platform reference." />
     <Error Condition="'$(HavenUiProject)' != '' and !Exists('$(HavenUiProject)')" Text="HavenUiProject does not exist: $(HavenUiProject)" />
+  </Target>
+<Target Name="RequireCanonicalHavenUiHavenUiProject" BeforeTargets="ResolveProjectReferences">
+    <PropertyGroup>
+      <CanonicalExpectedHavenUi>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)','../../shared/src/Haven.UI/Haven.UI.csproj'))</CanonicalExpectedHavenUi>
+      <CanonicalSelectedHavenUi>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)','$(HavenUiProject)'))</CanonicalSelectedHavenUi>
+    </PropertyGroup>
+    <Error Condition="'$(CanonicalSelectedHavenUi)' != '$(CanonicalExpectedHavenUi)'" Text="Active product graphs require the canonical shared Haven.UI project; alternate assembly inputs are unsupported." />
   </Target>
 </Project>

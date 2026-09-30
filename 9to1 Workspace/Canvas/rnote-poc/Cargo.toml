@@ -11,6 +11,7 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 anyhow = "1.0"
+slotmap = { version = "1.0", features = ["serde"] }
 futures = { version = "0.3", features = ["executor"] }
 parry2d-f64 = { version = "0.26.0", features = ["serde-serialize"] }
 rnote-compose = { path = "../Source/Rnote/crates/rnote-compose", default-features = false }

@@ -61,6 +61,22 @@ public sealed class CanvasFilesArtifactBridgeTests
             Assert.Equal("Edited canonical canvas", reopened.Artifact.DisplayName);
             Assert.Equal(edited.RevisionId, reopened.Artifact.RevisionId);
             Assert.Equal(saved.Id, reopened.Revision.Id);
+            Assert.Equal(saved.Id, reopened.CasRevisionId);
+            var rename = new FilesOperation(new(Guid.NewGuid()), owner, created.FileId, null, null, "Rename", saved.Id, null,
+                FilesOperationState.Pending, now, now, null, null);
+            Assert.True((await provider.MutateAsync(rename, "Renamed in Files.9to1c", default)).IsSuccess);
+            var renamed = await bridge.OpenAsync(created.FileId);
+            Assert.Equal(saved.Id, renamed.Revision.Id); // immutable bytes did not change
+            Assert.NotEqual(saved.Id, renamed.CasRevisionId);
+            Assert.Equal(renamed.CasRevisionId, (await provider.GetAsync(created.FileId, default)).Value!.CurrentRevisionId);
+            Assert.Equal(saved.Id, (await bridge.SaveAsync(created.FileId, renamed.Artifact, renamed.CasRevisionId)).Id);
+            var renamedSession = new CanvasArtifactSession(renamed.Artifact);
+            Assert.True(renamedSession.RenameArtifact(new(renamed.Artifact.RevisionId, Guid.NewGuid(), new(owner, "Fixture actor")), "Edited after Files rename").IsSuccess);
+            var afterRename = renamedSession.GetArtifactSnapshot();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.SaveAsync(created.FileId, afterRename, saved.Id));
+            var afterRenameSave = await bridge.SaveAsync(created.FileId, afterRename, renamed.CasRevisionId);
+            Assert.Equal(renamed.CasRevisionId, afterRenameSave.ParentRevisionId);
+            Assert.Equal(afterRename.RevisionId, (await bridge.OpenAsync(created.FileId)).Artifact.RevisionId);
             var content = (await provider.GetCurrentArtifactContentAsync(created.FileId)).Value!;
             await File.WriteAllTextAsync(Path.Combine(root, content.ProviderContentReference!), "tampered");
             await Assert.ThrowsAsync<InvalidDataException>(() => bridge.OpenAsync(created.FileId));

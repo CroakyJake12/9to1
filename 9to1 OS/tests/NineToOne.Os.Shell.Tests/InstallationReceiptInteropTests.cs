@@ -1,0 +1,17 @@
+using System.Text.Json;
+using NineToOne.Os.Shell.Authority;
+namespace NineToOne.Os.Shell.Tests;
+public sealed class InstallationReceiptInteropTests
+{
+    [Fact]
+    public void RealMetadataProducerEnvelopeVerifiesWithExplicitFixtureOnlyIssuer()
+    {
+        const string envelope = """
+{"issuerKeyId":"fixture.issuer","payload":"eyJhbGxvd2VkU2VydmljZUlkcyI6WyJob21lLnJlYWRpbmVzcyJdLCJhcHBJZCI6ImZpeHR1cmUuYXBwIiwiZGVza3RvcEVudHJ5UGF0aCI6Ii91c3Ivc2hhcmUvYXBwbGljYXRpb25zL2ZpeHR1cmUuYXBwLmRlc2t0b3AiLCJkZXNrdG9wRW50cnlTaGEyNTYiOiJhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwiZW50cnlwb2ludCI6ImZpeHR1cmUtYXBwIiwiZXhlY3V0YWJsZVBhdGgiOiIvb3B0Lzl0bzEvYXBwcy9maXh0dXJlLmFwcC9maXh0dXJlLWFwcCIsImZpbGVzIjpbeyJwYXRoIjoiZml4dHVyZS1hcHAiLCJzaGEyNTYiOiIyNjRlZmU5M2ViMTQxODQ5YjA3Nzk0ZjdhNjA2MjdhMDhlMjM1NjczN2IyMTE3OTFhNzM1OWU5OTBkM2E4YmMzIiwic2l6ZSI6NjN9XSwiaW5zdGFsbFJvb3QiOiIvb3B0Lzl0bzEvYXBwcy9maXh0dXJlLmFwcCIsIm9zQXBwbGljYXRpb25JZCI6ImZpeHR1cmUub3MuYXBwIiwicHJvdmlkZXJJZCI6ImZpeHR1cmUucHJvdmlkZXIiLCJyZWNlaXB0UmV2aXNpb24iOjEsInJvbGVzIjpbImZpeHR1cmUucm9sZSJdLCJzY2hlbWFWZXJzaW9uIjoxfQ==","schemaVersion":1,"signature":"A49O3eHZLRFRAAaDt4Bu7TZzBN5OTWekeUXg8MeKHysIrQHp7V8f7EuLsTfj2iCmlbt1IbE1zwjxqLsi4i5WzPingcLV+qZs6SZX3/Nv/PVougb0QUYu2zKxWq9sXiZ8W0+FR5H4zQhx+QSD0w2FGSx02+8njUgmKElnUkJqwLbjoMmR/zwg+x4oTUQdpv6bnYHuz2ZgoZZCKoByL22B4kMVekFUQ0v8e5FLLZFTaWBx9Lg0RMAgdp5yr65yr4QWVSuuChHThneLwGgezdHrFSaupBzvipjoypmjsF0YUzLr/9+eo/ma+Snz1hCFrZJbSFmPwuxFU2metDst26ejozm4/5IFszPSHqCo3lWW/JJSqGSDZ7VfhihmL9k3JvjlkkkcouM8ggrnCf8P0acTbJFnNgHyVTq8oYmy8jW/V0YSZvzzSh19RlRKXorLaei2MZFW7wZdjv4hKKQe5aNmJuhqeMLnMb6SKTE9ke/P9biRCUvuBL5dgHVUUVgTQHe1"}
+""";
+        var issuer = new PublisherTrust("fixture.issuer", "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAtF0KtACsl6odoHf2lTpimpg/+RHFR6PjSntgj7T+/eni3fP0Y3ytWqewnJkhTzoq+6Pv/3kstjC5Oj0OyRy3r2w2AcYhVYrWPQf8j6CWY/gjVAhoH5ytYe7V/SbBzjWOm0jDjKe/Ijd/lOevG5VLYlvfiNPBYqqsszd7MUUC4Q7+YJQXz6yyUroXxFeKZhcB/u86Dyc5i6JBSJXcz/63OgXw1q7qm22kvXuzzTO/pepWQpJIwMFZVhMf78iY38u/0FY0notA9ZE72EHJKCnwKWptn2DsRsZqji+chslQhht86PmrWMcOnH9hist0MAjlXV13vGt2pjXu68grCpzzYXR6mWZb+XHbic+6fNUFhtl0gy0c5A5JUJXZ1Qv4jY6Lwkll29iQqyc6Iv3F5t6w3gkkJzeyYRXCr9UIUZetSAuAa9YetHMC5NROpNVuLmEhIMUCuMX7iOUIB3zPXLXNUPkbPgRfxiDrrKnlWDAkRI5TclrH/HkJCcrKIgc9yWnLAgMBAAE=", ["fixture.app"], ["home.readiness"], ["fixture.role"] );
+        var receipt = InstallationReceiptSignature.Verify(System.Text.Encoding.UTF8.GetBytes(envelope), [issuer]);
+        Assert.NotNull(receipt); Assert.Equal("fixture.app", receipt.AppId);
+        Assert.Null(InstallationReceiptSignature.Verify(System.Text.Encoding.UTF8.GetBytes(envelope), []));
+    }
+}

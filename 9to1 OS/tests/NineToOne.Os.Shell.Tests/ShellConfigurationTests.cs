@@ -102,7 +102,7 @@ public sealed class ShellConfigurationTests
         var item = imported.ActiveSpace.Taskbar.Layers.Single().Items.Single(i => i.Kind == TaskbarItemKind.Application);
         Assert.Equal(id.ToString("D"), item.Target!.Id);
         Assert.NotEqual(original.ActiveSpace.Taskbar.Layers.Single().Items.Single(i => i.Kind == TaskbarItemKind.Application).Id, item.Id);
-        Assert.Throws<InvalidDataException>(() => DesktopSpaceExchange.Import(original, DesktopSpaceExchange.Export(original.ActiveSpace).Replace("\"SchemaVersion\": 1", "\"SchemaVersion\": 99")));
+        Assert.Throws<InvalidDataException>(() => DesktopSpaceExchange.Import(original, DesktopSpaceExchange.Export(original.ActiveSpace).Replace("\"SchemaVersion\": 2", "\"SchemaVersion\": 99")));
         imported.Validate();
     }
     private sealed class Clock : TimeProvider { public DateTimeOffset Utc = DateTimeOffset.UtcNow; public override DateTimeOffset GetUtcNow() => Utc; }

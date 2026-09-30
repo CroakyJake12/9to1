@@ -16,6 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../vendor/Haven.UI/Haven.UI.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
   </ItemGroup>
 </Project>

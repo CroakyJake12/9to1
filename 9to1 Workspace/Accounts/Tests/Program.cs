@@ -181,6 +181,13 @@ try
     var purchase=purchases.Begin(purchaseQuote.QuoteID);
     Assert(ledger.Get(purchaseAccount).Subscription.Resources.AIDustAllocated==0,"quote and checkout cannot activate purchased allowance");
     try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("unverified billing event accepted");}catch(UnauthorizedAccessException){}
+    var blockingBilling=new BlockingBillingVerifier();
+    var capturedPurchases=new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,blockingBilling,monthlyPolicy);
+    var envelope=new byte[]{1,2,3};var envelopeHeaders=new Dictionary<string,string>{{"signature","original"}};
+    var pendingEnvelope=capturedPurchases.ProcessProviderEventAsync(envelope,envelopeHeaders).AsTask();
+    await blockingBilling.Entered.Task;envelope[0]=9;envelopeHeaders["signature"]="replacement";blockingBilling.Release.SetResult();
+    try{await pendingEnvelope;throw new Exception("unverified captured billing event accepted");}catch(UnauthorizedAccessException){}
+    Assert(blockingBilling.ObservedBytes!.SequenceEqual(new byte[]{1,2,3})&&blockingBilling.ObservedSignature=="original","provider event and signature snapshot survive caller mutation across verification await");
     billingVerifier.Receipt=new(purchase.PurchaseID,purchaseAccount,"fictional-settlement-1",purchaseQuote.Currency,purchaseQuote.Breakdown.FinalMonthlyCharge+0.01m,DateTimeOffset.UtcNow);
     try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("incorrect final charge accepted");}catch(InvalidOperationException){}
     billingVerifier.Receipt=billingVerifier.Receipt with{ChargedAmount=purchaseQuote.Breakdown.FinalMonthlyCharge};
@@ -224,4 +231,14 @@ sealed class FixturePurchaseClock(DateTimeOffset now):TimeProvider
     public ManualResetEventSlim ReadStarted {get;}=new(false);
     public override DateTimeOffset GetUtcNow(){var value=new DateTimeOffset(Interlocked.Read(ref ticks),TimeSpan.Zero);ReadStarted.Set();return value;}
     public void AdvanceTo(DateTimeOffset value)=>Interlocked.Exchange(ref ticks,value.UtcTicks);
+}
+
+sealed class BlockingBillingVerifier:ITrustedBillingSettlementVerifier
+{
+    public TaskCompletionSource Entered {get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Release {get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public byte[]? ObservedBytes {get;private set;}
+    public string? ObservedSignature {get;private set;}
+    public async ValueTask<VerifiedBillingSettlement?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)
+    {Entered.SetResult();await Release.Task.WaitAsync(ct);ObservedBytes=data.ToArray();ObservedSignature=headers["signature"];return null;}
 }

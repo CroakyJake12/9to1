@@ -320,7 +320,7 @@ public sealed class CuiControlRegistry
 
     private static IEnumerable<string> BuiltInPropertyNames() =>
     [
-        "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Padding",
+        "Panel", "ItemRow", "ItemColumn", "ItemRowSpan", "ItemColumnSpan", "Spacing", "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Padding",
         "Background", "Foreground", "Color", "BorderColor", "BorderWidth", "CornerRadius", "Opacity", "Active",
         "Hidden", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
         "Role", "Text", "Content", "Orientation", "HorizontalScrolling", "VerticalScrolling",
@@ -337,6 +337,10 @@ public sealed class CuiControlRegistry
     {
         var entries = new (string Name, string LanguageType, Type RuntimeType, bool Writable)[]
         {
+            ("Panel", "symbol", typeof(string), false),
+            ("ItemRow", "integer", typeof(int), true), ("ItemColumn", "integer", typeof(int), true),
+            ("ItemRowSpan", "integer", typeof(int), true), ("ItemColumnSpan", "integer", typeof(int), true),
+            ("Spacing", "length", typeof(double), true),
             ("Type", "symbol", typeof(string), false),
             ("Width", "length", typeof(double), true), ("Height", "length", typeof(double), true),
             ("MinWidth", "length", typeof(double), true), ("MinHeight", "length", typeof(double), true),
