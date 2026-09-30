@@ -33,6 +33,10 @@ public sealed class HomeApprovalCuiSurfaceTests
             await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(store), new HomePermissionsCoreService(permissions, profiles)]);
             using var surface = new HomeApprovalCuiSurface(runtime, profiles, permissions);
             await surface.InitializeAsync(token);
+            Assert.IsAssignableFrom<HavenOS.Home.NativeUI.HomeApprovalCuiSurface>(surface);
+            Assert.True(await surface.FocusRequestAsync(request.RequestId, token));
+            Assert.Equal(HomePermissionRequestState.PendingApproval, (await permissions.GetAuthorizationAsync(request.RequestId, token)).State);
+            Assert.False(await surface.FocusRequestAsync("missing-request", token));
             var host = Assert.IsType<CuiSceneHost>(surface.Content);
             Assert.Equal(CuiSceneAvailabilityState.Ready, host.Availability!.State);
             Assert.DoesNotContain(host.Diagnostics, diagnostic => diagnostic.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);

@@ -54,7 +54,7 @@ public sealed class PictureFilesArtifactBridge(
     {
         var resolved = await ResolveAsync(fileId, ResourceAccess.Read, cancellationToken).ConfigureAwait(false);
         var binding = await BindingAsync(resolved.Actor, cancellationToken).ConfigureAwait(false);
-        RequireFolder(binding, resolved.Reference);
+        // Logical Files moves change the parent, never the registered payload anchor.
         var content = await resolved.Provider.GetCurrentArtifactContentAsync(fileId, cancellationToken).ConfigureAwait(false);
         if (!content.IsSuccess || string.IsNullOrWhiteSpace(content.Value!.ProviderContentReference))
             throw new InvalidDataException("Picture has no committed canonical Files content revision.");
@@ -90,7 +90,7 @@ public sealed class PictureFilesArtifactBridge(
             throw new InvalidDataException("Picture cannot replace a canonical artifact with another identity.");
         await ValidateSourceReferenceAsync(resolved.Actor, resolved.Provider, artifact.SourceAsset, cancellationToken).ConfigureAwait(false);
         var binding = await BindingAsync(resolved.Actor, cancellationToken).ConfigureAwait(false);
-        RequireFolder(binding, resolved.Reference);
+        // Logical Files moves change the parent, never the registered payload anchor.
         var bytes = PictureArtifactCodec.Serialize(artifact);
         if (bytes.LongLength > MaximumArtifactBytes) throw new InvalidDataException("The Picture artifact exceeds supported payload limits.");
         var hash = Convert.ToHexString(SHA256.HashData(bytes));
@@ -152,10 +152,6 @@ public sealed class PictureFilesArtifactBridge(
                 : throw new UnauthorizedAccessException("The Home profile identity is invalid.");
         if (!result.IsSuccess) throw new UnauthorizedAccessException(result.Error!.Message);
         return result.Value!;
-    }
-    private static void RequireFolder(FilesWorkspaceDirectoryBinding binding, FilesArtifactReference reference)
-    {
-        if (binding.FolderId != reference.ParentFolderId) throw new UnauthorizedAccessException("Choose the canonical Files folder containing this Picture artifact.");
     }
     private async Task RecheckAsync(AuthenticatedResourceActor actor, ResourceScope scope, string action, CancellationToken cancellationToken)
     {

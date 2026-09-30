@@ -32,6 +32,34 @@ public sealed class AgentPresentationTests
         var observed = await den.GetAsync<AgentDefinitionRecord>("personal", original.Id);
         Assert.Equal("asset:idle", observed!.Presentation!.States[0].AssetReference);
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Draft_preview_is_detached_read_only_and_rejects_concurrent_Agent_change(bool changeAgent)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "astra-agent-preview-" + Guid.NewGuid().ToString("N"));
+        await using var store = await DenStore.CreateAsync(root, [new("personal", "personal")]);
+        var den = new DulcheDen(store, new NamespaceAccessPolicy([new("owner", "personal", DenPermission.Administer)]), "owner");
+        var original = await den.SaveAsync(Agent(), 0, "create-agent");
+        var states = original.Presentation!.States.ToList();
+        var assets = new BlockingAssets();
+        var service = new AgentPresentationService(den, assets);
+        var pending = service.PreviewDraftAsync("personal", original.Id, original.Revision,
+            original.Presentation with { States = states }, "idle", "activity.coding", "Preview coding", false);
+        await assets.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        states[1] = new("coding", "Injected", "asset:unchecked", true);
+        if (changeAgent) await den.SaveAsync(original with { DisplayName = "Changed" }, original.Revision, "change-agent");
+        assets.Release.SetResult();
+        if (changeAgent) await Assert.ThrowsAsync<DenException>(() => pending);
+        else
+        {
+            var frame = await pending;
+            Assert.Equal("asset:coding", frame.AssetReference);
+            Assert.Equal(original.Revision, (await service.GetAsync("personal", original.Id)).Revision);
+        }
+        Assert.DoesNotContain("asset:unchecked", assets.Observed);
+    }
+
     private sealed class BlockingAssets : IAgentPresentationAssetAccess
     {
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

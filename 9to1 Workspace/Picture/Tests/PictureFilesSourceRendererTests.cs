@@ -51,6 +51,10 @@ public sealed class PictureFilesSourceRendererTests
             Assert.Equal((byte)0, pixels[0]);
             Assert.Equal((byte)255, pixels[1]);
             Assert.Equal((byte)0, pixels[2]);
+            var sharedFrame = pinned.RenderSharedFrame();
+            Assert.Equal(3, sharedFrame.Width);
+            Assert.Equal(4, sharedFrame.Height);
+            Assert.Equal(new byte[] { 0, 255, 0, 255 }, sharedFrame.CopyPixels()[..4]);
             Assert.Equal(document.DocumentId, pinned.DocumentId);
             Assert.Equal(document.Revision, pinned.Revision);
             pinned.Dispose();
@@ -136,6 +140,103 @@ public sealed class PictureFilesSourceRendererTests
             Assert.Equal(2, released);
         }
         finally { Directory.Delete(directory, true); }
+    }
+
+    [AvaloniaFact]
+    public async Task Canonical_animation_step_replays_edit_graph_and_rechecks_backing_and_raw_source_authority()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "picture-animation-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var path = Path.Combine(root, "source.gif");
+            var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+            await File.WriteAllBytesAsync(path, bytes, TestContext.Current.CancellationToken);
+            var source = new PictureSourceAssetReference(Guid.NewGuid(), Guid.NewGuid(), Convert.ToHexString(SHA256.HashData(bytes)), bytes.Length, Guid.NewGuid());
+            var document = PictureDocument.Create(2, 1, source.FileId.ToString(), source.RevisionId.ToString()).Crop(0, 0, 1, 1).Resize(3, 4);
+            var artifact = new PictureArtifactEnvelope { BackingFileId = Guid.NewGuid(), Document = document, SourceAsset = source };
+            var authority = new Authority(artifact.BackingFileId);
+            var requests = 0;
+            var releases = 0;
+            var wrongSource = false;
+            var renderer = new PictureFilesSourceRenderer((requested, _) =>
+            {
+                Assert.Equal(source, requested);
+                requests++;
+                return Task.FromResult(MediaEngineResult<MediaAssetReadLease>.Success(new(new(new(source.AssetId), source.FileId,
+                    new Uri(path), (wrongSource ? Guid.NewGuid() : source.RevisionId).ToString()), () => { releases++; return ValueTask.CompletedTask; })));
+            }, authority.Service);
+            using var pinned = await renderer.LoadAnimationWithGlycinAsync(artifact, authority.Revision, new PictureGlycinDecoder(), TestContext.Current.CancellationToken);
+            Assert.True(pinned.CanAdvanceFrames);
+            Assert.Equal(80_000, pinned.FrameDelayMicroseconds);
+            Assert.Equal(2, releases);
+            using var red = pinned.Render();
+            Assert.Equal(new PixelSize(3, 4), red.PixelSize);
+            Assert.Equal(new byte[] { 0, 0, 255, 255 }, FirstPixel(red));
+            await pinned.AdvanceFrameAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(120_000, pinned.FrameDelayMicroseconds);
+            Assert.Equal(new byte[] { 255, 0, 0, 255 }, pinned.RenderSharedFrame().CopyPixels()[..4]);
+            Assert.Equal(4, requests);
+            Assert.Equal(requests, releases);
+            using var blue = pinned.Render();
+            Assert.Equal(new byte[] { 255, 0, 0, 255 }, FirstPixel(blue));
+            Assert.Equal(document.Revision, pinned.Revision);
+            Assert.Equal(document.DocumentId, pinned.DocumentId);
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+            wrongSource = true;
+            await Assert.ThrowsAsync<InvalidDataException>(() => pinned.AdvanceFrameAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(120_000, pinned.FrameDelayMicroseconds);
+            wrongSource = false;
+            authority.Deny = true;
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pinned.AdvanceFrameAsync(TestContext.Current.CancellationToken));
+            Assert.False(pinned.CanAdvanceFrames);
+            Assert.Throws<ObjectDisposedException>(() => pinned.Render());
+            Assert.Equal(requests, releases);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task Initial_materialization_rechecks_revoked_raw_source_before_returning_any_pinned_frame(int mode)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "picture-initial-authority-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var ct = TestContext.Current.CancellationToken;
+            var path = Path.Combine(root, "source.gif");
+            var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+            await File.WriteAllBytesAsync(path, bytes, ct);
+            var source = new PictureSourceAssetReference(Guid.NewGuid(), Guid.NewGuid(), Convert.ToHexString(SHA256.HashData(bytes)), bytes.Length, Guid.NewGuid());
+            var artifact = new PictureArtifactEnvelope { BackingFileId = Guid.NewGuid(), SourceAsset = source,
+                Document = PictureDocument.Create(2, 1, source.FileId.ToString(), source.RevisionId.ToString()) };
+            var authority = new Authority(artifact.BackingFileId);
+            var requests = 0; var releases = 0;
+            var renderer = new PictureFilesSourceRenderer((_, _) => {
+                if (++requests > 1) throw new UnauthorizedAccessException("Raw Files source revoked after initial lease materialization.");
+                return Task.FromResult(MediaEngineResult<MediaAssetReadLease>.Success(new(new(new(source.AssetId), source.FileId,
+                    new Uri(path), source.RevisionId.ToString()), () => { releases++; return ValueTask.CompletedTask; })));
+            }, authority.Service);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => mode switch {
+                0 => renderer.LoadAsync(artifact, authority.Revision, ct),
+                1 => renderer.LoadWithGlycinAsync(artifact, authority.Revision, new PictureGlycinDecoder(), ct),
+                _ => renderer.LoadAnimationWithGlycinAsync(artifact, authority.Revision, new PictureGlycinDecoder(), ct)
+            });
+            Assert.Equal(2, requests); Assert.Equal(1, releases);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    private static byte[] FirstPixel(Avalonia.Media.Imaging.Bitmap bitmap)
+    {
+        var bytes = new byte[4];
+        var pinned = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+        try { bitmap.CopyPixels(new(0, 0, 1, 1), pinned.AddrOfPinnedObject(), bytes.Length, 4); }
+        finally { pinned.Free(); }
+        return bytes;
     }
 
     private static byte[] TwoPixelBmp()

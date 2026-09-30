@@ -5,6 +5,7 @@ using Android.Graphics;
 using Android.Views;
 using Android.Widget;
 using Haven.Application;
+using Haven.Application.Go;
 using Haven.Desktop;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -51,13 +52,14 @@ public sealed partial class HavenLauncherActivity
             Toast.MakeText(this, "Could not load apps", ToastLength.Long)?.Show();
         }
     }
-    private async Task<IReadOnlyList<LauncherApp>> QueryAppsAsync()
+    private async Task<IReadOnlyList<LauncherApp>> QueryAppsAsync(CancellationToken cancellationToken = default)
     {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_launcherLifetime.Token, cancellationToken);
         var services = App.Services ?? throw new InvalidOperationException("9-1 Home is unavailable.");
         var registry = services.GetRequiredService<IInstalledApplicationRegistry>();
         var catalog = services.GetRequiredService<AndroidLauncherPlatformCatalog>();
-        var references = await registry.RefreshAsync(_launcherLifetime.Token);
-        var profiles = await Task.Run(() => catalog.Observe(loadIcons: true), _launcherLifetime.Token);
+        var references = await registry.RefreshAsync(lifetime.Token);
+        var profiles = await Task.Run(() => catalog.Observe(loadIcons: true), lifetime.Token);
         var apps = new List<LauncherApp>();
         foreach (var reference in references.Where(item => item.ProviderId == AndroidLauncherPlatformCatalog.ProviderId))
         {
@@ -347,33 +349,57 @@ public sealed partial class HavenLauncherActivity
                 drawerWidth)
         };
         var width = Math.Max(Dp(64), drawerWidth / grid.ColumnCount);
-        void RenderMatches(string? query)
+        var engine = (App.Services ?? throw new InvalidOperationException("9-1 Home is unavailable.")).GetRequiredService<GoService>();
+        var dialogLifetime = CancellationTokenSource.CreateLinkedTokenSource(_launcherLifetime.Token);
+        var dialogToken = dialogLifetime.Token;
+        CancellationTokenSource? currentSearch = null;
+        var searchGeneration = 0;
+        dialog.DismissEvent += (_, _) => { dialogLifetime.Cancel(); currentSearch?.Cancel(); dialogLifetime.Dispose(); };
+        async Task RenderMatchesAsync(string? query)
         {
-            grid.RemoveAllViews();
-            var normalized = query?.Trim() ?? string.Empty;
-            var matches = string.IsNullOrWhiteSpace(normalized)
-                ? _apps.ToArray()
-                : _apps.Where(app => app.Label.Contains(normalized, StringComparison.CurrentCultureIgnoreCase)
-                    || app.PackageName.Contains(normalized, StringComparison.OrdinalIgnoreCase)).ToArray();
-            foreach (var app in matches)
-                grid.AddView(BuildAppTile(app, width, Dp(96)));
-            if (matches.Length == 0)
+            currentSearch?.Cancel();
+            using var request = CancellationTokenSource.CreateLinkedTokenSource(dialogToken);
+            currentSearch = request; var generation = Interlocked.Increment(ref searchGeneration);
+            try
             {
-                var empty = new TextView(this)
+                await Task.Delay(120, request.Token);
+                var presentation = (await QueryAppsAsync(request.Token)).ToDictionary(app => app.ApplicationId);
+                var scope = new GoScope(new HashSet<string>(StringComparer.Ordinal) { AndroidInstalledApplicationsGoProvider.Id },
+                    new HashSet<string>(StringComparer.Ordinal) { "Home" }, new HashSet<string>(StringComparer.Ordinal) { "os.installed-application" },
+                    new HashSet<string>(StringComparer.Ordinal) { "Open" });
+                RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.RemoveAllViews(); });
+                var count = 0; var failed = false;
+                await foreach (var update in engine.QueryAsync(new(query?.Trim() ?? "", "Apps", 1000, scope), request.Token))
                 {
-                    Text = "No installed apps match this search.",
-                    Gravity = GravityFlags.Center,
-                    LayoutParameters = new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MatchParent,
-                        Dp(72))
-                };
-                empty.SetTextColor(Color.Argb(220, 235, 225, 255));
-                grid.AddView(empty);
+                    if (update.Failure is not null) failed = true;
+                    if (update.Result is not { } result || !Guid.TryParse(result.Reference.Id, out var id) ||
+                        !long.TryParse(result.Reference.Revision, out var revision) || !presentation.TryGetValue(id, out var app)) continue;
+                    var current = app with { Label = result.Label, RegistryRevision = revision, Available = true };
+                    count++;
+                    RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.AddView(BuildAppTile(current, width, Dp(96))); });
+                }
+                if (count == 0)
+                    RunOnUiThread(() =>
+                    {
+                        if (request.IsCancellationRequested || generation != searchGeneration) return;
+                        var empty = new TextView(this) { Text = failed ? "Applications are temporarily unavailable. Retry or repair Home." : "No installed apps match this search.",
+                            Gravity = GravityFlags.Center, LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, Dp(72)) };
+                        empty.SetTextColor(Color.Argb(220, 235, 225, 255)); grid.AddView(empty);
+                    });
             }
+            catch (OperationCanceledException) when (request.IsCancellationRequested) { }
+            catch (Exception)
+            {
+                RunOnUiThread(() =>
+                {
+                    if (dialogToken.IsCancellationRequested || generation != searchGeneration) return;
+                    Toast.MakeText(this, "Applications could not be queried. Retry or repair Home.", ToastLength.Long)?.Show();
+                });
+            }
+            finally { if (ReferenceEquals(currentSearch, request)) currentSearch = null; }
         }
-
-        search.TextChanged += (_, args) => RenderMatches(args.Text?.ToString());
-        RenderMatches(string.Empty);
+        search.TextChanged += (_, args) => _ = RenderMatchesAsync(args.Text?.ToString());
+        _ = RenderMatchesAsync(string.Empty);
         scroll.AddView(grid);
         shell.AddView(scroll);
 
@@ -390,14 +416,9 @@ public sealed partial class HavenLauncherActivity
         try
         {
             var services = App.Services ?? throw new InvalidOperationException("9-1 Home is unavailable.");
-            var resolved = await services.GetRequiredService<IInstalledApplicationRegistry>()
-                .ResolveLaunchAsync(app.ApplicationId, app.RegistryRevision, _launcherLifetime.Token);
-            if (resolved is null)
-            {
-                LoadAppsAsync();
-                throw new InvalidOperationException("This application or its owning profile changed or is unavailable. Refresh the launcher and try again.");
-            }
-            services.GetRequiredService<AndroidLauncherPlatformCatalog>().Launch(resolved.PlatformProfileId, resolved.Entrypoint);
+            await services.GetRequiredService<AndroidInstalledApplicationsGoProvider>().InvokeAsync(
+                new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.RegistryRevision.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                "Open", _launcherLifetime.Token);
         }
         catch (OperationCanceledException) when (_launcherLifetime.IsCancellationRequested)
         {

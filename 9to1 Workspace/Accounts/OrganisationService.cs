@@ -4,7 +4,7 @@ using System.Text;
 namespace NineToOne.Accounts;
 
 /// <summary>Server authority for Business membership, roles and capability intersections; public clients supply no role assertions.</summary>
-public sealed class OrganisationService(string statePath,ProfileService profiles,IOrganisationObjectScopeResolver? objectScopesAuthority=null) : IOrganisationPolicyAuthority
+public sealed partial class OrganisationService(string statePath,ProfileService profiles,IOrganisationObjectScopeResolver? objectScopesAuthority=null) : IOrganisationPolicyAuthority
 {
     public Organisation CreateTrustedOrganisation(Guid verifiedOwnerID,string name,BusinessAddOnKind kind,string trustedBillingReference)
     {
@@ -75,7 +75,7 @@ public sealed class OrganisationService(string statePath,ProfileService profiles
         =>Mutate(actorID,orgID,expectedRevision,key,"Admin.Policies.Publish",null,org=>
             org with {Policy=new(org.Policy.PolicyID,org.Policy.Revision+1,blocked.ToHashSet(StringComparer.Ordinal),new Dictionary<string,string>(forced),new Dictionary<string,string>(defaults),"Published")});
     public Organisation PreviewDowngrade(Guid actorID,Guid orgID)
-    {var org=Get(actorID,orgID);Demand(org,actorID,"Admin.Billing.GetConfiguration");return org with {AddOn=org.AddOn with {AddOnID="business",MonthlyPrice=5,SeatLimit=50,State=org.Members.Count(m=>m.State==OrganisationMemberState.Active)>50?BusinessBillingState.PendingDowngrade:org.AddOn.State}};}
+    {using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.Single(o=>o.OrgID==orgID);Demand(org,actorID,"Admin.Billing.GetConfiguration");return org with {AddOn=org.AddOn with {AddOnID="business",MonthlyPrice=5,SeatLimit=50,State=org.Members.Count(m=>m.State==OrganisationMemberState.Active)>50?BusinessBillingState.PendingDowngrade:org.AddOn.State}};}
     public ValueTask<OrganisationPolicyDecision> EvaluateAsync(Guid accountID,Guid orgID,string action,IReadOnlyList<string> objectScopes,long? expectedPolicyRevision,CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.SingleOrDefault(o=>o.OrgID==orgID);
@@ -103,13 +103,13 @@ public sealed class OrganisationService(string statePath,ProfileService profiles
     private static OrganisationPolicyDecision Decision(bool allowed,string code,long revision)=>new(allowed,code,revision,[],new Dictionary<string,string>());
     private static string Allowed(Organisation org,Guid accountID,string action)
     {
-        if(org.AddOn.State is BusinessBillingState.Cancelled or BusinessBillingState.Suspended && !action.StartsWith("Admin.Billing.",StringComparison.Ordinal)&&!action.StartsWith("Admin.Recovery.",StringComparison.Ordinal))return "EntitlementRequired";
+        if((org.AddOn.State is BusinessBillingState.Cancelled or BusinessBillingState.Suspended || org.AddOn.EffectiveFrom > DateTimeOffset.UtcNow || org.AddOn.EffectiveUntil is {} until && until <= DateTimeOffset.UtcNow) && !action.StartsWith("Admin.Billing.",StringComparison.Ordinal)&&!action.StartsWith("Admin.Recovery.",StringComparison.Ordinal))return "EntitlementRequired";
         var member=org.Members.SingleOrDefault(m=>m.AccountID==accountID&&m.State==OrganisationMemberState.Active);if(member is null)return "PermissionDenied";
         var roles=org.Roles.Where(r=>member.RoleIDs.Contains(r.RoleID)).ToArray();
         if(org.Policy.BlockedCapabilities.Contains(action)||roles.Any(r=>r.Denials.Contains(action)||r.Denials.Contains("*")))return "PolicyDenied";
         return roles.Any(r=>r.Grants.Contains(action)||r.Grants.Contains("*"))?"Allowed":"PermissionDenied";
     }
-    private static void Demand(Organisation org,Guid accountID,string action){if(Allowed(org,accountID,action)!="Allowed")throw new UnauthorizedAccessException("organisation_permission_denied");}
+    private static void Demand(Organisation org,Guid accountID,string action){var code=Allowed(org,accountID,action);if(code!="Allowed")throw new OrganisationAccessException(code);}
     private static void EnsureOwner(Organisation org)
     {if(!org.Members.Any(m=>m.State==OrganisationMemberState.Active&&org.Roles.Any(r=>r.IsOwner&&m.RoleIDs.Contains(r.RoleID))))throw new InvalidOperationException("last_owner_protected");}
     private static void ValidateRoles(Organisation org,Guid actorID,IReadOnlyList<Guid> roleIDs)
@@ -137,6 +137,7 @@ public sealed class OrganisationService(string statePath,ProfileService profiles
             if(org.SchemaVersion!=1||org.OrgID==Guid.Empty||org.Revision<1||org.Members is null||org.Roles is null||org.Members.Any(m=>m is null)||org.Roles.Any(r=>r is null)||org.Policy is null||org.AddOn is null||!Enum.IsDefined(org.AddOn.State))throw new InvalidDataException("corrupt_organisation");
             if(org.AddOn.DefinitionVersion!=1||org.AddOn.Currency!="USD"||org.AddOn.AddOnID is not ("business" or "business-plus")||
                 (org.AddOn.AddOnID=="business"?org.AddOn.SeatLimit!=50:org.AddOn.SeatLimit is not null)||
+                org.AddOn.EffectiveFrom==default||org.AddOn.EffectiveUntil is {} end&&end<=org.AddOn.EffectiveFrom||
                 org.AddOn.MonthlyPrice<0||org.AddOn.MonthlyPrice!=(org.AddOn.AddOnID=="business"?5m:15m)&&org.AddOn.MonthlyPrice!=0)
                 throw new InvalidDataException("corrupt_organisation_addon");
             if(org.Members.Any(m=>m.MembershipID==Guid.Empty||m.AccountID==Guid.Empty||m.Revision<1||m.RoleIDs is null||!Enum.IsDefined(m.State)||m.RoleIDs.Any(id=>!org.Roles.Any(r=>r.RoleID==id)))||org.Roles.Any(r=>r.RoleID==Guid.Empty||r.Revision<1||r.Grants is null||r.Denials is null||r.Grants.Any(string.IsNullOrWhiteSpace)||r.Denials.Any(string.IsNullOrWhiteSpace))||org.Policy.BlockedCapabilities is null||org.Policy.ForcedSettings is null||org.Policy.Defaults is null)throw new InvalidDataException("corrupt_organisation_membership");
@@ -144,6 +145,10 @@ public sealed class OrganisationService(string statePath,ProfileService profiles
             if(org.Policy.PolicyID==Guid.Empty||org.Policy.Revision<1||org.Policy.State is not ("Draft" or "Validated" or "Published")||!org.Members.Any(m=>m.State==OrganisationMemberState.Active&&m.RoleIDs.Any(id=>org.Roles.Any(r=>r.RoleID==id&&r.IsOwner))))throw new InvalidDataException("corrupt_organisation_policy_or_owner");
             if(org.Members.Select(m=>m.AccountID).Distinct().Count()!=org.Members.Count||org.Roles.Select(r=>r.RoleID).Distinct().Count()!=org.Roles.Count)throw new InvalidDataException("duplicate_organisation_identity");
         }
+        if(state.BillingTransitions is {} transitions && (transitions.Any(t=>t is null||string.IsNullOrWhiteSpace(t.EventID)||t.AccountID==Guid.Empty||t.ExpectedRevision<1||
+            !Enum.IsDefined(t.State)||t.EffectiveFrom==default||t.EffectiveUntil is {} end&&end<=t.EffectiveFrom||string.IsNullOrWhiteSpace(t.PolicyVersion)||
+            !state.Organisations.Any(o=>o.OrgID==t.OrgID)||t.DefinitionVersion!=1||t.AddOnID is not ("business" or "business-plus"))||
+            transitions.Select(t=>t.EventID).Distinct(StringComparer.Ordinal).Count()!=transitions.Count))throw new InvalidDataException("corrupt_business_billing_history");
         if(state.Invitations is {} invitations && invitations.Any(i=>i is null||i.InvitationID==Guid.Empty||i.InviterID==Guid.Empty||i.RoleIDs is null||string.IsNullOrWhiteSpace(i.TokenHash)||!state.Organisations.Any(o=>o.OrgID==i.OrgID)))throw new InvalidDataException("corrupt_organisation_invitation");
         return state;
     }

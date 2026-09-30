@@ -49,4 +49,33 @@ public sealed class PictureCuiWorkspaceTests
         Assert.False(workspace.IsActionAvailable("9to1.Picture.Export"));
         Assert.Throws<NotSupportedException>(() => workspace.DispatchAsync("9to1.Picture.Save", null, TestContext.Current.CancellationToken));
     }
+    [Fact]
+    public async Task Readonly_animation_navigation_and_live_command_bindings_follow_owning_host_capabilities()
+    {
+        var available = true;
+        PictureWorkspaceCommand? dispatched = null;
+        var workspace = new PictureCuiWorkspace((command, _) => { dispatched = command; return ValueTask.CompletedTask; },
+            command => command == PictureWorkspaceCommandKind.NextFrame && available);
+        var document = PictureDocument.Create(2, 1);
+        workspace.Refresh(document, "Read only", "Animation preview", Guid.NewGuid(), 80_000);
+        Assert.True(workspace.TryGetValue("CanAdvanceFrames", out var canAdvance));
+        Assert.Equal(true, canAdvance);
+        Assert.True(workspace.TryGetValue("CanSave", out var canSave));
+        Assert.Equal(false, canSave);
+        Assert.True(workspace.TryGetValue("AnimationSummary", out var timing));
+        Assert.Equal("Frame delay: 80 ms", timing);
+        await workspace.DispatchAsync("9to1.Picture.Animation.NextFrame", null, TestContext.Current.CancellationToken);
+        Assert.Equal(PictureWorkspaceCommandKind.NextFrame, dispatched!.Kind);
+        Assert.Equal(document.DocumentId, dispatched.DocumentId);
+        Assert.Equal(document.Revision, dispatched.BaseRevision);
+        var notifications = 0;
+        workspace.PropertyChanged += (_, _) => notifications++;
+        available = false;
+        workspace.RefreshAvailability();
+        Assert.Equal(1, notifications);
+        workspace.TryGetValue("CanAdvanceFrames", out canAdvance);
+        Assert.Equal(false, canAdvance);
+        Assert.Throws<NotSupportedException>(() => workspace.DispatchAsync("9to1.Picture.Animation.NextFrame", null, TestContext.Current.CancellationToken));
+    }
+
 }

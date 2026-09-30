@@ -106,6 +106,31 @@ try
     Assert(organisations.ListAudit(id,org.OrgID).All(e=>e.OrgID==org.OrgID)&&organisations.ListAudit(id,org.OrgID).Count>0,"bounded canonical owner audit");
     try{organisations.ListAudit(active.Members.First(m=>m.AccountID!=id).AccountID,org.OrgID);throw new Exception("audit leaked to ungranted member");}catch(UnauthorizedAccessException){}
     var stranger=await organisations.EvaluateAsync(Guid.NewGuid(),org.OrgID,"Admin.Policies.Publish",[],null,CancellationToken.None);Assert(!stranger.Allowed,"nonmember API denied");
+    var lifecycleOrg=organisations.CreateTrustedOrganisation(id,"Lifecycle fixture",BusinessAddOnKind.Business,"fixture-existing-paid-addon");
+    var lifecycleVerifier=new FixtureBusinessBillingVerifier();var businessBilling=new OrganisationBillingService(organisations,id,lifecycleVerifier);
+    var suspension=new VerifiedBusinessBillingTransition("fixture-suspend",id,lifecycleOrg.OrgID,lifecycleOrg.Revision,"business",1,BusinessBillingState.Suspended,DateTimeOffset.UtcNow.AddSeconds(-1),null,"fixture-approved-policy");
+    try{await new OrganisationBillingService(organisations,id,null).ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());throw new Exception("unconfigured Business billing accepted");}catch(InvalidOperationException e)when(e.Message=="business_billing_verifier_unconfigured"){}
+    try{await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());throw new Exception("unverified Business billing accepted");}catch(UnauthorizedAccessException){}
+    lifecycleVerifier.Event=suspension with{AccountID=Guid.NewGuid()};
+    try{await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());throw new Exception("foreign Business billing accepted");}catch(UnauthorizedAccessException){}
+    lifecycleVerifier.Event=suspension with{EffectiveFrom=DateTimeOffset.UtcNow.AddDays(1)};
+    try{await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());throw new Exception("future Business event applied early");}catch(InvalidOperationException e)when(e.Message=="invalid_business_billing_transition"){}
+    Assert(organisations.GetBillingConfiguration(id,lifecycleOrg.OrgID).Revision==lifecycleOrg.Revision,"unverified or future billing cannot mutate state");
+    lifecycleVerifier.Event=suspension;
+    var suspended=await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());
+    Assert(suspended.AddOn.State==BusinessBillingState.Suspended,"verified Business suspension persisted");
+    Assert(!(await organisations.EvaluateAsync(id,lifecycleOrg.OrgID,"Admin.Policies.Publish",[],null,default)).Allowed,"suspended Business editing denied");
+    Assert(organisations.GetBillingConfiguration(id,lifecycleOrg.OrgID).OrgID==lifecycleOrg.OrgID,"billing recovery remains available under suspension");
+    Assert(organisations.PreviewDowngrade(id,lifecycleOrg.OrgID).AddOn.State==BusinessBillingState.Suspended,"billing preview does not reactivate suspended Business");
+    Assert((await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>())).Revision==suspended.Revision,"provider retry idempotent");
+    lifecycleVerifier.Event=suspension with{State=BusinessBillingState.Active};
+    try{await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());throw new Exception("conflicting Business receipt replay");}catch(InvalidOperationException e)when(e.Message=="business_billing_replay_conflict"){}
+    lifecycleVerifier.Event=suspension with{EventID="fixture-expired-recovery",ExpectedRevision=suspended.Revision,State=BusinessBillingState.Active,EffectiveFrom=DateTimeOffset.UtcNow.AddDays(-2),EffectiveUntil=DateTimeOffset.UtcNow.AddDays(-1)};
+    var expiredBusiness=await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());
+    Assert(!(await organisations.EvaluateAsync(id,lifecycleOrg.OrgID,"Admin.Policies.Publish",[],null,default)).Allowed,"actual expired entitlement dates enforced without inventing grace");
+    Assert(new OrganisationService(Path.Combine(root,"organisations.json"),profiles).GetBillingConfiguration(id,lifecycleOrg.OrgID).Revision==expiredBusiness.Revision,"billing transition survives restart");
+    lifecycleVerifier.Event=suspension;await businessBilling.ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());
+    Assert(organisations.GetBillingConfiguration(id,lifecycleOrg.OrgID).Revision==expiredBusiness.Revision,"old receipt replay cannot replace later billing state");
     var ownedQuotes=new SubscriptionQuotes(Path.Combine(root,"quotes.json"),pricing,id);var ownedQuote=ownedQuotes.Preview(new(1,null,20_000_000_000)).Quote!;
     Assert(new SubscriptionQuotes(Path.Combine(root,"quotes.json"),pricing,Guid.NewGuid()).Checkout(ownedQuote.QuoteID).Quote is null,"other account quote checkout denied");
     Assert(new SubscriptionBuilder(costs with {AICostPerDust=decimal.MaxValue}).Quote(new(1,null,20_000_000_000)).Blockers.Any(b=>b.Field=="PriceRange"),"overflow structured blocker");
@@ -241,4 +266,10 @@ sealed class BlockingBillingVerifier:ITrustedBillingSettlementVerifier
     public string? ObservedSignature {get;private set;}
     public async ValueTask<VerifiedBillingSettlement?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)
     {Entered.SetResult();await Release.Task.WaitAsync(ct);ObservedBytes=data.ToArray();ObservedSignature=headers["signature"];return null;}
+}
+
+sealed class FixtureBusinessBillingVerifier:ITrustedBusinessBillingVerifier
+{
+    public VerifiedBusinessBillingTransition? Event {get;set;}
+    public ValueTask<VerifiedBusinessBillingTransition?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)=>ValueTask.FromResult(Event);
 }

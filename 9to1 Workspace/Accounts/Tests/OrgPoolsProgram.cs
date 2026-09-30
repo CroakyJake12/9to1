@@ -17,10 +17,14 @@ try
     await service.FundAsync(token,org.OrgID,org.Policy.Revision,pool.PoolID,"fictional-paid-allocation");
     await Service().FundAsync(token,org.OrgID,org.Policy.Revision,pool.PoolID,"fictional-paid-allocation");
     Check(service.GetBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID).FundedDust==1000,"source funding retry creates no duplicate credits");
+    var noMetadataQuote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10),"fixture");quoted.Quotes[noMetadataQuote.QuoteID]=noMetadataQuote;
+    try{await service.ReserveAsync(token,new(org.OrgID,org.Policy.Revision,noMetadataQuote.ModelRouteID,noMetadataQuote.QuoteID,"missing-attribution"),CancellationToken.None);throw new Exception("unattributed quote admitted");}catch(InvalidOperationException error)when(error.Message=="organisation_quote_usage_attribution_unconfigured"){}
+    var wrongClientQuote=noMetadataQuote with{QuoteID=Guid.NewGuid(),RegisteredClientID="different-client",Attribution=new("fixture.app","fixture.model",null,null)};quoted.Quotes[wrongClientQuote.QuoteID]=wrongClientQuote;
+    try{await service.ReserveAsync(token,new(org.OrgID,org.Policy.Revision,wrongClientQuote.ModelRouteID,wrongClientQuote.QuoteID,"wrong-registered-client"),CancellationToken.None);throw new Exception("another registered client's quote admitted");}catch(UnauthorizedAccessException error)when(error.Message=="cost_quote_registered_client_mismatch"){}
     var reservations=new ConcurrentBag<OrganisationFundingReservation>();
     Parallel.For(0,32,i=>
     {
-        var quote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10));quoted.Quotes[quote.QuoteID]=quote;
+        var quote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10),"fixture",new("fixture.app","fixture.model",null,null));quoted.Quotes[quote.QuoteID]=quote;
         try{reservations.Add(Service().ReserveAsync(token,new(org.OrgID,org.Policy.Revision,quote.ModelRouteID,quote.QuoteID,"operation-"+i),CancellationToken.None).AsTask().GetAwaiter().GetResult());}
         catch(InvalidOperationException error)when(error.Message=="organisation_dust_exhausted"){}
     });
@@ -31,10 +35,12 @@ try
     await Service().SettleObservedAsync(new(first.ReservationID,"fixture-settlement",60,"fixture-provider-observed-usage"),CancellationToken.None);
     await Service().SettleObservedAsync(new(first.ReservationID,"fixture-settlement",60,"fixture-provider-observed-usage"),CancellationToken.None);
     balance=service.GetBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID);Check(balance.SettledDust==60&&balance.ReservedDust==900&&balance.AvailableDust==40,"actual charge releases unused reservation once across restart");
+    var report=Service().GetUsageReport(token,org.OrgID,org.Policy.Revision,pool.PoolID);
+    Check(report.Rows.Single().Attribution==new OrganisationUsageAttribution("fixture.app","fixture.model",null,null)&&report.Rows.Single().ReservedDust==900&&report.Rows.Single().SettledDust==60&&report.Rows.Single().HistoricalRoleIDs.SequenceEqual(org.Roles.Select(r=>r.RoleID)),"canonical attribution report reconciles actual ledger, preserves role snapshot, and excludes unrelated personal content");
     try{await service.SettleObservedAsync(new(first.ReservationID,"fixture-settlement",61,"fixture-provider-observed-usage"),CancellationToken.None);throw new Exception("conflicting delayed usage accepted");}catch(InvalidOperationException){}
     foreach(var reservation in reservations.Where(r=>r.ReservationID!=first.ReservationID))await service.CancelAsync(reservation.ReservationID,"cancel-"+reservation.ReservationID,CancellationToken.None);
     pool=service.Configure(token,org.OrgID,org.Policy.Revision,pool.PoolID,pool.Revision,OrganisationPoolMode.Partitioned,new Dictionary<Guid,long>{{owner,160}},new Dictionary<Guid,long>{{org.Roles.Single().RoleID,160}});
-    var partitionQuote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10));quoted.Quotes[partitionQuote.QuoteID]=partitionQuote;
+    var partitionQuote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,pool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10),"fixture",new("fixture.app","fixture.model",null,null));quoted.Quotes[partitionQuote.QuoteID]=partitionQuote;
     var partitionReservation=await service.ReserveAsync(token,new(org.OrgID,org.Policy.Revision,partitionQuote.ModelRouteID,partitionQuote.QuoteID,"partition-operation"),CancellationToken.None);
     var effective=Service().GetEffectiveBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID);
     Check(effective.AccountID==owner&&effective.MemberReservedDust==100&&effective.MemberSettledDust==60&&effective.EffectiveAvailableDust==0&&effective.PolicyRevision==org.Policy.Revision,"current member effective availability intersects partition and role ceilings with actual committed usage");
@@ -81,7 +87,7 @@ try
     Check(carriedBalance.FundedDust==0&&carriedBalance.RolledOverDust==300&&carriedBalance.AvailableDust==300,"rolled-over credits are separate from new paid funding");
     var sourceBalance=service.GetBalance(token,org.OrgID,org.Policy.Revision,pool.PoolID);
     Check(sourceBalance.AvailableDust==540&&sourceBalance.TransferredDust==300&&sourceBalance.ReservedDust==100&&sourceBalance.SettledDust==60,"rollover debits original uncommitted credits without copying or changing inflight/settled usage");
-    var carryQuote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,nextPool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10));quoted.Quotes[carryQuote.QuoteID]=carryQuote;
+    var carryQuote=new VerifiedOrganisationCostQuote(Guid.NewGuid(),owner,org.OrgID,nextPool.PoolID,"fictional-model-route",org.Policy.Revision,100,now.AddMinutes(10),"fixture",new("fixture.app","fixture.model",null,null));quoted.Quotes[carryQuote.QuoteID]=carryQuote;
     var carryReservation=await rolloverService.ReserveAsync(token,new(org.OrgID,org.Policy.Revision,carryQuote.ModelRouteID,carryQuote.QuoteID,"carry-operation"),CancellationToken.None);
     nextPool=service.ConfigureRolloverRules(token,org.OrgID,org.Policy.Revision,nextPool.PoolID,nextPool.Revision,new Dictionary<Guid,OrganisationRolloverChoice>{{org.Roles.Single().RoleID,OrganisationRolloverChoice.Disallow}});
     try{await rolloverService.RecheckDispatchAsync(token,carryReservation.ReservationID,org.Policy.Revision,CancellationToken.None);throw new Exception("changed rollover permission dispatched");}catch(UnauthorizedAccessException error)when(error.Message=="rollover_permission_changed"){}

@@ -49,12 +49,21 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<SpaceRegistry>();
         collection.AddSingleton<NativeFilesWorkspaceService>();
         collection.AddSingleton<NativeFilesWorkspaceAuthority>();
+        collection.AddSingleton<HavenOS.Apps.Sites.Application.ISiteNativeWorkspaceAuthority, SitesNativeWorkspaceAuthority>();
+        collection.AddSingleton<ICanonicalResourceAccessResolver, HavenOS.Apps.Sites.Application.SiteNativeProjectAccessResolver>();
+        collection.AddSingleton<HavenOS.Home.Core.IHomeActionPolicySource, HavenOS.Apps.Sites.Application.SiteNativeActionPolicies>();
+        collection.AddSingleton<HavenOS.Apps.Sites.Application.SiteNativeWriteCoordinator>();
         collection.AddSingleton<NativeFilesMediaAssetSourceResolver>();
+        collection.AddSingleton<NativeFilesArtifactContentReader>();
         collection.AddSingleton<Haven.Core.Media.IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
         collection.AddSingleton<ICanonicalResourceAccessResolver>(provider => new FilesArtifactResourceResolver(async (actor, token) =>
         {
             var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
             return workspace?.Actor == actor ? workspace.Provider : null;
+        }, async (actor, appId, token) =>
+        {
+            var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
+            return workspace?.Actor == actor && workspace.Configuration.AppFolders.TryGetValue(appId, out var folder) ? folder : null;
         }));
         collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider => provider.GetRequiredService<NativeFilesWorkspaceService>());
         collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>

@@ -72,6 +72,42 @@ public sealed class HomeResourceOperationBrokerTests : IDisposable
         Assert.Null(await new ResourceAuthorizationService(_actors, [_owner]).AuthorizeAsync("planner.attachJourney", []));
     }
 
+    [Fact]
+    public async Task Owner_capability_is_bound_to_issuer_exact_operation_and_claimed_once()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = Assert.IsType<HomeResourceExecutionCapability>(await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments));
+        var otherBroker = new HomeResourceOperationBroker(new ResourceAuthorizationService(_actors, [_owner]), _permissions);
+        Assert.Null(await otherBroker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        Assert.Null(await _broker.ClaimExecutionAsync(capability, "other-app", "planner.attachJourney", Scopes, Arguments));
+        Assert.Null(await _broker.ClaimExecutionAsync(capability, "planner", "other-action", Scopes, Arguments));
+        Assert.Null(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", [], Arguments));
+        Assert.Null(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes,
+            JsonSerializer.SerializeToElement(new { journeyId = "other" })));
+        Assert.Equal(_actors.Current, await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        Assert.Null(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        Assert.Null(await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments));
+    }
+
+    [Fact]
+    public async Task Owner_claim_rechecks_current_actor_acl_and_revision_after_approval_consumption()
+    {
+        foreach (var change in new[] { "actor", "acl", "revision", "blocked" })
+        {
+            _actors.Current = ActorSource.Initial; _owner.Allowed = true; _owner.Revision = "revision-1";
+            await _permissions.UnblockCallerAsync(ActorSource.Initial.ActorId);
+            var pending = await Request();
+            Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+            var capability = Assert.IsType<HomeResourceExecutionCapability>(await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments));
+            if (change == "actor") _actors.Current = ActorSource.Initial with { AuthenticationRevision = "switched" };
+            if (change == "acl") _owner.Allowed = false;
+            if (change == "revision") _owner.Revision = "revision-2";
+            if (change == "blocked") await _permissions.BlockCallerAsync(ActorSource.Initial.ActorId);
+            Assert.Null(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        }
+    }
+
     private sealed class ActorSource : IAuthenticatedResourceActorSource
     {
         public static AuthenticatedResourceActor Initial { get; } = new("verified-user", "profile-1", Guid.NewGuid(), null, "session-1");

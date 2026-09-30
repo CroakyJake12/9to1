@@ -1,4 +1,7 @@
 using Haven.Application;
+using Haven.Desktop.Controls;
+using HavenOS.Home.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Spaces;
@@ -31,11 +34,38 @@ public sealed partial class MainView
             DeleteSpaceAsync,
             OpenSpaceLayoutAsync,
             _conversations,
-            OpenSpaceConversationAsync);
+            OpenSpaceConversationAsync,
+            OpenSpaceCanonicalSourceAsync);
 
         AddOrSelectTab("spaces", "Spaces", _spacesPage, false, HavenSurface.Spaces);
         await _spacesPage.ActivateAsync(CancellationToken.None);
         ApplyShellVisualState();
+    }
+
+    private async Task OpenSpaceCanonicalSourceAsync(SpaceDefinition space, SpaceContextReference source)
+    {
+        if (source.HostedFileId is not { } fileId || source.Kind != SpaceContextReferenceKind.CanvasArtifact)
+            throw new NotSupportedException("This source has no available native owning-app surface.");
+        var services = global::Haven.Desktop.App.Services ?? throw new InvalidOperationException("Home services are unavailable.");
+        var files = services.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        var workspace = await files.GetCurrentAsync() ?? throw new UnauthorizedAccessException("Home has not authorised Files storage.");
+        var metadata = await workspace.Provider.GetAsync(new(fileId), CancellationToken.None);
+        if (!metadata.IsSuccess || metadata.Value!.CurrentRevisionId is not { } revision)
+            throw new InvalidOperationException("The canonical Files source is unavailable.");
+        var actors = services.GetRequiredService<IAuthenticatedResourceActorSource>();
+        var resources = services.GetRequiredService<ResourceAuthorizationService>();
+        var route = new SpaceFilesArtifactAction(space.Id, space.Revision, source.ContextId, fileId,
+            source.CanonicalEntityId, revision, false);
+        var surface = new SpaceCanvasCuiSurface(route, new(SpacesRegistry, files, actors, resources),
+            services.GetRequiredService<NativeFilesArtifactContentReader>(), services.GetRequiredService<HomeCoreRuntime>(), actors, resources);
+        try
+        {
+            await surface.InitializeAsync();
+            AddOrSelectTab($"space-source-{space.Id:N}-{source.ContextId:N}-{Guid.NewGuid():N}", metadata.Value.Name,
+                surface, true, HavenSurface.Spaces, forceNewTab: true);
+            ApplyShellVisualState();
+        }
+        catch { surface.Dispose(); throw; }
     }
 
     private async Task LaunchSpaceAsync(SpaceDefinition space)

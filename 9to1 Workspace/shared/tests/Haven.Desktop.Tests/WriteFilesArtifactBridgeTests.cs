@@ -86,6 +86,9 @@ public sealed class WriteFilesArtifactBridgeTests
                 var committed = await provider.CommitDurableRevisionAsync(new(fileId, owner, Guid.NewGuid().ToString("N"), actor.ActorId,
                     now, bytes.Length, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)), relative, null), token);
                 Assert.True(committed.IsSuccess);
+                var canonical = new FilesArtifactResourceResolver(_ => provider);
+                var scope = new ResourceScope("files.item", fileId.ToString(), committed.Value!.Id.ToString(), ResourceAccess.Read);
+                Assert.False((await canonical.EvaluateAsync(actor, "write.file.open", scope, token)).Allowed);
                 await Assert.ThrowsAsync<UnauthorizedAccessException>(() => bridge.OpenAsync(fileId, token));
                 await Assert.ThrowsAsync<UnauthorizedAccessException>(() => bridge.SaveAsync(fileId, document, committed.Value!.Id, token));
             }
@@ -138,6 +141,24 @@ public sealed class WriteFilesArtifactBridgeTests
             Assert.Equal(document.Id, reopened.Id);
             Assert.Equal("Persisted edit", reopened.Title);
             Assert.Equal(fileId, (await provider.GetArtifactAsync(fileId, TestContext.Current.CancellationToken)).Value!.FileId);
+            var token = TestContext.Current.CancellationToken;
+            var moveTime = DateTimeOffset.UtcNow;
+            var destination = HostedItemId.New();
+            Assert.True((await provider.MutateAsync(new(new(Guid.NewGuid()), actor.ActorId, destination, null, null,
+                "CreateFolder", null, null, FilesOperationState.Pending, moveTime, moveTime, null, null), "Logical destination", token)).IsSuccess);
+            var moved = await provider.MutateAsync(new(new(Guid.NewGuid()), actor.ActorId, fileId, folder.ItemId, destination,
+                "Move", edited.Id, null, FilesOperationState.Pending, moveTime, moveTime, null, null), null, token);
+            Assert.True(moved.IsSuccess);
+            Assert.Equal(destination, (await provider.GetArtifactAsync(fileId, token)).Value!.ParentFolderId);
+            Assert.Equal(edited.Id, (await provider.GetCurrentArtifactContentAsync(fileId, token)).Value!.Revision.Id);
+            var movedOpen = await bridge.OpenAsync(fileId, token);
+            Assert.Equal(document.Id, movedOpen.Id);
+            Assert.Equal("Persisted edit", movedOpen.Title);
+            document.Title = "Edit after canonical Files move";
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.SaveAsync(fileId, document, edited.Id, token));
+            edited = await bridge.SaveAsync(fileId, document, moved.Value!.ResultRevisionId, token);
+            Assert.Equal(document.Title, (await bridge.OpenAsync(fileId, token)).Title);
+            Assert.Equal(fileId, (await provider.GetArtifactAsync(fileId, token)).Value!.FileId);
             mode = AppAiAccessMode.ReadOnly;
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => bridge.SaveAsync(fileId, document, edited.Id, TestContext.Current.CancellationToken));
             Assert.Equal(edited.Id, (await provider.GetAsync(fileId, TestContext.Current.CancellationToken)).Value!.CurrentRevisionId);

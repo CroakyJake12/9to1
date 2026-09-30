@@ -60,6 +60,8 @@ public interface IHomeProductivityEngine
     bool CanPaste(HomeProductivityObjectBundle bundle, HomeProductivityContext target, out string code);
     HomeProductivityActionResult ApplyAction(HomeProductivityContext context, HomeProductivityAction action);
     ValueTask<HomeProductivityActionResult> ApplyActionAsync(HomeProductivityContext context, HomeProductivityAction action, CancellationToken cancellationToken = default);
+    ValueTask<HomeProductivityActionResult> InsertObjectsAsync(HomeProductivityContext context,
+        IReadOnlyList<HomeProductivityObject> objects, string operationId, CancellationToken cancellationToken = default);
     HomeProductivityObject CreateObject(string objectType, Guid objectId, JsonElement content);
     HomeProductivityObjectRenderResult RenderObject(HomeProductivityObject value);
     IReadOnlyList<HomeProductivityObject> GetSelection(HomeProductivityContext context, IReadOnlyList<HomeProductivityObject> objects);
@@ -91,6 +93,8 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
         foreach (var style in styles ?? []) RegisterStyle(style);
         _artifactActions = (artifactActions ?? []).ToArray();
         RegisterObjectHandler(new HomeParagraphObjectHandler());
+        foreach (var type in new[] { "text.heading", "text.list", "text.checklist", "code.block", "table" })
+            RegisterObjectHandler(new HomeNotesObjectHandler(type));
         foreach (var handler in handlers ?? []) RegisterObjectHandler(handler);
     }
 
@@ -221,11 +225,68 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
         return result;
     }
 
+    public async ValueTask<HomeProductivityActionResult> InsertObjectsAsync(HomeProductivityContext context,
+        IReadOnlyList<HomeProductivityObject> objects, string operationId, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!context.CanonicalRevision.IsValid || string.IsNullOrWhiteSpace(operationId) || objects is null || objects.Count is < 1 or > 10000 ||
+            objects.Any(item => item is null || item.ObjectId == Guid.Empty) || objects.Select(item => item.ObjectId).Distinct().Count() != objects.Count)
+            return new(false, "InsertionInvalid", "Insertion requires unique canonical object IDs, an operation ID and current artifact revision.", context.Revision, [])
+                { ArtifactRevision = context.CanonicalRevision };
+        context = context with { SelectedObjectIds = Array.AsReadOnly(context.SelectedObjectIds.ToArray()),
+            SupportedObjectTypes = context.SupportedObjectTypes.ToFrozenSet(StringComparer.Ordinal) };
+        var captured = Array.AsReadOnly(objects.Select(SnapshotObject).ToArray());
+        foreach (var item in captured)
+        {
+            if (!context.SupportedObjectTypes.Contains(item.ObjectType) || !_handlers.TryGetValue(item.ObjectType, out var handler) ||
+                item.SchemaVersion != handler.Schema.SchemaVersion ||
+                !NineToOne.Cui.AI.ActionJsonSchemaValidator.Validate(handler.Schema.Schema.GetRawText(), item.Content, out _))
+                return new(false, "InsertionUnsupported", "The destination cannot insert this shared object schema.", context.Revision, [])
+                    { ArtifactRevision = context.CanonicalRevision };
+            try { _ = handler.Create(item.ObjectId, item.Content); }
+            catch (Exception error) when (error is InvalidDataException or ArgumentException or NotSupportedException or JsonException)
+            {
+                return new(false, "InsertionInvalid", "The shared object handler rejected the canonical content.", context.Revision, [])
+                    { ArtifactRevision = context.CanonicalRevision };
+            }
+        }
+        var owners = _artifactActions.Where(provider => provider.AppId == context.AppId).ToArray();
+        if (owners.Length != 1 || owners[0] is not IHomeProductivityArtifactInsertionProvider owner)
+            return new(false, "ArtifactInsertionUnavailable", "The canonical owner does not expose shared object insertion.", context.Revision, [])
+                { ArtifactRevision = context.CanonicalRevision };
+        var result = await owner.InsertAsync(context, captured, operationId, cancellationToken).ConfigureAwait(false);
+        var observedTargets = result.AffectedObjectIds?.ToArray() ?? [];
+        var validCommit = result.Outcome == HomeProductivityArtifactOutcome.Committed &&
+            result.ArtifactRevision is { IsValid: true } observed &&
+            (context.CanonicalRevision.VersionId is not null) == (observed.VersionId is not null) &&
+            observedTargets.Length == captured.Count && observedTargets.Distinct().Count() == observedTargets.Length &&
+            observedTargets.ToHashSet().SetEquals(captured.Select(item => item.ObjectId));
+        if ((result.Succeeded && !validCommit) || (!result.Succeeded && result.Outcome == HomeProductivityArtifactOutcome.Committed))
+            return result with { Succeeded = false, Code = "ArtifactOutcomeNeedsRecovery",
+                Message = "The owner insertion acknowledgement is inconsistent. Refresh the canonical artifact before further edits.",
+                AffectedObjectIds = Array.AsReadOnly(observedTargets), Outcome = HomeProductivityArtifactOutcome.NeedsRecovery };
+        return result with { AffectedObjectIds = Array.AsReadOnly(observedTargets) };
+    }
+
     public IReadOnlyList<HomeProductivityObject> Paste(HomeProductivityObjectBundle bundle, HomeProductivityContext target)
     {
         if (!CanPaste(bundle, target, out var code))
             throw new InvalidDataException($"Productivity bundle cannot be pasted: {code}.");
-        return Array.AsReadOnly(bundle.Objects.Select(item => SnapshotObject(item) with { ObjectId = Guid.NewGuid() }).ToArray());
+        return Array.AsReadOnly(bundle.Objects.Select(item =>
+        {
+            var captured = SnapshotObject(item);
+            var newId = Guid.NewGuid();
+            if (_handlers.GetValueOrDefault(item.ObjectType) is IHomeProductivityObjectCloneHandler cloner)
+            {
+                var cloned = cloner.CloneForPaste(captured, newId);
+                if (cloned.ObjectId != newId || cloned.ObjectType != item.ObjectType || cloned.SchemaVersion != item.SchemaVersion)
+                    throw new InvalidDataException("Shared paste changed an identity or schema outside its declared clone operation.");
+                return SnapshotObject(cloned);
+            }
+            if (item.ObjectType is "drawing.ink" or "graph")
+                throw new InvalidDataException("This object requires its canonical identity clone handler before paste.");
+            return captured with { ObjectId = newId };
+        }).ToArray());
     }
 
     public HomeProductivityObject Convert(HomeProductivityObject source, string targetType, JsonElement options)

@@ -7,11 +7,12 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../../HUI/Platform/CakeOS.Platform.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
-    <EmbeddedResource Include="UI/*.cui" />
+    <EmbeddedResource Include="UI/*.cui" Exclude="UI/Models.cui" />
   </ItemGroup>
 </Project>

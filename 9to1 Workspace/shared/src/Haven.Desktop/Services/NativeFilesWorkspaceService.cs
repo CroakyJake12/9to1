@@ -100,7 +100,7 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
         {
             await ownership.BindNewEmptyAsync(ResourceKind, evidence.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false);
             foreach (var (appId, name) in new[] { ("write", "Write"), ("present", "Present"), ("canvas", "Canvas"),
-                ("picture", "Picture"), ("media", "Media"), ("sites", "Sites"), ("boards", "Boards") })
+                ("picture", "Picture"), ("media", "Media"), ("sites", "Sites"), ("boards", "Boards"), ("games", "Games") })
             {
                 if (await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor) throw new UnauthorizedAccessException("Home profile changed during Files setup.");
                 RequireDirectDirectory(root);

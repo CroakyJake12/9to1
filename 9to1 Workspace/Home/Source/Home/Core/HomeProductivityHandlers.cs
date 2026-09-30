@@ -7,7 +7,11 @@ using NineToOne.Cui.AI;
 namespace HavenOS.Home.Core;
 
 public sealed record HomeProductivityObjectActionDescriptor(string ActionId, int Version, JsonElement ArgumentSchema);
-public sealed record HomeProductivityObjectRenderResult(string CuiSource, IReadOnlyList<string> RetainedUnsupportedProperties);
+public sealed record HomeProductivityObjectRenderResult(string CuiSource, IReadOnlyList<string> RetainedUnsupportedProperties)
+{
+    public IReadOnlyList<HomeProductivityRasterBinding> RasterBindings { get; init; } = [];
+    public IReadOnlyList<HomeProductivityNotesBinding> NotesBindings { get; init; } = [];
+}
 
 /// <summary>One app-neutral object implementation. Pure transformations do not grant artifact write permission.</summary>
 public interface IHomeProductivityObjectHandler
@@ -17,6 +21,13 @@ public interface IHomeProductivityObjectHandler
     HomeProductivityObject Create(Guid objectId, JsonElement content);
     HomeProductivityObject Transform(HomeProductivityObject source, HomeProductivityAction action);
     HomeProductivityObjectRenderResult Render(HomeProductivityObject source);
+}
+
+/// <summary>Object families with embedded canonical identities clone those identities together. Target-layer or
+/// resource remapping remains an explicit owning-app operation; copying never claims target access.</summary>
+public interface IHomeProductivityObjectCloneHandler
+{
+    HomeProductivityObject CloneForPaste(HomeProductivityObject source, Guid newObjectId);
 }
 
 /// <summary>
@@ -31,6 +42,15 @@ public interface IHomeProductivityArtifactActionProvider
     string AppId { get; }
     ValueTask<HomeProductivityActionResult> ApplyAsync(HomeProductivityContext context, HomeProductivityAction action,
         Func<HomeProductivityObject, HomeProductivityObject> sharedTransformation, CancellationToken cancellationToken);
+}
+
+/// <summary>The same canonical artifact owner inserts the captured shared objects atomically, claiming Home consent
+/// and expected revision immediately before commit. Reject existing ObjectIDs; operationId binds owner idempotency.
+/// This capability does not authorise insertion and is never exposed by discovery IPC.</summary>
+public interface IHomeProductivityArtifactInsertionProvider : IHomeProductivityArtifactActionProvider
+{
+    ValueTask<HomeProductivityActionResult> InsertAsync(HomeProductivityContext context,
+        IReadOnlyList<HomeProductivityObject> objects, string operationId, CancellationToken cancellationToken);
 }
 
 /// <summary>Concrete paragraph semantics shared by all supported surfaces, including actual formatting and CUI rendering.</summary>

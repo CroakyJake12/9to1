@@ -55,6 +55,45 @@ internal static class TerminalAppSurfaceSpecs
         await FailedReplacementPreservesHealthySessionAsync();
         CreationFailureFailsClosedAndRedactsReason();
         await AdviceNeverExecutesSuggestedCommandsAsync();
+        await AiResolutionCannotOutliveItsSessionContextAsync();
+    }
+
+    private static async Task AiResolutionCannotOutliveItsSessionContextAsync()
+    {
+        var factory=new FakeSessionFactory();var broker=new DelayedActionBroker();
+        using var surface=new TerminalAppSurface(new(factory,()=>PermissionMode.FullAccess,NaturalLanguageActions:broker));
+        surface.SetMode(TerminalInputMode.AI);
+        var pending=surface.SubmitAsync("show files");surface.SetMode(TerminalInputMode.Command);broker.Complete();
+        Check((await pending).State==TerminalAppCommandState.Cancelled&&surface.ResolvedAction is null,"late AI result cannot resurrect after mode change");
+        surface.SetMode(TerminalInputMode.AI);
+        using(var cancelled=new CancellationTokenSource())
+        {
+            pending=surface.SubmitAsync("show files",cancelled.Token);cancelled.Cancel();broker.Complete();
+            try{await pending;throw new Exception("cancelled resolution published");}catch(OperationCanceledException){}
+            Check(surface.ResolvedAction is null,"broker ignoring cancellation cannot publish cancelled resolution");
+        }
+        surface.SetMode(TerminalInputMode.AI);pending=surface.SubmitAsync("show files");broker.Complete(foreign:true);
+        Check((await pending).State==TerminalAppCommandState.Cancelled&&surface.ResolvedAction is null,"foreign resolved session target rejected");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;var old=surface.ResolvedAction!;
+        Check(surface.NewSession(),"replacement native session created");
+        Check((await surface.ExecuteResolvedActionAsync(old.Id.ToString("D"),null)).State==TerminalAppCommandState.Unavailable&&broker.Executions==0,"old session AI action cannot dispatch after replacement");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;var current=surface.ResolvedAction!;
+        broker.Objects[0]="injected";Check(current.AffectedObjects.Single()=="fixture-file","resolved object scope detached from broker mutable list");
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),"fixture-home-verification")).State==TerminalAppCommandState.Succeeded,"current action delegated to canonical broker");
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),"fixture-home-verification")).State==TerminalAppCommandState.Unavailable&&broker.Executions==1,"resolved action consumed once");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
+        await surface.SetWorkingDirectoryAsync(Path.GetTempPath());
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),null)).State==TerminalAppCommandState.Unavailable,"directory transition invalidates resolved action");
+    }
+    private sealed class DelayedActionBroker:ITerminalActionBroker
+    {
+        private TaskCompletionSource<TerminalResolvedAction> _pending=null!;private Guid _session;private TerminalEnvironmentId _environment;
+        public List<string> Objects {get;private set;}=[];public int Executions {get;private set;}
+        public Task<TerminalResolvedAction> ResolveAsync(Guid session,TerminalEnvironmentId environment,string request,CancellationToken ct)
+        { _session=session;_environment=environment;_pending=new(TaskCreationOptions.RunContinuationsAsynchronously);Objects=["fixture-file"];return _pending.Task; }
+        public void Complete(bool foreign=false)=>_pending.SetResult(new(Guid.NewGuid(),foreign?Guid.NewGuid():_session,_environment,TerminalActionKind.TypedApi,"Files","List","Show files",Objects,TerminalActionRisk.ReadOnly,true,false));
+        public Task<TerminalActionExecutionResult> ExecuteAsync(TerminalResolvedAction action,string? verificationToken,CancellationToken ct)
+        {Executions++;return Task.FromResult(new TerminalActionExecutionResult(true,"Executed","Fixture broker executed"));}
     }
 
     private static async Task AdviceNeverExecutesSuggestedCommandsAsync()

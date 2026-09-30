@@ -1,0 +1,29 @@
+<Cui id="home.models" version="1">
+  <Actions>
+    <Action name="ChooseRoute" command="SelectRoute" parameter="{Binding route}" />
+    <Action name="CandidateEarlier" command="Earlier" parameter="{Binding candidate}" />
+    <Action name="CandidateLater" command="Later" parameter="{Binding candidate}" />
+    <Action name="CandidateToggle" command="Toggle" parameter="{Binding candidate}" />
+    <Action name="CandidateRemove" command="Remove" parameter="{Binding candidate}" />
+    <Action name="CatalogueAdd" command="Add" parameter="{Binding model}" />
+  </Actions>
+  <ScrollViewer><StackPanel margin="20">
+    <TextBlock text="Personal AI model routes" font-size="26" />
+    <TextBlock text="{Binding Selection}" font-size="18" />
+    <TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Model service status" margin="0,8" />
+    <WrapPanel><Button content="Refresh" action="Refresh" /><Button content="Active" action="Category.Active" /><Button content="Background" action="Category.Background" /><Button content="Chat" action="Category.Chat" /><Button content="Image" action="Category.Image" /><Button content="Voice" action="Category.Voice" /><Button content="Audio" action="Category.Audio" /><Button content="Video" action="Category.Video" /></WrapPanel>
+    <Repeat Source="{Binding Routes}" As="route" Key="{Binding route.RouteId}"><Button content="{Binding route.Label}" action="ChooseRoute" margin="0,2" /></Repeat>
+    <TextBlock text="Ordered candidates" font-size="20" margin="0,12" />
+    <Repeat Source="{Binding Candidates}" As="candidate" Key="{Binding candidate.Identity}"><StackPanel margin="0,4"><TextBlock text="{Binding candidate.Label}" /><WrapPanel><TextBlock text="{Binding candidate.Order}" margin="8,4" /><TextBlock text="{Binding candidate.Enabled}" margin="8,4" /><Button content="Earlier" action="CandidateEarlier" /><Button content="Later" action="CandidateLater" /><Button content="Enable or disable" action="CandidateToggle" /><Button content="Remove" action="CandidateRemove" /></WrapPanel></StackPanel></Repeat>
+    <WrapPanel><Button content="Save route" action="Save" is-enabled="{Binding CanSave}" /><Button content="Discard edits" action="Discard" is-enabled="{Binding CanDiscard}" /><Button content="Home permissions" action="HomePermissions" is-enabled="{Binding CanApprove}" /></WrapPanel>
+    <TextBlock text="{Binding Approval}" text-wrapping="Wrap" accessible-name="Pending Home approval" />
+    <TextBlock text="Preview the saved route using a capability reported by the catalogue. This checks eligibility without running a model." text-wrapping="Wrap" margin="0,8" />
+    <TextBox id="model-capability" text="{Binding Capability, Mode=TwoWay}" accessible-name="Required model capability" />
+    <Button content="Preview eligible selection" action="Preview" is-enabled="{Binding CanPreview}" />
+    <TextBlock text="{Binding Preview}" text-wrapping="Wrap" accessible-name="Eligibility and fallback preview" />
+    <TextBlock text="Shared model catalogue" font-size="20" margin="0,12" />
+    <TextBox id="model-query" text="{Binding Query, Mode=TwoWay}" accessible-name="Model catalogue query" /><Button content="Search catalogue" action="SearchCatalogue" />
+    <TextBlock text="{Binding CatalogueStatus}" text-wrapping="Wrap" />
+    <Repeat Source="{Binding Catalogue}" As="model" Key="{Binding model.Identity}"><StackPanel margin="0,8"><TextBlock text="{Binding model.DisplayName}" font-size="16" /><TextBlock text="{Binding model.Details}" text-wrapping="Wrap" /><TextBlock text="{Binding model.Label}" /><Button content="Add to route" action="CatalogueAdd" is-enabled="{Binding CanEdit}" /></StackPanel></Repeat>
+  </StackPanel></ScrollViewer>
+</Cui>

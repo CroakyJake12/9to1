@@ -28,4 +28,9 @@ public sealed record OrganisationAudit(Guid AuditEventID,Guid OrgID,Guid ActorID
 public sealed record OrganisationInvitation(Guid InvitationID,Guid OrgID,Guid InviterID,Guid? IntendedAccountID,IReadOnlyList<Guid> RoleIDs,string TokenHash,DateTimeOffset ExpiresAt,bool Accepted);
 public sealed record IssuedOrganisationInvitation(Guid InvitationID,string Token);
 public sealed record OrganisationState(IReadOnlyList<Organisation> Organisations,IReadOnlyList<OrganisationAudit> Audit,
-    IReadOnlyDictionary<string,long> Idempotency,IReadOnlyList<OrganisationInvitation>? Invitations=null);
+    IReadOnlyDictionary<string,long> Idempotency,IReadOnlyList<OrganisationInvitation>? Invitations=null,IReadOnlyList<VerifiedBusinessBillingTransition>? BillingTransitions=null);
+
+public sealed class OrganisationAccessException(string code) : UnauthorizedAccessException(code)
+{
+    public string Code { get; } = code;
+}

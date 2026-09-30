@@ -30,9 +30,17 @@ public sealed class PictureFilesSourceRenderer(
         return LoadCoreAsync(artifact, backingFilesRevision, decoder, cancellationToken);
     }
 
+    /// <summary>Preserves the donor animation session for explicit stepping/playback. Source document and revisions remain unchanged.</summary>
+    public Task<PicturePinnedRasterSource> LoadAnimationWithGlycinAsync(PictureArtifactEnvelope artifact, Guid backingFilesRevision,
+        PictureGlycinDecoder decoder, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(decoder);
+        return LoadCoreAsync(artifact, backingFilesRevision, decoder, cancellationToken, animation: true);
+    }
+
     private async Task<PicturePinnedRasterSource> LoadCoreAsync(PictureArtifactEnvelope artifact, Guid backingFilesRevision,
         PictureGlycinDecoder? decoder,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, bool animation = false)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         var snapshot = PictureArtifactCodec.Deserialize(PictureArtifactCodec.Serialize(artifact));
@@ -60,6 +68,7 @@ public sealed class PictureFilesSourceRenderer(
             catch { Array.Clear(bytes); throw; }
         }
         PictureGlycinFrame? decoded = null;
+        PictureGlycinDecoder.FrameSession? frames = null;
         var bytesTransferred = false;
         var pixelsTransferred = false;
         try
@@ -71,7 +80,12 @@ public sealed class PictureFilesSourceRenderer(
                 cancellationToken.ThrowIfCancellationRequested();
                 if (await authorization.AuthorizeAsync("picture.file.open", [scope], cancellationToken).ConfigureAwait(false) != actor)
                     throw new UnauthorizedAccessException("Picture authority changed before native source decoding.");
-                decoded = await Task.Run(() => decoder.DecodeFirstFrame(bytes), cancellationToken).ConfigureAwait(false);
+                if (animation)
+                {
+                    frames = await Task.Run(() => decoder.OpenFrames(bytes), cancellationToken).ConfigureAwait(false);
+                    decoded = await Task.Run(() => frames.NextFrame(cancellationToken), cancellationToken).ConfigureAwait(false);
+                }
+                else decoded = await Task.Run(() => decoder.DecodeFirstFrame(bytes), cancellationToken).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
                 // This raster surface is explicitly SDR/sRGB. Preserve linked
                 // source and reject CICP/HDR/unconverted ICC instead of silently
@@ -81,9 +95,26 @@ public sealed class PictureFilesSourceRenderer(
             }
             if (await authorization.AuthorizeAsync("picture.file.open", [scope], cancellationToken).ConfigureAwait(false) != actor)
                 throw new UnauthorizedAccessException("Picture authority changed while loading the retained source revision.");
+            async Task RecheckFrameAuthority(CancellationToken token)
+            {
+                if (await authorization.AuthorizeAsync("picture.file.open", [scope], token).ConfigureAwait(false) != actor)
+                    throw new UnauthorizedAccessException("Picture authority changed during animation playback.");
+                var currentSource = await resolveRetainedSource(source, token).ConfigureAwait(false);
+                if (!currentSource.IsSuccess || currentSource.Value is null)
+                    throw new UnauthorizedAccessException("Current Files authority cannot access the retained animation source.");
+                await using var currentLease = currentSource.Value;
+                var currentProof = currentLease.Source;
+                if (currentProof.AssetId.Value != source.AssetId || currentProof.HostedItemId != source.FileId ||
+                    !Guid.TryParse(currentProof.SourceRevisionId, out var currentRevision) || currentRevision != source.RevisionId || !currentProof.SourceUri.IsFile)
+                    throw new InvalidDataException("Animation source authority resolved a different canonical asset.");
+            }
+            // The first frame/static bytes also require fresh raw-source authority after materialization.
+            await RecheckFrameAuthority(cancellationToken).ConfigureAwait(false);
             if (decoded is not null)
             {
-                var result = new PicturePinnedRasterSource(snapshot, decoded);
+                if (decoded.DelayMicroseconds <= 0) { frames?.Dispose(); frames = null; }
+                var result = new PicturePinnedRasterSource(snapshot, decoded, frames, frames is null ? null : RecheckFrameAuthority);
+                frames = null; // ownership transferred only after successful construction
                 pixelsTransferred = true;
                 return result;
             }
@@ -92,6 +123,7 @@ public sealed class PictureFilesSourceRenderer(
         }
         finally
         {
+            frames?.Dispose();
             if (!bytesTransferred) Array.Clear(bytes);
             if (decoded is not null && !pixelsTransferred) ClearFrame(decoded);
         }
@@ -109,13 +141,78 @@ public sealed class PicturePinnedRasterSource : IDisposable
 {
     private byte[]? _bytes;
     private PictureGlycinFrame? _decoded;
+    private PictureGlycinDecoder.FrameSession? _frames;
+    private readonly Func<CancellationToken, Task>? _recheckFrameAuthority;
+    private readonly SemaphoreSlim _advanceGate = new(1, 1);
     private bool _disposed;
     private readonly PictureArtifactEnvelope _snapshot;
     private readonly object _gate = new();
     internal PicturePinnedRasterSource(PictureArtifactEnvelope snapshot, byte[] bytes) { _snapshot = snapshot; _bytes = bytes; }
-    internal PicturePinnedRasterSource(PictureArtifactEnvelope snapshot, PictureGlycinFrame decoded) { _snapshot = snapshot; _decoded = decoded; }
+    internal PicturePinnedRasterSource(PictureArtifactEnvelope snapshot, PictureGlycinFrame decoded,
+        PictureGlycinDecoder.FrameSession? frames = null, Func<CancellationToken, Task>? recheckFrameAuthority = null)
+    { _snapshot = snapshot; _decoded = decoded; _frames = frames; _recheckFrameAuthority = recheckFrameAuthority; }
     public Guid DocumentId => _snapshot.Document.DocumentId;
     public long Revision => _snapshot.Document.Revision;
+
+    public bool CanAdvanceFrames { get { lock (_gate) return !_disposed && _frames is not null; } }
+    public long FrameDelayMicroseconds { get { lock (_gate) { ObjectDisposedException.ThrowIf(_disposed, this); return _decoded?.DelayMicroseconds ?? 0; } } }
+
+    /// <summary>Decode off the UI thread, then recheck backing and retained raw-source authority before replacing the preview.</summary>
+    public async Task AdvanceFrameAsync(CancellationToken cancellationToken = default)
+    {
+        await _advanceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        PictureGlycinFrame? candidate = null;
+        try
+        {
+            PictureGlycinDecoder.FrameSession frames;
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                frames = _frames ?? throw new NotSupportedException("This source was not opened for animation playback.");
+            }
+            await _recheckFrameAuthority!(cancellationToken).ConfigureAwait(false);
+            candidate = await Task.Run(() => frames.NextFrame(cancellationToken), cancellationToken).ConfigureAwait(false);
+            if (candidate.ColorMode != 1) throw new NotSupportedException("Animation playback requires sRGB frames; the original source remains retained.");
+            await _recheckFrameAuthority(cancellationToken).ConfigureAwait(false);
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_decoded is not null) PictureFilesSourceRenderer.ClearFrame(_decoded);
+                _decoded = candidate;
+                candidate = null;
+            }
+        }
+        catch (UnauthorizedAccessException) { Dispose(); throw; }
+        finally
+        {
+            if (candidate is not null) PictureFilesSourceRenderer.ClearFrame(candidate);
+            _advanceGate.Release();
+        }
+    }
+
+    /// <summary>UI-thread adapter for the canonical Home shared renderer. Uses only this already-authorized pinned input.</summary>
+    public HavenOS.Home.Core.HomeProductivityRasterFrame RenderSharedFrame()
+    {
+        var width = _snapshot.Document.CanvasWidth;
+        var height = _snapshot.Document.CanvasHeight;
+        if (width is < 1 or > 8192 || height is < 1 or > 8192 || (long)width * height * 4 > 64 * 1024 * 1024)
+            throw new NotSupportedException("This Picture preview exceeds the bounded shared raster frame; use the owning tiled surface.");
+        using var rendered = Render();
+        using var converted = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+        var stride = checked(width * 4);
+        var pixels = new byte[checked(stride * height)];
+        try
+        {
+            using (var destination = converted.Lock())
+            {
+                rendered.CopyPixels(destination); // explicit pixel and alpha format transcode
+                for (var row = 0; row < height; row++)
+                    Marshal.Copy(IntPtr.Add(destination.Address, checked(row * destination.RowBytes)), pixels, checked(row * stride), stride);
+            }
+            return new(width, height, stride, pixels);
+        }
+        finally { Array.Clear(pixels); } // Home's immutable frame owns a detached copy
+    }
 
     public Bitmap Render()
     {
@@ -135,6 +232,7 @@ public sealed class PicturePinnedRasterSource : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
+            _frames?.Dispose(); _frames = null;
             if (_bytes is not null) Array.Clear(_bytes);
             _bytes = null;
             if (_decoded is not null) PictureFilesSourceRenderer.ClearFrame(_decoded);

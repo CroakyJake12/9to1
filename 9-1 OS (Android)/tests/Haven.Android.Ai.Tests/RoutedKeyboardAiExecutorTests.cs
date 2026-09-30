@@ -1,12 +1,28 @@
 using Dulche.Runtime;
 using Haven.Application;
 using Haven.Core;
+using HavenOS.Home.Core;
 using Xunit;
 
 namespace Haven.Android;
 
-public sealed class RoutedKeyboardAiExecutorTests
+public sealed class RoutedKeyboardAiExecutorTests : IDisposable
 {
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-keyboard-routes-" + Guid.NewGuid().ToString("N"));
+    private readonly HomeLocalProfileIdentity _profiles;
+    private readonly string _profileId;
+    private readonly string _routeId;
+    public RoutedKeyboardAiExecutorTests()
+    {
+        Directory.CreateDirectory(_root);
+        _profiles = new(new FileHomeCoreStateStore(Path.Combine(_root, "home.json")), new Principal());
+        _profileId = _profiles.GetCurrentAsync(default).AsTask().GetAwaiter().GetResult()!.ProfileId;
+        _routeId = HomeModelPickerFeatureProvider.RouteId(_profileId, ModelCapabilityCategory.Active);
+    }
+    public void Dispose() => Directory.Delete(_root, true);
+    private sealed class Principal : ITrustedHostPrincipalSource
+    { public ValueTask<string?> GetPrincipalAsync(CancellationToken ct) => ValueTask.FromResult<string?>("keyboard-test-os-principal"); }
+
     [Fact]
     public async Task LocalOnlyConsentFiltersRemoteBeforeDispatchAndHonoursOrder()
     {
@@ -24,7 +40,7 @@ public sealed class RoutedKeyboardAiExecutorTests
     {
         var remote = new Provider("remote", false);
         var routes = await Routes(new ModelIdentity("remote", "model"));
-        var route = (await routes.GetAsync("home.active", default))!;
+        var route = (await routes.GetAsync(_routeId, default))!;
         await routes.TrySaveAsync(route with { Revision = 2, Policy = route.Policy with { AllowPrivateContextToCloud = false } }, 1, default);
         var executor = Executor([remote], routes, () => true);
         await Assert.ThrowsAsync<InvalidOperationException>(() => executor.CompleteAsync("private text", default));
@@ -70,7 +86,7 @@ public sealed class RoutedKeyboardAiExecutorTests
         var routes = await Routes(new ModelIdentity("one", "model"));
         var executor = Executor([one, two], routes, () => false);
         Assert.Equal("one:result", await executor.CompleteAsync("private text", default));
-        var route = (await routes.GetAsync("home.active", default))!;
+        var route = (await routes.GetAsync(_routeId, default))!;
         await routes.TrySaveAsync(route with { Revision = 2, Candidates = [new(new("two", "model"))] }, 1, default);
         Assert.Equal("two:result", await executor.CompleteAsync("private text", default));
     }
@@ -97,26 +113,37 @@ public sealed class RoutedKeyboardAiExecutorTests
     }
 
     [Fact]
-    public async Task LegacySelectedModelIsLiveAndHandlesColonInLocalModelName()
+    public async Task LegacyGlobalRouteCannotSupplyKeyboardSelection()
     {
-        var provider = new Provider("ollama", true, ["qwen3:8b", "llama3:8b"]);
-        var selected = "qwen3:8b";
-        var executor = Executor([provider], new InMemoryModelRouteRepository(), () => false, current: () => selected);
-        await executor.CompleteAsync("private text", default);
-        Assert.Equal("qwen3:8b", provider.LastModel);
-        selected = "llama3:8b";
-        await executor.CompleteAsync("private text", default);
-        Assert.Equal("llama3:8b", provider.LastModel);
-    }
-
-    private static RoutedKeyboardAiExecutor Executor(IModelProvider[] providers, IVersionedModelRouteRepository routes,
-        Func<bool> cloud, Configurations? configurations = null, Privacy? privacy = null, Func<string?>? current = null) =>
-        new(new ModelProviderRegistry(providers), routes, configurations ?? new(), privacy ?? new(), current ?? (() => null), cloud);
-
-    private static async Task<InMemoryModelRouteRepository> Routes(params ModelIdentity[] candidates)
-    {
+        var provider = new Provider("local", true);
         var routes = new InMemoryModelRouteRepository();
         await routes.TrySaveAsync(new("home.active", 1, ModelRouteScope.User, "native-user", ModelCapabilityCategory.Active,
+            [new(new("local", "model"))], new()), 0, default);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Executor([provider], routes, () => false).CompleteAsync("private", default));
+        Assert.Equal(0, provider.Calls);
+    }
+
+    [Fact]
+    public async Task PersonalChatRouteTakesPrecedenceOverActive()
+    {
+        var active = new Provider("active", true); var chat = new Provider("chat", true);
+        var routes = await Routes(new ModelIdentity("active", "model"));
+        await routes.TrySaveAsync(new(HomeModelPickerFeatureProvider.RouteId(_profileId, ModelCapabilityCategory.Chat), 1,
+            ModelRouteScope.User, _profileId, ModelCapabilityCategory.Chat, [new(new("chat", "model"))], new()), 0, default);
+        Assert.Equal("chat:result", await Executor([active, chat], routes, () => false).CompleteAsync("private", default));
+        Assert.Equal(0, active.Calls);
+    }
+
+    private RoutedKeyboardAiExecutor Executor(IModelProvider[] providers, IVersionedModelRouteRepository routes,
+        Func<bool> cloud, Configurations? configurations = null, Privacy? privacy = null) =>
+        new(new ModelProviderRegistry(providers), new HomePersonalModelRoutes(_profiles, routes,
+            new ResourceAuthorizationService(_profiles, [new HomeModelRouteOwner(_profiles, routes), new HomeModelRouteProfileOwner(_profiles)])),
+            configurations ?? new(), privacy ?? new(), cloud);
+
+    private async Task<InMemoryModelRouteRepository> Routes(params ModelIdentity[] candidates)
+    {
+        var routes = new InMemoryModelRouteRepository();
+        await routes.TrySaveAsync(new(_routeId, 1, ModelRouteScope.User, _profileId, ModelCapabilityCategory.Active,
             candidates.Select((candidate, index) => new ModelRouteCandidate(candidate, true, index)).ToArray(),
             new(AllowCloud: true, AllowPrivateContextToCloud: true)), 0, default);
         return routes;

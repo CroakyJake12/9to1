@@ -17,11 +17,12 @@ public sealed class AdminNativeSceneTests
             var model=new CuiViewModel();model.Set("AccountName","Explicit fictional scene fixture");model.Set("Status","Ready fixture");
             model.Set("OrganisationName","Fixture organisation");model.Set("OrganisationID","");model.Set("BillingSummary","USD 5.00 per month");
             model.Set("Organisations",Array.Empty<AdminOrganisationRow>());model.Set("Members",Array.Empty<AdminMemberRow>());model.Set("Policy",Array.Empty<AdminPolicyRow>());model.Set("Audit",Array.Empty<object>());
-            model.On("Refresh",_=>{});model.On("OpenOrganisation",_=>{});model.On("RefreshAudit",_=>{});
+            model.On("Refresh",_=>{});model.On("OpenOrganisation",_=>{});model.On("RefreshAudit",_=>{});model.On("RefreshBilling",_=>{});
             using var host=new CuiSceneHost();Assert.Equal(CuiSceneAvailabilityState.Ready,(await host.ShowAsync(AdminNativeScene.Create(model,model,new FixtureReady(true)))).State);
             Assert.DoesNotContain(host.Diagnostics,d=>d.Severity==CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             Assert.Contains(host.GetLogicalDescendants().OfType<TextBlock>(),t=>t.Text=="9to1 Admin");
             Assert.Contains(host.GetLogicalDescendants().OfType<Button>(),b=>Equals(b.Content,"Refresh organisations"));
+            Assert.Contains(host.GetLogicalDescendants().OfType<Button>(),b=>Equals(b.Content,"Refresh billing and recovery status"));
             return true;
         },default);
     }

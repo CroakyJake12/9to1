@@ -98,10 +98,9 @@ internal static class AndroidHavenBootstrap
             var keyboardSettings = new HavenKeyboardSettings(global::Android.App.Application.Context);
             HavenKeyboardAiController.Configure(new RoutedKeyboardAiExecutor(
                 services.GetRequiredService<IModelProviderRegistry>(),
-                new HomeVersionedModelRouteRepository(services.GetRequiredService<IHomeCoreStateStore>()),
+                services.GetRequiredService<HomePersonalModelRoutes>(),
                 services.GetRequiredService<IProviderConfigurationStore>(),
                 services.GetRequiredService<IPrivacyPreferenceStore>(),
-                () => preferences.DefaultModel,
                 () => keyboardSettings.CloudAiAllowed));
             _ = services.GetRequiredService<AndroidNotificationBridge>();
             _ = services.GetRequiredService<AndroidProjectorDisplayService>();

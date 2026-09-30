@@ -70,7 +70,7 @@ public sealed class HomeModelPickerCuiSurface
         if (request.Action == HomeModelPickerAction.SelectRoute && string.IsNullOrWhiteSpace(request.RouteId))
             return false;
         if ((request.Action is HomeModelPickerAction.SetCandidateEnabled or HomeModelPickerAction.MoveCandidateUp or HomeModelPickerAction.MoveCandidateDown)
-            && (string.IsNullOrWhiteSpace(request.ProviderId) || string.IsNullOrWhiteSpace(request.ModelId) || string.IsNullOrWhiteSpace(request.ArtifactRevision)))
+            && (string.IsNullOrWhiteSpace(request.ProviderId) || string.IsNullOrWhiteSpace(request.ModelId) || (request.ArtifactRevision is not null && string.IsNullOrWhiteSpace(request.ArtifactRevision))))
             return false;
         if (request.Action == HomeModelPickerAction.SetCandidateEnabled && request.Enabled is null)
             return false;
@@ -129,7 +129,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
                 HomeModelPickerAction.SelectRoute => Box(_editor.SelectRoute(Required(action.RouteId, "route ID"))),
                 HomeModelPickerAction.SetCandidateEnabled => Box(_editor.SetCandidateEnabled(
                     Required(action.ProviderId, "provider ID"), Required(action.ModelId, "model ID"),
-                    Required(action.ArtifactRevision, "artifact revision"), action.Enabled
+                    action.ArtifactRevision, action.Enabled
                     ?? throw new ArgumentException("Candidate enabled state is required.", nameof(action)))),
                 HomeModelPickerAction.MoveCandidateUp => Box(Move(action, -1)),
                 HomeModelPickerAction.MoveCandidateDown => Box(Move(action, 1)),

@@ -10,6 +10,19 @@ namespace HavenOS.Home.Tests;
 public sealed class HomeModelPickerRouteEditorTests
 {
     [Fact]
+    public async Task Current_provider_model_revision_is_preserved_without_inventing_an_artifact_revision()
+    {
+        var initial = Snapshot();
+        var route = initial.Routes[0] with { Candidates = [new("provider", "model", null, true, 0)] };
+        var editor = new HomeModelPickerRouteEditor(new FakeProvider(initial with { Routes = [route] }));
+        Assert.True((await editor.RefreshAsync("global", "chat")).Succeeded);
+        Assert.True(editor.SetCandidateEnabled("provider", "model", null, false).Succeeded);
+        Assert.Null(Assert.Single(editor.Current.Candidates).ArtifactRevision);
+        Assert.Equal("CandidateNotFound", editor.SetCandidateEnabled("provider", "model", "invented", true).Code);
+        Assert.Equal("InvalidModelIdentity", editor.SetCandidateEnabled("provider", "model", " ", true).Code);
+    }
+
+    [Fact]
     public void CUI_document_exposes_all_model_categories_and_accessible_route_actions()
     {
         var path = Path.Combine(AppContext.BaseDirectory, "UI", "ModelPicker.cui");
@@ -36,7 +49,11 @@ public sealed class HomeModelPickerRouteEditorTests
         Assert.False(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.SetCandidateEnabled,
             ProviderId: "provider", ModelId: "model", ArtifactRevision: "rev")));
         Assert.False(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.MoveCandidateUp,
+            ProviderId: "provider")));
+        Assert.True(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.MoveCandidateUp,
             ProviderId: "provider", ModelId: "model")));
+        Assert.True(surface.TryDequeueAction(out var currentVariant));
+        Assert.Null(currentVariant.ArtifactRevision);
         Assert.True(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.SetCandidateEnabled,
             ProviderId: "provider", ModelId: "model", ArtifactRevision: "rev", Enabled: false)));
         Assert.True(surface.TryDequeueAction(out var queued));

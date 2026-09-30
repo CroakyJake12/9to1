@@ -532,6 +532,7 @@ public sealed class SpaceRegistry
         if (space.ContextReferences is null || space.ContextReferences.Any(reference => reference is null ||
                 reference.ContextId == Guid.Empty || string.IsNullOrWhiteSpace(reference.OwnerAppId) ||
                 string.IsNullOrWhiteSpace(reference.CanonicalEntityId) || !Enum.IsDefined(reference.Kind) ||
+                reference.HostedFileId == Guid.Empty ||
                 !Enum.IsDefined(reference.Permission) || !Enum.IsDefined(reference.IndexState)) ||
             space.ContextReferences.Select(reference => reference.ContextId).Distinct().Count() != space.ContextReferences.Count)
             throw new ArgumentException("Space context references must be valid and unique.");

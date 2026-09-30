@@ -64,9 +64,31 @@ public sealed class ShelfLibraryServiceTests
         Assert.Contains("Shelf contains duplicate collection memberships.", library.Validate());
     }
 
+    [Fact]
+    public async Task Caller_mutation_during_storage_wait_cannot_change_saved_target_or_tags()
+    {
+        var store = new MemorySettings { PauseExport = true };
+        var tags = new List<string> { "reviewed" };
+        var arguments = new List<string> { "reviewed-argument" };
+        var item = new ShelfLaunchItem(Guid.NewGuid(), "App",
+            new(ShelfTargetKind.InstalledApplication, "real.app", Arguments: arguments), Tags: tags);
+        var pending = new ShelfLibraryService(store).AddItemAsync(0, item);
+        await store.ExportEntered.Task;
+        tags[0] = "changed-after-call";
+        arguments[0] = "changed-after-call";
+        store.ExportRelease.SetResult();
+        Assert.True((await pending).Success);
+        var saved = Assert.Single((await new ShelfLibraryService(store).ReadAsync()).Library.Items);
+        Assert.Equal("reviewed", Assert.Single(saved.Tags!));
+        Assert.Equal("reviewed-argument", Assert.Single(saved.Target.Arguments!));
+    }
+
     private sealed class MemorySettings : IVersionedSettingsStore, IVersionedSettingsCompareExchange
     {
         private readonly Dictionary<string, string> _values = new();
+        public bool PauseExport { get; init; }
+        public TaskCompletionSource ExportEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ExportRelease { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class =>
             Task.FromResult(_values.TryGetValue(key, out var json) ? JsonSerializer.Deserialize<T>(json) : null);
         public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class
@@ -82,7 +104,15 @@ public sealed class ShelfLibraryServiceTests
             }
         }
         public Task RemoveAsync(string key, CancellationToken token) { _values.Remove(key); return Task.CompletedTask; }
-        public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => Task.FromResult(new SettingsExportManifest { Settings = new(_values) });
+        public async Task<SettingsExportManifest> ExportAsync(CancellationToken token)
+        {
+            if (PauseExport)
+            {
+                ExportEntered.TrySetResult();
+                await ExportRelease.Task.WaitAsync(token);
+            }
+            return new SettingsExportManifest { Settings = new(_values) };
+        }
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken token) => throw new NotSupportedException();
     }
 }

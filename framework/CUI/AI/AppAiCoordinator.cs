@@ -11,6 +11,8 @@ public sealed class AppAiCoordinator(
     IAppAiModelPicker? modelPicker = null,
     IInvocationResolver? invocationResolver = null)
 {
+    private AppAiModelSelection? _explicitModelSelection;
+
     public async ValueTask<AppAiContextSnapshot> CaptureContextAsync(CancellationToken cancellationToken = default)
     {
         var snapshot = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
@@ -24,7 +26,9 @@ public sealed class AppAiCoordinator(
             : modelPicker.GetModelsAsync(cancellationToken);
 
     public ValueTask<AppAiModelSelection?> GetModelSelectionAsync(CancellationToken cancellationToken = default) =>
-        modelPicker is null
+        _explicitModelSelection is { } selection
+            ? ValueTask.FromResult<AppAiModelSelection?>(selection)
+            : modelPicker is null
             ? ValueTask.FromResult<AppAiModelSelection?>(null)
             : modelPicker.GetSelectionAsync(cancellationToken);
 
@@ -35,7 +39,10 @@ public sealed class AppAiCoordinator(
         var options = await modelPicker.GetModelsAsync(cancellationToken).ConfigureAwait(false);
         if (!options.Any(option => option.IsAvailable && string.Equals(option.Id, modelId, StringComparison.Ordinal)))
             return false;
-        return await modelPicker.SelectAsync(modelId, cancellationToken).ConfigureAwait(false);
+        // A compact app selection is scoped to this bar. Only the Home route manager persists defaults.
+        cancellationToken.ThrowIfCancellationRequested();
+        _explicitModelSelection = new(modelId, "Medium");
+        return true;
     }
 
     public async ValueTask<AppAiActionResult> ExecuteAsync(

@@ -9,6 +9,36 @@ namespace NineToOne.Cui.AI.Tests;
 public sealed class AppAiCoordinatorTests
 {
     [Fact]
+    public async Task Compact_selection_is_bar_scoped_never_persists_and_rechecks_availability_before_dispatch()
+    {
+        var picker = new SelectionPicker();
+        var dulche = new FakeDulche();
+        var first = new AppAiCoordinator(new FakeContext(), new FakeActions(), new FakeApprovals(), dulche, modelPicker: picker);
+        var second = new AppAiCoordinator(new FakeContext(), new FakeActions(), new FakeApprovals(), new FakeDulche(), modelPicker: picker);
+        Assert.True(await first.SelectModelAsync("local:chosen"));
+        Assert.Equal("local:chosen", (await first.GetModelSelectionAsync())!.ModelId);
+        Assert.Equal("local:default", (await second.GetModelSelectionAsync())!.ModelId);
+        Assert.Equal(0, picker.PersistentWrites);
+        await DrainAsync(first.StreamAsync("Summarise", "scoped-selection"));
+        Assert.Equal("local:chosen", dulche.LastPrompt!.ModelSelection!.ModelId);
+        picker.Available = false;
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await DrainAsync(first.StreamAsync("Summarise", "revoked-selection")));
+        Assert.Equal(0, picker.PersistentWrites);
+    }
+
+    private sealed class SelectionPicker : IAppAiModelPicker
+    {
+        public bool Available = true;
+        public int PersistentWrites;
+        public ValueTask<IReadOnlyList<AppAiModelOption>> GetModelsAsync(CancellationToken cancellationToken) =>
+            ValueTask.FromResult<IReadOnlyList<AppAiModelOption>>([new("local:chosen", "Chosen", "local", true, Available)]);
+        public ValueTask<AppAiModelSelection?> GetSelectionAsync(CancellationToken cancellationToken) =>
+            ValueTask.FromResult<AppAiModelSelection?>(new("local:default", "Medium"));
+        public ValueTask<bool> SelectAsync(string modelId, CancellationToken cancellationToken)
+        { PersistentWrites++; return ValueTask.FromResult(true); }
+    }
+
+    [Fact]
     public async Task ReadOnlyModeIsDefaultAndCannotInvokeTypedMutations()
     {
         var actions = new FakeActions();
@@ -176,9 +206,10 @@ public sealed class AppAiCoordinatorTests
             AppContext.BaseDirectory,
             "..", "..", "..", "..", "AI", "UI", "FloatingAiBar.cui"));
         var document = new CuiRichParser().ParseFile(path);
-        var component = Assert.Single(document.Components, child => child.Type == "Component");
+        var component = Assert.Single(document.Components);
         var source = File.ReadAllText(path);
-        Assert.Equal("Component", component.Type);
+        Assert.Equal("Border", component.Type);
+        Assert.Equal("floating-ai-surface", component.Name);
         Assert.Contains("id=\"ReadOnlyMode\"", source, StringComparison.Ordinal);
         Assert.Contains("id=\"WriteMode\"", source, StringComparison.Ordinal);
         Assert.Contains("id=\"AiModel\"", source, StringComparison.Ordinal);

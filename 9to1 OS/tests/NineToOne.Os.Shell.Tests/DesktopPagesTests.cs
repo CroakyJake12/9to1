@@ -43,6 +43,23 @@ public sealed class DesktopPagesTests
         Assert.Throws<InvalidOperationException>(() => DesktopPageEdits.RemovePage(config));
     }
     [Fact]
+    public void MoveResizeAndGridChangesPreserveCanonicalIdentityAndRejectCollisionsOrHiddenItems()
+    {
+        var config = DesktopPageEdits.PinApplication(ShellConfiguration.Default(), Guid.NewGuid(), "A");
+        config = DesktopPageEdits.PinApplication(config, Guid.NewGuid(), "B");
+        var original = DesktopPageEdits.Effective(config).ActivePage.Items[0];
+        var moved = DesktopPageEdits.ArrangeItem(config, original.Id, 2, 1, 2, 2);
+        var item = DesktopPageEdits.Effective(moved).ActivePage.Items.Single(i => i.Id == original.Id);
+        Assert.Same(original.Target, item.Target); Assert.Equal(original.Id, item.Id);
+        Assert.Equal((2, 1, 2, 2), (item.Column, item.Row, item.ColumnSpan, item.RowSpan));
+        Assert.Throws<InvalidDataException>(() => DesktopPageEdits.ArrangeItem(config, original.Id, 1, 0, 1, 1));
+        Assert.Throws<InvalidDataException>(() => DesktopPageEdits.ArrangeItem(config, original.Id, 0, 0, 0, 1));
+        Assert.Throws<InvalidDataException>(() => DesktopPageEdits.ArrangeItem(config, original.Id, 0, 0, int.MaxValue, 1));
+        Assert.Throws<InvalidDataException>(() => DesktopPageEdits.GridSize(moved, 3, 2));
+        Assert.Throws<InvalidOperationException>(() => DesktopPageEdits.ArrangeItem(config, Guid.NewGuid(), 0, 0, 1, 1));
+        Assert.Equal((0, 0, 1, 1), (original.Column, original.Row, original.ColumnSpan, original.RowSpan));
+    }
+    [Fact]
     public async Task LegacyMigrationIsDeterministicReadOnlyUntilKeepAndPersistsPagesThroughHome()
     {
         var directory = Path.Combine(Path.GetTempPath(), "astra-pages-" + Guid.NewGuid());
@@ -64,6 +81,15 @@ public sealed class DesktopPagesTests
             var reopened = await new ShellConfigurationService(store).GetAsync();
             Assert.Equal(3, reopened.Stored.Revision); Assert.Equal(2, DesktopPageEdits.Effective(reopened.Effective).Pages.Count);
             Assert.Single(reopened.Stored.Previous!.GlobalDesktopSurface!.Pages);
+            var pinned = DesktopPageEdits.PinApplication(reopened.Effective, Guid.NewGuid(), "Movable");
+            var pinnedItem = Assert.Single(DesktopPageEdits.Effective(pinned).ActivePage.Items);
+            var arranged = DesktopPageEdits.ArrangeItem(pinned, pinnedItem.Id, 2, 1, 2, 2);
+            var placementPreview = await editor.PreviewAsync(reopened.Stored.Revision, arranged, TimeSpan.FromSeconds(30));
+            Assert.Empty(DesktopPageEdits.Effective((await store.ReadAsync(default)).Current).ActivePage.Items);
+            await editor.KeepAsync(placementPreview.Preview!.Id);
+            var durableItem = Assert.Single(DesktopPageEdits.Effective((await new ShellConfigurationService(store).GetAsync()).Effective).ActivePage.Items);
+            Assert.Equal(pinnedItem.Id, durableItem.Id); Assert.Equal(pinnedItem.Target, durableItem.Target);
+            Assert.Equal((2, 1, 2, 2), (durableItem.Column, durableItem.Row, durableItem.ColumnSpan, durableItem.RowSpan));
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }

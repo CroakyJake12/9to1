@@ -4,7 +4,7 @@ using CakeOS.Cui.Language;
 
 namespace HavenOS.Images;
 
-public enum PictureWorkspaceCommandKind { Open, RotateClockwise, FlipHorizontal, Crop, Resize, Save, Export }
+public enum PictureWorkspaceCommandKind { Open, RotateClockwise, FlipHorizontal, Crop, Resize, Save, Export, NextFrame }
 public sealed record PictureWorkspaceCommand(PictureWorkspaceCommandKind Kind, Guid? DocumentId, long? BaseRevision, string? FileId,
     Guid? BackingFileId = null)
 {
@@ -22,6 +22,7 @@ public sealed class PictureCuiWorkspace(
     private Guid? _backingFileId;
     private string _persistence = "No Picture document is open";
     private string _capability = "";
+    private long? _frameDelayMicroseconds;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public static CuiDocument LoadDocument()
@@ -36,12 +37,13 @@ public sealed class PictureCuiWorkspace(
         return document;
     }
 
-    public void Refresh(PictureDocument? document, string persistenceStatus, string capabilityStatus, Guid? backingFileId = null)
+    public void Refresh(PictureDocument? document, string persistenceStatus, string capabilityStatus, Guid? backingFileId = null, long? frameDelayMicroseconds = null)
     {
         _document = document;
         _backingFileId = backingFileId is { } id && id != Guid.Empty ? id : null;
         _persistence = persistenceStatus;
         _capability = capabilityStatus;
+        _frameDelayMicroseconds = frameDelayMicroseconds;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
@@ -55,10 +57,22 @@ public sealed class PictureCuiWorkspace(
             "CapabilityStatus" => _capability,
             "DocumentId" => _document?.DocumentId,
             "Revision" => _document?.Revision,
+            "AnimationSummary" => _frameDelayMicroseconds is > 0 ? $"Frame delay: {_frameDelayMicroseconds.Value / 1000d:0.###} ms" : "",
+            "CanOpen" => IsActionAvailable("9to1.Picture.Open") == true,
+            "CanRotate" => IsActionAvailable("9to1.Picture.Rotate") == true,
+            "CanFlip" => IsActionAvailable("9to1.Picture.FlipHorizontal") == true,
+            "CanCrop" => IsActionAvailable("9to1.Picture.Crop") == true,
+            "CanResize" => IsActionAvailable("9to1.Picture.Resize") == true,
+            "CanSave" => IsActionAvailable("9to1.Picture.Save") == true,
+            "CanExport" => IsActionAvailable("9to1.Picture.Export") == true,
+            "CanAdvanceFrames" => IsActionAvailable("9to1.Picture.Animation.NextFrame") == true,
             _ => null
         };
-        return path is "DisplayName" or "GeometrySummary" or "PersistenceStatus" or "CapabilityStatus" or "DocumentId" or "Revision";
+        return path is "DisplayName" or "GeometrySummary" or "PersistenceStatus" or "CapabilityStatus" or "DocumentId" or "Revision" or "AnimationSummary"
+            or "CanOpen" or "CanRotate" or "CanFlip" or "CanCrop" or "CanResize" or "CanSave" or "CanExport" or "CanAdvanceFrames";
     }
+
+    public void RefreshAvailability() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
 
     public bool? IsActionAvailable(string command) => TryCommand(command, out var kind) && isAvailable(kind)
         && (_document is not null || kind == PictureWorkspaceCommandKind.Open)
@@ -66,6 +80,7 @@ public sealed class PictureCuiWorkspace(
 
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (parameter is not null) throw new ArgumentException("Picture commands do not accept raw filesystem or caller identity arguments.", nameof(parameter));
         if (!TryCommand(command, out var kind) || IsActionAvailable(command) != true) throw new NotSupportedException("The Picture action is unavailable in this host state.");
         return dispatch(new(kind, _document?.DocumentId, _document?.Revision, _document?.FileId, _backingFileId), cancellationToken);
@@ -82,6 +97,7 @@ public sealed class PictureCuiWorkspace(
             "9to1.Picture.Resize" => PictureWorkspaceCommandKind.Resize,
             "9to1.Picture.Save" => PictureWorkspaceCommandKind.Save,
             "9to1.Picture.Export" => PictureWorkspaceCommandKind.Export,
+            "9to1.Picture.Animation.NextFrame" => PictureWorkspaceCommandKind.NextFrame,
             _ => (PictureWorkspaceCommandKind)(-1)
         };
         return Enum.IsDefined(kind);

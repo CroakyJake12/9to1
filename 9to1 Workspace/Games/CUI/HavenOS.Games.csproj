@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Games</AssemblyName>
+    <RootNamespace>HavenOS.Games</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/GamesWorkspace.cui" LogicalName="HavenOS.Games.UI.GamesWorkspace.cui" />
+  </ItemGroup>
+</Project>

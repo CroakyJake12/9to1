@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 using Haven.Application;
 using Haven.Core;
 using HavenOS.Files;
@@ -20,7 +21,7 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
     public async Task<NotesDocument> OpenAsync(HostedItemId fileId, CancellationToken cancellationToken = default)
     {
         var (actor, provider, reference, metadata, scope) = await ResolveAsync(fileId, ResourceAccess.Read, null, cancellationToken).ConfigureAwait(false);
-        var root = await RootAsync(actor, reference, cancellationToken).ConfigureAwait(false);
+        var root = await RootAsync(actor, cancellationToken).ConfigureAwait(false);
         var content = await provider.GetCurrentArtifactContentAsync(fileId, cancellationToken).ConfigureAwait(false);
         if (!content.IsSuccess || string.IsNullOrWhiteSpace(content.Value!.ProviderContentReference))
             throw new InvalidDataException("The canonical artifact has no available owning-app package.");
@@ -44,10 +45,15 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
     public async Task<FilesRevision> SaveAsync(HostedItemId fileId, NotesDocument document, FilesRevisionId? expectedFileRevision,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(document);
+        // Freeze the entire package graph before any authority or directory await. The caller retains
+        // its mutable editor graph; identity validation and serialization must observe the same value.
+        var captured = JsonSerializer.Deserialize<NotesDocument>(JsonSerializer.SerializeToUtf8Bytes(document))
+            ?? throw new InvalidDataException("The Write document cannot be captured.");
         if (currentHostAccessMode() != AppAiAccessMode.Write) throw new UnauthorizedAccessException("Write mode is required to edit the artifact.");
         var (actor, provider, reference, metadata, scope) = await ResolveAsync(fileId, ResourceAccess.Write, expectedFileRevision, cancellationToken).ConfigureAwait(false);
-        if (document.Id.ToString("N") != reference.ArtifactId) throw new InvalidDataException("Write cannot replace the canonical artifact with another document identity.");
-        var root = await RootAsync(actor, reference, cancellationToken).ConfigureAwait(false);
+        if (captured.Id.ToString("N") != reference.ArtifactId) throw new InvalidDataException("Write cannot replace the canonical artifact with another document identity.");
+        var root = await RootAsync(actor, cancellationToken).ConfigureAwait(false);
         var revisionId = Guid.NewGuid().ToString("N");
         var relative = Path.Combine(".9to1-artifacts", fileId.ToString(), revisionId + ".9to1w");
         var destination = SafePackagePath(root, relative);
@@ -57,7 +63,7 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
         if (currentHostAccessMode() != AppAiAccessMode.Write ||
             await authorization.AuthorizeAsync("write.file.save", [scope], cancellationToken).ConfigureAwait(false) != actor)
             throw new UnauthorizedAccessException("Write mode or current Files authority no longer permits this save.");
-        var saved = await packages.SaveAsync(document, destination, cancellationToken).ConfigureAwait(false);
+        var saved = await packages.SaveAsync(captured, destination, cancellationToken).ConfigureAwait(false);
         if (!saved.IsSuccess) throw new IOException(saved.Error!.Message);
         await using var stream = File.OpenRead(destination);
         var hash = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false));
@@ -89,14 +95,15 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
         return (actor, provider, reference.Value!, metadata.Value, scope);
     }
 
-    private async Task<string> RootAsync(AuthenticatedResourceActor actor, FilesArtifactReference reference, CancellationToken cancellationToken)
+    private async Task<string> RootAsync(AuthenticatedResourceActor actor, CancellationToken cancellationToken)
     {
         var binding = actor.AccountId is { } account
             ? await directories.ResolveAsync(account, "write", cancellationToken).ConfigureAwait(false)
             : Guid.TryParse(actor.ProfileId, out var profile)
                 ? await directories.ResolveProfileAsync(profile, "write", cancellationToken).ConfigureAwait(false)
                 : throw new UnauthorizedAccessException("The local Home profile identity is invalid.");
-        if (!binding.IsSuccess || binding.Value!.FolderId != reference.ParentFolderId)
+        // Logical Files parent changes do not relocate the registered immutable payload anchor.
+        if (!binding.IsSuccess || binding.Value is null)
             throw new UnauthorizedAccessException("Choose the current canonical Files folder; there is no private app-directory fallback.");
         return binding.Value.DirectoryPath;
     }

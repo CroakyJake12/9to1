@@ -153,6 +153,25 @@ public sealed class HomePermissionTrustService
         }
     }
 
+    /// <summary>Owner transaction gate for an already consumed approval; this never starts or renews execution.</summary>
+    public async Task<bool> IsExecutionCurrentAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
+            if (request is null || request.State != HomePermissionRequestState.Executing ||
+                state.BlockedCallerIds.Contains(request.Caller.CallerId, StringComparer.Ordinal)) return false;
+            if (request.AppliedGrantId is not { } grantId) return true;
+            return state.Grants.Any(grant => grant.GrantId == grantId && !grant.IsRevoked &&
+                grant.Caller.CallerId == request.Caller.CallerId && grant.Caller.IdentityVersion == request.Caller.IdentityVersion &&
+                ScopeEquals(grant.Scope, request.Scope) &&
+                (grant.ExpiresAt is null || grant.ExpiresAt > _timeProvider.GetUtcNow()));
+        }
+        finally { _gate.Release(); }
+    }
+
     /// <summary>Reads the decision for an existing request without creating a new action or reusing trust.</summary>
     public async Task<HomePermissionAuthorization> GetAuthorizationAsync(string requestId, CancellationToken cancellationToken = default)
     {

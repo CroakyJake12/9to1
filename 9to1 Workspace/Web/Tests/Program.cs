@@ -59,6 +59,21 @@ try
     await nativeAdmin.DispatchAsync("Refresh",null);Check(nativeAdmin.Organisations.Single().OrgID==fixtureOrg.OrgID.ToString("D"),"actual native Admin client uses authenticated canonical org endpoint");
     nativeAdmin.TrySetValue("OrganisationID",fixtureOrg.OrgID.ToString("D"));await nativeAdmin.DispatchAsync("OpenOrganisation",null);Check(nativeAdmin.Members.Single().AccountID==id.ToString("D"),"native current canonical memberships");
     await nativeAdmin.DispatchAsync("RefreshAudit",null);Check(nativeAdmin.Audit.All(e=>e.OrgID==fixtureOrg.OrgID)&&nativeAdmin.Audit.Count>0,"native bounded canonical audit");
+    var adminClient=new AdminAccountClient(http,_=>ValueTask.FromResult<string?>(issued.AccessToken));
+    var publishedPolicy=await adminClient.PublishPolicyAsync(fixtureOrg.OrgID,fixtureOrg.Revision,"fictional-publish-policy",
+        new HashSet<string>{"fixture.blocked.action"},new Dictionary<string,string>{{"fixture.setting","locked"}},new Dictionary<string,string>{{"fixture.default","configured"}},CancellationToken.None);
+    Check(publishedPolicy.Policy.Revision==fixtureOrg.Policy.Revision+1&&publishedPolicy.Policy.BlockedCapabilities.Contains("fixture.blocked.action")&&publishedPolicy.Policy.ForcedSettings["fixture.setting"]=="locked","native Admin policy publication uses server membership and canonical CAS");
+    var stalePolicy=await http.PostAsJsonAsync("/api/apps/Admin/Policies.Publish",new{orgID=fixtureOrg.OrgID,expectedRevision=fixtureOrg.Revision,idempotencyKey="fictional-stale-policy",blockedCapabilities=Array.Empty<string>(),forcedSettings=new Dictionary<string,string>(),defaultSettings=new Dictionary<string,string>()});
+    Check(stalePolicy.StatusCode==HttpStatusCode.Conflict,"stale policy cannot replace current published authority");
+    var actualBilling=await adminClient.GetBillingConfigurationAsync(fixtureOrg.OrgID,CancellationToken.None);
+    Check(actualBilling.OrgID==fixtureOrg.OrgID&&actualBilling.AddOn.MonthlyPrice==5&&actualBilling.AddOn.Currency=="USD"&&actualBilling.ActiveSeats==1,"native authenticated billing separates fixed add-on and seat count");
+    var suspension=new VerifiedBusinessBillingTransition("http-fixture-suspension",id,fixtureOrg.OrgID,publishedPolicy.Revision,"business",1,BusinessBillingState.Suspended,DateTimeOffset.UtcNow.AddSeconds(-1),null,"fixture-policy");
+    await new OrganisationBillingService(organisationAuthority,id,new FixtureBusinessLifecycleVerifier(suspension)).ProcessProviderEventAsync(new byte[]{1},new Dictionary<string,string>());
+    Check((await adminClient.GetBillingConfigurationAsync(fixtureOrg.OrgID,CancellationToken.None)).AddOn.State==BusinessBillingState.Suspended,"authenticated billing recovery survives Business suspension");
+    await nativeAdmin.DispatchAsync("RefreshBilling",null);
+    Check(nativeAdmin.TryGetValue("BillingSummary",out var billingSummary)&&billingSummary!.ToString()!.Contains("Suspended")&&nativeAdmin.Members.Count==0,"native recovery surface shows actual suspended billing and clears old management projection");
+    var suspendedEdit=await http.PostAsJsonAsync("/api/apps/Admin/Policies.Publish",new{orgID=fixtureOrg.OrgID,expectedRevision=publishedPolicy.Revision+1,idempotencyKey="fictional-suspended-policy",blockedCapabilities=Array.Empty<string>(),forcedSettings=new Dictionary<string,string>(),defaultSettings=new Dictionary<string,string>()});
+    Check(suspendedEdit.StatusCode==HttpStatusCode.Forbidden&&(await suspendedEdit.Content.ReadAsStringAsync()).Contains("EntitlementRequired"),"suspended Business editing denied by actual server error contract");
     var catalogue=await http.GetStringAsync("/api/catalogue");Check(catalogue.Contains("Sites")&&catalogue.Contains("Files"),"real registered domain adapters");
     var created=await http.PostAsJsonAsync("/api/apps/Sites/CreateProject",new {FilesDirectoryId=folder.Value,StackProjectId=(Guid?)null,StackDomainId=(Guid?)null,SourceRevision="fixture-a",Name="Fixture site",FrameworkId="9to1-native",RelativeProjectPath="Fixture"});
     created.EnsureSuccessStatusCode();using var result=JsonDocument.Parse(await created.Content.ReadAsStringAsync());
@@ -77,3 +92,8 @@ try
     Console.WriteLine("PASS authenticated HTTP CAKE identity, actual Files/Sites adapters, canonical creation/edit, missing price inputs, revocation");
 }
 finally {if(host is {HasExited:false}){host.Kill(true);await host.WaitForExitAsync();}host?.Dispose();Directory.Delete(root,true);}
+
+sealed class FixtureBusinessLifecycleVerifier(VerifiedBusinessBillingTransition transition):ITrustedBusinessBillingVerifier
+{
+    public ValueTask<VerifiedBusinessBillingTransition?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)=>ValueTask.FromResult<VerifiedBusinessBillingTransition?>(transition);
+}

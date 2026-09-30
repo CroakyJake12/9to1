@@ -26,6 +26,8 @@
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
     <ProjectReference Include="../../../Picture/HavenOS.Images.csproj" />
     <ProjectReference Include="../../../Canvas/HavenOS.Canvas.csproj" />
     <EmbeddedResource Include="Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />

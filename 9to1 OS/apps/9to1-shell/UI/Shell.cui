@@ -7,6 +7,7 @@
     <Action name="PinPageApp" command="PinPage" parameter="{Binding app}" />
     <Action name="OpenDesktopItem" command="OpenPageItem" parameter="{Binding desktopItem}" />
     <Action name="RemoveDesktopItem" command="RemovePageItem" parameter="{Binding desktopItem}" />
+    <Action name="ArrangeDesktopItem" command="SelectPageItem" parameter="{Binding desktopItem}" />
   </Actions>
   <ScrollViewer id="shell-scroll">
     <StackPanel id="shell" margin="20">
@@ -32,14 +33,14 @@
       <TextBlock text="{Binding PageTitle}" font-size="20" accessible-name="Current Desktop Page" />
       <TextBlock text="{Binding PageScope}" />
       <StackPanel orientation="Horizontal"><Button content="Previous page" action="PreviousPage" /><TextBlock text="{Binding PagePosition}" margin="12,4" /><Button content="Next page" action="NextPage" /></StackPanel>
-      <Repeat Source="{Binding PageItems}" As="desktopItem" Key="{Binding desktopItem.Id}" Panel="Grid" columns="{Binding PageColumns}" rows="{Binding PageRows}" ItemColumn="{Binding desktopItem.Column}" ItemRow="{Binding desktopItem.Row}" ItemColumnSpan="{Binding desktopItem.ColumnSpan}" ItemRowSpan="{Binding desktopItem.RowSpan}"><StackPanel margin="4"><Button content="{Binding desktopItem.Label}" action="OpenDesktopItem" is-enabled="{Binding desktopItem.CanOpen}" /><Button content="Remove shortcut" action="RemoveDesktopItem" /></StackPanel></Repeat>
+      <Repeat Source="{Binding PageItems}" As="desktopItem" Key="{Binding desktopItem.Id}" Panel="Grid" columns="{Binding PageColumns}" rows="{Binding PageRows}" ItemColumn="{Binding desktopItem.Column}" ItemRow="{Binding desktopItem.Row}" ItemColumnSpan="{Binding desktopItem.ColumnSpan}" ItemRowSpan="{Binding desktopItem.RowSpan}"><StackPanel margin="4"><Button content="{Binding desktopItem.Label}" action="OpenDesktopItem" is-enabled="{Binding desktopItem.CanOpen}" /><StackPanel orientation="Horizontal"><Button content="Arrange" action="ArrangeDesktopItem" /><Button content="Remove" action="RemoveDesktopItem" /></StackPanel></StackPanel></Repeat>
       <TextBlock text="Go · All Apps" font-size="20" />
       <StackPanel orientation="Horizontal">
         <TextBox id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search installed applications" width="420" accessible-name="Go search" />
         <Button content="Search" action="Search" />
       </StackPanel>
       <Repeat Source="{Binding Results}" As="app" Key="{Binding app.Reference.Id}">
-        <StackPanel orientation="Horizontal" margin="0,2"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" /><Button content="Pin to this layer" action="PinApp" /><Button content="Add to desktop page" action="PinPageApp" /></StackPanel>
+        <StackPanel orientation="Horizontal" margin="0,2"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" is-enabled="{Binding app.CanOpen}" /><Button content="Pin to this layer" action="PinApp" is-enabled="{Binding app.CanPinApplication}" /><Button content="Add to desktop page" action="PinPageApp" is-enabled="{Binding app.CanPinApplication}" /></StackPanel>
       </Repeat>
       <TextBlock text="Desktop Spaces, pages and taskbar settings" font-size="20" margin="0,20,0,8" />
       <TextBox text="{Binding Name, Mode=TwoWay}" placeholder-text="Layer, Desktop Space or page name" accessible-name="Layer, Desktop Space or page name" />
@@ -54,6 +55,10 @@
       </WrapPanel>
       <WrapPanel><Button content="Add page" action="AddPage" /><Button content="Rename page" action="RenamePage" /><Button content="Remove page" action="RemovePage" /><Button content="Move page earlier" action="MovePageEarlier" /><Button content="Move page later" action="MovePageLater" /></WrapPanel>
       <WrapPanel><Button content="Pages for this Desktop Space" action="SpaceSpecificPages" /><Button content="Use global pages" action="GlobalPages" /><Button content="Reset desktop pages" action="ResetDesktop" /></WrapPanel>
+      <TextBlock text="Desktop grid" font-size="18" margin="0,12,0,4" />
+      <WrapPanel><TextBlock text="Columns" /><TextBox text="{Binding PageGridColumns, Mode=TwoWay}" width="70" accessible-name="Desktop grid columns" /><TextBlock text="Rows" /><TextBox text="{Binding PageGridRows, Mode=TwoWay}" width="70" accessible-name="Desktop grid rows" /><Button content="Preview grid size" action="PageGridSize" /></WrapPanel>
+      <TextBlock text="{Binding SelectedPageItemLabel}" accessible-name="Selected desktop shortcut" />
+      <WrapPanel><TextBlock text="Column" /><TextBox text="{Binding SelectedColumn, Mode=TwoWay}" width="70" accessible-name="Shortcut column" /><TextBlock text="Row" /><TextBox text="{Binding SelectedRow, Mode=TwoWay}" width="70" accessible-name="Shortcut row" /><TextBlock text="Width in cells" /><TextBox text="{Binding SelectedWidth, Mode=TwoWay}" width="70" accessible-name="Shortcut width in cells" /><TextBlock text="Height in cells" /><TextBox text="{Binding SelectedHeight, Mode=TwoWay}" width="70" accessible-name="Shortcut height in cells" /><Button content="Preview placement" action="PlaceDesktopItem" is-enabled="{Binding HasSelectedPageItem}" /><Button content="Remove selected" action="RemoveSelectedDesktopItem" is-enabled="{Binding HasSelectedPageItem}" /></WrapPanel>
       <WrapPanel>
         <TextBlock text="Height" /><TextBox text="{Binding Thickness, Mode=TwoWay}" width="70" accessible-name="Taskbar layer height" />
         <TextBlock text="Spacing" /><TextBox text="{Binding Spacing, Mode=TwoWay}" width="70" accessible-name="Taskbar item spacing" />
@@ -66,7 +71,8 @@
         <Button content="Reset taskbar" action="ResetTaskbar" /><Button content="Restore previous" action="RestorePrevious" /><Button content="Preview safe defaults" action="SafeDefaults" />
       </StackPanel>
       <TextBlock id="transaction-status" text="{Binding Status}" accessible-name="Shell transaction status" text-wrapping="Wrap" margin="0,12" />
-      <StackPanel orientation="Horizontal"><Button id="keep" content="Keep" action="Keep" /><Button id="revert" content="Revert" action="Revert" /></StackPanel>
+      <StackPanel orientation="Horizontal"><Button id="keep" content="Keep" action="Keep" is-enabled="{Binding HasPreview}" /><Button id="revert" content="Revert" action="Revert" is-enabled="{Binding HasPreview}" /></StackPanel>
+      <Button content="Personal AI models" action="Models" />
     </StackPanel>
   </ScrollViewer>
 </Cui>

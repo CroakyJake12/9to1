@@ -1,17 +1,19 @@
 <Cui id="9to1.Picture.Workspace" version="1">
   <Grid id="picture-shell" rows="Auto,*,Auto" accessible-name="Picture editing workspace">
     <StackPanel id="picture-edit-controls" orientation="Horizontal" spacing="8">
-      <Button id="picture-open" action="9to1.Picture.Open" content="Open" accessible-name="Open Picture asset through Files" />
+      <Button id="picture-open" action="9to1.Picture.Open" is-enabled="{Binding CanOpen}" content="Open" accessible-name="Open Picture asset through Files" />
       <TextBlock id="picture-title" text="{Binding DisplayName}" accessible-name="Picture document name" />
-      <Button id="picture-rotate" action="9to1.Picture.Rotate" content="Rotate clockwise" accessible-name="Rotate Picture clockwise by ninety degrees" />
-      <Button id="picture-flip" action="9to1.Picture.FlipHorizontal" content="Flip horizontally" accessible-name="Flip Picture horizontally" />
-      <Button id="picture-crop" action="9to1.Picture.Crop" content="Crop" accessible-name="Crop Picture non-destructively" />
-      <Button id="picture-resize" action="9to1.Picture.Resize" content="Resize" accessible-name="Resize Picture non-destructively" />
-      <Button id="picture-save" action="9to1.Picture.Save" content="Save" accessible-name="Save editable Picture revision through Files" />
-      <Button id="picture-export" action="9to1.Picture.Export" content="Export" accessible-name="Export Picture as a separate asset" />
+      <Button id="picture-rotate" action="9to1.Picture.Rotate" is-enabled="{Binding CanRotate}" content="Rotate clockwise" accessible-name="Rotate Picture clockwise by ninety degrees" />
+      <Button id="picture-flip" action="9to1.Picture.FlipHorizontal" is-enabled="{Binding CanFlip}" content="Flip horizontally" accessible-name="Flip Picture horizontally" />
+      <Button id="picture-crop" action="9to1.Picture.Crop" is-enabled="{Binding CanCrop}" content="Crop" accessible-name="Crop Picture non-destructively" />
+      <Button id="picture-resize" action="9to1.Picture.Resize" is-enabled="{Binding CanResize}" content="Resize" accessible-name="Resize Picture non-destructively" />
+      <Button id="picture-save" action="9to1.Picture.Save" is-enabled="{Binding CanSave}" content="Save" accessible-name="Save editable Picture revision through Files" />
+      <Button id="picture-next-frame" action="9to1.Picture.Animation.NextFrame" is-enabled="{Binding CanAdvanceFrames}" content="Next frame" accessible-name="Show next animation frame without editing the Picture document" />
+      <Button id="picture-export" action="9to1.Picture.Export" is-enabled="{Binding CanExport}" content="Export" accessible-name="Export Picture as a separate asset" />
     </StackPanel>
     <PictureRasterSurface id="picture-surface" grid-row="1" accessible-name="Picture image composition surface" />
     <StackPanel id="picture-status" grid-row="2" spacing="4">
+      <TextBlock id="picture-animation-status" text="{Binding AnimationSummary}" accessible-name="Picture animation frame timing" />
       <TextBlock id="picture-geometry" text="{Binding GeometrySummary}" accessible-name="Picture canvas dimensions" />
       <TextBlock id="picture-storage-status" text="{Binding PersistenceStatus}" accessible-name="Picture persistence state" />
       <TextBlock id="picture-capability-status" text="{Binding CapabilityStatus}" accessible-name="Picture platform capabilities" />

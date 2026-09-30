@@ -1,11 +1,13 @@
 namespace NineToOne.Accounts;
 
+/// <summary>Canonical invocation metadata supplied by the trusted quote issuer; never document/message content.</summary>
+public sealed record OrganisationUsageAttribution(string AppID,string ModelID,string? AgentID,string? AutomationID);
 public sealed record OrganisationFundingRequest(Guid OrgID,long ExpectedPolicyRevision,string ModelRouteID,
     Guid CostQuoteID,string OperationID);
 public sealed record OrganisationFundingSlice(Guid SourceAllocationID,long Dust);
 public sealed record OrganisationFundingReservation(Guid ReservationID,Guid AccountID,Guid OrgID,Guid PoolID,
     string PeriodID,string OperationID,string ModelRouteID,Guid CostQuoteID,long PolicyRevision,long ReservedDust,
-    DateTimeOffset ExpiresAt,IReadOnlyList<OrganisationFundingSlice> FundingSources,long AuthorisationRevision);
+    DateTimeOffset ExpiresAt,IReadOnlyList<OrganisationFundingSlice> FundingSources,long AuthorisationRevision,string? RegisteredClientID=null,OrganisationUsageAttribution? Attribution=null);
 /// <summary>Final trusted observation; ProviderUsageReference is unique to the actual provider/operation usage report.</summary>
 public sealed record OrganisationObservedUsage(Guid ReservationID,string SettlementID,long ActualDust,
     string ProviderUsageReference);
@@ -21,7 +23,7 @@ public interface IOrganisationCloudFundingAuthority
 }
 
 public sealed record VerifiedOrganisationCostQuote(Guid QuoteID,Guid AccountID,Guid OrgID,Guid PoolID,string ModelRouteID,
-    long PolicyRevision,long MaximumDust,DateTimeOffset ExpiresAt);
+    long PolicyRevision,long MaximumDust,DateTimeOffset ExpiresAt,string? RegisteredClientID=null,OrganisationUsageAttribution? Attribution=null);
 public interface IOrganisationCostQuoteAuthority
 {
     ValueTask<VerifiedOrganisationCostQuote?> ResolveAsync(Guid quoteID,CancellationToken ct);

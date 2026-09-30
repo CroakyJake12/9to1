@@ -5,6 +5,7 @@ using Haven.Application;
 using Haven.Core.Media;
 using Haven.Desktop.Services;
 using HavenOS.Files;
+using HavenOS.Apps.Sites.Application;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 
@@ -39,7 +40,8 @@ public sealed class NativeFilesWorkspaceServiceTests
             Directory.CreateDirectory(chosen);
             var configured = await files.ConfigureNewAsync(chosen, ownership, token);
             Assert.Equal(actor.ProfileId, configured.Configuration.ProfileId);
-            Assert.Equal(7, configured.Configuration.AppFolders.Count);
+            Assert.Equal(8, configured.Configuration.AppFolders.Count);
+            Assert.Equal(Path.Combine(chosen, "Games"), await authority.ResolveAppDirectoryAsync("games", token));
             Assert.Equal(Path.Combine(chosen, "Sites"), await authority.ResolveAppDirectoryAsync("sites", token));
             Assert.Null(await authority.ResolveAppDirectoryAsync("unregistered-app", token));
             var sitesId = configured.Configuration.AppFolders["sites"];
@@ -51,10 +53,19 @@ public sealed class NativeFilesWorkspaceServiceTests
                 new HomeResourceStoreOwnershipAuthority(reopenedOwnership, reopenedProfiles));
             var reopened = await reopenedAuthority.GetCurrentAsync(token);
             Assert.NotNull(reopened);
+            actor = reopened.Actor; // Restart establishes a fresh authentication session for the same OS profile.
             Assert.Equal(configured.Configuration.StoreId, reopened.Configuration.StoreId);
             Assert.Equal(sitesId, reopened.Configuration.AppFolders["sites"]);
             Assert.False((await reopened.Provider.GetStoreEvidenceAsync(token)).NewlyCreated);
             Assert.Equal(Path.Combine(chosen, "Sites"), await reopenedAuthority.ResolveAppDirectoryAsync("sites", token));
+            var sitesAuthority = new SitesNativeWorkspaceAuthority(reopenedAuthority);
+            var sitesBinding = await sitesAuthority.GetCurrentAsync(token);
+            Assert.NotNull(sitesBinding);
+            Assert.Equal(actor.ProfileId, sitesBinding.ProfileId);
+            Assert.Equal(actor.ActorId, sitesBinding.ActorId);
+            Assert.Equal(sitesId.Value, sitesBinding.FilesFolderId);
+            Assert.Equal(Path.Combine(chosen, "Sites"), sitesBinding.RootDirectory);
+            Assert.Equal((await reopened.Provider.GetAsync(sitesId, token)).Value!.CurrentRevisionId!.Value.ToString(), sitesBinding.FolderRevision);
             var sourcePath = Path.Combine(chosen, "Media", "source.wav");
             byte[] sourceBytes = [82, 73, 70, 70, 1, 2, 3, 4];
             await File.WriteAllBytesAsync(sourcePath, sourceBytes, token);
@@ -71,7 +82,46 @@ public sealed class NativeFilesWorkspaceServiceTests
                 {
                     var currentWorkspace = await reopenedAuthority.GetCurrentAsync(ct);
                     return currentWorkspace?.Actor == current ? currentWorkspace.Provider : null;
-                })]);
+                }, async (current, appId, ct) =>
+                {
+                    var currentWorkspace = await reopenedAuthority.GetCurrentAsync(ct);
+                    return currentWorkspace?.Actor == current && currentWorkspace.Configuration.AppFolders.TryGetValue(appId, out var folder)
+                        ? folder : null;
+                }), new SiteNativeProjectAccessResolver(sitesAuthority)]);
+            var sitesScope = new ResourceScope("files.item", sitesId.ToString(), sitesBinding.FolderRevision, ResourceAccess.Write);
+            Assert.Equal(actor, await resourceAuthorization.AuthorizeAsync("sites.project.create", [sitesScope], token));
+            Assert.Equal(actor, await resourceAuthorization.AuthorizeAsync("sites.project.save", [sitesScope], token));
+            Assert.Null(await resourceAuthorization.AuthorizeAsync("sites.project.create", [sitesScope with { Access = ResourceAccess.Read }], token));
+            var otherFolder = (await reopened.Provider.GetAsync(reopened.Configuration.AppFolders["write"], token)).Value!;
+            Assert.Null(await resourceAuthorization.AuthorizeAsync("sites.project.create", [sitesScope with
+                { Id = otherFolder.Id.ToString(), Revision = otherFolder.CurrentRevisionId!.Value.ToString() }], token));
+            var unconfiguredSites = new FilesArtifactResourceResolver(_ => reopened.Provider);
+            Assert.False((await unconfiguredSites.EvaluateAsync(actor, "sites.project.save", sitesScope, token)).Allowed);
+            Assert.Null(await resourceAuthorization.AuthorizeAsync("sites.project.save", [sitesScope with { Revision = Guid.NewGuid().ToString("N") }], token));
+            var sitePermissions = new HomePermissionTrustService(home, new SiteNativeActionPolicies().TryGet);
+            var siteBroker = new HomeResourceOperationBroker(resourceAuthorization, sitePermissions);
+            var siteOwner = new SiteNativeWriteCoordinator(sitesAuthority, siteBroker);
+            var createSite = SiteNativeWriteIntent.Create(sitesBinding, "Canonical native site", "9to1-native", "canonical-site");
+            var pendingSite = await siteBroker.AuthorizeAsync("sites", createSite.ActionId, createSite.Scopes, createSite.Arguments,
+                "Create the reviewed site in the configured Files folder", null, actor.AuthenticationRevision, token);
+            Assert.Equal(HomePermissionRequestState.PendingApproval, pendingSite.State);
+            Assert.Null(await siteBroker.BeginExecutionCapabilityAsync(pendingSite.RequestId, createSite.Arguments, token));
+            Assert.True((await sitePermissions.DecideAsync(pendingSite.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            var createCapability = Assert.IsType<HomeResourceExecutionCapability>(await siteBroker.BeginExecutionCapabilityAsync(pendingSite.RequestId, createSite.Arguments, token));
+            var createdSite = await siteOwner.ExecuteAsync(createSite, createCapability, token);
+            Assert.Null(createdSite.Error);
+            Assert.Equal(sitesId.Value, createdSite.Value!.Source.FilesDirectoryId);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => siteOwner.ExecuteAsync(createSite, createCapability, token));
+            var renameSite = SiteNativeWriteIntent.Rename(sitesBinding, createdSite.Value.SiteId, createdSite.Value.Revision, "Renamed canonical site");
+            var renamePending = await siteBroker.AuthorizeAsync("sites", renameSite.ActionId, renameSite.Scopes, renameSite.Arguments,
+                "Rename the reviewed canonical site", null, actor.AuthenticationRevision, token);
+            Assert.True((await sitePermissions.DecideAsync(renamePending.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+            var renameCapability = Assert.IsType<HomeResourceExecutionCapability>(await siteBroker.BeginExecutionCapabilityAsync(renamePending.RequestId, renameSite.Arguments, token));
+            var renamedSite = await siteOwner.ExecuteAsync(renameSite, renameCapability, token);
+            Assert.Null(renamedSite.Error);
+            Assert.Equal(createdSite.Value.SiteId, renamedSite.Value!.SiteId);
+            Assert.Equal(createdSite.Value.Revision + 1, renamedSite.Value.Revision);
+            Assert.Null(await resourceAuthorization.AuthorizeAsync("sites.project.save", renameSite.Scopes, token));
             var media = new NativeFilesMediaAssetSourceResolver(reopenedAuthority, reopenedProfiles, resourceAuthorization);
             await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home),
                 new HomePermissionsCoreService(new HomePermissionTrustService(home, (_, _) => null), reopenedProfiles)]);
@@ -91,6 +141,8 @@ public sealed class NativeFilesWorkspaceServiceTests
                 Payload = JsonSerializer.SerializeToElement(binding with { ProfileId = "foreign-profile" }) }, bindingRecord.Revision, token)).IsSuccess);
             Assert.Null(await reopenedAuthority.GetCurrentAsync(token));
             Assert.Null(await reopenedAuthority.ResolveAppDirectoryAsync("sites", token));
+            Assert.Null(await sitesAuthority.GetCurrentAsync(token));
+            Assert.Null(await resourceAuthorization.AuthorizeAsync("sites.project.save", [sitesScope], token));
             Assert.Equal(CuiSceneAvailabilityState.Unavailable, (await viewReadiness.CheckAsync(token)).State);
             Assert.Equal(MediaEngineErrorCode.PermissionDenied,
                 (await media.ResolveAsync(sourceId.ToString(), assetId, sourceRevision.ToString(), token)).Error!.Code);

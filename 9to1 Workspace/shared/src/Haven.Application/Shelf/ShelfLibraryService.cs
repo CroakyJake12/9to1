@@ -30,10 +30,19 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
     }
 
     public Task<ShelfOperationResult> AddItemAsync(long revision, ShelfLaunchItem item, CancellationToken token = default) =>
-        MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.AddOrRefreshTarget(state.Library, item) }, token);
+        AddCapturedItemAsync(revision, Capture(item), token);
 
     public Task<ShelfOperationResult> CreateCollectionAsync(long revision, ShelfCollection collection, CancellationToken token = default) =>
+        CreateCapturedCollectionAsync(revision, Capture(collection), token);
+
+    private Task<ShelfOperationResult> AddCapturedItemAsync(long revision, ShelfLaunchItem item, CancellationToken token) =>
+        MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.AddOrRefreshTarget(state.Library, item) }, token);
+
+    private Task<ShelfOperationResult> CreateCapturedCollectionAsync(long revision, ShelfCollection collection, CancellationToken token) =>
         MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.AddCollection(state.Library, collection) }, token);
+
+    // Records may still contain caller-owned lists. Capture before waiting for the storage gate.
+    private static T Capture<T>(T value) => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value))!;
 
     public Task<ShelfOperationResult> AddMembershipAsync(long revision, Guid collectionId, Guid itemId, int order = 0, CancellationToken token = default) =>
         MutateAsync(revision, state =>
@@ -47,6 +56,10 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
 
     public Task<ShelfOperationResult> EditItemAsync(long revision, Guid id, string name, IReadOnlyList<string> tags,
         bool favourite, int order, ShelfLaunchBehaviour behaviour, CancellationToken token = default) =>
+        EditCapturedItemAsync(revision, id, name, tags.ToArray(), favourite, order, behaviour, token);
+
+    private Task<ShelfOperationResult> EditCapturedItemAsync(long revision, Guid id, string name, IReadOnlyList<string> tags,
+        bool favourite, int order, ShelfLaunchBehaviour behaviour, CancellationToken token) =>
         MutateAsync(revision, state =>
         {
             if (!state.Library.Items.Any(item => item.Id == id)) throw new KeyNotFoundException("Launch item not found.");
@@ -56,6 +69,9 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
         }, token);
 
     public Task<ShelfOperationResult> EditCollectionAsync(long revision, ShelfCollection collection, CancellationToken token = default) =>
+        EditCapturedCollectionAsync(revision, Capture(collection), token);
+
+    private Task<ShelfOperationResult> EditCapturedCollectionAsync(long revision, ShelfCollection collection, CancellationToken token) =>
         MutateAsync(revision, state =>
         {
             var existing = state.Library.Collections.FirstOrDefault(item => item.Id == collection.Id)
@@ -93,8 +109,11 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
         return visible.ToArray();
     }
 
-    public Task<ShelfOperationResult> ImportAsync(long revision, ShelfSnapshot imported, CancellationToken token = default) =>
-        MutateAsync(revision, _ => { Validate(imported); return imported; }, token);
+    public Task<ShelfOperationResult> ImportAsync(long revision, ShelfSnapshot imported, CancellationToken token = default)
+    {
+        var snapshot = Capture(imported);
+        return MutateAsync(revision, _ => { Validate(snapshot); return snapshot; }, token);
+    }
 
     private async Task<ShelfOperationResult> MutateAsync(long revision, Func<ShelfSnapshot, ShelfSnapshot> mutation, CancellationToken token)
     {

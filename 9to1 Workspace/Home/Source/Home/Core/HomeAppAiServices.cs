@@ -26,13 +26,13 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     private readonly ConcurrentDictionary<(string AppId, string ActionId), HomePermissionActionPolicy> _policies = new();
     private readonly ConcurrentDictionary<string, (string AppId, string ActionId, string? ArgumentsDigest)> _approvalTargets = new();
     private readonly ConcurrentDictionary<string, (string AppId, string ActionId)> _executingTargets = new();
-    private readonly SemaphoreSlim _selectionGate = new(1, 1);
     private readonly ModelRouteRegistry _routes;
-    private const string ActiveRouteId = "home.active";
+    private readonly HomePersonalModelRoutes? _personalRoutes;
     public HomePermissionTrustService Permissions { get; }
 
-    public HomeAppAiServices(IModelProviderRegistry providers, IHomeCoreStateStore store, HomePermissionCallerIdentity authenticatedCaller, IExecutionEventRepository graph, IInvocationResolver invocations, IEnumerable<IHomeActionPolicySource>? actionPolicies = null)
+    public HomeAppAiServices(IModelProviderRegistry providers, IHomeCoreStateStore store, HomePermissionCallerIdentity authenticatedCaller, IExecutionEventRepository graph, IInvocationResolver invocations, IEnumerable<IHomeActionPolicySource>? actionPolicies = null, HomePersonalModelRoutes? personalRoutes = null)
     {
+        _personalRoutes = personalRoutes;
         _providers = providers; _store = store; _graph = graph; _invocations = invocations;
         _routes = new(providers, new HomeVersionedModelRouteRepository(store), new ModelRouteResolver(providers));
         _caller = authenticatedCaller.Validate();
@@ -79,26 +79,22 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
 
     public async ValueTask<AppAiModelSelection?> GetSelectionAsync(CancellationToken cancellationToken)
     {
-        var route = await _routes.GetRouteAsync(ActiveRouteId, cancellationToken).ConfigureAwait(false);
+        var route = _personalRoutes is null ? null :
+            await _personalRoutes.GetAsync(ModelCapabilityCategory.Chat, cancellationToken).ConfigureAwait(false) ??
+            await _personalRoutes.GetAsync(ModelCapabilityCategory.Active, cancellationToken).ConfigureAwait(false);
         if (route is null) return null;
-        var preview = await _routes.PreviewAsync(route, containsPrivateContext: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+        // This bridge currently admits local inference only. Narrow before discovery, not after preview.
+        var localRoute = route with { Policy = route.Policy with { AllowRemote = false, AllowCloud = false } };
+        var preview = await _routes.PreviewAsync(localRoute, containsPrivateContext: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         return preview.Selection is { } selection ? new($"{selection.Model.ProviderId}:{selection.Model.ModelId}", "Medium") : null;
     }
 
-    public async ValueTask<bool> SelectAsync(string modelId, CancellationToken cancellationToken)
+    // Persistent route changes require the typed Home model route editor and its approval request.
+    // The shared compact bar owns its explicit per-surface override in AppAiCoordinator.
+    public ValueTask<bool> SelectAsync(string modelId, CancellationToken cancellationToken)
     {
-        if (!(await GetModelsAsync(cancellationToken).ConfigureAwait(false)).Any(m => m.Id == modelId && m.IsAvailable)) return false;
-        var descriptor = (await _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: true, AllowRemote: false), cancellationToken).ConfigureAwait(false)).Single(m => m.Key == modelId);
-        await _selectionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            var prior = await _routes.GetRouteAsync(ActiveRouteId, cancellationToken).ConfigureAwait(false);
-            var revision = prior?.Revision ?? 0;
-            var route = new ConfiguredModelRoute(ActiveRouteId, revision, ModelRouteScope.User, "native-user", ModelCapabilityCategory.Active,
-                [new(new(descriptor.ProviderId, descriptor.Name), true, 0)], new(AllowCloud: false, AllowFallback: false));
-            return (await _routes.SaveRouteAsync(route, revision, cancellationToken).ConfigureAwait(false)).Error is null;
-        }
-        finally { _selectionGate.Release(); }
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(false);
     }
 
     public async IAsyncEnumerable<AppAiResponseChunk> StreamAsync(AppAiPrompt prompt, [EnumeratorCancellation] CancellationToken cancellationToken)

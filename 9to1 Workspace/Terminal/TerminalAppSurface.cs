@@ -53,6 +53,10 @@ public sealed class TerminalAppSurface : IDisposable
     private ITerminalSession? _session;
     private string? _pendingCommand;
     private bool _disposed;
+    private readonly object _resolutionGate = new();
+    private long _resolutionGeneration;
+    private TerminalResolvedAction? _resolvedAction;
+    private string? _resolvedDirectory;
 
     public TerminalAppSurface(TerminalAppHostCapabilities host, string? initialDirectory = null)
     {
@@ -62,6 +66,7 @@ public sealed class TerminalAppSurface : IDisposable
 
         if (host.SessionFactory is null || host.CommandPermission is null)
         {
+            InvalidateResolution();
             Availability = TerminalAppAvailability.HostCapabilityUnavailable;
             UnavailableReason = MissingCapabilityMessage;
             return;
@@ -78,20 +83,26 @@ public sealed class TerminalAppSurface : IDisposable
     public bool IsAvailable => Availability == TerminalAppAvailability.Available && _session is not null;
     public TerminalInputMode Mode { get; private set; } = TerminalInputMode.Command;
     public string ModeLabel => Mode == TerminalInputMode.Command ? "Command" : "AI";
-    public TerminalResolvedAction? ResolvedAction { get; private set; }
+    public TerminalResolvedAction? ResolvedAction { get { lock(_resolutionGate) return _resolvedAction; } }
     public void SetMode(TerminalInputMode mode)
     {
         ThrowIfDisposed();
         if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
-        Mode = mode; ResolvedAction = null; _pendingCommand = null;
+        lock(_resolutionGate){Mode = mode; InvalidateResolution();} _pendingCommand = null;
     }
     public async Task<TerminalAppCommandResult> ExecuteResolvedActionAsync(string actionID,string? verificationReference,CancellationToken ct=default)
     {
         ThrowIfDisposed();
-        var action=ResolvedAction;
-        if(action is null || action.Id.ToString("D")!=actionID || _host.NaturalLanguageActions is null)
-            return new(TerminalAppCommandState.Unavailable,"","Resolved action is unavailable.");
-        ResolvedAction=null;
+        ct.ThrowIfCancellationRequested();
+        TerminalResolvedAction? action;
+        lock(_resolutionGate)
+        {
+            action=_resolvedAction;
+            if(action is null || action.Id.ToString("D")!=actionID || _host.NaturalLanguageActions is null || Mode!=TerminalInputMode.AI ||
+                _session is null || _session.Metadata.SessionId!=action.SessionId || _session.Metadata.EnvironmentId!=action.EnvironmentId || WorkingDirectory!=_resolvedDirectory)
+                return new(TerminalAppCommandState.Unavailable,"","Resolved action is unavailable for the current session context.");
+            InvalidateResolution();
+        }
         var result=await _host.NaturalLanguageActions.ExecuteAsync(action,verificationReference,ct).ConfigureAwait(false);
         return new(result.Executed?TerminalAppCommandState.Succeeded:TerminalAppCommandState.Denied,"",result.ResultText??result.Message);
     }
@@ -119,6 +130,7 @@ public sealed class TerminalAppSurface : IDisposable
         if (string.IsNullOrWhiteSpace(value))
             return new(TerminalAppCommandState.Failed, string.Empty, "Enter a command to run.");
 
+        InvalidateResolution();
         var safeCommand = SensitiveTextRedactor.Redact(value, 8_000);
         if (Mode == TerminalInputMode.Command && (value == "$Ask" || value.StartsWith("$Ask ",StringComparison.Ordinal)))
         {
@@ -130,9 +142,19 @@ public sealed class TerminalAppSurface : IDisposable
         if (Mode == TerminalInputMode.AI)
         {
             if (_host.NaturalLanguageActions is null || _session?.Metadata.EnvironmentId is null) return new(TerminalAppCommandState.Unavailable,safeCommand,"Natural-language action resolution is unavailable.");
-            ResolvedAction=await _host.NaturalLanguageActions.ResolveAsync(_session!.Metadata.SessionId,_session.Metadata.EnvironmentId!.Value,value,cancellationToken).ConfigureAwait(false);
-            _history.Add(safeCommand);
-            return new(TerminalAppCommandState.RequiresApproval,safeCommand,ResolvedAction.Summary);
+            ITerminalSession capturedSession;long generation;string directory;TerminalSessionMetadata metadata;
+            lock(_resolutionGate){capturedSession=_session!;metadata=capturedSession.Metadata;generation=_resolutionGeneration;directory=WorkingDirectory;}
+            var resolved=await _host.NaturalLanguageActions.ResolveAsync(metadata.SessionId,metadata.EnvironmentId!.Value,value,cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            lock(_resolutionGate)
+            {
+                if(_disposed || generation!=_resolutionGeneration || !ReferenceEquals(capturedSession,_session) || Mode!=TerminalInputMode.AI || WorkingDirectory!=directory ||
+                    resolved.SessionId!=metadata.SessionId || resolved.EnvironmentId!=metadata.EnvironmentId || resolved.Id==Guid.Empty || resolved.AffectedObjects is null)
+                    return new(TerminalAppCommandState.Cancelled,safeCommand,"Session context changed or the resolved action target did not match. Resolve the request again.");
+                _resolvedAction=resolved with{AffectedObjects=Array.AsReadOnly(resolved.AffectedObjects.ToArray())};_resolvedDirectory=directory;
+                _history.Add(safeCommand);
+                return new(TerminalAppCommandState.RequiresApproval,safeCommand,resolved.Summary);
+            }
         }
         _history.Add(safeCommand);
 
@@ -202,6 +224,7 @@ public sealed class TerminalAppSurface : IDisposable
 
         try
         {
+            InvalidateResolution();
             await _session.SetWorkingDirectoryAsync(Path.GetFullPath(path), cancellationToken).ConfigureAwait(false);
             return true;
         }
@@ -236,6 +259,7 @@ public sealed class TerminalAppSurface : IDisposable
             return false;
         }
 
+        InvalidateResolution();
         var previous = _session;
         Detach(previous);
         _session = replacement;
@@ -325,6 +349,7 @@ public sealed class TerminalAppSurface : IDisposable
         _session?.Dispose();
         _session = null;
         _pendingCommand = null;
+        InvalidateResolution();
         Availability = TerminalAppAvailability.HostCapabilityUnavailable;
         UnavailableReason = reason;
     }
@@ -363,6 +388,11 @@ public sealed class TerminalAppSurface : IDisposable
         return Directory.Exists(home) ? home : Environment.CurrentDirectory;
     }
 
+    private void InvalidateResolution()
+    {
+        lock(_resolutionGate){_resolutionGeneration++;_resolvedAction=null;_resolvedDirectory=null;}
+    }
+
     private void ThrowIfDisposed()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -374,6 +404,7 @@ public sealed class TerminalAppSurface : IDisposable
             return;
 
         _disposed = true;
+        InvalidateResolution();
         if (_host.ActivityHub is not null)
             _host.ActivityHub.ActivityPublished -= OnActivityPublished;
         Detach(_session);

@@ -5,6 +5,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../9to1 Workspace/Home/HavenOS.Home.csproj" />
     <Compile Include="../../src/Haven.Android/RoutedKeyboardAiExecutor.cs" Link="Production/RoutedKeyboardAiExecutor.cs" />
     <Compile Include="../../src/Haven.Android/HavenKeyboardAiController.cs" Link="Production/HavenKeyboardAiController.cs" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />

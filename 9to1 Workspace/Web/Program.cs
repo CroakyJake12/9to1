@@ -32,6 +32,7 @@ app.Use(async (context, next) =>
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     context.Response.Headers["Cache-Control"] = "no-store";
     try { await next(); }
+    catch (OrganisationAccessException error) { context.Response.StatusCode = 403; await context.Response.WriteAsJsonAsync(new { error = error.Code }); }
     catch (UnauthorizedAccessException) { context.Response.StatusCode = 401; await context.Response.WriteAsJsonAsync(new { error = "PermissionDenied" }); }
     catch (KeyNotFoundException) { context.Response.StatusCode = 404; await context.Response.WriteAsJsonAsync(new { error = "CapabilityUnavailable" }); }
     catch (FileNotFoundException) { context.Response.StatusCode = 404; await context.Response.WriteAsJsonAsync(new { error = "AccountNotFound" }); }

@@ -2,6 +2,7 @@ using System.Net;
 using Dulche.Runtime;
 using Haven.Application;
 using Haven.Core;
+using HavenOS.Home.Core;
 
 namespace Haven.Android;
 
@@ -9,18 +10,18 @@ namespace Haven.Android;
 /// It never changes global privacy, stores field content, or uses an unbounded fallback client.</summary>
 internal sealed class RoutedKeyboardAiExecutor(
     IModelProviderRegistry providers,
-    IVersionedModelRouteRepository routes,
+    HomePersonalModelRoutes routes,
     IProviderConfigurationStore configurations,
     IPrivacyPreferenceStore privacy,
-    Func<string?> currentModel,
     Func<bool> allowCloud) : IKeyboardAiExecutor
 {
-    internal const string ActiveRouteId = "home.active";
 
     public async Task<string?> CompleteAsync(string prompt, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var configured = await routes.GetAsync(ActiveRouteId, cancellationToken).ConfigureAwait(false);
+        var configured = await routes.GetAsync(ModelCapabilityCategory.Chat, cancellationToken).ConfigureAwait(false)
+            ?? await routes.GetAsync(ModelCapabilityCategory.Active, cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Choose and save a personal Chat or Active model route in Home before using keyboard AI.");
         var cloudConsent = allowCloud() && !privacy.Current.LocalOnlyMode && !RuntimeSafetyState.IsSafeMode;
         var policy = configured?.Policy ?? new ProviderPolicy(AllowCloud: cloudConsent,
             AllowRemote: cloudConsent, AllowPrivateContextToCloud: cloudConsent, AllowFallback: false);
@@ -32,7 +33,7 @@ internal sealed class RoutedKeyboardAiExecutor(
             RequiredCapabilities = new HashSet<string>((policy.RequiredCapabilities ?? new HashSet<string>()).Append(nameof(ToolCapability.Text)), StringComparer.OrdinalIgnoreCase)
         };
         var candidates = configured?.Candidates.Where(item => item.Enabled).OrderBy(item => item.Order).Select(item => item.Model).ToArray()
-            ?? LegacySelection(currentModel());
+            ?? [];
         var route = new ModelRoute(configured?.RouteId ?? "android.keyboard.current-selection",
             (int)Math.Clamp(configured?.Revision ?? 1, 1, int.MaxValue), candidates, policy);
         var resolver = new ModelRouteResolver(providers);
@@ -66,15 +67,6 @@ internal sealed class RoutedKeyboardAiExecutor(
             }
         }
         throw new InvalidOperationException("The authorised keyboard route is unavailable or exhausted.");
-    }
-
-    private ModelIdentity[] LegacySelection(string? model)
-    {
-        if (string.IsNullOrWhiteSpace(model)) return [];
-        var separator = model.IndexOf(':');
-        return separator > 0 && providers.Find(model[..separator]) is not null
-            ? [new(model[..separator], model[(separator + 1)..])]
-            : [new("ollama", model)];
     }
 
     private async Task<bool> IsDeviceLocalAsync(IModelProvider provider, CancellationToken cancellationToken)

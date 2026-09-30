@@ -1,5 +1,6 @@
 using System.Text;
 using Haven.Desktop.Services;
+using CanvasSvgRasterizer = Haven.Desktop.Services.CanvasSvgRasterizer;
 using HavenOS.Apps.Canvas;
 
 namespace Haven.Desktop.Tests;

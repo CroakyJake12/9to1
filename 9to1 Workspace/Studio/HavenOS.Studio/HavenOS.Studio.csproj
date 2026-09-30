@@ -8,8 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../9to1 Models/Dulche Alpha/Den.csproj" />
-    <PackageReference Include="Avalonia" />
-    <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <Compile Remove="App.axaml.cs;MainWindow.axaml.cs" />
+    <EmbeddedResource Include="UI/Studio.cui" LogicalName="HavenOS.AIStudio.UI.Studio.cui" />
   </ItemGroup>
 </Project>

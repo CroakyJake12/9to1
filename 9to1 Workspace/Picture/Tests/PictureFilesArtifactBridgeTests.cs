@@ -80,6 +80,36 @@ public sealed class PictureFilesArtifactBridgeTests
             var afterRename = await bridge.SaveAsync(next, reopened.CasRevisionId, TestContext.Current.CancellationToken);
             Assert.NotEqual(saved.Id, afterRename.Id);
             Assert.Equal(reopened.CasRevisionId, afterRename.ParentRevisionId);
+            var destinationId = HostedItemId.New();
+            Assert.True((await provider.MutateAsync(new(new(Guid.NewGuid()), owner, destinationId, null, null, "CreateFolder", null, null,
+                FilesOperationState.Pending, now, now, null, null), "Moved pictures", TestContext.Current.CancellationToken)).IsSuccess);
+            var beforeMove = (await provider.GetCurrentArtifactContentAsync(backingId, TestContext.Current.CancellationToken)).Value!;
+            Assert.True((await provider.MutateAsync(new(new(Guid.NewGuid()), owner, backingId, folderId, destinationId, "Move", afterRename.Id, null,
+                FilesOperationState.Pending, now, now, null, null), null, TestContext.Current.CancellationToken)).IsSuccess);
+            provider = new DurableDriveProvider(providerPath, location, owner);
+            actor.Provider = provider;
+            directories = new FilesWorkspaceDirectoryResolver(bindingsPath, _ => null, _ => provider);
+            bridge = new(actor, _ => provider, directories, authorization, () => writes);
+            var moved = await bridge.OpenAsync(backingId, TestContext.Current.CancellationToken);
+            Assert.Equal(destinationId, (await provider.GetArtifactAsync(backingId, TestContext.Current.CancellationToken)).Value!.ParentFolderId);
+            Assert.Equal(destinationId, (await provider.GetAsync(backingId, TestContext.Current.CancellationToken)).Value!.ParentId);
+            Assert.Equal(document.DocumentId, moved.Artifact.Document.DocumentId);
+            Assert.Equal(source, moved.Artifact.SourceAsset);
+            Assert.Equal(sourceRevision.ToString(), moved.Artifact.Document.SourceRevision);
+            Assert.Equal(afterRename.Id, moved.Revision.Id);
+            Assert.NotEqual(afterRename.Id, moved.CasRevisionId);
+            Assert.True(File.Exists(Path.Combine(root, beforeMove.ProviderContentReference!)));
+            Assert.Equal(afterRename.Id, (await bridge.SaveAsync(moved.Artifact, moved.CasRevisionId, TestContext.Current.CancellationToken)).Id);
+            var movedCandidate = moved.Artifact with { Document = moved.Artifact.Document.Rotate() };
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.SaveAsync(movedCandidate, afterRename.Id, TestContext.Current.CancellationToken));
+            writes = false;
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => bridge.SaveAsync(movedCandidate, moved.CasRevisionId, TestContext.Current.CancellationToken));
+            writes = true;
+            var moveSave = await bridge.SaveAsync(movedCandidate, moved.CasRevisionId, TestContext.Current.CancellationToken);
+            Assert.Equal(moved.CasRevisionId, moveSave.ParentRevisionId);
+            Assert.Equal(source, (await bridge.OpenAsync(backingId, TestContext.Current.CancellationToken)).Artifact.SourceAsset);
+            var createdAfterMove = await bridge.CreateAsync(PictureDocument.Create(10, 10), cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(folderId, (await provider.GetArtifactAsync(new(createdAfterMove.Artifact.BackingFileId), TestContext.Current.CancellationToken)).Value!.ParentFolderId);
             var foreign = HostedItemId.New();
             Assert.True((await provider.RegisterArtifactAsync(new("canvas", Guid.NewGuid().ToString(), foreign, folderId, nameof(FilesArtifactType.Canvas), "Canvas artifact"), owner, TestContext.Current.CancellationToken)).IsSuccess);
             await Assert.ThrowsAsync<InvalidDataException>(() => bridge.OpenAsync(foreign, TestContext.Current.CancellationToken));

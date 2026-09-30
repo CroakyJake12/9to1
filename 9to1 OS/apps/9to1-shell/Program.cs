@@ -1,3 +1,4 @@
+using Haven.Application.Go;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -44,6 +45,7 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Net.Sockets.SocketException or InvalidOperationException)
         { return new(CuiSceneAvailabilityState.Unavailable, "HomeDiscoveryEndpointUnavailable", "The native Home endpoint could not be published safely. Existing Home data was preserved; repair the installed runtime location."); }
         finally { _endpointGate.Release(); }
+        model.OpenModels = token => OsModelPickerWindow.OpenAsync(result.Services, token);
         await model.StartAsync(result.Services.GetRequiredService<ShellConfigurationService>(), result.Services.GetRequiredService<GoService>(), result.Services.GetRequiredService<LinuxApplicationLauncher>(), ct);
         return new(CuiSceneAvailabilityState.Ready, "HomeSessionReady", "The canonical OS session Home services are ready.");
     }

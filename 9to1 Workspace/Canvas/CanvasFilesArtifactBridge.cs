@@ -52,7 +52,7 @@ public sealed class CanvasFilesArtifactBridge(
     {
         var resolved = await ResolveAsync(fileId, ResourceAccess.Read, cancellationToken).ConfigureAwait(false);
         var binding = await BindingAsync(resolved.Actor, cancellationToken).ConfigureAwait(false);
-        RequireFolder(binding, resolved.Reference);
+        // Logical Files moves change the parent, never the registered payload anchor.
         var content = await resolved.Provider.GetCurrentArtifactContentAsync(fileId, cancellationToken).ConfigureAwait(false);
         if (!content.IsSuccess || string.IsNullOrWhiteSpace(content.Value!.ProviderContentReference))
             throw new InvalidDataException("Canvas has no committed canonical Files content revision.");
@@ -69,21 +69,36 @@ public sealed class CanvasFilesArtifactBridge(
         var artifact = CanvasArtifactCodec.Deserialize(bytes);
         if (!Guid.TryParse(resolved.Reference.ArtifactId, out var registeredId) || artifact.ArtifactId != registeredId)
             throw new InvalidDataException("Canvas artifact identity differs from its canonical Files identity.");
+        if (revision.OwningAppId != OwnerAppId || revision.OwningAppRevisionId != artifact.RevisionId.ToString("N"))
+            throw new InvalidDataException("Canvas document revision differs from its owning canonical Files revision.");
         await RecheckAsync(resolved.Actor, resolved.Scope, "canvas.file.open", cancellationToken).ConfigureAwait(false);
         return new(artifact, revision, resolved.Metadata.CurrentRevisionId
             ?? throw new InvalidDataException("Canvas current Files item has no structural revision."));
     }
 
-    public async Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
-        CancellationToken cancellationToken = default)
+    public Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
+        CancellationToken cancellationToken = default) => SaveCoreAsync(fileId, artifact, expectedFileRevision, null, cancellationToken);
+
+    /// <summary>Preserves the exact actor whose Home capability was claimed, including its authentication revision.</summary>
+    public Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
+        AuthenticatedResourceActor claimedActor, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(claimedActor);
+        return SaveCoreAsync(fileId, artifact, expectedFileRevision, claimedActor, cancellationToken);
+    }
+
+    private async Task<FilesRevision> SaveCoreAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
+        AuthenticatedResourceActor? claimedActor, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("The current Canvas host is read-only.");
         var resolved = await ResolveAsync(fileId, ResourceAccess.Write, cancellationToken).ConfigureAwait(false);
+        if (claimedActor is not null && resolved.Actor != claimedActor)
+            throw new UnauthorizedAccessException("The Canvas write actor differs from the claimed Home execution actor.");
         if (!Guid.TryParse(resolved.Reference.ArtifactId, out var registeredId) || artifact.ArtifactId != registeredId)
             throw new InvalidDataException("Canvas cannot replace a canonical artifact with another identity.");
         var binding = await BindingAsync(resolved.Actor, cancellationToken).ConfigureAwait(false);
-        RequireFolder(binding, resolved.Reference);
+        // Logical Files moves change the parent, never the registered payload anchor.
         var bytes = CanvasArtifactCodec.Serialize(artifact);
         if (bytes.LongLength > MaximumArtifactBytes) throw new InvalidDataException("The Canvas artifact exceeds supported payload limits.");
         var hash = Convert.ToHexString(SHA256.HashData(bytes));
@@ -113,6 +128,8 @@ public sealed class CanvasFilesArtifactBridge(
             stream.Flush(flushToDisk: true);
         }
         await RecheckWriteAsync(resolved.Actor, resolved.Scope, cancellationToken).ConfigureAwait(false);
+        if (claimedActor is not null && await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != claimedActor)
+            throw new UnauthorizedAccessException("The claimed Canvas execution actor changed before publication.");
         var committed = await resolved.Provider.CommitDurableRevisionAsync(new(fileId, OwnerAppId, artifact.RevisionId.ToString("N"),
             resolved.Metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, bytes.LongLength, hash,
             relative, expectedFileRevision), cancellationToken).ConfigureAwait(false);
@@ -144,10 +161,6 @@ public sealed class CanvasFilesArtifactBridge(
                 : throw new UnauthorizedAccessException("The Home profile identity is invalid.");
         if (!result.IsSuccess) throw new UnauthorizedAccessException(result.Error!.Message);
         return result.Value!;
-    }
-    private static void RequireFolder(FilesWorkspaceDirectoryBinding binding, FilesArtifactReference reference)
-    {
-        if (binding.FolderId != reference.ParentFolderId) throw new UnauthorizedAccessException("Choose the canonical Files folder containing this Canvas artifact.");
     }
     private async Task RecheckAsync(AuthenticatedResourceActor actor, ResourceScope scope, string action, CancellationToken cancellationToken)
     {

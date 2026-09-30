@@ -6,6 +6,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using CakeOS.Cui.Runtime;
 using Haven.Desktop.Services;
+using CanvasSvgRasterizer = Haven.Desktop.Services.CanvasSvgRasterizer;
 using HavenOS.Apps.Canvas;
 using System.Runtime.InteropServices;
 

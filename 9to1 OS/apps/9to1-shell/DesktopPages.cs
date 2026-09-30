@@ -65,6 +65,15 @@ public static class DesktopPageEdits
     });
     public static ShellConfiguration RemoveItem(ShellConfiguration configuration, Guid id) => Change(configuration, surface => surface with
     { Pages = surface.Pages.Select(p => p.Id == surface.ActivePageId ? p with { Items = p.Items.Where(i => i.Id != id).ToArray() } : p).ToArray() });
+    public static ShellConfiguration ArrangeItem(ShellConfiguration configuration, Guid id, int column, int row, int columnSpan, int rowSpan) => Change(configuration, surface =>
+    {
+        if (id == Guid.Empty || !surface.ActivePage.Items.Any(i => i.Id == id))
+            throw new InvalidOperationException("The selected shortcut is no longer on this desktop page.");
+        return surface with { Pages = surface.Pages.Select(p => p.Id == surface.ActivePageId
+            ? p with { Items = p.Items.Select(i => i.Id == id ? i with { Column = column, Row = row, ColumnSpan = columnSpan, RowSpan = rowSpan } : i).ToArray() } : p).ToArray() };
+    });
+    public static ShellConfiguration GridSize(ShellConfiguration configuration, int columns, int rows) =>
+        Change(configuration, surface => surface with { Columns = columns, Rows = rows });
     public static ShellConfiguration ResetSurface(ShellConfiguration configuration) => Change(configuration, _ => DesktopSurfaceConfiguration.Default());
     private static ShellConfiguration Change(ShellConfiguration configuration, Func<DesktopSurfaceConfiguration, DesktopSurfaceConfiguration> edit)
     {

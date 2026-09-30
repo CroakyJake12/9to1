@@ -1,3 +1,4 @@
+using Haven.Application.Go;
 using Avalonia.Threading;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
@@ -17,18 +18,25 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     private readonly CancellationToken _lifetimeToken;
     private readonly SemaphoreSlim _actions = new(1, 1);
     private readonly DispatcherTimer _timer;
+    public Func<CancellationToken, Task>? OpenModels { get; set; }
     private ShellConfigurationService? _configuration;
     private GoService? _go;
     private LinuxApplicationLauncher? _launcher;
     private ShellConfigurationSnapshot? _snapshot;
     private CancellationTokenSource? _query;
     private long _queryGeneration;
+    private Guid? _selectedPageItem;
     public ShellViewModel()
     {
         _lifetimeToken = _lifetime.Token;
         _bindings.Set("PageColumns", "*,*,*,*,*,*,*,*"); _bindings.Set("PageRows", "72,72,72,72,72,72");
         _bindings.Set("PageTitle", "Desktop Page"); _bindings.Set("PagePosition", "Page 1 of 1"); _bindings.Set("PageScope", "Global desktop pages");
         _bindings.GetOrCreateList<DesktopPageItem>("PageItems");
+        _bindings.Set("SelectedPageItemLabel", "Select Arrange on a desktop shortcut.");
+        _bindings.Set("HasSelectedPageItem", false); _bindings.Set("HasPreview", false);
+        _bindings.Set("PageGridColumns", "8"); _bindings.Set("PageGridRows", "6");
+        _bindings.Set("SelectedColumn", "1"); _bindings.Set("SelectedRow", "1");
+        _bindings.Set("SelectedWidth", "1"); _bindings.Set("SelectedHeight", "1");
         _bindings.Set("Status", "Checking Home…"); _bindings.Set("Name", ""); _bindings.Set("Query", "");
         _bindings.Set("Thickness", "56"); _bindings.Set("Spacing", "8"); _bindings.Set("Padding", "8"); _bindings.Set("Radius", "12"); _bindings.Set("Opacity", "1");
         _bindings.Set("SpaceTitle", "Desktop Space"); _bindings.Set("LayerTitle", "Main"); _bindings.Set("LayerPosition", "Layer 1 of 1");
@@ -58,12 +66,16 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     private void Populate(ShellConfigurationSnapshot snapshot)
     {
         _snapshot = snapshot; var config = snapshot.Effective; var space = config.ActiveSpace; var bar = space.Taskbar;
+        _bindings.Set("HasPreview", snapshot.Preview is not null);
         var surface = DesktopPageEdits.Effective(config);
         _bindings.Set("PageTitle", "Desktop Page: " + surface.ActivePage.Name);
         _bindings.Set("PagePosition", $"Page {surface.Pages.ToList().FindIndex(p => p.Id == surface.ActivePageId) + 1} of {surface.Pages.Count}");
         _bindings.Set("PageColumns", string.Join(",", Enumerable.Repeat("*", surface.Columns)));
         _bindings.Set("PageRows", string.Join(",", Enumerable.Repeat("72", surface.Rows)));
         _bindings.Set("PageScope", space.DesktopSurface is null ? "Global desktop pages" : "Pages for this Desktop Space");
+        _bindings.Set("PageGridColumns", surface.Columns.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        _bindings.Set("PageGridRows", surface.Rows.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        PopulateSelection(surface);
         var pageItems = _bindings.GetOrCreateList<DesktopPageItem>("PageItems"); pageItems.Clear(); foreach (var pageItem in surface.ActivePage.Items) pageItems.Add(pageItem);
         var layer = bar.Layers.Single(l => l.Id == bar.ActiveLayerId); var p = layer.Presentation;
         _bindings.Set("SpaceTitle", "Desktop Space: " + space.Name); _bindings.Set("LayerTitle", layer.Name);
@@ -81,6 +93,8 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         {
             (GoResult result, "Reference.Id") => result.Reference.Id,
             (GoResult result, "Label") => result.Label,
+            (GoResult result, "CanOpen") => result.Actions.Any(a => a.Id == "Open"),
+            (GoResult result, "CanPinApplication") => result.Reference is { Owner: "Home", Kind: "os.installed-application" } && Guid.TryParse(result.Reference.Id, out var applicationId) && applicationId != Guid.Empty,
             (DesktopPageItem pageItem, "Column") => pageItem.Column,
             (DesktopPageItem pageItem, "Row") => pageItem.Row,
             (DesktopPageItem pageItem, "ColumnSpan") => pageItem.ColumnSpan,
@@ -96,7 +110,22 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         return value is not null;
     }
     public bool TrySetItemValue(object item, string path, object? value) => false;
-    public bool? IsActionAvailable(string command) => _configuration is not null && (command is not ("Keep" or "Revert") || _snapshot?.Preview is not null);
+    public bool? IsActionAvailable(string command) => _configuration is not null &&
+        (command is not ("Keep" or "Revert") || _snapshot?.Preview is not null) &&
+        (command is not ("PlaceDesktopItem" or "RemoveSelectedDesktopItem") || SelectedItem() is not null);
+    private DesktopPageItem? SelectedItem() => _snapshot is null || _selectedPageItem is null ? null :
+        DesktopPageEdits.Effective(_snapshot.Effective).ActivePage.Items.SingleOrDefault(i => i.Id == _selectedPageItem);
+    private void PopulateSelection(DesktopSurfaceConfiguration surface)
+    {
+        var selected = surface.ActivePage.Items.SingleOrDefault(i => i.Id == _selectedPageItem);
+        _bindings.Set("HasSelectedPageItem", selected is not null);
+        if (selected is null) { _selectedPageItem = null; _bindings.Set("SelectedPageItemLabel", "Select Arrange on a desktop shortcut."); return; }
+        _bindings.Set("SelectedPageItemLabel", "Arrange: " + selected.Label);
+        _bindings.Set("SelectedColumn", (selected.Column + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        _bindings.Set("SelectedRow", (selected.Row + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+        _bindings.Set("SelectedWidth", selected.ColumnSpan.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        _bindings.Set("SelectedHeight", selected.RowSpan.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (_configuration is null || _snapshot is null || _go is null) return;
@@ -105,7 +134,14 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         await _actions.WaitAsync(request.Token);
         try
         {
+            if (command == "Models" && OpenModels is { } openModels) { await openModels(request.Token); return; }
             if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", request.Token); return; }
+            if (command == "SelectPageItem" && parameter is DesktopPageItem selected)
+            {
+                if (!DesktopPageEdits.Effective(_snapshot.Effective).ActivePage.Items.Any(i => i.Id == selected.Id))
+                    throw new InvalidOperationException("This shortcut is no longer on the current desktop page.");
+                _selectedPageItem = selected.Id; PopulateSelection(DesktopPageEdits.Effective(_snapshot.Effective)); return;
+            }
             if (command == "OpenPageItem" && parameter is DesktopPageItem pageItem)
             {
                 if (pageItem.Kind != DesktopPageItemKind.Application || pageItem.Target is not { Owner: "Home", Kind: "os.installed-application" } target || !Guid.TryParse(target.Id, out var id) || _launcher is null)
@@ -143,6 +179,10 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                 "MovePageEarlier" => DesktopPageEdits.ReorderPage(config, -1), "MovePageLater" => DesktopPageEdits.ReorderPage(config, 1),
                 "SpaceSpecificPages" => DesktopPageEdits.SetSpaceSpecific(config, true), "GlobalPages" => DesktopPageEdits.SetSpaceSpecific(config, false),
                 "ResetDesktop" => DesktopPageEdits.ResetSurface(config),
+                "PageGridSize" => DesktopPageEdits.GridSize(config, Integer("PageGridColumns"), Integer("PageGridRows")),
+                "PlaceDesktopItem" => DesktopPageEdits.ArrangeItem(config, SelectedItem()?.Id ?? throw new InvalidOperationException("Select a desktop shortcut first."),
+                    checked(Integer("SelectedColumn") - 1), checked(Integer("SelectedRow") - 1), Integer("SelectedWidth"), Integer("SelectedHeight")),
+                "RemoveSelectedDesktopItem" => DesktopPageEdits.RemoveItem(config, SelectedItem()?.Id ?? throw new InvalidOperationException("Select a desktop shortcut first.")),
                 "PinPage" when parameter is GoResult pagePin && pagePin.Reference is { Owner: "Home", Kind: "os.installed-application" } && Guid.TryParse(pagePin.Reference.Id, out var pageAppId) => DesktopPageEdits.PinApplication(config, pageAppId, pagePin.Label),
                 "RemovePageItem" when parameter is DesktopPageItem removePageItem => DesktopPageEdits.RemoveItem(config, removePageItem.Id),
                 "PreviousLayer" => ShellEdits.StepLayer(config, -1), "NextLayer" => ShellEdits.StepLayer(config, 1),

@@ -8,7 +8,7 @@ public sealed record PictureGlycinFrame(uint Width, uint Height, uint Stride, by
     long DelayMicroseconds, int ColorMode, byte[]? IccProfile, PictureGlycinCicp? Cicp);
 
 /// <summary>
-/// Controlled libglycin C ABI, first-frame materialization only. Native package,
+/// Controlled libglycin C ABI with bounded individual frame materialization. Native package,
 /// sandboxed loaders and colour-aware display must pass real acceptance before
 /// this is composed into Picture's production source renderer.
 /// </summary>
@@ -19,18 +19,81 @@ public sealed class PictureGlycinDecoder
 
     public PictureGlycinFrame DecodeFirstFrame(ReadOnlySpan<byte> encoded)
     {
-        if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This libglycin package has not been built and verified for this platform.");
-        if (encoded.IsEmpty || encoded.Length > MaximumBufferBytes) throw new ArgumentException("Picture encoded image is empty or exceeds the native materialization limit.", nameof(encoded));
-        var captured = encoded.ToArray();
-        using var bytes = new GBytesHandle(Native.g_bytes_new(captured, (nuint)captured.Length));
-        using var loader = new GObjectHandle(Native.gly_loader_new_for_bytes(bytes));
-        // Require the real Linux sandbox. Never downgrade to NOT_SANDBOXED
-        // when a namespace, bubblewrap or loader is unavailable.
-        Native.gly_loader_set_sandbox_selector(loader, 1);
-        Native.gly_loader_set_accepted_memory_formats(loader, 1u); // B8G8R8A8 premultiplied
-        Native.gly_loader_set_color_convert_icc_srgb(loader, 1);
-        using var image = new GObjectHandle(RequireSuccess(Native.gly_loader_load(loader, out var loadError), loadError, "load"));
-        using var frame = new GObjectHandle(RequireSuccess(Native.gly_image_next_frame(image, out var frameError), frameError, "first frame"));
+        using var session = OpenFrames(encoded);
+        return session.NextFrame();
+    }
+
+    /// <summary>
+    /// Opens one real sandboxed donor decoder. NextFrame follows donor frame order
+    /// and loops for animation; still images permit one frame. The caller owns each
+    /// returned pixel copy. This session never accumulates previous decoded frames.
+    /// </summary>
+    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded) => FrameSession.Create(encoded);
+
+    public sealed class FrameSession : IDisposable
+    {
+        private readonly object _gate = new();
+        private readonly GBytesHandle _bytes;
+        private readonly GObjectHandle _loader;
+        private readonly GObjectHandle _image;
+        private bool _disposed;
+        private FrameSession(GBytesHandle bytes, GObjectHandle loader, GObjectHandle image)
+        { _bytes = bytes; _loader = loader; _image = image; }
+
+        internal static FrameSession Create(ReadOnlySpan<byte> encoded)
+        {
+            if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This libglycin package has not been built and verified for this platform.");
+            if (encoded.IsEmpty || encoded.Length > MaximumBufferBytes)
+                throw new ArgumentException("Picture encoded image is empty or exceeds the native materialization limit.", nameof(encoded));
+            var captured = encoded.ToArray();
+            GBytesHandle bytes;
+            try { bytes = new GBytesHandle(Native.g_bytes_new(captured, (nuint)captured.Length)); }
+            finally { Array.Clear(captured); }
+            GObjectHandle? loader = null;
+            try
+            {
+                loader = new GObjectHandle(Native.gly_loader_new_for_bytes(bytes));
+                // Mandatory real Linux sandbox; namespace/loader failures never downgrade.
+                Native.gly_loader_set_sandbox_selector(loader, 1);
+                Native.gly_loader_set_accepted_memory_formats(loader, 1u); // premultiplied BGRA
+                Native.gly_loader_set_color_convert_icc_srgb(loader, 1);
+                var image = new GObjectHandle(RequireSuccess(Native.gly_loader_load(loader, out var error), error, "load"));
+                return new(bytes, loader, image);
+            }
+            catch { loader?.Dispose(); bytes.Dispose(); throw; }
+        }
+
+        /// <summary>Cancellation is checked before/after decoding; it cannot interrupt an in-flight native call.</summary>
+        public PictureGlycinFrame NextFrame(CancellationToken cancellationToken = default)
+        {
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                cancellationToken.ThrowIfCancellationRequested();
+                using var frame = new GObjectHandle(RequireSuccess(Native.gly_image_next_frame(_image, out var error), error, "next frame"));
+                var result = ReadFrame(frame);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    PictureFilesSourceRenderer.ClearFrame(result);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                return result;
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_gate)
+            {
+                if (_disposed) return;
+                _disposed = true;
+                _image.Dispose(); _loader.Dispose(); _bytes.Dispose();
+            }
+        }
+    }
+
+    private static PictureGlycinFrame ReadFrame(GObjectHandle frame)
+    {
         var width = Native.gly_frame_get_width(frame);
         var height = Native.gly_frame_get_height(frame);
         var stride = Native.gly_frame_get_stride(frame);

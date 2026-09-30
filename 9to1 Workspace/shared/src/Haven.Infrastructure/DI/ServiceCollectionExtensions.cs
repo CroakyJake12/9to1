@@ -10,6 +10,7 @@
 using System.Reflection;
 using Haven.Application;
 using Haven.Core;
+using Dulche.Runtime;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 using NineToOne.Cui.AI;
@@ -48,6 +49,13 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IHomeProductivityEngine>(provider => provider.GetRequiredService<HomeProductivityEngine>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeProductivityEngineService>());
         services.TryAddSingleton<HomeCoreRuntime>();
+        services.TryAddSingleton<IVersionedModelRouteRepository, HomeVersionedModelRouteRepository>();
+        services.TryAddSingleton<HomePersonalModelRoutes>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, HomeModelRouteOwner>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, HomeModelRouteProfileOwner>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, HomeModelRouteActionPolicies>());
+        services.TryAddSingleton<IHomeModelPickerFeatureProvider, HomeModelPickerFeatureProvider>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeModelPickerCoreService>());
         services.AddSingleton<HomeResourceOperationBroker>();
         services.AddSingleton<HomeInvocationCatalogue>();
         services.AddSingleton<IInvocationCatalogue>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
@@ -58,7 +66,8 @@ public static class ServiceCollectionExtensions
                 ?? throw new UnauthorizedAccessException("The native Home caller requires verified operating-system profile authority.");
             return new(provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
                 new HomePermissionCallerIdentity(actor.ActorId, "9to1 native Home host", "os-bound-local-profile", actor.AuthenticationRevision, true),
-                provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>(), provider.GetServices<IHomeActionPolicySource>());
+                provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>(), provider.GetServices<IHomeActionPolicySource>(),
+                provider.GetRequiredService<HomePersonalModelRoutes>());
         });
         services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());

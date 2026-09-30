@@ -16,6 +16,8 @@ public sealed record HomeModelPickerEditorState(
     public static HomeModelPickerEditorState Initial { get; } = new(
         false, "NotLoaded", "Model routes have not been loaded.", null, null, null, false, null);
 
+    public string? PendingApprovalRequestId { get; init; }
+
     public IReadOnlyList<HomeModelRouteCandidate> Candidates =>
         DraftRoute?.Candidates ?? Array.Empty<HomeModelRouteCandidate>();
 }
@@ -106,10 +108,10 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
     }
 
     public HomeCoreOperationResult<HomeModelRouteContract> SetCandidateEnabled(
-        string providerId, string modelId, string artifactRevision, bool enabled)
+        string providerId, string modelId, string? artifactRevision, bool enabled)
     {
-        if (string.IsNullOrWhiteSpace(providerId) || string.IsNullOrWhiteSpace(modelId) || string.IsNullOrWhiteSpace(artifactRevision))
-            return Fail<HomeModelRouteContract>("InvalidModelIdentity", "A provider, model and artifact revision are required.");
+        if (string.IsNullOrWhiteSpace(providerId) || string.IsNullOrWhiteSpace(modelId) || (artifactRevision is not null && string.IsNullOrWhiteSpace(artifactRevision)))
+            return Fail<HomeModelRouteContract>("InvalidModelIdentity", "A provider and stable model ID are required; a supplied artifact revision must be valid.");
         var state = Current;
         if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
         if (state.DraftRoute is not { } route) return Fail<HomeModelRouteContract>("RouteNotSelected", "Select a model route first.");
@@ -120,15 +122,15 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
         var currentIndex = Array.FindIndex(candidates, candidate => SameIdentity(candidate, providerId, modelId, artifactRevision));
         candidates[currentIndex] = candidates[currentIndex] with { Enabled = enabled, Order = currentIndex };
         var draft = route with { Candidates = Array.AsReadOnly(candidates) };
-        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Route candidate changes are not saved." });
+        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, PendingApprovalRequestId = null, Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Route candidate changes are not saved." });
         return Success(draft, state.Snapshot?.Revision ?? 0);
     }
 
     public HomeCoreOperationResult<HomeModelRouteContract> MoveCandidate(
-        string providerId, string modelId, string artifactRevision, int destinationIndex)
+        string providerId, string modelId, string? artifactRevision, int destinationIndex)
     {
-        if (string.IsNullOrWhiteSpace(providerId) || string.IsNullOrWhiteSpace(modelId) || string.IsNullOrWhiteSpace(artifactRevision))
-            return Fail<HomeModelRouteContract>("InvalidModelIdentity", "A provider, model and artifact revision are required.");
+        if (string.IsNullOrWhiteSpace(providerId) || string.IsNullOrWhiteSpace(modelId) || (artifactRevision is not null && string.IsNullOrWhiteSpace(artifactRevision)))
+            return Fail<HomeModelRouteContract>("InvalidModelIdentity", "A provider and stable model ID are required; a supplied artifact revision must be valid.");
         var state = Current;
         if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
         if (state.DraftRoute is not { } route) return Fail<HomeModelRouteContract>("RouteNotSelected", "Select a model route first.");
@@ -145,7 +147,41 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
         reordered.Insert(destinationIndex, moved);
         var normalized = reordered.Select((candidate, index) => candidate with { Order = index }).ToArray();
         var draft = route with { Candidates = Array.AsReadOnly(normalized) };
-        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Route order is not saved." });
+        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, PendingApprovalRequestId = null, Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "Route order is not saved." });
+        return Success(draft, state.Snapshot?.Revision ?? 0);
+    }
+
+    public HomeCoreOperationResult<HomeModelRouteContract> AddCandidate(HomeModelPickerCatalogueEntry entry)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        if (string.IsNullOrWhiteSpace(entry.ProviderId) || string.IsNullOrWhiteSpace(entry.ModelId) ||
+            (entry.ArtifactRevision is not null && string.IsNullOrWhiteSpace(entry.ArtifactRevision)))
+            return Fail<HomeModelRouteContract>("InvalidModelIdentity", "Choose a valid provider-scoped catalogue model.");
+        var state = Current;
+        if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
+        if (state.DraftRoute is not { } route) return Fail<HomeModelRouteContract>("RouteNotSelected", "Select a model route first.");
+        if (FindCandidate(route, entry.ProviderId, entry.ModelId, entry.ArtifactRevision) >= 0)
+            return Fail<HomeModelRouteContract>("DuplicateCandidate", "That model is already in this route.");
+        var candidates = Ordered(route.Candidates).Append(new(entry.ProviderId, entry.ModelId, entry.ArtifactRevision, true, route.Candidates.Count))
+            .Select((candidate, index) => candidate with { Order = index }).ToArray();
+        var draft = route with { Candidates = Array.AsReadOnly(candidates) };
+        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, PendingApprovalRequestId = null,
+            Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "The added model is not saved." });
+        return Success(draft, state.Snapshot?.Revision ?? 0);
+    }
+
+    public HomeCoreOperationResult<HomeModelRouteContract> RemoveCandidate(string providerId, string modelId, string? artifactRevision)
+    {
+        var state = Current;
+        if (state.IsBusy) return Fail<HomeModelRouteContract>("OperationInProgress", "Wait for the current model operation to finish.");
+        if (state.DraftRoute is not { } route) return Fail<HomeModelRouteContract>("RouteNotSelected", "Select a model route first.");
+        if (FindCandidate(route, providerId, modelId, artifactRevision) < 0)
+            return Fail<HomeModelRouteContract>("CandidateNotFound", "That model is not in this route.");
+        var candidates = Ordered(route.Candidates).Where(item => !SameIdentity(item, providerId, modelId, artifactRevision))
+            .Select((candidate, index) => candidate with { Order = index }).ToArray();
+        var draft = route with { Candidates = Array.AsReadOnly(candidates) };
+        Publish(state with { DraftRoute = draft, HasUnsavedChanges = true, PendingApprovalRequestId = null,
+            Preview = null, StatusCode = "UnsavedChanges", StatusMessage = "The removed model is not saved." });
         return Success(draft, state.Snapshot?.Revision ?? 0);
     }
 
@@ -169,10 +205,11 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
                     .Select((candidate, index) => candidate with { Order = index }).ToArray()),
             };
             var result = await _provider.UpdateRouteAsync(
-                new HomeModelRouteEdit(updatedRoute, currentSnapshot.Revision), cancellationToken).ConfigureAwait(false);
+                new HomeModelRouteEdit(updatedRoute, currentSnapshot.Revision) { ApprovalRequestId = stateBeforeSave.PendingApprovalRequestId }, cancellationToken).ConfigureAwait(false);
             if (!result.Succeeded || result.Value is null)
             {
-                Publish(stateBeforeSave with { IsBusy = false, StatusCode = EmptyCode(result.Code), StatusMessage = result.Message });
+                Publish(stateBeforeSave with { IsBusy = false, StatusCode = EmptyCode(result.Code), StatusMessage = result.Message,
+                    PendingApprovalRequestId = result.Value?.PendingApprovalRequestId });
                 return result.Succeeded
                     ? Fail<HomeModelPickerSnapshot>("InvalidProviderResult", "The model service returned no updated route snapshot.")
                     : result;
@@ -262,10 +299,10 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
     private static IReadOnlyList<HomeModelRouteCandidate> Ordered(IReadOnlyList<HomeModelRouteCandidate> candidates) =>
         candidates.OrderBy(candidate => candidate.Order).ToArray();
 
-    private static int FindCandidate(HomeModelRouteContract route, string providerId, string modelId, string revision) =>
+    private static int FindCandidate(HomeModelRouteContract route, string providerId, string modelId, string? revision) =>
         Array.FindIndex(route.Candidates.ToArray(), candidate => SameIdentity(candidate, providerId, modelId, revision));
 
-    private static bool SameIdentity(HomeModelRouteCandidate candidate, string providerId, string modelId, string revision) =>
+    private static bool SameIdentity(HomeModelRouteCandidate candidate, string providerId, string modelId, string? revision) =>
         StringComparer.Ordinal.Equals(candidate.ProviderId, providerId)
         && StringComparer.Ordinal.Equals(candidate.ModelId, modelId)
         && StringComparer.Ordinal.Equals(candidate.ArtifactRevision, revision);
@@ -293,7 +330,7 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
             foreach (var candidate in route.Candidates)
             {
                 if (string.IsNullOrWhiteSpace(candidate.ProviderId) || string.IsNullOrWhiteSpace(candidate.ModelId)
-                    || string.IsNullOrWhiteSpace(candidate.ArtifactRevision) || candidate.Order < 0)
+                    || (candidate.ArtifactRevision is not null && string.IsNullOrWhiteSpace(candidate.ArtifactRevision)) || candidate.Order < 0)
                     throw new InvalidDataException($"Model route '{route.RouteId}' contains an invalid candidate.");
                 var identity = $"{candidate.ProviderId}\0{candidate.ModelId}\0{candidate.ArtifactRevision}";
                 if (!identityKeys.Add(identity) || !orders.Add(candidate.Order))

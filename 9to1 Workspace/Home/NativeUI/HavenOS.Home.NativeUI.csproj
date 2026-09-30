@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Home.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Home.NativeUI</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Home.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="Resources/Cui/Models.cui" LogicalName="HavenOS.Home.NativeUI.Resources.Cui.Models.cui" />
+    <EmbeddedResource Include="Resources/Cui/HomeApprovals.cui" LogicalName="HavenOS.Home.NativeUI.Resources.Cui.HomeApprovals.cui" />
+  </ItemGroup>
+</Project>

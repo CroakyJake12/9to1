@@ -263,7 +263,7 @@ public interface IHomeNotificationFeatureProvider
         HomeNotificationDeepLinkRequest request, CancellationToken cancellationToken = default);
 }
 
-public sealed record HomeModelRouteCandidate(string ProviderId, string ModelId, string ArtifactRevision,
+public sealed record HomeModelRouteCandidate(string ProviderId, string ModelId, string? ArtifactRevision,
     bool Enabled, int Order);
 
 public sealed record HomeModelRouteContract(string RouteId, long Version, string Scope, string Category,
@@ -271,9 +271,15 @@ public sealed record HomeModelRouteContract(string RouteId, long Version, string
     JsonElement Policy, string? ScopeId = null);
 
 public sealed record HomeModelPickerSnapshot(long Revision, string Scope, string Category,
-    IReadOnlyList<HomeModelRouteContract> Routes);
+    IReadOnlyList<HomeModelRouteContract> Routes)
+{
+    public string? PendingApprovalRequestId { get; init; }
+}
 
-public sealed record HomeModelRouteEdit(HomeModelRouteContract Route, long ExpectedRevision);
+public sealed record HomeModelRouteEdit(HomeModelRouteContract Route, long ExpectedRevision)
+{
+    public string? ApprovalRequestId { get; init; }
+}
 
 public sealed record HomeModelRoutePreview(string RouteId, long RouteRevision, string? SelectedIdentity,
     string ResolutionState, IReadOnlyList<string> Trace, string? FailureCode = null);

@@ -1,3 +1,4 @@
+using Haven.Application.Go;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,6 +11,7 @@ using NineToOne.Os.Shell;
 
 namespace NineToOne.Os.Shell.Tests;
 
+[Collection("Native CUI")]
 public sealed class GoAndCuiTests
 {
     [Fact]
@@ -52,10 +54,11 @@ public sealed class GoAndCuiTests
             using var bindings = new ShellViewModel();
             var app = new GoResult("test", new("Home", "os.installed-application", Guid.NewGuid().ToString(), "1"), "Native app", "Apps", [new("Open", "Open")]);
             var otherApp = app with { Reference = app.Reference with { Id = Guid.NewGuid().ToString() }, Label = "Other native app" };
-            bindings.TrySetValue("Results", new[] { app, otherApp });
-            var firstPageItem = new DesktopPageItem(Guid.NewGuid(), DesktopPageItemKind.Application, "Page app", new("Home", "os.installed-application", app.Reference.Id), 0, 0);
-            Assert.True(bindings.TrySetValue("PageColumns", "*,*")); Assert.True(bindings.TrySetValue("PageRows", "72,72"));
-            bindings.TrySetValue("PageItems", new[] { firstPageItem, firstPageItem with { Id = Guid.NewGuid(), Label = "Other page app", Column = 1, Row = 1 } });
+            var navigationOnly = new GoResult("other-owner", new("Files", "folder", Guid.NewGuid().ToString(), "1"), "Navigation-only result", "Files", [new("Navigate", "Navigate")]);
+            bindings.TrySetValue("Results", new[] { app, otherApp, navigationOnly });
+            var firstPageItem = new DesktopPageItem(Guid.NewGuid(), DesktopPageItemKind.Application, "Page app", new("Home", "os.installed-application", app.Reference.Id), 0, 0, 2, 2);
+            Assert.True(bindings.TrySetValue("PageColumns", "*,*,*,*")); Assert.True(bindings.TrySetValue("PageRows", "72,72,72,72"));
+            bindings.TrySetValue("PageItems", new[] { firstPageItem, firstPageItem with { Id = Guid.NewGuid(), Label = "Other page app", Column = 2, Row = 2, ColumnSpan = 1, RowSpan = 1 } });
             bindings.TrySetValue("Items", new[] { new TaskbarItem(Guid.NewGuid(), TaskbarItemKind.Widget, "Unavailable widget", new("Owner", "widget", "widget-id")) });
             var dispatcher = new Recorder();
             using var loader = new CuiControlLoader(); loader.SetBindingContext(bindings); loader.SetActionDispatcher(dispatcher);
@@ -67,10 +70,16 @@ public sealed class GoAndCuiTests
             Assert.True(bindings.TryGetValue("Query", out var typed)); Assert.Equal("typed native query", typed);
             foreach (var input in Traverse(root!).OfType<TextBox>().Where(t => t != queryInput))
             { input.Text = "73"; Avalonia.Threading.Dispatcher.UIThread.RunJobs(); }
-            foreach (var field in new[] { "Name", "Thickness", "Spacing", "Padding", "Radius", "Opacity" })
+            foreach (var field in new[] { "Name", "Thickness", "Spacing", "Padding", "Radius", "Opacity", "PageGridColumns", "PageGridRows", "SelectedColumn", "SelectedRow", "SelectedWidth", "SelectedHeight" })
             { Assert.True(bindings.TryGetValue(field, out var value)); Assert.Equal("73", value); }
             var button = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Native app"));
             var otherButton = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Other native app"));
+            var unavailableResult = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Navigation-only result"));
+            Assert.False(unavailableResult.IsEnabled);
+            Assert.All(Traverse((Control)unavailableResult.Parent!).OfType<Button>(), resultAction => Assert.False(resultAction.IsEnabled));
+            Assert.False(Traverse(root!).OfType<Button>().Single(b => b.Name == "keep").IsEnabled);
+            Assert.False(Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Preview placement")).IsEnabled);
+            Assert.False(Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Remove selected")).IsEnabled);
             Assert.False(Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Unavailable widget")).IsEnabled);
             var window = new Window { Width = 1100, Height = 900, Content = root }; window.Show(); window.UpdateLayout();
             var firstPosition = button.TranslatePoint(default, root!); var secondPosition = otherButton.TranslatePoint(default, root!);
@@ -79,9 +88,13 @@ public sealed class GoAndCuiTests
             Assert.True(button.Bounds.Height > 0, "Native primitive theme templates must give buttons a usable height.");
             var pageButton = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Page app"));
             var otherPageButton = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Other page app"));
-            Assert.Equal(1, Grid.GetColumn((Control)otherPageButton.Parent!.Parent!));
-            Assert.Equal(1, Grid.GetRow((Control)otherPageButton.Parent!.Parent!));
-            var pageGrid = (Grid)otherPageButton.Parent!.Parent!.Parent!; Assert.Equal(2, pageGrid.ColumnDefinitions.Count); Assert.Equal(2, pageGrid.RowDefinitions.Count);
+            Assert.Equal(2, Grid.GetColumn((Control)otherPageButton.Parent!.Parent!));
+            Assert.Equal(2, Grid.GetRow((Control)otherPageButton.Parent!.Parent!));
+            var itemWrapper = (Control)pageButton.Parent!.Parent!;
+            Assert.Equal(2, Grid.GetColumnSpan(itemWrapper)); Assert.Equal(2, Grid.GetRowSpan(itemWrapper));
+            Assert.Equal(144, itemWrapper.Bounds.Height);
+            var pageGrid = (Grid)otherPageButton.Parent!.Parent!.Parent!; Assert.Equal(4, pageGrid.ColumnDefinitions.Count); Assert.Equal(4, pageGrid.RowDefinitions.Count);
+            Assert.True(itemWrapper.Bounds.Width >= pageGrid.Bounds.Width / 2 - 1);
             var pagePosition = pageButton.TranslatePoint(default, root!); var otherPagePosition = otherPageButton.TranslatePoint(default, root!);
             Assert.True(otherPagePosition!.Value.X >= pagePosition!.Value.X + pageButton.Bounds.Width, $"Expected distinct desktop grid columns: first {pagePosition}, width {pageButton.Bounds.Width}, second {otherPagePosition}; parents {pageButton.Parent?.Parent?.GetType().Name}/{otherPageButton.Parent?.Parent?.GetType().Name}");
             Assert.True(otherPagePosition.Value.Y >= pagePosition.Value.Y + 72);

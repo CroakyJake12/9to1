@@ -1,0 +1,66 @@
+<Cui id="9to1-studio" version="1">
+  <DefaultTheme value="Default">
+    <ScrollViewer>
+      <StackPanel padding="24" orientation="Vertical">
+        <TextBlock text="AI Studio" font-size="28" font-weight="Bold" />
+        <TextBlock text="{Binding Status}" accessible-name="AI Studio status" text-wrapping="Wrap" />
+        <TextBlock text="Projects" font-size="20" margin="0 20 0 8" />
+        <StackPanel items="{Binding Projects}" item-template="project-row" />
+        <StackPanel id="project-row" definition="true" margin="0 6 0 6">
+          <TextBlock text="{Binding Name}" font-weight="Bold" />
+          <TextBlock text="{Binding Description}" text-wrapping="Wrap" />
+        </StackPanel>
+        <TextBlock text="Agent Builder — presentation" font-size="20" margin="0 20 0 8" />
+        <TextBox text="{Binding NamespaceID}" accessible-name="Canonical Den namespace" />
+        <TextBox text="{Binding AgentID}" accessible-name="Canonical Agent ID" />
+        <Button action="OpenAvatar" content="Open Agent presentation" />
+        <TextBlock text="{Binding AgentName}" font-weight="Bold" />
+        <TextBlock text="{Binding Revision}" accessible-name="Saved definition revision" />
+        <TextBox text="{Binding StaticAsset}" accessible-name="Static fallback asset reference" />
+        <TextBox text="{Binding AccessibleName}" accessible-name="Accessible avatar name" />
+        <TextBox text="{Binding InitialState}" accessible-name="Initial state ID" />
+        <CheckBox checked="{Binding Animated}" content="Animate avatar" />
+        <Button action="SetAvatarIdentity" content="Apply avatar identity" />
+        <TextBlock text="Animation states" font-size="18" />
+        <StackPanel items="{Binding AvatarStates}" item-template="avatar-state-row" />
+        <StackPanel id="avatar-state-row" definition="true">
+          <TextBlock text="{Binding StateId}" />
+          <TextBlock text="{Binding Label}" />
+          <TextBlock text="{Binding AssetReference}" />
+        </StackPanel>
+        <TextBox text="{Binding StateID}" accessible-name="State ID" />
+        <TextBox text="{Binding StateLabel}" accessible-name="State label" />
+        <TextBox text="{Binding StateAsset}" accessible-name="Animation asset reference" />
+        <CheckBox checked="{Binding StateLoop}" content="Loop animation" />
+        <Button action="AddAvatarState" content="Add state" />
+        <Button action="ReplaceAvatarState" content="Update state" />
+        <Button action="RemoveAvatarState" content="Remove state" />
+        <TextBlock text="Transitions" font-size="18" />
+        <StackPanel items="{Binding AvatarTransitions}" item-template="avatar-transition-row" />
+        <StackPanel id="avatar-transition-row" definition="true">
+          <TextBlock text="{Binding FromStateId}" /><TextBlock text="{Binding EventId}" /><TextBlock text="{Binding ToStateId}" />
+        </StackPanel>
+        <TextBox text="{Binding FromState}" accessible-name="Transition from state" />
+        <TextBox text="{Binding ToState}" accessible-name="Transition to state" />
+        <TextBox text="{Binding TransitionEvent}" accessible-name="Transition event" />
+        <Button action="SetAvatarTransition" content="Apply transition" />
+        <Button action="RemoveAvatarTransition" content="Remove transition" />
+        <TextBlock text="Conversational reactions" font-size="18" />
+        <StackPanel items="{Binding AvatarReactions}" item-template="avatar-reaction-row" />
+        <StackPanel id="avatar-reaction-row" definition="true">
+          <TextBlock text="{Binding EventId}" /><TextBlock text="{Binding StateId}" />
+        </StackPanel>
+        <TextBox text="{Binding ReactionEvent}" accessible-name="Reaction event" />
+        <TextBox text="{Binding ReactionState}" accessible-name="Reaction state" />
+        <Button action="SetAvatarReaction" content="Apply reaction" />
+        <Button action="RemoveAvatarReaction" content="Remove reaction" />
+        <TextBox text="{Binding PreviewEvent}" accessible-name="Simulated presentation event" />
+        <TextBox text="{Binding AvatarActivity}" accessible-name="Readable Agent activity" />
+        <CheckBox checked="{Binding ReducedMotion}" content="Preview reduced motion" />
+        <Button action="PreviewAvatar" content="Preview presentation" />
+        <TextBlock text="{Binding PreviewAsset}" accessible-name="Preview asset reference" />
+        <Button action="SaveAvatar" content="Save to Agent" />
+      </StackPanel>
+    </ScrollViewer>
+  </DefaultTheme>
+</Cui>

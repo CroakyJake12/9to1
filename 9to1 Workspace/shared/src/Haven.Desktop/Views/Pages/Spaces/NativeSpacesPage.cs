@@ -15,6 +15,7 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposable
 {
     private readonly SpaceRegistry _registry;
+    private readonly Func<SpaceDefinition, SpaceContextReference, Task>? _openCanonicalSource;
     private readonly IConversationRepository? _conversations;
     private readonly Func<Conversation, Task>? _openConversation;
     private readonly Func<SpaceDefinition, Task>? _launchSpace;
@@ -47,8 +48,10 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         Func<Guid, Task>? deleteSpace = null,
         Func<SpaceDefinition, Task>? manageLayout = null,
         IConversationRepository? conversations = null,
-        Func<Conversation, Task>? openConversation = null)
+        Func<Conversation, Task>? openConversation = null,
+        Func<SpaceDefinition, SpaceContextReference, Task>? openCanonicalSource = null)
     {
+        _openCanonicalSource = openCanonicalSource;
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _conversations = conversations;
         _openConversation = openConversation;
@@ -57,7 +60,8 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _launchSpace = launchSpace;
         _deleteSpace = deleteSpace;
         _manageLayout = manageLayout;
-        _scene = new SpacesHavenScene();
+        _scene = new SpacesHavenScene { CanonicalSourceNavigationAvailable = _openCanonicalSource is not null };
+        _scene.CanonicalSourceRequested += OnCanonicalSourceRequested;
         _scene.SetLaunchAvailable(_launchSpace is not null);
         _scene.SetLayoutEditorAvailable(_manageLayout is not null);
         _scene.SetEditWithHavenAvailable(_editPlanner is not null);
@@ -351,6 +355,14 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }
     }
 
+    private async void OnCanonicalSourceRequested(object? sender, Guid contextId)
+    {
+        if (_disposed || _openCanonicalSource is null || CurrentSpace() is not { } space) return;
+        var source = space.ContextReferences?.SingleOrDefault(item => item.ContextId == contextId);
+        if (source is null) return;
+        await RunActionAsync(() => _openCanonicalSource(space, source), "open canonical source");
+    }
+
     private async void OnManageLayoutRequested(object? sender, Guid id)
     {
         if (_manageLayout is null) return;
@@ -400,7 +412,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     }
 
     private static bool IsExpected(Exception exception) =>
-        exception is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or JsonException;
+        exception is NotSupportedException or IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or JsonException;
 
     public void Dispose()
     {
@@ -411,6 +423,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _scene.SetGeneratedPreview(null, null);
         _generatedSurfaceMount?.Dispose();
         _generatedSurfaceMount = null;
+        _scene.CanonicalSourceRequested -= OnCanonicalSourceRequested;
         _scene.CreateRequested -= OnCreateRequested;
         _scene.ArchivedVisibilityChanged -= OnArchivedVisibilityChanged;
         _scene.SpaceSelected -= OnSpaceSelected;

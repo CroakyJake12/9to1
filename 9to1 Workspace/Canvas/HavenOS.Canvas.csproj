@@ -5,6 +5,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
     <EmbeddedResource Include="UI/CanvasWorkspace.cui" LogicalName="HavenOS.Apps.Canvas.UI.CanvasWorkspace.cui" />
     <ProjectReference Include="../Files/CUI/HavenOS.Files.CUI.csproj" />

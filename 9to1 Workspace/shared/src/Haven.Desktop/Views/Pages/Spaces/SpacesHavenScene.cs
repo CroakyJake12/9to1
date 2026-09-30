@@ -24,6 +24,8 @@ internal sealed class SpacesHavenScene : IDisposable
     private readonly List<SpaceExamplePair> _examples = [];
     private SpaceDefinition? _selected;
     private bool _editWithHavenAvailable;
+    public bool CanonicalSourceNavigationAvailable { get; set; }
+    public event EventHandler<Guid>? CanonicalSourceRequested;
     private bool _disposed;
 
     public SpacesHavenScene()
@@ -265,6 +267,7 @@ internal sealed class SpacesHavenScene : IDisposable
         SurfaceTemplate.SelectedIndex = SurfaceIndex(space.GeneratedSurface?.TemplateKey);
         SurfaceInputs.Text = space.GeneratedSurface?.InputsJson ?? "{}";
         RenderFiles(space.Files);
+        RenderCanonicalSources(space);
         Launch.Content = space.Kind == SpaceKind.Study ? "Open Study" : "Open Space";
         Archive.Content = space.IsArchived ? "Restore" : "Archive";
         Delete.SetValue(HavenProperties.Enabled, !space.IsBuiltIn);
@@ -386,6 +389,25 @@ internal sealed class SpacesHavenScene : IDisposable
             var path = file.Path;
             remove.Invoked += (_, _) => RemoveFileRequested?.Invoke(this, path);
             row.Add(remove);
+            Files.Add(row);
+        }
+    }
+
+    private void RenderCanonicalSources(SpaceDefinition space)
+    {
+        foreach (var source in space.ContextReferences ?? [])
+        {
+            var row = Card();
+            row.Add(new HavenText { Content = $"{source.Kind} · {source.CanonicalEntityId}" });
+            row.Add(Muted($"{source.Permission} · {source.IndexState}"));
+            var open = new HavenButton { Content = "Open source", Variant = ButtonVariant.Text };
+            open.Accessibility.AccessibleName = $"Open {source.Kind} source {source.CanonicalEntityId}";
+            open.SetValue(HavenProperties.Enabled, CanonicalSourceNavigationAvailable && !space.IsArchived &&
+                source.HostedFileId is not null && source.Kind == SpaceContextReferenceKind.CanvasArtifact &&
+                source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite);
+            var contextId = source.ContextId;
+            open.Invoked += (_, _) => CanonicalSourceRequested?.Invoke(this, contextId);
+            row.Add(open);
             Files.Add(row);
         }
     }

@@ -126,11 +126,14 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
         return Current(token,request.OrgID,request.ExpectedPolicyRevision,"AI.Cloud.Reserve",(session,org)=>
         {
             using var lease=DurableState.Acquire(statePath);var state=Read();var pool=Pool(state,quote.PoolID,org.OrgID);var now=clock.GetUtcNow();
+            if(string.IsNullOrWhiteSpace(session.RegisteredClientID)||quote.RegisteredClientID!=session.RegisteredClientID)throw new UnauthorizedAccessException("cost_quote_registered_client_mismatch");
+            if(quote.Attribution is null)throw new InvalidOperationException("organisation_quote_usage_attribution_unconfigured");
+            ValidateAttribution(quote.Attribution);
             if(quote.AccountID!=session.AccountID||quote.ExpiresAt<=now)throw new UnauthorizedAccessException("cost_quote_actor_or_expiry_mismatch");
             var prior=state.Reservations.SingleOrDefault(r=>r.Funding.OrgID==org.OrgID&&r.Funding.OperationID==request.OperationID);
             if(prior is not null)
             {
-                if(prior.Funding.AccountID!=session.AccountID||prior.Funding.CostQuoteID!=quote.QuoteID||prior.Funding.ModelRouteID!=request.ModelRouteID||prior.Funding.ReservedDust!=quote.MaximumDust)throw new InvalidOperationException("reservation_replay_conflict");
+                if(prior.Funding.AccountID!=session.AccountID||prior.Funding.CostQuoteID!=quote.QuoteID||prior.Funding.ModelRouteID!=request.ModelRouteID||prior.Funding.ReservedDust!=quote.MaximumDust||prior.Funding.RegisteredClientID!=quote.RegisteredClientID||prior.Funding.Attribution!=quote.Attribution||prior.Funding.PolicyRevision!=quote.PolicyRevision||prior.Funding.AuthorisationRevision!=org.Revision)throw new InvalidOperationException("reservation_replay_conflict");
                 if(prior.State!=OrganisationPoolReservationState.Reserved||prior.Funding.ExpiresAt<=now)throw new InvalidOperationException("reservation_already_dispatched_or_completed");
                 return prior.Funding;
             }
@@ -147,7 +150,7 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
                 if(remaining==0)break;
             }
             if(remaining!=0)throw new InvalidOperationException("organisation_dust_exhausted");
-            var reservation=new OrganisationFundingReservation(Guid.NewGuid(),session.AccountID,org.OrgID,pool.PoolID,pool.PeriodID,request.OperationID,request.ModelRouteID,quote.QuoteID,org.Policy.Revision,quote.MaximumDust,expiry,slices.ToArray(),org.Revision);
+            var reservation=new OrganisationFundingReservation(Guid.NewGuid(),session.AccountID,org.OrgID,pool.PoolID,pool.PeriodID,request.OperationID,request.ModelRouteID,quote.QuoteID,org.Policy.Revision,quote.MaximumDust,expiry,slices.ToArray(),org.Revision,session.RegisteredClientID,quote.Attribution);
             Write(state with{Reservations=state.Reservations.Append(new PoolReservation(reservation,roleIDs,OrganisationPoolReservationState.Reserved,0,null,null,null)).ToArray()});return reservation;
         });
     }
@@ -161,6 +164,8 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
             var currentPool=Pool(state,current.Funding.PoolID,org.OrgID);
             var currentRoles=org.Members.Single(m=>m.AccountID==session.AccountID&&m.State==OrganisationMemberState.Active).RoleIDs;
             if(current.Funding.FundingSources.Any(slice=>!CanUseRolloverLot(state,currentPool,slice.SourceAllocationID,currentRoles)))throw new UnauthorizedAccessException("rollover_permission_changed");
+            if(current.Funding.Attribution is null||current.Funding.RegisteredClientID is null)throw new UnauthorizedAccessException("legacy_reservation_requires_attributed_reauthorisation");
+            if(current.Funding.RegisteredClientID!=session.RegisteredClientID)throw new UnauthorizedAccessException("reservation_registered_client_mismatch");
             if(current.Funding.AccountID!=session.AccountID||current.Funding.AuthorisationRevision!=org.Revision||current.Funding.PolicyRevision!=expectedPolicyRevision)throw new UnauthorizedAccessException("reservation_authority_changed");
             if(current.State!=OrganisationPoolReservationState.Reserved||current.Funding.ExpiresAt<=clock.GetUtcNow())throw new InvalidOperationException("reservation_dispatch_unavailable");
             Write(state with{Reservations=state.Reservations.Select(r=>r.Funding.ReservationID==reservationID?r with{State=OrganisationPoolReservationState.Dispatched}:r).ToArray()});return current.Funding;
@@ -216,6 +221,8 @@ public sealed partial class OrganisationDustPools(string statePath,CakeIdentityS
         if(state.Pools.Any(p=>p.PoolID==Guid.Empty||p.OrgID==Guid.Empty||string.IsNullOrWhiteSpace(p.PeriodID)||!Enum.IsDefined(p.Mode)||p.Revision<1||p.MemberCeilings is null||p.RoleCeilings is null||p.MemberCeilings.Any(v=>v.Key==Guid.Empty||v.Value<0)||p.RoleCeilings.Any(v=>v.Key==Guid.Empty||v.Value<0))||state.Pools.Select(p=>p.PoolID).Distinct().Count()!=state.Pools.Count||state.Lots.Select(l=>l.SourceAllocationID).Distinct().Count()!=state.Lots.Count)throw new InvalidDataException("invalid_pool_configuration");
         foreach(var r in state.Reservations)
         {
+            if(r.Funding?.Attribution is not null)ValidateAttribution(r.Funding.Attribution);
+            if(r.Funding?.RegisteredClientID is not null&&string.IsNullOrWhiteSpace(r.Funding.RegisteredClientID)||(r.Funding?.Attribution is null)!=(r.Funding?.RegisteredClientID is null))throw new InvalidDataException("invalid_reservation_attribution_binding");
             if(r is null||r.Funding is null||r.RoleIDs is null||r.Funding.FundingSources is null||r.RoleIDs.Any(id=>id==Guid.Empty)||r.RoleIDs.Distinct().Count()!=r.RoleIDs.Count||r.Funding.ReservationID==Guid.Empty||r.Funding.AccountID==Guid.Empty||r.Funding.ReservedDust<=0||r.Funding.CostQuoteID==Guid.Empty||r.Funding.PolicyRevision<1||r.Funding.AuthorisationRevision<1||r.Funding.ExpiresAt==default||string.IsNullOrWhiteSpace(r.Funding.OperationID)||string.IsNullOrWhiteSpace(r.Funding.ModelRouteID)||string.IsNullOrWhiteSpace(r.Funding.PeriodID)||r.ActualDust<0||r.ActualDust>r.Funding.ReservedDust||!Enum.IsDefined(r.State)||r.Funding.FundingSources.Any(s=>s is null)||r.Funding.FundingSources.Sum(s=>s.Dust)!=r.Funding.ReservedDust||r.Funding.FundingSources.Select(s=>s.SourceAllocationID).Distinct().Count()!=r.Funding.FundingSources.Count||r.Funding.FundingSources.Any(s=>s.Dust<=0||!state.Lots.Any(l=>l.SourceAllocationID==s.SourceAllocationID&&l.OrgID==r.Funding.OrgID&&l.PeriodID==r.Funding.PeriodID&&state.LotPools[l.SourceAllocationID]==r.Funding.PoolID)))throw new InvalidDataException("invalid_pool_reservation");
             if(!state.Pools.Any(p=>p.PoolID==r.Funding.PoolID&&p.OrgID==r.Funding.OrgID)||
                 r.State is OrganisationPoolReservationState.Reserved or OrganisationPoolReservationState.Dispatched&&(r.ActualDust!=0||r.SettlementID is not null||r.CancellationID is not null||r.ProviderUsageReference is not null)||
