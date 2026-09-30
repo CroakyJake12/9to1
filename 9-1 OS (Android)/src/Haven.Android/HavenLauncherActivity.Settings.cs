@@ -45,7 +45,7 @@ public sealed partial class HavenLauncherActivity
         container.AddView(packages);
 
         var dialog = new AlertDialog.Builder(this);
-        dialog.SetTitle("Haven Launcher");
+        dialog.SetTitle("9to1 Launcher");
         dialog.SetView(container);
         dialog.SetPositiveButton("Save", (_, _) =>
         {

@@ -49,6 +49,16 @@ internal static class FilesDomainContractTests
             var restarted = new FilesWorkspaceDirectoryResolver(path, _ => null, id => id == profile ? provider : null);
             Check.True((await restarted.ResolveProfileAsync(profile, "write")).IsSuccess);
             Check.Equal(FilesErrorCode.DestinationUnavailable, (await restarted.ResolveAsync(profile, "write")).Error!.Code);
+            if (!OperatingSystem.IsWindows())
+            {
+                var child = Path.Combine(directory, "physical-child");
+                Directory.CreateDirectory(child);
+                var alias = Path.Combine(directory, "redirecting-parent");
+                Directory.CreateSymbolicLink(alias, directory);
+                var throughAlias = Path.Combine(alias, "physical-child");
+                Check.Equal(FilesErrorCode.DestinationUnavailable,
+                    (await resolver.RegisterProfileAsync(profile, folder.ItemId, "redirected", throughAlias)).Error!.Code);
+            }
         }
         finally { Directory.Delete(directory, true); }
     }

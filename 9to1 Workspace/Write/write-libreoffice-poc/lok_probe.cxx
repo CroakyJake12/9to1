@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "native_runtime_environment.hxx"
 
 namespace
 {
@@ -161,6 +162,7 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directories(profilePath);
     const auto profileUrl = fileUrl(profilePath);
+    if (!configureNativeRuntimeData()) return 78;
 
     LibreOfficeKit* kit = lok_init_2(programPath.string().c_str(), profileUrl.c_str());
     if (!kit || !kit->pClass)

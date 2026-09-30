@@ -8,6 +8,7 @@ using Xunit;
 
 namespace CakeOS.Cui.Runtime.Tests;
 
+[Collection("CuiNativeBackend")]
 public class CuiToAvaloniaPipelineTests
 {
     [Fact]

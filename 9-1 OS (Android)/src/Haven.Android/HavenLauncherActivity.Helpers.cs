@@ -28,9 +28,16 @@ public sealed partial class HavenLauncherActivity
         string Label,
         string PackageName,
         string ActivityName,
-        Drawable? Icon)
+        Drawable? Icon,
+        Guid ApplicationId,
+        long RegistryRevision,
+        string PlatformProfileId,
+        string ProfileLabel,
+        bool IsCurrentProfile,
+        bool Available)
     {
-        public string Key => PackageName + "/" + ActivityName;
+        public string Key => ApplicationId.ToString("D");
+        public string LegacyPersonalKey => PackageName + "/" + ActivityName;
     }
 
     private sealed class SwipeTouchListener(

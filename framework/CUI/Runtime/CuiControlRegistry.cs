@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using CakeOS.Cui.Language;
 using Avalonia.Layout;
 using System.Collections.Frozen;
 using CakeOS.Cui;

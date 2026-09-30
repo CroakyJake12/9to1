@@ -27,7 +27,32 @@ public sealed class SiteDocumentRenderer
         css.Append(":root{");
         foreach(var token in project.DesignSystem.ColourTokens.Concat(project.DesignSystem.TypographyTokens).Concat(project.DesignSystem.SpacingTokens).Concat(project.DesignSystem.RadiusTokens).Concat(project.DesignSystem.ShadowTokens))
             if(SafeIdentifier(token.Key)&&SafeCssValue(token.Value))css.Append("--").Append(token.Key).Append(':').Append(token.Value).Append(';');
-        css.Append("}*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif}img,video{max-width:100%;height:auto}a:focus-visible,button:focus-visible{outline:3px solid currentColor;outline-offset:3px}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}");
+        css.Append("}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;font-family:system-ui,sans-serif}img,video{max-width:100%;height:auto}a:focus-visible,button:focus-visible{outline:3px solid currentColor;outline-offset:3px}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}");
+        var pageNodes=HavenOS.Apps.Sites.Application.SiteAuthoringService.Reachable(project,page.RootComponentIds);
+        var defaults=new Dictionary<string,string>(StringComparer.Ordinal);
+        var selections=new Dictionary<Guid,(string Group,string Value)>();
+        foreach(var component in project.Components.Where(c=>pageNodes.Contains(c.ComponentId)))
+        {
+            if(component.Bindings.Count>0)diagnostics.Add(new("BindingUnavailable","Bindings need an owning typed runtime provider.",pageID,component.ComponentId,true));
+            foreach(var interaction in component.Interactions)
+            {
+                if(interaction.Key!="select-content-group" || component.ComponentType.ToLowerInvariant()!="button" || interaction.Value.ValueKind!=JsonValueKind.Object ||
+                    !interaction.Value.TryGetProperty("groupID",out var groupJson) || groupJson.ValueKind!=JsonValueKind.String ||
+                    !interaction.Value.TryGetProperty("value",out var valueJson) || valueJson.ValueKind!=JsonValueKind.String)
+                {diagnostics.Add(new("InteractionUnavailable","The interaction has no registered typed public runtime.",pageID,component.ComponentId,true));continue;}
+                var group=groupJson.GetString()!;var value=valueJson.GetString()!;
+                if(!SafeIdentifier(group)||!SafeIdentifier(value)||group.Length>128||value.Length>128 ||
+                    !project.Components.Any(target=>pageNodes.Contains(target.ComponentId)&&Get(target,"contentGroup")==group&&Get(target,"contentValue")==value))
+                {diagnostics.Add(new("ContentSelectionTargetMissing","Selection must name an existing content group/value on this page.",pageID,component.ComponentId,true));continue;}
+                selections[component.ComponentId]=(group,value);
+                if(Get(component,"selectedByDefault")=="true")
+                {
+                    if(!defaults.TryAdd(group,value)&&defaults[group]!=value)diagnostics.Add(new("ContentSelectionDefaultConflict","A content group must have one initial selection.",pageID,component.ComponentId,true));
+                }
+            }
+        }
+        foreach(var selection in selections.Values)
+            if(!defaults.ContainsKey(selection.Group))diagnostics.Add(new("ContentSelectionDefaultMissing","A content group needs an explicit initial selection.",pageID,null,true));
         var active=new HashSet<Guid>();
         string RenderNode(Guid id)
         {
@@ -35,16 +60,16 @@ public sealed class SiteDocumentRenderer
             try
             {
                 var node=project.Components.Single(c=>c.ComponentId==id);
-                if(node.Bindings.Count>0 || node.Interactions.Count>0)
-                    diagnostics.Add(new("BindingUnavailable","This renderer needs an owning typed runtime provider for bindings/interactions.",pageID,id,true));
                 var type=node.ComponentType.ToLowerInvariant();
                 var tag=type switch { "section" or "hero"=>"section","header"=>"header","footer"=>"footer","navigation"=>"nav",
                     "text" or "paragraph"=>"p","heading"=>Heading(node),"image"=>"img","button"=>"button","link"=>"a",
-                    "list"=>"ul","list-item"=>"li","table"=>"table","row"=>"tr","cell"=>"td","container" or "card" or "grid" or "stack"=>"div", _=>null };
+                    "list"=>"ul","ordered-list"=>"ol","list-item"=>"li","table"=>"table","table-head"=>"thead","table-body"=>"tbody","row"=>"tr","cell"=>"td","header-cell"=>"th",
+                    "main"=>"main","superscript"=>"sup","subscript"=>"sub","inline-text"=>"span","strong"=>"strong","emphasis"=>"em","line-break"=>"br","figure"=>"figure","caption"=>"figcaption","quote"=>"blockquote","separator"=>"hr","container" or "card" or "grid" or "stack"=>"div", _=>null };
                 if(tag is null){diagnostics.Add(new("UnsupportedVisualConstruct","Code-defined component requires its registered runtime provider.",pageID,id,true));return "";}
                 var selector="[data-site-component=\""+id.ToString("N")+"\"]";
                 var layout=new Dictionary<string,JsonElement>(node.Layout.Properties);
-                layout.TryAdd("display",JsonSerializer.SerializeToElement(node.Layout.Mode switch {SiteLayoutMode.Grid=>"grid",SiteLayoutMode.Stack=>"flex",_=>"block"}));
+                if(node.Layout.Mode != SiteLayoutMode.Flow)
+                    layout.TryAdd("display",JsonSerializer.SerializeToElement(node.Layout.Mode == SiteLayoutMode.Grid ? "grid" : "flex"));
                 AppendStyle(css,selector,layout,diagnostics,pageID,id);
                 foreach(var responsive in node.Layout.BreakpointOverrides)
                 {
@@ -55,7 +80,17 @@ public sealed class SiteDocumentRenderer
                 var html=new StringBuilder("<"+tag+" data-site-component=\""+id.ToString("N")+"\"");
                 if(Get(node,"hidden")=="true")html.Append(" hidden");
                 var label=Get(node,"aria-label");if(label is not null)html.Append(" aria-label=\"").Append(E(label)).Append('"');
-                if(tag=="button") html.Append(" type=\"button\"");
+                if(tag=="button")
+                {
+                    html.Append(" type=\"button\"");
+                    if(selections.TryGetValue(id,out var select))html.Append(" data-site-select-group=\"").Append(E(select.Group)).Append("\" data-site-select-value=\"").Append(E(select.Value))
+                        .Append("\" aria-pressed=\"").Append(defaults.GetValueOrDefault(select.Group)==select.Value?"true":"false").Append('"');
+                }
+                if(Get(node,"contentGroup") is {} contentGroup && Get(node,"contentValue") is {} contentValue)
+                {
+                    html.Append(" data-site-content-group=\"").Append(E(contentGroup)).Append("\" data-site-content-value=\"").Append(E(contentValue)).Append('"');
+                    if(defaults.TryGetValue(contentGroup,out var selected)&&selected!=contentValue)html.Append(" hidden");
+                }
                 if(tag=="a")
                 {
                     var href=Get(node,"href")??"#";
@@ -70,6 +105,7 @@ public sealed class SiteDocumentRenderer
                     if(alt is null) diagnostics.Add(new("ImageAlternativeMissing","Provide alternative text or an explicit empty alternative for decoration.",pageID,id,true));
                     html.Append(" alt=\"").Append(E(alt??"")).Append("\" loading=\"lazy\">");return html.ToString();
                 }
+                if(tag is "br" or "hr") return html.Append('>').ToString();
                 html.Append('>').Append(E(Get(node,"text")??""));
                 if(node.ReusableDefinitionId is {} definition)
                 {
@@ -83,11 +119,13 @@ public sealed class SiteDocumentRenderer
             finally{active.Remove(id);}
         }
         var body=string.Concat(page.RootComponentIds.Select(RenderNode));
-        output.Append("<style>").Append(css).Append("</style></head><body>").Append(body).Append("</body></html>");
+        output.Append("<style>").Append(css).Append("</style></head><body>").Append(body);
+        if(selections.Count>0)output.Append("<script>document.addEventListener('click',function(event){const button=event.target.closest('[data-site-select-group]');if(!button)return;const group=button.dataset.siteSelectGroup;const value=button.dataset.siteSelectValue;document.querySelectorAll('[data-site-select-group]').forEach(function(item){if(item.dataset.siteSelectGroup===group)item.setAttribute('aria-pressed',String(item.dataset.siteSelectValue===value));});document.querySelectorAll('[data-site-content-group]').forEach(function(item){if(item.dataset.siteContentGroup===group)item.hidden=item.dataset.siteContentValue!==value;});});</script>");
+        output.Append("</body></html>");
         return new(output.ToString(),diagnostics);
     }
     private static string Heading(SiteComponent c){var level=Get(c,"level");return int.TryParse(level,out var parsed)&&parsed is>=1 and<=6 ? "h"+parsed : "h2";}
-    private static string? Get(SiteComponent c,string key)=>c.Properties.TryGetValue(key,out var value)?value.ValueKind==JsonValueKind.String?value.GetString():value.ToString():null;
+    private static string? Get(SiteComponent c,string key)=>c.Properties.TryGetValue(key,out var value)?value.ValueKind==JsonValueKind.String?value.GetString():value.GetRawText():null;
     private static string E(string value)=>HtmlEncoder.Default.Encode(value);
     private static bool SafeIdentifier(string value)=>value.Length>0&&value.All(c=>char.IsAsciiLetterOrDigit(c)||c=='-');
     private static bool SafeCssValue(string value)=>value.Length<=512&&!value.Any(c=>c is '<' or '>' or '{' or '}' or ';' or '\\')&&!value.Contains("url(",StringComparison.OrdinalIgnoreCase)&&!value.Contains("expression",StringComparison.OrdinalIgnoreCase);

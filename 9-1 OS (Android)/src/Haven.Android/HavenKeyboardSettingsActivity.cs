@@ -61,7 +61,7 @@ public sealed class HavenKeyboardSettingsActivity : Activity
         scroll.AddView(root);
 
         AddHeading(root, "Haven Keyboard");
-        AddSummary(root, "Offline-first keyboard. Suggestions come from a small built-in word list on this device. Nothing you type is stored or sent anywhere by the keyboard.");
+        AddSummary(root, "Offline-first keyboard. Suggestions use the built-in word list on this device. Typing is never stored. A tapped AI action sends the selected text only to an authorised model; cloud disclosure also requires Allow cloud AI.");
 
         AddSection(root, "AI actions");
         AddToggle(
@@ -73,7 +73,7 @@ public sealed class HavenKeyboardSettingsActivity : Activity
         AddToggle(
             root,
             "Allow cloud AI",
-            "Consent flag for future cloud-backed executors. Unused while AI actions are off.",
+            "Allow a tapped AI action to send non-secure field text to a cloud or remote model when Home and privacy policy permit it.",
             Settings.CloudAiAllowed,
             value => Settings.CloudAiAllowed = value);
         AddNote(root, "AI never runs in password fields, even when enabled.");

@@ -185,7 +185,10 @@ public sealed record HomePermissionAuthorization(
     string RequestId,
     HomeTrustLevel? TrustLevel)
 {
-    public bool IsAllowed => State is HomePermissionRequestState.Approved or HomePermissionRequestState.Executing;
+    public bool IsAllowed => (State is HomePermissionRequestState.Approved or HomePermissionRequestState.Executing) &&
+        Code is "HOME_PERMISSION_GRANTED_BY_TRUST" or "HOME_PERMISSION_GRANTED_FOR_SESSION" or "HOME_PERMISSION_ACCEPTED"
+            or "HOME_ACCEPT_AND_TRUST_GRANTED" or "HOME_ALWAYS_TRUST_GRANTED" or "HOME_TEMPORARY_TRUST_GRANTED"
+            or "HOME_EXECUTION_STARTED";
 }
 
 public sealed record HomeTrustGrantOptions(

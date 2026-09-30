@@ -8,9 +8,14 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**;Source\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+    <EmbeddedResource Include="UI/PictureWorkspace.cui" LogicalName="HavenOS.Images.UI.PictureWorkspace.cui" />
+    <ProjectReference Include="../Canvas/HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Application/Haven.Application.csproj" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,18 @@
+<Cui id="9to1.Canvas.Workspace" version="1">
+  <Grid id="canvas-shell" rows="Auto,*,Auto" accessible-name="Canvas workspace">
+    <StackPanel id="canvas-document-controls" orientation="Horizontal" spacing="8">
+      <Button id="canvas-open" action="9to1.Canvas.Artifact.Open" content="Open" accessible-name="Open Canvas artifact through Files" />
+      <Button id="canvas-import" action="9to1.Canvas.Import" content="Import" accessible-name="Import Rnote or Xournal++ document" />
+      <TextBlock id="canvas-title" text="{Binding DisplayName}" accessible-name="Canvas document name" />
+      <Button id="canvas-save" action="9to1.Canvas.Artifact.Save" content="Flush" accessible-name="Flush Canvas revision to Files" />
+      <Button id="canvas-undo" action="9to1.Canvas.History.Undo" content="Undo" accessible-name="Undo Canvas document operation" />
+      <Button id="canvas-redo" action="9to1.Canvas.History.Redo" content="Redo" accessible-name="Redo Canvas document operation" />
+    </StackPanel>
+    <CanvasSpatialSurface id="canvas-surface" grid-row="1" accessible-name="Editable Canvas drawing surface" />
+    <StackPanel id="canvas-status" grid-row="2" spacing="4">
+      <TextBlock id="canvas-storage-status" text="{Binding PersistenceStatus}" accessible-name="Canvas persistence state" />
+      <TextBlock id="canvas-compatibility" text="{Binding CompatibilityStatus}" accessible-name="Canvas compatibility report" />
+      <TextBlock id="canvas-selection" text="{Binding SelectionSummary}" accessible-name="Canvas selected object information" />
+    </StackPanel>
+  </Grid>
+</Cui>

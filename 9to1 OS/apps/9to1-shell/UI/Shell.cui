@@ -1,0 +1,63 @@
+<Cui id="os.shell" version="1">
+  <Actions>
+    <Action name="OpenApp" command="Open" parameter="{Binding app}" />
+    <Action name="PinApp" command="Pin" parameter="{Binding app}" />
+    <Action name="OpenPinned" command="OpenItem" parameter="{Binding item}" />
+    <Action name="UnpinItem" command="Unpin" parameter="{Binding item}" />
+  </Actions>
+  <ScrollViewer id="shell-scroll">
+    <StackPanel id="shell" margin="20">
+      <TextBlock text="9to1 OS" font-size="28" />
+      <TextBlock text="{Binding SpaceTitle}" font-size="20" accessible-name="Current Desktop Space" />
+      <StackPanel orientation="Horizontal">
+        <Button content="Previous Desktop Space" action="PreviousSpace" />
+        <Button content="Next Desktop Space" action="NextSpace" />
+      </StackPanel>
+      <Border id="taskbar-layer" padding="{Binding LayerPadding}" corner-radius="{Binding LayerRadius}" opacity="{Binding LayerOpacity}" min-height="{Binding LayerHeight}" margin="0,12">
+        <StackPanel>
+          <StackPanel orientation="Horizontal">
+            <Button content="Previous layer" action="PreviousLayer" />
+            <TextBlock text="{Binding LayerPosition}" accessible-name="Taskbar layer position" margin="12,4" />
+            <TextBlock text="{Binding LayerTitle}" margin="12,4" />
+            <Button content="Next layer" action="NextLayer" />
+          </StackPanel>
+          <Repeat Source="{Binding Items}" As="item" Key="{Binding item.Id}" orientation="Horizontal">
+            <StackPanel orientation="Horizontal" margin="{Binding ItemSpacing}"><Button content="{Binding item.Label}" action="OpenPinned" is-enabled="{Binding item.CanOpen}" accessible-name="{Binding item.Label}" /><Button content="Remove from layer" action="UnpinItem" /></StackPanel>
+          </Repeat>
+        </StackPanel>
+      </Border>
+      <TextBlock text="Go · All Apps" font-size="20" />
+      <StackPanel orientation="Horizontal">
+        <TextBox id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search installed applications" width="420" accessible-name="Go search" />
+        <Button content="Search" action="Search" />
+      </StackPanel>
+      <Repeat Source="{Binding Results}" As="app" Key="{Binding app.Reference.Id}">
+        <StackPanel orientation="Horizontal" margin="0,2"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" /><Button content="Pin to this layer" action="PinApp" /></StackPanel>
+      </Repeat>
+      <TextBlock text="Desktop Spaces and taskbar settings" font-size="20" margin="0,20,0,8" />
+      <TextBox text="{Binding Name, Mode=TwoWay}" placeholder-text="Layer or Desktop Space name" accessible-name="Layer or Desktop Space name" />
+      <WrapPanel>
+        <Button content="Add layer" action="AddLayer" /><Button content="Rename layer" action="RenameLayer" /><Button content="Remove layer" action="RemoveLayer" />
+        <Button content="Move layer earlier" action="MoveLayerEarlier" /><Button content="Move layer later" action="MoveLayerLater" />
+      </WrapPanel>
+      <WrapPanel>
+        <Button content="Duplicate Desktop Space" action="DuplicateSpace" /><Button content="Rename Desktop Space" action="RenameSpace" /><Button content="Delete Desktop Space" action="RemoveSpace" />
+        <Button content="Move Desktop Space earlier" action="MoveSpaceEarlier" /><Button content="Move Desktop Space later" action="MoveSpaceLater" />
+        <Button content="Copy Desktop Space" action="CopySpace" /><Button content="Paste Desktop Space" action="PasteSpace" />
+      </WrapPanel>
+      <WrapPanel>
+        <TextBlock text="Height" /><TextBox text="{Binding Thickness, Mode=TwoWay}" width="70" accessible-name="Taskbar layer height" />
+        <TextBlock text="Spacing" /><TextBox text="{Binding Spacing, Mode=TwoWay}" width="70" accessible-name="Taskbar item spacing" />
+        <TextBlock text="Padding" /><TextBox text="{Binding Padding, Mode=TwoWay}" width="70" accessible-name="Taskbar layer padding" />
+        <TextBlock text="Radius" /><TextBox text="{Binding Radius, Mode=TwoWay}" width="70" accessible-name="Taskbar corner radius" />
+        <TextBlock text="Opacity" /><TextBox text="{Binding Opacity, Mode=TwoWay}" width="70" accessible-name="Taskbar opacity" />
+        <Button content="Preview presentation" action="Presentation" />
+      </WrapPanel>
+      <StackPanel orientation="Horizontal">
+        <Button content="Reset taskbar" action="ResetTaskbar" /><Button content="Restore previous" action="RestorePrevious" /><Button content="Preview safe defaults" action="SafeDefaults" />
+      </StackPanel>
+      <TextBlock id="transaction-status" text="{Binding Status}" accessible-name="Shell transaction status" text-wrapping="Wrap" margin="0,12" />
+      <StackPanel orientation="Horizontal"><Button id="keep" content="Keep" action="Keep" /><Button id="revert" content="Revert" action="Revert" /></StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Cui>

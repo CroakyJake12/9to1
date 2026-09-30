@@ -3,7 +3,7 @@
 //           Haven Keyboard suggestion strip, plus the offline contextual nudge.
 // How:      The controller is a thin static shell around a pluggable
 //           IKeyboardAiExecutor. The parent bootstrap wires a real executor via
-//           Configure(...) once Haven's services exist (see OllamaKeyboardAiExecutor).
+//           Configure(...) once Haven's services exist (see RoutedKeyboardAiExecutor).
 //           Every call is cancellable, capped at 20 seconds, reports honest inline
 //           status strings, and NEVER blocks typing.
 // Why:      The IME can start before Haven's app services exist, so direct DI
@@ -15,9 +15,9 @@
 //     receive keystrokes, composing text, selections or AI source/result text.
 //   - Text leaves the device ONLY through RunAsync -> IKeyboardAiExecutor when the
 //     user explicitly taps an AI action on a non-secure field with AI enabled in
-//     settings AND an active network. Secure fields never reach this file.
-//   - CloudAiAllowed must be honoured by any future cloud-backed executor: refuse
-//     to run when it is false. The current Ollama adapter documents this too.
+//     settings. Device-local models remain usable offline. Secure fields never reach this file.
+//   - RoutedKeyboardAiExecutor honours CloudAiAllowed for every selected and
+//     fallback candidate, together with canonical route and global privacy policy.
 
 using Haven.Application;
 using Haven.Core;
@@ -52,29 +52,6 @@ internal interface IKeyboardAiExecutor
 {
     /// <summary>Completes a prompt, returning null when nothing usable came back.</summary>
     Task<string?> CompleteAsync(string prompt, CancellationToken cancellationToken);
-}
-
-/// <summary>
-/// Executor adapter over Haven's shared <see cref="IOllamaClient"/> model routing.
-/// The parent bootstrap constructs this once services are available, e.g.:
-/// <code>
-/// HavenKeyboardAiController.Configure(new OllamaKeyboardAiExecutor(
-///     services.GetRequiredService&lt;IOllamaClient&gt;(), "default-model-id"));
-/// </code>
-/// </summary>
-/// <param name="client">Shared model client owned by Haven's DI container.</param>
-/// <param name="model">Model identifier to route completions to.</param>
-internal sealed class OllamaKeyboardAiExecutor(IOllamaClient client, string model) : IKeyboardAiExecutor
-{
-    /// <inheritdoc/>
-    public async Task<string?> CompleteAsync(string prompt, CancellationToken cancellationToken)
-    {
-        var request = new OllamaChatRequest(
-            Model: model,
-            Messages: [new OllamaMessage("user", prompt)],
-            Effort: EffortLevel.Medium);
-        return await client.CompleteAsync(request, cancellationToken).ConfigureAwait(false);
-    }
 }
 
 /// <summary>

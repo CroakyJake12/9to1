@@ -7,14 +7,15 @@ public sealed record UsageReservation(Guid ReservationID, Guid AccountID, string
     long ChargedDust, ReservationState State, DateTimeOffset CreatedAt, string RequiredBand, string BandVersion, bool PersonalAPI);
 public sealed record AccountUsage(long DustSpent, long DustReserved, long StorageUsedBytes, int HostedSites, int SinglePageSites);
 public sealed record AccountRecord(SubscriptionState Subscription, AccountUsage Usage,
-    IReadOnlyList<UsageReservation> Reservations);
+    IReadOnlyList<UsageReservation> Reservations, IReadOnlyList<SubscriptionPurchase>? Purchases = null);
 
-/// <summary>Single-process durable trusted-service ledger. Never shipped as client quota authority.</summary>
-public sealed class AccountLedger
+/// <summary>Single-host, cross-process durable trusted-service ledger. Never shipped as client quota authority.</summary>
+public sealed partial class AccountLedger
 {
     private readonly string directory;
     private readonly object gate = new();
-    public AccountLedger(string directory) { this.directory = Path.GetFullPath(directory); Directory.CreateDirectory(this.directory); }
+    private readonly TimeProvider clock;
+    public AccountLedger(string directory,TimeProvider? clock=null) { this.directory = Path.GetFullPath(directory); this.clock=clock??TimeProvider.System; Directory.CreateDirectory(this.directory); }
     public AccountRecord Get(Guid accountID) { lock (gate) { using var lease = DurableState.Acquire(directory); return Read(accountID); } }
     public void Provision(SubscriptionState subscription)
     {
@@ -99,6 +100,24 @@ public sealed class AccountLedger
         var account = DurableState.Read<AccountRecord>(PathFor(id));
         if (account.Subscription is null || account.Subscription.AccountID != id || account.Usage is null || account.Reservations is null)
             throw new InvalidDataException("invalid_account_identity");
+        var usage=account.Usage;var subscription=account.Subscription;
+        if(id==Guid.Empty||subscription.Revision<1||subscription.Resources is null||subscription.Resources.AdditionalResources is null||subscription.EntitlementPriceMonthly<0||
+            subscription.Resources.AIDustAllocated<0||subscription.Resources.StorageAllocatedBytes<0||subscription.Resources.HostedSiteLimit<0||subscription.Resources.SinglePageSiteLimit<0||
+            usage.DustSpent<0||usage.DustReserved<0||usage.StorageUsedBytes<0||usage.HostedSites<0||usage.SinglePageSites<0||
+            account.Reservations.Any(r=>r is null||r.ReservationID==Guid.Empty||r.AccountID!=id||string.IsNullOrWhiteSpace(r.RequestID)||r.ReservedDust<=0||r.ChargedDust<0||r.ChargedDust>r.ReservedDust||
+                !Enum.IsDefined(r.State)||r.CreatedAt==default||r.RequiredBand is not ("free" or "boost" or "pro" or "ultra")||string.IsNullOrWhiteSpace(r.BandVersion)||
+                r.State==ReservationState.Reserved&&r.ChargedDust!=0||r.State==ReservationState.Released&&r.ChargedDust!=0||r.State==ReservationState.Settled&&r.ChargedDust==0)||
+            account.Reservations.Select(r=>r.ReservationID).Distinct().Count()!=account.Reservations.Count||account.Reservations.Select(r=>r.RequestID).Distinct(StringComparer.Ordinal).Count()!=account.Reservations.Count)
+            throw new InvalidDataException("invalid_account_state");
+        try
+        {
+            var reserved=account.Reservations.Where(r=>r.State==ReservationState.Reserved).Sum(r=>r.ReservedDust);
+            var spent=account.Reservations.Where(r=>r.State==ReservationState.Settled).Sum(r=>r.ChargedDust);
+            _=checked(reserved+spent);
+            if(reserved!=usage.DustReserved||spent!=usage.DustSpent)throw new InvalidDataException("invalid_account_counters");
+        }
+        catch(OverflowException e){throw new InvalidDataException("invalid_account_counter_range",e);}
+        ValidatePurchases(account);
         return account;
     }
     private void Write(AccountRecord account) => DurableState.Write(PathFor(account.Subscription.AccountID), account);

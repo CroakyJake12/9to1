@@ -2,7 +2,7 @@
 
 The current [9to1 Development Specification](https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg/edit), amended by explicit current user instructions, is the product authority. Existing source, legacy Haven rules, model plans, migration/completion notes and historical machine paths do not supply alternative product scope. Consult applicable source sections before implementation; unresolved OPEN product decisions must remain explicit.
 
-Project Astra la Vista uses exactly four explicitly configured GPT-6.1 Sol implementation workers without nested delegation. The parent coordinates allocation, integration and verification. Current path ownership and evidence live in `../../../docs/ASTRA-WORKING-LEDGER.md`. Do not introduce competing release plans. Respect the single implementation owner of every shared file and request cross-owner edits.
+Project Astra la Vista uses six explicitly configured GPT-6.1 Sol implementation workers without nested delegation, following the user's clarification that four was the minimum and authorisation to use the maximum available capacity. The parent coordinates allocation, integration and verification. Current path ownership and evidence live in `../../../docs/ASTRA-WORKING-LEDGER.md`. Do not introduce competing release plans. Respect the single implementation owner of every shared file and request cross-owner edits.
 
 ## Shared architecture
 

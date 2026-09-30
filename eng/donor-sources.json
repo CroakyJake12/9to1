@@ -273,6 +273,18 @@
       "licenseFiles": [
         "LICENSE"
       ]
+    },
+    "lawnchair": {
+      "project": "Lawnchair",
+      "repository": "https://github.com/LawnchairLauncher/lawnchair",
+      "sourceRepository": "https://github.com/LawnchairLauncher/lawnchair",
+      "branch": "main",
+      "commit": "126b2250d76c6d17c04d45e691d57b67860395a1",
+      "license": "Apache-2.0 (preserve per-file third-party notices)",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ],
+      "tag": null
     }
   },
   "bindings": [
@@ -290,15 +302,16 @@
       "donor": "rnote",
       "path": "9to1 Workspace/Boards/Source/Rnote",
       "consumer": "Freeform reference; no latest-engine adapter proven",
-      "runtimeRequirement": null
+      "runtimeRequirement": null,
+      "sharedSourcePath": "9to1 Workspace/Canvas/Source/Rnote"
     },
     {
       "app": "Canvas",
       "owner": "9to1 Workspace/Canvas",
       "donor": "rnote",
       "path": "9to1 Workspace/Canvas/Source/Rnote",
-      "consumer": "Existing Cargo proof still pins 8cac558 v0.14.2",
-      "runtimeRequirement": "Existing Cargo proof requires 8cac558 (compatibility with newest unverified)"
+      "consumer": "Rust Canvas adapter uses local pinned Rnote source and current parry math dependency",
+      "runtimeRequirement": "Pinned Rnote0.15 local source dependency port built; owner native12 and managed22 tests passed. Native GTK/runtime platform packaging and exhaustive donor functional/UI parity remain unverified"
     },
     {
       "app": "Browse",
@@ -313,24 +326,26 @@
       "owner": "9to1 Workspace/Write",
       "donor": "libreoffice",
       "path": "9to1 Workspace/Write/Source/LibreOffice",
-      "consumer": "LibreOfficeKit Writer prototype",
-      "runtimeRequirement": "Local LibreOfficeKit ABI/version not verified"
+      "consumer": "Canonical Writer bridge with actual packaged LibreOfficeKit IPC",
+      "runtimeRequirement": "Packaged LibreOffice25.2.3.2 Writer IPC and Calc probes passed; installed runtime is distinct from controlled source d3fca73. Source sw/sd/desktop/source/lib/include/LibreOfficeKit now materialised alongside Calc; source build, full donor UI/functional parity and all dependent trees remain unverified",
+      "sharedSourcePath": "9to1 Workspace/Data/Source/LibreOffice"
     },
     {
       "app": "Present",
       "owner": "9to1 Workspace/Present",
       "donor": "libreoffice",
       "path": "9to1 Workspace/Present/Source/LibreOffice",
-      "consumer": "Impress LibreOfficeKit worker",
-      "runtimeRequirement": "Existing worker ABI/version not verified against newest source"
+      "consumer": "Canonical Impress bridge; uses actual shared source binding",
+      "runtimeRequirement": "Packaged LibreOffice25.2.3.2 Writer IPC and Calc probes passed; installed runtime is distinct from controlled source d3fca73. Source sw/sd/desktop/source/lib/include/LibreOfficeKit now materialised alongside Calc; source build, full donor UI/functional parity and all dependent trees remain unverified",
+      "sharedSourcePath": "9to1 Workspace/Data/Source/LibreOffice"
     },
     {
       "app": "Data",
       "owner": "9to1 Workspace/Data",
       "donor": "libreoffice",
       "path": "9to1 Workspace/Data/Source/LibreOffice",
-      "consumer": "Calc Python UNO worker",
-      "runtimeRequirement": "Local soffice with Python UNO required for full harness; historical CI used 26.2.5.2"
+      "consumer": "Canonical Calc/Python UNO worker",
+      "runtimeRequirement": "Packaged LibreOffice25.2.3.2 Writer IPC and Calc probes passed; installed runtime is distinct from controlled source d3fca73. Source sw/sd/desktop/source/lib/include/LibreOfficeKit now materialised alongside Calc; source build, full donor UI/functional parity and all dependent trees remain unverified"
     },
     {
       "app": "Data",
@@ -401,32 +416,34 @@
       "owner": "9to1 Workspace/Wave",
       "donor": "gstreamer",
       "path": "9to1 Workspace/Wave/Source/GStreamer",
-      "consumer": "Audio pipeline target; existing PCM reader retained",
-      "runtimeRequirement": "GStreamer audio runtime not validated"
+      "consumer": "Canonical native GStreamer/GES editing/rendering bridge over owning Files source/revision leases",
+      "runtimeRequirement": "Packaged GStreamer/GES1.26.2 native probes passed (Wave7 and Motion probes); controlled source pin is distinct and not built. Historical standalone GES archive is retained provenance; maintained GES source lives in GStreamer monorepo. Full mature timeline/UI parity and cross-platform packaging remain unverified"
     },
     {
       "app": "Wave",
       "owner": "9to1 Workspace/Wave",
       "donor": "ges",
       "path": "9to1 Workspace/Wave/Source/GES",
-      "consumer": "Editing-services source; current integration unimplemented",
-      "runtimeRequirement": "Current GES is in GStreamer monorepo; standalone archive 1.19.2 is historical"
+      "consumer": "Canonical native GStreamer/GES editing/rendering bridge over owning Files source/revision leases",
+      "runtimeRequirement": "Packaged GStreamer/GES1.26.2 native probes passed (Wave7 and Motion probes); controlled source pin is distinct and not built. Historical standalone GES archive is retained provenance; maintained GES source lives in GStreamer monorepo. Full mature timeline/UI parity and cross-platform packaging remain unverified"
     },
     {
       "app": "Motion",
       "owner": "9to1 Workspace/Motion",
       "donor": "gstreamer",
       "path": "9to1 Workspace/Motion/Source/GStreamer",
-      "consumer": "Video pipeline target; existing inspector retained",
-      "runtimeRequirement": "GStreamer video runtime not validated"
+      "consumer": "Canonical native GStreamer/GES editing/rendering bridge over owning Files source/revision leases",
+      "runtimeRequirement": "Packaged GStreamer/GES1.26.2 native probes passed (Wave7 and Motion probes); controlled source pin is distinct and not built. Historical standalone GES archive is retained provenance; maintained GES source lives in GStreamer monorepo. Full mature timeline/UI parity and cross-platform packaging remain unverified",
+      "sharedSourcePath": "9to1 Workspace/Wave/Source/GStreamer"
     },
     {
       "app": "Motion",
       "owner": "9to1 Workspace/Motion",
       "donor": "ges",
       "path": "9to1 Workspace/Motion/Source/GES",
-      "consumer": "Editing-services source; existing timeline unavailable",
-      "runtimeRequirement": "Current GES is in GStreamer monorepo; standalone archive 1.19.2 is historical"
+      "consumer": "Canonical native GStreamer/GES editing/rendering bridge over owning Files source/revision leases",
+      "runtimeRequirement": "Packaged GStreamer/GES1.26.2 native probes passed (Wave7 and Motion probes); controlled source pin is distinct and not built. Historical standalone GES archive is retained provenance; maintained GES source lives in GStreamer monorepo. Full mature timeline/UI parity and cross-platform packaging remain unverified",
+      "sharedSourcePath": "9to1 Workspace/Wave/Source/GES"
     },
     {
       "app": "Dulche",
@@ -475,6 +492,14 @@
       "path": "9to1 Workspace/Sites/Source/cake-plugin",
       "consumer": "Canonical native app donor integration boundary",
       "runtimeRequirement": "Full donor runtime parity remains unverified; source acquisition is not parity"
+    },
+    {
+      "app": "Launcher",
+      "owner": "9to1 Workspace/Launcher",
+      "donor": "lawnchair",
+      "path": "9to1 Workspace/Launcher/Source/Lawnchair",
+      "consumer": "Maintained native Android launcher donor; product/platform integration owned Android",
+      "runtimeRequirement": "Current maintained HEAD, not stable-release claim; Gradle9.8/JDK21/AGP9.4.1/Kotlin2.4.20/API37.2/build-tools37; runtime and source asset completeness unverified"
     }
   ],
   "firstPartyOrInternal": [
@@ -488,7 +513,6 @@
     "Mail",
     "Play",
     "Translate",
-    "Android Launcher",
     "Overlay",
     "Actions"
   ]

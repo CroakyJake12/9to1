@@ -5,7 +5,7 @@ namespace Dulche.Runtime;
 
 public enum CapabilitySourceType { App, Automation, Plugin, Mcp, Agent, Skill, Resource, Native, ComputerUse }
 public enum CapabilityReadiness { Executable, ApprovalRequired, PermissionDenied, AccountConnectionRequired, MissingRequiredInput, AppUnavailable, ProviderUnavailable, CapabilityDisabledByPolicy, UnsupportedOnCurrentPlatform }
-public enum ResolutionFailureKind { NoMatchingCapability, MatchingCapabilityUnavailable, MissingPrerequisite, PermissionBlocked, PolicyBlocked }
+public enum ResolutionFailureKind { NoMatchingCapability, MatchingCapabilityUnavailable, MissingPrerequisite, PermissionBlocked, PolicyBlocked, PlanningLimitExceeded }
 
 public sealed record RegistryCapability(
     string CapabilityId, CapabilitySourceType SourceType, string OwnerId, string Revision,
@@ -25,7 +25,8 @@ public sealed record CapabilityRequestContext(
 
 public sealed record EffectiveCapability(RegistryCapability Capability, CapabilityReadiness State, IReadOnlyList<string> Blockers);
 public sealed record EffectiveCapabilitySet(long RegistryRevision, string CallerId, IReadOnlyList<EffectiveCapability> Entries);
-public sealed record ResolutionIntent(string IntentTag, JsonElement Arguments, string? CanonicalAppId = null);
+public sealed record ResolutionIntent(string IntentTag, JsonElement Arguments, string? CanonicalAppId = null,
+    IReadOnlyDictionary<string, JsonElement>? PrerequisiteArguments = null);
 public sealed record ResolutionStep(string StepId, string CapabilityId, string ActionId, string OwnerId,
     JsonElement Arguments, IReadOnlySet<string> ExpectedOutputs, IReadOnlyList<string> Dependencies,
     CapabilityReadiness State, string Reason);
@@ -106,39 +107,104 @@ public sealed class DulcheToolRegistry(IToolRegistryAuthority authority)
     {
         if (intents.Count == 0) throw new ArgumentException("At least one semantic intent is required.", nameof(intents));
         var set = List(context); var id = Guid.NewGuid().ToString("N");
-        var selected = new List<ResolutionStep>(); var evaluated = new List<EffectiveCapability>(); var missing = new List<string>();
-        var availableInputs = (context.AvailableInputTypes ?? new HashSet<string>()).ToHashSet(StringComparer.Ordinal);
+        if (intents.Count > 32) throw new ArgumentException("Resolution is bounded to 32 semantic intents.", nameof(intents));
+        var evaluated = new List<EffectiveCapability>();
+        var paths = new List<List<ResolutionStep>> { new() };
+        var budget = new PlanningBudget();
         foreach (var intent in intents)
         {
-            var matches = set.Entries.Where(e => Matches(e.Capability, intent.IntentTag)).ToArray(); evaluated.AddRange(matches);
-            var eligible = matches.Where(e => e.State is CapabilityReadiness.Executable or CapabilityReadiness.ApprovalRequired)
-                .Where(e => e.Capability.InputTypes.All(availableInputs.Contains))
-                .OrderByDescending(e => context.ExplicitOwnerInvocations.Contains(e.Capability.OwnerId))
-                .ThenByDescending(e => intent.CanonicalAppId is not null && e.Capability.CanonicalAppId == intent.CanonicalAppId)
-                .ThenByDescending(e => e.Capability.IsLocal).ThenBy(e => e.State == CapabilityReadiness.Executable ? 0 : 1)
-                .ThenByDescending(e => e.Capability.ReliabilityRank).ThenByDescending(e => e.Capability.PreferenceRank)
-                .ThenBy(e => e.Capability.CapabilityId, StringComparer.Ordinal).FirstOrDefault();
-            if (eligible is null)
+            var matches = Rank(set.Entries.Where(e => Matches(e.Capability, intent.IntentTag)), context, intent.CanonicalAppId).ToArray();
+            if (matches.Any(e => context.ExplicitOwnerInvocations.Contains(e.Capability.OwnerId)))
+                matches = matches.Where(e => context.ExplicitOwnerInvocations.Contains(e.Capability.OwnerId)).ToArray();
+            evaluated.AddRange(matches);
+            var expanded = new List<List<ResolutionStep>>();
+            foreach (var path in paths)
+            foreach (var candidate in matches)
+            {
+                var trial = path.ToList();
+                if (Plan(candidate, intent.Arguments, intent, trial, new HashSet<string>(StringComparer.Ordinal), set, context, evaluated, budget))
+                    expanded.Add(trial);
+                if (expanded.Count >= 8) break;
+            }
+            if (expanded.Count == 0)
             {
                 var reason = matches.Length == 0 ? ResolutionFailureKind.NoMatchingCapability
+                    : budget.Exhausted ? ResolutionFailureKind.PlanningLimitExceeded
                     : matches.Any(e => e.State == CapabilityReadiness.PermissionDenied) ? ResolutionFailureKind.PermissionBlocked
                     : matches.Any(e => e.State == CapabilityReadiness.CapabilityDisabledByPolicy) ? ResolutionFailureKind.PolicyBlocked
-                    : matches.Any(e => e.State is CapabilityReadiness.AccountConnectionRequired or CapabilityReadiness.MissingRequiredInput ||
-                        !e.Capability.InputTypes.All(availableInputs.Contains)) ? ResolutionFailureKind.MissingPrerequisite
-                    : ResolutionFailureKind.MatchingCapabilityUnavailable;
-                return Remember(new(id, set.RegistryRevision, [], reason, Array.AsReadOnly(evaluated.ToArray()), $"No feasible path for semantic intent '{intent.IntentTag}': {reason}."), context.CallerId);
+                    : matches.Any(e => e.State is CapabilityReadiness.Executable or CapabilityReadiness.ApprovalRequired or CapabilityReadiness.AccountConnectionRequired or CapabilityReadiness.MissingRequiredInput)
+                        ? ResolutionFailureKind.MissingPrerequisite : ResolutionFailureKind.MatchingCapabilityUnavailable;
+                return Remember(new(id, set.RegistryRevision, [], reason, Array.AsReadOnly(evaluated.Distinct().ToArray()),
+                    $"No registered dependency path was selected for '{intent.IntentTag}': {reason}. Required arguments, prerequisite capabilities and typed inputs are checked; none are fabricated."), context.CallerId);
             }
-            var capability = eligible.Capability;
-            var dependencies = selected.Where(s => s.ExpectedOutputs.Any(capability.InputTypes.Contains)).Select(s => s.StepId).ToArray();
-            var stepId = $"step-{selected.Count + 1}";
-            selected.Add(new(stepId, capability.CapabilityId, capability.ActionId, capability.OwnerId, intent.Arguments.Clone(),
-                capability.OutputTypes, dependencies, eligible.State, $"Satisfies {intent.IntentTag} via registered semantic capability {capability.CapabilityId}."));
-            availableInputs.UnionWith(capability.OutputTypes);
-            if (eligible.State == CapabilityReadiness.ApprovalRequired) missing.Add($"{stepId}: approval required");
+            paths = expanded.Take(8).ToList();
         }
-        var plan = new ResolutionPlan(id, set.RegistryRevision, Array.AsReadOnly(selected.ToArray()), missing.Count == 0, Array.AsReadOnly(missing.ToArray()));
-        return Remember(new(id, set.RegistryRevision, Array.AsReadOnly(new[] { plan }), null, Array.AsReadOnly(evaluated.ToArray()), "A typed capability path exists; execution still requires current authorisation and validation."), context.CallerId);
+        var plans = paths.Select((steps, index) =>
+        {
+            var approvals = steps.Where(step => step.State == CapabilityReadiness.ApprovalRequired).Select(step => $"{step.StepId}: approval required").ToArray();
+            return new ResolutionPlan(id + ":" + (index + 1), set.RegistryRevision, Array.AsReadOnly(steps.ToArray()),
+                approvals.Length == 0, Array.AsReadOnly(approvals));
+        }).ToArray();
+        return Remember(new(id, set.RegistryRevision, Array.AsReadOnly(plans), null, Array.AsReadOnly(evaluated.Distinct().ToArray()),
+            "Ranked registered dependency paths exist; each execution requires fresh authority, schema validation and canonical output binding."), context.CallerId);
     }
+
+    private static IOrderedEnumerable<EffectiveCapability> Rank(IEnumerable<EffectiveCapability> entries,
+        CapabilityRequestContext context, string? canonicalAppId = null) => entries
+        .OrderByDescending(e => context.ExplicitOwnerInvocations.Contains(e.Capability.OwnerId))
+        .ThenByDescending(e => canonicalAppId is not null && e.Capability.CanonicalAppId == canonicalAppId)
+        .ThenByDescending(e => e.Capability.IsLocal).ThenBy(e => e.State == CapabilityReadiness.Executable ? 0 : 1)
+        .ThenByDescending(e => e.Capability.ReliabilityRank).ThenByDescending(e => e.Capability.PreferenceRank)
+        .ThenBy(e => e.Capability.CapabilityId, StringComparer.Ordinal);
+
+    private static bool Plan(EffectiveCapability candidate, JsonElement arguments, ResolutionIntent intent,
+        List<ResolutionStep> steps, HashSet<string> visiting, EffectiveCapabilitySet set, CapabilityRequestContext context,
+        List<EffectiveCapability> evaluated, PlanningBudget budget)
+    {
+        if (!budget.Consume()) return false;
+        if (steps.Count >= 64 || visiting.Count >= 16 || !visiting.Add(candidate.Capability.CapabilityId)) return false;
+        try
+        {
+            evaluated.Add(candidate);
+            if (candidate.State is not (CapabilityReadiness.Executable or CapabilityReadiness.ApprovalRequired) ||
+                !Haven.Application.ExtensionJsonSchemaValidator.Validate(candidate.Capability.ParameterSchemaJson, arguments, out _)) return false;
+            var capability = candidate.Capability;
+            foreach (var prerequisiteId in capability.Prerequisites)
+            {
+                if (steps.Any(step => step.CapabilityId == prerequisiteId)) continue;
+                var prerequisite = set.Entries.SingleOrDefault(entry => entry.Capability.CapabilityId == prerequisiteId);
+                if (prerequisite is null || !Plan(prerequisite, Arguments(prerequisiteId, intent), intent, steps, visiting, set, context, evaluated, budget)) return false;
+            }
+            foreach (var type in capability.InputTypes)
+            {
+                if (context.AvailableInputTypes?.Contains(type) == true || steps.Any(step => step.ExpectedOutputs.Contains(type))) continue;
+                var supplied = false;
+                foreach (var producer in Rank(set.Entries.Where(entry => entry.Capability.OutputTypes.Contains(type)), context))
+                {
+                    var trial = steps.ToList();
+                    if (!Plan(producer, Arguments(producer.Capability.CapabilityId, intent), intent, trial, visiting, set, context, evaluated, budget)) continue;
+                    steps.Clear(); steps.AddRange(trial); supplied = true; break;
+                }
+                if (!supplied) return false;
+            }
+            var dependencies = steps.Where(step => capability.Prerequisites.Contains(step.CapabilityId) || step.ExpectedOutputs.Any(capability.InputTypes.Contains))
+                .Select(step => step.StepId).Distinct(StringComparer.Ordinal).ToArray();
+            steps.Add(new($"step-{steps.Count + 1}", capability.CapabilityId, capability.ActionId, capability.OwnerId, arguments.Clone(),
+                capability.OutputTypes, Array.AsReadOnly(dependencies), candidate.State,
+                $"Registered {capability.SourceType} capability {capability.CapabilityId}; prerequisite identities and typed inputs resolved."));
+            return true;
+        }
+        finally { visiting.Remove(candidate.Capability.CapabilityId); }
+    }
+    private sealed class PlanningBudget
+    {
+        private int _remaining = 4096;
+        public bool Exhausted => _remaining < 0;
+        public bool Consume() => _remaining-- > 0;
+    }
+    private static JsonElement Arguments(string capabilityId, ResolutionIntent intent) =>
+        intent.PrerequisiteArguments?.TryGetValue(capabilityId, out var arguments) == true
+            ? arguments.Clone() : JsonSerializer.SerializeToElement(new { });
 
     public CapabilityResolution? ExplainResolution(string resolutionId, CapabilityRequestContext context)
     {

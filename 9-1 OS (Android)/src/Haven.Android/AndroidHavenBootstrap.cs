@@ -8,6 +8,7 @@ using Haven.Desktop;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Shell;
 using Haven.Infrastructure;
+using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Android;
@@ -94,9 +95,14 @@ internal static class AndroidHavenBootstrap
             preferences.ApplyAppearance(preferences.Appearance, save: false);
             // Keyboard AI uses normal Haven model routing and stays off unless the
             // user enables it; secure fields never reach the executor regardless.
-            HavenKeyboardAiController.Configure(new OllamaKeyboardAiExecutor(
-                services.GetRequiredService<IOllamaClient>(),
-                preferences.DefaultModel ?? string.Empty));
+            var keyboardSettings = new HavenKeyboardSettings(global::Android.App.Application.Context);
+            HavenKeyboardAiController.Configure(new RoutedKeyboardAiExecutor(
+                services.GetRequiredService<IModelProviderRegistry>(),
+                new HomeVersionedModelRouteRepository(services.GetRequiredService<IHomeCoreStateStore>()),
+                services.GetRequiredService<IProviderConfigurationStore>(),
+                services.GetRequiredService<IPrivacyPreferenceStore>(),
+                () => preferences.DefaultModel,
+                () => keyboardSettings.CloudAiAllowed));
             _ = services.GetRequiredService<AndroidNotificationBridge>();
             _ = services.GetRequiredService<AndroidProjectorDisplayService>();
 
@@ -132,6 +138,9 @@ internal static class AndroidHavenBootstrap
             await StartupGate.WaitAsync().ConfigureAwait(true);
             try
             {
+                var home = await AndroidHomeServiceHost.EnsureAsync(installedApplications: false);
+                if (home.State != HomeNativeHostState.Ready)
+                    throw new InvalidOperationException(home.Message);
                 var recovery = services.GetRequiredService<IStartupRecoveryCoordinator>();
                 StartupRecoveryState? recoveryState = null;
 

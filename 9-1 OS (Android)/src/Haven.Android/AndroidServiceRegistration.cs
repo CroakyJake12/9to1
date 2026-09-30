@@ -11,6 +11,8 @@ public static class AndroidServiceRegistration
     public static IServiceCollection AddHavenAndroidPlatformServices(IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<AndroidLauncherPlatformCatalog>(_ => new(global::Android.App.Application.Context));
+        services.AddSingleton<IInstalledApplicationObservationProvider>(provider => provider.GetRequiredService<AndroidLauncherPlatformCatalog>());
         services.RemoveAll<IComputerToolService>();
         services.AddSingleton<IComputerToolService, AndroidComputerToolService>();
         for (var index = services.Count - 1; index >= 0; index--)

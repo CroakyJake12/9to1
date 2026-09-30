@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>NineToOne.Admin</AssemblyName>
+    <RootNamespace>NineToOne.Admin</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Accounts/NineToOne.Accounts.csproj" />
+    <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/Admin.cui" LogicalName="NineToOne.Admin.UI.Admin.cui" />
+  </ItemGroup>
+</Project>

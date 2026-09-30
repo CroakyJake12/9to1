@@ -31,14 +31,22 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     private const string ActiveRouteId = "home.active";
     public HomePermissionTrustService Permissions { get; }
 
-    public HomeAppAiServices(IModelProviderRegistry providers, IHomeCoreStateStore store, HomePermissionCallerIdentity authenticatedCaller, IExecutionEventRepository graph, IInvocationResolver invocations)
+    public HomeAppAiServices(IModelProviderRegistry providers, IHomeCoreStateStore store, HomePermissionCallerIdentity authenticatedCaller, IExecutionEventRepository graph, IInvocationResolver invocations, IEnumerable<IHomeActionPolicySource>? actionPolicies = null)
     {
         _providers = providers; _store = store; _graph = graph; _invocations = invocations;
         _routes = new(providers, new HomeVersionedModelRouteRepository(store), new ModelRouteResolver(providers));
         _caller = authenticatedCaller.Validate();
         if (!_caller.IsVerified) throw new ArgumentException("The native host must authenticate its caller before composing shared AI services.", nameof(authenticatedCaller));
         _policies[("9to1.home.local-profile", "home.profile.importStore")] = new(BrokerRisk.High, false, false, true);
-        Permissions = new(store, (app, action) => _policies.GetValueOrDefault((app, action)));
+        var sources = (actionPolicies ?? []).ToArray();
+        Permissions = new(store, (app, action) =>
+        {
+            var declared = sources.Select(source => source.TryGet(app, action)).Where(policy => policy is not null).ToArray();
+            if (declared.Length > 1) return null; // Ambiguous owning authority never selects an arbitrary policy.
+            var contextual = _policies.GetValueOrDefault((app, action));
+            if (declared.Length == 0) return contextual;
+            return contextual is null || contextual == declared[0] ? declared[0] : null;
+        });
     }
 
     public FloatingAiBarState Create(IAppAiContext context, IAppAiActions actions, IAppAiDatabaseMutationGuard? databaseGuard = null) =>
@@ -61,7 +69,7 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     public async ValueTask<IReadOnlyList<AppAiModelOption>> GetModelsAsync(CancellationToken cancellationToken)
     {
         // Remote providers require a separately authorised context-disclosure route; never silently upload host context.
-        var models = await _providers.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+        var models = await _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: true, AllowRemote: false), cancellationToken).ConfigureAwait(false);
         var local = models.Where(m => m.IsLocal && m.Supports(ToolCapability.Text)).ToArray();
         var health = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         foreach (var id in local.Select(m => m.ProviderId).Distinct(StringComparer.OrdinalIgnoreCase))
@@ -80,7 +88,7 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     public async ValueTask<bool> SelectAsync(string modelId, CancellationToken cancellationToken)
     {
         if (!(await GetModelsAsync(cancellationToken).ConfigureAwait(false)).Any(m => m.Id == modelId && m.IsAvailable)) return false;
-        var descriptor = (await _providers.GetModelsAsync(cancellationToken).ConfigureAwait(false)).Single(m => m.Key == modelId);
+        var descriptor = (await _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: true, AllowRemote: false), cancellationToken).ConfigureAwait(false)).Single(m => m.Key == modelId);
         await _selectionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -97,7 +105,7 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     {
         var selection = prompt.ModelSelection ?? await GetSelectionAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Choose an available local model in Home before submitting a request.");
-        var descriptor = (await _providers.GetModelsAsync(cancellationToken).ConfigureAwait(false)).SingleOrDefault(m => m.Key == selection.ModelId && m.IsLocal)
+        var descriptor = (await _providers.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: true, AllowRemote: false), cancellationToken).ConfigureAwait(false)).SingleOrDefault(m => m.Key == selection.ModelId && m.IsLocal)
             ?? throw new InvalidOperationException("The selected authorised local model is unavailable.");
         var provider = _providers.GetRequired(descriptor.ProviderId);
         if (!provider.IsLocal) throw new InvalidOperationException("Remote context disclosure has not been authorised.");

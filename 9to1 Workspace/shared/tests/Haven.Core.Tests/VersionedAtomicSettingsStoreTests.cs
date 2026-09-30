@@ -8,6 +8,43 @@ public sealed class VersionedAtomicSettingsStoreTests
     private sealed record Value(string Name);
 
     [Fact]
+    public async Task Exact_key_cas_reloads_real_disk_and_conflict_never_changes_settings()
+    {
+        using var paths = new TestPaths();
+        var first = new VersionedAtomicSettingsStore(paths);
+        var second = new VersionedAtomicSettingsStore(paths);
+        await first.SetAsync("form", new Value("draft"), default);
+        Assert.Equal("draft", (await second.GetAsync<Value>("form", default))!.Name);
+        var expected = JsonSerializer.Serialize(new Value("draft"));
+        var replacement = JsonSerializer.Serialize(new Value("published"));
+        Assert.True((await first.CompareExchangeAsync("form", expected, replacement, default)).Exchanged);
+        var path = Path.Combine(paths.DataDirectory, "settings.json");
+        var bytes = await File.ReadAllBytesAsync(path);
+        var stale = await second.CompareExchangeAsync("form", expected, JsonSerializer.Serialize(new Value("lost update")), default);
+        Assert.False(stale.Exchanged); Assert.Equal(replacement, stale.CurrentJson);
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(path));
+        await second.SetAsync("different-key", new Value("other"), default);
+        Assert.Equal("published", (await first.GetAsync<Value>("form", default))!.Name);
+        Assert.Equal("other", (await first.GetAsync<Value>("different-key", default))!.Name);
+        Assert.True((await second.CompareExchangeAsync("form", replacement, null, default)).Exchanged);
+        Assert.Null(await first.GetAsync<Value>("form", default));
+    }
+
+    [Fact]
+    public async Task Two_real_store_instances_concurrently_create_one_key_without_overwrite()
+    {
+        using var paths = new TestPaths();
+        var first = new VersionedAtomicSettingsStore(paths);
+        var second = new VersionedAtomicSettingsStore(paths);
+        var results = await Task.WhenAll(first.CompareExchangeAsync("form", null, JsonSerializer.Serialize(new Value("one")), default),
+            second.CompareExchangeAsync("form", null, JsonSerializer.Serialize(new Value("two")), default));
+        Assert.Single(results, result => result.Exchanged);
+        var manifest = await first.ExportAsync(default);
+        Assert.Single(manifest.Settings);
+        Assert.Equal(1, manifest.Version);
+    }
+
+    [Fact]
     public async Task Actual_store_uuid_reopens_and_import_cannot_replace_its_owner_identity()
     {
         using var paths = new TestPaths();
@@ -25,6 +62,9 @@ public sealed class VersionedAtomicSettingsStoreTests
         }, default)).Succeeded);
         Assert.Equal(first.StoreId, (await new VersionedAtomicSettingsStore(paths).GetStoreIdentityAsync(default)).StoreId);
         Assert.Equal("data", (await reopened.GetAsync<Value>("imported", default))!.Name);
+        var snapshot = await reopened.ExportAsync(default);
+        Assert.Equal(first.StoreId, snapshot.StoreIdentity!.StoreId);
+        Assert.Equal("data", JsonSerializer.Deserialize<Value>(snapshot.Settings["imported"])!.Name);
     }
 
     [Fact]
@@ -97,10 +137,14 @@ public sealed class VersionedAtomicSettingsStoreTests
         var store = new VersionedAtomicSettingsStore(paths);
         await store.SetAsync("value", new Value("saved"), default);
         var path = Path.Combine(paths.DataDirectory, "settings.json");
-        // A directory at the file replacement target deterministically rejects the commit.
+        var savedBytes = await File.ReadAllBytesAsync(path);
+        // A directory at the file replacement target deterministically rejects access.
         File.Delete(path);
         Directory.CreateDirectory(path);
         await Assert.ThrowsAsync<IOException>(() => store.SetAsync("value", new Value("unsaved"), default));
+        await Assert.ThrowsAsync<IOException>(() => store.GetAsync<Value>("value", default));
+        Directory.Delete(path);
+        await File.WriteAllBytesAsync(path, savedBytes);
         Assert.Equal("saved", (await store.GetAsync<Value>("value", default))!.Name);
         Assert.Empty(Directory.GetFiles(paths.DataDirectory, "*.tmp"));
     }

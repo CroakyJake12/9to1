@@ -1,3 +1,4 @@
+using NineToOne.Admin;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -26,6 +27,8 @@ try
     var verifier=new string('a',64);var code=identity.AuthorizeAuthenticatedAccount(new(id,"Fixture"),"test",redirect,CakeIdentityService.Challenge(verifier));
     var issued=identity.Exchange(code,"test",redirect,verifier,"Fixture device");
     var ledger=new AccountLedger(Path.Combine(root,"accounts"));ledger.Provision(new(id,null,null,true,0,new(0,0,0,0,new Dictionary<string,JsonElement>()),1));
+    var organisationAuthority=new OrganisationService(Path.Combine(root,"organisations.json"),new ProfileService(Path.Combine(root,"profiles.json"),null));
+    var fixtureOrg=organisationAuthority.CreateTrustedOrganisation(id,"Explicit fictional native Admin fixture",BusinessAddOnKind.Business,"fixture-only-settled-billing");
     var start=new ProcessStartInfo(Path.Combine(Environment.GetEnvironmentVariable("DOTNET_ROOT")!,"dotnet")){UseShellExecute=false,RedirectStandardOutput=true,RedirectStandardError=true};
     foreach(var arg in new[]{typeof(FilesWebDomain).Assembly.Location,"--urls","http://127.0.0.1:5095","--StateRoot",root,
         "--Files:AccountLocations:0:AccountID",id.ToString(),"--Files:AccountLocations:0:LocationID",location.ToString(),"--Files:AccountLocations:0:StatePath",filesState})start.ArgumentList.Add(arg);
@@ -52,16 +55,25 @@ try
         await Task.Delay(TimeSpan.FromMinutes(14));return;
     }
     var profile=await http.GetFromJsonAsync<CakeProfile>("/api/account/current");Check(profile!.AccountID==id,"verified CAKE principal");
+    var nativeAdmin=new AdminCuiController(new AdminAccountClient(http,_=>ValueTask.FromResult<string?>(issued.AccessToken)));
+    await nativeAdmin.DispatchAsync("Refresh",null);Check(nativeAdmin.Organisations.Single().OrgID==fixtureOrg.OrgID.ToString("D"),"actual native Admin client uses authenticated canonical org endpoint");
+    nativeAdmin.TrySetValue("OrganisationID",fixtureOrg.OrgID.ToString("D"));await nativeAdmin.DispatchAsync("OpenOrganisation",null);Check(nativeAdmin.Members.Single().AccountID==id.ToString("D"),"native current canonical memberships");
+    await nativeAdmin.DispatchAsync("RefreshAudit",null);Check(nativeAdmin.Audit.All(e=>e.OrgID==fixtureOrg.OrgID)&&nativeAdmin.Audit.Count>0,"native bounded canonical audit");
     var catalogue=await http.GetStringAsync("/api/catalogue");Check(catalogue.Contains("Sites")&&catalogue.Contains("Files"),"real registered domain adapters");
     var created=await http.PostAsJsonAsync("/api/apps/Sites/CreateProject",new {FilesDirectoryId=folder.Value,StackProjectId=(Guid?)null,StackDomainId=(Guid?)null,SourceRevision="fixture-a",Name="Fixture site",FrameworkId="9to1-native",RelativeProjectPath="Fixture"});
     created.EnsureSuccessStatusCode();using var result=JsonDocument.Parse(await created.Content.ReadAsStringAsync());
     Check(result.RootElement.GetProperty("Error").ValueKind==JsonValueKind.Null,"canonical Sites creation");
     var siteID=result.RootElement.GetProperty("Value").GetProperty("SiteId").GetGuid();
     var page=await http.PostAsJsonAsync("/api/apps/Sites/CreatePage",new {siteID,expectedRevision=1,name="Home",path="/"});page.EnsureSuccessStatusCode();
+    var imported=await http.PostAsJsonAsync("/api/apps/Sites/ImportContent",new {siteID,expectedRevision=2,name="Imported",path="/imported",html="<h1>Preserved title</h1><p>Original <strong>content</strong>.</p>"});imported.EnsureSuccessStatusCode();
+    using(var importedResult=JsonDocument.Parse(await imported.Content.ReadAsStringAsync()))Check(importedResult.RootElement.GetProperty("Project").GetProperty("Revision").GetInt64()==3,"actual authenticated canonical HTML import");
+    var rejectedImport=await http.PostAsJsonAsync("/api/apps/Sites/ImportContent",new {siteID,expectedRevision=3,name="Unsafe",path="/unsafe",html="<script>throw 1</script><p>Keep original</p>"});rejectedImport.EnsureSuccessStatusCode();
+    using(var rejectedResult=JsonDocument.Parse(await rejectedImport.Content.ReadAsStringAsync()))Check(rejectedResult.RootElement.GetProperty("Project").ValueKind==JsonValueKind.Null,"unsafe content cannot mutate canonical project");
     var pricing=await http.PostAsJsonAsync("/api/subscription/preview",new BuilderSelection(1,null,20_000_000_000));
     Check((await pricing.Content.ReadAsStringAsync()).Contains("DustPer1x"),"missing production costs precise blocker");
     await http.PostAsync("/api/account/signout",null);
     Check((await http.GetAsync("/api/catalogue")).StatusCode==HttpStatusCode.Unauthorized,"revoked token domain dispatch denied");
+    await nativeAdmin.DispatchAsync("Refresh",null);Check(nativeAdmin.Organisations.Count==0&&nativeAdmin.Members.Count==0&&nativeAdmin.Audit.Count==0,"native projection cleared after actual server revocation");
     Console.WriteLine("PASS authenticated HTTP CAKE identity, actual Files/Sites adapters, canonical creation/edit, missing price inputs, revocation");
 }
 finally {if(host is {HasExited:false}){host.Kill(true);await host.WaitForExitAsync();}host?.Dispose();Directory.Delete(root,true);}

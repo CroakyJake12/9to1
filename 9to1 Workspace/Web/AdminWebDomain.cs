@@ -7,7 +7,7 @@ namespace NineToOne.Web;
 public sealed class AdminWebDomain(OrganisationService organisations) : IWorkspaceWebDomain
 {
     public string Name=>"Admin";
-    public IReadOnlySet<string> Actions {get;}=new HashSet<string>{"Organisations.List","Organisations.Get","Members.Invite","Members.AcceptInvitation","Members.Suspend","Members.Reinstate","Members.Remove","Members.SetRoles","Roles.Create","Policies.GetEffective","Billing.PreviewDowngrade"};
+    public IReadOnlySet<string> Actions {get;}=new HashSet<string>{"Organisations.List","Organisations.Get","Audit.List","Members.Invite","Members.AcceptInvitation","Members.Suspend","Members.Reinstate","Members.Remove","Members.SetRoles","Roles.Create","Policies.GetEffective","Billing.PreviewDowngrade"};
     public async Task<JsonElement> InvokeAsync(string action,JsonElement args,Guid accountID,CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();object result;
@@ -19,6 +19,7 @@ public sealed class AdminWebDomain(OrganisationService organisations) : IWorkspa
             switch(action)
             {
                 case "Organisations.Get":result=organisations.Get(accountID,orgID);break;
+                case "Audit.List":result=organisations.ListAudit(accountID,orgID,args.TryGetProperty("offset",out var auditOffset)?auditOffset.GetInt32():0,args.TryGetProperty("limit",out var auditLimit)?auditLimit.GetInt32():100);break;
                 case "Members.Invite":result=organisations.Invite(accountID,orgID,args.GetProperty("intendedAccountID").GetGuid(),Roles(args),args.GetProperty("expiresAt").GetDateTimeOffset());break;
                 case "Members.SetRoles":result=organisations.SetRoles(accountID,orgID,Revision(args),Key(args),args.GetProperty("memberID").GetGuid(),Roles(args));break;
                 case "Members.Suspend":case "Members.Reinstate":case "Members.Remove":result=organisations.SetMemberState(accountID,orgID,Revision(args),Key(args),args.GetProperty("memberID").GetGuid(),action=="Members.Suspend"?OrganisationMemberState.Suspended:action=="Members.Remove"?OrganisationMemberState.Removed:OrganisationMemberState.Active);break;

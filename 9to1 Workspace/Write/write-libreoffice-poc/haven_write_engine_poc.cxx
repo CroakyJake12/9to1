@@ -27,6 +27,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include "native_runtime_environment.hxx"
 
 namespace
 {
@@ -808,6 +809,7 @@ int main(int argc, char** argv)
         }
 
         const auto profileUrl = fileUrl(profilePath);
+        if (!configureNativeRuntimeData()) return 70;
         LibreOfficeKit* kit = lok_init_2(programPath.string().c_str(), profileUrl.c_str());
         if (!kit || !kit->pClass || !LIBREOFFICEKIT_HAS(kit, runLoop) || !kit->pClass->runLoop)
         {

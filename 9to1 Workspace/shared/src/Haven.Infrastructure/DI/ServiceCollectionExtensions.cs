@@ -36,13 +36,25 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ResourceAuthorizationService>();
         services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
         services.AddSingleton<HomeLocalStoreOwnership>();
+        services.TryAddSingleton<IResourceStoreOwnershipAuthority, HomeResourceStoreOwnershipAuthority>();
+        services.TryAddSingleton<IInstalledApplicationRegistry, HomeInstalledApplicationRegistry>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeInvocationResourceSource, HomeInstalledAppInvocationSource>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeCoreStateService>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeInstalledApplicationsService>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomePermissionsCoreService>());
+        services.TryAddSingleton<HomeCoreRuntime>();
         services.AddSingleton<HomeResourceOperationBroker>();
         services.AddSingleton<HomeInvocationCatalogue>();
         services.AddSingleton<IInvocationCatalogue>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
         services.AddSingleton<IInvocationResolver>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
-        services.AddSingleton<HomeAppAiServices>(provider => new(
-            provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
-            new HomePermissionCallerIdentity("9to1.native-host", "9to1 native application", "local-installed-host", "1", true), provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>()));
+        services.AddSingleton<HomeAppAiServices>(provider =>
+        {
+            var actor = provider.GetRequiredService<HomeLocalProfileIdentity>().GetCurrentAsync(default).AsTask().GetAwaiter().GetResult()
+                ?? throw new UnauthorizedAccessException("The native Home caller requires verified operating-system profile authority.");
+            return new(provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
+                new HomePermissionCallerIdentity(actor.ActorId, "9to1 native Home host", "os-bound-local-profile", actor.AuthenticationRevision, true),
+                provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>(), provider.GetServices<IHomeActionPolicySource>());
+        });
         services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IDulcheAppClient>(provider => provider.GetRequiredService<HomeAppAiServices>());
@@ -204,14 +216,21 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Haven.Application.Automations.DeviceAutomationNodeExecutor>();
         services.AddSingleton<Haven.Application.Automations.BuiltInAutomationActionNodeExecutor>();
         services.AddSingleton<Haven.Application.Automations.IAutomationGraphAiEditor, Haven.Application.Automations.AutomationGraphAiEditor>();
-        services.AddHttpClient<OllamaClient>(client =>
+        var ollamaTransportAddress = Environment.GetEnvironmentVariable("OLLAMA_HOST")?.Trim();
+        if (string.IsNullOrWhiteSpace(ollamaTransportAddress)) ollamaTransportAddress = "http://127.0.0.1:11434/";
+        if (!ollamaTransportAddress.EndsWith("/", StringComparison.Ordinal)) ollamaTransportAddress += "/";
+        var ollamaTransportUri = new Uri(ollamaTransportAddress, UriKind.Absolute);
+        services.AddHttpClient("Haven.Ollama", client =>
         {
-            var endpoint = Environment.GetEnvironmentVariable("OLLAMA_HOST")?.Trim();
-            if (string.IsNullOrWhiteSpace(endpoint)) endpoint = "http://127.0.0.1:11434/";
-            if (!endpoint.EndsWith("/", StringComparison.Ordinal)) endpoint += "/";
-            client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+            client.BaseAddress = ollamaTransportUri;
             client.Timeout = Timeout.InfiniteTimeSpan;
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseProxy = !OllamaModelProvider.IsDeviceLocalEndpoint(ollamaTransportUri)
         });
+        services.AddSingleton<OllamaClient>(provider => OllamaClient.CreatePinned(
+            provider.GetRequiredService<IHttpClientFactory>().CreateClient("Haven.Ollama"), provider.GetRequiredService<ProviderUsageCaptureBuffer>()));
         services.AddSingleton<IOllamaClient>(provider => provider.GetRequiredService<OllamaClient>());
         services.AddSingleton<ILocalOllamaClient, LocalOllamaClientAdapter>();
 
@@ -289,6 +308,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton<PluginToolRuntime>();
         services.AddSingleton<IVersionedSettingsStore, VersionedAtomicSettingsStore>();
+        services.AddSingleton<IVersionedSettingsCompareExchange>(provider => (IVersionedSettingsCompareExchange)provider.GetRequiredService<IVersionedSettingsStore>());
         services.AddSingleton<IUpdatePreferenceStore, VersionedUpdatePreferenceStore>();
         services.AddSingleton(new Func<InstallationInfo>(WindowsInstallationDetector.DetectInstallationSource));
         services.AddSingleton(new Func<string>(CurrentExecutableVersion));

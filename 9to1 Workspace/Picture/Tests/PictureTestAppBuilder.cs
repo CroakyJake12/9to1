@@ -10,6 +10,7 @@ namespace HavenOS.Images.Tests;
 public static class PictureTestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
+        .WithInterFont()
         .UseSkia()
         .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
 }

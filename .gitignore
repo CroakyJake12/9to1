@@ -48,3 +48,8 @@ dist/
 *.userprefs
 
 
+# Pinned Avalonia source build metadata is source, not generated build output.
+!framework/CUI/vendor/Avalonia/build/
+!framework/CUI/vendor/Avalonia/build/**
+!framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/
+!framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/**

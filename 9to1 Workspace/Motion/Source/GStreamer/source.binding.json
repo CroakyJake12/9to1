@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "donor": "gstreamer",
+  "canonicalSourcePath": "9to1 Workspace/Wave/Source/GStreamer",
+  "commit": "83e7df9168dd73f5dcd1caa60195a9d9dce558b4",
+  "sourceRepository": "https://github.com/CroakyJake12/gstreamer"
+}

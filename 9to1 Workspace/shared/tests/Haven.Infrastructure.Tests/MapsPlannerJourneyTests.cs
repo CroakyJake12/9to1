@@ -108,11 +108,30 @@ public sealed class MapsPlannerJourneyTests
         Assert.Equal(1, (await maps.ReadAsync()).Revision);
     }
 
+    [Fact]
+    public async Task Maps_resolver_rechecks_live_store_binding_and_rejects_revocation_during_evaluation()
+    {
+        using var paths = new Paths();
+        var maps = new MapsJourneyService(new VersionedAtomicSettingsStore(paths));
+        var journey = (await maps.SaveJourneyAsync(0, Journey(DateTimeOffset.UtcNow))).Value!;
+        var identity = await maps.GetStoreIdentityAsync(default);
+        var owner = new BoundOwner(identity.StoreId.ToString("D"));
+        var resolver = new MapsJourneyResourceResolver(maps, maps, owner);
+        var actor = new AuthenticatedResourceActor("trusted-user", "local-profile", null, null, "session-1");
+        var scope = new ResourceScope("maps.journey", journey.JourneyId.ToString("D"), "1", ResourceAccess.Read);
+        Assert.True((await resolver.EvaluateAsync(actor, "maps.planner.read", scope, default)).Allowed);
+        owner.RevokeAfterFirstRead = true;
+        owner.Reads = 0;
+        Assert.Equal("StoreOwnershipChanged", (await resolver.EvaluateAsync(actor, "maps.planner.read", scope, default)).Code);
+        Assert.False((await resolver.EvaluateAsync(actor, "maps.planner.read", scope, default)).Allowed);
+        Assert.Equal(1, (await maps.ReadAsync()).Revision);
+    }
+
     private static MapsPlannerJourneyService Facade(MapsJourneyService maps, IPlannerRepository repository, Policy policy, Actors actors)
     {
         var events = new PlannerEventJourneyAccessService(repository, policy);
         return new(maps, events, new ResourceAuthorizationService(actors,
-            [new PlannerEventResourceResolver(repository, new ProfilePlannerCalendarResourceBinding("local-profile")), new MapsJourneyResourceResolver(maps, "local-profile")]));
+            [new PlannerEventResourceResolver(repository, new ProfilePlannerCalendarResourceBinding("local-profile")), new MapsJourneyResourceResolver(maps, maps, new BoundOwner(maps.GetStoreIdentityAsync(default).AsTask().GetAwaiter().GetResult().StoreId.ToString("D")))]));
     }
     private static PlannerEvent Event(DateTimeOffset now) => new(Guid.NewGuid(), PlannerDefaults.LocalCalendarId,
         "College appointment", "", "", now.AddHours(1), now.AddHours(2), false, null, null, false, null, null, now, now);
@@ -120,6 +139,14 @@ public sealed class MapsPlannerJourneyTests
         [new(Guid.NewGuid(), MapJourneyStepKind.ManualInstruction, "Use the side entrance"),
          new(Guid.NewGuid(), MapJourneyStepKind.Wait, "Wait ten minutes", Duration: TimeSpan.FromMinutes(10))],
         MapObjectVisibility.Private, now, now, 0);
+    private sealed class BoundOwner(string storeID) : IResourceStoreOwnershipAuthority
+    {
+        public bool RevokeAfterFirstRead { get; set; }
+        public int Reads { get; set; }
+        public ValueTask<VerifiedResourceStoreOwnership?> GetVerifiedAsync(string kind, string id, CancellationToken token) =>
+            ValueTask.FromResult<VerifiedResourceStoreOwnership?>(!(RevokeAfterFirstRead && ++Reads > 1) && kind == "maps" && id == storeID
+                ? new(kind, id, "local-profile", "controlled-binding-revision") : null);
+    }
     private sealed class Actors : IAuthenticatedResourceActorSource
     {
         public string Profile { get; set; } = "local-profile";

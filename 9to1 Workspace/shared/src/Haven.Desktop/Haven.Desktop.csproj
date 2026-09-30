@@ -26,11 +26,16 @@
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
     <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../../Files/CUI/HavenOS.Files.CUI.csproj" />
+    <ProjectReference Include="../../../Wave/HavenOS.Wave.csproj" />
+    <ProjectReference Include="../../../Motion/HavenOS.Motion.csproj" />
     <ProjectReference Include="../../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />

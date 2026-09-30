@@ -4,6 +4,9 @@ using Android.Content.PM;
 using Android.Graphics;
 using Android.Views;
 using Android.Widget;
+using Haven.Application;
+using Haven.Desktop;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Android;
 
@@ -18,12 +21,16 @@ public sealed partial class HavenLauncherActivity
             _launcherStatus.Text = "Loading apps…";
         try
         {
-            var apps = await Task.Run(QueryApps);
+            var apps = await QueryAppsAsync();
             if (generation != Volatile.Read(ref _appLoadGeneration))
                 return;
 
             _apps.Clear();
             _apps.AddRange(ApplySavedOrder(apps));
+            var savedOrder = (Preferences.GetString(OrderKey, string.Empty) ?? string.Empty)
+                .Split('|', StringSplitOptions.RemoveEmptyEntries);
+            if (savedOrder.Any(key => !Guid.TryParse(key, out _)))
+                SaveOrder(); // One-time migration of personal-profile placement to canonical IDs.
             _page = Math.Clamp(_page, 0, Math.Max(0, PageCount - 1));
             if (_launcherStatus is not null)
                 _launcherStatus.Text = _apps.Count == 0
@@ -44,29 +51,25 @@ public sealed partial class HavenLauncherActivity
             Toast.MakeText(this, "Could not load apps", ToastLength.Long)?.Show();
         }
     }
-    private IReadOnlyList<LauncherApp> QueryApps()
+    private async Task<IReadOnlyList<LauncherApp>> QueryAppsAsync()
     {
-        var manager = PackageManager;
-        if (manager is null)
-            return [];
-
-        var apps = AndroidInstalledAppCatalog.Query(manager, loadIcons: true)
-            .Select(app => new LauncherApp(
-                app.Label,
-                app.PackageName,
-                app.ActivityName,
-                app.Icon))
-            .ToList();
-
-        if (!apps.Any(app => string.Equals(app.PackageName, PackageName, StringComparison.OrdinalIgnoreCase)))
+        var services = App.Services ?? throw new InvalidOperationException("9-1 Home is unavailable.");
+        var registry = services.GetRequiredService<IInstalledApplicationRegistry>();
+        var catalog = services.GetRequiredService<AndroidLauncherPlatformCatalog>();
+        var references = await registry.RefreshAsync(_launcherLifetime.Token);
+        var profiles = await Task.Run(() => catalog.Observe(loadIcons: true), _launcherLifetime.Token);
+        var apps = new List<LauncherApp>();
+        foreach (var reference in references.Where(item => item.ProviderId == AndroidLauncherPlatformCatalog.ProviderId))
         {
-            apps.Insert(0, new LauncherApp(
-                "Haven",
-                PackageName!,
-                typeof(AndroidBootstrapActivity).FullName!,
-                ApplicationInfo?.LoadIcon(manager)));
+            var component = ComponentName.UnflattenFromString(reference.Entrypoint);
+            if (component?.PackageName is null || component.ClassName is null) continue;
+            var profile = profiles.SingleOrDefault(item => item.PlatformUserSerial == reference.PlatformProfileId);
+            var platformActivity = profile?.Activities.SingleOrDefault(item => item.Entrypoint == reference.Entrypoint);
+            apps.Add(new(reference.Label, component.PackageName, component.ClassName,
+                platformActivity?.BadgedIcon, reference.ApplicationId, reference.Revision,
+                reference.PlatformProfileId, profile?.Label ?? $"Android profile {reference.PlatformProfileId}",
+                profile?.IsCurrentProfile == true, reference.Enabled && reference.ProfileAccessible));
         }
-
         return apps;
     }
 
@@ -75,10 +78,12 @@ public sealed partial class HavenLauncherActivity
         var order = (Preferences.GetString(OrderKey, string.Empty) ?? string.Empty)
             .Split('|', StringSplitOptions.RemoveEmptyEntries)
             .Select((key, index) => (key, index))
-            .ToDictionary(item => item.key, item => item.index, StringComparer.Ordinal);
+            .GroupBy(item => item.key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().index, StringComparer.Ordinal);
 
         return apps
-            .OrderBy(app => order.TryGetValue(app.Key, out var index) ? index : int.MaxValue)
+            .OrderBy(app => order.TryGetValue(app.Key, out var index) ? index
+                : app.IsCurrentProfile && order.TryGetValue(app.LegacyPersonalKey, out var legacyIndex) ? legacyIndex : int.MaxValue)
             .ThenBy(app => app.Label, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
     }
@@ -130,11 +135,12 @@ public sealed partial class HavenLauncherActivity
         var tile = new LinearLayout(this)
         {
             Orientation = Orientation.Vertical,
-            ContentDescription = $"{app.Label}, {app.PackageName}",
+            ContentDescription = $"{app.Label}, {app.ProfileLabel}" + (app.Available ? string.Empty : ", unavailable"),
             LayoutParameters = new ViewGroup.LayoutParams(width, height)
         };
         tile.SetGravity(GravityFlags.Center);
         tile.SetPadding(Dp(4), Dp(4), Dp(4), Dp(4));
+        if (!app.Available) tile.Alpha = 0.5f;
 
         var icon = new ImageView(this)
         {
@@ -169,6 +175,13 @@ public sealed partial class HavenLauncherActivity
             package.Ellipsize = global::Android.Text.TextUtils.TruncateAt.Middle;
             package.SetTextColor(Color.Argb(210, 230, 220, 255));
             tile.AddView(package);
+        }
+        if (!app.IsCurrentProfile)
+        {
+            var profile = new TextView(this) { Text = app.ProfileLabel, TextSize = 9, Gravity = GravityFlags.Center };
+            profile.SetTextColor(Color.Argb(220, 235, 225, 255));
+            profile.SetMaxLines(1);
+            tile.AddView(profile);
         }
 
         tile.LongClick += (_, args) =>
@@ -372,15 +385,22 @@ public sealed partial class HavenLauncherActivity
             ViewGroup.LayoutParams.MatchParent);
     }
 
-    private void LaunchApp(LauncherApp app)
+    private async void LaunchApp(LauncherApp app)
     {
         try
         {
-            var intent = new Intent(Intent.ActionMain);
-            intent.AddCategory(Intent.CategoryLauncher);
-            intent.SetClassName(app.PackageName, app.ActivityName);
-            intent.AddFlags(ActivityFlags.NewTask);
-            StartActivity(intent);
+            var services = App.Services ?? throw new InvalidOperationException("9-1 Home is unavailable.");
+            var resolved = await services.GetRequiredService<IInstalledApplicationRegistry>()
+                .ResolveLaunchAsync(app.ApplicationId, app.RegistryRevision, _launcherLifetime.Token);
+            if (resolved is null)
+            {
+                LoadAppsAsync();
+                throw new InvalidOperationException("This application or its owning profile changed or is unavailable. Refresh the launcher and try again.");
+            }
+            services.GetRequiredService<AndroidLauncherPlatformCatalog>().Launch(resolved.PlatformProfileId, resolved.Entrypoint);
+        }
+        catch (OperationCanceledException) when (_launcherLifetime.IsCancellationRequested)
+        {
         }
         catch (Exception exception)
         {

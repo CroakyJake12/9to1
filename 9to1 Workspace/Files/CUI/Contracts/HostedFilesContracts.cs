@@ -36,7 +36,7 @@ public enum FilesAccessRole { Viewer, Editor, Owner }
 public enum FilesGrantOrigin { Direct, Inherited }
 public enum FilesRiskLevel { Ordinary, Elevated, Destructive, SecuritySensitive }
 public enum FilesPermissionInheritancePolicy { RecomputeEffectiveGrants, PreserveExplicitGrants, RequireApprovalOnChange }
-public enum FilesArtifactType { WriteDocument, Presentation, Spreadsheet, Board, Canvas }
+public enum FilesArtifactType { WriteDocument, Presentation, Spreadsheet, Board, Canvas, Picture }
 public enum FilesErrorCode
 {
 	ItemNotFound, RevisionConflict, NameConflict, ConflictRequiresDecision, PermissionDenied,

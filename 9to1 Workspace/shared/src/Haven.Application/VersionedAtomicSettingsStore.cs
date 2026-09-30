@@ -50,7 +50,7 @@ public sealed class SettingsExportManifest
 /// </summary>
 public sealed record SettingsStoreIdentity(int SchemaVersion, Guid StoreId, DateTimeOffset CreatedAtUtc);
 
-public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IResourceStoreIdentitySource
+public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IResourceStoreIdentitySource, IVersionedSettingsCompareExchange
 {
     private readonly IAppPaths _paths;
     private readonly SemaphoreSlim _lock = new(1, 1);
@@ -69,7 +69,8 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             if (_identityNeedsPersistence) await CommitAsync(new(_settings, StringComparer.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
             return new(_identity!.SchemaVersion, _identity.StoreId, _identity.CreatedAtUtc, _newlyCreated);
         }
@@ -81,7 +82,8 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             if (!_settings.TryGetValue(key, out var json)) return null;
             try
             {
@@ -104,7 +106,8 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             var next = new Dictionary<string, string>(_settings, StringComparer.OrdinalIgnoreCase) { [key] = json };
             await CommitAsync(next, cancellationToken).ConfigureAwait(false);
         }
@@ -116,7 +119,8 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             var next = new Dictionary<string, string>(_settings, StringComparer.OrdinalIgnoreCase);
             if (next.Remove(key)) await CommitAsync(next, cancellationToken).ConfigureAwait(false);
         }
@@ -128,8 +132,9 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-            return new SettingsExportManifest { Version = _version, Settings = new(_settings) };
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
+            return new SettingsExportManifest { Version = _version, Settings = new(_settings), StoreIdentity = _identityNeedsPersistence ? null : _identity };
         }
         finally { _lock.Release(); }
     }
@@ -141,7 +146,8 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             var next = new Dictionary<string, string>(_settings, StringComparer.OrdinalIgnoreCase);
             foreach (var (key, value) in manifest.Settings) next[key] = value;
             await CommitAsync(next, cancellationToken).ConfigureAwait(false);
@@ -150,11 +156,69 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         finally { _lock.Release(); }
     }
 
+    public async Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson,
+        string? replacementJson, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        if (replacementJson is not null)
+        {
+            try { using var value = JsonDocument.Parse(replacementJson); }
+            catch (JsonException error) { throw new ArgumentException("Replacement settings must be valid serialized JSON.", nameof(replacementJson), error); }
+        }
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
+            await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
+            _settings.TryGetValue(key, out var current);
+            if (!StringComparer.Ordinal.Equals(current, expectedJson)) return new(false, current, _version);
+            if (StringComparer.Ordinal.Equals(current, replacementJson)) return new(true, current, _version);
+            var next = new Dictionary<string, string>(_settings, StringComparer.OrdinalIgnoreCase);
+            if (replacementJson is null) next.Remove(key); else next[key] = replacementJson;
+            await CommitAsync(next, cancellationToken).ConfigureAwait(false);
+            return new(true, replacementJson, _version);
+        }
+        finally { _lock.Release(); }
+    }
+
+    private async Task<FileStream> AcquireStoreLeaseAsync(CancellationToken token)
+    {
+        Directory.CreateDirectory(_paths.DataDirectory);
+        var path = GetSettingsPath() + ".lock";
+        var options = new FileStreamOptions { Mode = FileMode.OpenOrCreate, Access = FileAccess.ReadWrite, Share = FileShare.None };
+        if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        for (var attempt = 0; ; attempt++)
+        {
+            token.ThrowIfCancellationRequested();
+            try { return new FileStream(path, options); }
+            catch (IOException) when (attempt < 200 && File.Exists(path))
+            { await Task.Delay(25, token).ConfigureAwait(false); }
+        }
+    }
+
+    private async Task RefreshLoadedAsync(CancellationToken token)
+    {
+        var previous = _identityNeedsPersistence ? null : _identity;
+        var wasNew = _newlyCreated;
+        _loaded = false;
+        _settings = new(StringComparer.OrdinalIgnoreCase);
+        _version = 0;
+        _recoveredFromBackup = false;
+        await EnsureLoadedAsync(token).ConfigureAwait(false);
+        if (previous is not null)
+        {
+            if (_identity!.StoreId != previous.StoreId)
+                throw new InvalidOperationException("The durable settings root changed; preserve it and review ownership before reopening.");
+            _newlyCreated = wasNew;
+        }
+    }
+
     // Caller holds the shared gate. Empty-but-loaded is different from not loaded.
     private async Task EnsureLoadedAsync(CancellationToken cancellationToken)
     {
         if (_loaded) return;
         var path = GetSettingsPath();
+        if (Directory.Exists(path)) throw new IOException("The settings file target is a directory; explicit recovery is required.");
         if (!File.Exists(path))
         {
             _identity = new(1, Guid.NewGuid(), DateTimeOffset.UtcNow);

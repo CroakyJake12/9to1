@@ -72,6 +72,13 @@ public sealed class MainActivity : AvaloniaMainActivity
         base.OnPause();
     }
 
+    protected override void OnDestroy()
+    {
+        AndroidRuntimePermissions.Detach(this);
+        AndroidRuntimeDiagnostics.Detach(this);
+        base.OnDestroy();
+    }
+
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, global::Android.Content.PM.Permission[] grantResults)
     {
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults);

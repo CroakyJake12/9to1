@@ -6,11 +6,12 @@ using Android.Graphics;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
+using HavenOS.Home.Core;
 
 namespace Haven.Android;
 
 [Activity(
-    Label = "Haven Launcher",
+    Label = "9to1 Launcher",
     Theme = "@style/Theme.AppCompat.Light.NoActionBar",
     Icon = "@drawable/haven_icon",
     Exported = true,
@@ -52,6 +53,9 @@ public sealed partial class HavenLauncherActivity : Activity
     private int _page;
     private string? _movingKey;
     private int _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
+    private readonly CancellationTokenSource _launcherLifetime = new();
+    private bool _homeReady;
+    private bool _activityStarted;
 
     private ISharedPreferences Preferences
         => GetSharedPreferences(PreferenceName, FileCreationMode.Private)!;
@@ -68,12 +72,20 @@ public sealed partial class HavenLauncherActivity : Activity
         _widgetHost = new AppWidgetHost(this, WidgetHostId);
         _widgetManager = AppWidgetManager.GetInstance(this);
 
-        BuildSurface();
+        ShowHomeBootstrap("Preparing 9-1 Home…");
+        _ = InitializeHomeAsync();
     }
 
     protected override void OnStart()
     {
         base.OnStart();
+        _activityStarted = true;
+        StartWidgetListening();
+    }
+
+    private void StartWidgetListening()
+    {
+        if (!_homeReady || !_activityStarted) return;
         try
         {
             _widgetHost?.StartListening();
@@ -86,6 +98,7 @@ public sealed partial class HavenLauncherActivity : Activity
 
     protected override void OnStop()
     {
+        _activityStarted = false;
         try
         {
             _widgetHost?.StopListening();
@@ -99,6 +112,7 @@ public sealed partial class HavenLauncherActivity : Activity
     protected override void OnResume()
     {
         base.OnResume();
+        if (!_homeReady) return;
         ApplyWallpaper();
         RenderWidgets();
         LoadAppsAsync(showLoading: _apps.Count == 0);
@@ -107,11 +121,61 @@ public sealed partial class HavenLauncherActivity : Activity
     public override void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
+        if (!_homeReady) return;
 
         // This activity handles orientation/screen/density changes itself, so rebuild the
         // native surface to recalculate all dp-derived dimensions against current metrics.
         BuildSurface();
         _grid?.Post(RenderPage);
+    }
+
+    protected override void OnDestroy()
+    {
+        _launcherLifetime.Cancel();
+        _launcherLifetime.Dispose();
+        Interlocked.Increment(ref _appLoadGeneration);
+        base.OnDestroy();
+    }
+
+    private async Task InitializeHomeAsync()
+    {
+        try
+        {
+            var home = await AndroidHomeServiceHost.EnsureAsync(installedApplications: true, _launcherLifetime.Token);
+            if (_launcherLifetime.IsCancellationRequested) return;
+            if (home.State != HomeNativeHostState.Ready)
+            {
+                ShowHomeBootstrap(home.Message);
+                return;
+            }
+            _homeReady = true;
+            StartWidgetListening();
+            BuildSurface();
+            ApplyWallpaper();
+            RenderWidgets();
+            LoadAppsAsync(showLoading: true);
+        }
+        catch (System.OperationCanceledException) when (_launcherLifetime.IsCancellationRequested) { }
+        catch
+        {
+            if (!_launcherLifetime.IsCancellationRequested)
+                ShowHomeBootstrap("9-1 Home needs repair before Launcher can open your applications. Existing state was preserved.");
+        }
+    }
+
+    private void ShowHomeBootstrap(string message)
+    {
+        var panel = new LinearLayout(this) { Orientation = Orientation.Vertical };
+        panel.SetPadding(Dp(24), Dp(40), Dp(24), Dp(24));
+        var title = new TextView(this) { Text = "9-1 Home", TextSize = 24 };
+        var detail = new TextView(this) { Text = message, TextSize = 16 };
+        var repair = new Button(this) { Text = "Open Home" };
+        repair.Click += (_, _) => StartActivity(new Intent(this, typeof(AndroidBootstrapActivity)));
+        panel.AddView(title);
+        panel.AddView(detail);
+        panel.AddView(repair);
+        SetContentView(panel);
+        AndroidTypography.ApplyTree(panel);
     }
 
     public override void OnBackPressed()

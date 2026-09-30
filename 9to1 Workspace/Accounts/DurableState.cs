@@ -1,20 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace NineToOne.Accounts;
 
 internal sealed record StateEnvelope<T>(int SchemaVersion, T State);
 internal static class DurableState
 {
-    private static readonly JsonSerializerOptions Options = CreateOptions();
-    private static JsonSerializerOptions CreateOptions(){var options=new JsonSerializerOptions();options.Converters.Add(new StringSetConverter());return options;}
-    private sealed class StringSetConverter:JsonConverter<IReadOnlySet<string>>
-    {
-        public override IReadOnlySet<string> Read(ref Utf8JsonReader reader,Type type,JsonSerializerOptions options)=>JsonSerializer.Deserialize<HashSet<string>>(ref reader,options)??throw new JsonException("invalid_set");
-        public override void Write(Utf8JsonWriter writer,IReadOnlySet<string> value,JsonSerializerOptions options)=>JsonSerializer.Serialize(writer,value.ToArray(),options);
-    }
+    private static readonly JsonSerializerOptions Options = AccountContractJson.CreateOptions();
     public static T Read<T>(string path)
     {
         var envelope = JsonSerializer.Deserialize<StateEnvelope<T>>(File.ReadAllText(path),Options)
@@ -27,7 +20,9 @@ internal static class DurableState
         var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            var fileOptions=new FileStreamOptions{Mode=FileMode.CreateNew,Access=FileAccess.Write,Share=FileShare.None};
+            if(!OperatingSystem.IsWindows())fileOptions.UnixCreateMode=UnixFileMode.UserRead|UnixFileMode.UserWrite;
+            using (var stream = new FileStream(temporary, fileOptions))
             { JsonSerializer.Serialize(stream, new StateEnvelope<T>(1, state),Options); stream.Flush(true); }
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(temporary, UnixFileMode.UserRead | UnixFileMode.UserWrite);
             File.Move(temporary, path, true);

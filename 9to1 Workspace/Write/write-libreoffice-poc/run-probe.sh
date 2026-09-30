@@ -10,6 +10,8 @@ inside BUILD_DIR so edit persistence and reopen are still exercised.
 
 Environment overrides:
   LO_PROGRAM_PATH   LibreOffice program directory (default /usr/lib/libreoffice/program)
+  LO_INCLUDE_PATH   LibreOfficeKit header root (default /usr/include)
+  LO_LANGTAG_DATA_PATH isolated liblangtag data directory (optional)
   CXX               C++ compiler (default c++)
   BUILD_DIR         disposable build directory (default under /tmp)
 EOF
@@ -27,6 +29,7 @@ fi
 
 source_document="$1"
 lo_program="${LO_PROGRAM_PATH:-/usr/lib/libreoffice/program}"
+lo_include="${LO_INCLUDE_PATH:-/usr/include}"
 cxx="${CXX:-c++}"
 build_dir="${BUILD_DIR:-/tmp/haven-write-lok-probe}"
 output_document="${2:-$build_dir/roundtrip.odt}"
@@ -47,8 +50,8 @@ if ! command -v "$cxx" >/dev/null 2>&1; then
   exit 67
 fi
 
-if [[ ! -f /usr/include/LibreOfficeKit/LibreOfficeKit.h ]]; then
-  echo "FAIL: LibreOfficeKit headers are missing; expected libreofficekit-dev to provide /usr/include/LibreOfficeKit/LibreOfficeKit.h" >&2
+if [[ ! -f "$lo_include/LibreOfficeKit/LibreOfficeKit.h" ]]; then
+  echo "FAIL: LibreOfficeKit headers are missing under LO_INCLUDE_PATH=$lo_include" >&2
   exit 68
 fi
 
@@ -65,7 +68,7 @@ rm -f "$tile_file" "$output_document"
 "$cxx" \
   -std=c++20 \
   -Wall -Wextra -Wpedantic -Werror \
-  -I/usr/include \
+  -I"$lo_include" \
   "$script_dir/lok_probe.cxx" \
   -ldl \
   -o "$probe_binary"

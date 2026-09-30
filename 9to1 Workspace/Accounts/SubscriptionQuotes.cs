@@ -2,6 +2,8 @@ namespace NineToOne.Accounts;
 
 public sealed class SubscriptionQuotes(string statePath,SubscriptionBuilder builder,Guid authenticatedAccountID,Guid? organisationID=null)
 {
+    internal Guid OwnerAccountID => authenticatedAccountID;
+    internal Guid? OwnerOrganisationID => organisationID;
     private sealed record OwnedQuote(Guid AccountID,Guid? OrgID,SubscriptionQuote Quote);
     private sealed record QuoteState(IReadOnlyList<OwnedQuote> Quotes);
     public PricingResult Preview(BuilderSelection selection)

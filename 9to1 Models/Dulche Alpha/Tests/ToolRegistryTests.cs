@@ -56,6 +56,28 @@ public sealed class ToolRegistryTests
         Assert.Empty(registry.List(Context).Entries);
         Assert.Single(registry.List(Context with { ComputerUseInvocationId = "explicit-1" }).Entries);
     }
+    [Fact] public async Task Resolves_recursive_inputs_ranked_alternatives_and_rejects_cycles_or_invented_arguments()
+    {
+        var registry = new DulcheToolRegistry(new Authority());
+        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", outputs: ["image.reference"]));
+        await registry.RegisterAsync("plugin", Tool("slide-a", "plugin", "slide.insert", inputs: ["image.reference"]));
+        await registry.RegisterAsync("present", Tool("slide-b", "present", "slide.insert", inputs: ["image.reference"]));
+        var result = registry.Resolve([Intent("slide.insert")], Context);
+        Assert.Equal(2, result.Plans.Count);
+        Assert.All(result.Plans, plan =>
+        {
+            Assert.Equal("image-a", plan.Steps[0].CapabilityId);
+            Assert.Equal("step-1", Assert.Single(plan.Steps[1].Dependencies));
+        });
+        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", inputs: ["image.reference"], outputs: ["image.reference"]));
+        Assert.Equal(ResolutionFailureKind.MissingPrerequisite, registry.Resolve([Intent("slide.insert")], Context).Failure);
+        await registry.RegisterAsync("image", Tool("image-a", "image", "image.generate", outputs: ["image.reference"]) with
+        { ParameterSchemaJson = "{\"type\":\"object\",\"required\":[\"prompt\"],\"properties\":{\"prompt\":{\"type\":\"string\"}}}" });
+        Assert.Equal(ResolutionFailureKind.MissingPrerequisite, registry.Resolve([Intent("slide.insert")], Context).Failure);
+        var bound = Intent("slide.insert") with { PrerequisiteArguments = new Dictionary<string, JsonElement>
+            { ["image-a"] = JsonSerializer.SerializeToElement(new { prompt = "User requested image" }) } };
+        Assert.Null(registry.Resolve([bound], Context).Failure);
+    }
     private sealed class Authority : IToolRegistryAuthority
     {
         public ValueTask<bool> MayRegisterAsync(string registrar, string owner, CancellationToken cancellationToken) =>

@@ -51,6 +51,11 @@ public sealed class HomeLocalProfileIdentityTests : IDisposable
         evidence.Current = new("planner", "new-store-2", "revision-1", true, true, true);
         var created = await ownership.BindNewEmptyAsync("planner", "new-store-2");
         Assert.Null(created.ImportApprovalId);
+        var applicationAuthority = new HomeResourceStoreOwnershipAuthority(ownership, profile);
+        var verified = await applicationAuthority.GetVerifiedAsync("planner", "new-store-2", default);
+        Assert.Equal(created.ProfileId, verified!.ProfileId);
+        Assert.Equal("revision-1", verified.ObservedStoreRevision);
+        Assert.Null(await applicationAuthority.GetVerifiedAsync("planner", "unknown-store", default));
         Assert.Null(await ownership.GetVerifiedAsync("planner", "unknown-store"));
     }
 

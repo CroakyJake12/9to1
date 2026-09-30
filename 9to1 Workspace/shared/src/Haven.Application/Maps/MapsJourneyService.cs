@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Haven.Core;
 
 namespace Haven.Application;
@@ -15,11 +16,15 @@ public sealed record MapsJourneyResult<T>(T? Value, string? ErrorCode, string? M
 }
 
 /// <summary>Private landmarks and saved custom journeys, persisted through the shared user settings store.</summary>
-public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
+public sealed partial class MapsJourneyService(IVersionedSettingsStore settings) : IResourceStoreIdentitySource
 {
     private const string Key = "maps.journeys.v1";
     private readonly IVersionedSettingsStore _settings = settings ?? throw new ArgumentNullException(nameof(settings));
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    public ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken cancellationToken) =>
+        _settings is IResourceStoreIdentitySource source ? source.GetStoreIdentityAsync(cancellationToken)
+        : ValueTask.FromException<ResourceStoreIdentity>(new InvalidOperationException("Maps store has no durable identity authority."));
 
     public async Task<MapsJourneyLibrary> ReadAsync(CancellationToken token = default)
     {
@@ -96,12 +101,19 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            var current = await LoadAsync(token).ConfigureAwait(false);
+            if (_settings is not IVersionedSettingsCompareExchange atomic)
+                return new(default, "AtomicStoreUnavailable", "Maps requires atomic storage.");
+            var stored = await _settings.ExportAsync(token).ConfigureAwait(false);
+            stored.Settings.TryGetValue(Key, out var expectedJson);
+            var current = expectedJson is null ? MapsJourneyLibrary.Empty : JsonSerializer.Deserialize<MapsJourneyLibrary>(expectedJson)
+                ?? throw new InvalidDataException("Stored maps library is null.");
+            Validate(current);
             if (revision != current.Revision) return new(default, "RevisionConflict", "Maps changed; refresh before applying this action.");
             var (next, value) = apply(current);
             next = next with { Revision = checked(revision + 1) };
             Validate(next);
-            await _settings.SetAsync(Key, next, token).ConfigureAwait(false);
+            if (!(await atomic.CompareExchangeAsync(Key, expectedJson, JsonSerializer.Serialize(next), token).ConfigureAwait(false)).Exchanged)
+                return new(default, "RevisionConflict", "Maps changed; refresh before applying this action.");
             return new(value, null, null);
         }
         catch (JourneyRevisionException) { return new(default, "RevisionConflict", "The saved journey changed."); }
@@ -109,6 +121,7 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
         { return new(default, "RevisionConflict", exception.Message); }
         catch (PrivateDependencyException) { return new(default, "PrivateDependency", "Explicitly share or remove private place dependencies before sharing this journey."); }
         catch (KeyNotFoundException exception) { return new(default, "NotFound", exception.Message); }
+        catch (JsonException) { return new(default, "InvalidData", "Stored Maps data is incompatible or corrupt; prior state was preserved."); }
         catch (InvalidDataException exception) { return new(default, "InvalidData", exception.Message); }
         catch (ArgumentException exception) { return new(default, "InvalidArgument", exception.Message); }
         catch (InvalidOperationException exception) { return new(default, "InvalidOperation", exception.Message); }

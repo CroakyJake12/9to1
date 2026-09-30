@@ -82,13 +82,23 @@ public sealed class MapsJourneyServiceTests
             new(Guid.NewGuid(), MapJourneyStepKind.Wait, "Sit for ten minutes", Duration: TimeSpan.FromMinutes(10))], MapObjectVisibility.Private, now, now, 0);
     }
 
-    private sealed class MemorySettings : IVersionedSettingsStore
+    private sealed class MemorySettings : IVersionedSettingsStore, IVersionedSettingsCompareExchange
     {
         private readonly Dictionary<string, string> _values = new();
         public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class =>
             Task.FromResult(_values.TryGetValue(key, out var json) ? JsonSerializer.Deserialize<T>(json) : null);
         public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class
         { _values[key] = JsonSerializer.Serialize(value); return Task.CompletedTask; }
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson, string? replacementJson, CancellationToken token)
+        {
+            lock (_values)
+            {
+                _values.TryGetValue(key, out var current);
+                if (current != expectedJson) return Task.FromResult(new SettingsCompareExchangeResult(false, current, 0));
+                if (replacementJson is null) _values.Remove(key); else _values[key] = replacementJson;
+                return Task.FromResult(new SettingsCompareExchangeResult(true, replacementJson, 0));
+            }
+        }
         public Task RemoveAsync(string key, CancellationToken token) { _values.Remove(key); return Task.CompletedTask; }
         public Task<SettingsExportManifest> ExportAsync(CancellationToken token) => Task.FromResult(new SettingsExportManifest { Settings = new(_values) });
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken token) => throw new NotSupportedException();

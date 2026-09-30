@@ -29,6 +29,7 @@
     <HavenMicrosoftCalendarClientId Condition="'$(HavenMicrosoftCalendarClientId)' == ''">$(HAVEN_MICROSOFT_CALENDAR_CLIENT_ID)</HavenMicrosoftCalendarClientId>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="HavenGoogleCalendarClientId" Value="$(HavenGoogleCalendarClientId)" Condition="'$(HavenGoogleCalendarClientId)' != ''" />
     <AssemblyMetadata Include="HavenMicrosoftCalendarClientId" Value="$(HavenMicrosoftCalendarClientId)" Condition="'$(HavenMicrosoftCalendarClientId)' != ''" />
     <Using Include="System" />
@@ -42,7 +43,9 @@
   <ItemGroup>
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj" />
     <ProjectReference Include="../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />

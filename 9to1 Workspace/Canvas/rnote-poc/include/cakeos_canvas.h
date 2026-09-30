@@ -73,6 +73,13 @@ CakeCanvasStatus cake_canvas_engine_from_rnote(
     void** out_handle
 );
 
+CakeCanvasStatus cake_canvas_engine_from_xopp(
+    const uint8_t* data,
+    size_t len,
+    double dpi,
+    void** out_handle
+);
+
 CakeCanvasStatus cake_canvas_set_stroke_tool(void* handle, uint32_t tool);
 CakeCanvasStatus cake_canvas_set_shape(void* handle, uint32_t shape);
 

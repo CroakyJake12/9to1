@@ -5,6 +5,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="AngleSharp" VersionOverride="1.5.0" />
     <ProjectReference Include="..\shared\src\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
   </ItemGroup>

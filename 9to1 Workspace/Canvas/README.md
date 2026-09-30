@@ -1,20 +1,13 @@
-# HavenOS Canvas
+# Canvas
 
-This directory is the bounded standalone Canvas app surface for HavenOS.
+The authoritative product contract is the Canvas section of the [9to1 Development Specification](https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg/edit). Canvas owns freeform drawing artifacts; Boards owns mixed-content workspaces.
 
-## Functional journey
+`CanvasRnoteDocument` embeds the controlled Rnote 0.15 structured engine snapshot in the schema-versioned `.9to1c` artifact. New strokes retain stable Canvas IDs and original samples, pressure and tilt. It uses shared `CanvasArtifactSession` revision checks, operation replay and coherent stroke/engine-state undo. Genuine Rnote/Xournal++ import reports donor precision/page/identity limitations explicitly. SVG preview frames carry original document-space bounds and use a revision cache.
 
-The first slice exposes a framework-neutral Canvas session that can create, open, and save native Canvas documents through the shared `INotesRepository`, add and move objects, connect objects, draw ink, pan/zoom the board, and undo/redo edits. The repository retains the canonical Notes document and its versioned persistence behavior; Canvas does not introduce a second storage format.
+`CanvasFilesArtifactBridge` requires a trusted Home actor, current Files authority and an explicitly registered canonical folder. Immutable candidates publish through Files revision CAS. Reopen validates hash/size and owning identity; stale/failed saves preserve the prior revision. It has no private storage fallback. Public host actions additionally require Home's action broker.
 
-The app surface deliberately delegates creative behavior to the existing engine in `src/Haven.Application/Canvas` and the native Notes canvas data model in `src/Haven.Core/Notes`. It does not duplicate geometry, ink, connector, history, or document-storage rules.
+`UI/CanvasWorkspace.cui` and `CanvasCuiWorkspace` provide native-host markup and semantic bindings. The host must register a real `CanvasSpatialSurface`, perform Home/backend readiness checks and route typed commands through Home. Source/parser availability does not prove mounted UI behavior.
 
-After history operations, `CanvasAppSurface` synchronizes the controller's active board back into the canonical `NotesDocument`, so restored state remains the state that storage and later app surfaces observe.
+The earlier Notes-backed `CanvasAppSurface` remains useful implementation; it does not define the current native format or replace `.9to1c`.
 
-## Focused validation
-
-```text
-dotnet build "HavenOS Apps/Canvas/HavenOS.Canvas.csproj" --configuration Release
-dotnet test "HavenOS Apps/Canvas/Tests/HavenOS.Canvas.Tests.csproj" --configuration Release
-```
-
-The interaction test covers create -> add objects -> snapped move -> connector -> pen stroke -> pan/zoom -> undo -> redo, plus canonical document synchronization. Persistence tests cover repository-backed create -> edit -> save -> reopen and reject opening ordinary Notes documents as Canvas.
+Run `cargo test --locked` and `cargo build --locked` in `rnote-poc`, then Canvas .NET tests with the built library available. See [rnote-poc/README.md](rnote-poc/README.md) for native requirements. Checks cover real donor drawing/history/rendering, Xopp import, stable native round trips, canonical history and durable Files storage. Full donor parity, complete tool shell, shared objects, imported per-entity IDs, collaboration, spatial culling and cross-platform packages remain release gates.

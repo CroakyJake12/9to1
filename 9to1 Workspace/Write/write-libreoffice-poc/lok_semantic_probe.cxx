@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
+#include "native_runtime_environment.hxx"
 
 namespace
 {
@@ -273,6 +275,30 @@ int clientPoll(void* data, int timeoutUs)
             return -1;
         }
 
+        LibreOfficeKitDocument* reopened = context->kit->pClass->documentLoadWithOptions(
+            context->kit, outputUrl.c_str(), "ReadOnly=true");
+        if (!reopened || !LIBREOFFICEKIT_DOCUMENT_HAS(reopened, paintTile)
+            || !reopened->pClass->paintTile || !reopened->pClass->getDocumentSize)
+        {
+            if (reopened) reopened->pClass->destroy(reopened);
+            setFailure(*context, "saved Writer document could not be reopened for rendering");
+            return -1;
+        }
+        reopened->pClass->initializeForRendering(reopened, "{}");
+        long width = 0;
+        long height = 0;
+        reopened->pClass->getDocumentSize(reopened, &width, &height);
+        std::vector<unsigned char> tile(256 * 256 * 4, 0);
+        reopened->pClass->paintTile(reopened, tile.data(), 256, 256, 0, 0, 3840, 3840);
+        bool painted = false;
+        for (const auto byte : tile) painted = painted || byte != 0;
+        reopened->pClass->destroy(reopened);
+        if (width <= 0 || height <= 0 || !painted)
+        {
+            setFailure(*context, "reopened Writer document returned an empty rendered tile or invalid bounds");
+            return -1;
+        }
+        std::cout << "Reopened saved Writer document and rendered 262144-byte tile; bounds " << width << " x " << height << '\n';
         context->phase = Phase::Complete;
         std::cout << "Saved semantic ODT after completed Bold command: " << context->outputPath << '\n';
         return -1;
@@ -313,6 +339,7 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directories(profilePath);
     const auto profileUrl = fileUrl(profilePath);
+    if (!configureNativeRuntimeData()) return 72;
 
     if (::setenv("SAL_LOK_OPTIONS", "unipoll", 1) != 0)
     {

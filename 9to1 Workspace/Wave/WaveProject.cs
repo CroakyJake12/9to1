@@ -28,11 +28,13 @@ public sealed record WaveClip(
     long TimelineStartFrame,
     double Gain = 1,
     long FadeInFrames = 0,
-    long FadeOutFrames = 0);
+    long FadeOutFrames = 0,
+    string? SourceFileID = null,
+    string? SourceRevisionID = null);
 
 public static class WaveProjectStore
 {
-    private const int CurrentSchemaVersion = 3;
+    private const int CurrentSchemaVersion = 4;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -57,7 +59,7 @@ public static class WaveProjectStore
             ?? throw new InvalidDataException("TrackNotFound: the target track does not exist.");
         var preview = PcmWaveformReader.Decode(Path.GetFullPath(sourcePath));
         if (preview.SampleRate != project.SampleRate || preview.Channels != project.Channels)
-            throw new NotSupportedException($"CodecUnsupported: source is {preview.SampleRate} Hz/{preview.Channels} channel(s); this project slice requires {project.SampleRate} Hz/{project.Channels} channel(s).");
+            throw new NotSupportedException($"CodecUnsupported: source is {preview.SampleRate} Hz/{preview.Channels} channel(s); this project requires {project.SampleRate} Hz/{project.Channels} channel(s).");
         string sourceSha256;
         using (var source = File.OpenRead(preview.SourcePath))
             sourceSha256 = Convert.ToHexString(SHA256.HashData(source));
@@ -116,7 +118,7 @@ public static class WaveProjectStore
                 ?? throw new InvalidDataException("Project file is empty or invalid.");
             // v2 stored clip ranges without mixer/fade fields. Constructor defaults preserve
             // its exact audible output while migration adds editable structured processing.
-            if (project.SchemaVersion == 2) project = project with { SchemaVersion = CurrentSchemaVersion };
+            if (project.SchemaVersion is 2 or 3) project = project with { SchemaVersion = CurrentSchemaVersion };
             Validate(project);
             return project;
         }
@@ -137,7 +139,9 @@ public static class WaveProjectStore
         if (project.Tracks.Select(track => track.TrackId).Distinct().Count() != project.Tracks.Count)
             throw new InvalidDataException("Wave project contains duplicate track identities.");
         var clips = project.Tracks.SelectMany(track => track.Clips).ToList();
-        if (clips.Any(clip => clip.ClipId == Guid.Empty || clip.SourceReferenceId == Guid.Empty || string.IsNullOrWhiteSpace(clip.SourcePath)
+        if (clips.Any(clip => clip.ClipId == Guid.Empty || clip.SourceReferenceId == Guid.Empty || (string.IsNullOrWhiteSpace(clip.SourcePath) && string.IsNullOrWhiteSpace(clip.SourceFileID))
+            || (clip.SourceFileID is not null && (string.IsNullOrWhiteSpace(clip.SourceFileID) || string.IsNullOrWhiteSpace(clip.SourceRevisionID)))
+            || (clip.SourceFileID is null && clip.SourceRevisionID is not null)
             || clip.SourceSha256 is null || clip.SourceSha256.Length != 64 || !clip.SourceSha256.All(Uri.IsHexDigit)
             || clip.SourceStartFrame < 0 || clip.FrameCount <= 0 || clip.TimelineStartFrame < 0
             || !double.IsFinite(clip.Gain) || clip.Gain is < 0 or > 64
@@ -152,9 +156,10 @@ public static class WaveProjectExporter
 {
     private const int FramesPerBlock = 4096;
 
-    public static long ExportPcm16(WaveProject project, string outputPath)
+    public static long ExportPcm16(WaveProject project, string outputPath, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
+        cancellationToken.ThrowIfCancellationRequested();
         var anySolo = project.Tracks.Any(track => track.Solo && !track.Mute);
         var timelineClips = project.Tracks.SelectMany(track => track.Clips).ToList();
         var clips = project.Tracks.Where(track => !track.Mute && (!anySolo || track.Solo)).SelectMany(track => track.Clips).ToList();
@@ -164,6 +169,7 @@ public static class WaveProjectExporter
         var sources = new List<(WaveClip Clip, WaveformPreview Preview)>();
         foreach (var clip in clips)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!File.Exists(clip.SourcePath))
                 throw new FileNotFoundException($"SourceUnavailable: source for clip {clip.ClipId} is missing at its recorded path; relink is not available in this standalone slice.", clip.SourcePath);
             using var source = File.OpenRead(clip.SourcePath);
@@ -212,6 +218,7 @@ public static class WaveProjectExporter
             var encoded = new byte[mixed.Length * sizeof(short)];
             for (long blockStart = 0; blockStart < outputFrames; blockStart += FramesPerBlock)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var blockFrames = (int)Math.Min(FramesPerBlock, outputFrames - blockStart);
                 Array.Clear(mixed);
                 foreach (var item in sources)
@@ -234,7 +241,10 @@ public static class WaveProjectExporter
                         for (var channel = 0; channel < project.Channels; channel++)
                         {
                             var channelGain = project.Channels == 2 ? channel == 0 ? Math.Min(1, 1 - track.Pan) : Math.Min(1, 1 + track.Pan) : 1;
-                            mixed[destinationFrame * project.Channels + channel] += reader.ReadInt16() * gain * channelGain;
+                            var destination = destinationFrame * project.Channels + channel;
+                            mixed[destination] += PcmWaveformReader.ReadNormalizedSample(reader, item.Preview.FormatTag, item.Preview.BitsPerSample) * 32768d * gain * channelGain;
+                            if (!double.IsFinite(mixed[destination]))
+                                throw new InvalidDataException("Audio processing exceeded finite numeric range.");
                         }
                     }
                 }
@@ -256,6 +266,7 @@ public static class WaveProjectExporter
                 if (!string.Equals(currentHash, item.Clip.SourceSha256, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException($"SourceChanged: source content for clip {item.Clip.ClipId} changed during export.");
             }
+            cancellationToken.ThrowIfCancellationRequested();
             return outputFrames;
         }
         catch

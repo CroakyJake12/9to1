@@ -11,6 +11,9 @@ from .audit import audit_environment
 from .lifecycle import LifecycleError, UnitStatus, UserSystemdSupervisor, unit_name
 from .manifest import AppManifest
 from .registry import AppRegistry, RegistryError
+from .packages import PackageError, inspect_package
+from .routing import (AdministratorPolicySource, BackendPreferences, CompatibilityBackend,
+                      RoutingError, route_package)
 
 
 class CompatibilityError(RuntimeError):
@@ -34,12 +37,66 @@ class CompatibilityBroker:
         runtime_root: Path | None = None,
         supervisor: UserSystemdSupervisor | None = None,
         registry: AppRegistry | None = None,
+        policy_source: AdministratorPolicySource | None = None,
     ):
         data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
         self.state_root = state_root or data_home / "haven" / "compat" / "wine" / "apps"
         self.runtime_root = runtime_root or data_home / "haven" / "compat" / "wine" / "runtimes"
         self.supervisor = supervisor or UserSystemdSupervisor()
         self.registry = registry or AppRegistry(data_home / "haven" / "compat" / "registry")
+        self.policy_source = policy_source or AdministratorPolicySource()
+        self.backend_preferences = BackendPreferences(self.registry.root.parent / "backend-preferences")
+
+    def compatibility_backends(self) -> tuple[CompatibilityBackend, ...]:
+        audit = audit_environment(self.runtime_root)
+        wine = audit.get("preflight", {}).get("wineSlice1", {})
+        ready = bool(wine.get("prerequisitesPresent"))
+        return (
+            CompatibilityBackend("wine", "Wine", ("windows-exe", "windows-msi"),
+                ("x86", "x86_64"), ready, 100,
+                None if ready else "Wine prerequisites unavailable: " + ", ".join(wine.get("missing", []))),
+            CompatibilityBackend("winboat", "WinBoat Windows environment", ("windows-exe", "windows-msi"),
+                ("x86", "x86_64"), False, 90, "Managed Windows VM/container backend has not been implemented and runtime verified"),
+            CompatibilityBackend("android", "Android APK environment", ("android-apk",),
+                ("armeabi-v7a", "arm64-v8a", "x86", "x86_64"), False, 100,
+                "Managed Android runtime and permission-mediated host bridges have not been implemented and runtime verified"),
+        )
+
+    def inspect_foreign_package(self, path: str) -> dict[str, Any]:
+        try:
+            package = inspect_package(Path(path))
+            policy = self.policy_source.read()
+            return route_package(package, self.compatibility_backends(), policy,
+                                 self.backend_preferences.get(package.identity))
+        except (PackageError, RoutingError, OSError) as exc:
+            raise CompatibilityError(str(exc)) from exc
+
+    def set_package_backend(self, path: str, backend: str | None) -> dict[str, Any]:
+        try:
+            package = inspect_package(Path(path))
+            policy = self.policy_source.read()
+            denial = policy.check(package.identity, backend)
+            if denial or not policy.allow_backend_preferences:
+                raise RoutingError(denial or "Framework associations are managed by administrator policy")
+            if backend is not None:
+                route = route_package(package, self.compatibility_backends(), policy)
+                if backend not in route["eligibleBackends"]:
+                    raise RoutingError("Cannot associate this package with an ineligible or unavailable framework")
+            self.backend_preferences.set(package.identity, backend)
+            return self.inspect_foreign_package(path)
+        except (PackageError, RoutingError, OSError) as exc:
+            raise CompatibilityError(str(exc)) from exc
+
+    def _require_policy(self, identity: str, backend: str):
+        try:
+            policy = self.policy_source.read()
+            denied = policy.check(identity, backend)
+            if not denied and policy.allowed_identities is not None:
+                denied = "Managed application allowlists require verified installed-package identity; legacy user-authored manifests cannot establish that identity"
+        except RoutingError as exc:
+            raise CompatibilityError(str(exc)) from exc
+        if denied:
+            raise CompatibilityError(denied)
 
     def capabilities(self) -> dict[str, Any]:
         return {
@@ -75,6 +132,7 @@ class CompatibilityBroker:
         }
 
     def register_app(self, manifest: AppManifest) -> dict[str, Any]:
+        self._require_policy(manifest.app_id, manifest.backend)
         try:
             self.registry.register(manifest)
         except RegistryError as exc:
@@ -112,6 +170,7 @@ class CompatibilityBroker:
         }
 
     def plan(self, manifest: AppManifest) -> LaunchPlan:
+        self._require_policy(manifest.app_id, manifest.backend)
         if manifest.backend == "winboat":
             raise CompatibilityError("WinBoat provider is not enabled in compatibility slice 1")
         if manifest.backend != "wine":

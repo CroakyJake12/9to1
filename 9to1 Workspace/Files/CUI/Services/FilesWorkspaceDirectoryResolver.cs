@@ -50,7 +50,7 @@ public sealed class FilesWorkspaceDirectoryResolver
         if (!Path.IsPathFullyQualified(existingDirectoryPath))
             return Failure<FilesWorkspaceDirectoryBinding>(FilesErrorCode.DestinationUnavailable, "Files setup must supply an absolute existing materialised folder.", authenticatedAccountId);
         var directory = Path.GetFullPath(existingDirectoryPath);
-        if (!Directory.Exists(directory) || (File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+        if (!FilesPhysicalDirectory.IsDirectDirectory(directory))
             return Failure<FilesWorkspaceDirectoryBinding>(FilesErrorCode.DestinationUnavailable, "The materialised directory is unavailable or redirects elsewhere.", authenticatedAccountId);
         var binding = new FilesWorkspaceDirectoryBinding(authenticatedAccountId, canonicalFolderId, provider.Location.Id, directory, owningAppId, DateTimeOffset.UtcNow, profileId);
         var conflict = false;
@@ -86,7 +86,7 @@ public sealed class FilesWorkspaceDirectoryResolver
         if (!current.IsSuccess) return FilesResult<FilesWorkspaceDirectoryBinding>.Failure(current.Error!);
         if (current.Value!.OwnerPrincipalId != OwnerId(authenticatedAccountId, profileId) || current.Value.Kind != HostedItemKind.Folder)
             return Failure<FilesWorkspaceDirectoryBinding>(FilesErrorCode.PermissionDenied, "Canonical folder ownership changed.", authenticatedAccountId);
-        if (!Directory.Exists(binding.DirectoryPath) || (File.GetAttributes(binding.DirectoryPath) & FileAttributes.ReparsePoint) != 0)
+        if (!FilesPhysicalDirectory.IsDirectDirectory(binding.DirectoryPath))
             return Failure<FilesWorkspaceDirectoryBinding>(FilesErrorCode.DestinationUnavailable, "The registered Files materialisation is unavailable.", authenticatedAccountId);
         return FilesResult<FilesWorkspaceDirectoryBinding>.Success(binding);
     }

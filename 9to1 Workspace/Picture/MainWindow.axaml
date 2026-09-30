@@ -32,7 +32,7 @@
       <TextBlock Grid.Row="1" Grid.Column="0" Text="Export metadata" VerticalAlignment="Center" />
       <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="MetadataExportModeBox" SelectedIndex="0" AutomationProperties.Name="Export metadata privacy">
         <ComboBoxItem Content="Preserve supported metadata" />
-        <ComboBoxItem Content="Remove location (strips all metadata)" />
+        <ComboBoxItem Content="Remove supported location metadata" />
         <ComboBoxItem Content="Remove all metadata" />
       </ComboBox>
     </Grid>

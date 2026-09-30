@@ -203,6 +203,10 @@ public interface ITrainingRepository
 /// </summary>
 public interface IOllamaClient
 {
+    /// <summary>The actual transport endpoint; unknown endpoints never establish device locality.</summary>
+    Uri? TransportEndpoint => null;
+    /// <summary>Trusted transport rejects redirects and bypasses proxies for local endpoints.</summary>
+    bool IsDeviceLocalTransportVerified => false;
     Task<bool> IsAvailableAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<ModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken);
     IAsyncEnumerable<string> StreamChatAsync(OllamaChatRequest request, CancellationToken cancellationToken);

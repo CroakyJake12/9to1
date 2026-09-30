@@ -13,6 +13,7 @@ public sealed partial class DurableDriveProvider : IFilesProvider, IFilesOwningA
         public IReadOnlyList<FilesArtifactReference> Artifacts { get; init; } = [];
         public IReadOnlyList<FilesRevision> Revisions { get; init; } = [];
         public IReadOnlyDictionary<string, string?> RevisionContentReferences { get; init; } = new Dictionary<string, string?>();
+        public IReadOnlyList<FilesUploadedContent> UploadedContents { get; init; } = [];
     }
     private readonly VersionedJsonStateStore<State> _store;
     private readonly string _owner;

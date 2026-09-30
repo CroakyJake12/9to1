@@ -36,6 +36,7 @@ app.Use(async (context, next) =>
     catch (KeyNotFoundException) { context.Response.StatusCode = 404; await context.Response.WriteAsJsonAsync(new { error = "CapabilityUnavailable" }); }
     catch (FileNotFoundException) { context.Response.StatusCode = 404; await context.Response.WriteAsJsonAsync(new { error = "AccountNotFound" }); }
     catch (ArgumentException) { context.Response.StatusCode = 400; await context.Response.WriteAsJsonAsync(new { error = "InvalidInput" }); }
+    catch (InvalidDataException) { context.Response.StatusCode = 503; await context.Response.WriteAsJsonAsync(new { error = "StateRecoveryRequired" }); }
     catch (InvalidOperationException) { context.Response.StatusCode = 409; await context.Response.WriteAsJsonAsync(new { error = "Conflict" }); }
 });
 app.MapGet("/health", () => new { status = "ready", identity = "CAKE-ID", modelBandVersion = SubscriptionPolicy.ModelBandVersion });

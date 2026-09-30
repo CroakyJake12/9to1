@@ -401,8 +401,9 @@ public sealed class CanvasArtifactSession
     public CanvasApiResult<CanvasMutationResult> AddStructuredStroke(
         CanvasMutationRequest request,
         Guid pageId,
-        CanvasInkStroke stroke) =>
-        Mutate(request, "Ink.CreateFromSamples", stroke?.StrokeId, stroke, artifact =>
+        CanvasInkStroke stroke,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings = null) =>
+        Mutate(request, "Ink.CreateFromSamples", stroke?.StrokeId, new { pageId, stroke }, artifact =>
         {
             var pageIndex = artifact.Pages.FindIndex(page => page.PageId == pageId);
             if (pageIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
@@ -414,14 +415,35 @@ public sealed class CanvasArtifactSession
                 return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink cannot be added to a locked layer.");
             if (page.Strokes.Any(item => item.StrokeId == stroke.StrokeId))
                 return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Stroke ID already exists on the page.");
-            var strokes = page.Strokes.Append(CloneStroke(stroke)).ToList();
+            CanvasInkStroke clonedStroke;
+            try { clonedStroke = CloneStroke(stroke); }
+            catch (CanvasArtifactFormatException)
+            { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Structured stroke failed semantic validation."); }
+            // Engine-derived state is captured only after revision/idempotency
+            // and layer checks. It belongs to this stroke's single history and
+            // persistence boundary, rather than a second settings mutation.
+            var settings = captureAccompanyingDocumentSettings?.Invoke();
+            if (captureAccompanyingDocumentSettings is not null && settings is null)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Accompanying document settings are required.");
+            var strokes = page.Strokes.Append(clonedStroke).ToList();
             artifact.Pages[pageIndex] = page with
             {
                 Strokes = strokes,
                 StrokeOrder = page.StrokeOrder.Append(stroke.StrokeId).ToList(),
                 RevisionId = Guid.NewGuid()
             };
+            if (settings is not null)
+                artifact.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
             return MutationChanged(pageId, stroke.StrokeId);
+        });
+
+    public CanvasApiResult<CanvasMutationResult> UpdateDocumentSettings(CanvasMutationRequest request, CanvasDocumentSettings settings) =>
+        Mutate(request, "DocumentSettings.Update", _artifact.ArtifactId, settings, artifact =>
+        {
+            if (settings is null || settings.Properties is null)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Document settings are required.");
+            artifact.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            return MutationChanged(artifact.ArtifactId);
         });
 
     public CanvasApiResult<CanvasMutationResult> Undo(CanvasMutationRequest request) =>
@@ -656,7 +678,7 @@ public sealed class CanvasArtifactSession
 
     private static CanvasPage ClonePage(CanvasPage page)
     {
-        var artifact = CanvasArtifact.Create();
+        var artifact = CanvasArtifact.Create(mode: page.Bounds is null ? CanvasDocumentMode.Infinite : CanvasDocumentMode.Paged);
         artifact.PageOrder = [page.PageId];
         artifact.Pages = [page];
         return CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(artifact)).Pages[0];
@@ -664,7 +686,8 @@ public sealed class CanvasArtifactSession
 
     private static CanvasInkStroke CloneStroke(CanvasInkStroke stroke)
     {
-        var page = CanvasArtifact.Create().Pages[0] with { Strokes = [stroke], StrokeOrder = [stroke.StrokeId] };
+        var layer = new CanvasLayer { LayerId = stroke.LayerId };
+        var page = new CanvasPage { Layers = [layer], LayerOrder = [layer.LayerId], Strokes = [stroke], StrokeOrder = [stroke.StrokeId] };
         var artifact = CanvasArtifact.Create();
         artifact.Pages = [page];
         artifact.PageOrder = [page.PageId];

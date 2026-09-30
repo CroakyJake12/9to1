@@ -70,7 +70,7 @@ public sealed class ModelRouter(IModelProviderRegistry providers) : IModelRouter
     public async Task<ModelRoutingDecision> RouteAsync(ModelRoutingRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var compatible = (await providers.GetModelsAsync(cancellationToken).ConfigureAwait(false))
+        var compatible = (await providers.GetModelsAsync(new ModelCataloguePolicy(AllowRemote: request.Policy.AllowCloud), cancellationToken).ConfigureAwait(false))
             .Where(model => request.RequiredCapabilities.All(model.Supports));
         if (!request.Policy.AllowCloud) compatible = compatible.Where(model => model.IsLocal);
         var candidates = compatible.ToArray();

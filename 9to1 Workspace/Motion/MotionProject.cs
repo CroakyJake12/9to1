@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 namespace HavenOS.Apps.Motion;
 
 // FileId is retained as an opaque Files identity; resolution is not available in this Motion-only lane.
-internal sealed record MotionAssetReference(Guid AssetId, string FileId);
+public sealed record MotionAssetReference(Guid AssetId, string FileId, string? SourceRevisionID = null);
 
-internal sealed record MotionElement(
+public sealed record MotionElement(
     Guid ElementId,
     Guid TrackId,
     Guid AssetId,
@@ -16,9 +16,9 @@ internal sealed record MotionElement(
     long SourceOut,
     Guid? ProxyAssetId = null);
 
-internal sealed record MotionTrack(Guid TrackId, string Name, IReadOnlyList<MotionElement> Elements);
+public sealed record MotionTrack(Guid TrackId, string Name, IReadOnlyList<MotionElement> Elements);
 
-internal sealed record MotionSequence(
+public sealed record MotionSequence(
     Guid SequenceId,
     int Width,
     int Height,
@@ -26,7 +26,7 @@ internal sealed record MotionSequence(
     int FrameRateDenominator,
     IReadOnlyList<MotionTrack> VideoTracks);
 
-internal sealed record MotionProject(
+public sealed record MotionProject(
     int SchemaVersion,
     Guid ProjectId,
     IReadOnlyList<MotionSequence> Sequences,
@@ -35,7 +35,7 @@ internal sealed record MotionProject(
     DateTimeOffset ModifiedAt,
     long Revision);
 
-internal sealed class MotionProjectStore
+public sealed class MotionProjectStore
 {
     private const int CurrentSchemaVersion = 1;
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -158,7 +158,7 @@ internal sealed class MotionProjectStore
         return project;
     }
 
-    private static void Validate(MotionProject project)
+    public static void Validate(MotionProject project)
     {
         if (project.Sequences is null || project.AssetReferences is null
             || project.SchemaVersion != CurrentSchemaVersion || project.ProjectId == Guid.Empty || project.Revision < 0
@@ -178,10 +178,10 @@ internal sealed class MotionProjectStore
             if (!sequenceIds.Add(sequence.SequenceId)) throw new InvalidDataException("Sequence IDs must be unique.");
             foreach (var track in sequence.VideoTracks)
             {
-                if (track is null || track.Elements is null || !trackIds.Add(track.TrackId)) throw new InvalidDataException("Track IDs and element lists must be valid and unique.");
+                if (track is null || track.Elements is null || track.TrackId == Guid.Empty || !trackIds.Add(track.TrackId)) throw new InvalidDataException("Track IDs and element lists must be valid and unique.");
                 foreach (var element in track.Elements)
-                    if (element is null || element.TrackId != track.TrackId || !elementIds.Add(element.ElementId) || !assets.Contains(element.AssetId)
-                        || element.TimelineStart < 0 || element.Duration <= 0 || element.SourceIn < 0 || element.SourceOut - element.SourceIn != element.Duration)
+                    if (element is null || element.TrackId != track.TrackId || element.ElementId == Guid.Empty || !elementIds.Add(element.ElementId) || !assets.Contains(element.AssetId)
+                        || element.TimelineStart < 0 || element.Duration <= 0 || element.SourceIn < 0 || element.SourceOut <= element.SourceIn || element.SourceOut - element.SourceIn != element.Duration)
                         throw new InvalidDataException("Motion element identity, asset, or time ranges are invalid.");
             }
         }

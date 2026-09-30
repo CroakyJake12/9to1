@@ -70,11 +70,11 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
         },ct);
     internal static HashSet<Guid> Reachable(SiteProject project,IEnumerable<Guid> roots)
     {
-        var found=new HashSet<Guid>();var queue=new Queue<Guid>(roots);
+        var found=new HashSet<Guid>();var queue=new Queue<Guid>(roots);var nodes=project.Components.ToDictionary(c=>c.ComponentId);
         while(queue.TryDequeue(out var id))
         {
             if(!found.Add(id)) continue;
-            var component=project.Components.SingleOrDefault(c=>c.ComponentId==id)??throw Invalid("Missing component reference.");
+            var component=nodes.GetValueOrDefault(id)??throw Invalid("Missing component reference.");
             foreach(var child in component.ChildIds.Concat(component.Slots.Values.SelectMany(v=>v)))queue.Enqueue(child);
         }
         return found;

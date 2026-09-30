@@ -24,6 +24,13 @@ public sealed class OrganisationService(string statePath,ProfileService profiles
         using var lease=DurableState.Acquire(statePath);
         return Read().Organisations.Where(o=>o.Members.Any(m=>m.AccountID==authenticatedAccountID&&m.State==OrganisationMemberState.Active)).Skip(offset).Take(limit).ToArray();
     }
+    public IReadOnlyList<OrganisationAudit> ListAudit(Guid authenticatedAccountID,Guid orgID,int offset=0,int limit=100)
+    {
+        if(offset<0||limit is <1 or >200)throw new ArgumentOutOfRangeException(nameof(limit));
+        using var lease=DurableState.Acquire(statePath);var state=Read();
+        var org=state.Organisations.Single(o=>o.OrgID==orgID);Demand(org,authenticatedAccountID,"Admin.Audit.List");
+        return state.Audit.Where(e=>e.OrgID==orgID).OrderByDescending(e=>e.At).ThenBy(e=>e.AuditEventID).Skip(offset).Take(limit).ToArray();
+    }
     public Organisation Get(Guid accountID,Guid orgID)
     {using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.Single(o=>o.OrgID==orgID);Demand(org,accountID,"Admin.Organisations.Get");return org;}
     public IssuedOrganisationInvitation Invite(Guid actorID,Guid orgID,Guid? intendedAccountID,IReadOnlyList<Guid> roles,DateTimeOffset expiresAt)

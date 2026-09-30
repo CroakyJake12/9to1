@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Haven.Core.Shelf;
 
 namespace Haven.Application.Shelf;
@@ -100,18 +101,26 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            var state = await LoadAsync(token).ConfigureAwait(false);
+            if (_settings is not IVersionedSettingsCompareExchange atomic)
+                return new(false, "AtomicStoreUnavailable", "Shelf requires atomic storage.", null);
+            var stored = await _settings.ExportAsync(token).ConfigureAwait(false);
+            stored.Settings.TryGetValue(Key, out var expectedJson);
+            var state = expectedJson is null ? ShelfSnapshot.Empty : JsonSerializer.Deserialize<ShelfSnapshot>(expectedJson)
+                ?? throw new InvalidDataException("Stored shelf library is null.");
+            Validate(state);
             if (state.Library.Revision != revision)
                 return new(false, "RevisionConflict", "Shelf changed; refresh and review before retrying.", state);
             var updated = mutation(state);
             updated = updated with { Library = updated.Library with { Revision = checked(revision + 1) } };
             Validate(updated);
-            await _settings.SetAsync(Key, updated, token).ConfigureAwait(false);
+            if (!(await atomic.CompareExchangeAsync(Key, expectedJson, JsonSerializer.Serialize(updated), token).ConfigureAwait(false)).Exchanged)
+                return new(false, "RevisionConflict", "Shelf changed; refresh before retrying.", null);
             return new(true, null, null, updated);
         }
         catch (KeyNotFoundException exception) { return new(false, "NotFound", exception.Message, null); }
         catch (ArgumentException exception) { return new(false, "InvalidArgument", exception.Message, null); }
         catch (InvalidOperationException exception) { return new(false, "InvalidOperation", exception.Message, null); }
+        catch (JsonException) { return new(false, "InvalidData", "Stored Shelf data is incompatible or corrupt; prior state was preserved.", null); }
         catch (InvalidDataException exception) { return new(false, "InvalidData", exception.Message, null); }
         catch (IOException) { return new(false, "StorageUnavailable", "Shelf could not be saved. Retry after checking storage.", null); }
         finally { _gate.Release(); }

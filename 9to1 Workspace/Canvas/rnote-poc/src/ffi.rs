@@ -7,7 +7,7 @@ use futures::executor::block_on;
 
 use crate::{
     CanvasCoordinateSpace, CanvasPenStyle, CanvasPointerSample, CanvasRenderFormat, CanvasShape,
-    CanvasTool, CanvasViewport, HeadlessCanvasEngine,
+    CanvasTool, HeadlessCanvasEngine,
 };
 
 pub const CAKE_CANVAS_ABI_VERSION: u32 = 3;
@@ -245,6 +245,33 @@ pub extern "C" fn cake_canvas_engine_from_rnote(
                 unsafe {
                     *out_handle = Box::into_raw(Box::new(engine)).cast::<c_void>();
                 }
+                CakeCanvasStatus::Ok
+            }
+            Err(_) => CakeCanvasStatus::EngineError,
+        }
+    })
+}
+
+/// Additive ABI 3 entry point. Every input buffer is borrowed only for this call.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_engine_from_xopp(
+    data: *const u8,
+    len: usize,
+    dpi: f64,
+    out_handle: *mut *mut c_void,
+) -> CakeCanvasStatus {
+    guard_status(|| {
+        if out_handle.is_null() {
+            return CakeCanvasStatus::InvalidArgument;
+        }
+        unsafe { *out_handle = ptr::null_mut(); }
+        if data.is_null() || len == 0 || !dpi.is_finite() || !(1.0..=2400.0).contains(&dpi) {
+            return CakeCanvasStatus::InvalidArgument;
+        }
+        let bytes = unsafe { slice::from_raw_parts(data, len) }.to_vec();
+        match block_on(HeadlessCanvasEngine::from_xopp(bytes, dpi)) {
+            Ok(engine) => {
+                unsafe { *out_handle = Box::into_raw(Box::new(engine)).cast::<c_void>(); }
                 CakeCanvasStatus::Ok
             }
             Err(_) => CakeCanvasStatus::EngineError,

@@ -179,6 +179,55 @@ public sealed class ImageJourneyTests
         Assert.Equal(0, document.Revision);
     }
 
+    [AvaloniaFact]
+    public async Task RasterTransformGraphReplaysFromOriginalPixelsAfterSaveAndReopen()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"picture-transform-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "source.bmp");
+            var bytes = CreateTwoPixelBmp();
+            await File.WriteAllBytesAsync(path, bytes, TestContext.Current.CancellationToken);
+            var original = new PictureCropService().OpenSource(path);
+            var rotated = original.Rotate().Crop(0, 1, 1, 1);
+            using var source = new Bitmap(path);
+            using (var rendered = PictureCropService.Render(source, rotated))
+            {
+                Assert.Equal(new PixelSize(1, 1), rendered.PixelSize);
+                var pixel = ReadFirstPixel(rendered);
+                Assert.True(pixel.G > pixel.R, "Clockwise rotation followed by crop must select the original green pixel.");
+            }
+            var edited = original.Flip(horizontal: true).Crop(0, 0, 1, 1).Resize(4, 3).Rotate(-1);
+            var documentPath = Path.Combine(directory, "edit.picture.json");
+            await edited.SaveAsync(documentPath, TestContext.Current.CancellationToken);
+            var reopened = await PictureDocument.OpenAsync(documentPath, TestContext.Current.CancellationToken);
+            using var result = PictureCropService.Render(source, reopened);
+            Assert.Equal(new PixelSize(3, 4), result.PixelSize);
+            var first = ReadFirstPixel(result);
+            Assert.True(first.G > first.R);
+            Assert.Equal(original.DocumentId, reopened.DocumentId);
+            Assert.Equal(edited.Operations, reopened.Operations);
+            Assert.Equal(4, reopened.Revision);
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+            Assert.Equal(2, original.CanvasWidth);
+            Assert.Empty(original.Operations);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [Fact]
+    public void RasterResizeRejectsResourceOverflowAndNoOpRotatePreservesRevision()
+    {
+        var original = PictureDocument.Create(100, 80);
+        Assert.Same(original, original.Rotate(4));
+        Assert.Same(original, original.Resize(100, 80));
+        Assert.Throws<ArgumentOutOfRangeException>(() => original.Resize(32768, 32768));
+        Assert.Throws<ArgumentOutOfRangeException>(() => original.Resize(0, 10));
+        Assert.Empty(original.Operations);
+        Assert.Equal(0, original.Revision);
+    }
+
     [Fact]
     public async Task PictureDocumentRejectsUnknownSchemaInsteadOfGuessing()
     {
@@ -330,7 +379,13 @@ public sealed class ImageJourneyTests
             }
             using (var privateFile = TagLib.File.Create(privatePath))
             {
-                Assert.Equal(TagLib.TagTypes.None, privateFile.TagTypesOnDisk);
+                var pngTag = Assert.IsAssignableFrom<TagLib.Png.PngTag>(privateFile.GetTag(TagLib.TagTypes.Png, create: false));
+                Assert.Equal("Preserve this image title", pngTag.Title);
+                Assert.Equal("Preserve this non-location comment", pngTag.Comment);
+                var image = Assert.IsAssignableFrom<TagLib.Image.File>(privateFile);
+                Assert.Null(image.ImageTag.Latitude);
+                Assert.Null(image.ImageTag.Longitude);
+                Assert.Null(image.ImageTag.Altitude);
             }
             using (var stripped = TagLib.File.Create(strippedPath))
                 Assert.Null(stripped.GetTag(TagLib.TagTypes.Png, create: false));

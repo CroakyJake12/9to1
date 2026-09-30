@@ -22,6 +22,21 @@ try
     ledger.Settle(id, reservation.ReservationID, 4000); ledger.Settle(id, reservation.ReservationID, 4000);
     Assert(new AccountLedger(root).Get(id).Usage.DustSpent == 4000, "durable idempotent settlement");
     ledger.UpdateHostedUsage(id, 500, 1, 3);
+    var ledgerPath=Path.Combine(root,id.ToString("N")+".json");var cleanLedger=File.ReadAllText(ledgerPath);
+    foreach(var ledgerCorruptionKind in new[]{"negative-usage","foreign-owner","counter-mismatch","invalid-enum"})
+    {
+        var json=System.Text.Json.Nodes.JsonNode.Parse(cleanLedger)!;var data=json["State"]!;
+        if(ledgerCorruptionKind=="negative-usage")data["Usage"]!["DustSpent"]=-1;
+        else if(ledgerCorruptionKind=="foreign-owner")data["Reservations"]![0]!["AccountID"]=Guid.NewGuid().ToString();
+        else if(ledgerCorruptionKind=="counter-mismatch")data["Usage"]!["DustReserved"]=0;
+        else data["Reservations"]![0]!["State"]=99;
+        var invalid=json.ToJsonString();File.WriteAllText(ledgerPath,invalid);
+        try{ledger.Reserve(id,"corrupt-attempt",1,"free");throw new Exception("Corrupt ledger accepted: "+ledgerCorruptionKind);}catch(InvalidDataException){}
+        Assert(File.ReadAllText(ledgerPath)==invalid,"corrupt ledger preserved: "+ledgerCorruptionKind);
+    }
+    File.WriteAllText(ledgerPath,cleanLedger);
+    if(!OperatingSystem.IsWindows())Assert(File.GetUnixFileMode(ledgerPath)==(UnixFileMode.UserRead|UnixFileMode.UserWrite),"account file private permissions");
+
     try { ledger.UpdateHostedUsage(id, 501, 0, 0); throw new Exception("quota bypass"); }
     catch (InvalidOperationException error) when (error.Message == "hosted_quota_exceeded") { }
     var created = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
@@ -40,12 +55,19 @@ try
     try { identity.Exchange(code, "desktop", "http://127.0.0.1:48111/callback", verifier, "PC"); throw new Exception("code replay"); }
     catch (UnauthorizedAccessException) { }
     Assert(!File.ReadAllText(Path.Combine(root,"identity.json")).Contains(issued.AccessToken), "no plaintext bearer storage");
+    var secondCode=identity.AuthorizeAuthenticatedAccount(new(id,"Tester"),"desktop","http://127.0.0.1:48111/callback",CakeIdentityService.Challenge(verifier));
+    var secondSession=identity.Exchange(secondCode,"desktop","http://127.0.0.1:48111/callback",verifier,"Second device");
+    identity.SignOut(issued.AccessToken);
+    var beforeRevokedAttempt=File.ReadAllText(Path.Combine(root,"identity.json"));
+    try{new CakeIdentityService(Path.Combine(root,"identity.json"),new Dictionary<string,IReadOnlySet<string>>()).RevokeAllOtherSessions(issued.AccessToken);throw new Exception("revoked caller mutated sessions");}catch(UnauthorizedAccessException){}
+    Assert(File.ReadAllText(Path.Combine(root,"identity.json"))==beforeRevokedAttempt,"revoked caller cannot mutate session state");
+    Assert(identity.Authenticate(secondSession.AccessToken).SessionID==secondSession.Session.SessionID,"other live session preserved");
     var disk = File.ReadAllText(Path.Combine(root,"identity.json"));
     File.WriteAllText(Path.Combine(root,"identity.json"), disk.Replace("\"SchemaVersion\":1", "\"SchemaVersion\":99"));
     try { identity.Authenticate(issued.AccessToken); throw new Exception("newer schema overwritten"); }
     catch (InvalidDataException) { }
     File.WriteAllText(Path.Combine(root,"identity.json"), disk);
-    identity.SignOut(issued.AccessToken);
+    identity.SignOut(secondSession.AccessToken);
     try { identity.Authenticate(issued.AccessToken); throw new Exception("revocation bypass"); }
     catch (UnauthorizedAccessException) { }
     // Explicit fictional fixture; none of these numbers are production provider costs or commercial defaults.
@@ -81,6 +103,8 @@ try
     Assert(seats==49&&organisations.Get(id,org.OrgID).Members.Count==50,"concurrent 51st Business seat rejected");
     var active=organisations.Get(id,org.OrgID);
     try{organisations.SetMemberState(id,org.OrgID,active.Revision,"suspend-owner",id,OrganisationMemberState.Suspended);throw new Exception("last owner lost");}catch(InvalidOperationException error)when(error.Message=="last_owner_protected"){}
+    Assert(organisations.ListAudit(id,org.OrgID).All(e=>e.OrgID==org.OrgID)&&organisations.ListAudit(id,org.OrgID).Count>0,"bounded canonical owner audit");
+    try{organisations.ListAudit(active.Members.First(m=>m.AccountID!=id).AccountID,org.OrgID);throw new Exception("audit leaked to ungranted member");}catch(UnauthorizedAccessException){}
     var stranger=await organisations.EvaluateAsync(Guid.NewGuid(),org.OrgID,"Admin.Policies.Publish",[],null,CancellationToken.None);Assert(!stranger.Allowed,"nonmember API denied");
     var ownedQuotes=new SubscriptionQuotes(Path.Combine(root,"quotes.json"),pricing,id);var ownedQuote=ownedQuotes.Preview(new(1,null,20_000_000_000)).Quote!;
     Assert(new SubscriptionQuotes(Path.Combine(root,"quotes.json"),pricing,Guid.NewGuid()).Checkout(ownedQuote.QuoteID).Quote is null,"other account quote checkout denied");
@@ -126,6 +150,53 @@ try
     corrupt["State"]!["Organisations"]![0]!["Members"]![0]=null;var corruptBytes=corrupt.ToJsonString();File.WriteAllText(orgPath,corruptBytes);
     try{organisations.Get(id,org.OrgID);throw new Exception("null membership accepted");}catch(InvalidDataException){}
     Assert(File.ReadAllText(orgPath)==corruptBytes,"corrupt organisation preserved and fails typed closed");File.WriteAllText(orgPath,orgBytes);
+    // Fictional signed-billing adapter and monthly policy exercise the backend transaction, never production provider assumptions.
+    var purchaseAccount=Guid.NewGuid();ledger.Provision(new(purchaseAccount,null,null,true,0,new(0,0,0,0,new Dictionary<string,JsonElement>()),1));
+    var purchaseQuotes=new SubscriptionQuotes(Path.Combine(root,"purchase-quotes.json"),pricing,purchaseAccount);
+    var purchaseQuote=purchaseQuotes.Preview(new(1,null,20_000_000_000)).Quote!;
+    var billingVerifier=new FixtureBillingVerifier();var monthlyPolicy=new FixtureMonthlyPolicy();
+    var purchases=new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,billingVerifier,monthlyPolicy);
+    try{new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,null,monthlyPolicy).Begin(purchaseQuote.QuoteID);throw new Exception("missing verifier accepted");}catch(InvalidOperationException){}
+    try{new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,billingVerifier,null).Begin(purchaseQuote.QuoteID);throw new Exception("missing monthly policy accepted");}catch(InvalidOperationException){}
+    try{new SubscriptionPurchaseService(ledger,purchaseQuotes,Guid.NewGuid(),null,billingVerifier,monthlyPolicy).Begin(purchaseQuote.QuoteID);throw new Exception("foreign owned quote context accepted");}catch(InvalidOperationException){}
+    var expiryDirectory=Path.Combine(root,"expiry-ledger");var expiryClock=new FixturePurchaseClock(DateTimeOffset.UtcNow);
+    var expiryLedger=new AccountLedger(expiryDirectory,expiryClock);expiryLedger.Provision(new(purchaseAccount,null,null,true,0,new(0,0,0,0,new Dictionary<string,JsonElement>()),1));
+    var expiryPurchases=new SubscriptionPurchaseService(expiryLedger,purchaseQuotes,purchaseAccount,null,billingVerifier,monthlyPolicy);
+    var canonicalExpiryPath=Path.GetFullPath(expiryDirectory);if(OperatingSystem.IsWindows())canonicalExpiryPath=canonicalExpiryPath.ToUpperInvariant();
+    var expiryMutexName="9to1-state-"+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonicalExpiryPath)));
+    Task<SubscriptionPurchase> delayedPurchase;
+    using(var heldLease=new Mutex(false,expiryMutexName))
+    {
+        heldLease.WaitOne();
+        try
+        {
+            delayedPurchase=Task.Run(()=>expiryPurchases.Begin(purchaseQuote.QuoteID));
+            Assert(expiryClock.ReadStarted.Wait(TimeSpan.FromSeconds(3))&&!delayedPurchase.IsCompleted,"real account lease delays checkout creation");
+            expiryClock.AdvanceTo(purchaseQuote.ExpiresAt.AddSeconds(1));
+        }
+        finally{heldLease.ReleaseMutex();}
+    }
+    try{await delayedPurchase;throw new Exception("quote expired during account lease accepted");}catch(InvalidOperationException error)when(error.Message=="quote_expired"){}
+    Assert((expiryLedger.Get(purchaseAccount).Purchases?.Count??0)==0,"expired lease-delayed quote creates no pending order");
+    var purchase=purchases.Begin(purchaseQuote.QuoteID);
+    Assert(ledger.Get(purchaseAccount).Subscription.Resources.AIDustAllocated==0,"quote and checkout cannot activate purchased allowance");
+    try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("unverified billing event accepted");}catch(UnauthorizedAccessException){}
+    billingVerifier.Receipt=new(purchase.PurchaseID,purchaseAccount,"fictional-settlement-1",purchaseQuote.Currency,purchaseQuote.Breakdown.FinalMonthlyCharge+0.01m,DateTimeOffset.UtcNow);
+    try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("incorrect final charge accepted");}catch(InvalidOperationException){}
+    billingVerifier.Receipt=billingVerifier.Receipt with{ChargedAmount=purchaseQuote.Breakdown.FinalMonthlyCharge};
+    var activated=await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());
+    var activatedAccount=ledger.Get(purchaseAccount);
+    Assert(activated.State==SubscriptionPurchaseState.Activated&&activatedAccount.Subscription.Resources.AIDustAllocated==purchaseQuote.ActualMonthlyDust&&activatedAccount.Subscription.Resources.StorageAllocatedBytes==purchaseQuote.Selection.StorageBytes,"verified full purchased resources activate atomically");
+    Assert(activatedAccount.Subscription.Revision==2&&activatedAccount.Subscription.Resources.HostedSiteLimit==0,"activation preserves unrelated quotas and increments revision once");
+    var restartedPurchases=new SubscriptionPurchaseService(new AccountLedger(root),purchaseQuotes,purchaseAccount,null,billingVerifier,monthlyPolicy);
+    await restartedPurchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());
+    Assert(ledger.Get(purchaseAccount).Subscription.Revision==2,"settled event replay across restart is idempotent");
+    Parallel.For(0,8,_=>restartedPurchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>()).AsTask().GetAwaiter().GetResult());
+    Assert(ledger.Get(purchaseAccount).Subscription.Revision==2,"concurrent verified webhook replay cannot double activate");
+    billingVerifier.Receipt=billingVerifier.Receipt with{AccountID=Guid.NewGuid()};
+    try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("foreign signed account accepted");}catch(UnauthorizedAccessException){}
+    billingVerifier.Receipt=billingVerifier.Receipt with{AccountID=purchaseAccount,SettlementID="conflicting-replay"};
+    try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("conflicting receipt replay accepted");}catch(InvalidOperationException){}
     Console.WriteLine("PASS: thresholds, resource independence, concurrent reservations, restart, idempotency, hosting quotas, inactivity, unresolved presets");
 }
 finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
@@ -135,4 +206,22 @@ sealed class FixtureResourceAuthority(Guid owner,Guid org,string scope):IOrganis
 {
     public bool Allows(Guid account,Guid organisation,string action,string canonicalScope)
         =>account==owner&&organisation==org&&canonicalScope==scope;
+}
+
+sealed class FixtureBillingVerifier:ITrustedBillingSettlementVerifier
+{
+    public VerifiedBillingSettlement? Receipt {get;set;}
+    public ValueTask<VerifiedBillingSettlement?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)=>ValueTask.FromResult(Receipt);
+}
+sealed class FixtureMonthlyPolicy:IEntitlementMonthlyPricePolicy
+{
+    public decimal Resolve(SubscriptionPurchase purchase,VerifiedBillingSettlement settlement)=>purchase.Quote.Breakdown.TaxExclusiveMonthlyPrice;
+}
+
+sealed class FixturePurchaseClock(DateTimeOffset now):TimeProvider
+{
+    private long ticks=now.UtcTicks;
+    public ManualResetEventSlim ReadStarted {get;}=new(false);
+    public override DateTimeOffset GetUtcNow(){var value=new DateTimeOffset(Interlocked.Read(ref ticks),TimeSpan.Zero);ReadStarted.Set();return value;}
+    public void AdvanceTo(DateTimeOffset value)=>Interlocked.Exchange(ref ticks,value.UtcTicks);
 }

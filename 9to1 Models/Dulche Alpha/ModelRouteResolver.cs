@@ -12,7 +12,7 @@ public sealed class ModelRouteResolver(IModelProviderRegistry providers)
         if (route.Version <= 0 || string.IsNullOrWhiteSpace(route.RouteId))
             return Fail<RouteSelection>(DulcheErrorCode.InvalidArgument, "A route must have a stable identity and positive version.", "route");
         var policy = route.Policy ?? new ProviderPolicy();
-        var catalogue = await providers.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+        var catalogue = await providers.GetModelsAsync(new ModelCataloguePolicy(policy.AllowLocal, policy.AllowRemote && policy.AllowCloud, policy.AllowedProviders), cancellationToken).ConfigureAwait(false);
         var all = catalogue.Select(model => (Descriptor: model, Identity: new ModelIdentity(model.ProviderId, model.Name))).ToArray();
         var skipped = new List<string>();
         var configured = route.Candidates;

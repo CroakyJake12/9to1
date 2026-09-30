@@ -8,10 +8,12 @@ pub mod ffi;
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::path::Path;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
+#[cfg(test)]
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
-use nalgebra::Vector2;
+use parry2d_f64::math::Vector2;
 use rnote_compose::penevent::PenEvent;
 use rnote_compose::penpath::Element;
 use rnote_compose::style::smooth::SmoothOptions;
@@ -19,6 +21,7 @@ use rnote_compose::utils::{add_xml_header, wrap_svg_root};
 use rnote_compose::builders::ShapeBuilderType;
 use rnote_compose::Color;
 use rnote_engine::engine::export::{DocExportFormat, DocExportPrefs};
+use rnote_engine::engine::import::XoppImportPrefs;
 use rnote_engine::engine::{EngineConfig, EngineConfigShared};
 use rnote_engine::engine::EngineSnapshot;
 use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
@@ -28,7 +31,7 @@ use rnote_engine::Engine;
 
 /// One normalized CakeOS/HUI pointer sample in Canvas document coordinates.
 ///
-/// Tilt remains in the CakeOS boundary because Rnote 0.14.2 only accepts position
+/// Tilt remains in the Canvas boundary because Rnote 0.15 only accepts position
 /// and pressure in its core `Element` type. Keeping tilt here prevents a lossy
 /// public API if the engine is extended later.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -651,6 +654,26 @@ impl HeadlessCanvasEngine {
         let snapshot = EngineSnapshot::load_from_rnote_bytes(bytes)
             .await
             .context("Rnote snapshot load failed")?;
+        Ok(Self::from_snapshot(snapshot))
+    }
+
+    /// Import Xournal++ through the controlled Rnote engine, preserving its
+    /// editable stroke/image/text snapshot rather than flattening to a bitmap.
+    pub async fn from_xopp(bytes: Vec<u8>, dpi: f64) -> Result<Self> {
+        if !dpi.is_finite() || !(1.0..=2400.0).contains(&dpi) {
+            anyhow::bail!("Xopp DPI must be finite and within 1..=2400");
+        }
+        let snapshot = EngineSnapshot::load_from_xopp_bytes(bytes, XoppImportPrefs { dpi })
+            .await
+            .context("Rnote Xopp import failed")?;
+        // Normalize once at import to the donor's persisted precision. A preview
+        // must represent the committed snapshot, including donor DPI rounding,
+        // rather than displaying geometry that changes after the first reopen.
+        let imported = Self::from_snapshot(snapshot);
+        Self::from_rnote(imported.save_rnote().await?).await
+    }
+
+    fn from_snapshot(snapshot: EngineSnapshot) -> Self {
         let mut engine = Engine::default();
         let config = EngineConfigShared::from(EngineConfig::default());
         let _ = engine.install_config(&config, None);
@@ -669,7 +692,7 @@ impl HeadlessCanvasEngine {
             config,
         };
         canvas.configure_tool();
-        Ok(canvas)
+        canvas
     }
 
     pub async fn from_rnote_file(path: impl AsRef<Path>) -> Result<Self> {
@@ -689,6 +712,48 @@ impl HeadlessCanvasEngine {
 mod tests {
     use super::*;
     use futures::executor::block_on;
+
+    fn stable_svg(bytes: &[u8]) -> String {
+        let mut svg = String::from_utf8(bytes.to_vec()).unwrap();
+        let mut ids = Vec::new();
+        let mut tail = svg.as_str();
+        while let Some(index) = tail.find("id=\"") {
+            tail = &tail[index + 4..];
+            let end = tail.find('"').unwrap();
+            ids.push(tail[..end].to_owned());
+            tail = &tail[end + 1..];
+        }
+        // Export-generated SVG resource IDs are random and have no document
+        // identity semantics. Preserve/reference their topology while comparing
+        // every path, colour, geometry and remaining serialized attribute.
+        for (index, id) in ids.into_iter().enumerate() {
+            svg = svg.replace(&format!("id=\"{id}\""), &format!("id=\"resource-{index}\""));
+            svg = svg.replace(&format!("#{id}"), &format!("#resource-{index}"));
+        }
+        svg
+    }
+
+    #[test]
+    fn controlled_donor_imports_editable_xopp_and_round_trips_rendering() {
+        block_on(async {
+            use flate2::{Compression, write::GzEncoder};
+            use std::io::Write;
+            let xml = r##"<?xml version="1.0"?><xournal creator="Canvas donor bridge" fileversion="4"><title>Imported handwriting</title><page width="595" height="842"><background type="solid" color="#ffffffff" style="plain"/><layer><stroke tool="pen" color="#000000ff" width="2">10 20 30 40 50 35</stroke></layer></page></xournal>"##;
+            let mut gzip = GzEncoder::new(Vec::new(), Compression::default());
+            gzip.write_all(xml.as_bytes()).unwrap();
+            let canvas = HeadlessCanvasEngine::from_xopp(gzip.finish().unwrap(), 96.0).await.unwrap();
+            let before = canvas.render_frame().await.unwrap();
+            assert!(before.bytes.len() > 200);
+            let native = canvas.save_rnote().await.unwrap();
+            let restored = HeadlessCanvasEngine::from_rnote(native).await.unwrap();
+            let after = restored.render_frame().await.unwrap();
+            assert_eq!(before.bounds, after.bounds);
+            assert_eq!(stable_svg(&before.bytes), stable_svg(&after.bytes));
+            assert!(restored.debug_state_json().unwrap().contains("brushstroke"));
+            assert!(HeadlessCanvasEngine::from_xopp(vec![1, 2, 3], 96.0).await.is_err());
+            assert!(HeadlessCanvasEngine::from_xopp(vec![1], f64::NAN).await.is_err());
+        });
+    }
 
     fn sample_stroke() -> [CanvasPointerSample; 5] {
         [
