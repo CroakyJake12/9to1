@@ -56,6 +56,42 @@ public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocal
         return binding.ResourceKind == kind && binding.StoreId == storeId && binding.ProfileId == actor.ProfileId ? binding : null;
     }
 
+    internal async ValueTask<ResourceStoreBindingReceipt?> CaptureReceiptAsync(HomeLocalStoreBinding expected,
+        CancellationToken ct)
+    {
+        // Deliberately no owning-store evidence read: callers can hold that store's commit lease.
+        var read = await store.ReadAsync(ct).ConfigureAwait(false);
+        if (!read.IsSuccess) return null;
+        var record = read.State!.Records.SingleOrDefault(item => item.RecordId == Id(expected.ResourceKind, expected.StoreId));
+        if (record is null || record.SchemaVersion != 1 || record.RecordType != "home.local-store-ownership" ||
+            record.Scope != HomeDataScope.DeviceLocal || record.Authority != HomeRecordAuthority.LocalCanonical) return null;
+        try
+        {
+            if (record.Payload.Deserialize<HomeLocalStoreBinding>() != expected) return null;
+            return new(record.Revision, Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(record.Payload))));
+        }
+        catch (JsonException) { return null; }
+    }
+
+    internal async ValueTask<bool> IsReceiptCurrentAsync(VerifiedResourceStoreOwnership captured, CancellationToken ct)
+    {
+        if (captured.Receipt is null) return false;
+        var read = await store.ReadAsync(ct).ConfigureAwait(false);
+        if (!read.IsSuccess) return false;
+        var record = read.State!.Records.SingleOrDefault(item => item.RecordId == Id(captured.ResourceKind, captured.StoreId));
+        if (record is null || record.SchemaVersion != 1 || record.RecordType != "home.local-store-ownership" ||
+            record.Scope != HomeDataScope.DeviceLocal || record.Authority != HomeRecordAuthority.LocalCanonical ||
+            record.Revision != captured.Receipt.Revision) return false;
+        try
+        {
+            var binding = record.Payload.Deserialize<HomeLocalStoreBinding>();
+            return binding is not null && binding.ResourceKind == captured.ResourceKind && binding.StoreId == captured.StoreId &&
+                binding.ProfileId == captured.ProfileId && binding.ObservedStoreRevision == captured.ObservedStoreRevision &&
+                Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(record.Payload))) == captured.Receipt.Fingerprint;
+        }
+        catch (JsonException) { return false; }
+    }
+
     public async Task<HomeLocalStoreBinding> BindNewEmptyAsync(string kind, string storeId, CancellationToken ct = default)
     {
         var actor = await profiles.GetCurrentAsync(ct).ConfigureAwait(false) ?? throw new UnauthorizedAccessException();
@@ -116,8 +152,8 @@ public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocal
         var existing = await GetVerifiedAsync(observed.ResourceKind, observed.StoreId, ct).ConfigureAwait(false);
         if (existing is not null) return existing;
         var binding = new HomeLocalStoreBinding(observed.ResourceKind, observed.StoreId, actor.ProfileId, observed.Revision, approval);
-        var write = await store.WriteAsync(new(Id(observed.ResourceKind, observed.StoreId), "home.local-store-ownership", 1,
-            HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(binding)), 0, ct).ConfigureAwait(false);
+        var write = await store.WriteGuardedAsync(new(Id(observed.ResourceKind, observed.StoreId), "home.local-store-ownership", 1,
+            HomeDataScope.DeviceLocal, HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(binding)), 0, actor, profiles, ct).ConfigureAwait(false);
         if (!write.IsSuccess) throw new InvalidOperationException("Store ownership conflicts with an existing binding; explicit recovery is required.");
         return binding;
     }

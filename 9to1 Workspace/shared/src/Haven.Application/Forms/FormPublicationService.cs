@@ -10,11 +10,33 @@ public interface IFormStoreAuthority
     ValueTask<bool> AuthorizeAsync(Guid storeID, Guid formID, long revision, string actionID,
         CancellationToken cancellationToken);
 }
+/// <summary>Captures trusted current authority before acquiring the settings lease. The returned admission
+/// must recheck actor/ACL using independent authority state only, without reading this settings store.</summary>
+public interface IFormStoreCommitAuthority : IFormStoreAuthority
+{
+    ValueTask<ISettingsCommitAdmission?> CaptureCommitAdmissionAsync(Guid storeID, Guid formID, long revision,
+        string actionID, AuthenticatedResourceActor? expectedActor, CancellationToken cancellationToken);
+}
+
+internal sealed class FormCommitAdmission(Guid storeID, ISettingsCommitAdmission inner,
+    IAuthenticatedResourceActorSource? actors = null, AuthenticatedResourceActor? expectedActor = null) : ISettingsCommitAdmission
+{
+    public async ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken)
+    {
+        if (context.StoreIdentity.SchemaVersion != 1 || context.StoreIdentity.StoreId != storeID) return false;
+        if (actors is not null && await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != expectedActor) return false;
+        return await inner.CheckAsync(context, cancellationToken).ConfigureAwait(false)
+            && (actors is null || await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) == expectedActor);
+    }
+}
 /// <summary>The canonical Forms builder/runtime validates the complete authored project, including logic and bindings.
 /// Publication must not treat a valid identity envelope as a valid form.</summary>
 public interface IFormProjectPublicationValidator
 {
     void Validate(Guid formID, JsonElement canonicalProject);
+    /// <summary>Checks the actual configured runtime/presentation/integration capabilities before activation.
+    /// Draft validation remains structural so an unavailable capability does not destroy authored state.</summary>
+    void ValidateForPublication(Guid formID, JsonElement canonicalProject) => Validate(formID, canonicalProject);
 }
 public sealed record FormPublicationResult(bool Success, string? Code, FormPublication? Publication);
 
@@ -48,7 +70,7 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
         ChangeAsync(id, revision, "forms.publish", current =>
         {
             var form = Required(current);
-            validator.Validate(id, form.Draft);
+            validator.ValidateForPublication(id, form.Draft);
             var version = new FormPublishedVersion(id, Guid.NewGuid(), revision, _clock.GetUtcNow(), form.Draft.Clone());
             return form with { Revision = checked(revision + 1), Versions = form.Versions.Append(version).ToArray(),
                 ActiveVersionID = version.FormVersionID, State = FormPublicationState.Published };
@@ -77,7 +99,8 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            if (settings is not IVersionedSettingsCompareExchange atomic) return new(false, "AtomicStoreUnavailable", null);
+            if (settings is not IVersionedSettingsGuardedCompareExchange atomic) return new(false, "AtomicStoreUnavailable", null);
+            var root = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
             var snapshot = await settings.ExportAsync(token).ConfigureAwait(false);
             snapshot.Settings.TryGetValue(Key(id), out var expectedJson);
             var current = expectedJson is null ? null : JsonSerializer.Deserialize<FormPublication>(expectedJson)
@@ -88,20 +111,24 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
                 if (current.FormID != id) throw new InvalidDataException("Stored form identity mismatch.");
             }
             var revision = current?.Revision ?? 0;
-            var root = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
             if (!await authority.AuthorizeAsync(root.StoreId, id, revision, action, token).ConfigureAwait(false))
                 return new(false, "PermissionDenied", null);
             if (expected != revision) return new(false, "RevisionConflict", null);
+            if (snapshot.StoreIdentity is not { SchemaVersion: 1 } identity || identity.StoreId != root.StoreId
+                || authority is not IFormStoreCommitAuthority commitAuthority) return new(false, "PermissionDenied", null);
+            var admission = await commitAuthority.CaptureCommitAdmissionAsync(root.StoreId, id, revision, action, null, token).ConfigureAwait(false);
+            if (admission is null) return new(false, "PermissionDenied", null);
             var updated = change(current);
             FormPublicationValidation.Validate(updated);
             // Recheck after preparing the publication; an ownership/ACL revoke prevents commit.
             if (!await authority.AuthorizeAsync(root.StoreId, id, revision, action, token).ConfigureAwait(false))
                 return new(false, "PermissionDenied", null);
-            var exchanged = await atomic.CompareExchangeAsync(Key(id), expectedJson,
-                JsonSerializer.Serialize(updated), token).ConfigureAwait(false);
-            if (!exchanged.Exchanged) return new(false, "RevisionConflict", null);
+            var exchanged = await atomic.CompareExchangeGuardedAsync(Key(id), expectedJson,
+                JsonSerializer.Serialize(updated), new Dictionary<string, string?>(), new FormCommitAdmission(root.StoreId, admission), token).ConfigureAwait(false);
+            if (!exchanged.Exchanged) return new(false, exchanged.AdmissionRejected ? "PermissionDenied" : "RevisionConflict", null);
             return new(true, null, Clone(updated));
         }
+        catch (NotSupportedException) { return new(false, "CapabilityUnavailable", null); }
         catch (KeyNotFoundException) { return new(false, "NotFound", null); }
         catch (InvalidOperationException exception) when (exception.Message == "FormExists") { return new(false, "AlreadyExists", null); }
         catch (JsonException) { return new(false, "InvalidData", null); }

@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using Haven.Application;
 using HavenOS.Files;
 
-namespace Haven.Desktop.Services;
+namespace HavenOS.Files.NativeHost;
 
 public sealed record NativeFilesArtifactContent(FilesArtifactReference Reference, FilesRevision Revision, byte[] Bytes, HostedItemMetadata Metadata);
 

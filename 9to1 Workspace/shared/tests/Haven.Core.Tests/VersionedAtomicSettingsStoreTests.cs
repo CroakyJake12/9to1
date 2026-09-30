@@ -7,6 +7,67 @@ public sealed class VersionedAtomicSettingsStoreTests
 {
     private sealed record Value(string Name);
 
+    [Theory]
+    [InlineData(SettingsCommitPhase.Admission)]
+    [InlineData(SettingsCommitPhase.Publication)]
+    public async Task Authority_denial_under_lease_preserves_primary_and_actual_store_identity(SettingsCommitPhase denied)
+    {
+        using var paths = new TestPaths();
+        var store = new VersionedAtomicSettingsStore(paths);
+        await store.SetAsync("existing", new Value("keep"), default);
+        var identity = await store.GetStoreIdentityAsync(default);
+        var path = Path.Combine(paths.DataDirectory, "settings.json");
+        var before = await File.ReadAllBytesAsync(path);
+        var guard = new Admission(identity.StoreId, denied);
+        var result = await store.CompareExchangeGuardedAsync("response", null, "{}",
+            new Dictionary<string, string?>(), guard, default);
+        Assert.False(result.Exchanged);
+        Assert.True(result.AdmissionRejected);
+        Assert.Equal(before, await File.ReadAllBytesAsync(path));
+        Assert.Null(await new VersionedAtomicSettingsStore(paths).GetAsync<Value>("response", default));
+        Assert.Contains(denied, guard.Observed);
+        Assert.Empty(Directory.GetFiles(paths.DataDirectory, "*.tmp"));
+    }
+
+    private sealed class Admission(Guid expectedStoreId, SettingsCommitPhase denied) : ISettingsCommitAdmission
+    {
+        public List<SettingsCommitPhase> Observed { get; } = [];
+        public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken ct)
+        {
+            Assert.Equal(expectedStoreId, context.StoreIdentity.StoreId);
+            Assert.Equal(1, context.StoreIdentity.SchemaVersion);
+            Assert.Equal(1, context.StoreVersion);
+            Observed.Add(context.Phase);
+            return ValueTask.FromResult(context.Phase != denied);
+        }
+    }
+
+    [Fact]
+    public async Task Guarded_cas_reloads_other_keys_and_never_writes_when_publication_changed()
+    {
+        using var paths = new TestPaths();
+        var first = new VersionedAtomicSettingsStore(paths);
+        var second = new VersionedAtomicSettingsStore(paths);
+        var open = JsonSerializer.Serialize(new Value("open"));
+        var closed = JsonSerializer.Serialize(new Value("closed"));
+        var response = JsonSerializer.Serialize(new Value("response"));
+        Assert.True((await first.CompareExchangeAsync("publication", null, open, default)).Exchanged);
+        Assert.True((await second.CompareExchangeAsync("publication", open, closed, default)).Exchanged);
+        var path = Path.Combine(paths.DataDirectory, "settings.json");
+        var before = await File.ReadAllBytesAsync(path);
+        var denied = await first.CompareExchangeGuardedAsync("response", null, response,
+            new Dictionary<string, string?> { ["PUBLICATION"] = open }, default);
+        Assert.False(denied.Exchanged);
+        Assert.Equal("PUBLICATION", denied.ConflictingGuardKey);
+        Assert.Equal(before, await File.ReadAllBytesAsync(path));
+        Assert.Null(await second.GetAsync<Value>("response", default));
+        var saved = await first.CompareExchangeGuardedAsync("response", null, response,
+            new Dictionary<string, string?> { ["publication"] = closed, ["missing"] = null }, default);
+        Assert.True(saved.Exchanged);
+        Assert.Null(saved.ConflictingGuardKey);
+        Assert.Equal("response", (await second.GetAsync<Value>("response", default))!.Name);
+    }
+
     [Fact]
     public async Task Exact_key_cas_reloads_real_disk_and_conflict_never_changes_settings()
     {

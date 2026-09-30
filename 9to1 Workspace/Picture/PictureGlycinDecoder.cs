@@ -28,7 +28,8 @@ public sealed class PictureGlycinDecoder
     /// and loops for animation; still images permit one frame. The caller owns each
     /// returned pixel copy. This session never accumulates previous decoded frames.
     /// </summary>
-    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded) => FrameSession.Create(encoded);
+    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded) => OpenFrames(encoded, loopAnimation: true);
+    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded, bool loopAnimation) => FrameSession.Create(encoded, loopAnimation);
 
     public sealed class FrameSession : IDisposable
     {
@@ -37,10 +38,28 @@ public sealed class PictureGlycinDecoder
         private readonly GObjectHandle _loader;
         private readonly GObjectHandle _image;
         private bool _disposed;
-        private FrameSession(GBytesHandle bytes, GObjectHandle loader, GObjectHandle image)
-        { _bytes = bytes; _loader = loader; _image = image; }
+        private bool _ended;
+        private const int NoMoreFramesError = 2; // GlyLoaderError from the pinned public C header.
+        private readonly bool _loopAnimation;
+        private FrameSession(GBytesHandle bytes, GObjectHandle loader, GObjectHandle image, bool loopAnimation)
+        { _bytes = bytes; _loader = loader; _image = image; _loopAnimation = loopAnimation; }
 
-        internal static FrameSession Create(ReadOnlySpan<byte> encoded)
+        public string MimeType
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    ObjectDisposedException.ThrowIf(_disposed, this);
+                    var mime = Marshal.PtrToStringUTF8(Native.gly_image_get_mime_type(_image));
+                    if (string.IsNullOrWhiteSpace(mime) || mime.Length > 128 || !mime.Contains('/') || mime.Any(char.IsControl))
+                        throw new InvalidDataException("The donor returned no valid detected MIME type.");
+                    return mime;
+                }
+            }
+        }
+
+        internal static FrameSession Create(ReadOnlySpan<byte> encoded, bool loopAnimation)
         {
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This libglycin package has not been built and verified for this platform.");
             if (encoded.IsEmpty || encoded.Length > MaximumBufferBytes)
@@ -58,19 +77,37 @@ public sealed class PictureGlycinDecoder
                 Native.gly_loader_set_accepted_memory_formats(loader, 1u); // premultiplied BGRA
                 Native.gly_loader_set_color_convert_icc_srgb(loader, 1);
                 var image = new GObjectHandle(RequireSuccess(Native.gly_loader_load(loader, out var error), error, "load"));
-                return new(bytes, loader, image);
+                return new(bytes, loader, image, loopAnimation);
             }
             catch { loader?.Dispose(); bytes.Dispose(); throw; }
         }
 
         /// <summary>Cancellation is checked before/after decoding; it cannot interrupt an in-flight native call.</summary>
-        public PictureGlycinFrame NextFrame(CancellationToken cancellationToken = default)
+        public PictureGlycinFrame NextFrame(CancellationToken cancellationToken = default) =>
+            TryNextFrame(cancellationToken) ?? throw new EndOfStreamException("The non-looping image has no more frames.");
+
+        public PictureGlycinFrame? TryNextFrame(CancellationToken cancellationToken = default)
         {
             lock (_gate)
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
                 cancellationToken.ThrowIfCancellationRequested();
-                using var frame = new GObjectHandle(RequireSuccess(Native.gly_image_next_frame(_image, out var error), error, "next frame"));
+                if (_ended) return null;
+                using var request = new GObjectHandle(Native.gly_frame_request_new());
+                Native.gly_frame_request_set_loop_animation(request, _loopAnimation ? 1 : 0);
+                var pointer = Native.gly_image_get_specific_frame(_image, request, out var error);
+                if (!_loopAnimation && pointer == IntPtr.Zero && error != IntPtr.Zero)
+                {
+                    var detail = Marshal.PtrToStructure<GError>(error);
+                    if (detail.Domain == Native.gly_loader_error_quark() && detail.Code == NoMoreFramesError)
+                    {
+                        Native.g_error_free(error);
+                        _ended = true;
+                        cancellationToken.ThrowIfCancellationRequested();
+                        return null;
+                    }
+                }
+                using var frame = new GObjectHandle(RequireSuccess(pointer, error, "next frame"));
                 var result = ReadFrame(frame);
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -103,28 +140,37 @@ public sealed class PictureGlycinDecoder
         // Frame buffer is transfer-none: keep frame alive through the copy;
         // do not unref a borrowed GBytes pointer.
         var pixels = CopyBytes(Native.gly_frame_get_buf_bytes(frame), MaximumBufferBytes);
-        // The donor allows the last row to omit trailing stride padding.
-        // Validate the required pixels without rejecting that valid layout.
-        if ((ulong)stride * (height - 1) + (ulong)width * 4 > (ulong)pixels.Length)
-            throw new InvalidDataException("libglycin frame bytes do not cover its declared rows and pixels.");
         byte[]? icc = null;
-        var iccPointer = Native.gly_frame_get_color_icc_profile(frame); // transfer-full
-        if (iccPointer != IntPtr.Zero)
+        try
         {
-            using var profile = new GBytesHandle(iccPointer);
-            icc = CopyBytes(profile.DangerousGetHandle(), 16 * 1024 * 1024);
+            // The donor allows the last row to omit trailing stride padding.
+            // Validate the required pixels without rejecting that valid layout.
+            if ((ulong)stride * (height - 1) + (ulong)width * 4 > (ulong)pixels.Length)
+                throw new InvalidDataException("libglycin frame bytes do not cover its declared rows and pixels.");
+            var iccPointer = Native.gly_frame_get_color_icc_profile(frame); // transfer-full
+            if (iccPointer != IntPtr.Zero)
+            {
+                using var profile = new GBytesHandle(iccPointer);
+                icc = CopyBytes(profile.DangerousGetHandle(), 16 * 1024 * 1024);
+            }
+            PictureGlycinCicp? cicp = null;
+            var cicpPointer = Native.gly_frame_get_color_cicp(frame); // transfer-full
+            if (cicpPointer != IntPtr.Zero)
+            {
+                try { cicp = new(Marshal.ReadByte(cicpPointer, 0), Marshal.ReadByte(cicpPointer, 1), Marshal.ReadByte(cicpPointer, 2), Marshal.ReadByte(cicpPointer, 3)); }
+                finally { Native.gly_cicp_free(cicpPointer); }
+            }
+            var colorMode = Native.gly_frame_get_color_mode(frame);
+            if (colorMode is < 1 or > 3 || colorMode == 2 && cicp is null || colorMode == 3 && icc is null)
+                throw new InvalidDataException("libglycin colour mode has no corresponding declared colour information.");
+            return new(width, height, stride, pixels, Native.gly_frame_get_delay(frame), colorMode, icc, cicp);
         }
-        PictureGlycinCicp? cicp = null;
-        var cicpPointer = Native.gly_frame_get_color_cicp(frame); // transfer-full
-        if (cicpPointer != IntPtr.Zero)
+        catch
         {
-            try { cicp = new(Marshal.ReadByte(cicpPointer, 0), Marshal.ReadByte(cicpPointer, 1), Marshal.ReadByte(cicpPointer, 2), Marshal.ReadByte(cicpPointer, 3)); }
-            finally { Native.gly_cicp_free(cicpPointer); }
+            Array.Clear(pixels);
+            if (icc is not null) Array.Clear(icc);
+            throw;
         }
-        var colorMode = Native.gly_frame_get_color_mode(frame);
-        if (colorMode is < 1 or > 3 || colorMode == 2 && cicp is null || colorMode == 3 && icc is null)
-            throw new InvalidDataException("libglycin colour mode has no corresponding declared colour information.");
-        return new(width, height, stride, pixels, Native.gly_frame_get_delay(frame), colorMode, icc, cicp);
     }
 
     internal static void ValidateLayout(uint width, uint height, uint stride)
@@ -180,6 +226,11 @@ public sealed class PictureGlycinDecoder
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_bytes_get_data(IntPtr bytes, out nuint length);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_bytes_unref(IntPtr bytes);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_error_free(IntPtr error);
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_frame_request_new();
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern void gly_frame_request_set_loop_animation(GObjectHandle request, int loopAnimation);
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_image_get_specific_frame(GObjectHandle image, GObjectHandle request, out IntPtr error);
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern uint gly_loader_error_quark();
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_image_get_mime_type(GObjectHandle image);
         [DllImport("libgobject-2.0.so.0", CallingConvention = CallingConvention.Cdecl)] internal static extern void g_object_unref(IntPtr value);
         [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_loader_new_for_bytes(GBytesHandle bytes);
         [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern void gly_loader_set_sandbox_selector(GObjectHandle loader, int selector);

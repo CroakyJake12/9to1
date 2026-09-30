@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
+using Avalonia.Input;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
@@ -61,7 +62,7 @@ public sealed class GoAndCuiTests
             bindings.TrySetValue("PageItems", new[] { firstPageItem, firstPageItem with { Id = Guid.NewGuid(), Label = "Other page app", Column = 2, Row = 2, ColumnSpan = 1, RowSpan = 1 } });
             bindings.TrySetValue("Items", new[] { new TaskbarItem(Guid.NewGuid(), TaskbarItemKind.Widget, "Unavailable widget", new("Owner", "widget", "widget-id")) });
             var dispatcher = new Recorder();
-            using var loader = new CuiControlLoader(); loader.SetBindingContext(bindings); loader.SetActionDispatcher(dispatcher);
+            using var loader = new CuiControlLoader(TaskbarLayerSurface.CreateRegistry(dispatcher)); loader.SetBindingContext(bindings); loader.SetActionDispatcher(dispatcher);
             var (root, diagnostics) = loader.LoadMarkup(reader.ReadToEnd());
             Assert.True(root is not null, string.Join("\n", diagnostics)); Assert.DoesNotContain(diagnostics, d => d.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             loader.WireBindings(root!);
@@ -102,9 +103,44 @@ public sealed class GoAndCuiTests
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.Equal("Open", dispatcher.Command); Assert.Same(app, dispatcher.Parameter);
             otherButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Same(otherApp, dispatcher.Parameter);
+            var navigation = Traverse(root!).OfType<Button>().Single(b => Equals(b.Content, "Navigate"));
+            navigation.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal("InvokeGoAction", dispatcher.Command);
+            var invoked = Assert.IsType<ShellGoAction>(dispatcher.Parameter);
+            Assert.Same(navigationOnly, invoked.Result); Assert.Same(navigationOnly.Reference, invoked.Result.Reference);
+            Assert.Equal("Navigate", invoked.Action.Id);
             window.Close();
         }, default);
     }
+    [Fact]
+    public async Task TaskbarNativeInputStepsOnceAndRemainsScopedToItsOwningSurface()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(TestApplication));
+        await session.Dispatch(() =>
+        {
+            var actions = new Recorder(); var child = new Button { Content = "Layer content" };
+            var layer = new TaskbarLayerSurface(actions) { Child = child, Height = 80 };
+            var outside = new Button { Content = "Outside taskbar", Height = 80 };
+            var panel = new StackPanel(); panel.Children.Add(layer); panel.Children.Add(outside);
+            var window = new Window { Width = 400, Height = 200, Content = panel }; window.Show(); window.UpdateLayout();
+            window.MouseWheel(new Point(50, 40), new Vector(0, -0.4)); Assert.Null(actions.Command);
+            window.MouseWheel(new Point(50, 40), new Vector(0, -0.4)); Assert.Null(actions.Command);
+            window.MouseWheel(new Point(50, 40), new Vector(0, -0.4)); Assert.Equal("NextLayer", actions.Command);
+            actions.Command = null;
+            window.MouseWheel(new Point(50, 40), new Vector(0, 4)); Assert.Equal("PreviousLayer", actions.Command);
+            actions.Command = null;
+            outside.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.PageDown, KeyModifiers = KeyModifiers.Control });
+            Assert.Null(actions.Command);
+            child.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.PageDown, KeyModifiers = KeyModifiers.Control });
+            Assert.Equal("NextLayer", actions.Command); Assert.Null(actions.Parameter);
+            actions.Command = null;
+            window.Content = null;
+            child.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.PageUp, KeyModifiers = KeyModifiers.Control });
+            Assert.Null(actions.Command);
+            window.Close();
+        }, default);
+    }
+
     private static IEnumerable<Control> Traverse(Control root)
     {
         yield return root;

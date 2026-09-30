@@ -19,7 +19,7 @@ public sealed class NativeFilesSetupCuiSurface(HomeCoreRuntime runtime, HomeLoca
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly CancellationTokenSource _lifetime = new();
     private AuthenticatedResourceActor? _actor;
-    private NativeFilesWorkspace? _configured;
+    private NativeFilesWorkspaceConfiguration? _configured;
     private string? _importRequest;
     private bool _disposed;
 
@@ -60,7 +60,7 @@ public sealed class NativeFilesSetupCuiSurface(HomeCoreRuntime runtime, HomeLoca
     private async Task RefreshAsync(CancellationToken cancellationToken)
     {
         await RequireActorAsync(cancellationToken).ConfigureAwait(false);
-        _configured = await files.GetConfiguredAsync(cancellationToken).ConfigureAwait(false);
+        _configured = await files.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var current = await authority.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -68,7 +68,7 @@ public sealed class NativeFilesSetupCuiSurface(HomeCoreRuntime runtime, HomeLoca
             _model.Set("CanConfigure", _configured is null);
             _model.Set("NeedsImport", _configured is not null && current is null);
             _model.Set("CanCompleteImport", _importRequest is not null && current is null);
-            _model.Set("Location", _configured is null ? "" : "Folder: " + _configured.Configuration.RootDirectory);
+            _model.Set("Location", _configured is null ? "" : "Folder: " + _configured.RootDirectory);
             _model.Set("Status", current is null ? "Files storage is not yet authorised for this profile."
                 : $"Files storage is ready. {current.Configuration.AppFolders.Count} canonical app folders are available.");
         });
@@ -94,7 +94,7 @@ public sealed class NativeFilesSetupCuiSurface(HomeCoreRuntime runtime, HomeLoca
             switch (command)
             {
                 case "ChooseFolder":
-                    if (await files.GetConfiguredAsync(linked.Token).ConfigureAwait(false) is not null)
+                    if (await files.GetConfigurationAsync(linked.Token).ConfigureAwait(false) is not null)
                         throw new InvalidOperationException("Files is already configured. Existing storage was preserved.");
                     var selected = await Dispatcher.UIThread.InvokeAsync(() => chooseEmptyFolder(linked.Token));
                     if (selected is null) return;
@@ -102,9 +102,9 @@ public sealed class NativeFilesSetupCuiSurface(HomeCoreRuntime runtime, HomeLoca
                     await files.ConfigureNewAsync(selected, ownership, linked.Token).ConfigureAwait(false);
                     break;
                 case "RequestOwnership":
-                    var configured = await files.GetConfiguredAsync(linked.Token).ConfigureAwait(false)
+                    var configured = await files.GetConfigurationAsync(linked.Token).ConfigureAwait(false)
                         ?? throw new InvalidOperationException("No existing Files store is configured.");
-                    var request = await ownership.RequestImportAsync("files", configured.Configuration.StoreId.ToString("D"),
+                    var request = await ownership.RequestImportAsync("files", configured.StoreId.ToString("D"),
                         _actor!.AuthenticationRevision, linked.Token).ConfigureAwait(false);
                     _importRequest = request.State is HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.PendingApproval or
                         HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Approved ? request.RequestId : null;

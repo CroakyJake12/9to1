@@ -18,7 +18,8 @@ public sealed class PictureFilesArtifactBridge(
     Func<AuthenticatedResourceActor, DurableDriveProvider?> providers,
     FilesWorkspaceDirectoryResolver directories,
     ResourceAuthorizationService authorization,
-    Func<bool> hostAllowsWrites)
+    Func<bool> hostAllowsWrites,
+    Func<AuthenticatedResourceActor, DurableDriveProvider, CancellationToken, ValueTask<FilesCommitAuthorityGuard>>? captureCommitAuthority = null)
 {
     private const string OwnerAppId = "picture";
     private const long MaximumArtifactBytes = PictureArtifactCodec.MaximumPayloadBytes;
@@ -44,10 +45,40 @@ public sealed class PictureFilesArtifactBridge(
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("Picture became read-only before creation.");
         var reference = new FilesArtifactReference(OwnerAppId, artifact.Document.DocumentId.ToString("N"), fileId,
             binding.FolderId, nameof(FilesArtifactType.Picture), artifact.Document.DisplayName + ".picture.json");
-        var registered = await provider.RegisterArtifactAsync(reference, folder.Value.OwnerPrincipalId, cancellationToken).ConfigureAwait(false);
-        if (!registered.IsSuccess) throw new InvalidOperationException(registered.Error!.Message);
-        var revision = await SaveAsync(artifact, null, cancellationToken).ConfigureAwait(false);
-        return new(artifact, revision, revision.Id);
+        var guards = new List<FilesItemRevisionPrecondition> { new(binding.FolderId, folder.Value.CurrentRevisionId) };
+        if (artifact.SourceAsset is { } rawSource)
+        {
+            var raw = await provider.GetAsync(new(rawSource.FileId), cancellationToken).ConfigureAwait(false);
+            if (!raw.IsSuccess) throw new UnauthorizedAccessException("The canonical source is unavailable.");
+            guards.Add(new(new(rawSource.FileId), raw.Value!.CurrentRevisionId));
+        }
+        var bytes = PictureArtifactCodec.Serialize(artifact);
+        if (bytes.LongLength > MaximumArtifactBytes) throw new InvalidDataException("The Picture artifact exceeds supported payload limits.");
+        var relative = Path.Combine(".9to1-artifacts", fileId.ToString(), Guid.NewGuid().ToString("N") + ".picture.json");
+        var destination = SafePath(binding.DirectoryPath, relative);
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        destination = SafePath(binding.DirectoryPath, relative);
+        await using (var stream = new FileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous | FileOptions.WriteThrough))
+        {
+            await stream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+            await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            stream.Flush(flushToDisk: true);
+        }
+        await RecheckAsync(actor, scope, "picture.file.create", cancellationToken).ConfigureAwait(false);
+        await ValidateSourceReferenceAsync(actor, provider, artifact.SourceAsset, cancellationToken).ConfigureAwait(false);
+        if (await BindingAsync(actor, cancellationToken).ConfigureAwait(false) != binding || !ReferenceEquals(providers(actor), provider))
+            throw new UnauthorizedAccessException("The canonical Picture destination changed before creation.");
+        SafePath(binding.DirectoryPath, relative);
+        var commitAuthority = captureCommitAuthority is null
+            ? new FilesCommitAuthorityGuard(actor.ActorId, async token =>
+                await actors.GetCurrentAsync(token).ConfigureAwait(false) == actor && hostAllowsWrites())
+            : await captureCommitAuthority(actor, provider, cancellationToken).ConfigureAwait(false);
+        var committed = await provider.CommitCreatedArtifactAsync(reference,
+            new(fileId, OwnerAppId, OwningRevision(artifact), actor.ActorId, DateTimeOffset.UtcNow,
+                bytes.LongLength, Convert.ToHexString(SHA256.HashData(bytes)), relative, null), guards, commitAuthority, cancellationToken).ConfigureAwait(false);
+        if (!committed.IsSuccess)
+            throw new InvalidOperationException(committed.Error!.Message + " The unpublished candidate remains recoverable; no artifact was registered.");
+        return new(artifact, committed.Value!, committed.Value!.Id);
     }
 
     public async Task<PictureFilesOpenResult> OpenAsync(HostedItemId fileId, CancellationToken cancellationToken = default)
@@ -78,14 +109,27 @@ public sealed class PictureFilesArtifactBridge(
             ?? throw new InvalidDataException("Picture current Files item has no structural revision."));
     }
 
-    public async Task<FilesRevision> SaveAsync(PictureArtifactEnvelope artifact, FilesRevisionId? expectedFileRevision,
-        CancellationToken cancellationToken = default)
+    public Task<FilesRevision> SaveAsync(PictureArtifactEnvelope artifact, FilesRevisionId? expectedFileRevision,
+        CancellationToken cancellationToken = default) => SaveCoreAsync(artifact, expectedFileRevision, null, cancellationToken);
+
+    /// <summary>Retains the exact actor already claimed by an owning Home operation; this overload grants no authority.</summary>
+    public Task<FilesRevision> SaveAsync(PictureArtifactEnvelope artifact, FilesRevisionId? expectedFileRevision,
+        AuthenticatedResourceActor claimedActor, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(claimedActor);
+        return SaveCoreAsync(artifact, expectedFileRevision, claimedActor, cancellationToken);
+    }
+
+    private async Task<FilesRevision> SaveCoreAsync(PictureArtifactEnvelope artifact, FilesRevisionId? expectedFileRevision,
+        AuthenticatedResourceActor? claimedActor, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         artifact = PictureArtifactCodec.Deserialize(PictureArtifactCodec.Serialize(artifact));
         var fileId = new HostedItemId(artifact.BackingFileId);
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("The current Picture host is read-only.");
         var resolved = await ResolveAsync(fileId, ResourceAccess.Write, cancellationToken).ConfigureAwait(false);
+        if (claimedActor is not null && resolved.Actor != claimedActor)
+            throw new UnauthorizedAccessException("The Picture write actor differs from the claimed Home execution actor.");
         if (!Guid.TryParse(resolved.Reference.ArtifactId, out var registeredId) || artifact.Document.DocumentId != registeredId || artifact.BackingFileId != fileId.Value)
             throw new InvalidDataException("Picture cannot replace a canonical artifact with another identity.");
         await ValidateSourceReferenceAsync(resolved.Actor, resolved.Provider, artifact.SourceAsset, cancellationToken).ConfigureAwait(false);
@@ -121,9 +165,16 @@ public sealed class PictureFilesArtifactBridge(
         }
         await RecheckWriteAsync(resolved.Actor, resolved.Scope, cancellationToken).ConfigureAwait(false);
         await ValidateSourceReferenceAsync(resolved.Actor, resolved.Provider, artifact.SourceAsset, cancellationToken).ConfigureAwait(false);
+        if (!ReferenceEquals(providers(resolved.Actor), resolved.Provider))
+            throw new UnauthorizedAccessException("The canonical Files provider changed before Picture publication.");
+        var commitAuthority = captureCommitAuthority is null
+            ? new FilesCommitAuthorityGuard(resolved.Actor.ActorId, async token =>
+                await actors.GetCurrentAsync(token).ConfigureAwait(false) == resolved.Actor && hostAllowsWrites())
+            : await captureCommitAuthority(resolved.Actor, resolved.Provider, cancellationToken).ConfigureAwait(false);
         var committed = await resolved.Provider.CommitDurableRevisionAsync(new(fileId, OwnerAppId, OwningRevision(artifact),
             resolved.Metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, bytes.LongLength, hash,
-            relative, expectedFileRevision), cancellationToken).ConfigureAwait(false);
+            relative, expectedFileRevision), commitAuthority,
+            cancellationToken).ConfigureAwait(false);
         if (!committed.IsSuccess)
             throw new InvalidOperationException(committed.Error!.Message + " The candidate remains recoverable and the prior canonical revision is unchanged.");
         return committed.Value!;

@@ -17,6 +17,23 @@ public sealed class PolicyAwareModelCatalogueTests
         Assert.False(result[0].IsLocal); // A remote backend's inaccurate model label cannot invent locality.
         Assert.Equal(1, local.Calls); Assert.Equal(1, remote.Calls);
     }
+    [Fact]
+    public async Task Legacy_catalogue_overload_preserves_real_locality_and_cancellation()
+    {
+        IModelProviderRegistry registry = new ModelProviderRegistry([new Provider("remote", false)]);
+        Assert.False(Assert.Single(await registry.GetModelsAsync(default)).IsLocal);
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => registry.GetModelsAsync(cancelled.Token));
+        IModelProviderRegistry empty = new ModelProviderRegistry([]);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => empty.GetModelsAsync(new ModelCataloguePolicy(), cancelled.Token));
+    }
+    [Fact]
+    public void Competing_provider_identities_cannot_silently_replace_the_registered_owner()
+    {
+        var local = new Provider("same", true);
+        Assert.Throws<InvalidOperationException>(() => new ModelProviderRegistry([local, new Provider("SAME", false)]));
+        Assert.Single(new ModelProviderRegistry([local, local]).Providers);
+    }
     private sealed class Provider(string id, bool local) : IModelProvider
     {
         public int Calls;

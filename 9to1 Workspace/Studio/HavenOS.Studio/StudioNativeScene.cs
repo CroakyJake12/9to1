@@ -7,13 +7,17 @@ namespace HavenOS.AIStudio;
 public static class StudioNativeScene
 {
     public static CuiNativeScene Create(ICuiBindingContext bindings,ICuiActionDispatcher actions,
-        ICuiSceneReadiness authenticatedHomeReadiness)
+        ICuiSceneReadiness authenticatedHomeReadiness, AgentAvatarPreview? preview = null)
     {
         using var stream=typeof(StudioNativeScene).Assembly.GetManifestResourceStream("HavenOS.AIStudio.UI.Studio.cui")
             ??throw new InvalidDataException("Canonical Studio CUI source is missing.");
         using var reader=new StreamReader(stream);
-        return new("9to1.Studio","AI Studio","Studio",new CuiRichParser().Parse(reader.ReadToEnd()),
-            bindings,actions,authenticatedHomeReadiness);
+        var registry = new CuiControlRegistry();
+        registry.RegisterObjectRenderer("studio.agent-avatar", _ => preview is null
+            ? new Avalonia.Controls.TextBlock { Text = "Visual avatar service unavailable." }
+            : new AgentAvatarPreviewControl(preview));
+        return new CuiNativeScene("9to1.Studio","AI Studio","Studio",new CuiRichParser().Parse(reader.ReadToEnd()),
+            bindings,actions,authenticatedHomeReadiness) { ControlRegistry = registry };
     }
 
     public static CuiNativeScene CreateUnavailable()

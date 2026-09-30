@@ -21,6 +21,7 @@ public interface IHomeProductivityObjectHandler
     HomeProductivityObject Create(Guid objectId, JsonElement content);
     HomeProductivityObject Transform(HomeProductivityObject source, HomeProductivityAction action);
     HomeProductivityObjectRenderResult Render(HomeProductivityObject source);
+    IReadOnlyList<string> GetReferencedStyleIds(HomeProductivityObject source) => [];
 }
 
 /// <summary>Object families with embedded canonical identities clone those identities together. Target-layer or

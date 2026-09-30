@@ -9,6 +9,7 @@ using Haven.Infrastructure.Games;
 using HavenOS.Files;
 using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
+using HavenOS.Games;
 
 namespace Haven.Desktop.Tests;
 
@@ -20,7 +21,16 @@ public sealed class GamesCanonicalProjectSourceTests
     [GamesHomeNativeFact]
     public Task Actual_Home_Files_scene_is_observed_by_matching_native_Godot_under_current_resource_authority() => ExerciseAsync(true);
 
-    private static async Task ExerciseAsync(bool observeNative)
+    [GamesManagedHomeNativeFact]
+    public Task Actual_Home_Files_saved_project_runs_in_pinned_owning_CSharp_driver() => ExerciseAsync(true, true);
+
+    [Fact]
+    public Task Actual_Home_one_use_position_approval_reaches_same_Files_CAS_and_retains_claimed_actor() => ExerciseAsync(false, false, true);
+
+    [Fact]
+    public Task Actual_Games_commit_waiting_for_Files_lease_rejects_changed_authentication_without_revision_or_event() => ExerciseAsync(false, false, false, true);
+
+    private static async Task ExerciseAsync(bool observeNative, bool observeManaged = false, bool homeWrite = false, bool leaseRace = false)
     {
         var root = Path.Combine(Path.GetTempPath(), "astra-games-files-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -73,12 +83,29 @@ public sealed class GamesCanonicalProjectSourceTests
             var reopenedAuthority = new NativeFilesWorkspaceAuthority(reopenedFiles, reopenedProfiles,
                 new HomeResourceStoreOwnershipAuthority(reopenedOwnership, reopenedProfiles));
             GamesCanonicalProjectSource? source = null;
-            var resources = new ResourceAuthorizationService(reopenedProfiles,
-                [new FilesArtifactResourceResolver(async (actor, ct) =>
+            var raceActor = new CommitRaceActor(reopenedProfiles);
+            var metadataPath = Path.Combine(chosen, ".9to1-files", "drive.json");
+            var leaseStore = new VersionedJsonStateStore<DurableDriveProvider.State>(metadataPath, 1, () => new([], [], []));
+            var releaseLease = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            Task? holder = null;
+            var saveChecks = 0;
+            var resources = new ResourceAuthorizationService(raceActor,
+                [new CommitRaceResolver(new FilesArtifactResourceResolver(async (actor, ct) =>
                 {
                     var current = await reopenedAuthority.GetCurrentAsync(ct);
                     return current?.Actor == actor ? current.Provider : null;
-                }), new GamesSceneResourceResolver(() => source!, reopenedProfiles)]);
+                }), async () =>
+                {
+                    if (!leaseRace || ++saveChecks != 3) return;
+                    var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                    holder = leaseStore.UpdateAsync(state => state, async ct =>
+                    {
+                        held.TrySetResult();
+                        await releaseLease.Task.WaitAsync(ct);
+                    }, token);
+                    await held.Task.WaitAsync(token);
+                    raceActor.TransitionAfterCapture = true;
+                }), new GamesSceneResourceResolver(() => source!, raceActor)]);
             source = new GamesCanonicalProjectSource(reopenedAuthority,
                 new NativeFilesArtifactContentReader(reopenedAuthority, reopenedProfiles, resources));
             var loaded = await source.GetAsync(projectID, sceneID, token);
@@ -125,13 +152,64 @@ public sealed class GamesCanonicalProjectSourceTests
             Assert.Null(await source.GetAsync(projectID, Guid.NewGuid(), token));
             Assert.Null(await source.GetAsync(Guid.NewGuid(), sceneID, token));
             var bridge = new GamesFilesArtifactBridge(reopenedAuthority,
-                new NativeFilesArtifactContentReader(reopenedAuthority, reopenedProfiles, resources), resources);
+                new NativeFilesArtifactContentReader(reopenedAuthority, reopenedProfiles, resources), resources, raceActor);
             var editor = new GamesProjectEditorService(bridge);
             var openedProject = await editor.OpenAsync(fileID.Value, token);
             Assert.Equal(projectID, openedProject.Project.ProjectID);
             Assert.Equal(3, openedProject.Project.Revision);
             var editedScene = GamesSceneEdits.SetPosition(openedProject.Project.Scenes[0], 2, scene.Nodes[0].NodeID, new(4, 5, 6));
-            var savedProject = await editor.SetSceneAsync(fileID.Value, openedProject.StructuralRevisionID, 3, 2, editedScene, token);
+            if (leaseRace)
+            {
+                var before = await File.ReadAllBytesAsync(metadataPath, token);
+                var pending = editor.SetSceneAsync(fileID.Value, openedProject.StructuralRevisionID, 3, 2, editedScene, token);
+                try
+                {
+                    await raceActor.Transitioned.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+                    Assert.False(pending.IsCompleted);
+                    Assert.NotNull(holder);
+                }
+                finally
+                {
+                    releaseLease.TrySetResult();
+                    if (holder is not null) await holder;
+                }
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
+                Assert.Equal(before, await File.ReadAllBytesAsync(metadataPath, token));
+                raceActor.Override = null;
+                var retained = await bridge.OpenAsync(fileID.Value, token);
+                Assert.Equal(openedProject.ContentRevisionID, retained.ContentRevisionID);
+                Assert.Equal(openedProject.StructuralRevisionID, retained.StructuralRevisionID);
+                return;
+            }
+            GamesStoredProject savedProject;
+            if (homeWrite)
+            {
+                var permissions = new HomePermissionTrustService(home, new GamesNativeActionPolicies().TryGet);
+                var broker = new HomeResourceOperationBroker(resources, permissions);
+                var intent = GamesPositionWriteIntent.Capture(fileID.Value, openedProject.StructuralRevisionID,
+                    projectID, 3, sceneID, 2, scene.Nodes[0].NodeID, new(4, 5, 6));
+                var pending = await broker.AuthorizeAsync(GamesPositionWriteIntent.TargetAppId, GamesPositionWriteIntent.ActionId,
+                    intent.Scopes, intent.Arguments, "Set this canonical node to the reviewed position", null,
+                    reopenedActor.AuthenticationRevision, token);
+                Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
+                Assert.True((await permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+                var capability = Assert.IsType<HomeResourceExecutionCapability>(await broker.BeginExecutionCapabilityAsync(pending.RequestId, intent.Arguments, token));
+                var operation = new GamesHomePositionOperation(bridge, broker);
+                var changed = GamesPositionWriteIntent.Capture(fileID.Value, openedProject.StructuralRevisionID,
+                    projectID, 3, sceneID, 2, scene.Nodes[0].NodeID, new(99, 99, 99));
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(changed, capability, token));
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => new GamesHomePositionOperation(bridge,
+                    new HomeResourceOperationBroker(resources, permissions)).ExecuteAsync(intent, capability, token));
+                savedProject = await operation.ExecuteAsync(intent, capability, token);
+                Assert.Equal(reopenedActor.ActorId, (await currentWorkspace.Provider.GetCurrentArtifactContentAsync(fileID, token)).Value!.Revision.ActorId);
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability, token));
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => bridge.SaveForActorAsync(
+                    reopenedActor with { AuthenticationRevision = "expired-claim" }, fileID.Value,
+                    savedProject.StructuralRevisionID, savedProject.Project.Revision,
+                    GamesProjectEdits.ChangeWorkspace(savedProject.Project, savedProject.Project.Revision, GamesWorkspaceMode.Development), token));
+                Assert.Equal(savedProject.StructuralRevisionID, (await bridge.OpenAsync(fileID.Value, token)).StructuralRevisionID);
+            }
+            else savedProject = await editor.SetSceneAsync(fileID.Value, openedProject.StructuralRevisionID, 3, 2, editedScene, token);
             Assert.Equal(4, savedProject.Project.Revision);
             Assert.Equal(3, savedProject.Project.Scenes[0].Revision);
             Assert.Equal(projectID, savedProject.Project.ProjectID);
@@ -141,7 +219,7 @@ public sealed class GamesCanonicalProjectSourceTests
             await Assert.ThrowsAsync<InvalidOperationException>(() => editor.SetSceneAsync(fileID.Value,
                 openedProject.StructuralRevisionID, 3, 2, editedScene, token));
             var freshlyOpened = await new GamesFilesArtifactBridge(reopenedAuthority,
-                new NativeFilesArtifactContentReader(reopenedAuthority, reopenedProfiles, resources), resources).OpenAsync(fileID.Value, token);
+                new NativeFilesArtifactContentReader(reopenedAuthority, reopenedProfiles, resources), resources, reopenedProfiles).OpenAsync(fileID.Value, token);
             Assert.Equal(savedProject.ContentRevisionID, freshlyOpened.ContentRevisionID);
             Assert.Equal(new GamesVector3(4, 5, 6), freshlyOpened.Project.Scenes[0].Nodes[0].Spatial.Position);
             if (observeNative)
@@ -149,6 +227,24 @@ public sealed class GamesCanonicalProjectSourceTests
                 var afterSave = await new GamesSceneSessionService(resources, source,
                     new GodotSceneRuntime(Environment.GetEnvironmentVariable("ASTRA_GODOT_RUNTIME")!)).ObserveAsync(projectID, sceneID, 3, token);
                 Assert.Equal(new GamesVector3(4, 5, 6), Assert.Single(afterSave.Nodes).WorldPosition);
+            }
+            if (observeManaged)
+            {
+                var executable = Environment.GetEnvironmentVariable("ASTRA_GODOT_RUNTIME")!;
+                var module = Environment.GetEnvironmentVariable("ASTRA_GAMES_MANAGED_MODULE")!;
+                var executableHash = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(executable, token)));
+                var moduleHash = await GodotManagedProjectRuntime.FingerprintModuleAsync(module, token);
+                var managed = new GamesManagedProjectSessionService(resources, bridge,
+                    new GodotManagedProjectRuntime(executable, module, executableHash, moduleHash));
+                var observedManaged = await managed.ObserveAsync(fileID.Value, savedProject.StructuralRevisionID,
+                    projectID, 4, sceneID, 3, token);
+                Assert.Equal(projectID, observedManaged.ProjectID);
+                Assert.Equal(4, observedManaged.ProjectRevision);
+                Assert.Equal(3, observedManaged.SceneRevision);
+                Assert.Equal(new GamesVector3(4, 5, 6), Assert.Single(observedManaged.Nodes).WorldPosition);
+                Assert.Equal(36, Assert.Single(observedManaged.Nodes).MeshVertexCount);
+                await Assert.ThrowsAsync<UnauthorizedAccessException>(() => managed.ObserveAsync(fileID.Value,
+                    openedProject.StructuralRevisionID, projectID, 3, sceneID, 2, token));
             }
             var state = (await home.ReadAsync(token)).State!;
             var record = Assert.Single(state.Records, item => item.RecordType == "home.local-store-ownership");
@@ -161,6 +257,35 @@ public sealed class GamesCanonicalProjectSourceTests
         }
         finally { Directory.Delete(root, true); }
     }
+    private sealed class CommitRaceResolver(ICanonicalResourceAccessResolver inner, Func<Task> finalValidation) : ICanonicalResourceAccessResolver
+    {
+        public string ResourceKind => inner.ResourceKind;
+        public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId,
+            ResourceScope scope, CancellationToken cancellationToken)
+        {
+            var result = await inner.EvaluateAsync(actor, actionId, scope, cancellationToken);
+            if (result.Allowed && actionId == "games.file.save") await finalValidation();
+            return result;
+        }
+    }
+    private sealed class CommitRaceActor(IAuthenticatedResourceActorSource inner) : IAuthenticatedResourceActorSource
+    {
+        public AuthenticatedResourceActor? Override { get; set; }
+        public bool TransitionAfterCapture { get; set; }
+        public TaskCompletionSource Transitioned { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken cancellationToken)
+        {
+            var captured = Override ?? await inner.GetCurrentAsync(cancellationToken);
+            if (TransitionAfterCapture)
+            {
+                TransitionAfterCapture = false;
+                Override = captured! with { AuthenticationRevision = "changed-after-final-validation" };
+                Transitioned.TrySetResult();
+            }
+            return captured;
+        }
+    }
+
 }
 
 public sealed class GamesHomeNativeFactAttribute : FactAttribute
@@ -170,5 +295,16 @@ public sealed class GamesHomeNativeFactAttribute : FactAttribute
     {
         if (!File.Exists(Environment.GetEnvironmentVariable("ASTRA_GODOT_RUNTIME")))
             Skip = "Requires the explicitly configured actual matching Godot runtime; no cross-app native claim without it.";
+    }
+}
+
+public sealed class GamesManagedHomeNativeFactAttribute : FactAttribute
+{
+    public GamesManagedHomeNativeFactAttribute([CallerFilePath] string? sourceFilePath = null,
+        [CallerLineNumber] int sourceLineNumber = -1) : base(sourceFilePath, sourceLineNumber)
+    {
+        if (!File.Exists(Environment.GetEnvironmentVariable("ASTRA_GODOT_RUNTIME"))
+            || !Directory.Exists(Environment.GetEnvironmentVariable("ASTRA_GAMES_MANAGED_MODULE")))
+            Skip = "Requires the actual controlled Godot Mono runtime and owning first-party C# module.";
     }
 }

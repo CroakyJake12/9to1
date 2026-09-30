@@ -1,0 +1,135 @@
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+using CakeOS.Cui.Runtime;
+
+namespace HavenOS.Images;
+
+/// <summary>Owning native Picture CUI over an exact authorized Files revision. The host supplies
+/// its real authority handshake and canonical open operation; this surface grants no access.</summary>
+public sealed class PictureNativeCuiSurface(
+    Func<CancellationToken, Task<PictureFilesOpenResult>> open,
+    PictureFilesSourceRenderer renderer,
+    PictureGlycinDecoder decoder,
+    ICuiSceneReadiness readiness) : UserControl, IDisposable
+{
+    private readonly CancellationTokenSource _lifetime = new();
+    private readonly SemaphoreSlim _operation = new(1, 1);
+    private readonly Image _image = new() { Stretch = Stretch.Uniform };
+    private PicturePinnedRasterSource? _source;
+    private PictureArtifactEnvelope? _artifact;
+    private PictureCuiWorkspace? _bindings;
+    private CuiSceneHost? _scene;
+    private Bitmap? _bitmap;
+    private bool _initialized, _disposed, _available;
+
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_initialized) throw new InvalidOperationException("This captured Picture surface is already initialized.");
+        _initialized = true;
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        await _operation.WaitAsync(linked.Token);
+        try
+        {
+            await RequireReadyAsync(linked.Token);
+            var opened = await open(linked.Token);
+            _artifact = PictureArtifactCodec.Deserialize(PictureArtifactCodec.Serialize(opened.Artifact));
+            _source = await renderer.LoadAnimationWithGlycinAsync(_artifact, opened.CasRevisionId.Value, decoder, linked.Token);
+            await RequireReadyAsync(linked.Token);
+            await _source.ValidateAccessAsync(linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            _available = true;
+            _bindings = new(DispatchAsync, kind => !_disposed && _available &&
+                kind == PictureWorkspaceCommandKind.NextFrame && _source?.CanAdvanceFrames == true);
+            RefreshBindings();
+            var registry = new CuiControlRegistry();
+            registry.RegisterControlType("PictureRasterSurface", _ => _image);
+            _scene = new(registry);
+            var state = await _scene.ShowAsync(new("picture", "Picture", "Picture", PictureCuiWorkspace.LoadDocument(),
+                _bindings, _bindings, readiness), linked.Token);
+            if (state.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(state.Message);
+            await _source.ValidateAccessAsync(linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            Render();
+            Content = _scene;
+        }
+        catch { Invalidate(); throw; }
+        finally { _operation.Release(); if (_disposed || !_available) ReleaseSource(); }
+    }
+
+    private async ValueTask DispatchAsync(PictureWorkspaceCommand command, CancellationToken cancellationToken)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (!_available || _disposed || _artifact is null || command.Kind != PictureWorkspaceCommandKind.NextFrame ||
+            command.DocumentId != _artifact.Document.DocumentId || command.BaseRevision != _artifact.Document.Revision ||
+            command.BackingFileId != _artifact.BackingFileId)
+            throw new UnauthorizedAccessException("This Picture operation is unavailable.");
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        await _operation.WaitAsync(linked.Token);
+        try
+        {
+            if (!_available) throw new UnauthorizedAccessException("Picture access changed while waiting for the current frame.");
+            await RequireReadyAsync(linked.Token);
+            await _source!.AdvanceFrameAsync(linked.Token);
+            await RequireReadyAsync(linked.Token);
+            await _source.ValidateAccessAsync(linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            Render(); RefreshBindings();
+        }
+        catch { Invalidate(); throw; }
+        finally { _operation.Release(); if (_disposed || !_available) ReleaseSource(); }
+    }
+
+    public async Task ValidateAccessAsync(CancellationToken cancellationToken = default)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_disposed || !_available) return;
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        await _operation.WaitAsync(linked.Token);
+        try
+        {
+            if (!_available) throw new UnauthorizedAccessException("Picture access changed while waiting for validation.");
+            await RequireReadyAsync(linked.Token);
+            await _source!.ValidateAccessAsync(linked.Token);
+            await RequireReadyAsync(linked.Token);
+        }
+        catch { Invalidate(); throw; }
+        finally { _operation.Release(); if (_disposed || !_available) ReleaseSource(); }
+    }
+
+    private async Task RequireReadyAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var state = await readiness.CheckAsync(cancellationToken);
+        if (state.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(state.Message);
+    }
+    private void Render()
+    {
+        if (_disposed || !_available) throw new UnauthorizedAccessException("Picture access changed.");
+        var next = _source!.Render();
+        var previous = _bitmap; _bitmap = next; _image.Source = next; previous?.Dispose();
+    }
+    private void RefreshBindings() => _bindings?.Refresh(_artifact?.Document,
+        _available ? "Canonical Files document · read-only preview" : "Source access changed. Reopen the Picture document.",
+        _available ? "Original source retained. Native animation frame stepping is available." : "Picture preview unavailable",
+        _artifact?.BackingFileId, _available ? _source?.FrameDelayMicroseconds : null);
+    private void Invalidate()
+    {
+        _available = false; _image.Source = null; _bitmap?.Dispose(); _bitmap = null;
+        RefreshBindings();
+    }
+    private void ReleaseSource() { _source?.Dispose(); _source = null; }
+    public void Dispose()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        if (_disposed) return;
+        _disposed = true; _lifetime.Cancel(); _lifetime.Dispose(); Invalidate(); Content = null; _scene?.Dispose();
+        if (_operation.Wait(0)) { try { ReleaseSource(); } finally { _operation.Release(); } }
+        // In-flight operations retain their linked cancellation tokens and release donor state in finally.
+    }
+}

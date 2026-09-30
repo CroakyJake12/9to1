@@ -21,6 +21,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check out the pinned Rnote source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 -- "9to1 Workspace/Canvas/Source/Rnote"
+          expected="$(git ls-tree HEAD -- "9to1 Workspace/Canvas/Source/Rnote" | awk '{print $3}')"
+          test "$(git -C "9to1 Workspace/Canvas/Source/Rnote" rev-parse HEAD)" = "$expected"
+          test -f "9to1 Workspace/Canvas/Source/Rnote/crates/rnote-engine/Cargo.toml"
+
       - name: Install Rust 1.92
         uses: dtolnay/rust-toolchain@1.92.0
 
@@ -78,8 +87,8 @@ jobs:
         with:
           name: canvas-rnote-native-bridge
           path: |
-            "9to1 Workspace/Canvas/rnote-poc/target/debug/libcakeos_canvas_rnote_poc.so"
-            "9to1 Workspace/Canvas/rnote-poc/include/cakeos_canvas.h"
+            9to1 Workspace/Canvas/rnote-poc/target/debug/libcakeos_canvas_rnote_poc.so
+            9to1 Workspace/Canvas/rnote-poc/include/cakeos_canvas.h
           if-no-files-found: error
 
       - name: Upload boundary test diagnostics
@@ -89,5 +98,5 @@ jobs:
           name: canvas-rnote-test-log
           path: |
             /tmp/canvas-rnote-test.log
-            "9to1 Workspace/Canvas/rnote-poc/Cargo.lock"
+            9to1 Workspace/Canvas/rnote-poc/Cargo.lock
           if-no-files-found: error

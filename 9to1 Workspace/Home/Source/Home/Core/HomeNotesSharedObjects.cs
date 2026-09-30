@@ -12,7 +12,7 @@ public static class HomeNotesSharedObjects
 {
     public static string ObjectType(NotesBlock block) => block.Kind switch
     {
-        NotesBlockKind.Heading => "text.heading", NotesBlockKind.Code => "code.block",
+        NotesBlockKind.Paragraph => "text.paragraph", NotesBlockKind.Heading => "text.heading", NotesBlockKind.Code => "code.block",
         NotesBlockKind.List when block.List?.Kind == NotesListKind.Checklist => "text.checklist",
         NotesBlockKind.List => "text.list", NotesBlockKind.Table => "table",
         _ => throw new NotSupportedException("This Notes family does not yet have a shared semantic adapter.")
@@ -22,7 +22,7 @@ public static class HomeNotesSharedObjects
     public static NotesBlock Read(HomeProductivityObject value)
     {
         var block = JsonSerializer.Deserialize<NotesBlock>(value.Content) ?? throw new InvalidDataException("Missing canonical Notes block.");
-        if (block.Id != value.ObjectId || ObjectType(block) != value.ObjectType || value.SchemaVersion != 1)
+        if (block.Id != value.ObjectId || ObjectType(block) != value.ObjectType || value.SchemaVersion != (block.Kind == NotesBlockKind.Paragraph ? 2 : 1))
             throw new InvalidDataException("Canonical Notes and shared object identity/schema disagree.");
         return block;
     }
@@ -32,7 +32,7 @@ public sealed record HomeProductivityNotesBinding(string ControlId, Guid ObjectI
 /// <summary>Shared typed formatting and editing over canonical Notes fields, retaining unrecognised JSON properties.</summary>
 public sealed class HomeNotesObjectHandler : IHomeProductivityObjectHandler, IHomeProductivityObjectCloneHandler
 {
-    private static readonly string[] Types = ["text.heading", "text.list", "text.checklist", "code.block", "table"];
+    private static readonly string[] Types = ["text.paragraph", "text.heading", "text.list", "text.checklist", "code.block", "table"];
     public HomeProductivityObjectSchema Schema { get; }
     public IReadOnlyList<HomeProductivityObjectActionDescriptor> Actions { get; }
     private static JsonElement Json(string value) { using var doc = JsonDocument.Parse(value); return doc.RootElement.Clone(); }
@@ -46,12 +46,12 @@ public sealed class HomeNotesObjectHandler : IHomeProductivityObjectHandler, IHo
             "text.list" => [new("list.item.text", 1, Json("{\"type\":\"object\",\"properties\":{\"itemId\":{\"type\":\"string\"},\"text\":{\"type\":\"string\"}},\"required\":[\"itemId\",\"text\"],\"additionalProperties\":false}"))],
             _ => [new("text.run.bold", 1, Json("{\"type\":\"object\",\"properties\":{\"runId\":{\"type\":\"string\"},\"value\":{\"type\":\"boolean\"}},\"required\":[\"runId\",\"value\"],\"additionalProperties\":false}"))]
         };
-        Schema = new(objectType, 1, true, Json("{\"type\":\"object\",\"properties\":{\"Id\":{\"type\":\"string\"},\"Kind\":{\"type\":\"integer\"},\"Runs\":{\"type\":\"array\"}},\"required\":[\"Id\",\"Kind\",\"Runs\"],\"additionalProperties\":true}"),
+        Schema = new(objectType, objectType == "text.paragraph" ? 2 : 1, true, Json("{\"type\":\"object\",\"properties\":{\"Id\":{\"type\":\"string\"},\"Kind\":{\"type\":\"integer\"},\"Runs\":{\"type\":\"array\"}},\"required\":[\"Id\",\"Kind\",\"Runs\"],\"additionalProperties\":true}"),
             Actions.Select(action => action.ActionId).Append("object.create").Append("object.render").ToFrozenSet(StringComparer.Ordinal));
     }
     public HomeProductivityObject Create(Guid objectId, JsonElement content)
     {
-        var value = new HomeProductivityObject(objectId, Schema.ObjectType, 1, content.Clone(), Json("{}"), Json("{}"), [], Json("{}"));
+        var value = new HomeProductivityObject(objectId, Schema.ObjectType, Schema.SchemaVersion, content.Clone(), Json("{}"), Json("{}"), [], Json("{}"));
         Validate(value); return value;
     }
     private NotesBlock Validate(HomeProductivityObject source)
@@ -99,6 +99,11 @@ public sealed class HomeNotesObjectHandler : IHomeProductivityObjectHandler, IHo
             if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("Id", out var identity) ||
                 identity.ValueKind != JsonValueKind.String || !identity.TryGetGuid(out var id) || id == Guid.Empty || !seen.Add(id))
                 throw new InvalidDataException("Canonical child IDs must be explicit and unique; deserialisation cannot create them.");
+    }
+    public IReadOnlyList<string> GetReferencedStyleIds(HomeProductivityObject source)
+    {
+        var block = Validate(source);
+        return string.IsNullOrWhiteSpace(block.StyleId) ? [] : [block.StyleId];
     }
     public HomeProductivityObject Transform(HomeProductivityObject source, HomeProductivityAction action)
     {

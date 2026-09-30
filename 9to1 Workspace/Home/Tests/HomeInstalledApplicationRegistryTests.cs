@@ -59,8 +59,52 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
         provider.Operability = new(Haven.Core.AppOperabilityClassification.AntiCheatProtected, Haven.Core.AppOperabilityPath.ComputerUseRequired);
         Assert.Empty(await source.SearchAsync("", default));
     }
-    private sealed class Actors : IAuthenticatedResourceActorSource
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actor_change_while_actual_store_lease_is_held_does_not_publish_registry(bool existing)
     {
+        var actors = new Actors(); var provider = new Provider();
+        var store = new PausedStore(_path);
+        var registry = new HomeInstalledApplicationRegistry(store, actors, [provider]);
+        if (existing) await registry.RefreshAsync(default);
+        var before = File.Exists(_path) ? await File.ReadAllBytesAsync(_path) : null;
+        store.Pause = true; provider.Removed = true;
+        var write = registry.RefreshAsync(default).AsTask();
+        await store.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        actors.Current = actors.Current with { AuthenticationRevision = "revoked-session" };
+        store.Release.TrySetResult();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => write);
+        if (before is null) Assert.False(File.Exists(_path));
+        else Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    private sealed class PausedStore(string path) : IHomeCoreStateStore
+    {
+        private readonly FileHomeCoreStateStore _inner = new(path);
+        public bool Pause;
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => _inner.ReadAsync(ct);
+        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long revision, CancellationToken ct = default) =>
+            _inner.WriteAsync(record, revision, ct);
+        public async Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long revision,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default)
+        {
+            if (!Pause) return await _inner.WriteGuardedAsync(record, revision, actor, guard, ct);
+            using var heldLease = new FileStream(path + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            var pending = _inner.WriteGuardedAsync(record, revision, actor, guard, ct);
+            Entered.TrySetResult();
+            await Release.Task.WaitAsync(ct);
+            heldLease.Dispose();
+            return await pending;
+        }
+    }
+
+    private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
+    {
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected,
+            HomeStateCommitPhase phase, CancellationToken ct) => ValueTask.FromResult(Current == expected);
         public AuthenticatedResourceActor Current = new("actor", "profile", null, null, "session");
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => ValueTask.FromResult<AuthenticatedResourceActor?>(Current);
     }

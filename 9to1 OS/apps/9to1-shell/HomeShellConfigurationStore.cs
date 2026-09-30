@@ -21,14 +21,14 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
             var read = await home.ReadAsync(ct);
             if (!read.IsSuccess) throw new InvalidDataException("Home shell state requires recovery.");
             var record = read.State!.Records.SingleOrDefault(r => r.RecordId == RecordId(actor.ProfileId));
-            if (record is not null) { var result = Decode(record, actor.ProfileId); await SameActorAsync(actor, ct); return result; }
+            if (record is not null) { var result = Decode(record, actor.ProfileId); await AuthorizeReadAsync(actor, result.Revision, ct); await SameActorAsync(actor, ct); return result; }
             // Persist the initial stable identities atomically so reopening cannot silently replace them.
             var initial = new Payload(actor.ProfileId, ShellConfiguration.Default(), null);
             await SameActorAsync(actor, ct);
-            var write = await home.WriteAsync(new(RecordId(actor.ProfileId), RecordType, 1, HomeDataScope.DeviceLocal,
-                HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(initial)), 0, ct);
+            var write = await home.WriteGuardedAsync(new(RecordId(actor.ProfileId), RecordType, 1, HomeDataScope.DeviceLocal,
+                HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(initial)), 0, actor, CommitGuard(), ct);
             await SameActorAsync(actor, ct);
-            if (write.IsSuccess) return new(1, initial.Current, null, RecordId(actor.ProfileId));
+            if (write.IsSuccess) { await AuthorizeReadAsync(actor, 1, ct); return new(1, initial.Current, null, RecordId(actor.ProfileId)); }
             if (write.Failure?.Code != HomeCoreErrorCode.HomeStateConflict) throw new IOException("Home could not initialize shell state safely.");
         }
         throw new ShellConfigurationConflictException();
@@ -42,11 +42,19 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
         var authorized = await authorization.AuthorizeAsync("os.shell.configuration.keep",
             [new(RecordType, RecordId(actor.ProfileId), expectedRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Write)], ct);
         if (authorized != actor) throw new UnauthorizedAccessException("Current Home shell ownership could not be verified.");
-        var write = await home.WriteAsync(new(RecordId(actor.ProfileId), RecordType, 1, HomeDataScope.DeviceLocal,
-            HomeRecordAuthority.LocalCanonical, next.Revision, JsonSerializer.SerializeToElement(new Payload(actor.ProfileId, next.Current, next.Previous))), expectedRevision, ct);
+        var write = await home.WriteGuardedAsync(new(RecordId(actor.ProfileId), RecordType, 1, HomeDataScope.DeviceLocal,
+            HomeRecordAuthority.LocalCanonical, next.Revision, JsonSerializer.SerializeToElement(new Payload(actor.ProfileId, next.Current, next.Previous))), expectedRevision, actor, CommitGuard(), ct);
         await SameActorAsync(actor, ct);
         if (!write.IsSuccess && write.Failure?.Code != HomeCoreErrorCode.HomeStateConflict) throw new IOException("Home could not save the shell transaction safely.");
         return write.IsSuccess;
+    }
+    private IHomeStateCommitActorGuard CommitGuard() => actors as IHomeStateCommitActorGuard
+        ?? throw new UnauthorizedAccessException("The current Home identity cannot guard shell persistence.");
+    private async Task AuthorizeReadAsync(AuthenticatedResourceActor actor, long revision, CancellationToken ct)
+    {
+        if (await authorization.AuthorizeAsync("os.shell.configuration.read", [new(RecordType, RecordId(actor.ProfileId),
+            revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Read)], ct) != actor)
+            throw new UnauthorizedAccessException("Current Home shell read access could not be verified.");
     }
     private async Task<AuthenticatedResourceActor> ActorAsync(CancellationToken ct)
     {
@@ -77,7 +85,8 @@ public sealed class ShellConfigurationResourceResolver(IHomeCoreStateStore home)
     {
         var denied = new ResourceAccessDecision(false, "ShellOwnershipUnavailable", actor.ActorId, scope.Revision, actor.OrganisationId);
         if (actor.OrganisationId is not null || scope.Id != HomeShellConfigurationStore.RecordId(actor.ProfileId) ||
-            actionId != "os.shell.configuration.keep" || scope.Access != ResourceAccess.Write) return denied;
+            !((actionId == "os.shell.configuration.keep" && scope.Access == ResourceAccess.Write) ||
+                (actionId == "os.shell.configuration.read" && scope.Access == ResourceAccess.Read))) return denied;
         var read = await home.ReadAsync(ct);
         var record = read.State?.Records.SingleOrDefault(r => r.RecordId == scope.Id);
         if (!read.IsSuccess || record is null || record.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture) != scope.Revision) return denied;

@@ -9,6 +9,7 @@
 
 using System.Reflection;
 using Haven.Application;
+using Haven.Application.NodeGraph;
 using Haven.Core;
 using Dulche.Runtime;
 using HavenOS.Home.Core;
@@ -37,7 +38,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ResourceAuthorizationService>();
         services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
         services.AddSingleton<HomeLocalStoreOwnership>();
-        services.TryAddSingleton<IResourceStoreOwnershipAuthority, HomeResourceStoreOwnershipAuthority>();
+        services.TryAddSingleton<HomeResourceStoreOwnershipAuthority>();
+        services.TryAddSingleton<IResourceStoreOwnershipAuthority>(provider => provider.GetRequiredService<HomeResourceStoreOwnershipAuthority>());
+        services.TryAddSingleton<IResourceStoreOwnershipReceiptAuthority>(provider => provider.GetRequiredService<IResourceStoreOwnershipAuthority>()
+            as IResourceStoreOwnershipReceiptAuthority ?? throw new InvalidOperationException("The configured ownership authority cannot recheck commit receipts."));
         services.TryAddSingleton<IInstalledApplicationRegistry, HomeInstalledApplicationRegistry>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeInvocationResourceSource, HomeInstalledAppInvocationSource>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeCoreStateService>());
@@ -51,6 +55,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<HomeCoreRuntime>();
         services.TryAddSingleton<IVersionedModelRouteRepository, HomeVersionedModelRouteRepository>();
         services.TryAddSingleton<HomePersonalModelRoutes>();
+        services.TryAddSingleton<NodeGraphSchemaRegistry>(provider => new(provider.GetServices<GraphNodeType>(), provider.GetServices<GraphCapabilityProfile>()));
+        services.TryAddSingleton<IVersionedNodeGraphRepository, HomeVersionedNodeGraphRepository>();
+        services.TryAddSingleton<NodeGraphRuntimeRegistry>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, HomeModelRouteOwner>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, HomeModelRouteProfileOwner>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, HomeModelRouteActionPolicies>());
@@ -72,6 +79,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IDulcheAppClient>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.TryAddSingleton<ITerminalAdviceService, HomeTerminalAdviceService>();
         services.AddSingleton<IMcpInvocationAuthorizer>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IWebMcpInvocationAuthorizer>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IComputerUseAdmission>(provider => provider.GetRequiredService<HomeAppAiServices>());

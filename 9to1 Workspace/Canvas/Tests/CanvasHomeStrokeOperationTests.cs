@@ -9,6 +9,80 @@ namespace HavenOS.Apps.Canvas.Tests;
 public sealed class CanvasHomeStrokeOperationTests
 {
     [Fact]
+    public async Task Initial_Canvas_creation_rejects_actor_change_without_registering_an_empty_artifact()
+    {
+        var ct = CancellationToken.None;
+        await using var fixture = await Fixture.Create();
+        var actor = (await fixture.Actors.GetCurrentAsync(ct))!;
+        await using var lease = new CommitLeaseHold(fixture.StatePath, ct);
+        fixture.OnProviderResolution = count => { if (count == 2) lease.Acquire(); };
+        var creation = fixture.Files.CreateAsync(CanvasArtifact.Create("Guarded new canvas"), ct);
+        await Task.WhenAny(lease.Entered, creation).WaitAsync(TimeSpan.FromSeconds(10), ct);
+        Assert.True(lease.Entered.IsCompletedSuccessfully);
+        Assert.False(creation.IsCompleted);
+        fixture.ActorOverride = actor with { AuthenticationRevision = actor.AuthenticationRevision + ":changed-during-create" };
+        await lease.ReleaseAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => creation);
+        var after = await lease.Store.ReadAsync(ct);
+        Assert.Equal(lease.Snapshot!.Items.Count, after.Items.Count);
+        Assert.Equal(lease.Snapshot.Artifacts.Count, after.Artifacts.Count);
+        Assert.Equal(lease.Snapshot.Revisions.Count, after.Revisions.Count);
+        Assert.Equal(lease.Snapshot.Events.Count, after.Events.Count);
+    }
+
+    [Fact]
+    public async Task Claimed_actor_refresh_while_final_Files_commit_waits_publishes_no_stroke_revision_or_event()
+    {
+        var ct = CancellationToken.None;
+        await using var fixture = await Fixture.Create();
+        var actor = (await fixture.Actors.GetCurrentAsync(ct))!;
+        var opened = await fixture.Files.OpenAsync(fixture.FileId, ct);
+        var intent = CanvasStrokeWriteIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), [new(10, 20, .3), new(30, 40, .6)]);
+        var capability = await fixture.Approve(intent);
+        await using var lease = new CommitLeaseHold(fixture.StatePath, ct);
+        fixture.OnWriteAdmission = () => fixture.OnProviderResolution = count => { if (count == 2) lease.Acquire(); };
+        var owner = new CanvasHomeStrokeOperation(fixture.Files, fixture.Home, fixture.Actors);
+        var execution = owner.ExecuteAsync(intent, capability, ct);
+        await Task.WhenAny(lease.Entered, execution).WaitAsync(TimeSpan.FromSeconds(10), ct);
+        Assert.True(lease.Entered.IsCompletedSuccessfully, "The claimed save must finish all pre-commit checks before changing actors.");
+        Assert.False(execution.IsCompleted);
+        fixture.ActorOverride = actor with { AuthenticationRevision = actor.AuthenticationRevision + ":changed-during-commit-wait" };
+        await lease.ReleaseAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => execution);
+        var after = await lease.Store.ReadAsync(ct);
+        Assert.Equal(lease.Snapshot!.Items.Count, after.Items.Count);
+        Assert.Equal(lease.Snapshot.Revisions.Count, after.Revisions.Count);
+        Assert.Equal(lease.Snapshot.Events.Count, after.Events.Count);
+        fixture.ActorOverride = null;
+        var unchanged = await fixture.Files.OpenAsync(fixture.FileId, ct);
+        Assert.Equal(opened.CasRevisionId, unchanged.CasRevisionId);
+        Assert.Equal(opened.Artifact.RevisionId, unchanged.Artifact.RevisionId);
+        Assert.Empty(unchanged.Artifact.Pages[0].Strokes);
+    }
+
+    private sealed class CommitLeaseHold(string statePath, CancellationToken token) : IAsyncDisposable
+    {
+        private readonly ManualResetEventSlim _acquired = new(false), _release = new(false);
+        private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private Task? _holding;
+        public VersionedJsonStateStore<DurableDriveProvider.State> Store { get; } = new(statePath, 1, () => new([], [], []));
+        public DurableDriveProvider.State? Snapshot { get; private set; }
+        public Task Entered => _entered.Task;
+        public void Acquire()
+        {
+            _holding = Task.Run(async () => await Store.UpdateAsync(state =>
+            {
+                Snapshot = state; _acquired.Set(); _release.Wait(token); return state;
+            }, token), token);
+            if (!_acquired.Wait(TimeSpan.FromSeconds(10), token)) throw new TimeoutException("The actual Files state lease was not acquired.");
+            _entered.TrySetResult();
+        }
+        public async Task ReleaseAsync() { _release.Set(); if (_holding is not null) await _holding; }
+        public async ValueTask DisposeAsync() { await ReleaseAsync(); _acquired.Dispose(); _release.Dispose(); }
+    }
+
+    [Fact]
     public async Task Actual_os_profile_Home_capability_commits_one_native_stroke_with_Files_CAS_and_cannot_replay()
     {
         await using var fixture = await Fixture.Create();
@@ -129,6 +203,14 @@ public sealed class CanvasHomeStrokeOperationTests
         public IAuthenticatedResourceActorSource Actors => this;
         public AuthenticatedResourceActor? ActorOverride { get; set; }
         public Action? OnWriteAdmission { get; set; }
+        public Action<int>? OnProviderResolution { get; set; }
+        private int _providerResolutions;
+        public string StatePath => Path.Combine(_root, "drive.json");
+        private DurableDriveProvider ResolveProvider()
+        {
+            if (OnProviderResolution is { } callback) callback(Interlocked.Increment(ref _providerResolutions));
+            return _provider;
+        }
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken cancellationToken) =>
             ActorOverride is { } actor ? ValueTask.FromResult<AuthenticatedResourceActor?>(actor) : _actors.GetCurrentAsync(cancellationToken);
         public CanvasFilesArtifactBridge Files { get; private set; } = null!;
@@ -156,7 +238,7 @@ public sealed class CanvasHomeStrokeOperationTests
                 id => id == profile ? fixture._provider : null);
             Assert.True((await directories.RegisterProfileAsync(profile, folder.ItemId, "canvas", fixture._root)).IsSuccess);
             fixture.Resources = new(fixture.Actors, [fixture]);
-            fixture.Files = new(fixture.Actors, current => current.ActorId == actor.ActorId && current.ProfileId == actor.ProfileId ? fixture._provider : null,
+            fixture.Files = new(fixture.Actors, current => current.ActorId == actor.ActorId && current.ProfileId == actor.ProfileId ? fixture.ResolveProvider() : null,
                 directories, fixture.Resources, () => {
                     var admission = fixture.OnWriteAdmission; fixture.OnWriteAdmission = null; admission?.Invoke();
                     return fixture.WritesAllowed;

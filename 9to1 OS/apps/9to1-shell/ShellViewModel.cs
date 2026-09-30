@@ -25,6 +25,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     private ShellConfigurationSnapshot? _snapshot;
     private CancellationTokenSource? _query;
     private long _queryGeneration;
+    private string? _goCategory;
     private Guid? _selectedPageItem;
     public ShellViewModel()
     {
@@ -37,6 +38,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         _bindings.Set("PageGridColumns", "8"); _bindings.Set("PageGridRows", "6");
         _bindings.Set("SelectedColumn", "1"); _bindings.Set("SelectedRow", "1");
         _bindings.Set("SelectedWidth", "1"); _bindings.Set("SelectedHeight", "1");
+        _bindings.Set("GoCategory", "All");
         _bindings.Set("Status", "Checking Home…"); _bindings.Set("Name", ""); _bindings.Set("Query", "");
         _bindings.Set("Thickness", "56"); _bindings.Set("Spacing", "8"); _bindings.Set("Padding", "8"); _bindings.Set("Radius", "12"); _bindings.Set("Opacity", "1");
         _bindings.Set("SpaceTitle", "Desktop Space"); _bindings.Set("LayerTitle", "Main"); _bindings.Set("LayerPosition", "Layer 1 of 1");
@@ -93,6 +95,10 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         {
             (GoResult result, "Reference.Id") => result.Reference.Id,
             (GoResult result, "Label") => result.Label,
+            (GoResult result, "Category") => result.Category,
+            (GoResult result, "OtherActions") => result.Actions.Where(a => a.Id != "Open").Select(a => new ShellGoAction(result, a)).ToArray(),
+            (ShellGoAction action, "Id") => action.Action.Id,
+            (ShellGoAction action, "Label") => action.Action.Label,
             (GoResult result, "CanOpen") => result.Actions.Any(a => a.Id == "Open"),
             (GoResult result, "CanPinApplication") => result.Reference is { Owner: "Home", Kind: "os.installed-application" } && Guid.TryParse(result.Reference.Id, out var applicationId) && applicationId != Guid.Empty,
             (DesktopPageItem pageItem, "Column") => pageItem.Column,
@@ -130,12 +136,24 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     {
         if (_configuration is null || _snapshot is null || _go is null) return;
         using var request = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetimeToken);
+        if (command.StartsWith("GoFilter.", StringComparison.Ordinal))
+        {
+            var category = command[9..];
+            if (category is not ("All" or "Apps" or "Desktop Spaces" or "Desktop Pages" or "Taskbar Layers")) return;
+            _goCategory = category == "All" ? null : category;
+            _bindings.Set("GoCategory", category); await SearchSafelyAsync(request.Token); return;
+        }
         if (command is "Search" or "Go") { await SearchSafelyAsync(request.Token); return; }
         await _actions.WaitAsync(request.Token);
         try
         {
+            if (command == "InvokeGoAction" && parameter is ShellGoAction ownerAction)
+            {
+                await _go.InvokeAsync(ownerAction.Result, ownerAction.Action.Id, GoScope(), request.Token);
+                Populate(await _configuration.GetAsync(request.Token)); return;
+            }
             if (command == "Models" && OpenModels is { } openModels) { await openModels(request.Token); return; }
-            if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", request.Token); return; }
+            if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", GoScope(), request.Token); return; }
             if (command == "SelectPageItem" && parameter is DesktopPageItem selected)
             {
                 if (!DesktopPageEdits.Effective(_snapshot.Effective).ActivePage.Items.Any(i => i.Id == selected.Id))
@@ -171,6 +189,15 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                     ?? throw new InvalidOperationException("The platform clipboard is unavailable.");
                 var text = await clipboard.TryGetTextAsync().WaitAsync(request.Token);
                 Populate(await _configuration.PreviewAsync(_snapshot.Stored.Revision, DesktopSpaceExchange.Import(config, text ?? ""), TimeSpan.FromSeconds(30), request.Token)); return;
+            }
+            if (command is "Pin" or "PinPage" && parameter is GoResult pinSource)
+            {
+                if (_launcher is null || _goCategory is not (null or "Apps") || pinSource.ProviderId != "os.installed-applications" ||
+                    pinSource.Reference is not { Owner: "Home", Kind: "os.installed-application" } ||
+                    !Guid.TryParse(pinSource.Reference.Id, out var currentAppId) || !long.TryParse(pinSource.Reference.Revision, out var currentRevision))
+                    throw new UnauthorizedAccessException("This application is outside the current Go discovery scope.");
+                var canonical = await _launcher.ResolveForReadAsync(currentAppId, currentRevision, request.Token);
+                parameter = pinSource with { Label = canonical.Label };
             }
             var candidate = command switch
             {
@@ -214,7 +241,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         _query = queryLifetime; var generation = Interlocked.Increment(ref _queryGeneration);
         var results = _bindings.GetOrCreateList<GoResult>("Results");
         await Dispatcher.UIThread.InvokeAsync(results.Clear);
-        var query = new GoQuery(_bindings.Get("Query")?.ToString() ?? "");
+        var query = new GoQuery(_bindings.Get("Query")?.ToString() ?? "", _goCategory, Scope: GoScope());
         try
         {
             await foreach (var update in _go.QueryAsync(query, queryLifetime.Token))
@@ -222,6 +249,12 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         }
         finally { if (ReferenceEquals(_query, queryLifetime)) _query = null; }
     }
+    private GoScope? GoScope() => _goCategory switch
+    {
+        "Apps" => new(new HashSet<string>(StringComparer.Ordinal) { "os.installed-applications" }),
+        "Desktop Spaces" or "Desktop Pages" or "Taskbar Layers" => new(new HashSet<string>(StringComparer.Ordinal) { ShellNavigationGoProvider.Id }),
+        _ => null
+    };
     private async Task SearchSafelyAsync(CancellationToken ct)
     {
         try { await SearchAsync(ct); }

@@ -17,7 +17,7 @@ internal static class Program
         using var home = new OsSessionHome(model);
         using var stream = typeof(Program).Assembly.GetManifestResourceStream("NineToOne.Os.Shell.UI.Shell.cui") ?? throw new InvalidDataException("The canonical shell CUI document is missing.");
         using var reader = new StreamReader(stream);
-        return CuiNativeHost.Run(new("os.shell", "9to1 OS", "os.shell", new CuiRichParser().Parse(reader.ReadToEnd()), model, model, home), args);
+        return CuiNativeHost.Run(new("os.shell", "9to1 OS", "os.shell", new CuiRichParser().Parse(reader.ReadToEnd()), model, model, home) { ControlRegistry = TaskbarLayerSurface.CreateRegistry(model) }, args);
     }
 }
 
@@ -67,6 +67,7 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         services.AddSingleton<ShellConfigurationService>();
         services.AddSingleton<LinuxApplicationLauncher>();
         services.AddSingleton<IGoProvider, InstalledApplicationsGoProvider>();
+        services.AddSingleton<IGoProvider, ShellNavigationGoProvider>();
         services.AddSingleton<GoService>();
         _services = services.BuildServiceProvider();
         var actors = _services.GetRequiredService<IAuthenticatedResourceActorSource>();

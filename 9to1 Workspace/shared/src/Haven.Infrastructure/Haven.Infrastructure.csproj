@@ -28,4 +28,19 @@
     <PackageReference Include="System.Speech" VersionOverride="10.0.0" />
   </ItemGroup>
   <ItemGroup><ProjectReference Include="../../../Home/HavenOS.Home.csproj" /></ItemGroup>
+  <PropertyGroup>
+    <TerminalNativeHost Condition="$([MSBuild]::IsOSPlatform('Linux')) and ('$(RuntimeIdentifier)' == '' or '$(RuntimeIdentifier)' == 'linux-x64')">linux</TerminalNativeHost>
+    <TerminalNativeHost Condition="$([MSBuild]::IsOSPlatform('OSX')) and ('$(RuntimeIdentifier)' == '' or '$(RuntimeIdentifier)' == 'osx-x64' or '$(RuntimeIdentifier)' == 'osx-arm64')">osx</TerminalNativeHost>
+    <TerminalNativeExtension Condition="'$(TerminalNativeHost)' == 'linux'">so</TerminalNativeExtension>
+    <TerminalNativeExtension Condition="'$(TerminalNativeHost)' == 'osx'">dylib</TerminalNativeExtension>
+    <TerminalNativeOutput>$(MSBuildProjectDirectory)/obj/terminal-native/$(Configuration)/$(TerminalNativeHost)/libhaven_terminal_pty.$(TerminalNativeExtension)</TerminalNativeOutput>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TerminalNativeHost)' != ''">
+    <None Include="$(TerminalNativeOutput)" Link="libhaven_terminal_pty.$(TerminalNativeExtension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildTerminalPtyShim" BeforeTargets="PrepareForBuild" Condition="'$(TerminalNativeHost)' != ''" Inputs="$(MSBuildProjectDirectory)/Terminal/Native/terminal_pty.c" Outputs="$(TerminalNativeOutput)">
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(TerminalNativeOutput)'))" />
+    <Exec Condition="'$(TerminalNativeHost)' == 'linux'" Command="cc -O2 -fPIC -shared -Wall -Wextra -Werror &quot;$(MSBuildProjectDirectory)/Terminal/Native/terminal_pty.c&quot; -o &quot;$(TerminalNativeOutput)&quot; -lutil" />
+    <Exec Condition="'$(TerminalNativeHost)' == 'osx'" Command="cc -O2 -fPIC -dynamiclib -Wall -Wextra -Werror &quot;$(MSBuildProjectDirectory)/Terminal/Native/terminal_pty.c&quot; -o &quot;$(TerminalNativeOutput)&quot;" />
+  </Target>
 </Project>

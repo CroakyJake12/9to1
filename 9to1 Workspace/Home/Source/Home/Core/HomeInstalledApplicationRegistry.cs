@@ -18,6 +18,8 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
     {
         var actor = await actors.GetCurrentAsync(ct).ConfigureAwait(false);
         if (actor is null || !Text(actor.ActorId) || !Text(actor.ProfileId) || !Text(actor.AuthenticationRevision) || actor.AccountId == Guid.Empty || actor.OrganisationId is not null) throw new UnauthorizedAccessException("A verified personal Home profile is required.");
+        if (actors is not IHomeStateCommitActorGuard commitGuard)
+            throw new UnauthorizedAccessException("The current actor source cannot validate commit authority.");
         if (_providers.Any(p => !Text(p.ProviderId)) || _providers.GroupBy(p => p.ProviderId, StringComparer.Ordinal).Any(g => g.Count() != 1))
             throw new InvalidOperationException("Installed application providers must have unique canonical identities.");
         var observed = new List<(string Provider, InstalledApplicationProfileObservation Profile)>();
@@ -71,13 +73,15 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
             foreach (var missing in next.Where(a => !observed.Any(o => o.Provider == a.ProviderId && o.Profile.PlatformProfileId == a.PlatformProfileId)).ToArray())
                 Replace(next, missing, missing with { ProfileAccessible = false, Revision = missing.Revision + (missing.ProfileAccessible ? 1 : 0) });
             if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry reconciliation.");
-            var write = await store.WriteAsync(new(id, "home.installed-apps", 1, HomeDataScope.DeviceLocal,
-                HomeRecordAuthority.LocalCanonical, (record?.Revision ?? 0) + 1, JsonSerializer.SerializeToElement(new State(actor.ProfileId, next))), record?.Revision ?? 0, ct).ConfigureAwait(false);
+            var write = await store.WriteGuardedAsync(new(id, "home.installed-apps", 1, HomeDataScope.DeviceLocal,
+                HomeRecordAuthority.LocalCanonical, (record?.Revision ?? 0) + 1, JsonSerializer.SerializeToElement(new State(actor.ProfileId, next))), record?.Revision ?? 0, actor, commitGuard, ct).ConfigureAwait(false);
             if (write.IsSuccess)
             {
                 if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry persistence.");
                 return next.OrderBy(a => a.ProviderId, StringComparer.Ordinal).ThenBy(a => a.PlatformProfileId, StringComparer.Ordinal).ThenBy(a => a.ApplicationId).ToArray();
             }
+            if (write.Failure?.Code == HomeCoreErrorCode.PermissionDenied)
+                throw new UnauthorizedAccessException("Home profile changed before registry publication.");
             if (write.Failure?.Code != HomeCoreErrorCode.HomeStateConflict) throw new InvalidDataException("Installed application state could not be saved safely.");
         }
         throw new IOException("Installed application registry changed concurrently; retry discovery.");

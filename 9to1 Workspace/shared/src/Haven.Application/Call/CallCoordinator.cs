@@ -203,9 +203,21 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
             throw new ArgumentException("A local Ollama model must be selected.", nameof(options));
 
         await _lifecycleGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var startingNewSession = false;
         try
         {
             if (IsActive) throw new InvalidOperationException("A Haven call is already active.");
+            Conversation? existingConversation = null;
+            if (options.ConversationId is { } conversationId)
+            {
+                if (conversationId == Guid.Empty) throw new ArgumentException("ConversationID must be a canonical non-empty identity.", nameof(options));
+                existingConversation = await _conversations.GetAsync(conversationId, cancellationToken).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException("The requested conversation is unavailable.");
+                if (existingConversation.Id != conversationId || existingConversation.IsArchived ||
+                    existingConversation.Kind is ConversationKind.AutomationRun or ConversationKind.Training)
+                    throw new InvalidOperationException("The requested conversation cannot host this voice interaction.");
+            }
+            startingNewSession = true;
 
             _lifetimeCts?.Dispose();
             _lifetimeCts = new CancellationTokenSource();
@@ -221,7 +233,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
             IsMuted = false;
 
             var now = _timeProvider.GetUtcNow();
-            CurrentConversation = new Conversation(
+            CurrentConversation = existingConversation ?? new Conversation(
                 Guid.NewGuid(), HavenMode.Chat, ConversationKind.Call,
                 $"Call · {now.ToLocalTime():dd MMM HH:mm}",
                 null, null, false, false, now, now);
@@ -230,7 +242,8 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
                 options.InputDeviceId, options.OutputDeviceId, options.VoiceName,
                 options.InputMode, false, CallSessionStatus.Active, now);
 
-            await _conversations.UpsertConversationAsync(CurrentConversation, cancellationToken).ConfigureAwait(false);
+            if (existingConversation is null)
+                await _conversations.UpsertConversationAsync(CurrentConversation, cancellationToken).ConfigureAwait(false);
             await _calls.UpsertAsync(CurrentSession, cancellationToken).ConfigureAwait(false);
 
             if (!_speechInput.IsAvailable)
@@ -252,7 +265,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
 
             return CurrentSession;
         }
-        catch
+        catch when (startingNewSession)
         {
             _lifetimeCts?.Cancel();
             _lifetimeCts?.Dispose();

@@ -1,3 +1,4 @@
+using NineToOne.Launcher;
 using Android.App;
 using Android.Appwidget;
 using Android.Content;
@@ -9,62 +10,53 @@ namespace Haven.Android;
 
 public sealed partial class HavenLauncherActivity
 {
+    private LauncherPresentation CurrentPresentation => _layout?.Current.Presentation ?? new(
+        ShowLabels: Preferences.GetBoolean(LabelsKey, true), ShowPackages: Preferences.GetBoolean(PackagesKey, false));
+    private int MinimumTileWidth => Dp(Math.Max(64, CurrentPresentation.IconSizeDp + CurrentPresentation.HorizontalSpacingDp * 2));
+    private int TileHeight => Dp(Math.Max(78, CurrentPresentation.IconSizeDp +
+        (CurrentPresentation.ShowLabels ? CurrentPresentation.LabelSizeSp * 2 : 0) +
+        (CurrentPresentation.ShowPackages ? 16 : 0) + CurrentPresentation.VerticalSpacingDp * 2));
+
     private void ShowLauncherSettings()
     {
-        var container = new LinearLayout(this)
-        {
-            Orientation = Orientation.Vertical
-        };
+        var expected = _layout;
+        if (expected is null) return;
+        var appearance = CurrentPresentation;
+        var container = new LinearLayout(this) { Orientation = Orientation.Vertical };
         container.SetPadding(Dp(18), Dp(8), Dp(18), 0);
-
-        var rows = new NumberPicker(this)
+        var rows = new NumberPicker(this) { MinValue = 3, MaxValue = 8, Value = expected.Current.Rows };
+        var columns = new NumberPicker(this) { MinValue = 3, MaxValue = 7, Value = expected.Current.Columns };
+        var icon = new NumberPicker(this) { MinValue = 24, MaxValue = 96, Value = appearance.IconSizeDp };
+        var labelSize = new NumberPicker(this) { MinValue = 10, MaxValue = 24, Value = appearance.LabelSizeSp };
+        var horizontal = new NumberPicker(this) { MinValue = 0, MaxValue = 24, Value = appearance.HorizontalSpacingDp };
+        var vertical = new NumberPicker(this) { MinValue = 0, MaxValue = 24, Value = appearance.VerticalSpacingDp };
+        var labels = new HavenNativeCheckBox(this) { Text = "Show app labels", Checked = appearance.ShowLabels };
+        var packages = new HavenNativeCheckBox(this) { Text = "Show package names", Checked = appearance.ShowPackages };
+        void Preset(LauncherPresentation preset)
         {
-            MinValue = 3,
-            MaxValue = 8,
-            Value = Math.Clamp(Preferences.GetInt(RowsKey, 5), 3, 8)
-        };
-        var columns = new NumberPicker(this)
+            icon.Value = preset.IconSizeDp; labelSize.Value = preset.LabelSizeSp;
+            horizontal.Value = preset.HorizontalSpacingDp; vertical.Value = preset.VerticalSpacingDp;
+            labels.Checked = preset.ShowLabels; packages.Checked = preset.ShowPackages;
+        }
+        var presets = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+        foreach (var (name, value) in new[] { ("Compact", LauncherPresentation.Compact), ("Comfortable", LauncherPresentation.Comfortable), ("Large", LauncherPresentation.Large) })
         {
-            MinValue = 3,
-            MaxValue = 7,
-            Value = Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7)
-        };
-        var labels = new HavenNativeCheckBox(this)
-        {
-            Text = "Show app labels",
-            Checked = Preferences.GetBoolean(LabelsKey, true)
-        };
-        var packages = new HavenNativeCheckBox(this)
-        {
-            Text = "Show package names",
-            Checked = Preferences.GetBoolean(PackagesKey, false)
-        };
-        container.AddView(LabeledControl("Rows", rows));
-        container.AddView(LabeledControl("Columns", columns));
-        container.AddView(labels);
-        container.AddView(packages);
-
-        var dialog = new AlertDialog.Builder(this);
-        dialog.SetTitle("9to1 Launcher");
-        dialog.SetView(container);
+            var button = new Button(this) { Text = name }; button.Click += (_, _) => Preset(value); presets.AddView(button);
+        }
+        var presetScroll = new HorizontalScrollView(this); presetScroll.AddView(presets); container.AddView(presetScroll);
+        container.AddView(LabeledControl("Home rows", rows)); container.AddView(LabeledControl("Home columns", columns));
+        container.AddView(LabeledControl("Icon size", icon)); container.AddView(LabeledControl("Label size", labelSize));
+        container.AddView(LabeledControl("Horizontal spacing", horizontal)); container.AddView(LabeledControl("Vertical spacing", vertical));
+        container.AddView(labels); container.AddView(packages);
+        var scroll = new ScrollView(this); scroll.AddView(container);
+        var dialog = new AlertDialog.Builder(this); dialog.SetTitle("9to1 Launcher"); dialog.SetView(scroll);
         dialog.SetPositiveButton("Save", (_, _) =>
         {
-            var editor = Preferences.Edit();
-            if (editor is not null)
-            {
-                editor.PutInt(RowsKey, rows.Value);
-                editor.PutInt(ColumnsKey, columns.Value);
-                editor.PutBoolean(LabelsKey, labels.Checked);
-                editor.PutBoolean(PackagesKey, packages.Checked);
-                editor.Apply();
-            }
-
-            _page = 0;
-            RenderPage();
+            var selected = new LauncherPresentation(icon.Value, labelSize.Value, horizontal.Value, vertical.Value, labels.Checked, packages.Checked);
+            _ = EditLayoutAsync(layout => LauncherLayoutEdits.SetPresentation(LauncherLayoutEdits.Reflow(layout, rows.Value, columns.Value), selected), expected);
         });
         dialog.SetNeutralButton("Wallpaper", (_, _) => ChooseWallpaper());
-        dialog.SetNegativeButton("Widgets", (_, _) => ShowWidgetMenu());
-        dialog.Show();
+        dialog.SetNegativeButton("Widgets", (_, _) => ShowWidgetMenu()); dialog.Show();
     }
 
     private View LabeledControl(string label, View control)
@@ -80,6 +72,7 @@ public sealed partial class HavenLauncherActivity
             LayoutParameters = new LinearLayout.LayoutParams(0, Dp(56), 1f),
             Gravity = GravityFlags.CenterVertical
         };
+        control.ContentDescription = label;
         row.AddView(text);
         row.AddView(control);
         return row;
@@ -109,6 +102,11 @@ public sealed partial class HavenLauncherActivity
 
     private void PickAndroidWidget()
     {
+        if (_pendingWidgetId != AppWidgetManager.InvalidAppwidgetId)
+        {
+            Toast.MakeText(this, "Finish or cancel the current widget selection first.", ToastLength.Short)?.Show();
+            return;
+        }
         var widgetHost = _widgetHost;
         if (widgetHost is null)
         {
@@ -138,6 +136,11 @@ public sealed partial class HavenLauncherActivity
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
     {
         base.OnActivityResult(requestCode, resultCode, data);
+        if (requestCode is ExportLayoutRequest or ImportLayoutRequest)
+        {
+            _ = CompleteLayoutDocumentAsync(requestCode, resultCode, data?.Data);
+            return;
+        }
 
         if (requestCode is not PickWidgetRequest and not ConfigureWidgetRequest)
             return;
@@ -146,9 +149,13 @@ public sealed partial class HavenLauncherActivity
             AppWidgetManager.ExtraAppwidgetId,
             _pendingWidgetId) ?? _pendingWidgetId;
 
-        if (widgetId == AppWidgetManager.InvalidAppwidgetId)
+        // A platform result may only complete the binding this activity allocated.
+        // Never release a binding ID supplied by an unrelated or stale result.
+        if (_pendingWidgetId == AppWidgetManager.InvalidAppwidgetId) return;
+        if (widgetId != _pendingWidgetId)
         {
-            _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
+            CompletePendingWidget(_pendingWidgetId, keep: false);
+            Toast.MakeText(this, "Widget selection changed. Please choose the widget again.", ToastLength.Long)?.Show();
             return;
         }
 
@@ -260,14 +267,14 @@ public sealed partial class HavenLauncherActivity
                 var info = widgetManager.GetAppWidgetInfo(widgetId);
                 if (info is null)
                 {
-                    DeleteWidgetId(widgetId);
+                    widgetStrip.AddView(BuildUnavailableWidget(widgetId));
                     continue;
                 }
 
                 var hostView = widgetHost.CreateView(this, widgetId, info);
                 if (hostView is null)
                 {
-                    DeleteWidgetId(widgetId);
+                    widgetStrip.AddView(BuildUnavailableWidget(widgetId));
                     continue;
                 }
                 hostView.SetAppWidget(widgetId, info);
@@ -296,9 +303,39 @@ public sealed partial class HavenLauncherActivity
                 global::Android.Util.Log.Warn(
                     "HavenLauncher",
                     $"Widget {widgetId} could not be hosted: {exception.Message}");
-                DeleteWidgetId(widgetId);
+                widgetStrip.AddView(BuildUnavailableWidget(widgetId));
             }
         }
+    }
+
+    private View BuildUnavailableWidget(int widgetId)
+    {
+        // Provider packages and work profiles may return later. Rendering must not
+        // delete the retained platform binding or its provider configuration.
+        var button = new Button(this)
+        {
+            Text = "Widget unavailable · Retry or remove",
+            ContentDescription = "Unavailable Android widget. Retry loading or remove the saved widget.",
+            LayoutParameters = new LinearLayout.LayoutParams(Dp(300), Dp(160)) { RightMargin = Dp(8) }
+        };
+        button.Click += (_, _) =>
+        {
+            var dialog = new AlertDialog.Builder(this);
+            dialog.SetTitle("Widget unavailable");
+            dialog.SetMessage("Its saved configuration has been kept. Retry when its application or profile is available, or remove this widget.");
+            dialog.SetPositiveButton("Retry", (_, _) => RenderWidgets());
+            dialog.SetNeutralButton("Remove", (_, _) =>
+            {
+                var confirm = new AlertDialog.Builder(this);
+                confirm.SetMessage("Remove this widget and its saved configuration?");
+                confirm.SetPositiveButton("Remove", (_, _) => { DeleteWidgetId(widgetId); RenderWidgets(); });
+                confirm.SetNegativeButton("Cancel", (_, _) => { });
+                confirm.Show();
+            });
+            dialog.SetNegativeButton("Cancel", (_, _) => { });
+            dialog.Show();
+        };
+        return button;
     }
 
     private HashSet<int> ReadWidgetIds()

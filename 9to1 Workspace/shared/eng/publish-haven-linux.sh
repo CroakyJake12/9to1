@@ -9,7 +9,8 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 project="$repo_root/src/Haven.Desktop/Haven.Desktop.csproj"
 rid="${HAVEN_LINUX_RID:-linux-x64}"
 configuration="${HAVEN_CONFIGURATION:-Release}"
-artifacts_root="${HAVEN_ARTIFACTS_DIR:-$repo_root/artifacts/linux/$rid}"
+checkout_root="$(cd "$repo_root/../.." && pwd)"
+artifacts_root="${HAVEN_ARTIFACTS_DIR:-$checkout_root/artifacts/linux/$rid}"
 publish_dir="$artifacts_root/publish"
 package_path="$artifacts_root/haven-linux-$rid.tar.gz"
 
@@ -33,7 +34,9 @@ dotnet publish "$project" \
   --framework net10.0 \
   --runtime "$rid" \
   --self-contained false \
-  -p:TargetFrameworks=net10.0 \
+  -p:HavenLinuxPublish=true \
+  -p:RuntimeIdentifiers="$rid" \
+  -p:AvsSkipBuildingLegacyTargetFrameworks=True \
   -p:UseAppHost=true \
   --output "$publish_dir"
 

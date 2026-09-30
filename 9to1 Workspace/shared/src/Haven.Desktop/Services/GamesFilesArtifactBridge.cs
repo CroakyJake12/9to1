@@ -11,7 +11,7 @@ namespace Haven.Desktop.Services;
 /// <summary>Owning Games persistence through actual Home/Files authority. Payload candidates are immutable;
 /// Files CAS publishes their revision. A failed commit retains the prior canonical project and recoverable candidate.</summary>
 public sealed class GamesFilesArtifactBridge(NativeFilesWorkspaceAuthority files, NativeFilesArtifactContentReader reader,
-    ResourceAuthorizationService resources) : ICanonicalGamesProjectStore
+    ResourceAuthorizationService resources, IAuthenticatedResourceActorSource? actors = null) : IActorBoundGamesProjectStore
 {
     public async Task<GamesStoredProject> OpenAsync(Guid fileID, CancellationToken cancellationToken = default)
     {
@@ -25,10 +25,24 @@ public sealed class GamesFilesArtifactBridge(NativeFilesWorkspaceAuthority files
         return new(fileID, read.Metadata.CurrentRevisionId.Value.Value, read.Revision.Id.Value, project);
     }
 
-    public async Task<GamesStoredProject> SaveAsync(Guid fileID, Guid expectedStructuralRevisionID, long expectedProjectRevision,
+    public Task<GamesStoredProject> SaveAsync(Guid fileID, Guid expectedStructuralRevisionID, long expectedProjectRevision,
         GamesProjectDocument project, CancellationToken cancellationToken = default)
+        => SaveCoreAsync(null, fileID, expectedStructuralRevisionID, expectedProjectRevision, project, cancellationToken);
+
+    public Task<GamesStoredProject> SaveForActorAsync(AuthenticatedResourceActor expectedActor, Guid fileID,
+        Guid expectedStructuralRevisionID, long expectedProjectRevision, GamesProjectDocument project, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return SaveCoreAsync(expectedActor, fileID, expectedStructuralRevisionID, expectedProjectRevision, project, cancellationToken);
+    }
+
+    private async Task<GamesStoredProject> SaveCoreAsync(AuthenticatedResourceActor? expectedActor, Guid fileID,
+        Guid expectedStructuralRevisionID, long expectedProjectRevision, GamesProjectDocument project, CancellationToken cancellationToken)
+    {
+        if (actors is null) throw new UnauthorizedAccessException("A trusted current actor source is required at the Games commit boundary.");
         var captured = project.Capture();
+        if (expectedActor is not null && (await files.GetCurrentAsync(cancellationToken).ConfigureAwait(false))?.Actor != expectedActor)
+            throw new UnauthorizedAccessException("The actor that claimed this Games operation is no longer current.");
         var bytes = GamesProjectCodec.Encode(captured);
         var opened = await OpenAsync(fileID, cancellationToken).ConfigureAwait(false);
         if (opened.StructuralRevisionID != expectedStructuralRevisionID || opened.Project.Revision != expectedProjectRevision
@@ -44,7 +58,8 @@ public sealed class GamesFilesArtifactBridge(NativeFilesWorkspaceAuthority files
             ?? throw new UnauthorizedAccessException("Home has not verified this Files store.");
         var scope = new ResourceScope("files.item", fileID.ToString("N"), expectedStructuralRevisionID.ToString("N"), ResourceAccess.Write);
         var actor = await resources.AuthorizeAsync("games.file.save", [scope], cancellationToken).ConfigureAwait(false);
-        if (actor != workspace.Actor) throw new UnauthorizedAccessException("Current Games project write permission is unavailable.");
+        if (actor != workspace.Actor || expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("Current Games project write permission is unavailable for the claimed actor.");
         var root = await files.ResolveAppDirectoryAsync("games", cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The registered Games payload directory is unavailable.");
         var relative = Path.Combine(".9to1-artifacts", fileID.ToString("N"), Guid.NewGuid().ToString("N") + ".9to1g");
@@ -62,7 +77,11 @@ public sealed class GamesFilesArtifactBridge(NativeFilesWorkspaceAuthority files
         SafePath(root, relative);
         var result = await workspace.Provider.CommitDurableRevisionAsync(new(new(fileID), "games",
             captured.Revision.ToString(CultureInfo.InvariantCulture), actor!.ActorId, DateTimeOffset.UtcNow, bytes.LongLength,
-            Convert.ToHexString(SHA256.HashData(bytes)), relative, new(expectedStructuralRevisionID)), cancellationToken).ConfigureAwait(false);
+            Convert.ToHexString(SHA256.HashData(bytes)), relative, new(expectedStructuralRevisionID)),
+            new FilesCommitAuthorityGuard(actor!.ActorId, async token => await actors.GetCurrentAsync(token).ConfigureAwait(false) == actor),
+            cancellationToken).ConfigureAwait(false);
+        if (result.Error?.Code == FilesErrorCode.PermissionDenied)
+            throw new UnauthorizedAccessException("Games commit authority changed; the prior canonical project remains available.");
         if (!result.IsSuccess) throw new InvalidOperationException("GamesProjectRevisionConflict: candidate retained; " + result.Error?.Message);
         return new(fileID, result.Value!.Id.Value, result.Value.Id.Value, captured);
 

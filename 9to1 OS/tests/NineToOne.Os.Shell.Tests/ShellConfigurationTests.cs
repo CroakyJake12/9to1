@@ -7,6 +7,42 @@ namespace NineToOne.Os.Shell.Tests;
 public sealed class ShellConfigurationTests
 {
     [Fact]
+    public async Task ActorWithoutCommitGuardCannotInitializeShellState()
+    {
+        using var f = new Fixture(); var actor = new UnguardedActors(f.Actors);
+        var owner = new HomeShellConfigurationStore(f.Home, actor, new ResourceAuthorizationService(actor, [new ShellConfigurationResourceResolver(f.Home)]));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.ReadAsync(default));
+        Assert.DoesNotContain((await f.Home.ReadAsync()).State!.Records, r => r.RecordType == HomeShellConfigurationStore.RecordType);
+    }
+    private sealed class UnguardedActors(IAuthenticatedResourceActorSource source) : IAuthenticatedResourceActorSource
+    { public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => source.GetCurrentAsync(ct); }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ActorChangeWhileActualHomeWriteLeaseIsHeldCannotPersistShellState(bool initialize, bool changeProfile)
+    {
+        using var f = new Fixture();
+        var before = initialize ? null : await f.Store.ReadAsync(default);
+        var recordId = HomeShellConfigurationStore.RecordId(f.Actors.Current.ProfileId);
+        var beforeRecord = (await f.Home.ReadAsync()).State!.Records.SingleOrDefault(r => r.RecordId == recordId);
+        var blocked = new LeaseBlockingHomeStore(f.Home, f.StatePath);
+        var owner = new HomeShellConfigurationStore(blocked, f.Actors,
+            new ResourceAuthorizationService(f.Actors, [new ShellConfigurationResourceResolver(f.Home)]));
+        Task pending = initialize ? owner.ReadAsync(default) : owner.TryWriteAsync(before!.Revision,
+            new(before.Revision + 1, ShellEdits.AddLayer(before.Current, "Must not persist"), before.Current, before.AuthorityId), default);
+        await blocked.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        f.Actors.Current = changeProfile ? f.Actors.Current with { ProfileId = "other-profile" }
+            : f.Actors.Current with { AuthenticationRevision = "revoked-session" };
+        blocked.Release.TrySetResult();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
+        var afterRecord = (await f.Home.ReadAsync()).State!.Records.SingleOrDefault(r => r.RecordId == recordId);
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(beforeRecord), System.Text.Json.JsonSerializer.Serialize(afterRecord));
+    }
+
+    [Fact]
     public async Task PreviewDoesNotPersistAndExpiredPreviewCannotBeKept()
     {
         using var fixture = new Fixture(); var clock = new Clock(); var service = new ShellConfigurationService(fixture.Store, clock);
@@ -106,14 +142,16 @@ public sealed class ShellConfigurationTests
         imported.Validate();
     }
     private sealed class Clock : TimeProvider { public DateTimeOffset Utc = DateTimeOffset.UtcNow; public override DateTimeOffset GetUtcNow() => Utc; }
-    private sealed class Actors : IAuthenticatedResourceActorSource
+    private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
     {
         public AuthenticatedResourceActor Current = new("actor", "profile", null, null, "session");
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => ValueTask.FromResult<AuthenticatedResourceActor?>(Current);
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState lockedState, AuthenticatedResourceActor expectedActor, HomeStateCommitPhase phase, CancellationToken ct) => ValueTask.FromResult(Current == expectedActor);
     }
     private sealed class Fixture : IDisposable
     {
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "astra-shell-" + Guid.NewGuid());
+        public string StatePath => Path.Combine(_directory, "home.json");
         public FileHomeCoreStateStore Home { get; }
         public Actors Actors { get; } = new();
         public HomeShellConfigurationStore Store { get; }

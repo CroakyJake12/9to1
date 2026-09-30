@@ -34,6 +34,7 @@ public sealed class SpaceFilesArtifactActionRouter(SpaceRegistry spaces, NativeF
             SpaceContextReferenceKind.WriteArtifact => (App: "write", Type: nameof(FilesArtifactType.WriteDocument)),
             SpaceContextReferenceKind.CanvasArtifact => (App: "canvas", Type: nameof(FilesArtifactType.Canvas)),
             SpaceContextReferenceKind.PictureArtifact => (App: "picture", Type: nameof(FilesArtifactType.Picture)),
+            SpaceContextReferenceKind.GamesProject => (App: "games", Type: nameof(FilesArtifactType.GameProject)),
             _ => throw new NotSupportedException("The owning native app has no registered Space artifact route.")
         };
         if (source.HostedFileId != action.FileId || source.OwnerAppId != expectedOwner.App ||

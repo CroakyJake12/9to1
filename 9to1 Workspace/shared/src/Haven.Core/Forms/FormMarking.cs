@@ -72,7 +72,7 @@ public static class FormMarking
         }
         if (rule.Kind == FormMarkingRuleKind.NumberWithinTolerance && (rule.ExpectedNumber is null || rule.Tolerance < 0))
             throw new ArgumentException("Numeric rules need a value and nonnegative tolerance.");
-        if (rule.Kind == FormMarkingRuleKind.ChoiceSet && (rule.ChoiceIDs is null || rule.ChoiceIDs.Any(string.IsNullOrWhiteSpace) || rule.ChoiceIDs.Distinct(StringComparer.Ordinal).Count() != rule.ChoiceIDs.Length))
+        if (rule.Kind == FormMarkingRuleKind.ChoiceSet && (rule.ChoiceIDs is null || rule.ChoiceIDs.Any(string.IsNullOrWhiteSpace) || rule.ChoiceIDs.Select(CanonicalChoiceIdentity).Distinct(StringComparer.Ordinal).Count() != rule.ChoiceIDs.Length))
             throw new ArgumentException("Choice rules require unique stable option IDs.");
         if (rule.Kind is FormMarkingRuleKind.All or FormMarkingRuleKind.Any)
         {
@@ -90,7 +90,7 @@ public static class FormMarking
             FormMarkingRuleKind.AcceptedText => answer.ValueKind == JsonValueKind.String && rule.AcceptedTexts!.Any(value => Normalise(value, rule.Normalisation) == Normalise(answer.GetString()!, rule.Normalisation)),
             FormMarkingRuleKind.Regex => answer.ValueKind == JsonValueKind.String && TestRegex(rule.Pattern!, answer.GetString()!, rule.FullMatch, rule.RegexIgnoreCase),
             FormMarkingRuleKind.NumberWithinTolerance => answer.ValueKind == JsonValueKind.Number && answer.TryGetDecimal(out var number) && WithinTolerance(number, rule.ExpectedNumber!.Value, rule.Tolerance),
-            FormMarkingRuleKind.ChoiceSet => answer.ValueKind == JsonValueKind.Array && ChoiceSetMatches(answer, rule.ChoiceIDs!),
+            FormMarkingRuleKind.ChoiceSet => ChoiceSetMatches(answer, rule.ChoiceIDs!),
             FormMarkingRuleKind.All => rule.Children!.All(child => Matches(answer, child, childMatches)),
             FormMarkingRuleKind.Any => rule.Children!.Any(child => Matches(answer, child, childMatches)),
             _ => false
@@ -106,11 +106,17 @@ public static class FormMarking
     }
     private static bool ChoiceSetMatches(JsonElement answer, string[] choices)
     {
+        // SingleChoice/Dropdown retain one typed option ID; set-valued fields retain an array.
+        // Both use the same assessment rule without changing the canonical answer shape.
+        if (answer.ValueKind == JsonValueKind.String)
+            return choices.Length == 1 && StringComparer.Ordinal.Equals(CanonicalChoiceIdentity(answer.GetString()!), CanonicalChoiceIdentity(choices[0]));
+        if (answer.ValueKind != JsonValueKind.Array) return false;
         var values = new HashSet<string>(StringComparer.Ordinal);
         foreach (var item in answer.EnumerateArray())
-            if (item.ValueKind != JsonValueKind.String || !values.Add(item.GetString()!)) return false;
-        return values.SetEquals(choices);
+            if (item.ValueKind != JsonValueKind.String || !values.Add(CanonicalChoiceIdentity(item.GetString()!))) return false;
+        return values.SetEquals(choices.Select(CanonicalChoiceIdentity));
     }
+    private static string CanonicalChoiceIdentity(string value) => Guid.TryParse(value, out var id) ? "guid:" + id.ToString("N") : "text:" + value;
     private static string Normalise(string input, FormTextNormalisation? options)
     {
         if (input.Length > MaxTextLength) throw new ArgumentOutOfRangeException(nameof(input));

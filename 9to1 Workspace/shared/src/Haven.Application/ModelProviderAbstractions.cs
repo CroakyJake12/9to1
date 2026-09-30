@@ -52,6 +52,8 @@ public interface IModelProviderRegistry
     Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken);
     async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(ModelCataloguePolicy policy, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(policy);
+        cancellationToken.ThrowIfCancellationRequested();
         var models = new List<ProviderModelDescriptor>();
         foreach (var provider in Providers.Where(p => (p.IsLocal ? policy.AllowLocal : policy.AllowRemote) &&
             (policy.AllowedProviderIds is null || policy.AllowedProviderIds.Contains(p.Id))))

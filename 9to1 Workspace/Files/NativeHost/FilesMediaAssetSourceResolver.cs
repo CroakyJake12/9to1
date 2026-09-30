@@ -3,7 +3,7 @@ using Haven.Application;
 using Haven.Core.Media;
 using HavenOS.Files;
 
-namespace Haven.Desktop.Services;
+namespace HavenOS.Files.NativeHost;
 
 public sealed record FilesMediaSourceBinding(IFilesProvider Provider, FilesMaterializationRegistry Materializations);
 
@@ -53,12 +53,16 @@ public sealed class FilesMediaAssetSourceResolver(IAuthenticatedResourceActorSou
                 if (retained) retainedContent = committedContent.Value;
             }
             var revisionText = contentRevision.ToString();
-            if (expectedRevision is not null && expectedRevision != revisionText)
+            if (expectedRevision is not null &&
+                (!Guid.TryParse(expectedRevision, out var expectedContentRevision) || expectedContentRevision != contentRevision.Value))
                 return Fail(MediaEngineErrorCode.RevisionConflict, "The media project references another Files revision.");
             var scope = new ResourceScope("files.item", fileId.ToString(), revision.ToString(), ResourceAccess.Read);
             if (await authorization.AuthorizeAsync("media.asset.read", [scope], cancellationToken).ConfigureAwait(false) != actor)
                 return Fail(MediaEngineErrorCode.PermissionDenied, "Current Files access does not permit this media source.");
-            var root = actor.AccountId is { } account
+            var root = retained && retainedContent?.UploadAnchorFolderId is { } anchor
+                ? await directories.ResolveFolderAsync(actor.AccountId ?? Guid.Empty,
+                    actor.AccountId is null && Guid.TryParse(actor.ProfileId, out var anchorProfile) ? anchorProfile : null, anchor, cancellationToken).ConfigureAwait(false)
+                : actor.AccountId is { } account
                 ? await directories.ResolveAsync(account, "media", cancellationToken).ConfigureAwait(false)
                 : Guid.TryParse(actor.ProfileId, out var profile)
                     ? await directories.ResolveProfileAsync(profile, "media", cancellationToken).ConfigureAwait(false)
@@ -70,7 +74,7 @@ public sealed class FilesMediaAssetSourceResolver(IAuthenticatedResourceActorSou
             string? sourceHash;
             if (retained)
             {
-                if (retainedContent is null || metadata.Value.ParentId != root.Value!.FolderId ||
+                if (retainedContent is null || retainedContent.UploadAnchorFolderId != root.Value!.FolderId ||
                     retainedContent.Revision.SizeBytes is not { } retainedSize || retainedSize < 0 ||
                     NormalizeHash(retainedContent.Revision.ContentHash) is not { Length: 64 } ||
                     retainedContent.ProviderContentReference is not { } relative || Path.IsPathFullyQualified(relative) ||

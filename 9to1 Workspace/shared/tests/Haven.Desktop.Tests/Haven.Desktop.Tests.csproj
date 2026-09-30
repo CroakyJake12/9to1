@@ -25,4 +25,8 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <Using Include="HavenOS.Files.NativeHost" />
+  </ItemGroup>
 </Project>

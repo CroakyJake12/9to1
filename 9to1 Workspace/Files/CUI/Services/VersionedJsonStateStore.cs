@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace HavenOS.Files;
 
@@ -40,6 +41,7 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 		await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
 		try
 		{
+            await using var processLease = await AcquireProcessLeaseAsync(cancellationToken).ConfigureAwait(false);
 			return await ReadCoreAsync(cancellationToken).ConfigureAwait(false);
 		}
 		finally
@@ -48,15 +50,22 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 		}
 	}
 
-	public async Task<TState> UpdateAsync(Func<TState, TState> update, CancellationToken cancellationToken = default)
-	{
+	public Task<TState> UpdateAsync(Func<TState, TState> update, CancellationToken cancellationToken = default) =>
+        UpdateAsync(update, null, cancellationToken);
+
+    /// <summary>The optional authority validator runs under the metadata lease and must not reenter this store.</summary>
+    public async Task<TState> UpdateAsync(Func<TState, TState> update,
+        Func<CancellationToken, ValueTask>? validateCommitAuthority, CancellationToken cancellationToken)
+    {
 		ArgumentNullException.ThrowIfNull(update);
 		await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
 		try
 		{
+            await using var processLease = await AcquireProcessLeaseAsync(cancellationToken).ConfigureAwait(false);
 			TState current = await ReadCoreAsync(cancellationToken).ConfigureAwait(false);
+            if (validateCommitAuthority is not null) await validateCommitAuthority(cancellationToken).ConfigureAwait(false);
 			TState next = update(current) ?? throw new InvalidOperationException("A Files state update cannot return null.");
-			await WriteCoreAsync(next, cancellationToken).ConfigureAwait(false);
+			await WriteCoreAsync(next, cancellationToken, validateCommitAuthority).ConfigureAwait(false);
 			return next;
 		}
 		finally
@@ -64,6 +73,34 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 			_gate.Release();
 		}
 	}
+
+    private async Task<FileStream> AcquireProcessLeaseAsync(CancellationToken cancellationToken)
+    {
+        var directory = Path.GetDirectoryName(_path) ?? throw new InvalidOperationException("Files state has no parent directory.");
+        Directory.CreateDirectory(directory);
+        // This sidecar is persistent. Never unlink it: recreating a lock path can split contenders
+        // across different inodes while an earlier process still owns the original lease.
+        var lockPath = _path + ".lock";
+        var elapsed = Stopwatch.StartNew();
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var options = new FileStreamOptions
+                {
+                    Mode = FileMode.OpenOrCreate, Access = FileAccess.ReadWrite, Share = FileShare.None,
+                    BufferSize = 1, Options = FileOptions.Asynchronous
+                };
+                if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+                return new FileStream(lockPath, options);
+            }
+            catch (IOException) when (elapsed.Elapsed < TimeSpan.FromSeconds(30))
+            { await Task.Delay(25, cancellationToken).ConfigureAwait(false); }
+            catch (IOException error)
+            { throw new IOException("Files metadata is locked or unavailable in another process.", error); }
+        }
+    }
 
 	private async Task<TState> ReadCoreAsync(CancellationToken cancellationToken)
 	{
@@ -84,7 +121,7 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 			?? throw new InvalidDataException("Files state payload is empty or invalid.");
 	}
 
-	private async Task WriteCoreAsync(TState state, CancellationToken cancellationToken)
+	private async Task WriteCoreAsync(TState state, CancellationToken cancellationToken, Func<CancellationToken, ValueTask>? validateCommitAuthority)
 	{
 		string directory = Path.GetDirectoryName(_path) ?? throw new InvalidOperationException("Files state path has no parent directory.");
 		Directory.CreateDirectory(directory);
@@ -104,6 +141,7 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 				await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
 				stream.Flush(flushToDisk: true);
 			}
+            if (validateCommitAuthority is not null) await validateCommitAuthority(cancellationToken).ConfigureAwait(false);
 			cancellationToken.ThrowIfCancellationRequested();
 			File.Move(temporaryPath, _path, overwrite: true);
 		}

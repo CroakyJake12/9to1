@@ -95,15 +95,34 @@ public sealed class TerminalAppSurface : IDisposable
         ThrowIfDisposed();
         ct.ThrowIfCancellationRequested();
         TerminalResolvedAction? action;
+        string? directory;
+        long generation;
         lock(_resolutionGate)
         {
             action=_resolvedAction;
             if(action is null || action.Id.ToString("D")!=actionID || _host.NaturalLanguageActions is null || Mode!=TerminalInputMode.AI ||
                 _session is null || _session.Metadata.SessionId!=action.SessionId || _session.Metadata.EnvironmentId!=action.EnvironmentId || WorkingDirectory!=_resolvedDirectory)
                 return new(TerminalAppCommandState.Unavailable,"","Resolved action is unavailable for the current session context.");
+            directory = _resolvedDirectory;
             InvalidateResolution();
+            generation = _resolutionGeneration;
         }
         var result=await _host.NaturalLanguageActions.ExecuteAsync(action,verificationReference,ct).ConfigureAwait(false);
+        ct.ThrowIfCancellationRequested();
+        if (!result.Executed && result.State == "PermissionRequired")
+        {
+            lock (_resolutionGate)
+            {
+                if (!_disposed && generation == _resolutionGeneration && Mode == TerminalInputMode.AI &&
+                    _session?.Metadata.SessionId == action.SessionId && _session.Metadata.EnvironmentId == action.EnvironmentId && WorkingDirectory == directory)
+                {
+                    _resolvedAction = action;
+                    _resolvedDirectory = directory;
+                    return new(TerminalAppCommandState.RequiresApproval, "", result.ResultText ?? result.Message);
+                }
+            }
+            return new(TerminalAppCommandState.Unavailable, "", "The session context changed while approval was requested.");
+        }
         return new(result.Executed?TerminalAppCommandState.Succeeded:TerminalAppCommandState.Denied,"",result.ResultText??result.Message);
     }
     private TerminalAdviceContext AdviceContext()
@@ -116,12 +135,30 @@ public sealed class TerminalAppSurface : IDisposable
     public bool HasPendingApproval => _pendingCommand is not null;
     public IReadOnlyList<string> History => _history;
     public TerminalSessionMetadata? SessionMetadata => _session?.Metadata;
+    /// <summary>The actual owned session for trusted in-process host composition; never a restored descriptor or replacement process.</summary>
+    public ITerminalInteractiveSession? InteractiveSession => _disposed ? null : _session as ITerminalInteractiveSession;
     public string WorkingDirectory => _session?.Metadata.CurrentWorkingDirectory ?? _initialDirectory;
 
     public event EventHandler<TerminalSessionOutput>? OutputReceived;
     public event EventHandler<TerminalSessionMetadata>? MetadataChanged;
     public event EventHandler<TerminalCommandActivity>? AgentActivityObserved;
     public event EventHandler? TranscriptClearRequested;
+
+    /// <summary>Routes actual viewport input through the same current command policy.
+    /// A viewport must retain its attached session ID; it cannot retarget a replacement session.</summary>
+    public ValueTask SendInteractiveInputAsync(Guid expectedSessionId, ReadOnlyMemory<byte> input, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (_resolutionGate)
+        {
+            if (Mode != TerminalInputMode.Command || !TryGetExecutionHost(out var session, out var permission) ||
+                session is not ITerminalInteractiveSession interactive || session.Metadata.SessionId != expectedSessionId ||
+                TerminalCommandPolicy.Evaluate(permission()).Decision != TerminalPermissionDecision.Allowed)
+                throw new UnauthorizedAccessException("Interactive input is unavailable for the current session, mode, or command permission.");
+            return interactive.SendInputAsync(input, cancellationToken);
+        }
+    }
 
     public async Task<TerminalAppCommandResult> SubmitAsync(string command, CancellationToken cancellationToken = default)
     {

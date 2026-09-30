@@ -1,5 +1,6 @@
 <Cui id="os.shell" version="1">
   <Actions>
+    <Action name="InvokeOwnerAction" command="InvokeGoAction" parameter="{Binding ownerAction}" />
     <Action name="OpenApp" command="Open" parameter="{Binding app}" />
     <Action name="PinApp" command="Pin" parameter="{Binding app}" />
     <Action name="OpenPinned" command="OpenItem" parameter="{Binding item}" />
@@ -17,7 +18,7 @@
         <Button content="Previous Desktop Space" action="PreviousSpace" />
         <Button content="Next Desktop Space" action="NextSpace" />
       </StackPanel>
-      <Border id="taskbar-layer" padding="{Binding LayerPadding}" corner-radius="{Binding LayerRadius}" opacity="{Binding LayerOpacity}" min-height="{Binding LayerHeight}" margin="0,12">
+      <TaskbarLayer id="taskbar-layer" padding="{Binding LayerPadding}" corner-radius="{Binding LayerRadius}" opacity="{Binding LayerOpacity}" min-height="{Binding LayerHeight}" margin="0,12">
         <StackPanel>
           <StackPanel orientation="Horizontal">
             <Button content="Previous layer" action="PreviousLayer" />
@@ -29,18 +30,18 @@
             <StackPanel orientation="Horizontal" margin="{Binding ItemSpacing}"><Button content="{Binding item.Label}" action="OpenPinned" is-enabled="{Binding item.CanOpen}" accessible-name="{Binding item.Label}" /><Button content="Remove from layer" action="UnpinItem" /></StackPanel>
           </Repeat>
         </StackPanel>
-      </Border>
+      </TaskbarLayer>
       <TextBlock text="{Binding PageTitle}" font-size="20" accessible-name="Current Desktop Page" />
       <TextBlock text="{Binding PageScope}" />
       <StackPanel orientation="Horizontal"><Button content="Previous page" action="PreviousPage" /><TextBlock text="{Binding PagePosition}" margin="12,4" /><Button content="Next page" action="NextPage" /></StackPanel>
       <Repeat Source="{Binding PageItems}" As="desktopItem" Key="{Binding desktopItem.Id}" Panel="Grid" columns="{Binding PageColumns}" rows="{Binding PageRows}" ItemColumn="{Binding desktopItem.Column}" ItemRow="{Binding desktopItem.Row}" ItemColumnSpan="{Binding desktopItem.ColumnSpan}" ItemRowSpan="{Binding desktopItem.RowSpan}"><StackPanel margin="4"><Button content="{Binding desktopItem.Label}" action="OpenDesktopItem" is-enabled="{Binding desktopItem.CanOpen}" /><StackPanel orientation="Horizontal"><Button content="Arrange" action="ArrangeDesktopItem" /><Button content="Remove" action="RemoveDesktopItem" /></StackPanel></StackPanel></Repeat>
-      <TextBlock text="Go · All Apps" font-size="20" />
+      <TextBlock text="Go" font-size="20" /><TextBlock text="{Binding GoCategory}" accessible-name="Go search category" />
       <StackPanel orientation="Horizontal">
-        <TextBox id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search installed applications" width="420" accessible-name="Go search" />
+        <TextBox id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search applications and desktop navigation" width="420" accessible-name="Go search" />
         <Button content="Search" action="Search" />
       </StackPanel>
       <Repeat Source="{Binding Results}" As="app" Key="{Binding app.Reference.Id}">
-        <StackPanel orientation="Horizontal" margin="0,2"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" is-enabled="{Binding app.CanOpen}" /><Button content="Pin to this layer" action="PinApp" is-enabled="{Binding app.CanPinApplication}" /><Button content="Add to desktop page" action="PinPageApp" is-enabled="{Binding app.CanPinApplication}" /></StackPanel>
+        <StackPanel margin="0,2"><TextBlock text="{Binding app.Category}" /><StackPanel orientation="Horizontal"><Button content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" is-enabled="{Binding app.CanOpen}" /><Button content="Pin to this layer" action="PinApp" is-enabled="{Binding app.CanPinApplication}" /><Button content="Add to desktop page" action="PinPageApp" is-enabled="{Binding app.CanPinApplication}" /></StackPanel><Repeat Source="{Binding app.OtherActions}" As="ownerAction" Key="{Binding ownerAction.Id}" orientation="Horizontal"><Button content="{Binding ownerAction.Label}" action="InvokeOwnerAction" /></Repeat></StackPanel>
       </Repeat>
       <TextBlock text="Desktop Spaces, pages and taskbar settings" font-size="20" margin="0,20,0,8" />
       <TextBox text="{Binding Name, Mode=TwoWay}" placeholder-text="Layer, Desktop Space or page name" accessible-name="Layer, Desktop Space or page name" />
@@ -72,6 +73,8 @@
       </StackPanel>
       <TextBlock id="transaction-status" text="{Binding Status}" accessible-name="Shell transaction status" text-wrapping="Wrap" margin="0,12" />
       <StackPanel orientation="Horizontal"><Button id="keep" content="Keep" action="Keep" is-enabled="{Binding HasPreview}" /><Button id="revert" content="Revert" action="Revert" is-enabled="{Binding HasPreview}" /></StackPanel>
+      <TextBlock text="Go search categories" font-size="18" margin="0,12" />
+      <WrapPanel><Button content="All results" action="GoFilter.All" /><Button content="Apps" action="GoFilter.Apps" /><Button content="Desktop Spaces" action="GoFilter.Desktop Spaces" /><Button content="Desktop Pages" action="GoFilter.Desktop Pages" /><Button content="Taskbar Layers" action="GoFilter.Taskbar Layers" /></WrapPanel>
       <Button content="Personal AI models" action="Models" />
     </StackPanel>
   </ScrollViewer>

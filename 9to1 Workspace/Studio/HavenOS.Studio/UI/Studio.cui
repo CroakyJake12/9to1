@@ -58,6 +58,7 @@
         <TextBox text="{Binding AvatarActivity}" accessible-name="Readable Agent activity" />
         <CheckBox checked="{Binding ReducedMotion}" content="Preview reduced motion" />
         <Button action="PreviewAvatar" content="Preview presentation" />
+        <Object Type="studio.agent-avatar" id="studio-avatar-preview" />
         <TextBlock text="{Binding PreviewAsset}" accessible-name="Preview asset reference" />
         <Button action="SaveAvatar" content="Save to Agent" />
       </StackPanel>

@@ -10,8 +10,9 @@ namespace HavenOS.Games;
 
 /// <summary>Owning Games CUI bindings call the same canonical editor operations as typed APIs.
 /// The host supplies its current Files selection and action availability; neither grants permission.</summary>
-public sealed class GamesCuiWorkspace(GamesProjectEditorService editor, GamesSceneSessionService scenes,
-    Func<Guid?> currentFilesSelection, Func<string, bool> available) : ICuiWritableBindingContext,
+public sealed class GamesCuiWorkspace(GamesProjectEditorService editor, GamesSceneSessionService? scenes,
+    Func<Guid?> currentFilesSelection, Func<string, bool> available,
+    Func<GamesPositionWriteIntent, CancellationToken, Task<GamesStoredProject>>? positionWriter = null) : ICuiWritableBindingContext,
     ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
     private GamesStoredProject? _opened;
@@ -61,7 +62,8 @@ public sealed class GamesCuiWorkspace(GamesProjectEditorService editor, GamesSce
     {
         "9to1.Games.Open" => currentFilesSelection() is not null,
         "9to1.Games.SetPosition" or "9to1.Games.NextNode" => Selected is not null,
-        "9to1.Games.Development" or "9to1.Games.CreationRendering" or "9to1.Games.Observe" => _opened is not null,
+        "9to1.Games.Development" or "9to1.Games.CreationRendering" => _opened is not null,
+        "9to1.Games.Observe" => _opened is not null && scenes is not null,
         _ => false
     });
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
@@ -85,16 +87,25 @@ public sealed class GamesCuiWorkspace(GamesProjectEditorService editor, GamesSce
                         command.EndsWith(".Development", StringComparison.Ordinal) ? GamesWorkspaceMode.Development : GamesWorkspaceMode.CreationRendering, cancellationToken); break;
                 case "9to1.Games.SetPosition":
                     var position = new GamesVector3(Number(x), Number(y), Number(z));
+                    if (positionWriter is not null)
+                    {
+                        var intent = GamesPositionWriteIntent.Capture(target!.FileID, target.StructuralRevisionID,
+                            target.Project.ProjectID, target.Project.Revision, scene!.SceneID, scene.Revision, node!.NodeID, position);
+                        _opened = await positionWriter(intent, cancellationToken);
+                        break;
+                    }
                     var edited = GamesSceneEdits.SetPosition(scene!, scene!.Revision, node!.NodeID, position);
                     _opened = await editor.SetSceneAsync(target!.FileID, target.StructuralRevisionID, target.Project.Revision, scene.Revision, edited, cancellationToken); break;
                 case "9to1.Games.Observe":
+                    if (scenes is null) throw new InvalidOperationException("The Games runtime package is unavailable.");
                     var observation = await scenes.ObserveAsync(target!.Project.ProjectID, scene!.SceneID, scene.Revision, cancellationToken);
                     _status = $"Godot {observation.ObservedEngineVersion}: {observation.Nodes.Count} native nodes observed";
                     return;
             }
             if (Selected is { } selected)
             { _x = selected.Spatial.Position.X.ToString(CultureInfo.InvariantCulture); _y = selected.Spatial.Position.Y.ToString(CultureInfo.InvariantCulture); _z = selected.Spatial.Position.Z.ToString(CultureInfo.InvariantCulture); }
-            _status = _opened is null ? "No project" : $"Saved project revision {_opened.Project.Revision}; scene revision {Scene!.Revision}";
+            _status = _opened is null ? "No project" : $"{(command == "9to1.Games.Open" ? "Opened" : command == "9to1.Games.NextNode" ? "Selected node in" : "Saved")} project revision {_opened.Project.Revision}; scene revision {Scene!.Revision}";
+            if (scenes is null) _status += "; native runtime unavailable";
         }
         catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
         { _status = error.Message; throw; }

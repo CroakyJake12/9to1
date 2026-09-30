@@ -47,25 +47,21 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenPlannerInfrastructure();
         collection.AddHavenDesktopCallServices();
         collection.AddSingleton<SpaceRegistry>();
-        collection.AddSingleton<NativeFilesWorkspaceService>();
-        collection.AddSingleton<NativeFilesWorkspaceAuthority>();
+        collection.AddFilesNativeHost();
         collection.AddSingleton<HavenOS.Apps.Sites.Application.ISiteNativeWorkspaceAuthority, SitesNativeWorkspaceAuthority>();
         collection.AddSingleton<ICanonicalResourceAccessResolver, HavenOS.Apps.Sites.Application.SiteNativeProjectAccessResolver>();
         collection.AddSingleton<HavenOS.Home.Core.IHomeActionPolicySource, HavenOS.Apps.Sites.Application.SiteNativeActionPolicies>();
         collection.AddSingleton<HavenOS.Apps.Sites.Application.SiteNativeWriteCoordinator>();
-        collection.AddSingleton<NativeFilesMediaAssetSourceResolver>();
-        collection.AddSingleton<NativeFilesArtifactContentReader>();
-        collection.AddSingleton<Haven.Core.Media.IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
-        collection.AddSingleton<ICanonicalResourceAccessResolver>(provider => new FilesArtifactResourceResolver(async (actor, token) =>
-        {
-            var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
-            return workspace?.Actor == actor ? workspace.Provider : null;
-        }, async (actor, appId, token) =>
-        {
-            var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);
-            return workspace?.Actor == actor && workspace.Configuration.AppFolders.TryGetValue(appId, out var folder) ? folder : null;
-        }));
-        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider => provider.GetRequiredService<NativeFilesWorkspaceService>());
+        collection.AddSingleton<HavenOS.Home.Core.IHomeActionPolicySource, HavenOS.Images.PictureNativeActionPolicies>();
+        collection.AddSingleton<IWriteNativeDocumentPackageStore, Haven.Infrastructure.WriteNativeDocumentPackageStore>();
+        collection.AddSingleton<GamesCanonicalProjectSource>();
+        collection.AddSingleton<Haven.Application.Games.ICanonicalGamesSceneSource>(provider => provider.GetRequiredService<GamesCanonicalProjectSource>());
+        collection.AddSingleton<Haven.Application.Games.ICanonicalGamesProjectStore, GamesFilesArtifactBridge>();
+        collection.AddSingleton<Haven.Application.Games.GamesProjectEditorService>();
+        collection.AddSingleton<ICanonicalResourceAccessResolver>(provider => new Haven.Application.Games.GamesSceneResourceResolver(
+            () => provider.GetRequiredService<Haven.Application.Games.ICanonicalGamesSceneSource>(), provider.GetRequiredService<IAuthenticatedResourceActorSource>()));
+        collection.AddSingleton(provider => new Haven.Infrastructure.Games.GamesInstalledRuntimeResolver(
+            provider.GetService<Haven.Infrastructure.Games.GamesInstalledRuntimePackage>()));
         collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
             new PlannerLocalStoreEvidenceProvider(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<ISqliteConnectionFactory>()));
         collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>

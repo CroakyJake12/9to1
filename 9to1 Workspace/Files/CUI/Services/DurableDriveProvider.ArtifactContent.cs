@@ -1,6 +1,6 @@
 namespace HavenOS.Files;
 
-public sealed record FilesArtifactContentRevision(FilesRevision Revision, string? ProviderContentReference);
+public sealed record FilesArtifactContentRevision(FilesRevision Revision, string? ProviderContentReference, HostedItemId? UploadAnchorFolderId = null);
 
 public sealed partial class DurableDriveProvider
 {
@@ -13,6 +13,7 @@ public sealed partial class DurableDriveProvider
             return Fail<FilesArtifactContentRevision>(FilesErrorCode.ItemNotFound, "Artifact is unavailable.", "GetArtifactContent", fileId);
         var revision = state.Revisions.SingleOrDefault(entry => entry.ItemId == fileId && entry.IsCurrent);
         return revision is null ? Fail<FilesArtifactContentRevision>(FilesErrorCode.InvalidState, "No owning-app durable content revision is committed.", "GetArtifactContent", fileId) :
-            FilesResult<FilesArtifactContentRevision>.Success(new(revision, state.RevisionContentReferences.GetValueOrDefault(revision.Id.ToString())));
+            FilesResult<FilesArtifactContentRevision>.Success(new(revision, state.RevisionContentReferences.GetValueOrDefault(revision.Id.ToString()),
+                state.UploadedContents.SingleOrDefault(upload => upload.FileId == fileId && upload.RevisionId == revision.Id)?.ParentFolderId));
     }
 }

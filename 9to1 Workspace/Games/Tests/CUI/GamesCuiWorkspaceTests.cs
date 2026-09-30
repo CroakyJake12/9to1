@@ -9,6 +9,50 @@ namespace HavenOS.Games.Tests;
 public sealed class GamesCuiWorkspaceTests
 {
     [Fact]
+    public async Task Position_approval_callback_pins_original_target_and_blocks_editing_while_pending_without_fallback_on_denial()
+    {
+        var store = new Store();
+        var selectedFile = store.Saved.FileID;
+        var entered = new TaskCompletionSource<GamesPositionWriteIntent>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var decision = new TaskCompletionSource<GamesStoredProject>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var surface = new GamesCuiWorkspace(new(store), null, () => selectedFile, _ => true,
+            (intent, token) => { entered.SetResult(intent); return decision.Task.WaitAsync(token); });
+        await surface.DispatchAsync("9to1.Games.Open", null);
+        Assert.True(surface.TrySetValue("PositionX", "8"));
+        var original = store.Saved;
+        var saving = surface.DispatchAsync("9to1.Games.SetPosition", null).AsTask();
+        var intent = await entered.Task;
+        selectedFile = Guid.NewGuid();
+        Assert.False(surface.TrySetValue("PositionX", "99"));
+        Assert.False(surface.IsActionAvailable("9to1.Games.Open"));
+        Assert.Equal(original.FileID, intent.FileID);
+        Assert.Equal(original.StructuralRevisionID, intent.StructuralRevisionID);
+        Assert.Equal(original.Project.ProjectID, intent.ProjectID);
+        Assert.Equal(original.Project.Revision, intent.ProjectRevision);
+        Assert.Equal(original.Project.Scenes[0].SceneID, intent.SceneID);
+        Assert.Equal(original.Project.Scenes[0].Revision, intent.SceneRevision);
+        Assert.Equal(original.Project.Scenes[0].Nodes[0].NodeID, intent.NodeID);
+        Assert.Equal(new GamesVector3(8, 0, 0), intent.Position);
+        decision.SetException(new UnauthorizedAccessException("Home denied this edit."));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => saving);
+        Assert.Same(original, store.Saved);
+        Assert.True(surface.TryGetValue("Status", out var status));
+        Assert.Equal("Home denied this edit.", status);
+        Assert.True(surface.IsActionAvailable("9to1.Games.SetPosition"));
+    }
+
+    [Fact]
+    public async Task Inspector_opens_without_an_installed_native_runtime_and_observe_is_unavailable()
+    {
+        var store = new Store();
+        var surface = new GamesCuiWorkspace(new(store), null, () => store.Saved.FileID, _ => true);
+        await surface.DispatchAsync("9to1.Games.Open", null, CancellationToken.None);
+        Assert.True(surface.IsActionAvailable("9to1.Games.NextNode"));
+        Assert.False(surface.IsActionAvailable("9to1.Games.Observe"));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await surface.DispatchAsync("9to1.Games.Observe", null, CancellationToken.None));
+        Assert.Equal(1, store.Saved.Project.Revision);
+    }
+    [Fact]
     public async Task Real_Cui_document_and_actions_edit_same_canonical_project_and_keep_previous_state_on_conflict()
     {
         Assert.NotNull(GamesCuiWorkspace.LoadDocument());

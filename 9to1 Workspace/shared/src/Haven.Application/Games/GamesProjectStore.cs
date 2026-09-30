@@ -11,6 +11,15 @@ public interface ICanonicalGamesProjectStore
         GamesProjectDocument project, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Owning Home operation carries the already claimed actor to the final canonical write.
+/// This actor is an expected identity, not an independent permission grant.</summary>
+public interface IActorBoundGamesProjectStore : ICanonicalGamesProjectStore
+{
+    Task<GamesStoredProject> SaveForActorAsync(AuthenticatedResourceActor expectedActor, Guid fileID,
+        Guid expectedStructuralRevisionID, long expectedProjectRevision, GamesProjectDocument project,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>Editor and typed API operations use the same captured canonical project and Files compare/exchange.</summary>
 public sealed class GamesProjectEditorService(ICanonicalGamesProjectStore store)
 {

@@ -90,6 +90,6 @@ public sealed class HomeProductivityCuiSurfaceTests
     public static class PixelAppBuilder
     {
         public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<Avalonia.Application>()
-            .UseSkia().UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+            .UseSkia().WithInterFont().With(new Avalonia.Media.FontManagerOptions { DefaultFamilyName = "fonts:Inter#Inter" }).UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
     }
 }

@@ -1,7 +1,7 @@
 using Haven.Application;
 using Haven.Core.Media;
 
-namespace Haven.Desktop.Services;
+namespace HavenOS.Files.NativeHost;
 
 /// <summary>Resolves each operation through the current verified native Files workspace.</summary>
 public sealed class NativeFilesMediaAssetSourceResolver(NativeFilesWorkspaceAuthority workspaces,

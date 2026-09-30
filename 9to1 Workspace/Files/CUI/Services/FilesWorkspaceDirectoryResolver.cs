@@ -71,6 +71,22 @@ public sealed class FilesWorkspaceDirectoryResolver
     public Task<FilesResult<FilesWorkspaceDirectoryBinding>> ResolveProfileAsync(Guid authenticatedProfileId,
         string owningAppId, CancellationToken cancellationToken = default) => ResolveCoreAsync(Guid.Empty, authenticatedProfileId, owningAppId, cancellationToken);
 
+    public async Task<FilesResult<FilesWorkspaceDirectoryBinding>> ResolveFolderAsync(Guid authenticatedAccountId,
+        Guid? authenticatedProfileId, HostedItemId folderId, CancellationToken cancellationToken = default)
+    {
+        var state = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);
+        var candidates = state.Bindings.Where(item => item.AccountId == authenticatedAccountId &&
+            item.ProfileId == authenticatedProfileId && item.FolderId == folderId).ToArray();
+        if (candidates.Length != 1)
+            return Failure<FilesWorkspaceDirectoryBinding>(FilesErrorCode.DestinationUnavailable,
+                "The content anchor has no unique registered Files directory.", authenticatedProfileId ?? authenticatedAccountId);
+        var resolved = await ResolveCoreAsync(authenticatedAccountId, authenticatedProfileId,
+            candidates[0].OwningAppId, cancellationToken).ConfigureAwait(false);
+        return resolved.IsSuccess && resolved.Value!.FolderId != folderId
+            ? Failure<FilesWorkspaceDirectoryBinding>(FilesErrorCode.RevisionConflict, "The registered content anchor changed.", authenticatedProfileId ?? authenticatedAccountId)
+            : resolved;
+    }
+
     private async Task<FilesResult<FilesWorkspaceDirectoryBinding>> ResolveCoreAsync(Guid authenticatedAccountId,
         Guid? profileId, string owningAppId, CancellationToken cancellationToken)
     {

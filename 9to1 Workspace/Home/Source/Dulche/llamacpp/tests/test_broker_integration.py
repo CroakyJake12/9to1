@@ -212,6 +212,42 @@ class BrokerIntegrationTests(unittest.TestCase):
         self.assertEqual(200, status, body)
         self.assertEqual("approved", json.loads(body)["decision"])
 
+    def test_transport_fallback_closes_response_owned_http10_socket(self) -> None:
+        self._load()
+        outcome: dict[str, object] = {}
+
+        def blocked_chat() -> None:
+            try:
+                outcome["response"] = self._request("POST", "/v1/chat/completions", {
+                    "request_id": "integration-fallback-1",
+                    "messages": [{"role": "user", "content": "__BLOCK_UNTIL_CANCELLED__"}],
+                })
+            except BaseException as exc:
+                outcome["error"] = exc
+
+        chat = threading.Thread(target=blocked_chat, daemon=True)
+        chat.start()
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline and not self.fake_session_ready.exists():
+            time.sleep(0.01)
+        self.assertTrue(self.fake_session_ready.exists(), "worker response never became active")
+        with broker.ACTIVE_LOCK:
+            active = broker.ACTIVE_REQUESTS["integration-fallback-1"]
+        self.assertTrue(active.response_started.wait(1))
+        self.assertIsNone(active.connection.sock, "fixture must exercise response-owned HTTP/1.0 transport")
+        with mock.patch.object(broker, "cancel_worker_stream", return_value=False):
+            status, body = self._request("POST", "/v1/requests/integration-fallback-1/cancel")
+        self.assertEqual(202, status, body)
+        cancellation = json.loads(body)["cancellation"]
+        self.assertEqual("transport-close", cancellation["mode"])
+        self.assertTrue(cancellation["transportFallback"])
+        self.assertFalse(cancellation["workerCompletionConfirmed"])
+        chat.join(timeout=2)
+        self.assertFalse(chat.is_alive(), "response-owned socket was not interrupted")
+        self.assertNotIn("error", outcome)
+        with broker.ACTIVE_LOCK:
+            self.assertNotIn("integration-fallback-1", broker.ACTIVE_REQUESTS)
+
     def test_cancel_endpoint_actively_unblocks_a_blocked_worker_stream(self) -> None:
         self._load()
         outcome: dict[str, object] = {}

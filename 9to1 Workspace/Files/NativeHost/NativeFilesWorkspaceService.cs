@@ -1,10 +1,11 @@
+using System.Collections.Frozen;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Files;
 using HavenOS.Home.Core;
 
-namespace Haven.Desktop.Services;
+namespace HavenOS.Files.NativeHost;
 
 public sealed record NativeFilesWorkspaceConfiguration(string ProfileId, Guid StoreId, FilesLocationId LocationId,
     string RootDirectory, IReadOnlyDictionary<string, HostedItemId> AppFolders);
@@ -22,6 +23,34 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
 
     private static string RecordId(string profileId) => "files.native-workspace:" + profileId;
     private static string MetadataDirectory(string root) => Path.Combine(root, ".9to1-files");
+
+    /// <summary>Configuration details only; this does not expose an unbound provider or grant content access.</summary>
+    public async Task<NativeFilesWorkspaceConfiguration?> GetConfigurationAsync(CancellationToken cancellationToken = default)
+    {
+        var configured = await GetConfiguredAsync(cancellationToken).ConfigureAwait(false);
+        return configured is null ? null : configured.Configuration with
+        { AppFolders = configured.Configuration.AppFolders.ToFrozenDictionary(StringComparer.Ordinal) };
+    }
+
+    internal async ValueTask<Func<CancellationToken, ValueTask<bool>>> CaptureConfigurationCheckAsync(
+        NativeFilesWorkspace expected, CancellationToken cancellationToken)
+    {
+        // Home-only observation: this callback must remain safe under the Files metadata lease.
+        var read = await home.ReadAsync(cancellationToken).ConfigureAwait(false);
+        var record = read.State?.Records.SingleOrDefault(item => item.RecordId == RecordId(expected.Actor.ProfileId));
+        if (!read.IsSuccess || record is null ||
+            !_cache.TryGetValue((expected.Actor.ProfileId, record.Revision), out var cached) ||
+            !ReferenceEquals(cached.Provider, expected.Provider) ||
+            JsonSerializer.Serialize(record.Payload.Deserialize<NativeFilesWorkspaceConfiguration>()) != JsonSerializer.Serialize(expected.Configuration))
+            throw new UnauthorizedAccessException("The selected Files workspace configuration changed.");
+        var captured = JsonSerializer.Serialize(record);
+        return async token =>
+        {
+            var current = await home.ReadAsync(token).ConfigureAwait(false);
+            var candidate = current.State?.Records.SingleOrDefault(item => item.RecordId == record.RecordId);
+            return current.IsSuccess && candidate is not null && JsonSerializer.Serialize(candidate) == captured;
+        };
+    }
 
     internal async Task<NativeFilesWorkspace?> GetConfiguredAsync(CancellationToken cancellationToken)
     {
@@ -66,7 +95,7 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
     }
 
     /// <summary>Called only by the compiled native Files setup after an explicit folder-picker choice. Existing data is never adopted here.</summary>
-    internal async Task<NativeFilesWorkspace> ConfigureNewAsync(string explicitlyChosenEmptyDirectory,
+    public async Task<NativeFilesWorkspace> ConfigureNewAsync(string explicitlyChosenEmptyDirectory,
         HomeLocalStoreOwnership ownership, CancellationToken cancellationToken)
     {
         await _setupGate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -154,6 +183,28 @@ public sealed class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService wo
             !Guid.TryParse(workspace.Actor.ProfileId, out var profile)) return null;
         var result = await workspace.Directories.ResolveProfileAsync(profile, appId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess && result.Value!.FolderId == folderId ? result.Value.DirectoryPath : null;
+    }
+
+    /// <summary>Capture outside a Files commit. The resulting final check reads only Home's binding receipt
+    /// and actor, so it can run while Files holds its metadata lease without recursively opening Files.</summary>
+    public async ValueTask<FilesCommitAuthorityGuard> CaptureCommitAuthorityAsync(AuthenticatedResourceActor expectedActor,
+        DurableDriveProvider expectedProvider, Func<bool> isHostWriteAvailable, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        ArgumentNullException.ThrowIfNull(expectedProvider);
+        ArgumentNullException.ThrowIfNull(isHostWriteAvailable);
+        var workspace = await GetCurrentAsync(cancellationToken).ConfigureAwait(false);
+        if (workspace?.Actor != expectedActor || !ReferenceEquals(workspace.Provider, expectedProvider) || !isHostWriteAvailable() ||
+            ownership is not IResourceStoreOwnershipReceiptAuthority receipts)
+            throw new UnauthorizedAccessException("Current Home ownership cannot authorize this Files commit.");
+        var configurationCurrent = await workspaces.CaptureConfigurationCheckAsync(workspace, cancellationToken).ConfigureAwait(false);
+        var captured = await receipts.GetVerifiedAsync("files", workspace.Configuration.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false);
+        if (captured?.Receipt is null || captured.ProfileId != expectedActor.ProfileId ||
+            captured.ResourceKind != "files" || captured.StoreId != workspace.Configuration.StoreId.ToString("D") ||
+            !await receipts.IsCurrentAsync(captured, expectedActor, cancellationToken).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("Home ownership changed while capturing commit authority.");
+        return new FilesCommitAuthorityGuard(expectedActor.ActorId, async token => isHostWriteAvailable() &&
+            await configurationCurrent(token).ConfigureAwait(false) && await receipts.IsCurrentAsync(captured, expectedActor, token).ConfigureAwait(false));
     }
 
     public async Task<NativeFilesWorkspace?> GetCurrentAsync(CancellationToken cancellationToken = default)

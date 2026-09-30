@@ -63,6 +63,27 @@ public sealed class CuiSceneHostTests
         }, default);
     }
 
+    [Fact]
+    public async Task Native_window_uses_owning_scene_object_renderer()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
+        await session.Dispatch(async () =>
+        {
+            var registry = new CuiControlRegistry();
+            var rendered = new TextBlock { Text = "Actual owner content" };
+            registry.RegisterObjectRenderer("fixture.avatar", _ => rendered);
+            var model = new CuiViewModel();
+            var scene = new CuiNativeScene("fixture", "Fixture", "Home", new CuiRichParser().Parse(
+                "<Cui><Object id=\"avatar\" type=\"fixture.avatar\" /></Cui>"), model, model,
+                new Ready(CuiSceneAvailabilityState.Ready)) { ControlRegistry = registry };
+            var window = await CuiSceneHost.CreateWindowAsync(scene);
+            using var host = Assert.IsType<CuiSceneHost>(window.Content);
+            Assert.Same(rendered, host.Content);
+            window.Close();
+            return true;
+        }, default);
+    }
+
     private sealed class Ready(CuiSceneAvailabilityState state) : ICuiSceneReadiness
     {
         public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) =>

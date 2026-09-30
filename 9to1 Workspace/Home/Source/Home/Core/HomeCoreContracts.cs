@@ -172,6 +172,13 @@ public interface IHomeCoreStateStore
         HomeCoreStateRecord record,
         long expectedRecordRevision,
         CancellationToken cancellationToken = default);
+
+    Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        Haven.Application.AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard,
+        CancellationToken cancellationToken = default) => Task.FromResult(HomeStateWriteResult.Failed(
+            new HomeCoreFailure(HomeCoreErrorCode.PermissionDenied, "This store does not support commit authority guards.",
+                record.RecordId, false)));
+
 }
 
 public interface IHomeCoreService

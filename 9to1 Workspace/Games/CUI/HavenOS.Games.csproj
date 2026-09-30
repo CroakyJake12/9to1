@@ -5,6 +5,7 @@
     <RootNamespace>HavenOS.Games</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <EmbeddedResource Include="UI/GamesWorkspace.cui" LogicalName="HavenOS.Games.UI.GamesWorkspace.cui" />

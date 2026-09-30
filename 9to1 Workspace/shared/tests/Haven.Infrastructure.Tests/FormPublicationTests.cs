@@ -97,8 +97,12 @@ public sealed class FormPublicationTests
         Assert.Equal(attempts.Single(item => item.Success).Publication!.ActiveVersionID, result.ActiveVersionID);
     }
 
-    private sealed class PublicationBarrier : IFormStoreAuthority
+    private sealed class PublicationBarrier : IFormStoreCommitAuthority
     {
+        public ValueTask<ISettingsCommitAdmission?> CaptureCommitAdmissionAsync(Guid storeID, Guid formID, long revision,
+            string actionID, AuthenticatedResourceActor? expectedActor, CancellationToken cancellationToken) =>
+            ValueTask.FromResult<ISettingsCommitAdmission?>(new FixtureAdmission(() => true));
+
         private int _calls;
         private readonly TaskCompletionSource _bothPrepared = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public async ValueTask<bool> AuthorizeAsync(Guid storeID, Guid formID, long revision, string actionID, CancellationToken token)
@@ -109,9 +113,17 @@ public sealed class FormPublicationTests
         }
     }
 
-    private sealed class FaultStore(IVersionedSettingsStore inner) : IVersionedSettingsStore, IVersionedSettingsCompareExchange
+    private sealed class FaultStore(IVersionedSettingsStore inner) : IVersionedSettingsStore, IVersionedSettingsGuardedCompareExchange
     {
         public bool FailWrites { get; set; }
+        public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expectedJson, string? replacementJson,
+            IReadOnlyDictionary<string, string?> guards, CancellationToken token) =>
+            ((IVersionedSettingsGuardedCompareExchange)inner).CompareExchangeGuardedAsync(key, expectedJson, replacementJson, guards, token);
+        public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expectedJson, string? replacementJson,
+            IReadOnlyDictionary<string, string?> guards, ISettingsCommitAdmission admission, CancellationToken token) =>
+            FailWrites ? Task.FromException<SettingsGuardedCompareExchangeResult>(new IOException("Injected persistence failure"))
+                : ((IVersionedSettingsGuardedCompareExchange)inner).CompareExchangeGuardedAsync(key, expectedJson, replacementJson, guards, admission, token);
+
         public Task<T?> GetAsync<T>(string key, CancellationToken token) where T : class => inner.GetAsync<T>(key, token);
         public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class =>
             FailWrites ? Task.FromException(new IOException("Injected persistence failure")) : inner.SetAsync(key, value, token);
@@ -126,8 +138,12 @@ public sealed class FormPublicationTests
     private static string? Label(JsonElement value) => value.GetProperty("Fields")[0].GetProperty("Label").GetString();
     private static JsonElement Project(Guid id, Guid field, string label) => JsonSerializer.SerializeToElement(new
     { FormID = id, Fields = new[] { new { FieldID = field, Label = label } }, Theme = new { Accent = "blue" } });
-    private sealed class Authority : IFormStoreAuthority
+    private sealed class Authority : IFormStoreCommitAuthority
     {
+        public ValueTask<ISettingsCommitAdmission?> CaptureCommitAdmissionAsync(Guid storeID, Guid formID, long revision,
+            string actionID, AuthenticatedResourceActor? expectedActor, CancellationToken cancellationToken) =>
+            ValueTask.FromResult<ISettingsCommitAdmission?>(new FixtureAdmission(() => RemainingAllowed > 0));
+
         public int RemainingAllowed { get; set; } = int.MaxValue;
         public ValueTask<bool> AuthorizeAsync(Guid storeID, Guid formID, long revision, string actionID, CancellationToken cancellationToken)
             => ValueTask.FromResult(storeID != Guid.Empty && formID != Guid.Empty && RemainingAllowed-- > 0);
@@ -151,4 +167,9 @@ public sealed class FormPublicationTests
         public string LegacyStatePath => Path.Combine(_root, "legacy.json");
         public void Dispose() => Directory.Delete(_root, true);
     }
+    private sealed class FixtureAdmission(Func<bool> allowed) : ISettingsCommitAdmission
+    {
+        public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken) => ValueTask.FromResult(allowed());
+    }
+
 }

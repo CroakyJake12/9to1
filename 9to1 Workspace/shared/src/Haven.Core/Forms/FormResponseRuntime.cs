@@ -12,6 +12,11 @@ public sealed record FormResponse(Guid ResponseID, Guid FormID, Guid FormVersion
     Guid? CurrentFieldID, decimal? AwardedPoints, decimal? MaximumPoints, Guid? GradeID,
     FormResponseDataWriteState DataWriteState);
 public sealed record FormResponseOperation(bool Success, string? Code, FormResponse Response);
+/// <summary>Authoritative server persistence only; never accept a respondent-supplied checkpoint.
+/// Marks are recomputed from the pinned authored version rather than trusting stored client scores.</summary>
+public sealed record FormResponseCheckpoint(int SchemaVersion, Guid ResponseID, Guid FormID, Guid FormVersionID,
+    long ProjectRevision, long Revision, DateTimeOffset StartedAt, DateTimeOffset? SubmittedAt,
+    int QuestionIndex, IReadOnlyList<FormAnswer> Answers);
 
 /// <summary>One deterministic session engine for native Form/Test/Quiz presets and interactive preview.
 /// The host owns respondent authorisation, durable response CAS, attempts and Data commits. This instance is
@@ -35,7 +40,7 @@ public sealed class FormResponseRuntime
     {
         _project = FormProjectCodec.Capture(project);
         if (versionID == Guid.Empty) throw new ArgumentException("VersionNotFound", nameof(versionID));
-        if (_project.ModeDefinition.Kind == FormModeKind.Custom || _project.LogicGraphID is not null
+        if (_project.ModeDefinition.Kind == FormModeKind.Custom || _project.ModeDefinition.StateGraphID is not null || _project.LogicGraphID is not null
             || _project.Pages.Any(page => page.VisibilityNodeID is not null) || _project.Fields.Any(field => field.ValidationNodeID is not null)
             || _project.RuntimeSettings.ShuffleChoices || _project.RuntimeSettings.ShuffleQuestions)
             throw new NotSupportedException("CapabilityUnavailable: configured graph or randomisation runtime is not registered.");
@@ -49,6 +54,46 @@ public sealed class FormResponseRuntime
     }
 
     public FormResponse Read() { lock (_gate) return Snapshot(); }
+
+    public FormResponseCheckpoint CaptureCheckpoint()
+    {
+        lock (_gate) return new(1, _id, _project.FormID, _version, _project.Revision, _revision, _started, _submitted,
+            _index, _answers.Select(answer => new FormAnswer(answer.Key, answer.Value.Clone())).ToArray());
+    }
+
+    public static FormResponseRuntime Restore(FormProject project, FormResponseCheckpoint checkpoint, TimeProvider? clock = null) =>
+        new(project, checkpoint, clock);
+
+    private FormResponseRuntime(FormProject project, FormResponseCheckpoint checkpoint, TimeProvider? clock)
+        : this(project, checkpoint.FormVersionID, clock)
+    {
+        if (checkpoint.SchemaVersion != 1 || checkpoint.ResponseID == Guid.Empty || checkpoint.FormID != _project.FormID
+            || checkpoint.ProjectRevision != _project.Revision || checkpoint.Revision < 1 || checkpoint.StartedAt == default
+            || checkpoint.SubmittedAt < checkpoint.StartedAt || checkpoint.QuestionIndex < 0 || checkpoint.QuestionIndex > _order.Length
+            || _project.ModeDefinition.Kind != FormModeKind.Quiz && checkpoint.QuestionIndex != 0
+            || checkpoint.Answers is null || checkpoint.Answers.Count > _project.Fields.Count)
+            throw new InvalidDataException("Invalid authoritative response checkpoint.");
+        _id = checkpoint.ResponseID; _started = checkpoint.StartedAt; _revision = checkpoint.Revision;
+        _index = checkpoint.QuestionIndex; _submitted = checkpoint.SubmittedAt;
+        foreach (var answer in checkpoint.Answers)
+        {
+            var field = answer is null ? null : _project.Fields.SingleOrDefault(field => field.FieldID == answer.FieldID);
+            if (field is null || _answers.ContainsKey(field.FieldID) || answer!.Value.ValueKind == JsonValueKind.Undefined
+                || FormAnswerValidation.Validate(field, answer.Value) is not null
+                || _project.ModeDefinition.Kind == FormModeKind.Quiz && _submitted is null && Array.IndexOf(_order, field.FieldID) > _index)
+                throw new InvalidDataException("Invalid checkpoint answer or question progression.");
+            _answers[field.FieldID] = answer.Value.Clone();
+            if (field.Assessment is { } assessment)
+                _marks[field.FieldID] = FormMarking.Evaluate(answer.Value, assessment.Rules, assessment.MaximumPoints);
+        }
+        if (_revision < 1L + _answers.Count + _index + (_submitted is null ? 0 : 1)
+            || _project.Fields.Any(field => field.Required && !_answers.ContainsKey(field.FieldID)
+                && (_submitted is not null || _project.ModeDefinition.Kind == FormModeKind.Quiz && Array.IndexOf(_order, field.FieldID) < _index)))
+            throw new InvalidDataException("Checkpoint cannot represent a valid completed transition.");
+        if (_submitted is not null)
+            foreach (var field in _project.Fields.Where(field => field.Assessment is not null && !_marks.ContainsKey(field.FieldID)))
+                _marks[field.FieldID] = new(FormMarkingOutcome.Incorrect, 0, field.Assessment!.MaximumPoints, []);
+    }
 
     public FormResponseOperation Answer(long expectedRevision, Guid fieldID, JsonElement value)
     {

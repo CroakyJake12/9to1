@@ -51,7 +51,6 @@ public sealed partial class HavenLauncherActivity : Activity
     private AppWidgetHost? _widgetHost;
     private AppWidgetManager? _widgetManager;
     private int _page;
-    private string? _movingKey;
     private int _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
     private readonly CancellationTokenSource _launcherLifetime = new();
     private bool _homeReady;
@@ -63,6 +62,8 @@ public sealed partial class HavenLauncherActivity : Activity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        _pendingWidgetId = savedInstanceState?.GetInt("pending_android_widget_id", AppWidgetManager.InvalidAppwidgetId)
+            ?? AppWidgetManager.InvalidAppwidgetId;
         if (!OperatingSystem.IsAndroidVersionAtLeast(35))
         {
             Window?.SetStatusBarColor(Color.Transparent);
@@ -74,6 +75,12 @@ public sealed partial class HavenLauncherActivity : Activity
 
         ShowHomeBootstrap("Preparing 9-1 Home…");
         _ = InitializeHomeAsync();
+    }
+
+    protected override void OnSaveInstanceState(Bundle outState)
+    {
+        outState.PutInt("pending_android_widget_id", _pendingWidgetId);
+        base.OnSaveInstanceState(outState);
     }
 
     protected override void OnStart()
@@ -131,6 +138,7 @@ public sealed partial class HavenLauncherActivity : Activity
 
     protected override void OnDestroy()
     {
+        _folderDialog?.Dismiss();
         _launcherLifetime.Cancel();
         _launcherLifetime.Dispose();
         Interlocked.Increment(ref _appLoadGeneration);
@@ -182,8 +190,7 @@ public sealed partial class HavenLauncherActivity : Activity
     {
         if (_page != 0)
         {
-            _page = 0;
-            RenderPage();
+            ChangePage(-_page);
             return;
         }
 
@@ -224,16 +231,21 @@ public sealed partial class HavenLauncherActivity : Activity
         widgetScroll.AddView(_widgetStrip);
         _root.AddView(widgetScroll);
 
-        _pageIndicator = new TextView(this)
+        _pageIndicator = new Button(this)
         {
             Gravity = GravityFlags.Center,
             TextSize = 12,
-            LayoutParameters = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent,
-                Dp(28))
+            LayoutParameters = new LinearLayout.LayoutParams(0, Dp(48), 1f)
         };
         _pageIndicator.SetTextColor(Color.White);
-        _root.AddView(_pageIndicator);
+        _pageIndicator.Click += (_, _) => ShowPagesMenu();
+        _pageIndicator.ContentDescription = "Manage launcher pages";
+        var pageNavigation = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+        var previousPage = new Button(this) { Text = "‹", ContentDescription = "Previous launcher page", LayoutParameters = new LinearLayout.LayoutParams(Dp(48), Dp(48)) };
+        var nextPage = new Button(this) { Text = "›", ContentDescription = "Next launcher page", LayoutParameters = new LinearLayout.LayoutParams(Dp(48), Dp(48)) };
+        previousPage.Click += (_, _) => ChangePage(-1); nextPage.Click += (_, _) => ChangePage(1);
+        pageNavigation.AddView(previousPage); pageNavigation.AddView(_pageIndicator); pageNavigation.AddView(nextPage);
+        _root.AddView(pageNavigation);
         _launcherStatus = new TextView(this)
         {
             Text = "Loading apps…",
@@ -251,13 +263,21 @@ public sealed partial class HavenLauncherActivity : Activity
         {
             UseDefaultMargins = false,
             AlignmentMode = GridAlign.Bounds,
-            LayoutParameters = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent,
-                0,
-                1f)
+            LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent)
         };
-        _root.AddView(_grid);
+        // Keep every configured cell reachable when large grids or accessibility scaling exceed the viewport.
+        var gridVertical = new ScrollView(this) { FillViewport = true };
+        gridVertical.AddView(_grid);
+        var gridHorizontal = new HorizontalScrollView(this)
+        {
+            FillViewport = true,
+            LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 0, 1f)
+        };
+        gridHorizontal.AddView(gridVertical);
+        _root.AddView(gridHorizontal);
 
+        _dockHost = new LinearLayout(this) { Orientation = Orientation.Vertical };
+        _root.AddView(_dockHost);
         _root.AddView(BuildBottomBar());
         SetContentView(_root);
         AndroidTypography.ApplyTree(_root);

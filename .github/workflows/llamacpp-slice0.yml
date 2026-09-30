@@ -82,7 +82,7 @@ jobs:
             echo 'required=true' >> "$GITHUB_OUTPUT"
           elif git -C cakeos diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
               "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh" \
-              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json;" then
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json"; then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo 'Pinned llama.cpp build inputs are unchanged; reusing the base branch build evidence.'
           else
@@ -150,7 +150,7 @@ jobs:
               "9to1 Workspace/Home/Source/Dulche/llamacpp/benchmark.py" \
               "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json" \
               "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh" \
-              "9to1 Workspace/Home/Source/Dulche/llamacpp/licenses/llama.cpp-LICENSE;" then
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/licenses/llama.cpp-LICENSE"; then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo 'Package inputs are unchanged; reusing base-branch package evidence.'
           else
@@ -239,7 +239,7 @@ jobs:
               "9to1 Workspace/Home/Source/Dulche/llamacpp/model_lease.py" \
               "9to1 Workspace/Home/Source/Dulche/llamacpp/gguf.py" \
               "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh" \
-              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json;" then
+              "9to1 Workspace/Home/Source/Dulche/llamacpp/upstream.lock.json"; then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo 'Real-runtime proof inputs are unchanged; reusing base-branch runtime evidence.'
           else
@@ -273,9 +273,30 @@ jobs:
         run: |
           set -euo pipefail
           MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
-          URL=$(python -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['downloadUrl'])")
-          EXPECTED_SIZE=$(python -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['size'])")
-          EXPECTED_SHA=$(python -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['sha256'])")
+          model_metadata_file="$RUNNER_TEMP/pinned-model-metadata.txt"
+          python - "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json" > "$model_metadata_file" <<'PYMETA'
+          import json
+          import re
+          import sys
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          model = json.loads(Path(sys.argv[1]).read_text())
+          url, size, digest = model['downloadUrl'], model['size'], model['sha256']
+          if not isinstance(url, str) or '\n' in url or '\r' in url or urlsplit(url).scheme != 'https':
+              raise SystemExit('Invalid pinned model HTTPS URL')
+          if type(size) is not int or size <= 0:
+              raise SystemExit('Invalid pinned model size')
+          if not isinstance(digest, str) or re.fullmatch(r'[0-9a-f]{64}', digest) is None:
+              raise SystemExit('Invalid pinned model SHA-256')
+          print(url)
+          print(size)
+          print(digest)
+          PYMETA
+          mapfile -t model_metadata < "$model_metadata_file"
+          test "${#model_metadata[@]}" -eq 3
+          URL="${model_metadata[0]}"
+          EXPECTED_SIZE="${model_metadata[1]}"
+          EXPECTED_SHA="${model_metadata[2]}"
           curl --fail --location --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 --output "$MODEL_PATH" "$URL"
           test "$(stat -c '%s' "$MODEL_PATH")" = "$EXPECTED_SIZE"
           printf '%s  %s\n' "$EXPECTED_SHA" "$MODEL_PATH" | sha256sum -c -
@@ -366,9 +387,30 @@ jobs:
         run: |
           set -euo pipefail
           MODEL_PATH="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q4_K_M.gguf"
-          URL=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['downloadUrl'])")
-          EXPECTED_SIZE=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['size'])")
-          EXPECTED_SHA=$(/usr/bin/python3 -c "import json; print(json.load(open("cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json"))['sha256'])")
+          model_metadata_file="$RUNNER_TEMP/pinned-model-metadata.txt"
+          /usr/bin/python3 - "cakeos/9to1 Workspace/Home/Source/Dulche/llamacpp/test-model.lock.json" > "$model_metadata_file" <<'PYMETA'
+          import json
+          import re
+          import sys
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          model = json.loads(Path(sys.argv[1]).read_text())
+          url, size, digest = model['downloadUrl'], model['size'], model['sha256']
+          if not isinstance(url, str) or '\n' in url or '\r' in url or urlsplit(url).scheme != 'https':
+              raise SystemExit('Invalid pinned model HTTPS URL')
+          if type(size) is not int or size <= 0:
+              raise SystemExit('Invalid pinned model size')
+          if not isinstance(digest, str) or re.fullmatch(r'[0-9a-f]{64}', digest) is None:
+              raise SystemExit('Invalid pinned model SHA-256')
+          print(url)
+          print(size)
+          print(digest)
+          PYMETA
+          mapfile -t model_metadata < "$model_metadata_file"
+          test "${#model_metadata[@]}" -eq 3
+          URL="${model_metadata[0]}"
+          EXPECTED_SIZE="${model_metadata[1]}"
+          EXPECTED_SHA="${model_metadata[2]}"
           curl --fail --location --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 --output "$MODEL_PATH" "$URL"
           test "$(stat -c '%s' "$MODEL_PATH")" = "$EXPECTED_SIZE"
           printf '%s  %s\n' "$EXPECTED_SHA" "$MODEL_PATH" | sha256sum -c -

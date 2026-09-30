@@ -9,7 +9,7 @@ namespace Haven.Infrastructure.Games;
 
 /// <summary>Observed native scene semantics over generated data-only scenes. The fixed private donor
 /// bridge is not a user scripting language or a substitute for the required managed Games runtime.</summary>
-public sealed class GodotSceneRuntime(string executablePath) : IGamesSceneRuntime
+public sealed class GodotSceneRuntime(string executablePath, string? requiredExecutableSha256 = null) : IGamesSceneRuntime
 {
     private const string Marker = "ASTRA_GAMES_SCENE_RESULT=";
     public async Task<GamesNativeSceneObservation> ObserveAsync(GamesSceneSnapshot scene, CancellationToken cancellationToken = default)
@@ -18,6 +18,8 @@ public sealed class GodotSceneRuntime(string executablePath) : IGamesSceneRuntim
         var executable = Path.GetFullPath(executablePath);
         if (!File.Exists(executable)) throw new FileNotFoundException("Games native runtime is unavailable.");
         var executableHash = await HashAsync(executable, cancellationToken).ConfigureAwait(false);
+        if (requiredExecutableSha256 is not null && !string.Equals(executableHash, requiredExecutableSha256, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("The installed Games runtime does not match its trusted package declaration.");
         var directory = Directory.CreateTempSubdirectory("9to1-games-native-scene-").FullName;
         if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         try

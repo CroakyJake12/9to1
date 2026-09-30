@@ -93,7 +93,7 @@ public sealed class InstalledApplicationResourceResolver(IInstalledApplicationRe
     public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken ct)
     {
         var denied = new ResourceAccessDecision(false, "ApplicationUnavailable", actor.ActorId, scope.Revision, actor.OrganisationId);
-        if (actionId != "os.application.launch" || scope.Access != ResourceAccess.Execute || !Guid.TryParse(scope.Id, out var id) || !long.TryParse(scope.Revision, out var revision)) return denied;
+        if (!((actionId == "os.application.launch" && scope.Access == ResourceAccess.Execute) || (actionId == "os.application.read" && scope.Access == ResourceAccess.Read)) || !Guid.TryParse(scope.Id, out var id) || !long.TryParse(scope.Revision, out var revision)) return denied;
         var app = await registry.ResolveLaunchAsync(id, revision, ct);
         return denied with { Allowed = app is not null && app.HomeProfileId == actor.ProfileId && app.ProviderId == "linux.xdg-desktop" && actor.OrganisationId is null, Code = "CurrentInstalledApplication" };
     }
@@ -101,6 +101,17 @@ public sealed class InstalledApplicationResourceResolver(IInstalledApplicationRe
 
 public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry registry, ResourceAuthorizationService resources)
 {
+    public async Task<InstalledApplicationReference> ResolveForReadAsync(Guid id, long revision, CancellationToken ct)
+    {
+        var scope = new ResourceScope("os.installed-application", id.ToString("D"), revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Read);
+        var actor = await resources.AuthorizeAsync("os.application.read", [scope], ct);
+        if (actor is null) throw new UnauthorizedAccessException("This installed application is not visible to the current profile.");
+        var app = await registry.ResolveLaunchAsync(id, revision, ct);
+        if (app is null || app.HomeProfileId != actor.ProfileId || app.ProviderId != "linux.xdg-desktop" ||
+            actor != await resources.AuthorizeAsync("os.application.read", [scope], ct))
+            throw new UnauthorizedAccessException("The installed application or profile changed during discovery.");
+        return app;
+    }
     public async Task LaunchCurrentAsync(Guid id, CancellationToken ct)
     {
         var app = (await registry.RefreshAsync(ct)).SingleOrDefault(a => a.ApplicationId == id && a.Enabled && a.ProfileAccessible && a.ProviderId == "linux.xdg-desktop")

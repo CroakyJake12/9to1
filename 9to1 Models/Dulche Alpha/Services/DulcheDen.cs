@@ -27,8 +27,11 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
     {
         if (record is MemoryEntry or BlobReferenceRecord or StorageQuotaRecord)
             throw new DenException(DenErrorCode.Forbidden, "This record type must use its policy- and quota-enforcing Den operation.");
-        RejectSecrets(JsonSerializer.Serialize(record, DenJson.Options));
-        return Store.SaveAsync(record, expectedRevision, operationId, AccessPolicy, PrincipalId, cancellationToken);
+        var capturedJson = JsonSerializer.Serialize<DenRecord>(record, DenJson.Options);
+        RejectSecrets(capturedJson);
+        var captured = JsonSerializer.Deserialize<DenRecord>(capturedJson, DenJson.Options) as T
+            ?? throw new DenException(DenErrorCode.InvalidRecord, "The submitted record could not retain its canonical type.");
+        return Store.SaveAsync(captured, expectedRevision, operationId, AccessPolicy, PrincipalId, cancellationToken);
     }
 
     public Task<DenManifest> CreateNamespaceAsync(string id, string kind, bool sharedOptIn,
@@ -484,6 +487,24 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         if (reference.Deleted) throw new DenException(DenErrorCode.NotFound, "The attachment reference was removed.", recoverable: true);
         var bytes = await Store.ReadBlobAsync(reference.Sha256, cancellationToken);
         if (bytes.LongLength != reference.Length) throw new DenException(DenErrorCode.InvalidRecord, "The attachment length does not match its reference.", recoverable: true);
+        return bytes;
+    }
+
+    public async Task<byte[]> ReadAttachmentAsync(string namespaceId, string referenceId, int maximumBytes,
+        CancellationToken cancellationToken = default)
+    {
+        if (maximumBytes < 1) throw new ArgumentOutOfRangeException(nameof(maximumBytes));
+        var reference = await GetAsync<BlobReferenceRecord>(namespaceId, referenceId, cancellationToken)
+            ?? throw new DenException(DenErrorCode.NotFound, "The attachment reference does not exist.");
+        if (reference.Deleted) throw new DenException(DenErrorCode.NotFound, "The attachment reference was removed.", recoverable: true);
+        if (reference.Length < 0 || reference.Length > maximumBytes)
+            throw new DenException(DenErrorCode.InvalidRecord, "The attachment exceeds the requested byte limit.");
+        var bytes = await Store.ReadBlobAsync(reference.Sha256, maximumBytes, cancellationToken);
+        if (bytes.LongLength != reference.Length)
+        {
+            Array.Clear(bytes);
+            throw new DenException(DenErrorCode.InvalidRecord, "The attachment length does not match its reference.", recoverable: true);
+        }
         return bytes;
     }
 

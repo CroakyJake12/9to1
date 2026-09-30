@@ -6,16 +6,16 @@
     <RootNamespace>HavenOS.Images</RootNamespace>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**;Source\**\*</DefaultItemExcludes>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
-    <EmbeddedResource Include="UI/PictureWorkspace.cui" LogicalName="HavenOS.Images.UI.PictureWorkspace.cui" />
-    <ProjectReference Include="../Canvas/HavenOS.Canvas.csproj" />
-    <ProjectReference Include="../shared/src/Haven.Application/Haven.Application.csproj" />
+    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Core/HavenOS.Images.Core.csproj" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
-    <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
+    <Compile Include="Program.cs;App.axaml.cs;MainWindow.axaml.cs;ImageMetadataWindow.cs" />
   </ItemGroup>
 </Project>

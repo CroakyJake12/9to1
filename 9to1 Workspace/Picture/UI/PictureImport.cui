@@ -1,0 +1,10 @@
+<Cui id="9to1.Picture.Import" version="1">
+  <StackPanel id="picture-import" spacing="12" accessible-name="Import a selected picture">
+    <TextBlock text="Import picture" font-size="20" />
+    <TextBlock text="Choose an image from your device. Its original frames and metadata are preserved alongside an editable Picture document in Pictures." text-wrapping="Wrap" />
+    <Button id="picture-import-pick" content="Choose image" action="9to1.Picture.Import.Pick" is-enabled="{Binding CanPick}" />
+    <TextBlock id="picture-import-preview" text="{Binding PreparedSummary}" text-wrapping="Wrap" accessible-name="Selected import preview" />
+    <Button id="picture-import-approval" content="Review in Home" action="9to1.Picture.Import.RequestApproval" is-enabled="{Binding CanRequestApproval}" />
+    <TextBlock id="picture-import-status" text="{Binding Status}" text-wrapping="Wrap" accessible-name="Import status" />
+  </StackPanel>
+</Cui>

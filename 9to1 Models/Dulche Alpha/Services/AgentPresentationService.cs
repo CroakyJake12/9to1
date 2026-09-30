@@ -16,7 +16,7 @@ public sealed class AgentPresentationService(DulcheDen den, IAgentPresentationAs
         if (agent.Revision != expectedRevision)
             throw new DenException(DenErrorCode.Conflict, "The Agent changed before presentation preview.");
         foreach (var asset in definition.States.Select(s => s.AssetReference).Append(definition.StaticFallbackAssetReference).Distinct(StringComparer.Ordinal))
-            if (!await assets.CanReadAsync(den.PrincipalId, namespaceId, asset, cancellationToken).ConfigureAwait(false))
+            if (!await assets.CanReadForAgentAsync(den.PrincipalId, namespaceId, agentId, asset, cancellationToken).ConfigureAwait(false))
                 throw new DenException(DenErrorCode.Forbidden, "A referenced presentation asset is missing or inaccessible.");
         var current = await GetAsync(namespaceId, agentId, cancellationToken).ConfigureAwait(false);
         if (current.Revision != expectedRevision)
@@ -33,7 +33,7 @@ public sealed class AgentPresentationService(DulcheDen den, IAgentPresentationAs
             ?? throw new DenException(DenErrorCode.NotFound, "The Agent was not found.");
         if (agent.Revision != expectedRevision) throw new DenException(DenErrorCode.Conflict, "The Agent changed before presentation was saved.");
         foreach (var asset in presentation.States.Select(s => s.AssetReference).Append(presentation.StaticFallbackAssetReference).Distinct(StringComparer.Ordinal))
-            if (!await assets.CanReadAsync(den.PrincipalId, namespaceId, asset, cancellationToken).ConfigureAwait(false))
+            if (!await assets.CanReadForAgentAsync(den.PrincipalId, namespaceId, agentId, asset, cancellationToken).ConfigureAwait(false))
                 throw new DenException(DenErrorCode.Forbidden, "A referenced presentation asset is missing or inaccessible.");
         return await den.SaveAsync(agent with { Presentation = presentation }, expectedRevision, operationId, cancellationToken).ConfigureAwait(false);
     }
@@ -46,8 +46,8 @@ public sealed class AgentPresentationService(DulcheDen den, IAgentPresentationAs
         var definition = AgentAvatarPresentation.Snapshot(agent.Presentation ?? throw new DenException(DenErrorCode.NotFound, "Presentation is not configured."));
         var available = true;
         foreach (var asset in definition.States.Select(s => s.AssetReference))
-            available &= await assets.CanReadAsync(den.PrincipalId, namespaceId, asset, cancellationToken).ConfigureAwait(false);
-        if (!await assets.CanReadAsync(den.PrincipalId, namespaceId, definition.StaticFallbackAssetReference, cancellationToken).ConfigureAwait(false))
+            available &= await assets.CanReadForAgentAsync(den.PrincipalId, namespaceId, agentId, asset, cancellationToken).ConfigureAwait(false);
+        if (!await assets.CanReadForAgentAsync(den.PrincipalId, namespaceId, agentId, definition.StaticFallbackAssetReference, cancellationToken).ConfigureAwait(false))
             throw new DenException(DenErrorCode.Forbidden, "The static fallback asset is inaccessible.");
         return AgentAvatarPresentation.Present(agent with { Presentation = definition }, stateId, presentationEvent, readableActivity, reducedMotion, available);
     }

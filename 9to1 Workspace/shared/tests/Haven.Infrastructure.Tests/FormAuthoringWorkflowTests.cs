@@ -74,8 +74,12 @@ public sealed class FormAuthoringWorkflowTests
             _ = new FormResponseRuntime(project, Guid.NewGuid());
         }
     }
-    private sealed class Authority : IFormStoreAuthority
+    private sealed class Authority : IFormStoreCommitAuthority
     {
+        public ValueTask<ISettingsCommitAdmission?> CaptureCommitAdmissionAsync(Guid storeID, Guid formID, long revision,
+            string actionID, AuthenticatedResourceActor? expectedActor, CancellationToken cancellationToken) =>
+            ValueTask.FromResult<ISettingsCommitAdmission?>(new FixtureAdmission(() => Allowed));
+
         public bool Allowed { get; set; } = true;
         public ValueTask<bool> AuthorizeAsync(Guid storeID, Guid formID, long revision, string actionID, CancellationToken cancellationToken) =>
             ValueTask.FromResult(Allowed && storeID != Guid.Empty && formID != Guid.Empty);
@@ -91,4 +95,9 @@ public sealed class FormAuthoringWorkflowTests
         public string LegacyStatePath => Path.Combine(_root, "legacy.json");
         public void Dispose() => Directory.Delete(_root, true);
     }
+    private sealed class FixtureAdmission(Func<bool> allowed) : ISettingsCommitAdmission
+    {
+        public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken) => ValueTask.FromResult(allowed());
+    }
+
 }

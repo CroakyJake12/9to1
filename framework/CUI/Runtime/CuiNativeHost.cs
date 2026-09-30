@@ -42,7 +42,7 @@ public static class CuiNativeHost
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var host = new CuiSceneHost();
+                var host = new CuiSceneHost(scene.ControlRegistry);
                 var window = new Window { Title = scene.Title, Width = 1100, Height = 760, Content = host, Background = (Avalonia.Media.IBrush?)Resources["CuiBackgroundBrush"] };
                 window.Closed += (_, _) => { _shutdown.Cancel(); host.Dispose(); };
                 desktop.MainWindow = window;

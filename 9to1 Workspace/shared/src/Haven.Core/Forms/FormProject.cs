@@ -17,7 +17,8 @@ public enum FormResultRelease { Immediate, AfterQuestion, AfterSubmission, After
 public enum FormRespondentAccess { OwnerOnly, Authenticated, Invitation, Public }
 public enum FormDataBindingKind { Lookup, AppendRecord, UpdateRecord, ParentChildRecords }
 
-public sealed record FormModeDefinition(Guid ModeID, FormModeKind Kind, Guid? StateGraphID = null, Guid? StartNodeID = null);
+public sealed record FormModeDefinition(Guid ModeID, FormModeKind Kind, Guid? StateGraphID = null, Guid? StartNodeID = null,
+    long? StateGraphRevision = null);
 public sealed record FormVersionReference(Guid FormVersionID, long SourceRevision);
 public sealed record FormChildReference(FormChildKind Kind, Guid ID);
 public sealed record FormLayout(int Columns = 1, decimal Gap = 8, decimal? MinimumWidth = null, decimal? MaximumWidth = null);
@@ -56,6 +57,7 @@ public sealed record FormProject(int SchemaVersion, Guid FormID, string Title, F
     DateTimeOffset ModifiedAt, long Revision)
 {
     public const int CurrentSchemaVersion = 1;
+    public long? LogicGraphRevision { get; init; }
 }
 
 /// <summary>Structural validation never claims registered renderer, graph, Data or audience availability.
@@ -110,6 +112,13 @@ public static class FormProjectCodec
         Identity(project.FormID);
         Require(project.ModeDefinition is not null && Enum.IsDefined(project.ModeDefinition.Kind), "Invalid form mode.");
         Identity(project.ModeDefinition.ModeID);
+        Require(project.ModeDefinition.StateGraphID is null
+            ? project.ModeDefinition.StateGraphRevision is null
+            : project.ModeDefinition.StateGraphID != Guid.Empty && project.ModeDefinition.StateGraphRevision is null or > 0,
+            "Invalid state graph revision reference.");
+        Require(project.LogicGraphID is null ? project.LogicGraphRevision is null
+            : project.LogicGraphID != Guid.Empty && project.LogicGraphRevision is null or > 0,
+            "Invalid logic graph revision reference.");
         Require(project.ModeDefinition.Kind != FormModeKind.Custom ||
             project.ModeDefinition.StateGraphID is { } graph && graph != Guid.Empty && project.ModeDefinition.StartNodeID is { } start && start != Guid.Empty,
             "Custom mode requires the canonical state graph and start node.");

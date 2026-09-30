@@ -7,6 +7,8 @@
  * Maintenance: Keep the schema version explicit, reject unknown versions, and preserve conflicting or unreadable persisted values.
  */
 
+using System.Text.Json;
+
 namespace Haven.Application.Call;
 
 /// <summary>Persists durable session metadata while leaving conversation content with the canonical conversation store.</summary>
@@ -44,10 +46,10 @@ public sealed class MultimodalSessionStore
         try
         {
             var key = Key(session.SessionId);
-            var existing = await ReadEnvelopeAsync(key, cancellationToken).ConfigureAwait(false);
-            if (existing is not null || await ContainsKeyAsync(key, cancellationToken).ConfigureAwait(false))
+            var stored = await ReadSnapshotAsync(key, cancellationToken).ConfigureAwait(false);
+            if (stored.Json is not null)
                 throw new InvalidOperationException("A session with this SessionID already exists; existing metadata was preserved.");
-            await _settings.SetAsync(key, new MultimodalSessionEnvelope(CurrentSchemaVersion, session), cancellationToken).ConfigureAwait(false);
+            await ExchangeAsync(key, null, new MultimodalSessionEnvelope(CurrentSchemaVersion, session), cancellationToken).ConfigureAwait(false);
             return session;
         }
         finally
@@ -73,7 +75,8 @@ public sealed class MultimodalSessionStore
         try
         {
             var key = Key(sessionId);
-            var current = await ReadEnvelopeAsync(key, cancellationToken).ConfigureAwait(false);
+            var stored = await ReadSnapshotAsync(key, cancellationToken).ConfigureAwait(false);
+            var current = stored.Envelope;
             if (current is null)
             {
                 if (await ContainsKeyAsync(key, cancellationToken).ConfigureAwait(false))
@@ -87,7 +90,7 @@ public sealed class MultimodalSessionStore
             if (updated.ConversationId != current.Session.ConversationId || updated.CreatedAt != current.Session.CreatedAt)
                 throw new ArgumentException("ConversationID and CreatedAt are immutable for a session.", nameof(updated));
 
-            await _settings.SetAsync(key, new MultimodalSessionEnvelope(CurrentSchemaVersion, updated), cancellationToken).ConfigureAwait(false);
+            await ExchangeAsync(key, stored.Json, new MultimodalSessionEnvelope(CurrentSchemaVersion, updated), cancellationToken).ConfigureAwait(false);
             return updated;
         }
         finally
@@ -96,15 +99,40 @@ public sealed class MultimodalSessionStore
         }
     }
 
+    private async Task ExchangeAsync(string key, string? expectedJson, MultimodalSessionEnvelope replacement, CancellationToken token)
+    {
+        if (_settings is not IVersionedSettingsCompareExchange atomic)
+            throw new NotSupportedException("Vision & Voice requires atomic session metadata storage.");
+        if (!(await atomic.CompareExchangeAsync(key, expectedJson, JsonSerializer.Serialize(replacement), token).ConfigureAwait(false)).Exchanged)
+            throw new InvalidOperationException("Session revision conflict: another surface changed the session; refresh before retrying.");
+    }
+
+    private async Task<(string? Json, MultimodalSessionEnvelope? Envelope)> ReadSnapshotAsync(string key, CancellationToken token)
+    {
+        var manifest = await _settings.ExportAsync(token).ConfigureAwait(false);
+        if (!manifest.Settings.TryGetValue(key, out var json)) return (null, null);
+        MultimodalSessionEnvelope? envelope;
+        try { envelope = JsonSerializer.Deserialize<MultimodalSessionEnvelope>(json); }
+        catch (JsonException error) { throw new InvalidDataException("Stored session metadata is invalid; it was preserved.", error); }
+        if (envelope is null) throw new InvalidDataException("Stored session metadata is null; it was preserved.");
+        ValidateEnvelope(envelope);
+        return (json, envelope);
+    }
+
     private async Task<MultimodalSessionEnvelope?> ReadEnvelopeAsync(string key, CancellationToken cancellationToken)
     {
         var envelope = await _settings.GetAsync<MultimodalSessionEnvelope>(key, cancellationToken).ConfigureAwait(false);
         if (envelope is null) return null;
+        ValidateEnvelope(envelope);
+        return envelope;
+    }
+
+    private static void ValidateEnvelope(MultimodalSessionEnvelope envelope)
+    {
         if (envelope.SchemaVersion != CurrentSchemaVersion)
             throw new NotSupportedException($"Vision & Voice session schema {envelope.SchemaVersion} is not supported; stored data was preserved.");
         if (envelope.Session is null || envelope.Session.Validate() is not null)
             throw new InvalidDataException("Stored multimodal session metadata is invalid; stored data was preserved.");
-        return envelope;
     }
 
     private async Task<bool> ContainsKeyAsync(string key, CancellationToken cancellationToken)

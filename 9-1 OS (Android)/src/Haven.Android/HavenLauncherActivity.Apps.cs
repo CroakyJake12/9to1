@@ -1,3 +1,4 @@
+using NineToOne.Launcher;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -26,13 +27,16 @@ public sealed partial class HavenLauncherActivity
             if (generation != Volatile.Read(ref _appLoadGeneration))
                 return;
 
-            _apps.Clear();
-            _apps.AddRange(ApplySavedOrder(apps));
-            var savedOrder = (Preferences.GetString(OrderKey, string.Empty) ?? string.Empty)
-                .Split('|', StringSplitOptions.RemoveEmptyEntries);
-            if (savedOrder.Any(key => !Guid.TryParse(key, out _)))
-                SaveOrder(); // One-time migration of personal-profile placement to canonical IDs.
-            _page = Math.Clamp(_page, 0, Math.Max(0, PageCount - 1));
+            await _layoutEdits.WaitAsync(_launcherLifetime.Token);
+            try
+            {
+                var layout = await LayoutStore.GetAsync(ApplySavedOrder(apps).Select(a => a.ApplicationId).ToArray(),
+                    Math.Clamp(Preferences.GetInt(RowsKey, 5), 3, 8), Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7), _launcherLifetime.Token);
+                if (generation != Volatile.Read(ref _appLoadGeneration)) return;
+                _apps.Clear(); _apps.AddRange(apps); _layout = layout;
+                _page = layout.Current.Pages.ToList().FindIndex(p => p.Id == layout.Current.ActivePageId);
+            }
+            finally { _layoutEdits.Release(); }
             if (_launcherStatus is not null)
                 _launcherStatus.Text = _apps.Count == 0
                     ? "No launchable apps were returned by Android. Open launcher settings or retry."
@@ -95,23 +99,10 @@ public sealed partial class HavenLauncherActivity
         if (_grid is null || _pageIndicator is null)
             return;
 
-        var (rows, columns) = ResolveGridShape(
-            Math.Clamp(Preferences.GetInt(RowsKey, 5), 3, 8),
-            Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7));
-        var perPage = rows * columns;
-        var pageCount = Math.Max(1, (int)Math.Ceiling(_apps.Count / (double)perPage));
-        _page = Math.Clamp(_page, 0, pageCount - 1);
-        var visible = _apps.Skip(_page * perPage).Take(perPage).ToArray();
-
-        _grid.RemoveAllViews();
-        if (_apps.Count == 0)
-        {
-            _pageIndicator.Text = "Tap All apps to retry";
-            return;
-        }
-
-        _grid.RowCount = rows;
-        _grid.ColumnCount = columns;
+        if (_layout is null) return;
+        var layout = _layout.Current; var rows = layout.Rows; var columns = layout.Columns;
+        var page = layout.ActivePage;
+        _grid.RemoveAllViews(); _grid.RowCount = rows; _grid.ColumnCount = columns;
 
         var metrics = Resources?.DisplayMetrics;
         var gridWidth = _grid.Width > 0
@@ -120,44 +111,66 @@ public sealed partial class HavenLauncherActivity
         var gridHeight = _grid.Height > 0
             ? _grid.Height
             : Math.Max(Dp(78), (metrics?.HeightPixels ?? Dp(640)) - Dp(180));
-        var cellWidth = Math.Max(Dp(64), gridWidth / columns);
-        var cellHeight = Math.Max(Dp(78), gridHeight / rows);
+        var cellWidth = Math.Max(MinimumTileWidth, gridWidth / columns);
+        var cellHeight = Math.Max(TileHeight, gridHeight / rows);
 
-        foreach (var app in visible)
-            _grid.AddView(BuildAppTile(app, cellWidth, cellHeight));
-
-        _pageIndicator.Text = pageCount <= 1
-            ? "Swipe up for apps"
-            : $"{_page + 1} / {pageCount}  \u2022  Swipe up for apps";
+        for (var row = 0; row < rows; row++) for (var column = 0; column < columns; column++)
+        {
+            var placement = page.Items.SingleOrDefault(item => item.Column == column && item.Row == row);
+            if (placement?.FolderId is not null) _grid.AddView(BuildFolderTile(placement, cellWidth, cellHeight));
+            else if (placement is not null)
+            {
+                var app = _apps.SingleOrDefault(item => item.ApplicationId == placement.ApplicationId)
+                    ?? new LauncherApp("Unavailable application", "", "", null, placement.ApplicationId, 0, "", "Unavailable profile", false, false);
+                _grid.AddView(BuildAppTile(app, cellWidth, cellHeight, placement));
+            }
+            else
+            {
+                var targetColumn = column; var targetRow = row;
+                var empty = new Button(this) { Text = _movingPlacementId is null ? "" : "+", Enabled = _movingPlacementId is not null,
+                    ContentDescription = $"Empty slot, row {row + 1}, column {column + 1}", LayoutParameters = new ViewGroup.LayoutParams(cellWidth, cellHeight) };
+                empty.SetBackgroundColor(Color.Transparent);
+                empty.Click += (_, _) => { if (_movingPlacementId is { } moving) _ = EditLayoutAsync(current => LauncherLayoutEdits.MovePlacement(current, moving, page.Id, targetColumn, targetRow)); };
+                _grid.AddView(empty);
+            }
+        }
+        _pageIndicator.Text = $"{page.Name} · {_page + 1} / {layout.Pages.Count} · Manage pages";
         AndroidTypography.ApplyTree(_grid);
+        RenderDock();
+        RefreshOpenFolder();
     }
 
-    private View BuildAppTile(LauncherApp app, int width, int height)
+    private View BuildAppTile(LauncherApp app, int width, int height, LauncherPlacement? placement = null)
     {
+        var appearance = CurrentPresentation;
+        height = Math.Max(height, TileHeight);
         var tile = new LinearLayout(this)
         {
             Orientation = Orientation.Vertical,
+            Focusable = true,
+            Clickable = true,
             ContentDescription = $"{app.Label}, {app.ProfileLabel}" + (app.Available ? string.Empty : ", unavailable"),
             LayoutParameters = new ViewGroup.LayoutParams(width, height)
         };
         tile.SetGravity(GravityFlags.Center);
-        tile.SetPadding(Dp(4), Dp(4), Dp(4), Dp(4));
+        tile.SetPadding(Dp(appearance.HorizontalSpacingDp), Dp(appearance.VerticalSpacingDp), Dp(appearance.HorizontalSpacingDp), Dp(appearance.VerticalSpacingDp));
         if (!app.Available) tile.Alpha = 0.5f;
 
+        var iconSize = Math.Min(Dp(appearance.IconSizeDp), Math.Max(Dp(24), width - Dp(appearance.HorizontalSpacingDp * 2)));
         var icon = new ImageView(this)
         {
-            LayoutParameters = new LinearLayout.LayoutParams(Dp(52), Dp(52))
+            LayoutParameters = new LinearLayout.LayoutParams(iconSize, iconSize)
         };
         icon.SetImageDrawable(app.Icon);
         tile.AddView(icon);
 
-        if (Preferences.GetBoolean(LabelsKey, true))
+        if (appearance.ShowLabels)
         {
             var label = new TextView(this)
             {
                 Text = app.Label,
                 Gravity = GravityFlags.Center,
-                TextSize = 12
+                TextSize = appearance.LabelSizeSp
             };
             label.SetMaxLines(1);
             label.Ellipsize = global::Android.Text.TextUtils.TruncateAt.End;
@@ -165,7 +178,7 @@ public sealed partial class HavenLauncherActivity
             tile.AddView(label);
         }
 
-        if (Preferences.GetBoolean(PackagesKey, false))
+        if (appearance.ShowPackages)
         {
             var package = new TextView(this)
             {
@@ -186,62 +199,18 @@ public sealed partial class HavenLauncherActivity
             tile.AddView(profile);
         }
 
-        tile.LongClick += (_, args) =>
-        {
-            _movingKey = app.Key;
-            tile.Background = RoundedBackground(Color.Argb(120, 176, 116, 255), Dp(18));
-            Toast.MakeText(this, "Tap another app to move it here", ToastLength.Short)?.Show();
-            args.Handled = true;
-        };
+        tile.LongClick += (_, args) => { ShowPlacementMenu(app, placement); args.Handled = true; };
         tile.Click += (_, _) =>
         {
-            if (_movingKey is not null)
-            {
-                MoveApp(_movingKey, app.Key);
-                _movingKey = null;
-                return;
-            }
-
-            LaunchApp(app);
+            if (_movingPlacementId is { } moving && placement is not null && _layout is not null)
+            { _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, moving, LauncherLayoutEdits.ContainerForPlacement(layout, placement.Id), placement.Column, placement.Row)); return; }
+            if (app.Available) LaunchApp(app);
+            else Toast.MakeText(this, "This application's owning profile or package is currently unavailable. Its shortcut was preserved.", ToastLength.Long)?.Show();
         };
         return tile;
     }
 
-    private void MoveApp(string sourceKey, string destinationKey)
-    {
-        var source = _apps.FindIndex(app => app.Key == sourceKey);
-        var destination = _apps.FindIndex(app => app.Key == destinationKey);
-        if (source < 0 || destination < 0 || source == destination)
-            return;
-
-        var moving = _apps[source];
-        _apps.RemoveAt(source);
-        if (source < destination)
-            destination--;
-        _apps.Insert(destination, moving);
-        SaveOrder();
-        RenderPage();
-    }
-
-    private void SaveOrder()
-    {
-        Preferences.Edit()?
-            .PutString(OrderKey, string.Join('|', _apps.Select(app => app.Key)))?
-            .Apply();
-    }
-
-    private int PageCount
-    {
-        get
-        {
-            var rows = Math.Clamp(Preferences.GetInt(RowsKey, 5), 3, 8);
-            var columns = Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7);
-            var (effectiveRows, effectiveColumns) = ResolveGridShape(rows, columns);
-            return Math.Max(
-                1,
-                (int)Math.Ceiling(_apps.Count / (double)(effectiveRows * effectiveColumns)));
-        }
-    }
+    private int PageCount => _layout?.Current.Pages.Count ?? 1;
 
     private (int Rows, int Columns) ResolveGridShape(int requestedRows, int requestedColumns)
     {
@@ -268,11 +237,17 @@ public sealed partial class HavenLauncherActivity
 
     private void ChangePage(int delta)
     {
-        var next = Math.Clamp(_page + delta, 0, Math.Max(0, PageCount - 1));
-        if (next == _page)
-            return;
-        _page = next;
-        RenderPage();
+        if (_layout is null) return;
+        var next = Math.Clamp(_page + delta, 0, _layout.Current.Pages.Count - 1);
+        if (next == _page) return;
+        var id = _layout.Current.Pages[next].Id;
+        var moving = _movingPlacementId;
+        _ = SelectPageAsync(id, moving);
+    }
+    private async Task SelectPageAsync(Guid id, Guid? moving)
+    {
+        await EditLayoutAsync(layout => LauncherLayoutEdits.SelectPage(layout, id));
+        _movingPlacementId = moving; RenderPage();
     }
 
     private void ShowAppDrawer()
@@ -331,6 +306,10 @@ public sealed partial class HavenLauncherActivity
         search.Background = RoundedBackground(Color.Argb(70, 255, 255, 255), Dp(18));
         search.SetPadding(Dp(16), 0, Dp(16), 0);
         shell.AddView(search);
+        var pageSearch = false;
+        var categories = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+        var appsCategory = new Button(this) { Text = "Apps" }; var pagesCategory = new Button(this) { Text = "Launcher pages" };
+        categories.AddView(appsCategory); categories.AddView(pagesCategory); shell.AddView(categories);
 
         var scroll = new ScrollView(this)
         {
@@ -344,17 +323,15 @@ public sealed partial class HavenLauncherActivity
             (Resources?.DisplayMetrics?.WidthPixels ?? Dp(360)) - Dp(24));
         var grid = new GridLayout(this)
         {
-            ColumnCount = ResolveColumnCount(
-                Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7),
-                drawerWidth)
+            ColumnCount = Math.Min(_layout?.Current.Columns ?? 4, Math.Max(1, drawerWidth / MinimumTileWidth))
         };
-        var width = Math.Max(Dp(64), drawerWidth / grid.ColumnCount);
+        var width = Math.Max(MinimumTileWidth, drawerWidth / grid.ColumnCount);
         var engine = (App.Services ?? throw new InvalidOperationException("9-1 Home is unavailable.")).GetRequiredService<GoService>();
         var dialogLifetime = CancellationTokenSource.CreateLinkedTokenSource(_launcherLifetime.Token);
         var dialogToken = dialogLifetime.Token;
         CancellationTokenSource? currentSearch = null;
         var searchGeneration = 0;
-        dialog.DismissEvent += (_, _) => { dialogLifetime.Cancel(); currentSearch?.Cancel(); dialogLifetime.Dispose(); };
+        dialog.DismissEvent += (_, _) => { _refreshDrawer = null; dialogLifetime.Cancel(); currentSearch?.Cancel(); dialogLifetime.Dispose(); };
         async Task RenderMatchesAsync(string? query)
         {
             currentSearch?.Cancel();
@@ -363,17 +340,40 @@ public sealed partial class HavenLauncherActivity
             try
             {
                 await Task.Delay(120, request.Token);
-                var presentation = (await QueryAppsAsync(request.Token)).ToDictionary(app => app.ApplicationId);
-                var scope = new GoScope(new HashSet<string>(StringComparer.Ordinal) { AndroidInstalledApplicationsGoProvider.Id },
+                var searchingPages = pageSearch;
+                var presentation = searchingPages ? new Dictionary<Guid, LauncherApp>() : (await QueryAppsAsync(request.Token)).ToDictionary(app => app.ApplicationId);
+                var scope = searchingPages ? new GoScope(new HashSet<string>(StringComparer.Ordinal) { LauncherNavigationGoProvider.Id },
+                    new HashSet<string>(StringComparer.Ordinal) { "Launcher" }, new HashSet<string>(StringComparer.Ordinal) { "launcher.page" },
+                    new HashSet<string>(StringComparer.Ordinal) { "OpenPage" }) : new GoScope(new HashSet<string>(StringComparer.Ordinal) { AndroidInstalledApplicationsGoProvider.Id },
                     new HashSet<string>(StringComparer.Ordinal) { "Home" }, new HashSet<string>(StringComparer.Ordinal) { "os.installed-application" },
                     new HashSet<string>(StringComparer.Ordinal) { "Open" });
                 RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.RemoveAllViews(); });
                 var count = 0; var failed = false;
-                await foreach (var update in engine.QueryAsync(new(query?.Trim() ?? "", "Apps", 1000, scope), request.Token))
+                await foreach (var update in engine.QueryAsync(new(query?.Trim() ?? "", searchingPages ? "Launcher Pages" : "Apps", 1000, scope), request.Token))
                 {
                     if (update.Failure is not null) failed = true;
-                    if (update.Result is not { } result || !Guid.TryParse(result.Reference.Id, out var id) ||
-                        !long.TryParse(result.Reference.Revision, out var revision) || !presentation.TryGetValue(id, out var app)) continue;
+                    if (update.Result is not { } result) continue;
+                    if (searchingPages)
+                    {
+                        count++;
+                        RunOnUiThread(() =>
+                        {
+                            if (request.IsCancellationRequested || generation != searchGeneration) return;
+                            var pageButton = new Button(this) { Text = result.Label, ContentDescription = "Open launcher page " + result.Label,
+                                LayoutParameters = new ViewGroup.LayoutParams(width, Dp(96)) };
+                            pageButton.Click += async (_, _) =>
+                            {
+                                try { await engine.InvokeAsync(result, "OpenPage", scope, dialogToken); dialog.Dismiss(); LoadAppsAsync(); }
+                                catch (OperationCanceledException) when (dialogToken.IsCancellationRequested) { }
+                                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+                                { Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show(); }
+                            };
+                            grid.AddView(pageButton);
+                        });
+                        continue;
+                    }
+                    if (!Guid.TryParse(result.Reference.Id, out var id) ||
+                        !long.TryParse(result.Reference.Revision, out var revision) || !presentation.TryGetValue(id, out var app) || _layout?.Current.HiddenApplications.Contains(id) == true) continue;
                     var current = app with { Label = result.Label, RegistryRevision = revision, Available = true };
                     count++;
                     RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.AddView(BuildAppTile(current, width, Dp(96))); });
@@ -382,7 +382,7 @@ public sealed partial class HavenLauncherActivity
                     RunOnUiThread(() =>
                     {
                         if (request.IsCancellationRequested || generation != searchGeneration) return;
-                        var empty = new TextView(this) { Text = failed ? "Applications are temporarily unavailable. Retry or repair Home." : "No installed apps match this search.",
+                        var empty = new TextView(this) { Text = failed ? "Search is temporarily unavailable. Retry or repair Home." : searchingPages ? "No launcher pages match this search." : "No installed apps match this search.",
                             Gravity = GravityFlags.Center, LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, Dp(72)) };
                         empty.SetTextColor(Color.Argb(220, 235, 225, 255)); grid.AddView(empty);
                     });
@@ -398,6 +398,9 @@ public sealed partial class HavenLauncherActivity
             }
             finally { if (ReferenceEquals(currentSearch, request)) currentSearch = null; }
         }
+        appsCategory.Click += (_, _) => { pageSearch = false; title.Text = "All apps"; search.Hint = "Search installed apps"; _ = RenderMatchesAsync(search.Text); };
+        pagesCategory.Click += (_, _) => { pageSearch = true; title.Text = "Launcher pages"; search.Hint = "Search launcher pages"; _ = RenderMatchesAsync(search.Text); };
+        _refreshDrawer = () => _ = RenderMatchesAsync(search.Text);
         search.TextChanged += (_, args) => _ = RenderMatchesAsync(args.Text?.ToString());
         _ = RenderMatchesAsync(string.Empty);
         scroll.AddView(grid);

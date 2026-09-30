@@ -59,9 +59,25 @@ public sealed partial class DurableDriveProvider
             : FilesResult<FilesArtifactReference>.Success(reference with { DisplayName = metadata.Metadata.Name, ParentFolderId = metadata.Metadata.ParentId });
     }
 
-    public async Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit, CancellationToken cancellationToken)
+    public Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit, CancellationToken cancellationToken) =>
+        CommitDurableRevisionCoreAsync(commit, null, cancellationToken);
+
+    public Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit,
+        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(authority);
+        return CommitDurableRevisionCoreAsync(commit, authority, cancellationToken);
+    }
+
+    private async Task<FilesResult<FilesRevision>> CommitDurableRevisionCoreAsync(FilesOwningAppRevisionCommit commit,
+        FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(commit);
+        if (authority is not null && authority.ActorId != _owner)
+            return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority does not own this Drive.", "CommitOwningAppRevision", commit.FileId);
         FilesResult<FilesRevision>? result = null;
+        try
+        {
         await _store.UpdateAsync(state =>
         {
             var entry = state.Items.SingleOrDefault(item => item.Metadata.Id == commit.FileId);
@@ -93,7 +109,10 @@ public sealed partial class DurableDriveProvider
                 Revisions = [.. state.Revisions.Select(item => item.ItemId == commit.FileId ? item with { IsCurrent = false } : item), revision],
                 RevisionContentReferences = new Dictionary<string, string?>(state.RevisionContentReferences) { [revision.Id.ToString()] = commit.ProviderContentReference },
                 Events = [.. state.Events, change] };
-        }, cancellationToken);
+        }, authority is null ? null : authority.ValidateAsync, cancellationToken);
+        }
+        catch (FilesCommitAuthorityChangedException)
+        { return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority changed before publication.", "CommitOwningAppRevision", commit.FileId); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
         return result;
     }

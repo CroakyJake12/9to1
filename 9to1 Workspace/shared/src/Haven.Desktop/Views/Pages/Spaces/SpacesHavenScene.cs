@@ -403,7 +403,7 @@ internal sealed class SpacesHavenScene : IDisposable
             var open = new HavenButton { Content = "Open source", Variant = ButtonVariant.Text };
             open.Accessibility.AccessibleName = $"Open {source.Kind} source {source.CanonicalEntityId}";
             open.SetValue(HavenProperties.Enabled, CanonicalSourceNavigationAvailable && !space.IsArchived &&
-                source.HostedFileId is not null && source.Kind == SpaceContextReferenceKind.CanvasArtifact &&
+                source.HostedFileId is not null && source.Kind is (SpaceContextReferenceKind.CanvasArtifact or SpaceContextReferenceKind.PictureArtifact or SpaceContextReferenceKind.GamesProject or SpaceContextReferenceKind.WriteArtifact) &&
                 source.Permission is SpaceContextPermission.Read or SpaceContextPermission.ReadWrite);
             var contextId = source.ContextId;
             open.Invoked += (_, _) => CanonicalSourceRequested?.Invoke(this, contextId);

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Forms</AssemblyName>
+    <RootNamespace>HavenOS.Forms</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/FormsWorkspace.cui" LogicalName="HavenOS.Forms.UI.FormsWorkspace.cui" />
+  </ItemGroup>
+</Project>

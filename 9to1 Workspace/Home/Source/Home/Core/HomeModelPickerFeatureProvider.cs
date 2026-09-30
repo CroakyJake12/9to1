@@ -101,6 +101,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         if (candidates.Any(item => item is null || string.IsNullOrWhiteSpace(item.ProviderId) || string.IsNullOrWhiteSpace(item.ModelId) ||
             item.ArtifactRevision is not null || item.Order < 0) || candidates.Select(item => new ModelIdentity(item.ProviderId, item.ModelId).StableKey).Distinct(StringComparer.OrdinalIgnoreCase).Count() != candidates.Length ||
             candidates.Select(item => item.Order).Distinct().Count() != candidates.Length) return Invalid<HomeModelPickerSnapshot>();
+        if (routes is not IHomeGuardedModelRouteRepository guardedRoutes) return Denied<HomeModelPickerSnapshot>();
         var actor = await ActorAsync("models.routes.update", ResourceAccess.Write, cancellationToken).ConfigureAwait(false);
         if (actor is null || input.ScopeId != actor.ProfileId || input.RouteId != RouteId(actor.ProfileId, category) ||
             input.AppId is not null || input.OverrideIdentity is not null) return Denied<HomeModelPickerSnapshot>();
@@ -129,7 +130,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         if (capability is null || await operations.ClaimExecutionAsync(capability, AppId, "models.routes.update", scopeList, arguments, cancellationToken).ConfigureAwait(false) != actor)
             return Denied<HomeModelPickerSnapshot>();
         // CAS is the authoritative transaction; an approval cannot overwrite a concurrent or changed-owner record.
-        if (!await routes.TrySaveAsync(route, edit.ExpectedRevision, cancellationToken).ConfigureAwait(false))
+        if (!await guardedRoutes.TrySaveGuardedAsync(route, edit.ExpectedRevision, actor, profiles, cancellationToken).ConfigureAwait(false))
             return new(false, "Conflict", "Another route edit won; reload and request approval again.");
         return new(true, "Saved", "Model route saved.", Snapshot(route), Revision: route.Revision);
     }

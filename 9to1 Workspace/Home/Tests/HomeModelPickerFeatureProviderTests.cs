@@ -13,6 +13,7 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-model-owner-" + Guid.NewGuid().ToString("N"));
     private readonly HomeLocalProfileIdentity _profiles;
+    private readonly Principal _principal = new();
     private readonly FileHomeCoreStateStore _store;
     private readonly HomeVersionedModelRouteRepository _routes;
     private readonly HomePermissionTrustService _permissions;
@@ -24,12 +25,51 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
     {
         Directory.CreateDirectory(_root);
         var store = _store = new FileHomeCoreStateStore(Path.Combine(_root, "home.json"));
-        _profiles = new(store, new Principal()); _routes = new(store);
+        _profiles = new(store, _principal); _routes = new(store);
         var policies = new HomeModelRouteActionPolicies();
         _permissions = new(store, policies.TryGet);
         var resources = new ResourceAuthorizationService(_profiles, [new HomeModelRouteOwner(_profiles, _routes), new HomeModelRouteProfileOwner(_profiles)]);
         _personal = new(_profiles, _routes, resources);
         _provider = new(_profiles, _routes, _catalogue, _privacy, resources, new(resources, _permissions));
+    }
+
+    [Fact]
+    public async Task Approved_route_does_not_commit_if_real_principal_changes_while_Home_lease_waits()
+    {
+        var paused = new PausedRoutes(_routes, Path.Combine(_root, "home.json"));
+        var resources = new ResourceAuthorizationService(_profiles, [new HomeModelRouteOwner(_profiles, _routes), new HomeModelRouteProfileOwner(_profiles)]);
+        var provider = new HomeModelPickerFeatureProvider(_profiles, paused, _catalogue, _privacy, resources,
+            new(resources, _permissions));
+        var draft = Assert.Single((await provider.GetSnapshotAsync("User", "Chat")).Value!.Routes);
+        var edit = new HomeModelRouteEdit(draft with { Version = 1, Candidates = [new("local", "one", null, true, 0)] }, 0);
+        var pending = await provider.UpdateRouteAsync(edit);
+        var request = pending.Value!.PendingApprovalRequestId!;
+        Assert.True((await _permissions.DecideAsync(request, HomeApprovalChoice.Accept)).Succeeded);
+        var saving = provider.UpdateRouteAsync(edit with { ApprovalRequestId = request });
+        await paused.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        _principal.Value = "different-os-principal";
+        paused.Release.TrySetResult();
+        Assert.False((await saving).Succeeded);
+        Assert.Empty(await _routes.ListAsync(default));
+    }
+
+    private sealed class PausedRoutes(HomeVersionedModelRouteRepository inner, string path) : IHomeGuardedModelRouteRepository
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<ConfiguredModelRoute?> GetAsync(string id, CancellationToken ct) => inner.GetAsync(id, ct);
+        public Task<IReadOnlyList<ConfiguredModelRoute>> ListAsync(CancellationToken ct) => inner.ListAsync(ct);
+        public Task<bool> TrySaveAsync(ConfiguredModelRoute route, long revision, CancellationToken ct) => inner.TrySaveAsync(route, revision, ct);
+        public async Task<bool> TrySaveGuardedAsync(ConfiguredModelRoute route, long revision, AuthenticatedResourceActor actor,
+            IHomeStateCommitActorGuard guard, CancellationToken ct)
+        {
+            using var held = new FileStream(path + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            var saving = inner.TrySaveGuardedAsync(route, revision, actor, guard, ct);
+            Entered.TrySetResult();
+            await Release.Task.WaitAsync(ct);
+            held.Dispose();
+            return await saving;
+        }
     }
 
     [Fact]
@@ -149,7 +189,8 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
     }
     private sealed class Principal : ITrustedHostPrincipalSource
     {
-        public ValueTask<string?> GetPrincipalAsync(CancellationToken cancellationToken) => ValueTask.FromResult<string?>("fixture-os-principal");
+        public string Value { get; set; } = "fixture-os-principal";
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken cancellationToken) => ValueTask.FromResult<string?>(Value);
     }
     private sealed class Privacy : IPrivacyPreferenceStore
     {

@@ -32,6 +32,7 @@ try
         return;
     }
 
+    if(args.Contains("--owned-signal-only")){await OwnedSignalSpecs.RunAsync();return;}
     await TerminalAppSurfaceSpecs.RunAsync();
     await PtyProcessSpecs.RunAsync();
     Console.WriteLine("Terminal specs passed.");
@@ -82,6 +83,17 @@ internal static class TerminalAppSurfaceSpecs
         Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),"fixture-home-verification")).State==TerminalAppCommandState.Succeeded,"current action delegated to canonical broker");
         Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),"fixture-home-verification")).State==TerminalAppCommandState.Unavailable&&broker.Executions==1,"resolved action consumed once");
         pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
+        broker.RequireApproval = true;
+        var approval = await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"), null);
+        Check(approval.State == TerminalAppCommandState.RequiresApproval && surface.ResolvedAction?.Id == current.Id, "pending Home approval preserves exact draft without execution");
+        broker.RequireApproval = false;
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"), "home-request")).State == TerminalAppCommandState.Succeeded && surface.ResolvedAction is null, "approved retry consumes draft");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
+        broker.RequireApproval = true;
+        broker.BeforeExecution = () => surface.SetMode(TerminalInputMode.Command);
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"), null)).State == TerminalAppCommandState.Unavailable && surface.ResolvedAction is null, "pending approval cannot restore after mode change");
+        broker.RequireApproval = false; broker.BeforeExecution = null; surface.SetMode(TerminalInputMode.AI);
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
         await surface.SetWorkingDirectoryAsync(Path.GetTempPath());
         Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),null)).State==TerminalAppCommandState.Unavailable,"directory transition invalidates resolved action");
     }
@@ -89,11 +101,13 @@ internal static class TerminalAppSurfaceSpecs
     {
         private TaskCompletionSource<TerminalResolvedAction> _pending=null!;private Guid _session;private TerminalEnvironmentId _environment;
         public List<string> Objects {get;private set;}=[];public int Executions {get;private set;}
+        public bool RequireApproval { get; set; }
+        public Action? BeforeExecution { get; set; }
         public Task<TerminalResolvedAction> ResolveAsync(Guid session,TerminalEnvironmentId environment,string request,CancellationToken ct)
         { _session=session;_environment=environment;_pending=new(TaskCreationOptions.RunContinuationsAsynchronously);Objects=["fixture-file"];return _pending.Task; }
         public void Complete(bool foreign=false)=>_pending.SetResult(new(Guid.NewGuid(),foreign?Guid.NewGuid():_session,_environment,TerminalActionKind.TypedApi,"Files","List","Show files",Objects,TerminalActionRisk.ReadOnly,true,false));
         public Task<TerminalActionExecutionResult> ExecuteAsync(TerminalResolvedAction action,string? verificationToken,CancellationToken ct)
-        {Executions++;return Task.FromResult(new TerminalActionExecutionResult(true,"Executed","Fixture broker executed"));}
+        { BeforeExecution?.Invoke(); if (RequireApproval) return Task.FromResult(new TerminalActionExecutionResult(false,"PermissionRequired","Review in Home", "home-request")); Executions++;return Task.FromResult(new TerminalActionExecutionResult(true,"Executed","Fixture broker executed"));}
     }
 
     private static async Task AdviceNeverExecutesSuggestedCommandsAsync()

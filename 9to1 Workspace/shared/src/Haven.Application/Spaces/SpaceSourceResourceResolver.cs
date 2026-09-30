@@ -36,6 +36,7 @@ public sealed class SpaceSourceResourceResolver(IAuthenticatedResourceActorSourc
             SpaceContextReferenceKind.WriteArtifact => "write",
             SpaceContextReferenceKind.CanvasArtifact => "canvas",
             SpaceContextReferenceKind.PictureArtifact => "picture",
+            SpaceContextReferenceKind.GamesProject => "games",
             _ => null
         };
         if (owner is null || reference.OwnerAppId != owner ||

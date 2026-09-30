@@ -64,17 +64,102 @@ public sealed class AgentAvatarEditorTests
         await using var session = HeadlessUnitTestSession.StartNew(typeof(StudioTestApplication));
         await session.Dispatch(async () =>
         {
-            var model = new CuiViewModel(); using var host = new CuiSceneHost();
+            var model = new CuiViewModel();
+            var scene = StudioNativeScene.Create(model, model, new FixtureReady());
+            using var host = new CuiSceneHost(scene.ControlRegistry);
             Assert.Equal(CuiSceneAvailabilityState.Unavailable, (await host.ShowAsync(StudioNativeScene.CreateUnavailable())).State);
             Assert.Empty(host.GetLogicalDescendants().OfType<Button>());
             foreach (var key in new[] { "Projects", "AvatarStates", "AvatarTransitions", "AvatarReactions" }) model.Set(key, Array.Empty<object>());
-            Assert.Equal(CuiSceneAvailabilityState.Ready, (await host.ShowAsync(StudioNativeScene.Create(model, model, new FixtureReady()))).State);
+            Assert.Equal(CuiSceneAvailabilityState.Ready, (await host.ShowAsync(scene)).State);
             Assert.DoesNotContain(host.Diagnostics, d => d.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             Assert.Contains(host.GetLogicalDescendants().OfType<Button>(), b => Equals(b.Content, "Save to Agent"));
             Assert.Contains(host.GetLogicalDescendants().OfType<CheckBox>(), c => Equals(c.Content, "Preview reduced motion"));
             return true;
         }, default);
     }
+    [Fact]
+    public async Task Actual_Den_attachment_preview_decodes_with_genuine_Glycin_and_mounts_owned_pixels()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "astra-studio-den-visual-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var store = await DenStore.CreateAsync(root, [new("personal", "personal")]);
+            var den = new DulcheDen(store, new NamespaceAccessPolicy([new("owner", "personal", DenPermission.Administer)]), "owner");
+            var agent = await den.SaveAsync(new AgentDefinitionRecord { Id = "visual", NamespaceId = "personal", DisplayName = "Visual", Version = "1" }, 0, "create");
+            var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+            var attachment = await den.AddAttachmentAsync("personal", agent.Id, DenAgentPresentationAssets.AgentOwnerKind, "image/gif", bytes, "attach");
+            var assets = new DenAgentPresentationAssets(den);
+            var editor = new AgentAvatarEditor(new(den, assets), assets);
+            await editor.OpenAsync("personal", agent.Id);
+            editor.Bindings.Set("StaticAsset", attachment.Id); editor.Bindings.Set("AccessibleName", "Visual agent"); editor.Bindings.Set("Animated", false);
+            await editor.DispatchAsync("SetAvatarIdentity", null);
+            await editor.DispatchAsync("PreviewAvatar", null);
+            Assert.Equal(attachment.Id, editor.Bindings.Get("PreviewAsset"));
+            Assert.Equal(2, editor.Preview!.Frame!.Width); Assert.Equal(1, editor.Preview.Frame.Height);
+            var pixels = editor.Preview.Frame.CopyPixels(); Assert.Equal(new byte[] { 0, 0, 255, 255 }, pixels[..4]); Array.Clear(pixels);
+            Assert.Null((await den.GetAsync<AgentDefinitionRecord>("personal", agent.Id))!.Presentation);
+            var acquired = await assets.ReadAsync("personal", agent.Id, attachment.Id, agent.Revision);
+            acquired.Content[0] ^= 1;
+            await Assert.ThrowsAsync<DenException>(() => assets.ValidateAsync("personal", agent.Id, agent.Revision, acquired));
+            Array.Clear(acquired.Content);
+            await using var native = HeadlessUnitTestSession.StartNew(typeof(StudioTestApplication));
+            await native.Dispatch(async () =>
+            {
+                var scene = StudioNativeScene.Create(editor.Bindings, editor, new FixtureReady(), editor.Preview);
+                using var host = new CuiSceneHost(scene.ControlRegistry);
+                await host.ShowAsync(scene);
+                var control = Assert.Single(host.GetLogicalDescendants().OfType<AgentAvatarPreviewControl>());
+                Assert.NotNull(control.Source); control.Dispose();
+                return true;
+            }, default);
+            await den.SaveAsync(agent with { DisplayName = "Changed" }, agent.Revision, "change");
+            await Assert.ThrowsAsync<DenException>(() => editor.DispatchAsync("PreviewAvatar", null).AsTask());
+            Assert.Null(editor.Preview.Frame);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Clearing_preview_during_retained_read_rejects_the_late_decoded_frame()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "astra-studio-preview-race-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var store = await DenStore.CreateAsync(root, [new("personal", "personal")]);
+            var policy = new PausedPolicy();
+            var den = new DulcheDen(store, policy, "owner");
+            var agent = await den.SaveAsync(new AgentDefinitionRecord { Id = "visual", NamespaceId = "personal", DisplayName = "Visual", Version = "1" }, 0, "create");
+            var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+            var attachment = await den.AddAttachmentAsync("personal", agent.Id, DenAgentPresentationAssets.AgentOwnerKind, "image/gif", bytes, "attach");
+            var preview = new AgentAvatarPreview(new DenAgentPresentationAssets(den));
+            policy.Arm();
+            var loading = preview.LoadAsync("personal", new(agent.Id, agent.Revision, attachment.Id, "Visual", "Idle", false, null), default);
+            await policy.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            preview.Clear();
+            policy.Continue.TrySetResult();
+            await loading;
+            Assert.Null(preview.Frame);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    private sealed class PausedPolicy : IDenAccessPolicy
+    {
+        private int _armed;
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Continue { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public void Arm() => Volatile.Write(ref _armed, 1);
+        public async ValueTask<bool> IsAllowedAsync(string principal, string ns, string id, DenPermission permission, CancellationToken cancellationToken = default)
+        {
+            if (Interlocked.Exchange(ref _armed, 0) == 1)
+            {
+                Entered.TrySetResult();
+                await Continue.Task.WaitAsync(cancellationToken);
+            }
+            return principal == "owner" && ns == "personal";
+        }
+    }
+
     private sealed class FixtureAssets : IAgentPresentationAssetAccess
     { public ValueTask<bool> CanReadAsync(string principal, string ns, string asset, CancellationToken ct) => ValueTask.FromResult(principal == "owner" && ns == "personal" && asset != "asset:denied"); }
     private sealed class FixtureReady : ICuiSceneReadiness

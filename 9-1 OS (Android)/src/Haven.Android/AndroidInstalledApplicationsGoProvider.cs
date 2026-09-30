@@ -23,6 +23,12 @@ internal sealed class AndroidInstalledApplicationsGoProvider(IInstalledApplicati
             if (!app.Enabled || !app.ProfileAccessible || app.HomeProfileId != actor.ProfileId ||
                 app.ProviderId != AndroidLauncherPlatformCatalog.ProviderId ||
                 !(app.Label.Contains(query.Text, StringComparison.CurrentCultureIgnoreCase) || app.OsApplicationId.Contains(query.Text, StringComparison.OrdinalIgnoreCase))) continue;
+            var scope = new ResourceScope("os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(CultureInfo.InvariantCulture), ResourceAccess.Read);
+            try
+            {
+                if (actor != await resources.AuthorizeAsync("os.application.read", [scope], ct)) continue;
+            }
+            catch (UnauthorizedAccessException) { continue; }
             if (actor != await actors.GetCurrentAsync(ct)) throw new UnauthorizedAccessException("The Home profile changed during discovery.");
             yield return new(Id, new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(CultureInfo.InvariantCulture)),
                 app.Label, "Apps", [new("Open", "Open")]);
@@ -52,7 +58,8 @@ internal sealed class AndroidInstalledApplicationResourceResolver(IInstalledAppl
     public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken ct)
     {
         var denied = new ResourceAccessDecision(false, "ApplicationUnavailable", actor.ActorId, scope.Revision, actor.OrganisationId);
-        if (actionId != "os.application.launch" || scope.Access != ResourceAccess.Execute || !Guid.TryParse(scope.Id, out var id) ||
+        if (!((actionId == "os.application.launch" && scope.Access == ResourceAccess.Execute) ||
+            (actionId == "os.application.read" && scope.Access == ResourceAccess.Read)) || !Guid.TryParse(scope.Id, out var id) ||
             !long.TryParse(scope.Revision, NumberStyles.None, CultureInfo.InvariantCulture, out var revision)) return denied;
         var app = await registry.ResolveLaunchAsync(id, revision, ct);
         return denied with { Allowed = app is { Enabled: true, ProfileAccessible: true } && app.HomeProfileId == actor.ProfileId &&

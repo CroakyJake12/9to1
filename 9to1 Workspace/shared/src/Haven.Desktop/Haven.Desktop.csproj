@@ -7,6 +7,8 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
   <PropertyGroup>
     <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <!-- Limit this host restore only; never retarget referenced compiler/build tools. -->
+    <TargetFrameworks Condition="'$(HavenLinuxPublish)' == 'true'">net10.0</TargetFrameworks>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>
@@ -26,9 +28,10 @@
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../Games/CUI/HavenOS.Games.csproj" />
     <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
-    <ProjectReference Include="../../../Picture/HavenOS.Images.csproj" />
+    <ProjectReference Include="../../../Picture/Core/HavenOS.Images.Core.csproj" />
     <ProjectReference Include="../../../Canvas/HavenOS.Canvas.csproj" />
     <EmbeddedResource Include="Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
@@ -79,4 +82,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup><EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <Using Include="HavenOS.Files.NativeHost" />
+  </ItemGroup>
 </Project>

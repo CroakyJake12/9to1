@@ -14,6 +14,6 @@ public sealed partial class DurableDriveProvider
         var reference = state.RevisionContentReferences.GetValueOrDefault(revisionId.ToString());
         return revision is null || string.IsNullOrWhiteSpace(reference)
             ? Fail<FilesArtifactContentRevision>(FilesErrorCode.InvalidState, "The requested content revision is not retained.", "GetRevisionContent", fileId)
-            : FilesResult<FilesArtifactContentRevision>.Success(new(revision, reference));
+            : FilesResult<FilesArtifactContentRevision>.Success(new(revision, reference, state.UploadedContents.SingleOrDefault(upload => upload.FileId == fileId && upload.RevisionId == revisionId)?.ParentFolderId));
     }
 }

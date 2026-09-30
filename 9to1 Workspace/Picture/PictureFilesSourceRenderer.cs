@@ -113,7 +113,7 @@ public sealed class PictureFilesSourceRenderer(
             if (decoded is not null)
             {
                 if (decoded.DelayMicroseconds <= 0) { frames?.Dispose(); frames = null; }
-                var result = new PicturePinnedRasterSource(snapshot, decoded, frames, frames is null ? null : RecheckFrameAuthority);
+                var result = new PicturePinnedRasterSource(snapshot, decoded, frames, RecheckFrameAuthority);
                 frames = null; // ownership transferred only after successful construction
                 pixelsTransferred = true;
                 return result;
@@ -156,6 +156,22 @@ public sealed class PicturePinnedRasterSource : IDisposable
 
     public bool CanAdvanceFrames { get { lock (_gate) return !_disposed && _frames is not null; } }
     public long FrameDelayMicroseconds { get { lock (_gate) { ObjectDisposedException.ThrowIf(_disposed, this); return _decoded?.DelayMicroseconds ?? 0; } } }
+
+    /// <summary>Revalidates the current pinned native source without advancing its frame. Hosts must clear their own copied bitmap on failure.</summary>
+    public async Task ValidateAccessAsync(CancellationToken cancellationToken = default)
+    {
+        await _advanceGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            lock (_gate) ObjectDisposedException.ThrowIf(_disposed, this);
+            if (_recheckFrameAuthority is null)
+                throw new NotSupportedException("This source has no retained native authority validator.");
+            await _recheckFrameAuthority(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or InvalidDataException or IOException)
+        { Dispose(); throw; }
+        finally { _advanceGate.Release(); }
+    }
 
     /// <summary>Decode off the UI thread, then recheck backing and retained raw-source authority before replacing the preview.</summary>
     public async Task AdvanceFrameAsync(CancellationToken cancellationToken = default)

@@ -19,6 +19,8 @@ public sealed record CuiNativeScene(string AppId, string Title, string Surface, 
 {
     // Supplied by the host's canonical profile/theme authority; null inherits the current canonical appearance.
     public CuiAppearance? Appearance { get; init; }
+    /// <summary>Trusted in-process owning app factories for typed native Object controls.</summary>
+    public CuiControlRegistry? ControlRegistry { get; init; }
 }
 
 /// <summary>Retained canonical CUI scene adapter, shared by native app windows and embedded Desktop surfaces.</summary>
@@ -121,7 +123,7 @@ public sealed class CuiSceneHost(CuiControlRegistry? registry = null) : ContentC
         CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.VerifyAccess();
-        var host = new CuiSceneHost();
+        var host = new CuiSceneHost(scene.ControlRegistry);
         try { await host.ShowAsync(scene, cancellationToken); }
         catch { host.Dispose(); throw; }
         var window = new Window { Title = scene.Title, Width = width, Height = height, Content = host };

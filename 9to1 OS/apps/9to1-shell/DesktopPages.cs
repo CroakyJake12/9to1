@@ -42,6 +42,8 @@ public static class DesktopPageEdits
         var pages = surface.Pages.Where(p => p.Id != surface.ActivePageId).ToArray();
         return surface with { ActivePageId = pages[Math.Min(index, pages.Length - 1)].Id, Pages = pages };
     });
+    public static ShellConfiguration SelectPage(ShellConfiguration configuration, Guid pageId) => Change(configuration, surface =>
+        surface.Pages.Any(p => p.Id == pageId) ? surface with { ActivePageId = pageId } : throw new InvalidOperationException("The selected desktop page is no longer available."));
     public static ShellConfiguration StepPage(ShellConfiguration configuration, int direction) => Change(configuration, surface => surface with
     { ActivePageId = surface.Pages[Math.Clamp(surface.Pages.ToList().FindIndex(p => p.Id == surface.ActivePageId) + Math.Sign(direction), 0, surface.Pages.Count - 1)].Id });
     public static ShellConfiguration ReorderPage(ShellConfiguration configuration, int direction) => Change(configuration, surface =>

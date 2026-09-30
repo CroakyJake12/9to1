@@ -6,13 +6,36 @@ public sealed record FilesUploadedContent(HostedItemId FileId, HostedItemId? Par
     string? MimeType, FilesRevisionId RevisionId, FilesRevisionId? ExpectedRevision, string ActorId,
     DateTimeOffset CommittedAt, long SizeBytes, string ContentHash, string ProviderContentReference);
 
+/// <summary>Current visible item revision required atomically with an uploaded-content commit.</summary>
+public sealed record FilesItemRevisionPrecondition(HostedItemId ItemId, FilesRevisionId? ExpectedRevision);
+
 public sealed partial class DurableDriveProvider
 {
-    public async Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
-        CancellationToken cancellationToken = default)
+    public Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
+        CancellationToken cancellationToken = default) => CommitUploadedContentAsync(content, [], cancellationToken);
+
+    public Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, CancellationToken cancellationToken = default) =>
+        CommitUploadedContentCoreAsync(content, preconditions, null, cancellationToken);
+
+    public Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, FilesCommitAuthorityGuard authority,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(authority);
+        return CommitUploadedContentCoreAsync(content, preconditions, authority, cancellationToken);
+    }
+
+    private async Task<FilesResult<FilesRevision>> CommitUploadedContentCoreAsync(FilesUploadedContent content,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(content);
-        if (content.ActorId != _owner) return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Only the trusted Files owner can publish content.", "CommitFileContent", content.FileId);
+        ArgumentNullException.ThrowIfNull(preconditions);
+        var captured = preconditions.ToArray();
+        if (captured.Length > 256 || captured.Any(item => item is null || item.ItemId.Value == Guid.Empty) ||
+            captured.Select(item => item.ItemId).Distinct().Count() != captured.Length)
+            return Fail<FilesRevision>(FilesErrorCode.InvalidState, "Upload preconditions require unique canonical item identities.", "CommitFileContent", content.FileId);
+        if (content.ActorId != _owner || authority is not null && authority.ActorId != _owner) return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Only the trusted Files owner can publish content.", "CommitFileContent", content.FileId);
         var hash = content.ContentHash.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? content.ContentHash[7..] : content.ContentHash;
         if (content.FileId.Value == Guid.Empty || content.RevisionId.Value == Guid.Empty || content.SizeBytes < 0 ||
             hash.Length != 64 || hash.Any(character => !Uri.IsHexDigit(character)) || string.IsNullOrWhiteSpace(content.Name) ||
@@ -21,8 +44,18 @@ public sealed partial class DurableDriveProvider
             content.ProviderContentReference.Contains('\0') || content.ProviderContentReference.Split(['/', '\\']).Any(part => part is "." or ".."))
             return Fail<FilesRevision>(FilesErrorCode.InvalidState, "Content requires safe canonical identities, name, hash and immutable Files-relative reference.", "CommitFileContent", content.FileId);
         FilesResult<FilesRevision>? result = null;
+        try
+        {
         await _store.UpdateAsync(state =>
         {
+            foreach (var condition in captured)
+            {
+                var guarded = state.Items.SingleOrDefault(item => item.Metadata.Id == condition.ItemId);
+                if (guarded is null || !IsVisible(state, guarded))
+                { result = Fail<FilesRevision>(FilesErrorCode.ItemNotFound, "A required Files item is unavailable.", "CommitFileContent", content.FileId); return state; }
+                if (guarded.Metadata.CurrentRevisionId != condition.ExpectedRevision)
+                { result = Fail<FilesRevision>(FilesErrorCode.RevisionConflict, "A required Files revision changed before publication.", "CommitFileContent", content.FileId); return state; }
+            }
             var replay = state.UploadedContents.SingleOrDefault(item => item.RevisionId == content.RevisionId);
             if (replay is not null)
             {
@@ -65,7 +98,10 @@ public sealed partial class DurableDriveProvider
                 RevisionContentReferences = new Dictionary<string, string?>(state.RevisionContentReferences) { [revision.Id.ToString()] = content.ProviderContentReference },
                 UploadedContents = [.. state.UploadedContents, content], Events = [.. state.Events, change]
             };
-        }, cancellationToken).ConfigureAwait(false);
+        }, authority is null ? null : authority.ValidateAsync, cancellationToken).ConfigureAwait(false);
+        }
+        catch (FilesCommitAuthorityChangedException)
+        { return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority changed before publication.", "CommitFileContent", content.FileId); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
         return result;
     }

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include "native_runtime_environment.hxx"
+#include "native_document_snapshot.hxx"
 
 namespace
 {
@@ -361,7 +362,7 @@ int main(int argc, char** argv)
 
     ProbeContext context;
     context.kit = kit;
-    context.sourcePath = sourcePath;
+    context.sourcePath = createNativeDocumentSnapshot(sourcePath, profilePath);
     context.outputPath = outputPath;
     context.deadline = std::chrono::steady_clock::now() + kProbeDeadline;
 

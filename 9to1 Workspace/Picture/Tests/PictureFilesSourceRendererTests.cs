@@ -183,12 +183,15 @@ public sealed class PictureFilesSourceRendererTests
             Assert.Equal(document.Revision, pinned.Revision);
             Assert.Equal(document.DocumentId, pinned.DocumentId);
             Assert.Equal(bytes, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+            await pinned.ValidateAccessAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(120_000, pinned.FrameDelayMicroseconds);
+            Assert.Equal(new byte[] { 255, 0, 0, 255 }, pinned.RenderSharedFrame().CopyPixels()[..4]);
             wrongSource = true;
             await Assert.ThrowsAsync<InvalidDataException>(() => pinned.AdvanceFrameAsync(TestContext.Current.CancellationToken));
             Assert.Equal(120_000, pinned.FrameDelayMicroseconds);
             wrongSource = false;
             authority.Deny = true;
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pinned.AdvanceFrameAsync(TestContext.Current.CancellationToken));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pinned.ValidateAccessAsync(TestContext.Current.CancellationToken));
             Assert.False(pinned.CanAdvanceFrames);
             Assert.Throws<ObjectDisposedException>(() => pinned.Render());
             Assert.Equal(requests, releases);

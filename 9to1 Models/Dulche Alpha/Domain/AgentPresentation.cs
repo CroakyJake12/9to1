@@ -74,4 +74,6 @@ public static class AgentAvatarPresentation
 public interface IAgentPresentationAssetAccess
 {
     ValueTask<bool> CanReadAsync(string principalId, string namespaceId, string assetReference, CancellationToken cancellationToken);
+    ValueTask<bool> CanReadForAgentAsync(string principalId, string namespaceId, string agentId, string assetReference,
+        CancellationToken cancellationToken) => CanReadAsync(principalId, namespaceId, assetReference, cancellationToken);
 }

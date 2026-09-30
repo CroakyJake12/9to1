@@ -50,7 +50,7 @@ public sealed class SettingsExportManifest
 /// </summary>
 public sealed record SettingsStoreIdentity(int SchemaVersion, Guid StoreId, DateTimeOffset CreatedAtUtc);
 
-public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IResourceStoreIdentitySource, IVersionedSettingsCompareExchange
+public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IResourceStoreIdentitySource, IVersionedSettingsGuardedCompareExchange
 {
     private readonly IAppPaths _paths;
     private readonly SemaphoreSlim _lock = new(1, 1);
@@ -159,7 +159,36 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
     public async Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson,
         string? replacementJson, CancellationToken cancellationToken)
     {
+        var result = await CompareExchangeGuardedAsync(key, expectedJson, replacementJson,
+            new Dictionary<string, string?>(), cancellationToken).ConfigureAwait(false);
+        return new(result.Exchanged, result.CurrentJson, result.StoreVersion);
+    }
+
+    public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expectedJson,
+        string? replacementJson, IReadOnlyDictionary<string, string?> expectedGuards, CancellationToken cancellationToken) =>
+        CompareExchangeGuardedCoreAsync(key, expectedJson, replacementJson, expectedGuards, null, cancellationToken);
+
+    public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expectedJson,
+        string? replacementJson, IReadOnlyDictionary<string, string?> expectedGuards, ISettingsCommitAdmission admission,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(admission);
+        return CompareExchangeGuardedCoreAsync(key, expectedJson, replacementJson, expectedGuards, admission, cancellationToken);
+    }
+
+    private async Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedCoreAsync(string key, string? expectedJson,
+        string? replacementJson, IReadOnlyDictionary<string, string?> expectedGuards, ISettingsCommitAdmission? admission, CancellationToken cancellationToken)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(expectedGuards);
+        if (expectedGuards.Count > 128) throw new ArgumentException("At most 128 exact settings guards are supported.", nameof(expectedGuards));
+        var guards = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var guard in expectedGuards)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(guard.Key);
+            if (!guards.TryAdd(guard.Key, guard.Value))
+                throw new ArgumentException("Settings guard keys must be unique ignoring case.", nameof(expectedGuards));
+        }
         if (replacementJson is not null)
         {
             try { using var value = JsonDocument.Parse(replacementJson); }
@@ -171,11 +200,21 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
             await using var diskLease = await AcquireStoreLeaseAsync(cancellationToken).ConfigureAwait(false);
             await RefreshLoadedAsync(cancellationToken).ConfigureAwait(false);
             _settings.TryGetValue(key, out var current);
+            foreach (var guard in guards)
+            {
+                _settings.TryGetValue(guard.Key, out var guardedCurrent);
+                if (!StringComparer.Ordinal.Equals(guardedCurrent, guard.Value))
+                    return new(false, current, _version, guard.Key);
+            }
             if (!StringComparer.Ordinal.Equals(current, expectedJson)) return new(false, current, _version);
+            if (admission is not null && !await admission.CheckAsync(new(_identity!, _version, SettingsCommitPhase.Admission), cancellationToken).ConfigureAwait(false))
+                return new(false, current, _version) { AdmissionRejected = true };
+            cancellationToken.ThrowIfCancellationRequested();
             if (StringComparer.Ordinal.Equals(current, replacementJson)) return new(true, current, _version);
             var next = new Dictionary<string, string>(_settings, StringComparer.OrdinalIgnoreCase);
             if (replacementJson is null) next.Remove(key); else next[key] = replacementJson;
-            await CommitAsync(next, cancellationToken).ConfigureAwait(false);
+            if (!await CommitAsync(next, cancellationToken, admission).ConfigureAwait(false))
+                return new(false, current, _version) { AdmissionRejected = true };
             return new(true, replacementJson, _version);
         }
         finally { _lock.Release(); }
@@ -280,7 +319,7 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
         }
     }
 
-    private async Task CommitAsync(Dictionary<string, string> next, CancellationToken token)
+    private async Task<bool> CommitAsync(Dictionary<string, string> next, CancellationToken token, ISettingsCommitAdmission? admission = null)
     {
         var nextVersion = checked(_version + 1);
         var path = GetSettingsPath();
@@ -309,12 +348,16 @@ public sealed class VersionedAtomicSettingsStore : IVersionedSettingsStore, IRes
                 if (_recoveredFromBackup) File.Copy(path, path + ".corrupt." + Guid.NewGuid().ToString("N"));
                 else File.Copy(path, path + ".bak", overwrite: true);
             }
+            if (admission is not null && !await admission.CheckAsync(new(_identity!, _version, SettingsCommitPhase.Publication), token).ConfigureAwait(false))
+                return false;
+            token.ThrowIfCancellationRequested();
             File.Move(tempPath, path, overwrite: !(_newlyCreated && _version == 0));
             // Publish only after the atomic replacement has succeeded.
             _settings = next;
             _version = nextVersion;
             _recoveredFromBackup = false;
             _identityNeedsPersistence = false;
+            return true;
         }
         finally
         {

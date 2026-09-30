@@ -93,6 +93,10 @@ public sealed class DesktopPagesTests
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
-    private sealed class Actors : IAuthenticatedResourceActorSource
-    { public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => ValueTask.FromResult<AuthenticatedResourceActor?>(new("actor", "profile", null, null, "1")); }
+    private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
+    {
+        private static readonly AuthenticatedResourceActor Current = new("actor", "profile", null, null, "1");
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => ValueTask.FromResult<AuthenticatedResourceActor?>(Current);
+        public ValueTask<bool> CheckAsync(HomeCoreStoredState lockedState, AuthenticatedResourceActor expectedActor, HomeStateCommitPhase phase, CancellationToken ct) => ValueTask.FromResult(Current == expectedActor);
+    }
 }

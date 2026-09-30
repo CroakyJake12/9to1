@@ -36,12 +36,42 @@ public sealed record HomeLocalProfile(Guid ProfileId, string PrincipalDigest, Da
 
 /// <summary>Local OS profile identity is independent of CAKE AccountID and OrganisationID. This creates no artifact ownership grants.</summary>
 public sealed class HomeLocalProfileIdentity(IHomeCoreStateStore store, ITrustedHostPrincipalSource principals)
-    : IAuthenticatedResourceActorSource
+    : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
 {
     private const string RecordId = "home.local-profile";
     private const int SchemaVersion = 1;
     private readonly string _sessionRevision = Guid.NewGuid().ToString("N");
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    public async ValueTask<bool> CheckAsync(HomeCoreStoredState lockedState, AuthenticatedResourceActor expectedActor,
+        HomeStateCommitPhase phase, CancellationToken cancellationToken)
+    {
+        var principal = await principals.GetPrincipalAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(principal) || lockedState.SchemaVersion != FileHomeCoreStateStore.CurrentSchemaVersion) return false;
+        var records = lockedState.Records.Where(item => item.RecordId == RecordId).ToArray();
+        if (records.Length != 1) return false;
+        var record = records[0];
+        if (record.RecordType != RecordId || record.SchemaVersion != SchemaVersion || record.Scope != HomeDataScope.DeviceLocal ||
+            record.Authority != HomeRecordAuthority.LocalCanonical) return false;
+        try
+        {
+            var profile = record.Payload.Deserialize<HomeLocalProfile>();
+            if (profile is null || profile.ProfileId == Guid.Empty || profile.CreatedAtUtc == default ||
+                profile.PrincipalDigest != Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(principal)))) return false;
+            var actor = new AuthenticatedResourceActor("local-profile:" + profile.ProfileId.ToString("D"),
+                profile.ProfileId.ToString("D"), null, null, _sessionRevision);
+            return actor == expectedActor && await principals.GetPrincipalAsync(cancellationToken).ConfigureAwait(false) == principal;
+        }
+        catch (JsonException) { return false; }
+    }
+
+    private sealed class InitialProfileGuard(ITrustedHostPrincipalSource source, string expectedPrincipal) : IHomeStateCommitActorGuard
+    {
+        public async ValueTask<bool> CheckAsync(HomeCoreStoredState lockedState, AuthenticatedResourceActor expectedActor,
+            HomeStateCommitPhase phase, CancellationToken cancellationToken) =>
+            !lockedState.Records.Any(item => item.RecordId == RecordId) &&
+            await source.GetPrincipalAsync(cancellationToken).ConfigureAwait(false) == expectedPrincipal;
+    }
 
     public async ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken cancellationToken)
     {
@@ -61,8 +91,11 @@ public sealed class HomeLocalProfileIdentity(IHomeCoreStateStore store, ITrusted
                 if (record is null)
                 {
                     profile = new(Guid.NewGuid(), digest, DateTimeOffset.UtcNow);
-                    var write = await store.WriteAsync(new(RecordId, RecordId, SchemaVersion, HomeDataScope.DeviceLocal,
-                        HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(profile)), 0, cancellationToken).ConfigureAwait(false);
+                    var initialActor = new AuthenticatedResourceActor("local-profile:" + profile.ProfileId.ToString("D"),
+                        profile.ProfileId.ToString("D"), null, null, _sessionRevision);
+                    var write = await store.WriteGuardedAsync(new(RecordId, RecordId, SchemaVersion, HomeDataScope.DeviceLocal,
+                        HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(profile)), 0, initialActor,
+                        new InitialProfileGuard(principals, principal), cancellationToken).ConfigureAwait(false);
                     if (!write.IsSuccess)
                     {
                         if (write.Failure?.Code == HomeCoreErrorCode.HomeStateConflict) continue;

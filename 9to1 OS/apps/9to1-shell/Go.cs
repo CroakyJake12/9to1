@@ -14,7 +14,10 @@ public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistr
         {
             ct.ThrowIfCancellationRequested();
             if (!app.Enabled || !app.ProfileAccessible || app.ProviderId != "linux.xdg-desktop" || !app.Label.Contains(query.Text, StringComparison.CurrentCultureIgnoreCase)) continue;
-            yield return new(ProviderId, new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture)), app.Label, "Apps", [new("Open", "Open")]);
+            InstalledApplicationReference visible;
+            try { visible = await launcher.ResolveForReadAsync(app.ApplicationId, app.Revision, ct); }
+            catch (UnauthorizedAccessException) { continue; }
+            yield return new(ProviderId, new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture)), visible.Label, "Apps", [new("Open", "Open")]);
         }
     }
     public Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken ct)

@@ -1,0 +1,22 @@
+<Cui id="9to1-terminal" version="1">
+  <DefaultTheme value="Default">
+    <StackPanel orientation="Vertical" padding="16">
+      <TextBlock text="Terminal" font-size="24" font-weight="Bold" />
+      <TextBlock text="{Binding Availability}" text-wrapping="Wrap" />
+      <TextBlock text="{Binding WorkingDirectory}" accessible-name="Working directory" />
+      <StackPanel orientation="Horizontal">
+        <Button content="New session" action="TerminalNewSession" />
+        <Button content="Command mode" action="TerminalCommandMode" />
+        <Button content="AI mode" action="TerminalAiMode" />
+        <TextBlock text="{Binding Mode}" accessible-name="Input mode" />
+      </StackPanel>
+      <Object Type="terminal.viewport" id="terminal-viewport" />
+      <TextBox text="{Binding InputText}" accessible-name="Command or AI request" />
+      <Button content="Submit" action="TerminalSubmit" />
+      <TextBlock text="{Binding ActionSummary}" text-wrapping="Wrap" accessible-name="Resolved action preview" />
+      <Button content="Review or retry action" action="TerminalExecuteResolved" />
+      <TextBlock text="{Binding ApprovalRequestId}" accessible-name="Home review request" />
+      <TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Terminal status" />
+    </StackPanel>
+  </DefaultTheme>
+</Cui>

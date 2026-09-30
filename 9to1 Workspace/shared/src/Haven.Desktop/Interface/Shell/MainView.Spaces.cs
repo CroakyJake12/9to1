@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Haven.Application;
 using Haven.Desktop.Controls;
 using HavenOS.Home.Core;
@@ -44,7 +45,7 @@ public sealed partial class MainView
 
     private async Task OpenSpaceCanonicalSourceAsync(SpaceDefinition space, SpaceContextReference source)
     {
-        if (source.HostedFileId is not { } fileId || source.Kind != SpaceContextReferenceKind.CanvasArtifact)
+        if (source.HostedFileId is not { } fileId || source.Kind is not (SpaceContextReferenceKind.CanvasArtifact or SpaceContextReferenceKind.PictureArtifact or SpaceContextReferenceKind.GamesProject or SpaceContextReferenceKind.WriteArtifact))
             throw new NotSupportedException("This source has no available native owning-app surface.");
         var services = global::Haven.Desktop.App.Services ?? throw new InvalidOperationException("Home services are unavailable.");
         var files = services.GetRequiredService<NativeFilesWorkspaceAuthority>();
@@ -56,16 +57,49 @@ public sealed partial class MainView
         var resources = services.GetRequiredService<ResourceAuthorizationService>();
         var route = new SpaceFilesArtifactAction(space.Id, space.Revision, source.ContextId, fileId,
             source.CanonicalEntityId, revision, false);
-        var surface = new SpaceCanvasCuiSurface(route, new(SpacesRegistry, files, actors, resources),
-            services.GetRequiredService<NativeFilesArtifactContentReader>(), services.GetRequiredService<HomeCoreRuntime>(), actors, resources);
+        var router = new SpaceFilesArtifactActionRouter(SpacesRegistry, files, actors, resources);
+        var reader = services.GetRequiredService<NativeFilesArtifactContentReader>();
+        var home = services.GetRequiredService<HomeCoreRuntime>();
+        Control surface;
+        Func<Task> initialize;
+        if (source.Kind == SpaceContextReferenceKind.CanvasArtifact)
+        {
+            var canvas = new SpaceCanvasCuiSurface(route, router, reader, home, actors, resources);
+            surface = canvas;
+            initialize = () => canvas.InitializeAsync();
+        }
+        else if (source.Kind == SpaceContextReferenceKind.PictureArtifact)
+        {
+            var picture = new SpacePictureCuiSurface(route, router, reader,
+                services.GetRequiredService<NativeFilesMediaAssetSourceResolver>(), home, actors, resources);
+            surface = picture;
+            initialize = () => picture.InitializeAsync();
+        }
+        else if (source.Kind == SpaceContextReferenceKind.WriteArtifact)
+        {
+            var write = new SpaceWriteCuiSurface(route, router, files,
+                services.GetRequiredService<IWriteNativeDocumentPackageStore>(), home, actors, resources);
+            surface = write;
+            initialize = () => write.InitializeAsync();
+        }
+        else
+        {
+            var capability = await services.GetRequiredService<Haven.Infrastructure.Games.GamesInstalledRuntimeResolver>().ResolveAsync();
+            var sessions = capability.Runtime is { } runtime ? new Haven.Application.Games.GamesSceneSessionService(resources,
+                services.GetRequiredService<Haven.Application.Games.ICanonicalGamesSceneSource>(), runtime) : null;
+            var games = new SpaceGamesCuiSurface(route, router,
+                services.GetRequiredService<Haven.Application.Games.GamesProjectEditorService>(), sessions, home, actors, resources);
+            surface = games;
+            initialize = () => games.InitializeAsync();
+        }
         try
         {
-            await surface.InitializeAsync();
+            await initialize();
             AddOrSelectTab($"space-source-{space.Id:N}-{source.ContextId:N}-{Guid.NewGuid():N}", metadata.Value.Name,
                 surface, true, HavenSurface.Spaces, forceNewTab: true);
             ApplyShellVisualState();
         }
-        catch { surface.Dispose(); throw; }
+        catch { ((IDisposable)surface).Dispose(); throw; }
     }
 
     private async Task LaunchSpaceAsync(SpaceDefinition space)

@@ -5,6 +5,71 @@ namespace Haven.Core.Tests;
 
 public sealed class FormProjectRuntimeTests
 {
+    [Theory]
+    [InlineData(FormFieldKind.SingleChoice, true)]
+    [InlineData(FormFieldKind.SingleChoice, false)]
+    [InlineData(FormFieldKind.Dropdown, true)]
+    [InlineData(FormFieldKind.Dropdown, false)]
+    public void Scalar_choice_assessment_uses_option_identity_and_retains_typed_answer(FormFieldKind kind, bool correct)
+    {
+        var accepted = new FormChoiceOption(Guid.NewGuid(), "Same label");
+        var rejected = new FormChoiceOption(Guid.NewGuid(), "Same label");
+        var field = Text("Select an option") with
+        {
+            Kind = kind, Options = [accepted, rejected], Assessment = new(2, 1,
+                [new(Guid.NewGuid(), FormMarkingRuleKind.ChoiceSet, 2, ChoiceIDs: [accepted.OptionID.ToString("N")])])
+        };
+        var project = WithField(FormModeKind.Test, field);
+        var runtime = new FormResponseRuntime(project, Guid.NewGuid());
+        var selected = correct ? accepted.OptionID : rejected.OptionID;
+        var answer = runtime.Answer(1, field.FieldID, Json(selected));
+        Assert.True(answer.Success);
+        Assert.Empty(answer.Response.ReleasedResults);
+        var restored = FormResponseRuntime.Restore(project, runtime.CaptureCheckpoint());
+        var submitted = restored.Submit(answer.Response.Revision);
+        Assert.True(submitted.Success);
+        Assert.Equal(selected, Assert.Single(submitted.Response.Answers).Value.GetGuid());
+        Assert.Equal(correct ? 2 : 0, submitted.Response.AwardedPoints);
+        Assert.Equal(correct ? FormMarkingOutcome.Correct : FormMarkingOutcome.Incorrect,
+            Assert.Single(submitted.Response.ReleasedResults).Value.Outcome);
+    }
+
+    [Fact]
+    public void Checkpoint_roundtrip_retains_question_lock_hidden_marks_version_and_original_timer()
+    {
+        var field = Text("Processor", Assessment(FormResultRelease.AfterQuestion));
+        var project = WithField(FormModeKind.Quiz, field) with { RuntimeSettings = new(TimeLimit: TimeSpan.FromMinutes(2)) };
+        var clock = new CheckpointClock { Now = Now };
+        var runtime = new FormResponseRuntime(project, Guid.NewGuid(), clock);
+        var answer = runtime.Answer(1, field.FieldID, Json("CPU"));
+        var checkpoint = JsonSerializer.Deserialize<FormResponseCheckpoint>(JsonSerializer.Serialize(runtime.CaptureCheckpoint()))!;
+        var restored = FormResponseRuntime.Restore(project, checkpoint, clock);
+        Assert.Equal(answer.Response.ResponseID, restored.Read().ResponseID);
+        Assert.Equal(answer.Response.FormVersionID, restored.Read().FormVersionID);
+        Assert.Empty(restored.Read().ReleasedResults);
+        var advanced = restored.Advance(checkpoint.Revision);
+        Assert.Single(advanced.Response.ReleasedResults);
+        var locked = FormResponseRuntime.Restore(project, restored.CaptureCheckpoint(), clock);
+        Assert.Equal("IntegrityPolicyViolation", locked.Answer(advanced.Response.Revision, field.FieldID, Json("wrong")).Code);
+        clock.Now = Now.AddMinutes(3);
+        Assert.Equal("IntegrityPolicyViolation", locked.Submit(advanced.Response.Revision).Code);
+        Assert.Throws<InvalidDataException>(() => FormResponseRuntime.Restore(project with { Revision = project.Revision + 1 }, checkpoint, clock));
+        Assert.Throws<InvalidDataException>(() => FormResponseRuntime.Restore(project, checkpoint with { Answers = [] , QuestionIndex = 1 }, clock));
+    }
+
+    [Fact]
+    public void Preset_cannot_silently_ignore_a_configured_state_graph()
+    {
+        var project = WithField(FormModeKind.Test, Text("Question"));
+        project = project with { ModeDefinition = project.ModeDefinition with { StateGraphID = Guid.NewGuid(), StartNodeID = Guid.NewGuid() } };
+        Assert.Throws<NotSupportedException>(() => new FormResponseRuntime(project, Guid.NewGuid()));
+    }
+
+    private sealed class CheckpointClock : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; }
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
     private static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
     private static JsonElement Json<T>(T value) => JsonSerializer.SerializeToElement(value);
     private static FormField Text(string label, FormFieldAssessment? assessment = null) =>

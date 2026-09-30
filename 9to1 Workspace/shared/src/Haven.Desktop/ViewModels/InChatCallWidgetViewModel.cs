@@ -424,7 +424,8 @@ public sealed class InChatCallWidgetViewModel : ObservableObject, IDisposable
                     VoiceName: SelectedVoice?.Name,
                     Effort: Effort,
                     VoiceProfileId: SelectedVoiceProfile?.Id,
-                    VoiceProfile: SelectedVoiceProfile),
+                    VoiceProfile: SelectedVoiceProfile,
+                    ConversationId: _parentConversationId),
                 null,
                 CancellationToken.None);
 

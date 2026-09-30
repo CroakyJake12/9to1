@@ -23,7 +23,163 @@ internal static class FilesDomainContractTests
 		await WorkspaceDirectoryBindingsRemainCanonicalAcrossRestart();
 		await OwningArtifactRevisionsPreserveIdentityAndRejectStaleOrChangedReplays();
 		await LocalProfileDirectoryBindingsDoNotCreateAccountIdentity();
+        await GuardedUploadsRejectChangedOrMissingDependenciesWithoutPublishing();
+        await ImportedArtifactsPublishBothIdentitiesAtomically();
+        await CreatedArtifactsPublishIdentityAndContentAtomically();
 	}
+
+    private static async Task CreatedArtifactsPublishIdentityAndContentAtomically()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            var now = DateTimeOffset.UtcNow; var folder = HostedItemId.New();
+            Check.True((await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folder,
+                null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null), "Canvas", default)).IsSuccess);
+            var folderRevision = (await provider.GetAsync(folder, default)).Value!.CurrentRevisionId;
+            var artifact = new FilesArtifactReference("canvas", Guid.NewGuid().ToString("N"), HostedItemId.New(), folder, "CanvasDocument", "Canvas.9to1c");
+            var commit = new FilesOwningAppRevisionCommit(artifact.FileId, "canvas", "document:1", "owner", now,
+                8, new string('b', 64), "immutable/canvas.9to1c", null);
+            var guards = new[] { new FilesItemRevisionPrecondition(folder, folderRevision) };
+            var before = await File.ReadAllBytesAsync(path);
+            var checks = 0;
+            var denied = await provider.CommitCreatedArtifactAsync(artifact, commit, guards,
+                new("owner", _ => ValueTask.FromResult(++checks == 1)), default);
+            Check.Equal(FilesErrorCode.PermissionDenied, denied.Error!.Code); Check.Equal(2, checks);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+            Check.False((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            var allowed = new FilesCommitAuthorityGuard("owner", _ => ValueTask.FromResult(true));
+            var stale = await provider.CommitCreatedArtifactAsync(artifact, commit,
+                [new(folder, new FilesRevisionId(Guid.NewGuid()))], allowed, default);
+            Check.Equal(FilesErrorCode.RevisionConflict, stale.Error!.Code);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+            var created = await provider.CommitCreatedArtifactAsync(artifact, commit, guards, allowed, default);
+            Check.True(created.IsSuccess);
+            var reopened = new DurableDriveProvider(path, location, "owner");
+            Check.Equal(artifact, (await reopened.GetArtifactAsync(artifact.FileId)).Value);
+            Check.Equal(created.Value!.Id, (await reopened.GetAsync(artifact.FileId, default)).Value!.CurrentRevisionId);
+            var state = await new VersionedJsonStateStore<DurableDriveProvider.State>(path, 1, () => throw new InvalidOperationException()).ReadAsync();
+            Check.Equal(1, state.Artifacts.Count); Check.Equal(1, state.Revisions.Count); Check.Equal(2, state.Events.Count);
+            var committedBytes = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.InvalidState, (await reopened.CommitCreatedArtifactAsync(artifact, commit, guards, allowed, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(committedBytes, await File.ReadAllBytesAsync(path)));
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task ImportedArtifactsPublishBothIdentitiesAtomically()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-atomic-import-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            var now = DateTimeOffset.UtcNow;
+            var folder = HostedItemId.New();
+            Check.True((await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folder,
+                null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null), "Imports", default)).IsSuccess);
+            var folderRevision = (await provider.GetAsync(folder, default)).Value!.CurrentRevisionId;
+            var raw = new FilesUploadedContent(HostedItemId.New(), folder, "original.png", "image/png",
+                new(Guid.NewGuid()), null, "owner", now, 4, new string('a', 64), "immutable/source.png");
+            var artifact = new FilesArtifactReference("picture", Guid.NewGuid().ToString("N"), HostedItemId.New(),
+                folder, "PictureDocument", "Picture.9to1p");
+            var commit = new FilesOwningAppRevisionCommit(artifact.FileId, "picture", "document:1", "owner", now,
+                8, new string('b', 64), "immutable/picture.9to1p", null);
+            var guards = new[] { new FilesItemRevisionPrecondition(folder, folderRevision) };
+            var occupied = raw with { FileId = HostedItemId.New(), RevisionId = new(Guid.NewGuid()), Name = "occupied.9to1p" };
+            Check.True((await provider.CommitUploadedContentAsync(occupied)).IsSuccess);
+            Check.Equal(FilesErrorCode.NameConflict, (await provider.CommitImportedArtifactAsync(raw,
+                artifact with { DisplayName = occupied.Name }, commit, guards)).Error!.Code);
+            Check.False((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.False((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            Check.Equal(FilesErrorCode.PermissionDenied, (await provider.CommitImportedArtifactAsync(raw, artifact,
+                commit with { ActorId = "other" }, guards)).Error!.Code);
+            Check.False((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.False((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitImportedArtifactAsync(raw,
+                artifact with { DisplayName = raw.Name }, commit, guards)).Error!.Code);
+            Check.False((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.True((await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folder,
+                null, null, "Rename", folderRevision, null, FilesOperationState.Pending, now, now, null, null), "Changed", default)).IsSuccess);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitImportedArtifactAsync(raw, artifact, commit, guards)).Error!.Code);
+            Check.False((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.False((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            guards[0] = new(folder, (await provider.GetAsync(folder, default)).Value!.CurrentRevisionId);
+            var unchanged = await File.ReadAllBytesAsync(path);
+            var checks = 0;
+            var finalGuard = new FilesCommitAuthorityGuard("owner", _ => ValueTask.FromResult(++checks == 1));
+            Check.Equal(FilesErrorCode.PermissionDenied, (await provider.CommitImportedArtifactAsync(raw, artifact, commit, guards, finalGuard, default)).Error!.Code);
+            Check.Equal(2, checks); // The second check occurs after the candidate flush, before atomic publication.
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            Check.False((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.False((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            checks = 0;
+            Check.Equal(FilesErrorCode.PermissionDenied, (await provider.CommitUploadedContentAsync(raw, guards,
+                new FilesCommitAuthorityGuard("owner", _ => ValueTask.FromResult(++checks == 1)), default)).Error!.Code);
+            Check.Equal(2, checks);
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            var result = await provider.CommitImportedArtifactAsync(raw, artifact, commit, guards);
+            Check.True(result.IsSuccess);
+            var restarted = new DurableDriveProvider(path, location, "owner");
+            Check.Equal(raw.RevisionId, (await restarted.GetAsync(raw.FileId, default)).Value!.CurrentRevisionId!.Value);
+            Check.Equal(result.Value!.ArtifactRevision.Id, (await restarted.GetAsync(artifact.FileId, default)).Value!.CurrentRevisionId!.Value);
+            Check.Equal(artifact, (await restarted.GetArtifactAsync(artifact.FileId)).Value!);
+            unchanged = await File.ReadAllBytesAsync(path); checks = 0;
+            var nextCommit = commit with { OwningAppRevisionId = "document:2", ExpectedBaseRevisionId = result.Value.ArtifactRevision.Id };
+            Check.Equal(FilesErrorCode.PermissionDenied, (await restarted.CommitDurableRevisionAsync(nextCommit,
+                new FilesCommitAuthorityGuard("owner", _ => ValueTask.FromResult(++checks == 1)), default)).Error!.Code);
+            Check.Equal(2, checks);
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            Check.Equal(FilesErrorCode.InvalidState, (await restarted.CommitImportedArtifactAsync(raw, artifact, commit, guards)).Error!.Code);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task GuardedUploadsRejectChangedOrMissingDependenciesWithoutPublishing()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-guarded-upload-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            var now = DateTimeOffset.UtcNow;
+            var folderId = HostedItemId.New();
+            var folder = await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folderId,
+                null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null), "Exports", default);
+            Check.True(folder.IsSuccess);
+            var folderRevision = (await provider.GetAsync(folderId, default)).Value!.CurrentRevisionId;
+            var source = new FilesUploadedContent(HostedItemId.New(), folderId, "source.bin", "application/octet-stream",
+                new(Guid.NewGuid()), null, "owner", now, 1, new string('a', 64), "source.bin");
+            Check.True((await provider.CommitUploadedContentAsync(source)).IsSuccess);
+            var output = source with { FileId = HostedItemId.New(), RevisionId = new(Guid.NewGuid()), Name = "snapshot.png", ProviderContentReference = "snapshot.png" };
+            var guards = new[] { new FilesItemRevisionPrecondition(source.FileId, source.RevisionId), new FilesItemRevisionPrecondition(folderId, folderRevision) };
+            var renamed = await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", source.FileId,
+                folderId, null, "Rename", source.RevisionId, null, FilesOperationState.Pending, now, now, null, null), "renamed.bin", default);
+            Check.True(renamed.IsSuccess);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitUploadedContentAsync(output, guards)).Error!.Code);
+            Check.False((await provider.GetAsync(output.FileId, default)).IsSuccess);
+            guards[0] = new(source.FileId, (await provider.GetAsync(source.FileId, default)).Value!.CurrentRevisionId);
+            Check.Equal(FilesErrorCode.ItemNotFound, (await provider.CommitUploadedContentAsync(output,
+                [guards[0], new(HostedItemId.New(), null)])).Error!.Code);
+            Check.True((await provider.CommitUploadedContentAsync(output, guards)).IsSuccess);
+            var restarted = new DurableDriveProvider(path, location, "owner");
+            Check.Equal(output.RevisionId, (await restarted.GetAsync(output.FileId, default)).Value!.CurrentRevisionId!.Value);
+            var folderRename = await restarted.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folderId,
+                null, null, "Rename", folderRevision, null, FilesOperationState.Pending, now, now, null, null), "Changed", default);
+            Check.True(folderRename.IsSuccess);
+            var second = output with { FileId = HostedItemId.New(), RevisionId = new(Guid.NewGuid()), Name = "second.png" };
+            Check.Equal(FilesErrorCode.RevisionConflict, (await restarted.CommitUploadedContentAsync(second, guards)).Error!.Code);
+            Check.False((await restarted.GetAsync(second.FileId, default)).IsSuccess);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
 
     private static async Task LocalProfileDirectoryBindingsDoNotCreateAccountIdentity()
     {

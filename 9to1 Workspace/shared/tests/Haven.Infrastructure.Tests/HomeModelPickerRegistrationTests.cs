@@ -1,5 +1,6 @@
 using Dulche.Runtime;
 using Haven.Application;
+using Haven.Application.NodeGraph;
 using Haven.Infrastructure;
 using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,9 @@ public sealed class HomeModelPickerRegistrationTests
             Assert.IsType<HomeVersionedModelRouteRepository>(services.GetRequiredService<IVersionedModelRouteRepository>());
             Assert.Empty(await services.GetRequiredService<IVersionedModelRouteRepository>().ListAsync(default));
             Assert.Contains("permissions.trust", service.Dependencies);
+            Assert.IsType<HomeTerminalAdviceService>(services.GetRequiredService<ITerminalAdviceService>());
+            Assert.IsType<HomeVersionedNodeGraphRepository>(services.GetRequiredService<IVersionedNodeGraphRepository>());
+            Assert.NotNull(services.GetRequiredService<NodeGraphRuntimeRegistry>());
         }
         finally { Directory.Delete(root, true); }
     }

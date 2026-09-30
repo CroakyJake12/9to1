@@ -146,7 +146,7 @@ public sealed class MultimodalSessionStoreTests
         var updated = initial with { State = MultimodalSessionState.Paused, Revision = 2 };
         await store.UpdateAsync(initial.SessionId, 1, updated, CancellationToken.None);
 
-        Assert.Equal(updated, await store.GetAsync(initial.SessionId, CancellationToken.None));
+        Assert.Equal(JsonSerializer.Serialize(updated), JsonSerializer.Serialize(await store.GetAsync(initial.SessionId, CancellationToken.None)));
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             store.UpdateAsync(initial.SessionId, 1, updated with { Revision = 2 }, CancellationToken.None));
     }
@@ -217,6 +217,25 @@ public sealed class MultimodalSessionStoreTests
         Assert.Equal("Revision", result.Error.Target);
     }
 
+    [Fact]
+    public async Task Independent_surfaces_cannot_both_commit_the_same_revision()
+    {
+        var settings = new MemorySettingsStore();
+        var first = new MultimodalSessionStore(settings);
+        var second = new MultimodalSessionStore(settings);
+        var initial = CreateSession();
+        await first.CreateAsync(initial, CancellationToken.None);
+        settings.SynchronizeTwoReads = true;
+        async Task<bool> Attempt(MultimodalSessionStore store, MultimodalSessionState state)
+        {
+            try { await store.UpdateAsync(initial.SessionId, 1, initial with { Revision = 2, State = state }, CancellationToken.None); return true; }
+            catch (InvalidOperationException) { return false; }
+        }
+        var results = await Task.WhenAll(Attempt(first, MultimodalSessionState.Paused), Attempt(second, MultimodalSessionState.Ended));
+        Assert.Single(results, succeeded => succeeded);
+        Assert.Equal(2, (await first.GetAsync(initial.SessionId, CancellationToken.None))!.Revision);
+    }
+
     private static MultimodalSession CreateSession() => new(
         Guid.NewGuid(),
         Guid.NewGuid(),
@@ -235,9 +254,24 @@ public sealed class MultimodalSessionStoreTests
         1,
         VisionVoiceRetention.Ephemeral);
 
-    private sealed class MemorySettingsStore : IVersionedSettingsStore
+    private sealed class MemorySettingsStore : IVersionedSettingsStore, IVersionedSettingsCompareExchange
     {
         private readonly Dictionary<string, object> _values = new(StringComparer.OrdinalIgnoreCase);
+        public bool SynchronizeTwoReads { get; set; }
+        private readonly TaskCompletionSource _bothRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _readCount;
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson, string? replacementJson, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            lock (_values)
+            {
+                var current = _values.TryGetValue(key, out var value) ? JsonSerializer.Serialize(value) : null;
+                if (current != expectedJson) return Task.FromResult(new SettingsCompareExchangeResult(false, current, 1));
+                if (replacementJson is null) _values.Remove(key);
+                else _values[key] = JsonSerializer.Deserialize<MultimodalSessionStore.MultimodalSessionEnvelope>(replacementJson)!;
+                return Task.FromResult(new SettingsCompareExchangeResult(true, replacementJson, 1));
+            }
+        }
 
         public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
         {
@@ -259,13 +293,20 @@ public sealed class MultimodalSessionStoreTests
             return Task.CompletedTask;
         }
 
-        public Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken)
+        public async Task<SettingsExportManifest> ExportAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(new SettingsExportManifest
+            SettingsExportManifest snapshot;
+            lock (_values) snapshot = new SettingsExportManifest
             {
                 Settings = _values.ToDictionary(pair => pair.Key, pair => JsonSerializer.Serialize(pair.Value), StringComparer.OrdinalIgnoreCase)
-            });
+            };
+            if (SynchronizeTwoReads)
+            {
+                if (Interlocked.Increment(ref _readCount) == 2) { SynchronizeTwoReads = false; _bothRead.TrySetResult(); }
+                await _bothRead.Task.WaitAsync(cancellationToken);
+            }
+            return snapshot;
         }
 
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken cancellationToken)

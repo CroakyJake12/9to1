@@ -50,13 +50,15 @@ public static class DataSqlSafety
 
 public sealed class DataWorkbook
 {
-    public const int CurrentSchemaVersion = 3;
+    public const int CurrentSchemaVersion = 4;
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = "Untitled workbook";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public int Version { get; set; }
+    /// <summary>Immutable persistence revision identity; distinguishes recovered/recreated versions with the same sequence number.</summary>
+    public Guid RevisionId { get; set; }
     public List<DataSheet> Sheets { get; set; } = [];
     public List<DataQuery> Queries { get; set; } = [];
     public List<DataNamedRange> NamedRanges { get; set; } = [];

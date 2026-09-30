@@ -224,7 +224,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ref="$(tr -d '[:space:]' < "9to1 Workspace/Data/Hui/hui-platform-reference.txt)"
+          ref="$(tr -d '[:space:]' < "9to1 Workspace/Data/Hui/hui-platform-reference.txt")"
           test "$ref" = "2a578502c31973fbefa3b3f82efa22d7ad11db53"
           platform="$RUNNER_TEMP/cakeos-hui-platform"
           git fetch --no-tags --depth=1 origin "$ref"
@@ -241,7 +241,7 @@ jobs:
           echo "Pinned Haven.UI donor: $donor"
 
       - name: Prove accepted HUI platform smoke contract
-        run: dotnet run --project "$RUNNER_TEMP/cakeos-hui-platform/"HUI/Preview/CakeOS.HuiPreview.csproj" -c Release
+        run: dotnet run --project "$RUNNER_TEMP/cakeos-hui-platform/HUI/Preview/CakeOS.HuiPreview.csproj" -c Release
 
       - name: Enforce thin Data HUI adapter boundary
         run: |

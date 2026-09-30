@@ -23,6 +23,7 @@ public sealed class CuiControlLoader : IDisposable
     private readonly Dictionary<string, string> _resourceScope;
     private readonly List<CuiDiagnostic> _runtimeDiagnostics = [];
     private readonly List<CuiLiveBinding> _liveBindings = [];
+    private readonly HashSet<Control> _applyingHostValues = new(ReferenceEqualityComparer.Instance);
     private readonly List<CuiLiveConditional> _liveConditionals = [];
     private readonly List<CuiRepeatState> _repeats = [];
     private readonly Dictionary<RepeatItemScope, PropertyChangedEventHandler> _scopeChangedHandlers = new(ReferenceEqualityComparer.Instance);
@@ -723,10 +724,7 @@ public sealed class CuiControlLoader : IDisposable
                 && !binding.Binding.Path.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
                 && !leaf.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                 continue;
-            var resolved = ResolveObservedBinding(
-                binding.Control, binding.PropertyName, binding.Binding, context);
-            if (resolved is not null)
-                ApplyLiteralProperty(binding.Control, binding.PropertyName, resolved, binding.Span);
+            ApplyObservedBinding(binding.Control, binding.PropertyName, binding.Binding, context, binding.Span);
         }
         RefreshLiveConditionals(propertyName, context);
     }
@@ -808,12 +806,10 @@ public sealed class CuiControlLoader : IDisposable
 
         // Apply initial value
         var context = _bindingContext!;
-        var resolved = ResolveObservedBinding(control, propName, binding, context);
-        if (resolved is null) return;
-        ApplyLiteralProperty(control, propName, resolved, sourceSpan);
+        ApplyObservedBinding(control, propName, binding, context, sourceSpan);
 
         if (binding.Mode == CuiBindingMode.TwoWay)
-            WireInputWriteBack(control, binding, sourceSpan, context);
+            WireInputWriteBack(control, propName, binding, sourceSpan, context);
     }
 
     /// <summary>
@@ -824,9 +820,7 @@ public sealed class CuiControlLoader : IDisposable
     {
         foreach (var record in _liveBindings)
         {
-            var resolved = ResolveObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context);
-            if (resolved is null) continue;
-            ApplyLiteralProperty(record.Control, record.PropertyName, resolved, record.Span);
+            ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
         }
         RefreshLiveConditionals(null);
         foreach (var repeat in _repeats.ToArray())
@@ -845,9 +839,7 @@ public sealed class CuiControlLoader : IDisposable
                     && !leaf.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                var resolved = ResolveObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context);
-                if (resolved is not null)
-                    ApplyLiteralProperty(record.Control, record.PropertyName, resolved, record.Span);
+                ApplyObservedBinding(record.Control, record.PropertyName, record.Binding, record.Context, record.Span);
             }
             RefreshLiveConditionals(propertyName);
             foreach (var repeat in _repeats.ToArray())
@@ -910,7 +902,7 @@ public sealed class CuiControlLoader : IDisposable
         };
     }
 
-    private void WireInputWriteBack(Control control, CuiBindingValue binding, CuiSourceSpan sourceSpan, ICuiBindingContext context)
+    private void WireInputWriteBack(Control control, string propertyName, CuiBindingValue binding, CuiSourceSpan sourceSpan, ICuiBindingContext context)
     {
         if (context is not ICuiWritableBindingContext writable)
             throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -920,6 +912,8 @@ public sealed class CuiControlLoader : IDisposable
 
         void Update(object? rawValue)
         {
+            if (_disposed || _applyingHostValues.Contains(control) || !_liveBindings.Any(record =>
+                ReferenceEquals(record.Control, control) && ReferenceEquals(record.Context, context) && record.Binding == binding)) return;
             if (!TryConvertInput(binding.Path, rawValue, binding.TargetType, context, out var converted))
             {
                 CuiInputValidationProperties.SetHasError(control, true);
@@ -948,6 +942,9 @@ public sealed class CuiControlLoader : IDisposable
                 break;
             case NumericUpDown number:
                 number.ValueChanged += (_, args) => Update(args.NewValue);
+                break;
+            case Avalonia.Controls.Primitives.SelectingItemsControl selection when NormalizeProperty(propertyName) == "selectedindex":
+                selection.SelectionChanged += (_, _) => Update(selection.SelectedIndex);
                 break;
             default:
                 throw new CuiRuntimeLoadException(new CuiDiagnostic(
@@ -1191,6 +1188,16 @@ public sealed class CuiControlLoader : IDisposable
                                  System.Globalization.CultureInfo.InvariantCulture, out var numberValue))
                         inputNumber.Value = numberValue;
                     break;
+                case "selectedindex":
+                    if (control is Avalonia.Controls.Primitives.SelectingItemsControl selection &&
+                        int.TryParse(resolved, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var selectedIndex) && selectedIndex >= -1)
+                        selection.SelectedIndex = selectedIndex;
+                    else throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "SelectedIndex requires a native selector and an integer of at least -1.", sourceSpan));
+                    break;
+                case "itemssource":
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "ItemsSource requires an explicit collection binding.", sourceSpan));
                 case "checked":
                 case "ischecked":
                     if (control is CheckBox checkBox && bool.TryParse(resolved, out var isChecked))
@@ -1514,6 +1521,49 @@ public sealed class CuiControlLoader : IDisposable
         }
         // Fall back to declared fallback value
         return binding.Fallback;
+    }
+
+    private static string NormalizeProperty(string name) => name.Replace("-", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
+
+    private void ApplyObservedBinding(Control control, string property, CuiBindingValue binding,
+        ICuiBindingContext context, CuiSourceSpan span)
+    {
+        var alreadyApplying = !_applyingHostValues.Add(control);
+        try
+        {
+            if (NormalizeProperty(property) == "itemssource")
+            {
+                if (control is not ItemsControl items || binding.Mode == CuiBindingMode.TwoWay ||
+                    !context.TryGetValue(binding.Path, out var source) || source is string || source is not System.Collections.IEnumerable values)
+                    throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "ItemsSource requires a one-way bounded collection binding on an ItemsControl.", span));
+                var snapshot = new List<object?>();
+                foreach (var value in values)
+                {
+                    if (snapshot.Count == 10000) throw new CuiRuntimeLoadException(new CuiDiagnostic("CUIR007", CuiDiagnosticSeverity.Error,
+                        "ItemsSource exceeds the supported 10000-item bound.", span));
+                    snapshot.Add(value);
+                }
+                items.ItemsSource = snapshot;
+                if (!_observedBindings.TryGetValue(control, out var observed))
+                    _observedBindings[control] = observed = new(StringComparer.OrdinalIgnoreCase);
+                observed[property] = new(property, binding, $"{snapshot.Count} items", source.GetType().Name, false, true, null);
+                // Reapply the host's selection after replacement; native reset notifications are not user edits.
+                foreach (var selected in _liveBindings.Where(record => ReferenceEquals(record.Control, control) &&
+                    NormalizeProperty(record.PropertyName) == "selectedindex").ToArray())
+                    ApplyObservedBinding(control, selected.PropertyName, selected.Binding, selected.Context, selected.Span);
+                return;
+            }
+            var resolved = ResolveObservedBinding(control, property, binding, context);
+            if (resolved is not null) ApplyLiteralProperty(control, property, resolved, span);
+        }
+        catch
+        {
+            if (NormalizeProperty(property) == "itemssource" && control is ItemsControl items)
+                items.ItemsSource = Array.Empty<object>();
+            throw;
+        }
+        finally { if (!alreadyApplying) _applyingHostValues.Remove(control); }
     }
 
     private string? ResolveObservedBinding(

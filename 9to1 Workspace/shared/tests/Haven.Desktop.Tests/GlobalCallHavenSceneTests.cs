@@ -12,6 +12,18 @@ namespace Haven.Desktop.Tests;
 
 public sealed class GlobalCallHavenSceneTests
 {
+    [AvaloniaFact]
+    public async Task Voice_start_passes_current_canonical_conversation_to_shared_coordinator()
+    {
+        var coordinator = new FakeCallCoordinator();
+        using var viewModel = new InChatCallWidgetViewModel(coordinator, new StubConversationRepository());
+        var first = Guid.NewGuid(); var current = Guid.NewGuid();
+        viewModel.AttachConversation(first, TestModel());
+        viewModel.AttachConversation(current, TestModel());
+        await viewModel.StartCallCommand.ExecuteAsync();
+        Assert.Equal(current, coordinator.LastStartOptions?.ConversationId);
+    }
+
     [Fact]
     public void Scene_exposes_existing_voice_modes_and_runtime_choices()
     {
@@ -201,8 +213,12 @@ public sealed class GlobalCallHavenSceneTests
         public event EventHandler<ScreenShareSnapshotEventArgs>? ScreenPreviewChanged;
         public event EventHandler<VoiceInputStatusChangedEventArgs>? InputStatusChanged;
 
-        public Task<CallSession> StartAsync(CallStartOptions options, SpeechModelInfo? speechModel, CancellationToken cancellationToken) =>
+        public CallStartOptions? LastStartOptions { get; private set; }
+        public Task<CallSession> StartAsync(CallStartOptions options, SpeechModelInfo? speechModel, CancellationToken cancellationToken)
+        {
+            LastStartOptions = options;
             throw new NotSupportedException();
+        }
         public Task SubmitTextAsync(string text, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task BeginPushToTalkAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         public Task EndPushToTalkAsync(CancellationToken cancellationToken) => Task.CompletedTask;

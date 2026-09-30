@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><IsPackable>false</IsPackable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../Home/HavenOS.Home.csproj" />
+  </ItemGroup>
+</Project>

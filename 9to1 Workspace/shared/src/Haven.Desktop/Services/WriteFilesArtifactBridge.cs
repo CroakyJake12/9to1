@@ -70,8 +70,14 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
         if (currentHostAccessMode() != AppAiAccessMode.Write ||
             await authorization.AuthorizeAsync("write.file.save", [scope], cancellationToken).ConfigureAwait(false) != actor)
             throw new UnauthorizedAccessException("Authority changed; the saved candidate remains recoverable but was not published.");
+        if (!ReferenceEquals(providers(actor), provider))
+            throw new UnauthorizedAccessException("The trusted Files provider changed before publication.");
         var committed = await provider.CommitDurableRevisionAsync(new(fileId, "write", revisionId,
-            metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, stream.Length, hash, relative, expectedFileRevision), cancellationToken).ConfigureAwait(false);
+            metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, stream.Length, hash, relative, expectedFileRevision),
+            new FilesCommitAuthorityGuard(actor.ActorId, async token => currentHostAccessMode() == AppAiAccessMode.Write &&
+                await actors.GetCurrentAsync(token).ConfigureAwait(false) == actor), cancellationToken).ConfigureAwait(false);
+        if (committed.Error?.Code == FilesErrorCode.PermissionDenied)
+            throw new UnauthorizedAccessException(committed.Error.Message + " The candidate package remains recoverable.");
         if (!committed.IsSuccess) throw new InvalidOperationException(committed.Error!.Message + " The candidate package remains recoverable.");
         return committed.Value!;
     }
