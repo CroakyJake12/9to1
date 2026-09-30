@@ -5,9 +5,17 @@ namespace HavenOS.Home.Core;
 
 public sealed record HomeProductivityObjectSchema(string ObjectType, int SchemaVersion, bool IsRequired,
     JsonElement Schema, IReadOnlySet<string> Capabilities);
+[method: JsonConstructor]
 public sealed record HomeProductivityObject(Guid ObjectId, string ObjectType, int SchemaVersion,
     JsonElement Content, JsonElement Formatting, JsonElement Accessibility, IReadOnlyList<string> AssetReferences,
-    JsonElement Layout, [property: JsonExtensionData] IDictionary<string, JsonElement>? Extensions = null);
+    JsonElement Layout)
+{
+    [JsonExtensionData] public IDictionary<string, JsonElement>? Extensions { get; init; }
+    public HomeProductivityObject(Guid objectId, string objectType, int schemaVersion, JsonElement content,
+        JsonElement formatting, JsonElement accessibility, IReadOnlyList<string> assetReferences, JsonElement layout,
+        IDictionary<string, JsonElement>? extensions) : this(objectId, objectType, schemaVersion, content, formatting, accessibility, assetReferences, layout)
+    { Extensions = extensions; }
+}
 public sealed record HomeProductivityStyle(string StyleId, int Version, string DisplayName, string Scope,
     JsonElement Properties, JsonElement? AppExtensions = null);
 public sealed record HomeProductivityObjectBundle(int FormatVersion, IReadOnlyList<HomeProductivityObject> Objects,
@@ -146,7 +154,7 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
         if (source.ObjectType == targetType) return source with { SchemaVersion = to.SchemaVersion };
         if (targetType == "artifact.reference")
             return source with { ObjectType = targetType, SchemaVersion = to.SchemaVersion, Content = JsonDocument.Parse(JsonSerializer.Serialize(new { source.ObjectId, source.ObjectType, source.Content }, _json)).RootElement.Clone() };
-        throw new InvalidOperationException("This object conversion is not registered; content cannot be flattened implicitly.");
+        throw new InvalidDataException("This object conversion is not registered; content cannot be flattened implicitly.");
     }
 
     public HomeProductivityCompatibility GetCompatibility(string appId, string appVersion, IEnumerable<string> requiredTypes)

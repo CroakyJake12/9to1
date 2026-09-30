@@ -38,13 +38,31 @@ public sealed class GenUiInstanceStore
         cancellationToken.ThrowIfCancellationRequested();
         if (result.Patches is null) throw new InvalidOperationException("Action result patches are required.");
         if (result.Patches.Count > 100) throw new InvalidOperationException("An action result exceeds the patch batch limit.");
-        if (result.Status != GenUiActionStatus.Completed && result.Patches.Count > 0)
+        if (result.Status != GenUiActionStatus.Completed && result.Patches.Count > 0 && !IsFailureDisplayOnly(result))
             throw new InvalidOperationException("A non-completed action cannot mutate generated UI state.");
         if (result.Patches.Any(patch => patch.InstanceId != result.Origin.InstanceId || patch.PatchId == Guid.Empty))
             throw new InvalidOperationException("Action result patches must target the originating instance and have stable IDs.");
         ApplyPatchesAtomically(result.Patches);
         return Task.CompletedTask;
     }
+
+    /// <summary>A failed result may only show its exact safe summary in an existing passive status display.</summary>
+    public bool IsFailureDisplayOnly(GenUiActionResult result)
+    {
+        if (result.Status != GenUiActionStatus.Failed || result.Patches.Count != 1 ||
+            result.Summary.Length > 4096 || !_instances.TryGetValue(result.Origin.InstanceId, out var instance)) return false;
+        lock (instance.Gate)
+        {
+            var patch = result.Patches[0];
+            if (patch.Operation != GenUiPatchOperation.Replace || patch.Path != "text" ||
+                patch.Value is not { ValueKind: JsonValueKind.String } value || value.GetString() != result.Summary) return false;
+            var component = FindDisplay(instance.Document.Root, patch.TargetId);
+            return component is { ComponentType: "HavenStatus", Actions.Count: 0, Children.Count: 0 };
+        }
+    }
+
+    private static GenUiComponent? FindDisplay(GenUiComponent component, string id) =>
+        component.ComponentId == id ? component : component.Children.Select(child => FindDisplay(child, id)).FirstOrDefault(found => found is not null);
 
     public bool ApplyPatch(GenUiStatePatch patch)
     {

@@ -70,3 +70,9 @@
 [submodule "9to1 OS/compatibility/winboat/Source/WinBoat"]
 	path = 9to1 OS/compatibility/winboat/Source/WinBoat
 	url = https://github.com/CroakyJake12/winboat.git
+[submodule "9to1 Workspace/Sites/Source/cake-plugin"]
+	path = 9to1 Workspace/Sites/Source/cake-plugin
+	url = https://github.com/CroakyJake12/cake-plugin.git
+[submodule "9to1 Workspace/Connect/Source/element-web"]
+	path = 9to1 Workspace/Connect/Source/element-web
+	url = https://github.com/element-hq/element-web.git

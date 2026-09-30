@@ -154,9 +154,9 @@ public sealed class SitePublicIdentityService(
                 var binding = new DomainBinding(Guid.NewGuid(), request.SiteId, request.EnvironmentId, normalized.AsciiName, normalized.DisplayName, false, SiteDomainVerificationState.Pending, nameState, SiteTlsState.Unknown,
                     [new SiteDnsRequirement("TXT", SiteAddressRules.DomainChallengeRecordName(normalized.AsciiName), "", "Ownership verification", true)], 1, now, now);
                 var projectIndex = IndexOf(state.Projects, project => project.SiteId == request.SiteId);
-                var project = state.Projects[projectIndex] with { DomainBindingIds = [.. state.Projects[projectIndex].DomainBindingIds, binding.DomainBindingId], Revision = checked(state.Projects[projectIndex].Revision + 1), UpdatedAt = now };
+                var updatedProject = state.Projects[projectIndex] with { DomainBindingIds = [.. state.Projects[projectIndex].DomainBindingIds, binding.DomainBindingId], Revision = checked(state.Projects[projectIndex].Revision + 1), UpdatedAt = now };
                 var projects = state.Projects.ToArray();
-                projects[projectIndex] = project;
+                projects[projectIndex] = updatedProject;
                 return (state with { Projects = projects, Domains = [.. state.Domains, binding] }, binding);
             }, cancellationToken).ConfigureAwait(false);
             return SiteApiResult<DomainBinding>.Success(domain);

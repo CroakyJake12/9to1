@@ -18,7 +18,172 @@ internal static class FilesDomainContractTests
 		await FolderColorMetadataUsesStableIdentityAndResets();
 		await MaterializationRegistryPreservesCanonicalIdentityAndProtectsLocalChanges();
 		await StateStoreRejectsAnUnknownSchemaVersion();
+		await DurableDriveSurvivesRestartAndRejectsStaleMutations();
+		await DurableDriveBroadcastsAcrossProviderInstances();
+		await WorkspaceDirectoryBindingsRemainCanonicalAcrossRestart();
+		await OwningArtifactRevisionsPreserveIdentityAndRejectStaleOrChangedReplays();
+		await LocalProfileDirectoryBindingsDoNotCreateAccountIdentity();
 	}
+
+    private static async Task LocalProfileDirectoryBindingsDoNotCreateAccountIdentity()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-local-files-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var profile = Guid.NewGuid();
+            var owner = "local-profile:" + profile.ToString("D");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(Path.Combine(directory, "drive.json"), location, owner);
+            var now = DateTimeOffset.UtcNow;
+            var folder = new FilesOperation(new(Guid.NewGuid()), owner, HostedItemId.New(), null, null, "CreateFolder", null, null,
+                FilesOperationState.Pending, now, now, null, null);
+            Check.True((await provider.MutateAsync(folder, "Documents", default)).IsSuccess);
+            var path = Path.Combine(directory, "bindings.json");
+            var resolver = new FilesWorkspaceDirectoryResolver(path, _ => null, id => id == profile ? provider : null);
+            var registered = await resolver.RegisterProfileAsync(profile, folder.ItemId, "write", directory);
+            Check.True(registered.IsSuccess);
+            Check.Equal(Guid.Empty, registered.Value!.AccountId);
+            Check.Equal(profile, registered.Value.ProfileId!.Value);
+            Check.Equal(FilesErrorCode.PermissionDenied, (await resolver.RegisterAsync(profile, folder.ItemId, "write", directory)).Error!.Code);
+            var restarted = new FilesWorkspaceDirectoryResolver(path, _ => null, id => id == profile ? provider : null);
+            Check.True((await restarted.ResolveProfileAsync(profile, "write")).IsSuccess);
+            Check.Equal(FilesErrorCode.DestinationUnavailable, (await restarted.ResolveAsync(profile, "write")).Error!.Code);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task OwningArtifactRevisionsPreserveIdentityAndRejectStaleOrChangedReplays()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-files-artifact-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            var reference = new FilesArtifactReference("write", Guid.NewGuid().ToString("N"), HostedItemId.New(), null, "WriteDocument", "Research.9to1w");
+            Check.Equal(FilesErrorCode.PermissionDenied, (await provider.RegisterArtifactAsync(reference, "outsider")).Error!.Code);
+            Check.True((await provider.RegisterArtifactAsync(reference, "owner")).IsSuccess);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.RegisterArtifactAsync(reference with { FileId = HostedItemId.New() }, "owner")).Error!.Code);
+            var commit = new FilesOwningAppRevisionCommit(reference.FileId, "write", "write-version-1", "owner", DateTimeOffset.UtcNow,
+                100, "hash-1", "canonical-package-1", null);
+            var first = await provider.CommitDurableRevisionAsync(commit, default);
+            Check.True(first.IsSuccess);
+            Check.Equal(first.Value!.Id, (await provider.CommitDurableRevisionAsync(commit, default)).Value!.Id);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitDurableRevisionAsync(commit with { ContentHash = "changed" }, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitDurableRevisionAsync(commit with { OwningAppRevisionId = "write-version-2" }, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.PermissionDenied, (await provider.CommitDurableRevisionAsync(commit with { OwningAppId = "present" }, default)).Error!.Code);
+            var now = DateTimeOffset.UtcNow;
+            var rename = new FilesOperation(new(Guid.NewGuid()), "owner", reference.FileId, null, null, "Rename", first.Value.Id, null,
+                FilesOperationState.Pending, now, now, null, null);
+            Check.True((await provider.MutateAsync(rename, "Evidence.9to1w", default)).IsSuccess);
+            var restarted = new DurableDriveProvider(path, location, "owner");
+            var canonical = (await restarted.GetArtifactAsync(reference.FileId)).Value!;
+            Check.Equal(reference.ArtifactId, canonical.ArtifactId);
+            Check.Equal("Evidence.9to1w", canonical.DisplayName);
+            var current = (await restarted.GetAsync(reference.FileId, default)).Value!;
+            Check.True((await restarted.CommitDurableRevisionAsync(commit with { OwningAppRevisionId = "write-version-2", ExpectedBaseRevisionId = current.CurrentRevisionId }, default)).IsSuccess);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task WorkspaceDirectoryBindingsRemainCanonicalAcrossRestart()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-files-binding-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var account = Guid.NewGuid();
+            var other = Guid.NewGuid();
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(Path.Combine(directory, "drive.json"), location, account.ToString("N"));
+            var now = DateTimeOffset.UtcNow;
+            var create = new FilesOperation(new(Guid.NewGuid()), account.ToString("N"), HostedItemId.New(), null, null, "CreateFolder", null, null,
+                FilesOperationState.Pending, now, now, null, null);
+            Check.True((await provider.MutateAsync(create, "Sites", default)).IsSuccess);
+            var bindingPath = Path.Combine(directory, "bindings.json");
+            var resolver = new FilesWorkspaceDirectoryResolver(bindingPath, id => id == account ? provider : null);
+            Check.Equal(FilesErrorCode.DestinationUnavailable, (await resolver.ResolveAsync(account, "sites")).Error!.Code);
+            Check.Equal(FilesErrorCode.PermissionDenied, (await resolver.RegisterAsync(other, create.ItemId, "sites", directory)).Error!.Code);
+            Check.True((await resolver.RegisterAsync(account, create.ItemId, "sites", directory)).IsSuccess);
+            var restarted = new FilesWorkspaceDirectoryResolver(bindingPath, id => id == account ? provider : null);
+            var resolved = await restarted.ResolveAsync(account, "sites");
+            Check.True(resolved.IsSuccess);
+            Check.Equal(create.ItemId, resolved.Value!.FolderId);
+            Check.Equal(Path.GetFullPath(directory), resolved.Value.DirectoryPath);
+            var folder = (await provider.GetAsync(create.ItemId, default)).Value!;
+            Check.True((await provider.MutateAsync(create with { Id = new(Guid.NewGuid()), Operation = "Delete", BaseRevisionId = folder.CurrentRevisionId }, null, default)).IsSuccess);
+            Check.Equal(FilesErrorCode.ItemNotFound, (await restarted.ResolveAsync(account, "sites")).Error!.Code);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task DurableDriveBroadcastsAcrossProviderInstances()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-drive-feed-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var observing = new DurableDriveProvider(path, location, "owner");
+            var mutating = new DurableDriveProvider(path, location, "owner");
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await using var events = observing.SubscribeAsync(null, cancellation.Token).GetAsyncEnumerator();
+            var next = events.MoveNextAsync().AsTask();
+            var now = DateTimeOffset.UtcNow;
+            var create = new FilesOperation(new(Guid.NewGuid()), "owner", HostedItemId.New(), null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null);
+            Check.True((await mutating.MutateAsync(create, "Parent", default)).IsSuccess);
+            Check.True(await next);
+            Check.Equal(create.ItemId, events.Current.ItemId);
+            var parent = (await mutating.GetAsync(create.ItemId, default)).Value!;
+            var child = create with { Id = new(Guid.NewGuid()), ItemId = HostedItemId.New(), DestinationParentId = parent.Id };
+            Check.True((await mutating.MutateAsync(child, "Child", default)).IsSuccess);
+            var childMetadata = (await mutating.GetAsync(child.ItemId, default)).Value!;
+            Check.True((await mutating.MutateAsync(create with { Id = new(Guid.NewGuid()), Operation = "Delete", BaseRevisionId = parent.CurrentRevisionId }, null, default)).IsSuccess);
+            Check.True(!(await mutating.GetAsync(child.ItemId, default)).IsSuccess);
+            Check.Equal(FilesErrorCode.ItemNotFound, (await mutating.MutateAsync(child with { Id = new(Guid.NewGuid()), Operation = "Move", DestinationParentId = null, BaseRevisionId = childMetadata.CurrentRevisionId }, null, default)).Error!.Code);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task DurableDriveSurvivesRestartAndRejectsStaleMutations()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-drive-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            var id = HostedItemId.New();
+            var now = DateTimeOffset.UtcNow;
+            var create = new FilesOperation(new(Guid.NewGuid()), "owner", id, null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null);
+            var created = await provider.MutateAsync(create, "Project", default);
+            Check.True(created.IsSuccess);
+            Check.Equal(created.Value, (await provider.MutateAsync(create, "Project", default)).Value);
+            Check.True(!(await provider.MutateAsync(create, "Different", default)).IsSuccess);
+            var revision = created.Value!.ResultRevisionId;
+            var rename = create with { Id = new(Guid.NewGuid()), Operation = "Rename", BaseRevisionId = revision };
+            Check.True((await provider.MutateAsync(rename, "Renamed", default)).IsSuccess);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.MutateAsync(rename with { Id = new(Guid.NewGuid()) }, "Stale", default)).Error!.Code);
+            var restarted = new DurableDriveProvider(path, location, "owner");
+            var item = (await restarted.GetAsync(id, default)).Value!;
+            Check.Equal("Renamed", item.Name);
+            var delete = rename with { Id = new(Guid.NewGuid()), Operation = "Delete", BaseRevisionId = item.CurrentRevisionId };
+            var deleted = await restarted.MutateAsync(delete, null, default);
+            Check.True(deleted.IsSuccess);
+            Check.True(!(await restarted.GetAsync(id, default)).IsSuccess);
+            var restored = await restarted.MutateAsync(delete with { Id = new(Guid.NewGuid()), Operation = "Restore", BaseRevisionId = deleted.Value!.ResultRevisionId }, null, default);
+            Check.True(restored.IsSuccess);
+            Check.Equal(id, (await restarted.GetAsync(id, default)).Value!.Id);
+            Check.Equal(4, (await restarted.GetChangesAsync(null, 50, default)).Items.Count);
+            Check.Equal(2, (await restarted.GetChangesAsync(new(2), 50, default)).Items.Count);
+            Check.Equal(FilesErrorCode.PermissionDenied, (await restarted.MutateAsync(create with { Id = new(Guid.NewGuid()), ItemId = HostedItemId.New(), ActorId = "outsider" }, "Private", default)).Error!.Code);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
 
 	private static void HostedIdentitySurvivesRenameAndMoveProjections()
 	{

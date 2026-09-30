@@ -101,7 +101,8 @@ public sealed class ChatSessionService(
         PermissionMode commandPermission = PermissionMode.FullAccess,
         PermissionMode browserPermission = PermissionMode.FullAccess,
         IReadOnlyCollection<ToolCapability>? explicitCapabilities = null,
-        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null)
+        IReadOnlyCollection<ActiveCapability>? availableCapabilities = null,
+        ComputerUseRequest? computerUseRequest = null)
     {
         await safety.EnsureMayActAsync(conversation.Id, "chat.send", cancellationToken).ConfigureAwait(false);
         ModelDescriptor etaModel = model;
@@ -258,6 +259,8 @@ public sealed class ChatSessionService(
             prompt,
             selectedCapabilities);
         var requiredCapabilities = capabilitySelection.Required.ToHashSet();
+        if (computerUseRequest?.HasExplicitEligibleTarget != true)
+            requiredCapabilities.Remove(ToolCapability.ComputerUse);
 
         if (images is { Count: > 0 })
         {
@@ -330,7 +333,7 @@ public sealed class ChatSessionService(
         var effectiveProjectInstructions = string.Join("\n\n",
             new[] { projectInstructions, discoveredAgentInstructions }.Where(item => !string.IsNullOrWhiteSpace(item)));
 
-        using var computerPassCandidate = computerTools.CreatePass();
+        using var computerPassCandidate = computerTools.CreatePass(computerUseRequest);
         var selectedRegisteredCapabilities = FilterCapabilitiesForTurn(
                 availableCapabilities ?? capabilities,
                 requiredCapabilities)
@@ -1048,7 +1051,7 @@ public sealed class ChatSessionService(
                 filePermission,
                 commandPermission,
                 browserPermission,
-                OperatingSystem.IsWindows(),
+                computerTools.IsSupported,
                 browserTools is not null,
                 browserTools?.IsInteractiveAvailable == true,
                 automationTools is not null),

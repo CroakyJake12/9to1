@@ -463,6 +463,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (!SetProperty(ref _currentPage, value)) return;
             if (PageContent is not null)
                 PageContent.Content = value;
+            if (NativeOverlayLayer is not null) RefreshContextualAiBar(value);
             RaisePropertyChanged(nameof(IsChatVisible));
             RaisePropertyChanged(nameof(IsPageVisible));
             RaisePropertyChanged(nameof(IsBrowseMode));

@@ -10,7 +10,11 @@
 using System.Reflection;
 using Haven.Application;
 using Haven.Core;
+using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
+using NineToOne.Cui.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Haven.Infrastructure;
 
@@ -25,6 +29,27 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddHavenInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton<IAppPaths, AppPaths>();
+        services.AddSingleton<IHomeCoreStateStore>(_ => FileHomeCoreStateStore.CreateDefault());
+        services.TryAddSingleton<ITrustedHostPrincipalSource, OperatingSystemPrincipalSource>();
+        services.AddSingleton<HomeLocalProfileIdentity>();
+        services.TryAddSingleton<IAuthenticatedResourceActorSource>(provider => provider.GetRequiredService<HomeLocalProfileIdentity>());
+        services.AddSingleton<ResourceAuthorizationService>();
+        services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
+        services.AddSingleton<HomeLocalStoreOwnership>();
+        services.AddSingleton<HomeResourceOperationBroker>();
+        services.AddSingleton<HomeInvocationCatalogue>();
+        services.AddSingleton<IInvocationCatalogue>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
+        services.AddSingleton<IInvocationResolver>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
+        services.AddSingleton<HomeAppAiServices>(provider => new(
+            provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
+            new HomePermissionCallerIdentity("9to1.native-host", "9to1 native application", "local-installed-host", "1", true), provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>()));
+        services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IDulcheAppClient>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IMcpInvocationAuthorizer>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IWebMcpInvocationAuthorizer>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IComputerUseAdmission>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<HomePermissionTrustService>(provider => provider.GetRequiredService<HomeAppAiServices>().Permissions);
         services.AddSingleton<IBoardsWorkspaceService, BoardsWorkspaceService>();
         services.AddSingleton<PrivacyPreferenceStore>();
         services.AddSingleton<IPrivacyPreferenceStore>(provider => provider.GetRequiredService<PrivacyPreferenceStore>());
@@ -66,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SqliteDatabase>();
         services.AddSingleton<IAppDatabase, ConversationProductionDatabase>();
         services.AddSingleton<ISqliteConnectionFactory>(provider => provider.GetRequiredService<SqliteDatabase>());
+        services.AddSingleton<IResourceStoreIdentitySource>(provider => provider.GetRequiredService<SqliteDatabase>());
         services.AddSingleton<IExecutionEventRepository, ExecutionEventRepository>();
         services.AddSingleton<IActionFeedbackRepository, ActionFeedbackRepository>();
         services.AddSingleton<IRemediationRepository, RemediationRepository>();

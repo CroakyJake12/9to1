@@ -29,7 +29,9 @@ public enum TerminalAppCommandState
 public sealed record TerminalAppHostCapabilities(
     ITerminalSessionFactory? SessionFactory,
     Func<PermissionMode>? CommandPermission,
-    TerminalCommandActivityHub? ActivityHub = null);
+    TerminalCommandActivityHub? ActivityHub = null,
+    ITerminalAdviceService? Advice = null,
+    ITerminalActionBroker? NaturalLanguageActions = null);
 
 public sealed record TerminalAppCommandResult(
     TerminalAppCommandState State,
@@ -74,6 +76,32 @@ public sealed class TerminalAppSurface : IDisposable
     public TerminalAppAvailability Availability { get; private set; }
     public string? UnavailableReason { get; private set; }
     public bool IsAvailable => Availability == TerminalAppAvailability.Available && _session is not null;
+    public TerminalInputMode Mode { get; private set; } = TerminalInputMode.Command;
+    public string ModeLabel => Mode == TerminalInputMode.Command ? "Command" : "AI";
+    public TerminalResolvedAction? ResolvedAction { get; private set; }
+    public void SetMode(TerminalInputMode mode)
+    {
+        ThrowIfDisposed();
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        Mode = mode; ResolvedAction = null; _pendingCommand = null;
+    }
+    public async Task<TerminalAppCommandResult> ExecuteResolvedActionAsync(string actionID,string? verificationReference,CancellationToken ct=default)
+    {
+        ThrowIfDisposed();
+        var action=ResolvedAction;
+        if(action is null || action.Id.ToString("D")!=actionID || _host.NaturalLanguageActions is null)
+            return new(TerminalAppCommandState.Unavailable,"","Resolved action is unavailable.");
+        ResolvedAction=null;
+        var result=await _host.NaturalLanguageActions.ExecuteAsync(action,verificationReference,ct).ConfigureAwait(false);
+        return new(result.Executed?TerminalAppCommandState.Succeeded:TerminalAppCommandState.Denied,"",result.ResultText??result.Message);
+    }
+    private TerminalAdviceContext AdviceContext()
+    {
+        var metadata=_session?.Metadata??throw new InvalidOperationException("SessionUnavailable");
+        var environment=metadata.EnvironmentId??throw new InvalidOperationException("EnvironmentUnavailable");
+        return new(metadata.SessionId,environment,Mode==TerminalInputMode.AI?TerminalSessionMode.Ai:TerminalSessionMode.Command,
+            metadata.ShellProfileId??metadata.ShellRuntime,WorkingDirectory,_history.LastOrDefault(),null,string.Empty);
+    }
     public bool HasPendingApproval => _pendingCommand is not null;
     public IReadOnlyList<string> History => _history;
     public TerminalSessionMetadata? SessionMetadata => _session?.Metadata;
@@ -92,6 +120,20 @@ public sealed class TerminalAppSurface : IDisposable
             return new(TerminalAppCommandState.Failed, string.Empty, "Enter a command to run.");
 
         var safeCommand = SensitiveTextRedactor.Redact(value, 8_000);
+        if (Mode == TerminalInputMode.Command && (value == "$Ask" || value.StartsWith("$Ask ",StringComparison.Ordinal)))
+        {
+            if (_host.Advice is null || _session?.Metadata.EnvironmentId is null) return new(TerminalAppCommandState.Unavailable,safeCommand,"AI advice is unavailable.");
+            var answer=await _host.Advice.AskAsync(AdviceContext(),value.Length>4 ? value[4..].Trim() : "",cancellationToken).ConfigureAwait(false);
+            _history.Add(safeCommand);
+            return new(TerminalAppCommandState.Succeeded,safeCommand,answer.Explanation);
+        }
+        if (Mode == TerminalInputMode.AI)
+        {
+            if (_host.NaturalLanguageActions is null || _session?.Metadata.EnvironmentId is null) return new(TerminalAppCommandState.Unavailable,safeCommand,"Natural-language action resolution is unavailable.");
+            ResolvedAction=await _host.NaturalLanguageActions.ResolveAsync(_session!.Metadata.SessionId,_session.Metadata.EnvironmentId!.Value,value,cancellationToken).ConfigureAwait(false);
+            _history.Add(safeCommand);
+            return new(TerminalAppCommandState.RequiresApproval,safeCommand,ResolvedAction.Summary);
+        }
         _history.Add(safeCommand);
 
         if (IsTranscriptClearCommand(value))

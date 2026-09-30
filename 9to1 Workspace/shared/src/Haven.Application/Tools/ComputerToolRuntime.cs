@@ -19,7 +19,8 @@ namespace Haven.Application;
 /// </summary>
 public sealed class ComputerToolRuntime(
     IComputerToolService tools,
-    IComputerUseSessionController sessions)
+    IComputerUseSessionController sessions,
+    IComputerUseAdmission? admission = null)
 {
     public ComputerToolRuntime(IComputerToolService tools)
         : this(tools, new ComputerUseSessionController())
@@ -77,12 +78,14 @@ public sealed class ComputerToolRuntime(
     /// <summary>
     /// Creates pass with the invariants required by its callers.
     /// </summary>
-    public ComputerToolPass CreatePass() => new(
+    public bool IsSupported => tools.IsSupported;
+
+    public ComputerToolPass CreatePass(ComputerUseRequest? request = null) => new(
         tools,
         sessions,
         ToolDefinitions,
         DirectLaunchPattern,
-        ComputerUseSuffix);
+        ComputerUseSuffix, admission, request);
 
     /// <summary>
     /// Performs the definition step owned by this component.
@@ -108,7 +111,9 @@ public sealed class ComputerToolPass(
     IComputerUseSessionController sessions,
     IReadOnlyList<OllamaToolDefinition> definitions,
     Regex directLaunchPattern,
-    Regex computerUseSuffix) : IDisposable
+    Regex computerUseSuffix,
+    IComputerUseAdmission? admission = null,
+    ComputerUseRequest? request = null) : IDisposable
 {
     /// <summary>
     /// Stores mutation limit locally so this component can preserve the dependency, cache, or state between member calls.
@@ -156,6 +161,14 @@ public sealed class ComputerToolPass(
     /// </summary>
     public async Task<WorkspaceToolResult> ExecuteAsync(OllamaToolCall call, CancellationToken cancellationToken)
     {
+        var arguments = JsonSerializer.SerializeToElement(call.Arguments);
+        if (request?.HasExplicitEligibleTarget != true || admission is null ||
+            !await tools.VerifyTargetAsync(request.TargetAppId, call.Name, arguments, cancellationToken).ConfigureAwait(false) ||
+            !await admission.AuthorizeAsync(request, call.Name, arguments, cancellationToken).ConfigureAwait(false) ||
+            !await tools.VerifyTargetAsync(request.TargetAppId, call.Name, arguments, cancellationToken).ConfigureAwait(false))
+            return new(new ToolActivity(Guid.NewGuid(), HumanLabel(call.Name),
+                "An explicit Computer Use invocation, eligible current target and Home approval are required.", false,
+                TimeSpan.Zero, DateTimeOffset.UtcNow), "Computer Use denied before dispatch.");
         _session ??= sessions.BeginSession();
         int? cursorX = call.Name == "computer_click" ? Integer(call, "x", -1) : null;
         int? cursorY = call.Name == "computer_click" ? Integer(call, "y", -1) : null;
@@ -223,7 +236,7 @@ public sealed class ComputerToolPass(
     /// </summary>
     private void BeforeAction(string name)
     {
-        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Computer Use currently requires Windows.");
+        if (!tools.IsSupported) throw new PlatformNotSupportedException("Computer Use is unavailable from the installed platform backend.");
         if (!IsMutation(name)) return;
         lock (_stateGate)
         {

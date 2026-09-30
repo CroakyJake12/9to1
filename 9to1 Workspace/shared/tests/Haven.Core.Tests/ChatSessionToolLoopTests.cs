@@ -67,7 +67,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         var connection = ChatMcpRepository.ReadyConnection();
         var connectionRepository = new ChatMcpRepository(connection);
         var mcpClient = new ChatMcpClient();
-        var mcpRuntime = new McpToolRuntime(connectionRepository, mcpClient);
+        var mcpRuntime = new McpToolRuntime(connectionRepository, mcpClient, new ApprovedMcpInvocation());
         var localToolName = McpToolRuntime.LocalToolName(connection.Id, "write_item");
         var remediationRepository = new ChatRemediationRepository();
         var eventSink = new ChatRecordingSink();
@@ -138,7 +138,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         var computer = new TestComputerTools();
         var service = new ChatSessionService(
             new FakeConversations(), ollama, new CapabilityPreflightService(), new PermitSafety(),
-            new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(computer));
+            new WorkspaceToolRuntime(new TestWorkspaceTools()), TestComputerUseAdmission.Runtime(computer));
         var now = DateTimeOffset.UtcNow;
         var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, true, now, now);
 
@@ -146,7 +146,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         await foreach (var item in service.SendAsync(
                            conversation, "open notepad", model, EffortLevel.Medium,
                            [ActiveCapability.FromDefinition(CapabilityRegistryCatalog.BuiltIns.Single(item => item.Key == "computer-device-use"))], "Default", "",
-                           DuoMode.Solo, null, "", "", null, CancellationToken.None))
+                           DuoMode.Solo, null, "", "", null, CancellationToken.None, computerUseRequest: TestComputerUseAdmission.Request()))
             events.Add(item);
 
         Assert.Equal("notepad", computer.LaunchedName, ignoreCase: true);
@@ -163,7 +163,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         var model = new ModelDescriptor("legacy-model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.ComputerUse }, DateTimeOffset.UtcNow);
         var service = new ChatSessionService(
             new FakeConversations(), new UnsupportedToolsOllama(model), new CapabilityPreflightService(), new PermitSafety(),
-            new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(new TestComputerTools()));
+            new WorkspaceToolRuntime(new TestWorkspaceTools()), TestComputerUseAdmission.Runtime(new TestComputerTools()));
         var now = DateTimeOffset.UtcNow;
         var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, true, now, now);
 
@@ -171,7 +171,7 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         await foreach (var item in service.SendAsync(
                            conversation, "click the Save button", model, EffortLevel.Medium,
                            [ActiveCapability.FromDefinition(CapabilityRegistryCatalog.BuiltIns.Single(item => item.Key == "computer-device-use"))], "Default", "",
-                           DuoMode.Solo, null, "", "", null, CancellationToken.None))
+                           DuoMode.Solo, null, "", "", null, CancellationToken.None, computerUseRequest: TestComputerUseAdmission.Request()))
             events.Add(item);
 
         Assert.Contains(events, item => item.Kind == ChatStreamEventKind.ToolActivity && item.ToolActivity?.Title == "Inspecting the desktop" && item.ToolActivity.Succeeded);
@@ -428,6 +428,9 @@ public sealed class ChatSessionToolLoopTests : IDisposable
     /// </summary>
     private sealed class TestComputerTools : IComputerToolService
     {
+        public bool IsSupported => true;
+        public ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, System.Text.Json.JsonElement arguments,
+            CancellationToken cancellationToken) => ValueTask.FromResult(canonicalAppId == "fixture.native-app");
         /// <summary>
         /// Gets or updates launched name, the bindable or domain state represented by this property.
         /// </summary>

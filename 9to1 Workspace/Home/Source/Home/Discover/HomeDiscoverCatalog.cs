@@ -144,7 +144,7 @@ public sealed record HomeDiscoverPage(HomeDiscoverSourceState State,
     HomeDiscoverError? Error = null);
 
 public sealed record HomeDiscoverComparison(IReadOnlyList<HomeDiscoverModel> Models,
-    IReadOnlyList<HomeDiscoverIdentity> MissingIdentities, long Revision);
+    IReadOnlyList<HomeDiscoverIdentity> MissingIdentities, string Revision);
 
 public sealed record HomeVoiceRecommendation(HomeDiscoverIdentity Identity, string Label,
     decimal Score, string EvidenceSource, DateTimeOffset MeasuredAtUtc, IReadOnlyList<string> Reasons);

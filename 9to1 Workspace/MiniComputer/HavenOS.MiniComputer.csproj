@@ -5,6 +5,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\VirtualBox\**\*</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Tests/**/*.cs" />
     <ProjectReference Include="..\..\framework\CUI\Core\CakeOS.Cui.Core.csproj" />
     <Content Include="MiniComputer.cui" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

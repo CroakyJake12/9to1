@@ -309,6 +309,11 @@ public sealed record ComputerSelectionSnapshot(
 /// </summary>
 public interface IComputerToolService
 {
+    /// <summary>Trusted installed backend capability; request payloads cannot override this platform boundary.</summary>
+    bool IsSupported => OperatingSystem.IsWindows();
+    /// <summary>Resolve a canonical installed app to the actual process/window or launch target. Unknown targets fail closed.</summary>
+    ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, System.Text.Json.JsonElement arguments,
+        CancellationToken cancellationToken) => ValueTask.FromResult(false);
     Task<ComputerSelectionSnapshot?> GetSelectionSnapshotAsync(CancellationToken cancellationToken) =>
         Task.FromResult<ComputerSelectionSnapshot?>(null);
     Task<string> SnapshotAsync(CancellationToken cancellationToken);

@@ -8,7 +8,8 @@ public sealed class AppAiCoordinator(
     IAppAiApprovalRequester? approvalRequester = null,
     IAppAiDatabaseMutationGuard? databaseGuard = null,
     IAppAiActionGraph? actionGraph = null,
-    IAppAiModelPicker? modelPicker = null)
+    IAppAiModelPicker? modelPicker = null,
+    IInvocationResolver? invocationResolver = null)
 {
     public async ValueTask<AppAiContextSnapshot> CaptureContextAsync(CancellationToken cancellationToken = default)
     {
@@ -108,7 +109,8 @@ public sealed class AppAiCoordinator(
                 ForcePerActionApproval: forcePerActionApproval,
                 ChangePreview: databasePreparation?.Preview,
                 BackupId: databasePreparation?.BackupId,
-                request.CorrelationId), cancellationToken).ConfigureAwait(false);
+                request.CorrelationId,
+                request.Arguments), cancellationToken).ConfigureAwait(false);
 
             if (decision.Outcome != AppAiApprovalOutcome.Approved)
             {
@@ -130,30 +132,37 @@ public sealed class AppAiCoordinator(
                 return AppAiActionResult.Rejected("Home approval did not include a scoped approval token; the action was not run.", "approval-token-missing");
 
             verifiedApprovalToken = decision.ApprovalToken;
-            var approved = await approvals.VerifyAsync(
-                request.AppId,
-                request.ActionId,
-                verifiedApprovalToken,
-                cancellationToken).ConfigureAwait(false);
-            if (!approved)
-                return AppAiActionResult.Rejected("The approval is invalid or expired.", "approval-invalid");
-
             // Re-read after approval so a stale revision or changed capability cannot inherit consent.
             var current = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
             ValidateSnapshot(current);
             if (!SameTarget(snapshot, current) ||
                 !HasSameActionScope(descriptor))
                 return AppAiActionResult.Rejected("The app context or action scope changed during approval. Review the new state before retrying.", "stale-context", canRetry: true);
+            var approved = await approvals.VerifyRequestAsync(
+                request with { ApprovalToken = verifiedApprovalToken },
+                cancellationToken).ConfigureAwait(false);
+            if (!approved)
+                return AppAiActionResult.Rejected("The approval is invalid or expired.", "approval-invalid");
         }
 
-        var result = await actions.ExecuteAsync(request with
+        var executionRequest = request with
         {
             ApprovalToken = descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval
                 ? verifiedApprovalToken
                 : null
-        }, cancellationToken).ConfigureAwait(false);
+        };
+        AppAiActionResult result;
+        try { result = await actions.ExecuteAsync(executionRequest, cancellationToken).ConfigureAwait(false); }
+        catch (Exception exception)
+        {
+            await approvals.CompleteAsync(executionRequest, AppAiActionResult.Rejected(
+                exception is OperationCanceledException ? "App action cancelled." : "App action failed.",
+                exception is OperationCanceledException ? "action-cancelled" : "action-execution-failed"), CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
         if (!result.Succeeded)
         {
+            await approvals.CompleteAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
             await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
                 AppAiActionGraphStatus.Failed, "App action failed", cancellationToken).ConfigureAwait(false);
             return result;
@@ -165,10 +174,16 @@ public sealed class AppAiCoordinator(
                 databaseGuard is not null && await databaseGuard.VerifyAsync(
                     snapshot, descriptor, request.Arguments, result, backupId, cancellationToken).ConfigureAwait(false);
             if (!verified)
-                return AppAiActionResult.Rejected(
+            {
+                var unverified = AppAiActionResult.Rejected(
                     "The database action ran, but its result could not be verified. The recovery backup is retained.",
                     "database-result-unverified");
+                await approvals.CompleteAsync(executionRequest, unverified, CancellationToken.None).ConfigureAwait(false);
+                return unverified;
+            }
         }
+
+        await approvals.CompleteAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
 
         await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
             AppAiActionGraphStatus.Completed, "App action completed", cancellationToken).ConfigureAwait(false);
@@ -179,11 +194,17 @@ public sealed class AppAiCoordinator(
         string prompt,
         string correlationId,
         AppAiAccessMode accessMode = AppAiAccessMode.ReadOnly,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default,
+        IReadOnlyList<InvocationToken>? invocations = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(correlationId);
 
+        if (invocations is { Count: > 0 })
+        {
+            if (invocationResolver is null) throw new InvalidOperationException("Current invocation permissions cannot be verified.");
+            invocations = await invocationResolver.ResolveAsync(invocations, cancellationToken).ConfigureAwait(false);
+        }
         var snapshot = await CaptureContextAsync(cancellationToken).ConfigureAwait(false);
         var modelSelection = await GetModelSelectionAsync(cancellationToken).ConfigureAwait(false);
         if (modelSelection is not null)
@@ -200,12 +221,12 @@ public sealed class AppAiCoordinator(
         var selectedActionCalls = 0;
         var selectedModel = modelSelection;
         await PublishGraphEventAsync(snapshot, "contextual-ai.request", correlationId,
-            AppAiActionGraphStatus.Started, "Contextual AI request started", cancellationToken).ConfigureAwait(false);
+            AppAiActionGraphStatus.Started, "Contextual AI request started", cancellationToken, invocations).ConfigureAwait(false);
         var completed = false;
         try
         {
             await foreach (var chunk in dulche.StreamAsync(
-                new AppAiPrompt(prompt.Trim(), snapshot, correlationId, accessMode, availableActions, selectedModel),
+                new AppAiPrompt(prompt, snapshot, correlationId, accessMode, availableActions, selectedModel, invocations),
                 cancellationToken).ConfigureAwait(false))
             {
                 if (chunk.RequestedAction is { } requestedAction)
@@ -259,7 +280,8 @@ public sealed class AppAiCoordinator(
         string correlationId,
         AppAiActionGraphStatus status,
         string summary,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<InvocationToken>? invocations = null)
     {
         if (actionGraph is null) return;
         await actionGraph.PublishAsync(new AppAiActionGraphEvent(
@@ -270,7 +292,7 @@ public sealed class AppAiCoordinator(
             correlationId,
             status,
             summary,
-            DateTimeOffset.UtcNow), cancellationToken).ConfigureAwait(false);
+            DateTimeOffset.UtcNow, invocations), cancellationToken).ConfigureAwait(false);
     }
 
     private static bool SameTarget(AppAiContextSnapshot before, AppAiContextSnapshot after) =>
@@ -307,25 +329,8 @@ public sealed class AppAiCoordinator(
         ArgumentNullException.ThrowIfNull(snapshot.SemanticState);
     }
 
-    private static string? ValidateInput(AppAiActionDescriptor descriptor, System.Text.Json.JsonElement arguments)
-    {
-        if (arguments.ValueKind != System.Text.Json.JsonValueKind.Object)
-            return "Action arguments must be a JSON object.";
-        if (string.IsNullOrWhiteSpace(descriptor.InputSchemaJson))
-            return "The app did not provide an input schema for this action.";
-
-        try
-        {
-            using var schema = System.Text.Json.JsonDocument.Parse(descriptor.InputSchemaJson);
-            if (schema.RootElement.ValueKind != System.Text.Json.JsonValueKind.Object)
-                return "The app action input schema is invalid.";
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return "The app action input schema is invalid.";
-        }
-        return null;
-    }
+    private static string? ValidateInput(AppAiActionDescriptor descriptor, System.Text.Json.JsonElement arguments) =>
+        ActionJsonSchemaValidator.Validate(descriptor.InputSchemaJson, arguments, out var problem) ? null : problem;
 
     private void ValidateActions(IReadOnlyList<AppAiActionDescriptor> availableActions)
     {
@@ -335,7 +340,7 @@ public sealed class AppAiCoordinator(
 
         foreach (var action in availableActions)
         {
-            if (ValidateInput(action, System.Text.Json.JsonSerializer.SerializeToElement(new { })) is not null)
+            if (!ActionJsonSchemaValidator.IsSupported(action.InputSchemaJson))
                 throw new InvalidOperationException($"The active app provided an invalid input schema for action '{action.Id}'.");
         }
     }

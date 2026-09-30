@@ -224,6 +224,7 @@ public sealed record ApprovalRecord : DenRecord
 
 public sealed record AgentDefinitionRecord : DenRecord
 {
+    public AgentPresentationDefinition? Presentation { get; init; }
     public required string DisplayName { get; init; }
     public required string Version { get; init; }
     public string? Instructions { get; init; }

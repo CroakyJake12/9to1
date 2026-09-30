@@ -120,7 +120,7 @@ public sealed class WebProjectPreviewProvider(IExecutionEventSink events) : IPro
     private static void CopySafeEnvironment(ProcessStartInfo start)
     {
         start.Environment.Clear();
-        foreach (var name in new[] { "PATH", "Path", "SystemRoot", "ProgramFiles", "ProgramFiles(x86)", "DOTNET_ROOT", "APPDATA", "LOCALAPPDATA", "TEMP", "TMP" })
+        foreach (var name in new[] { "PATH", "Path", "SystemRoot", "ProgramFiles", "ProgramFiles(x86)", "DOTNET_ROOT", "DOTNET_CLI_HOME", "NUGET_PACKAGES", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME", "APPDATA", "LOCALAPPDATA", "TEMP", "TMP" })
             if (Environment.GetEnvironmentVariable(name) is { Length: > 0 } value) start.Environment[name] = value;
         start.Environment["BROWSER"] = "none";
         start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";

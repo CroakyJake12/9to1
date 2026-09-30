@@ -356,6 +356,33 @@ internal static class WaveSelfTest
             var reopenedAfterExport = WaveProjectStore.Open(projectPath);
             Require(reopenedAfterExport.ProjectId == reopenedProject.ProjectId && reopenedAfterExport.Revision == reopenedProject.Revision
                 && reopenedAfterExport.Tracks[0].Clips[0].ClipId == clip.ClipId, "Export changed canonical project identity or revision.");
+            var splitProject = WaveProjectEdits.Split(reopenedProject, reopenedProject.Revision, clip.ClipId, 8000);
+            Require(splitProject.Tracks[0].Clips.Count == 2 && splitProject.Tracks[0].Clips[0].ClipId == clip.ClipId
+                && splitProject.Tracks[0].Clips[1].SourceReferenceId == clip.SourceReferenceId, "Split lost canonical source or left-clip identity.");
+            var editedPath = Path.Combine(directory, "edited.waveproject.json");
+            WaveProjectStore.Save(editedPath, splitProject, -1);
+            var roundTrip = WaveProjectStore.Open(editedPath);
+            var splitExportPath = Path.Combine(directory, "split.wav");
+            WaveProjectExporter.ExportPcm16(roundTrip, splitExportPath);
+            Require(File.ReadAllBytes(splitExportPath).SequenceEqual(exportedBytes), "A non-destructive split changed audible PCM output.");
+            var staleSaveRejected = false;
+            try { WaveProjectStore.Save(editedPath, roundTrip, 0); }
+            catch (InvalidOperationException exception) when (exception.Message == "RevisionConflict") { staleSaveRejected = true; }
+            Require(staleSaveRejected, "Stale file-save revisions must conflict instead of overwriting newer project data.");
+            var trimmedProject = WaveProjectEdits.Trim(roundTrip, roundTrip.Revision, clip.ClipId, 1000, 1000);
+            var trimmedClip = trimmedProject.Tracks[0].Clips[0];
+            Require(trimmedClip.SourceStartFrame == 1000 && trimmedClip.TimelineStartFrame == 5000 && trimmedClip.FrameCount == 2000,
+                "Trim did not preserve source/timeline ranges.");
+            var faded = WaveProjectEdits.SetClipProcessing(reopenedProject, reopenedProject.Revision, clip.ClipId, .5, 1000, 1000);
+            var fadedPath = Path.Combine(directory, "faded.wav");
+            WaveProjectExporter.ExportPcm16(faded, fadedPath);
+            var fadedBytes = File.ReadAllBytes(fadedPath);
+            Require(fadedBytes.AsSpan(44 + 4000 * sizeof(short), sizeof(short)).ToArray().All(value => value == 0), "Fade-in did not start at silence.");
+            Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Clip editing or mixing modified source PCM bytes.");
+            var muted = WaveProjectEdits.SetTrackMixer(reopenedProject, reopenedProject.Revision, trackId, 1, 0, true, false);
+            var mutedPath = Path.Combine(directory, "muted.wav");
+            Require(WaveProjectExporter.ExportPcm16(muted, mutedPath) == exportedFrames, "Mute changed project duration.");
+            Require(File.ReadAllBytes(mutedPath).AsSpan(44).ToArray().All(value => value == 0), "Muted track leaked audio into export.");
             File.Delete(tonePath);
             var missingSourceRejected = false;
             try { _ = WaveProjectExporter.ExportPcm16(reopenedAfterExport, Path.Combine(directory, "missing-source.wav")); }
@@ -427,6 +454,7 @@ internal static class Program
     private static int Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+        if (args.Length > 0 && args[0] == "project") return WaveProjectCommands.Run(args);
 
         if (args.Length == 1 && string.Equals(args[0], "--self-test", StringComparison.Ordinal))
         {

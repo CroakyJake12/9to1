@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Haven.Core;
+using Haven.Application;
 using AvaloniaCanvas = Avalonia.Controls.Canvas;
 
 namespace Haven.Desktop.Views.Pages.Boards;

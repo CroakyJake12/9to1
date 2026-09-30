@@ -165,25 +165,25 @@ public sealed class PlaySessionServiceTests
         Assert.Equal("Second prompt?", state.Questions[1].Prompt);
     }
 
-    private static PlaySessionService CreateService(MemorySettingsStore settings, out GenerativeUiEventRouter router)
+    private static PlaySessionService CreateService(MemorySettingsStore settings, out TestRouter router)
     {
         var appHandler = new GenUiAppEventHandler();
         var service = new PlaySessionService(settings, appHandler);
-        router = new GenerativeUiEventRouter(
-            [appHandler],
-            new BoundedGenUiEventAuditSink(),
-            new GenUiInstanceStore());
+        var instances = new GenUiInstanceStore();
+        var permissions = new PermissionDecisionEngine();
+        permissions.Grant(PlaySessionService.AppTargetKey);
+        router = new(new GenerativeUiEventRouter([appHandler], new BoundedGenUiEventAuditSink(), instances, permissions), instances);
         return service;
     }
 
     private static Task<GenUiActionResult> RouteAsync(
-        GenerativeUiEventRouter router,
+        TestRouter router,
         Guid sessionId,
         string actionId,
         object payload,
         GenUiEventSource source)
     {
-        var origin = new GenUiOrigin(Guid.Empty, PlaySessionService.AppTargetKey, null, sessionId);
+        var origin = new GenUiOrigin(sessionId, PlaySessionService.AppTargetKey, null, sessionId);
         var semanticEvent = new GenUiEvent(
             Guid.NewGuid(),
             GenUiEventType.ActionInvoked,
@@ -197,11 +197,16 @@ public sealed class PlaySessionServiceTests
             JsonSerializer.SerializeToElement(payload),
             source,
             "Play regression test.");
-        return router.RouteAsync(
-            semanticEvent,
-            new GenUiActionBinding(actionId, GenUiRouteKind.App, PlaySessionService.AppTargetKey, CapabilityRiskClass.Low, false),
-            CancellationToken.None);
+        var binding = new GenUiActionBinding(actionId, GenUiRouteKind.App, PlaySessionService.AppTargetKey, CapabilityRiskClass.Low, true);
+        router.Instances.Register(new GenUiDocument(Guid.NewGuid(), GenerativeUiContractValidator.CurrentContractVersion,
+            origin, "Play test", PlaySessionService.AppTargetKey,
+            new GenUiComponent("play-test", "HavenButton",
+                new Dictionary<string, JsonElement> { ["label"] = JsonSerializer.SerializeToElement("Play action") }, [binding], []),
+            new Dictionary<string, JsonElement>(), DateTimeOffset.UtcNow));
+        return router.Router.RouteAsync(semanticEvent, binding, CancellationToken.None);
     }
+
+    private sealed record TestRouter(GenerativeUiEventRouter Router, GenUiInstanceStore Instances);
 
     private sealed class MemorySettingsStore : IVersionedSettingsStore
     {

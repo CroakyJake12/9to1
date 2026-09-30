@@ -200,6 +200,8 @@ public sealed class SpaceRegistryTests
 
         first = await registry.MoveAsync(first.Id, parent.Id);
         second = await registry.MoveAsync(second.Id, parent.Id, 0);
+        // Moving another sibling updates the stored record, not an earlier immutable result.
+        first = (await registry.GetAsync(first.Id))!;
 
         Assert.Equal(firstId, first.Id);
         Assert.Equal(parent.Id, first.ParentSpaceId);

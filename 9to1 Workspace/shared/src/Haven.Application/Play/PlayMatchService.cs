@@ -176,6 +176,14 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         return CreateGameAsync(game, cancellationToken);
     }
 
+    public Task<PlayApiResult<PlayGameDefinition>> UpdateGameAsync(Guid gameDefinitionId, PlayGameDefinition updated, int expectedRevision, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(updated);
+        if (gameDefinitionId == Guid.Empty || updated.GameDefinitionId != gameDefinitionId)
+            return Task.FromResult(Error<PlayGameDefinition>("InvalidGameDefinition", "The update must target the same canonical game definition identity.", "UpdateGame"));
+        return UpdateGameAsync(updated, expectedRevision, cancellationToken);
+    }
+
     public Task<PlayApiResult<PlayGameDefinition>> UpdateGameAsync(PlayGameDefinition updated, int expectedRevision, CancellationToken cancellationToken) =>
         MutateAsync(library =>
         {
@@ -423,6 +431,8 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
         if (contestantId is null && !match.PinnedGame.AllowsSpectators) return Error<PlayRoundSnapshot>("ContestantViewDenied", "Spectator access is not allowed for this game.", "GetRound");
         var index = roundIndex ?? match.MatchState.RoundIndex;
         if (index < 0 || index >= match.PinnedGame.Questions.Count) return Error<PlayRoundSnapshot>("RoundNotActive", "The requested round is unavailable.", "GetRound", true);
+        if (index > match.MatchState.RoundIndex)
+            return Error<PlayRoundSnapshot>("ContestantViewDenied", "Future round content is sealed until its round begins.", "GetRound");
         var revealed = match.MatchState.Reveals.Any(item => item.QuestionIndex == index);
         var question = revealed ? null : match.PinnedGame.Questions[index];
         return PlayApiResult<PlayRoundSnapshot>.Success(new(matchId, index, revealed ? PlayRoundPhase.Revealed : match.MatchState.Phase,
@@ -590,7 +600,12 @@ public sealed class PlayMatchService(IVersionedSettingsStore settings)
 
     private static PlayMatchSnapshot PublicMatch(PlayMatchSnapshot match) => match with
     {
-        PinnedGame = PublicGame(match.PinnedGame),
+        PinnedGame = PublicGame(match.PinnedGame) with
+        {
+            Questions = match.PinnedGame.Questions.Select((question, index) => index <= match.MatchState.RoundIndex
+                ? question with { CorrectOption = -1, Explanation = string.Empty }
+                : question with { Prompt = string.Empty, Options = [], CorrectOption = -1, Explanation = string.Empty }).ToArray()
+        },
         MatchState = match.MatchState with { Submissions = new Dictionary<Guid, PlaySubmission>(), TeamPrivateState = new Dictionary<Guid, string>() }
     };
 

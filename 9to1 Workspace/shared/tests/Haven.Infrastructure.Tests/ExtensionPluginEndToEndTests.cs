@@ -147,7 +147,7 @@ public sealed class ExtensionPluginEndToEndTests
         Assert.False(File.Exists(deniedMarker));
         var deniedEvents = await WaitForEventsAsync(executionRepository, deniedExecution, 2);
         Assert.Equal(new[] { ExecutionActionStatus.Running, ExecutionActionStatus.Failed }, deniedEvents.Select(item => item.Status).ToArray());
-        Assert.DoesNotContain(deniedEvents, item => item.Output?.Contains("must-not-run", StringComparison.Ordinal) == true);
+        Assert.DoesNotContain(deniedEvents, item => item.SafeDetail?.Contains("must-not-run", StringComparison.Ordinal) == true);
 
         const string rawSecret = "worker28-input-secret-123";
         var successMarker = NewMarker();
@@ -287,9 +287,9 @@ public sealed class ExtensionPluginEndToEndTests
 
         await manager.AddSourceAsync(source, CancellationToken.None);
         var candidate = Assert.Single(await manager.RefreshAsync(source.Id, CancellationToken.None));
-        var installed = await manager.InstallAsync(candidate, CancellationToken.None);
+        var installed = await manager.InstallAsync(candidate, RequiredPermissions, CancellationToken.None);
         Assert.False(installed.IsEnabled);
-        Assert.Equal(ExtensionPermission.None, installed.GrantedPermissions);
+        Assert.Equal(RequiredPermissions, installed.GrantedPermissions);
         await manager.SetGrantedPermissionsAsync(installed.Id, RequiredPermissions, CancellationToken.None);
         await manager.SetEnabledAsync(installed.Id, true, CancellationToken.None);
         var pluginPath = Path.Combine(installed.InstallPath, "bin", "Haven.PluginFixture.dll");

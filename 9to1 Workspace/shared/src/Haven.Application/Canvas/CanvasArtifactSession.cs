@@ -506,9 +506,17 @@ public sealed class CanvasArtifactSession
         {
             if (afterCursor < 0 || pageSize is < 1 or > MaximumPageSize)
                 return Failure<CanvasChangePage>(CanvasApiErrorCode.InvalidArgument, "Events.GetChanges", "Change cursor or page size is invalid.");
-            var matching = _events.Where((_, index) => index + 1 > afterCursor).Take(pageSize).ToArray();
-            var nextCursor = matching.Length == 0 ? afterCursor : _events.IndexOf(matching[^1]) + 1L;
-            var hasMore = _events.Any((_, index) => index + 1 > nextCursor);
+            // Retention may remove early entries, so cursors refer to the lifetime sequence,
+            // never the current list index. An expired cursor requires a fresh snapshot.
+            var firstRetainedCursor = _eventCursor - _events.Count;
+            if (afterCursor < firstRetainedCursor)
+                return Failure<CanvasChangePage>(CanvasApiErrorCode.RevisionConflict, "Events.GetChanges", "Change cursor expired; refresh the Canvas snapshot.", canRetry: true);
+            if (afterCursor > _eventCursor)
+                return Failure<CanvasChangePage>(CanvasApiErrorCode.InvalidArgument, "Events.GetChanges", "Change cursor is ahead of this Canvas session.");
+            var offset = checked((int)(afterCursor - firstRetainedCursor));
+            var matching = _events.Skip(offset).Take(pageSize).ToArray();
+            var nextCursor = afterCursor + matching.Length;
+            var hasMore = nextCursor < _eventCursor;
             return CanvasApiResult<CanvasChangePage>.Success(new CanvasChangePage(matching, nextCursor, hasMore));
         }
     }

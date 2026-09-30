@@ -8,7 +8,7 @@ public sealed class MeshRemoteModelProvider(MeshCoordinator mesh) : IModelProvid
     public string Id => MeshProviderId;
     public string DisplayName => "Haven Mesh";
     public ModelProviderKind Kind => ModelProviderKind.OpenAICompatible;
-    public bool IsLocal => true;
+    public bool IsLocal => false;
     public bool CanManageModels => false;
 
     public async Task<ProviderHealthStatus> CheckHealthAsync(CancellationToken cancellationToken)

@@ -21,4 +21,5 @@
     <ProjectReference Include="..\shared\src\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
   </ItemGroup>
+  <ItemGroup><Compile Include="BrowseWebMcpBinding.cs" /></ItemGroup>
 </Project>

@@ -153,6 +153,21 @@ public sealed class HomePermissionTrustService
         }
     }
 
+    /// <summary>Reads the decision for an existing request without creating a new action or reusing trust.</summary>
+    public async Task<HomePermissionAuthorization> GetAuthorizationAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = state.Requests.SingleOrDefault(r => r.RequestId == requestId);
+            return request is null
+                ? new(HomePermissionRequestState.Denied, "HOME_PERMISSION_REQUEST_NOT_FOUND", "The request was not found.", requestId, null)
+                : Authorization(request);
+        }
+        finally { _gate.Release(); }
+    }
+
     public async Task<HomePermissionOperationResult> MarkAlwaysTrustWarningShownAsync(
         string requestId,
         CancellationToken cancellationToken = default)
@@ -506,7 +521,7 @@ public sealed class HomePermissionTrustService
     private async Task ExpireGrantsAsync(PersistedState state, DateTimeOffset now, CancellationToken cancellationToken)
     {
         foreach (var grant in state.Grants.Where(item => !item.IsRevoked &&
-                     item.ExpiresAt <= now).ToArray())
+                     (item.ExpiresAt <= now || item.TrustLevel == HomeTrustLevel.TemporaryAlwaysTrust && item.RemainingActions is <= 0)).ToArray())
             await ExpireTemporaryGrantAsync(state, grant, now, cancellationToken).ConfigureAwait(false);
     }
 

@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><RootNamespace>HavenOS.Connect</RootNamespace><DefaultItemExcludes>$(DefaultItemExcludes);Tests/**</DefaultItemExcludes></PropertyGroup></Project>

@@ -71,7 +71,7 @@ public sealed class SiteDeploymentService(
 
             var artifact = await buildPipeline.BuildAndPackageAsync(
                 new SiteBuildRequest(deployment.SiteId, deployment.DeploymentId, source, context.environment.EnvironmentId),
-                (update, token) => SetStageAsync(deployment.DeploymentId, update.Stage, update.State, update.Code, update.Message, token),
+                async (update, token) => { await SetStageAsync(deployment.DeploymentId, update.Stage, update.State, update.Code, update.Message, token).ConfigureAwait(false); },
                 cancellationToken).ConfigureAwait(false);
             if (artifact.ArtifactId == Guid.Empty || !string.Equals(artifact.SourceRevision, source.SourceRevision, StringComparison.Ordinal) ||
                 !string.Equals(artifact.ConfigurationRevision, source.ConfigurationRevision, StringComparison.Ordinal))

@@ -1,3 +1,4 @@
+using Xunit;
 namespace Dulche.Runtime.Agents.Tests;
 
 public sealed class AgentExecutionContractTests
@@ -42,7 +43,11 @@ public sealed class AgentExecutionContractTests
         var usage = ledger.Snapshot("root").Value!;
         Assert.Equal(UsageAvailability.ProviderUnavailable, usage.Tokens.Availability);
         Assert.Null(usage.Tokens.Value);
-        Assert.Equal(40, usage.KnownTokenSubtotal);
+        // Provider omission is not a measured 40-token report. The conservative 40-token charge still limits admission.
+        Assert.Equal(0, usage.KnownTokenSubtotal);
+        Assert.Equal(AgentFailureCode.BudgetExceeded,
+            ledger.Reserve("root", "after-unknown", new(Tokens: 61), DateTimeOffset.UnixEpoch).Error?.Code);
+        Assert.True(ledger.Reserve("root", "remaining", new(Tokens: 60), DateTimeOffset.UnixEpoch).Succeeded);
     }
 
     [Fact]

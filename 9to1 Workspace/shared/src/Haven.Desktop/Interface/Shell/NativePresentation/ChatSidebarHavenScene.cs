@@ -126,6 +126,21 @@ internal sealed class ChatSidebarHavenScene : IDisposable
     public event EventHandler<ChatSidebarGroupRequest>? GroupActionRequested;
     public event EventHandler<Guid>? FileRequested;
 
+    public void SetPluginItems(IReadOnlyList<(string Label, string IconKey, Action Open)> items)
+    {
+        var rows = Get<Container>("PluginSidebarRows");
+        foreach (var child in rows.Children.ToArray()) rows.Remove(child);
+        foreach (var item in items)
+        {
+            var button = new HavenButton { Content = item.Label, IconKey = item.IconKey, Variant = ButtonVariant.Navigation };
+            button.Accessibility.AccessibleName = item.Label;
+            button.SetValue(HavenProperties.Width, HavenLength.Percent(100));
+            button.SetValue(HavenProperties.MinHeight, HavenLength.Px(44));
+            button.Invoked += (_, _) => item.Open();
+            rows.Add(button);
+        }
+    }
+
     public void SetMode(HavenMode mode)
     {
         _mode = mode;
@@ -511,6 +526,8 @@ internal sealed class ChatSidebarHavenScene : IDisposable
               <Input Name="Search" Row="1" Width="100%" Height="34px" MinHeight="34px" Placeholder="Search chats, groups and files" Visibility="Collapsed" />
               <Container Name="ScrollHost" Row="2" Layout="Vertical" Width="100%" Overflow="Scroll" Clip="true" Gap="4px">
                 <Button Name="NewChat" Variant="Navigation" IconKey="plus" Content="New Chat" Width="100%" MinHeight="36px" />
+                <Container Name="PluginSidebarRows" Layout="Vertical" Width="100%" Gap="4px" />
+                <Container Name="NavigationDivider" Width="100%" Height="1px" Background="Border" />
                 <Text Name="FilesHeading" Content="File Library" Level="H3" />
                 <DynamicUIRuntime Name="FileRows" Width="100%" />
                 <Text Name="FilesEmpty" Content="Files attached to chats appear here." FontSize="11" Foreground="TextSecondary" Visibility="Collapsed" />

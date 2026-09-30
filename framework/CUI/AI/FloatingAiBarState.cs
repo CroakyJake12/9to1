@@ -15,6 +15,8 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 {
     private CancellationTokenSource? _requestCancellation;
     private long _requestVersion;
+    private long _searchVersion;
+    private bool _disposed;
 
     public FloatingAiBarMode Mode { get; private set; } = FloatingAiBarMode.Collapsed;
     public AppAiAccessMode AccessMode { get; private set; } = AppAiAccessMode.ReadOnly;
@@ -32,7 +34,36 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         AppAiRequestState.Failed => "Could not complete the request",
         _ => string.Empty
     };
-    public string Prompt { get; set; } = string.Empty;
+    public InvocationCompose Compose { get; } = new();
+    public string Prompt
+    {
+        get => Compose.Text;
+        set { Compose.SetText(value); Changed?.Invoke(this, EventArgs.Empty); }
+    }
+    public IReadOnlyList<InvocationSection> InvocationSections { get; private set; } = [];
+    public async ValueTask SearchInvocationsAsync(IInvocationCatalogue catalogue, int caret, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var version = Interlocked.Increment(ref _searchVersion);
+        Compose.UpdateCaret(caret);
+        var query = Compose.Query;
+        var text = Compose.Text;
+        var resources = await catalogue.SearchAsync(query, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_disposed || version != Volatile.Read(ref _searchVersion) || text != Compose.Text || query != Compose.Query) return;
+        InvocationSections = Compose.Sections(resources);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+    public void InsertInvocation(InvocationResource resource, int caret)
+    {
+        Compose.Insert(resource, caret);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+    public void RemoveInvocation(string tokenId)
+    {
+        Compose.Remove(tokenId);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
     public string Response { get; private set; } = string.Empty;
     public string? ContextLabel { get; private set; }
     public string? Error { get; private set; }
@@ -169,8 +200,16 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
 
     public async Task SubmitAsync(CancellationToken cancellationToken = default)
     {
-        var submittedPrompt = Prompt.Trim();
-        if (submittedPrompt.Length == 0)
+        IReadOnlyList<InvocationToken> invocations;
+        try { invocations = Compose.Resolve(); }
+        catch (InvalidOperationException exception)
+        {
+            Error = exception.Message;
+            SetMode(FloatingAiBarMode.Error);
+            return;
+        }
+        var submittedPrompt = Prompt;
+        if (string.IsNullOrWhiteSpace(submittedPrompt))
         {
             Error = "Enter a request first.";
             SetMode(FloatingAiBarMode.Error);
@@ -193,7 +232,8 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
                 submittedPrompt,
                 Guid.NewGuid().ToString("N"),
                 AccessMode,
-                token).ConfigureAwait(false))
+                token,
+                invocations).ConfigureAwait(false))
             {
                 if (version != Volatile.Read(ref _requestVersion))
                     return;
@@ -242,7 +282,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
             SetMode(FloatingAiBarMode.Ready);
     }
 
-    public void Dispose() => Cancel();
+    public void Dispose() { _disposed = true; Interlocked.Increment(ref _searchVersion); Cancel(); }
 
     private void SetMode(FloatingAiBarMode mode)
     {

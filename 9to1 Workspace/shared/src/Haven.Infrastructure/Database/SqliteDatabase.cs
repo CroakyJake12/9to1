@@ -23,16 +23,21 @@ public interface ISqliteConnectionFactory
 /// <summary>
 /// Represents sqlite database and keeps its related state and behavior together.
 /// </summary>
-public sealed class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory
+public sealed class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory, IResourceStoreIdentitySource
 {
     /// <summary>
     /// Stores connection string locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
     private readonly string _connectionString;
+    private readonly string _databasePath;
+    private readonly SemaphoreSlim _creationGate = new(1, 1);
+    private bool _creationChecked;
+    private bool _createdFile;
 
     public SqliteDatabase(IAppPaths paths)
     {
         SqliteProviderBootstrap.EnsureInitialized();
+        _databasePath = paths.DatabasePath;
         _connectionString = new SqliteConnectionStringBuilder
         {
             DataSource = paths.DatabasePath,
@@ -48,12 +53,73 @@ public sealed class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory
     /// </summary>
     public async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
+        await EnsureFileLifecycleAsync(cancellationToken).ConfigureAwait(false);
         var connection = new SqliteConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var pragma = connection.CreateCommand();
-        pragma.CommandText = "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;";
-        await pragma.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        return connection;
+        try
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var pragma = connection.CreateCommand();
+            pragma.CommandText = "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;";
+            await pragma.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await EnsureStoreIdentityAsync(connection, cancellationToken).ConfigureAwait(false);
+            return connection;
+        }
+        catch { await connection.DisposeAsync().ConfigureAwait(false); throw; }
+    }
+
+    private async Task EnsureFileLifecycleAsync(CancellationToken cancellationToken)
+    {
+        await _creationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (_creationChecked) return;
+            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.ReadWrite };
+            if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            try { using var created = new FileStream(_databasePath, options); _createdFile = true; }
+            catch (IOException) when (File.Exists(_databasePath)) { _createdFile = false; }
+            _creationChecked = true;
+        }
+        finally { _creationGate.Release(); }
+    }
+
+    private static async Task EnsureStoreIdentityAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using (var exists = connection.CreateCommand())
+        {
+            exists.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='resource_store_identity';";
+            if (Convert.ToInt32(await exists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) != 0)
+            {
+                await ReadStoreIdentityAsync(connection, false, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+        }
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await ExecuteAsync(connection, transaction, "CREATE TABLE IF NOT EXISTS resource_store_identity(singleton INTEGER PRIMARY KEY CHECK(singleton=1),schema_version INTEGER NOT NULL,store_id TEXT NOT NULL,created_at TEXT NOT NULL);", cancellationToken).ConfigureAwait(false);
+        await using var insert = connection.CreateCommand();
+        insert.Transaction = transaction;
+        insert.CommandText = "INSERT OR IGNORE INTO resource_store_identity(singleton,schema_version,store_id,created_at) VALUES(1,1,$id,$created);";
+        insert.Parameters.AddWithValue("$id", Guid.NewGuid().ToString("D"));
+        insert.Parameters.AddWithValue("$created", DateTimeOffset.UtcNow.ToString("O"));
+        await insert.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        return await ReadStoreIdentityAsync(connection, _createdFile, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async ValueTask<ResourceStoreIdentity> ReadStoreIdentityAsync(SqliteConnection connection, bool newlyCreated, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT schema_version,store_id,created_at FROM resource_store_identity WHERE singleton=1;";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false) || reader.GetInt32(0) != 1 ||
+            !Guid.TryParse(reader.GetString(1), out var id) || id == Guid.Empty ||
+            !DateTimeOffset.TryParse(reader.GetString(2), out var created))
+            throw new InvalidDataException("Unsupported or corrupt resource store identity; preserve the store for recovery.");
+        return new(1, id, created, newlyCreated);
     }
 
     /// <summary>

@@ -50,6 +50,26 @@ public sealed class CalculatorTemplateRuntimeTests
         Assert.StartsWith("Could not calculate:", Find(store.TryGet(document.Origin.InstanceId)!.Root, "calculator.result").Properties["text"].GetString(), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Failed_result_cannot_change_calculator_artifact_state_or_input()
+    {
+        var store = new GenUiInstanceStore();
+        var runtime = new CalculatorTemplateRuntime(new GenUiLocalActionRegistry(), store);
+        var document = runtime.Create(Guid.NewGuid());
+        store.Register(document);
+        foreach (var (target, path) in new[] { ("state", "history"), ("calculator.expression", "value") })
+        {
+            var patch = new GenUiStatePatch(Guid.NewGuid(), document.Origin.InstanceId,
+                GenUiPatchOperation.Replace, target, path, JsonSerializer.SerializeToElement("error"), DateTimeOffset.UtcNow);
+            var result = new GenUiActionResult(Guid.NewGuid(), Guid.NewGuid(), document.Origin,
+                "calculator.calculate", "calculator.evaluate", GenUiActionStatus.Failed, "error",
+                JsonSerializer.SerializeToElement(new { error = "error" }), [patch], DateTimeOffset.UtcNow);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => store.ApplyResultAsync(result, CancellationToken.None));
+        }
+        Assert.Empty(store.TryGet(document.Origin.InstanceId)!.State["history"].EnumerateArray());
+        Assert.Equal("", Find(store.TryGet(document.Origin.InstanceId)!.Root, "calculator.expression").Properties["value"].GetString());
+    }
+
     private static GenUiEvent CreateEvent(GenUiOrigin origin, GenUiActionBinding binding, string expression) => new(
         Guid.NewGuid(),
         GenUiEventType.ActionInvoked,

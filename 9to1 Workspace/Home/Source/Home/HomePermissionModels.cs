@@ -113,7 +113,10 @@ public sealed record HomePermissionImpactPreview(
     IReadOnlyList<string> AffectedObjectTypes,
     int? AffectedObjectCount,
     IReadOnlyList<HomeObjectReference> KnownObjects,
-    bool IsUnknown)
+    bool IsUnknown,
+    string? ChangePreview = null,
+    string? BackupId = null,
+    string? ArgumentsDigest = null)
 {
     public static HomePermissionImpactPreview Unknown { get; } = new([], null, [], true);
 }

@@ -3,15 +3,15 @@
   "agent": {
     "build": {
       "mode": "primary",
-      "model": "openai/gpt-6-sol"
+      "model": "openai/gpt-6.1-sol"
     },
     "general": {
       "mode": "subagent",
-      "model": "openai/gpt-6-luna"
+      "model": "openai/gpt-6.1-sol"
     },
     "explore": {
       "mode": "subagent",
-      "model": "openai/gpt-6-luna"
+      "model": "openai/gpt-6.1-sol"
     }
   }
 }

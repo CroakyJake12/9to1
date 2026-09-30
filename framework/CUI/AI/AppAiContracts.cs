@@ -127,6 +127,11 @@ public interface IAppAiActions
 
 public interface IAppAiApprovalVerifier
 {
+    ValueTask CompleteAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+
+    ValueTask<bool> VerifyRequestAsync(AppAiActionRequest request, CancellationToken cancellationToken) =>
+        request.ApprovalToken is { } token ? VerifyAsync(request.AppId, request.ActionId, token, cancellationToken) : ValueTask.FromResult(false);
+
     ValueTask<bool> VerifyAsync(
         string appId,
         string actionId,
@@ -180,10 +185,11 @@ public sealed record AppAiPrompt(
     string CorrelationId,
     AppAiAccessMode AccessMode = AppAiAccessMode.ReadOnly,
     IReadOnlyList<AppAiActionDescriptor>? AvailableActions = null,
-    AppAiModelSelection? ModelSelection = null)
+    AppAiModelSelection? ModelSelection = null,
+    IReadOnlyList<InvocationToken>? Invocations = null)
 {
     public string SystemInstructions => AccessMode == AppAiAccessMode.ReadOnly
-        ? "Inspect only the supplied authorised semantic context. Do not request or perform app actions. You may describe proposed changes in your response. Do not infer private or off-scope information."
+        ? "Inspect only the supplied authorised semantic context; do not request or perform app actions. You may describe proposed changes in your response. Do not infer private or off-scope information."
         : "Use only the supplied authorised semantic context and listed typed app actions. Request mutations only through those actions and stable target IDs. The host app, Home permissions and its current edit/review state remain authoritative; Write mode does not bypass them. Do not use UI simulation or invent entities.";
 }
 
@@ -203,7 +209,8 @@ public sealed record AppAiApprovalRequest(
     bool ForcePerActionApproval,
     string? ChangePreview,
     string? BackupId,
-    string CorrelationId);
+    string CorrelationId,
+    JsonElement? Arguments = null);
 
 public sealed record AppAiApprovalDecision(
     AppAiApprovalOutcome Outcome,
@@ -226,7 +233,8 @@ public sealed record AppAiActionGraphEvent(
     string CorrelationId,
     AppAiActionGraphStatus Status,
     string Summary,
-    DateTimeOffset Timestamp);
+    DateTimeOffset Timestamp,
+    IReadOnlyList<InvocationToken>? Invocations = null);
 
 public sealed record AppAiModelOption(string Id, string DisplayName, string ProviderId, bool IsLocal, bool IsAvailable);
 

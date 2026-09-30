@@ -158,7 +158,7 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
     private async Task<FileStream> AcquireProcessLockAsync(CancellationToken cancellationToken)
     {
         var directory = Path.GetDirectoryName(_path)!;
-        Directory.CreateDirectory(directory);
+        CreatePrivateDirectory(directory);
         var lockPath = _path + ".lock";
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
         while (true)
@@ -166,8 +166,7 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
-                    1, FileOptions.Asynchronous);
+                return new FileStream(lockPath, PrivateFileOptions(FileMode.OpenOrCreate, FileAccess.ReadWrite, 1, FileOptions.Asynchronous));
             }
             catch (IOException) when (DateTime.UtcNow < deadline)
             {
@@ -186,9 +185,9 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         var temporaryPath = Path.Combine(directory, $".{Path.GetFileName(_path)}.{Guid.NewGuid():N}.tmp");
         try
         {
-            Directory.CreateDirectory(directory);
-            await using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None,
-                             16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough))
+            CreatePrivateDirectory(directory);
+            await using (var stream = new FileStream(temporaryPath, PrivateFileOptions(FileMode.CreateNew, FileAccess.Write,
+                             16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough)))
             {
                 await JsonSerializer.SerializeAsync(stream, state, JsonOptions, cancellationToken).ConfigureAwait(false);
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -222,6 +221,19 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
             catch (IOException) { /* A stale temporary file is non-authoritative and never read on startup. */ }
             catch (UnauthorizedAccessException) { }
         }
+    }
+
+    private static void CreatePrivateDirectory(string directory)
+    {
+        if (OperatingSystem.IsWindows()) Directory.CreateDirectory(directory);
+        else Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    }
+
+    private static FileStreamOptions PrivateFileOptions(FileMode mode, FileAccess access, int bufferSize, FileOptions options)
+    {
+        var result = new FileStreamOptions { Mode = mode, Access = access, Share = FileShare.None, BufferSize = bufferSize, Options = options };
+        if (!OperatingSystem.IsWindows()) result.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        return result;
     }
 
     private static HomeCoreFailure? ValidateRecord(HomeCoreStateRecord record)

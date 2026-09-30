@@ -259,7 +259,7 @@ public sealed class FormsSubmissionStoreTests : IDisposable
         FormsSubmissionCursor? cursor = null;
         do
         {
-            var page = await store.GetPageAsync(new FormsSubmissionPageRequest(100, cursor), CancellationToken.None);
+            var page = await ((IFormsSubmissionStore)store).GetPageAsync(new FormsSubmissionPageRequest(100, cursor), CancellationToken.None);
             paged.AddRange(page.Items);
             cursor = page.Next;
         } while (cursor is not null);

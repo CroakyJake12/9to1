@@ -73,6 +73,7 @@ public sealed class NotesReadAloudController(
     /// Index of the chunk currently being spoken (or next when paused).
     /// </summary>
     private int _chunkIndex;
+    private long _chunkPlaybackEpoch;
     /// <summary>
     /// Voice resolved once per long-form session.
     /// </summary>
@@ -441,6 +442,7 @@ public sealed class NotesReadAloudController(
         while (true)
         {
             int index = -1;
+            long playbackEpoch = 0;
             string chunk = string.Empty;
             CancellationTokenSource? chunkCts = null;
             Task? resumeSignal = null;
@@ -461,6 +463,7 @@ public sealed class NotesReadAloudController(
                     chunk = _chunks[index];
                     chunkCts = CancellationTokenSource.CreateLinkedTokenSource(session.Token);
                     _chunkCancellation = chunkCts;
+                    playbackEpoch = _chunkPlaybackEpoch;
                 }
             }
             finally
@@ -503,6 +506,13 @@ public sealed class NotesReadAloudController(
             try
             {
                 if (!ReferenceEquals(_activeCancellation, session)) return false;
+                // Pause can be resumed before a cancelled utterance finishes unwinding. Its
+                // completion must never advance the retained section after that transition.
+                if (playbackEpoch != _chunkPlaybackEpoch)
+                {
+                    _replayCurrentChunk = false;
+                    continue;
+                }
                 if (Volatile.Read(ref _paused) == 1) continue;
                 if (_chunkIndex == index && !_replayCurrentChunk)
                 {
@@ -570,6 +580,7 @@ public sealed class NotesReadAloudController(
                 Volatile.Write(ref _chunkIndex, target);
             else
                 _replayCurrentChunk = true;
+            _chunkPlaybackEpoch++;
             interrupted = TakeChunkCancellationLocked();
             RaiseProgressLocked();
             RaiseStatus($"Reading section {target + 1} of {_chunks.Count}…");
@@ -594,6 +605,7 @@ public sealed class NotesReadAloudController(
         {
             if (Volatile.Read(ref _reading) != 1 || Volatile.Read(ref _paused) == 1) return;
             Volatile.Write(ref _paused, 1);
+            _chunkPlaybackEpoch++;
             interrupted = TakeChunkCancellationLocked();
             var index = Math.Min(Volatile.Read(ref _chunkIndex), Math.Max(0, _chunks.Count - 1));
             RaiseStatus($"Read aloud paused at section {index + 1} of {_chunks.Count}. Resume re-speaks this section.");

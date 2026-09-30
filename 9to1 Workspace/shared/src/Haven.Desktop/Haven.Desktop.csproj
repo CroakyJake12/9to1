@@ -29,6 +29,8 @@
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
+    <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
@@ -67,4 +69,5 @@
       <DependentUpon>NewDashboardPage.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" /></ItemGroup>
 </Project>

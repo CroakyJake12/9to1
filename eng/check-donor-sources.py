@@ -36,6 +36,8 @@ REQUIRED = {
     "Wine": {"wine"},
     "WinBoat": {"winboat"},
     "Files": {"files"},
+    "Connect": {"element-web"},
+    "Sites": {"cake-plugin"},
 }
 
 
@@ -88,11 +90,12 @@ def failures(local_only=False):
             if git("diff", "--name-only", "--", path):
                 errors.append("Files: working source differs from the pinned imported snapshot")
         else:
-            if not record.get("repository", "").startswith("https://") or not record.get("fork", "").startswith("https://github.com/CroakyJake12/"):
-                errors.append(f"{app}/{donor}: missing canonical upstream or controlled fork")
-            if record.get("forkCommit") != commit:
+            source_repository = record.get("sourceRepository", record.get("fork", record.get("repository", "")))
+            if not record.get("repository", "").startswith("https://") or not source_repository.startswith("https://"):
+                errors.append(f"{app}/{donor}: missing canonical upstream or selected source provenance")
+            if record.get("fork") and record.get("forkCommit") != commit:
                 errors.append(f"{app}/{donor}: fork and upstream revisions disagree")
-            if paths_in_modules.get(path) != record.get("fork"):
+            if paths_in_modules.get(path) != source_repository:
                 errors.append(f"{app}/{donor}: .gitmodules URL/path disagrees with donor record")
             if git("rev-parse", "HEAD", cwd=source) != commit:
                 errors.append(f"{app}/{donor}: materialised source HEAD differs from pinned revision")

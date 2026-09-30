@@ -54,6 +54,25 @@ internal static class TerminalAppSurfaceSpecs
         await WorkingDirectoryAndNewSessionUseHostSessionContractAsync();
         await FailedReplacementPreservesHealthySessionAsync();
         CreationFailureFailsClosedAndRedactsReason();
+        await AdviceNeverExecutesSuggestedCommandsAsync();
+    }
+
+    private static async Task AdviceNeverExecutesSuggestedCommandsAsync()
+    {
+        var factory=new FakeSessionFactory();var advice=new AdviceFixture();
+        using var surface=new TerminalAppSurface(new(factory,()=>PermissionMode.FullAccess,Advice:advice));
+        var result=await surface.SubmitAsync("$Ask how do I remove old files?");
+        Check(result.State==TerminalAppCommandState.Succeeded,"advice returned");
+        Check(factory.LastSession!.ExecuteCount==0,"suggested command never reaches native shell");
+        Check(advice.Question=="how do I remove old files?","reserved Ask prefix routed to advice");
+        var count=factory.CreateCount;surface.SetMode(TerminalInputMode.AI);surface.SetMode(TerminalInputMode.Command);
+        Check(factory.CreateCount==count,"mode switch preserves persistent PTY");
+    }
+    private sealed class AdviceFixture:ITerminalAdviceService
+    {
+        public string? Question {get;private set;}
+        public Task<TerminalAdviceResult> AskAsync(Haven.Application.TerminalAdviceContext context,string question,CancellationToken token)
+        {Question=question;return Task.FromResult(new TerminalAdviceResult("Suggested command: rm old-file (review first)",["rm old-file"]));}
     }
 
     private static async Task MissingSessionCapabilityFailsClosedAsync()
@@ -203,7 +222,7 @@ internal sealed class FakeSession : ITerminalSession
             TerminalSessionLifecycleState.Ready,
             DateTimeOffset.UtcNow,
             0,
-            false);
+            false) {EnvironmentId=new TerminalEnvironmentId("fixture-local")};
     }
 
     public int ExecuteCount { get; private set; }

@@ -2,6 +2,7 @@ using System.Text.Json;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using Xunit;
 
 namespace HavenOS.Home.Tests;
@@ -11,7 +12,7 @@ public sealed class HomeModelPickerRouteEditorTests
     [Fact]
     public void CUI_document_exposes_all_model_categories_and_accessible_route_actions()
     {
-        var path = Path.Combine(Environment.CurrentDirectory, "9to1 Workspace", "Home", "UI", "ModelPicker.cui");
+        var path = Path.Combine(AppContext.BaseDirectory, "UI", "ModelPicker.cui");
         var document = new CuiRichParser().ParseFile(path);
 
         Assert.Contains(document.RootProperties, property => property.Key == "id"
@@ -182,7 +183,7 @@ public sealed class HomeModelPickerRouteEditorTests
         var result = await editor.RefreshAsync("global", "chat");
 
         Assert.False(result.Succeeded);
-        Assert.Equal("HomeServiceUnavailable", editor.Current.StatusCode);
+        Assert.Equal("InvalidProviderResult", editor.Current.StatusCode);
         Assert.Null(editor.Current.SelectedRouteId);
     }
 

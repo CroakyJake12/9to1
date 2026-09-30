@@ -47,7 +47,8 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         Func<ContainerDefinition, Task> openGroup,
         NativeChatUiStateStore? stateStore = null,
         IConversationProductionRepository? production = null,
-        SpaceRegistry? spaces = null)
+        SpaceRegistry? spaces = null,
+        HavenOS.Apps.Spaces.PluginSidebarRegistry? pluginSidebar = null)
     {
         _conversations = conversations ?? throw new ArgumentNullException(nameof(conversations));
         _containers = containers ?? throw new ArgumentNullException(nameof(containers));
@@ -57,6 +58,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         _stateStore = stateStore ?? new NativeChatUiStateStore();
         _production = production;
         _spaces = spaces;
+        _pluginSidebar = pluginSidebar;
 
         _scene = new ChatSidebarHavenScene();
         SceneHost = new HavenSceneControl { Root = _scene.Root };
@@ -81,6 +83,22 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
     /// <summary>The Space the sidebar is currently scoped to, or null for unscoped Chat.</summary>
     internal Guid? CurrentSpaceId => _currentSpaceId;
+
+    private readonly HavenOS.Apps.Spaces.PluginSidebarRegistry? _pluginSidebar;
+
+    private async Task OpenPluginSidebarItemAsync(Guid spaceId, string pluginId, string itemId)
+    {
+        try
+        {
+            if (_pluginSidebar is null) return;
+            await _pluginSidebar.OpenAsync(spaceId, pluginId, itemId, _lifetime.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception exception) when (exception is InvalidOperationException or UnauthorizedAccessException or IOException)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => _scene.SetStatus("Plugin item could not be opened: " + exception.Message));
+        }
+    }
 
     /// <summary>Raised when the user asks to manage Spaces from the sidebar picker.</summary>
     internal event EventHandler? ManageSpacesRequested;
@@ -144,6 +162,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
     private async Task SelectSpaceAsync(Guid? spaceId)
     {
+        _scene.SetPluginItems([]);
         if (_spaces is not null)
             await _spaces.SetCurrentSpaceIdAsync(spaceId, _lifetime.Token).ConfigureAwait(false);
         _currentSpaceId = spaceId;
@@ -188,6 +207,10 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
                 var conversationTask = _conversations.GetRecentAsync(_currentMode, 500, _lifetime.Token);
                 var groupTask = _containers.GetByModeAsync(_currentMode, _lifetime.Token);
                 var stateTask = _stateStore.GetAllAsync(_lifetime.Token);
+                var sidebarSpaceId = _currentSpaceId ?? SpaceRegistry.ChatSpaceId;
+                var pluginItems = _pluginSidebar is null
+                    ? Array.Empty<HavenOS.Apps.Spaces.PluginSidebarContribution>()
+                    : await _pluginSidebar.GetVisibleAsync(sidebarSpaceId, _lifetime.Token).ConfigureAwait(false);
                 var fileTask = _production is null || _currentMode != HavenMode.Chat
                     ? Task.FromResult<IReadOnlyList<MessageAttachment>>([])
                     : _production.GetRecentAttachmentsAsync(100, _lifetime.Token);
@@ -202,6 +225,9 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
                 if (Dispatcher.UIThread.CheckAccess()) Render();
                 else await Dispatcher.UIThread.InvokeAsync(Render);
+                await Dispatcher.UIThread.InvokeAsync(() => _scene.SetPluginItems(
+                    sidebarSpaceId != (_currentSpaceId ?? SpaceRegistry.ChatSpaceId) ? [] : pluginItems.Select(item =>
+                    (item.Label, item.IconKey, (Action)(() => _ = OpenPluginSidebarItemAsync(sidebarSpaceId, item.PluginId, item.SidebarItemId)))).ToArray()));
             }
             while (_refreshPending && !_disposed);
         }
