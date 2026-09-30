@@ -145,8 +145,10 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
                 if (!registered.IsSuccess) throw new UnauthorizedAccessException(registered.Error!.Message);
                 folders.Add(appId, id);
             }
-            var write = await home.WriteAsync(new(RecordId(actor.ProfileId), "files.native-workspace", 1, HomeDataScope.DeviceLocal,
-                HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(configuration)), 0, cancellationToken).ConfigureAwait(false);
+            var write = await home.WriteGuardedAsync(new(RecordId(actor.ProfileId), "files.native-workspace", 1, HomeDataScope.DeviceLocal,
+                HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(configuration)), 0, actor, profiles, cancellationToken).ConfigureAwait(false);
+            if (write.Failure?.Code == HomeCoreErrorCode.PermissionDenied)
+                throw new UnauthorizedAccessException("Home profile changed before Files setup configuration publication.");
             if (!write.IsSuccess) throw new InvalidOperationException("Files setup configuration conflicted; created Files data was preserved for recovery.");
             return workspace;
         }

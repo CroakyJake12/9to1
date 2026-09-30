@@ -38,25 +38,24 @@ public sealed partial class HavenLauncherActivity
         var scroll = new HorizontalScrollView(this) { FillViewport = true }; scroll.AddView(grid); _dockHost.AddView(scroll);
         AndroidTypography.ApplyTree(_dockHost);
     }
-    private void ShowDockSettings()
+    private void ShowDockSettings(LauncherStoredLayout expected)
     {
-        if (_layout is null) return;
         var panel = new LinearLayout(this) { Orientation = Orientation.Vertical };
-        var rows = new SeekBar(this) { Max = 2, Progress = (_layout.Current.Dock?.Rows ?? 1) - 1, ContentDescription = "Dock rows, one to three" };
-        var columns = new SeekBar(this) { Max = 4, Progress = (_layout.Current.Dock?.Columns ?? 4) - 3, ContentDescription = "Dock columns, three to seven" };
+        var rows = new SeekBar(this) { Max = 2, Progress = (expected.Current.Dock?.Rows ?? 1) - 1, ContentDescription = "Dock rows, one to three" };
+        var columns = new SeekBar(this) { Max = 4, Progress = (expected.Current.Dock?.Columns ?? 4) - 3, ContentDescription = "Dock columns, three to seven" };
         var label = new TextView(this);
         void Update() => label.Text = $"Dock: {rows.Progress + 1} rows × {columns.Progress + 3} columns";
         rows.ProgressChanged += (_, _) => Update(); columns.ProgressChanged += (_, _) => Update(); Update();
         panel.AddView(label); panel.AddView(rows); panel.AddView(columns);
         var dialog = new AlertDialog.Builder(this); dialog.SetTitle("Dock"); dialog.SetView(panel);
-        dialog.SetPositiveButton("Save", (_, _) => _ = EditLayoutAsync(layout => LauncherLayoutEdits.ConfigureDock(layout, rows.Progress + 1, columns.Progress + 3)));
-        dialog.SetNeutralButton("Hide empty dock", (_, _) => _ = EditLayoutAsync(LauncherLayoutEdits.RemoveDock));
+        dialog.SetPositiveButton("Save", (_, _) => _ = EditLayoutAsync(layout => LauncherLayoutEdits.ConfigureDock(layout, rows.Progress + 1, columns.Progress + 3), expected));
+        dialog.SetNeutralButton("Hide empty dock", (_, _) => _ = EditLayoutAsync(LauncherLayoutEdits.RemoveDock, expected));
         dialog.SetNegativeButton("Cancel", (_, _) => { }); dialog.Show();
     }
-    private Task AddOrMoveToDockAsync(Guid applicationId, LauncherPlacement? placement) => EditLayoutAsync(layout =>
+    private Task AddOrMoveToDockAsync(Guid applicationId, LauncherPlacement? placement, LauncherStoredLayout expected) => EditLayoutAsync(layout =>
     {
         var configured = layout.Dock is null ? LauncherLayoutEdits.ConfigureDock(layout, 1, 4) : layout;
         return placement is null ? LauncherLayoutEdits.AddDockApplication(configured, applicationId)
             : LauncherLayoutEdits.MoveToContainer(configured, placement.Id, configured.Dock!.Id);
-    });
+    }, expected);
 }

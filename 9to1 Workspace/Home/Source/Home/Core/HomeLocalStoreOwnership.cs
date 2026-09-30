@@ -92,20 +92,44 @@ public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocal
         catch (JsonException) { return false; }
     }
 
-    public async Task<HomeLocalStoreBinding> BindNewEmptyAsync(string kind, string storeId, CancellationToken ct = default)
+    public Task<HomeLocalStoreBinding> BindNewEmptyAsync(string kind, string storeId, CancellationToken ct = default) =>
+        BindNewEmptyCoreAsync(null, kind, storeId, ct);
+    public Task<HomeLocalStoreBinding> BindNewEmptyAsync(AuthenticatedResourceActor expectedActor, string kind,
+        string storeId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return BindNewEmptyCoreAsync(expectedActor, kind, storeId, ct);
+    }
+    private async Task<HomeLocalStoreBinding> BindNewEmptyCoreAsync(AuthenticatedResourceActor? expectedActor,
+        string kind, string storeId, CancellationToken ct)
     {
         var actor = await profiles.GetCurrentAsync(ct).ConfigureAwait(false) ?? throw new UnauthorizedAccessException();
+        if (expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The displayed Home setup profile changed; reopen setup.");
         var observed = await evidence.ReadAsync(kind, storeId, ct).ConfigureAwait(false);
         if (!Valid(observed, kind, storeId) || !observed!.NewlyCreated || !observed.IsEmpty)
             throw new UnauthorizedAccessException("An existing or unknown store requires explicit ownership import.");
         return await BindAsync(observed, actor, null, ct).ConfigureAwait(false);
     }
 
-    public async Task<HomePermissionAuthorization> RequestImportAsync(string kind, string storeId, string sessionId, CancellationToken ct = default)
+    public Task<HomePermissionAuthorization> RequestImportAsync(string kind, string storeId, string sessionId, CancellationToken ct = default) =>
+        RequestImportCoreAsync(null, kind, storeId, sessionId, ct);
+    public Task<HomePermissionAuthorization> RequestImportAsync(AuthenticatedResourceActor expectedActor, string kind,
+        string storeId, string sessionId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return RequestImportCoreAsync(expectedActor, kind, storeId, sessionId, ct);
+    }
+    private async Task<HomePermissionAuthorization> RequestImportCoreAsync(AuthenticatedResourceActor? expectedActor,
+        string kind, string storeId, string sessionId, CancellationToken ct)
     {
         var actor = await profiles.GetCurrentAsync(ct).ConfigureAwait(false) ?? throw new UnauthorizedAccessException();
+        if (expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The displayed Home setup profile changed; reopen setup.");
         var observed = await evidence.ReadAsync(kind, storeId, ct).ConfigureAwait(false);
         if (!Valid(observed, kind, storeId)) throw new UnauthorizedAccessException("Unknown or inaccessible local store cannot be imported.");
+        if (actor != await profiles.GetCurrentAsync(ct).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The Home setup profile changed during store observation.");
         if (_imports.Count >= 256) throw new InvalidOperationException("Too many pending ownership imports.");
         var reference = new HomeObjectReference("local-resource-store", kind + ":" + storeId);
         var authorization = await permissions.AuthorizeAsync(new(null,

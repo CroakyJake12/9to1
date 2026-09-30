@@ -64,7 +64,10 @@ public sealed class DataTableDefinition
     public bool SortDescending { get; set; }
     public List<DataTableFilter> Filters { get; set; } = [];
     public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.Ordinal);
-    public void Normalize() { if (Id == Guid.Empty) Id = Guid.NewGuid(); Name = string.IsNullOrWhiteSpace(Name) ? "Table1" : Name.Trim(); Range ??= new(); Range.Normalize(); if (SortColumn is < 0 || SortColumn < Range.StartColumn || SortColumn > Range.EndColumn) SortColumn = null; Filters ??= []; foreach (var filter in Filters.Where(value => value is not null)) filter.Normalize(); Filters = Filters.Where(value => value is not null && value.Column >= Range.StartColumn && value.Column <= Range.EndColumn).OrderBy(value => value.Column).ThenBy(value => value.Operator).ThenBy(value => value.Value, StringComparer.OrdinalIgnoreCase).ToList(); Metadata ??= new(StringComparer.Ordinal); }
+    public int RecordIdentityVersion { get; set; }
+    public List<DataTableField> Fields { get; set; } = [];
+    public List<DataTableRecord> Records { get; set; } = [];
+    public void Normalize() { if (RecordIdentityVersion != 0) DataTableIdentity.ValidateTable(this); if (Id == Guid.Empty && RecordIdentityVersion != 0) throw new InvalidDataException("Canonical table identity is missing."); if (Id == Guid.Empty) Id = Guid.NewGuid(); Name = string.IsNullOrWhiteSpace(Name) ? "Table1" : Name.Trim(); Range ??= new(); Range.Normalize(); if (SortColumn is < 0 || SortColumn < Range.StartColumn || SortColumn > Range.EndColumn) SortColumn = null; Filters ??= []; foreach (var filter in Filters.Where(value => value is not null)) filter.Normalize(); Filters = Filters.Where(value => value is not null && value.Column >= Range.StartColumn && value.Column <= Range.EndColumn).OrderBy(value => value.Column).ThenBy(value => value.Operator).ThenBy(value => value.Value, StringComparer.OrdinalIgnoreCase).ToList(); Metadata ??= new(StringComparer.Ordinal); Fields ??= []; Records ??= []; }
 }
 
 public sealed class DataValidationRule
@@ -119,20 +122,40 @@ public static class DataSpreadsheetOperations
         for (var row = range.StartRow; row <= range.EndRow; row++) for (var column = range.StartColumn; column <= range.EndColumn; column++) { var cell = sheet.GetOrCreateCell(row, column); foreach (var (key, value) in properties) { if (string.IsNullOrWhiteSpace(value)) cell.Metadata.Remove(key); else cell.Metadata[key] = value; } }
     }
 
-    public static void InsertRows(DataSheet sheet, int index, int count = 1) { ArgumentNullException.ThrowIfNull(sheet); ValidateStructural(index, count); foreach (var cell in sheet.Cells.Where(cell => cell.Row >= index).OrderByDescending(cell => cell.Row)) cell.Row += count; sheet.Normalize(sheet.Order); }
-    public static void DeleteRows(DataSheet sheet, int index, int count = 1) { ArgumentNullException.ThrowIfNull(sheet); ValidateStructural(index, count); var end = checked(index + count); sheet.Cells.RemoveAll(cell => cell.Row >= index && cell.Row < end); foreach (var cell in sheet.Cells.Where(cell => cell.Row >= end)) cell.Row -= count; sheet.Normalize(sheet.Order); }
-    public static void InsertColumns(DataSheet sheet, int index, int count = 1) { ArgumentNullException.ThrowIfNull(sheet); ValidateStructural(index, count); foreach (var cell in sheet.Cells.Where(cell => cell.Column >= index).OrderByDescending(cell => cell.Column)) cell.Column += count; sheet.Normalize(sheet.Order); }
-    public static void DeleteColumns(DataSheet sheet, int index, int count = 1) { ArgumentNullException.ThrowIfNull(sheet); ValidateStructural(index, count); var end = checked(index + count); sheet.Cells.RemoveAll(cell => cell.Column >= index && cell.Column < end); foreach (var cell in sheet.Cells.Where(cell => cell.Column >= end)) cell.Column -= count; sheet.Normalize(sheet.Order); }
+    public static void InsertRows(DataSheet sheet, int index, int count = 1) => ChangeStructure(sheet, index, count, rows: true, delete: false);
+    public static void DeleteRows(DataSheet sheet, int index, int count = 1) => ChangeStructure(sheet, index, count, rows: true, delete: true);
+    public static void InsertColumns(DataSheet sheet, int index, int count = 1) => ChangeStructure(sheet, index, count, rows: false, delete: false);
+    public static void DeleteColumns(DataSheet sheet, int index, int count = 1) => ChangeStructure(sheet, index, count, rows: false, delete: true);
+
+    private static void ChangeStructure(DataSheet sheet, int index, int count, bool rows, bool delete)
+    {
+        ArgumentNullException.ThrowIfNull(sheet); ValidateStructural(index, count);
+        var end = checked(index + count);
+        if (!delete && sheet.Cells.Any(cell => (rows ? cell.Row : cell.Column) >= index && (rows ? cell.Row : cell.Column) > int.MaxValue - count))
+            throw new ArgumentOutOfRangeException(nameof(count), "The shifted cells exceed the sheet coordinate range.");
+        var commitIdentities = DataTableIdentity.PrepareStructure(sheet, index, count, rows, delete);
+        if (delete) sheet.Cells.RemoveAll(cell => (rows ? cell.Row : cell.Column) >= index && (rows ? cell.Row : cell.Column) < end);
+        foreach (var cell in sheet.Cells)
+        {
+            var coordinate = rows ? cell.Row : cell.Column;
+            if (coordinate < (delete ? end : index)) continue;
+            var target = delete ? coordinate - count : checked(coordinate + count);
+            if (rows) cell.Row = target; else cell.Column = target;
+        }
+        sheet.Normalize(sheet.Order); commitIdentities();
+    }
 
     public static void SortRange(DataSheet sheet, DataCellRange range, int keyColumn, bool descending = false, bool hasHeader = true)
     {
         ArgumentNullException.ThrowIfNull(sheet); ArgumentNullException.ThrowIfNull(range); range.Normalize(); if (keyColumn < range.StartColumn || keyColumn > range.EndColumn) throw new ArgumentOutOfRangeException(nameof(keyColumn));
-        var firstDataRow = range.StartRow + (hasHeader ? 1 : 0); if (firstDataRow > range.EndRow) return;
+        DataTableIdentity.ValidateSort(sheet, range, hasHeader);
+        var firstDataRow = checked(range.StartRow + (hasHeader ? 1 : 0)); if (firstDataRow > range.EndRow) return;
         var rows = Enumerable.Range(firstDataRow, range.EndRow - firstDataRow + 1).Select(row => new RowSnapshot(row, Enumerable.Range(range.StartColumn, range.ColumnCount).Select(column => Clone(sheet.GetCell(row, column), row, column)).ToArray(), sheet.GetCell(row, keyColumn)?.Value ?? string.Empty)).ToList();
-        rows.Sort((left, right) => { var result = Compare(left.Key, right.Key); if (result == 0) result = left.SourceRow.CompareTo(right.SourceRow); return descending ? -result : result; });
+        rows.Sort((left, right) => { var result = Compare(left.Key, right.Key); if (result == 0) return left.SourceRow.CompareTo(right.SourceRow); return descending ? -result : result; });
         sheet.Cells.RemoveAll(cell => cell.Row >= firstDataRow && cell.Row <= range.EndRow && cell.Column >= range.StartColumn && cell.Column <= range.EndColumn);
         for (var offset = 0; offset < rows.Count; offset++) { var targetRow = firstDataRow + offset; foreach (var cell in rows[offset].Cells.Where(cell => cell is not null)) { cell!.Row = targetRow; sheet.Cells.Add(cell); } }
         sheet.Normalize(sheet.Order);
+        DataTableIdentity.ApplySort(sheet, range, rows.Select((row, offset) => (row.SourceRow, Target: firstDataRow + offset)).ToDictionary(item => item.SourceRow, item => item.Target));
     }
 
     public static IReadOnlyList<int> FilterRows(DataSheet sheet, DataCellRange range, IReadOnlyList<DataTableFilter> filters, bool hasHeader = true)

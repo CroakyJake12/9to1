@@ -9,9 +9,11 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="Core/HavenOS.Images.Core.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <EmbeddedResource Include="UI/PictureHost.cui" LogicalName="HavenOS.Images.UI.PictureHost.cui" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />

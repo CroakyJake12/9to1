@@ -84,32 +84,37 @@ public sealed partial class HavenLauncherActivity
     }
     private void ShowFolderMenu(LauncherFolder folder, LauncherPlacement icon)
     {
+        var expected = _layout; if (expected is null) return;
+        var currentFolder = expected.Current.Folders.SingleOrDefault(f => f.Id == folder.Id);
+        var currentIcon = LauncherLayoutEdits.Placements(expected.Current).SingleOrDefault(i => i.Id == icon.Id);
+        if (currentFolder is null || currentIcon is null || currentIcon.FolderId != folder.Id) return;
+        folder = currentFolder; icon = currentIcon;
         var dialog = new AlertDialog.Builder(this); dialog.SetTitle(folder.Name);
         dialog.SetItems(new[] { "Open folder", "Rename folder", "Folder columns", "Move folder", "Move selected shortcut here", "Remove empty folder" }, (_, e) =>
         {
             switch (e.Which)
             {
                 case 0: ShowFolder(folder.Id); break;
-                case 1: AskPageName("Rename folder", folder.Name, name => EditLayoutAsync(layout => LauncherLayoutEdits.ConfigureFolder(layout, folder.Id, name, layout.Folders.Single(f => f.Id == folder.Id).Columns))); break;
-                case 2: ShowFolderColumns(folder); break;
+                case 1: AskPageName("Rename folder", folder.Name, name => EditLayoutAsync(layout => LauncherLayoutEdits.ConfigureFolder(layout, folder.Id, name, layout.Folders.Single(f => f.Id == folder.Id).Columns), expected)); break;
+                case 2: ShowFolderColumns(folder, expected); break;
                 case 3: _movingPlacementId = icon.Id; RenderPage(); break;
                 case 4:
-                    if (_movingPlacementId is { } item) _ = EditLayoutAsync(layout => LauncherLayoutEdits.MoveToContainer(layout, item, folder.Id));
+                    if (_movingPlacementId is { } item) _ = EditLayoutAsync(layout => LauncherLayoutEdits.MoveToContainer(layout, item, folder.Id), expected);
                     else Toast.MakeText(this, "Choose Move shortcut on an app first.", ToastLength.Short)?.Show();
                     break;
-                case 5: _ = EditLayoutAsync(layout => LauncherLayoutEdits.RemovePlacement(layout, icon.Id)); break;
+                case 5: _ = EditLayoutAsync(layout => LauncherLayoutEdits.RemovePlacement(layout, icon.Id), expected); break;
             }
         });
         dialog.SetNegativeButton("Cancel", (_, _) => { }); dialog.Show();
     }
-    private void ShowFolderColumns(LauncherFolder folder)
+    private void ShowFolderColumns(LauncherFolder folder, LauncherStoredLayout expected)
     {
         var panel = new LinearLayout(this) { Orientation = Orientation.Vertical };
         var columns = new SeekBar(this) { Max = 4, Progress = folder.Columns - 3, ContentDescription = "Folder columns, three to seven" };
         var label = new TextView(this) { Text = $"{folder.Columns} columns" };
         columns.ProgressChanged += (_, _) => label.Text = $"{columns.Progress + 3} columns"; panel.AddView(label); panel.AddView(columns);
         var dialog = new AlertDialog.Builder(this); dialog.SetTitle(folder.Name); dialog.SetView(panel);
-        dialog.SetPositiveButton("Save", (_, _) => _ = EditLayoutAsync(layout => LauncherLayoutEdits.ConfigureFolder(layout, folder.Id, layout.Folders.Single(f => f.Id == folder.Id).Name, columns.Progress + 3)));
+        dialog.SetPositiveButton("Save", (_, _) => _ = EditLayoutAsync(layout => LauncherLayoutEdits.ConfigureFolder(layout, folder.Id, layout.Folders.Single(f => f.Id == folder.Id).Name, columns.Progress + 3), expected));
         dialog.SetNegativeButton("Cancel", (_, _) => { }); dialog.Show();
     }
 }

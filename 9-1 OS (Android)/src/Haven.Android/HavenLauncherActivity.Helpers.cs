@@ -1,3 +1,4 @@
+using NineToOne.Launcher;
 using Android.Graphics;
 using Android.Graphics.Drawables;
 using Android.Views;
@@ -40,47 +41,29 @@ public sealed partial class HavenLauncherActivity
         public string LegacyPersonalKey => PackageName + "/" + ActivityName;
     }
 
-    private sealed class SwipeTouchListener(
-        float swipeThresholdPixels,
-        Action onSwipeUp,
-        Action onSwipeLeft,
-        Action onSwipeRight) : Java.Lang.Object, View.IOnTouchListener
+    private sealed class SwipeTouchListener(float swipeThresholdPixels, float tapSlopPixels,
+        Action<LauncherGesture> dispatch) : Java.Lang.Object, View.IOnTouchListener
     {
-        private readonly float _swipeThresholdPixels = Math.Max(1f, swipeThresholdPixels);
-        private float _downX;
-        private float _downY;
-
+        private readonly LauncherGestureRecognizer _input = new(swipeThresholdPixels, tapSlopPixels);
         public bool OnTouch(View? view, MotionEvent? e)
         {
-            if (e is null)
-                return false;
-
-            if (e.Action == MotionEventActions.Down)
+            if (e is null) { _input.Cancel(); return false; }
+            switch (e.ActionMasked)
             {
-                _downX = e.RawX;
-                _downY = e.RawY;
-                return true;
+                case MotionEventActions.Down:
+                    _input.Down(e.RawX, e.RawY, e.EventTime, e.PointerCount); break;
+                case MotionEventActions.Move:
+                    _input.Move(e.RawX, e.RawY, e.PointerCount); break;
+                case MotionEventActions.Up:
+                    var gesture = _input.Up(e.RawX, e.RawY, e.EventTime, e.PointerCount);
+                    if (gesture is { } value) dispatch(value); else if (_input.WasTap) view?.PerformClick();
+                    break;
+                case MotionEventActions.Cancel:
+                case MotionEventActions.PointerDown:
+                case MotionEventActions.PointerUp:
+                case MotionEventActions.Outside:
+                    _input.Cancel(); break;
             }
-
-            if (e.Action != MotionEventActions.Up)
-                return true;
-
-            var deltaX = e.RawX - _downX;
-            var deltaY = e.RawY - _downY;
-            if (Math.Abs(deltaY) > Math.Abs(deltaX) && deltaY < -_swipeThresholdPixels)
-                onSwipeUp();
-            else if (Math.Abs(deltaX) > _swipeThresholdPixels)
-            {
-                if (deltaX < 0)
-                    onSwipeLeft();
-                else
-                    onSwipeRight();
-            }
-            else
-            {
-                view?.PerformClick();
-            }
-
             return true;
         }
     }

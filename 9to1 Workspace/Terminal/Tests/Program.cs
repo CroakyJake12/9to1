@@ -52,6 +52,7 @@ internal static class TerminalAppSurfaceSpecs
         await AskPermissionRequiresApprovalWithoutExecutingAsync();
         await CommandTextIsPreservedForNativeShellExecutionAsync();
         await ApprovalUsesTheSamePersistentSessionAsync();
+        await ApprovalBindsDisplayedCommandAndDirectoryAsync();
         await WorkingDirectoryAndNewSessionUseHostSessionContractAsync();
         await FailedReplacementPreservesHealthySessionAsync();
         CreationFailureFailsClosedAndRedactsReason();
@@ -172,6 +173,39 @@ internal static class TerminalAppSurfaceSpecs
         Check(approvedSecond.State == TerminalAppCommandState.Succeeded, "second approved command should execute");
         Check(factory.CreateCount == 1, "multiple commands must reuse one persistent host session");
         Check(factory.LastSession!.ExecuteCount == 2, "both commands must execute through that session");
+    }
+
+    private static async Task ApprovalBindsDisplayedCommandAndDirectoryAsync()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "terminal-review-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new FakeSessionFactory();
+            using var surface = new TerminalAppSurface(new(factory, () => PermissionMode.Ask));
+            await surface.SubmitAsync("first-command");
+            var first = surface.PendingCommandId!.Value;
+            await surface.SubmitAsync("second-command");
+            var second = surface.PendingCommandId!.Value;
+            Check(first != second, "each manual review has its own stable identity");
+            Check((await surface.ApprovePendingAsync(first)).State == TerminalAppCommandState.Denied, "old review cannot approve replacement command");
+            surface.DenyPending(first);
+            Check(surface.PendingCommandId == second && factory.LastSession!.ExecuteCount == 0, "old deny cannot clear replacement review");
+            Check((await surface.ApprovePendingAsync(second)).State == TerminalAppCommandState.Succeeded && factory.LastSession!.LastCommand == "second-command", "exact displayed review executes once");
+            await surface.SubmitAsync("directory-sensitive");
+            var beforeDirectory = surface.PendingCommandId!.Value;
+            await surface.SetWorkingDirectoryAsync(directory);
+            Check(surface.PendingCommandId is null && (await surface.ApprovePendingAsync(beforeDirectory)).State != TerminalAppCommandState.Succeeded, "owner directory change invalidates pending review");
+            await surface.SubmitAsync("external-directory-sensitive");
+            var external = surface.PendingCommandId!.Value;
+            await factory.LastSession!.SetWorkingDirectoryAsync(Path.GetTempPath(), default);
+            Check((await surface.ApprovePendingAsync(external)).State == TerminalAppCommandState.Denied && factory.LastSession.ExecuteCount == 1, "external session directory change denies old review");
+            await surface.SubmitAsync("replaced-session");
+            var replaced = surface.PendingCommandId!.Value;
+            surface.NewSession();
+            Check((await surface.ApprovePendingAsync(replaced)).State != TerminalAppCommandState.Succeeded && factory.LastSession!.ExecuteCount == 0, "old review cannot target replacement shell");
+        }
+        finally { Directory.Delete(directory, true); }
     }
 
     private static async Task CommandTextIsPreservedForNativeShellExecutionAsync()

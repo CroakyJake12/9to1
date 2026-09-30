@@ -108,6 +108,58 @@ public sealed class HomeResourceOperationBrokerTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task Completion_requires_original_issuer_successful_claim_and_reports_actual_outcome_once()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        var outcome = new HomeExecutionOutcome(HomePermissionRequestState.Succeeded, "OWNER_COMMITTED", "The owner committed revision2.", [new("planner-event", "event-1")]);
+        Assert.False((await _broker.CompleteExecutionAsync(capability, outcome)).Succeeded);
+        Assert.NotNull(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        var foreign = new HomeResourceOperationBroker(new ResourceAuthorizationService(_actors, [_owner]), _permissions);
+        Assert.False((await foreign.CompleteExecutionAsync(capability, outcome)).Succeeded);
+        // The actual committed outcome belongs to the original request even after the UI session changes.
+        _actors.Current = ActorSource.Initial with { AuthenticationRevision = "later-session" };
+        Assert.True((await _broker.CompleteExecutionAsync(capability, outcome)).Succeeded);
+        Assert.True((await _broker.CompleteExecutionAsync(capability, outcome)).Succeeded); // same receipt, no repeated audit/effect
+        Assert.False((await _broker.CompleteExecutionAsync(capability, outcome with { Code = "DIFFERENT" })).Succeeded);
+        Assert.True((await _permissions.RecordExecutionAsync(pending.RequestId, outcome)).Succeeded); // durable idempotency after a lost acknowledgement
+        Assert.False((await _permissions.RecordExecutionAsync(pending.RequestId, outcome with { AffectedObjects = [] })).Succeeded);
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
+        Assert.Single((await _permissions.GetSnapshotAsync()).RecentAuditEvents,
+            item => item.RequestId == pending.RequestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);
+    }
+
+    [Fact]
+    public async Task Rejected_owner_claim_cannot_manufacture_completion_and_records_no_execution_success()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        _owner.Allowed = false;
+        Assert.Null(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        Assert.False((await _broker.CompleteExecutionAsync(capability,
+            new(HomePermissionRequestState.Succeeded, "FORGED", "No owner committed.", []))).Succeeded);
+        Assert.Equal(HomePermissionRequestState.Failed, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
+    }
+
+    [Theory]
+    [InlineData(HomePermissionRequestState.Failed)]
+    [InlineData(HomePermissionRequestState.PartiallyCompleted)]
+    [InlineData(HomePermissionRequestState.Cancelled)]
+    public async Task Owner_terminal_failures_are_not_relabelled_as_success(HomePermissionRequestState state)
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        Assert.NotNull(await _broker.ClaimExecutionAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments));
+        Assert.False((await _broker.CompleteExecutionAsync(capability,
+            new(HomePermissionRequestState.Executing, "INVALID", "Not terminal.", []))).Succeeded);
+        Assert.True((await _broker.CompleteExecutionAsync(capability, new(state, "OWNER_RESULT", "Observed owner outcome.", []))).Succeeded);
+        Assert.Equal(state, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
+    }
+
     private sealed class ActorSource : IAuthenticatedResourceActorSource
     {
         public static AuthenticatedResourceActor Initial { get; } = new("verified-user", "profile-1", Guid.NewGuid(), null, "session-1");

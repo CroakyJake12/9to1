@@ -9,19 +9,15 @@ public class HomeResourceCuiReadiness(HomeCoreRuntime home, IAuthenticatedResour
     ResourceAuthorizationService resources, string actionId,
     Func<CancellationToken, ValueTask<IReadOnlyList<ResourceScope>>> currentScopes) : ICuiSceneReadiness
 {
+    private readonly HomeProfileCuiReadiness _profile = new(home, actors);
     public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken)
     {
         try
         {
             var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
             if (actor is null) return Unavailable("HomeProfileUnavailable", "Open Home to recover this profile.");
-            var snapshot = await home.StartAsync(cancellationToken).ConfigureAwait(false);
-            foreach (var id in new[] { "home.core", "home.state", "permissions.trust" })
-                if (!snapshot.Services.Any(service => service.ServiceId == id && service.IsAvailable &&
-                    service.State == HomeServiceLifecycleState.Ready &&
-                    service.ContractVersion.Major == HomeCoreServiceCatalog.CurrentContractVersion.Major &&
-                    service.ContractVersion.Minor >= HomeCoreServiceCatalog.CurrentContractVersion.Minor))
-                    return Unavailable("HomeServicesUnavailable", "Home services need repair before opening this content.");
+            var profile = await _profile.CheckAsync(cancellationToken).ConfigureAwait(false);
+            if (profile.State != CuiSceneAvailabilityState.Ready) return profile;
             var scopes = await currentScopes(cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(actionId) || scopes.Count == 0 || scopes.Any(scope => scope.Access != ResourceAccess.Read))
                 return Unavailable("ResourceScopeUnavailable", "The owning app has no current canonical read scope.");

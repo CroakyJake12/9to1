@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Haven.Application;
 
 public sealed class SpaceRegistry
@@ -8,6 +10,7 @@ public sealed class SpaceRegistry
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly Func<CancellationToken, ValueTask<ISettingsCommitAdmission>>? _captureAdmission;
 
     public static Guid ChatSpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000005");
     public static Guid StudySpaceId { get; } = Guid.Parse("b1000000-0000-0000-0000-000000000001");
@@ -20,6 +23,16 @@ public sealed class SpaceRegistry
 
     public SpaceRegistry(IVersionedSettingsStore settings) : this(settings, () => DateTimeOffset.UtcNow)
     {
+    }
+
+    /// <summary>Trusted owner composition; capture occurs before the settings lease. The returned admission
+    /// must not read this settings store or its evidence while its lease is held.</summary>
+    public SpaceRegistry(IVersionedSettingsStore settings,
+        Func<CancellationToken, ValueTask<ISettingsCommitAdmission>> captureAdmission) : this(settings)
+    {
+        if (settings is not IVersionedSettingsGuardedCompareExchange)
+            throw new ArgumentException("Guarded Space writes require durable guarded compare-exchange.", nameof(settings));
+        _captureAdmission = captureAdmission ?? throw new ArgumentNullException(nameof(captureAdmission));
     }
 
     internal SpaceRegistry(IVersionedSettingsStore settings, Func<DateTimeOffset> clock)
@@ -53,6 +66,18 @@ public sealed class SpaceRegistry
     {
         var spaces = await GetAllAsync(includeArchived: true, cancellationToken).ConfigureAwait(false);
         return spaces.FirstOrDefault(space => space.Id == id);
+    }
+
+    /// <summary>Reads only an existing stored Space; never seeds, migrates or writes settings.
+    /// This snapshot grants no access: callers retain their actual owner/resource authority checks.</summary>
+    public async Task<SpaceDefinition?> ReadExistingAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var state = await _settings.GetAsync<SpaceRegistryState>(SettingsKey, cancellationToken).ConfigureAwait(false);
+        if (state is null) return null;
+        if (state.Version != CurrentVersion) throw new InvalidDataException("A stored Space snapshot requires the current schema.");
+        ValidateRegistry(state.Spaces);
+        var matches = state.Spaces.Where(space => space.Id == id).ToArray();
+        return matches.Length == 1 ? CloneSpace(matches[0]) : null;
     }
 
     public async Task<SpaceDefinition> CreateAsync(string name, string? description = null, CancellationToken cancellationToken = default)
@@ -227,6 +252,11 @@ public sealed class SpaceRegistry
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_settings is IVersionedSettingsCompareExchange)
+            {
+                await SetCurrentComparedAsync(spaceId, cancellationToken).ConfigureAwait(false);
+                return;
+            }
             if (spaceId is { } id)
             {
                 var state = await LoadAndReconcileAsync(cancellationToken).ConfigureAwait(false);
@@ -348,6 +378,8 @@ public sealed class SpaceRegistry
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_settings is IVersionedSettingsCompareExchange)
+                return await MutateComparedAsync(mutation, cancellationToken).ConfigureAwait(false);
             var state = await LoadAndReconcileAsync(cancellationToken).ConfigureAwait(false);
             var (next, result) = mutation(state);
             await _settings.SetAsync(SettingsKey,
@@ -362,6 +394,21 @@ public sealed class SpaceRegistry
 
     private async Task<SpaceRegistryState> LoadAndReconcileAsync(CancellationToken cancellationToken)
     {
+        if (_settings is IVersionedSettingsCompareExchange)
+        {
+            ISettingsCommitAdmission? admission = null;
+            for (var attempt = 0; attempt < 16; attempt++)
+            {
+                var exported = await _settings.ExportAsync(cancellationToken).ConfigureAwait(false);
+                exported.Settings.TryGetValue(SettingsKey, out var raw);
+                var (snapshotState, reconcileNeeded) = ReadComparedState(raw);
+                if (!reconcileNeeded) return snapshotState;
+                admission ??= await CaptureAdmissionAsync(cancellationToken).ConfigureAwait(false);
+                if (await TryCommitAsync(SettingsKey, raw, JsonSerializer.Serialize(snapshotState),
+                    new Dictionary<string, string?>(), admission, cancellationToken).ConfigureAwait(false)) return snapshotState;
+            }
+            throw new InvalidOperationException("The Space registry kept changing during reconciliation; reload and retry.");
+        }
         var state = await _settings.GetAsync<SpaceRegistryState>(SettingsKey, cancellationToken).ConfigureAwait(false)
             ?? new SpaceRegistryState(CurrentVersion, []);
         if (state.Version > CurrentVersion)
@@ -379,6 +426,81 @@ public sealed class SpaceRegistry
         var reconciled = new SpaceRegistryState(CurrentVersion, spaces);
         await _settings.SetAsync(SettingsKey, reconciled, cancellationToken).ConfigureAwait(false);
         return reconciled with { Spaces = reconciled.Spaces.Select(CloneSpace).ToArray() };
+    }
+
+    private async ValueTask<ISettingsCommitAdmission?> CaptureAdmissionAsync(CancellationToken token) =>
+        _captureAdmission is null ? null : await _captureAdmission(token).ConfigureAwait(false)
+            ?? throw new UnauthorizedAccessException("Current Space commit authority is unavailable.");
+
+    private async Task<bool> TryCommitAsync(string key, string? expected, string? replacement,
+        IReadOnlyDictionary<string, string?> guards, ISettingsCommitAdmission? admission, CancellationToken token)
+    {
+        if (_settings is IVersionedSettingsGuardedCompareExchange guarded)
+        {
+            var result = admission is null
+                ? await guarded.CompareExchangeGuardedAsync(key, expected, replacement, guards, token).ConfigureAwait(false)
+                : await guarded.CompareExchangeGuardedAsync(key, expected, replacement, guards, admission, token).ConfigureAwait(false);
+            if (result.AdmissionRejected) throw new UnauthorizedAccessException("Space authority changed before publication.");
+            return result.Exchanged;
+        }
+        if (admission is not null || guards.Count != 0)
+            throw new NotSupportedException("This settings store cannot preserve the required Space commit guards.");
+        return (await ((IVersionedSettingsCompareExchange)_settings)
+            .CompareExchangeAsync(key, expected, replacement, token).ConfigureAwait(false)).Exchanged;
+    }
+
+    private (SpaceRegistryState State, bool Changed) ReadComparedState(string? raw)
+    {
+        var stored = raw is null ? new SpaceRegistryState(CurrentVersion, []) :
+            JsonSerializer.Deserialize<SpaceRegistryState>(raw) ?? throw new InvalidDataException("The Space registry is invalid.");
+        if (stored.Version > CurrentVersion) throw new InvalidDataException("The Space registry schema is newer than supported.");
+        var spaces = stored.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
+        ValidateRegistry(spaces);
+        var changed = stored.Version != CurrentVersion;
+        foreach (var builtIn in BuiltIns())
+        {
+            if (spaces.Any(space => space.Id == builtIn.Id)) continue;
+            spaces.Add(builtIn); changed = true;
+        }
+        return (new(CurrentVersion, spaces.Select(CloneSpace).ToArray()), changed);
+    }
+
+    private async Task<TResult> MutateComparedAsync<TResult>(Func<SpaceRegistryState, (SpaceRegistryState Next, TResult Result)> mutation,
+        CancellationToken token)
+    {
+        var admission = await CaptureAdmissionAsync(token).ConfigureAwait(false);
+        for (var attempt = 0; attempt < 16; attempt++)
+        {
+            var exported = await _settings.ExportAsync(token).ConfigureAwait(false);
+            exported.Settings.TryGetValue(SettingsKey, out var raw);
+            var (state, _) = ReadComparedState(raw);
+            var (next, result) = mutation(state);
+            var replacement = JsonSerializer.Serialize(new SpaceRegistryState(next.Version, next.Spaces.Select(CloneSpace).ToArray()));
+            if (await TryCommitAsync(SettingsKey, raw, replacement, new Dictionary<string, string?>(), admission, token).ConfigureAwait(false))
+                return result is SpaceDefinition space ? (TResult)(object)CloneSpace(space) : result;
+        }
+        throw new InvalidOperationException("The Space registry kept changing during this edit; reload and retry.");
+    }
+
+    private async Task SetCurrentComparedAsync(Guid? spaceId, CancellationToken token)
+    {
+        var admission = await CaptureAdmissionAsync(token).ConfigureAwait(false);
+        for (var attempt = 0; attempt < 16; attempt++)
+        {
+            var exported = await _settings.ExportAsync(token).ConfigureAwait(false);
+            exported.Settings.TryGetValue(SettingsKey, out var registryRaw);
+            exported.Settings.TryGetValue(CurrentSpaceSettingsKey, out var currentRaw);
+            if (spaceId is { } id)
+            {
+                var (state, _) = ReadComparedState(registryRaw);
+                if (!state.Spaces.Any(space => space.Id == id && !space.IsArchived))
+                    throw new KeyNotFoundException($"Active Space '{id}' was not found.");
+            }
+            var guards = new Dictionary<string, string?> { [SettingsKey] = registryRaw };
+            if (await TryCommitAsync(CurrentSpaceSettingsKey, currentRaw,
+                spaceId is { } selected ? JsonSerializer.Serialize(selected.ToString()) : null, guards, admission, token).ConfigureAwait(false)) return;
+        }
+        throw new InvalidOperationException("The Space registry kept changing before selection; reload and retry.");
     }
 
     private static SpaceLayoutDocument? CloneLayout(SpaceLayoutDocument? layout)

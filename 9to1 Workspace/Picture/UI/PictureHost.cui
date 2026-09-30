@@ -1,0 +1,29 @@
+<Cui id="9to1.Picture.NativeHost" version="1">
+  <Grid id="picture-native-host" rows="Auto,Auto,*,Auto" columns="2*,*" accessible-name="Picture">
+    <WrapPanel orientation="Horizontal" grid-column-span="2">
+      <Button content="Refresh Pictures" action="picture.host.refresh" is-enabled="{Binding CanNavigate}" />
+      <Button content="Set up Pictures" action="picture.host.setup" is-enabled="{Binding CanSetup}" />
+      <Button content="Review Files ownership" action="picture.host.reviewOwnership" is-enabled="{Binding CanReviewWorkspace}" />
+      <Button content="Import image" action="picture.host.import" is-enabled="{Binding CanWrite}" />
+      <Button content="Finish approved request" action="picture.host.finish" is-enabled="{Binding CanFinish}" />
+    </WrapPanel>
+    <StackPanel grid-row="1" grid-column-span="2" spacing="6">
+      <StackPanel orientation="Horizontal" spacing="8">
+        <Button content="Previous document" action="picture.host.previous" is-enabled="{Binding CanPrevious}" />
+        <TextBlock text="{Binding SelectedName}" />
+        <Button content="Next document" action="picture.host.next" is-enabled="{Binding CanNext}" />
+        <Button content="Open selected" action="picture.host.open" is-enabled="{Binding CanOpen}" />
+        <Button content="Next page" action="picture.host.page" is-enabled="{Binding CanPage}" />
+      </StackPanel>
+      <StackPanel orientation="Horizontal" spacing="8">
+        <TextBox text="{Binding CropX, Mode=TwoWay}" accessible-name="Crop left coordinate" is-enabled="{Binding CanWrite}" />
+        <TextBox text="{Binding CropY, Mode=TwoWay}" accessible-name="Crop top coordinate" is-enabled="{Binding CanWrite}" />
+        <TextBox text="{Binding Width, Mode=TwoWay}" accessible-name="Crop or resize width" is-enabled="{Binding CanWrite}" />
+        <TextBox text="{Binding Height, Mode=TwoWay}" accessible-name="Crop or resize height" is-enabled="{Binding CanWrite}" />
+      </StackPanel>
+    </StackPanel>
+    <PictureHostContent id="picture-native-content" grid-row="2" accessible-name="Picture document and requests" />
+    <PictureHostApprovals id="picture-home-approvals" grid-row="2" grid-column="1" accessible-name="Home approvals" />
+    <TextBlock grid-row="3" grid-column-span="2" text="{Binding Status}" text-wrapping="Wrap" />
+  </Grid>
+</Cui>

@@ -17,6 +17,7 @@ public static class AndroidServiceRegistration
         services.AddSingleton<IInstalledApplicationObservationProvider>(provider => provider.GetRequiredService<AndroidLauncherPlatformCatalog>());
         services.AddSingleton<ICanonicalResourceAccessResolver, AndroidInstalledApplicationResourceResolver>();
         services.AddSingleton<AndroidInstalledApplicationsGoProvider>();
+        services.AddSingleton<AndroidInstalledApplicationShortcuts>();
         services.AddSingleton<ICanonicalResourceAccessResolver, LauncherLayoutResourceResolver>();
         services.AddSingleton<HomeLauncherLayoutStore>();
         services.AddSingleton<IGoProvider>(provider => provider.GetRequiredService<AndroidInstalledApplicationsGoProvider>());

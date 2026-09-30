@@ -11,10 +11,24 @@ public sealed class LocalModelRegistry(string denRoot, string deviceId, long max
     private readonly string _deviceId = Validate(deviceId);
     private readonly long _maximumModelWeightBytes = maximumModelWeightBytes >= 0 ? maximumModelWeightBytes : throw new ArgumentOutOfRangeException(nameof(maximumModelWeightBytes));
 
-    public async Task<LocalModelInstallation> RegisterAsync(string modelId, string absoluteModelPath,
-        string artifactSha256, CancellationToken cancellationToken = default)
+    public Task<LocalModelInstallation> RegisterAsync(string modelId, string absoluteModelPath,
+        string artifactSha256, CancellationToken cancellationToken = default) =>
+        RegisterCoreAsync(modelId, absoluteModelPath, artifactSha256, null, cancellationToken);
+
+    /// <summary>Owning authority is checked before artifact inspection and immediately before publishing
+    /// device-local installation evidence. The callback must not claim the artifact is immutable or executable.</summary>
+    public Task<LocalModelInstallation> RegisterGuardedAsync(string modelId, string absoluteModelPath,
+        string artifactSha256, Func<CancellationToken, ValueTask<bool>> commitAuthority,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(commitAuthority);
+        return RegisterCoreAsync(modelId, absoluteModelPath, artifactSha256, commitAuthority, cancellationToken);
+    }
+    private async Task<LocalModelInstallation> RegisterCoreAsync(string modelId, string absoluteModelPath,
+        string artifactSha256, Func<CancellationToken, ValueTask<bool>>? commitAuthority, CancellationToken cancellationToken)
     {
         Validate(modelId);
+        await CheckAuthorityAsync(commitAuthority, cancellationToken);
         if (!Path.IsPathFullyQualified(absoluteModelPath)) throw new DenException(DenErrorCode.InvalidRecord, "A local model installation requires an absolute device path.");
         if (!System.Text.RegularExpressions.Regex.IsMatch(artifactSha256, "^[A-Fa-f0-9]{64}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant))
             throw new DenException(DenErrorCode.InvalidRecord, "The model artifact hash must be SHA-256.");
@@ -26,15 +40,27 @@ public sealed class LocalModelRegistry(string denRoot, string deviceId, long max
         if (!string.Equals(actual, artifactSha256, StringComparison.OrdinalIgnoreCase)) throw new DenException(DenErrorCode.InvalidRecord, "The installed model hash does not match the model catalogue.");
         var installation = new LocalModelInstallation(modelId, deviceId, fullPath, actual, length, DateTime.UtcNow, isDirectory);
         var path = RecordPath(modelId);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await CheckAuthorityAsync(commitAuthority, cancellationToken);
+        var directory = Path.GetDirectoryName(path)!;
+        if (OperatingSystem.IsWindows()) Directory.CreateDirectory(directory);
+        else Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        await using (var output = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough | FileOptions.Asynchronous))
+        try
         {
-            await JsonSerializer.SerializeAsync(output, installation, DenJson.Options, cancellationToken);
-            await output.FlushAsync(cancellationToken);
-            output.Flush(true);
+            var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None,
+                BufferSize = 4096, Options = FileOptions.WriteThrough | FileOptions.Asynchronous };
+            if (!OperatingSystem.IsWindows()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+            await using (var output = new FileStream(temp, options))
+            {
+                await JsonSerializer.SerializeAsync(output, installation, DenJson.Options, cancellationToken);
+                await output.FlushAsync(cancellationToken);
+                output.Flush(true);
+            }
+            await CheckAuthorityAsync(commitAuthority, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temp, path, true);
         }
-        File.Move(temp, path, true);
+        finally { if (File.Exists(temp)) File.Delete(temp); }
         return installation;
     }
 
@@ -136,6 +162,13 @@ public sealed class LocalModelRegistry(string denRoot, string deviceId, long max
             length = checked(length + info.Length);
         }
         return (Convert.ToHexString(aggregate.GetHashAndReset()), length);
+    }
+
+    private static async ValueTask CheckAuthorityAsync(Func<CancellationToken, ValueTask<bool>>? authority, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (authority is not null && !await authority(ct))
+            throw new DenException(DenErrorCode.Forbidden, "Current authority does not permit publishing this model installation.");
     }
 
     private string RecordPath(string modelId) => Path.Combine(_root, Validate(modelId) + ".json");

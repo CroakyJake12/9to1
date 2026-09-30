@@ -224,8 +224,10 @@ public sealed class DataPageTests
         Assert.Equal(0, queries.Calls);
     }
 
-    [AvaloniaFact]
-    public async Task Spreadsheet_table_sort_filter_and_keyboard_undo_redo_round_trip_cells_and_metadata()
+    [AvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Spreadsheet_table_sort_filter_and_keyboard_undo_redo_round_trip_cells_and_metadata(bool promoteLegacy)
     {
         var workbook = DataWorkbook.Create("Spreadsheet commands");
         var sheet = workbook.Sheets[0];
@@ -233,6 +235,9 @@ public sealed class DataPageTests
         sheet.SetCell(1, 0, "beta"); sheet.SetCell(1, 1, "10", kind: DataCellKind.Number);
         sheet.SetCell(2, 0, "alpha"); sheet.SetCell(2, 1, "30", kind: DataCellKind.Number);
         sheet.SetCell(3, 0, "gamma"); sheet.SetCell(3, 1, "20", kind: DataCellKind.Number);
+        var legacyID = Guid.NewGuid();
+        if (promoteLegacy) workbook.Tables.Add(new DataTableDefinition { Id = legacyID, SheetId = sheet.Id, Name = "Existing", HasHeaders = true,
+            Range = new() { EndRow = 3, EndColumn = 1 } });
         using var page = new DataPage(new HavenEventBus(), new FakeDataRepository(workbook), new FakeDataFormats(), new FakeDataQueries());
         await page.InitializeAsync();
         var window = new Window { Width = 3200, Height = 1400, Content = page };
@@ -243,6 +248,9 @@ public sealed class DataPageTests
             Click(router, Assert.IsType<HavenButton>(page.SceneRoot.DescendantsAndSelf().Single(element => element.Name == "Data.Grid.Table.Create")));
             var definition = Assert.Single(page.Workbook!.Tables); Assert.Equal(0, definition.Range.StartRow); Assert.Equal(3, definition.Range.EndRow); Assert.True(definition.HasHeaders);
 
+            Assert.Equal(1, definition.RecordIdentityVersion);
+            if (promoteLegacy) Assert.Equal(legacyID, definition.Id);
+            var tableID = definition.Id; var alphaID = definition.Records[1].RecordID; var nameID = definition.Fields[0].FieldID;
             surface = Assert.Single(page.Route.GridHost.Children.OfType<DataSpreadsheetSurface>()); surface.SelectCell(1, 1); window.UpdateLayout();
             Click(router, Assert.IsType<HavenButton>(page.SceneRoot.DescendantsAndSelf().Single(element => element.Name == "Data.Grid.Sort.Ascending")));
             Assert.Equal("beta", sheet.GetCell(1, 0)?.Value); Assert.Equal("10", sheet.GetCell(1, 1)?.Value);
@@ -262,12 +270,17 @@ public sealed class DataPageTests
 
             Assert.True(surface.KeyDown(new HavenKeyInput(HavenKey.Z, HavenKeyModifiers.Control)));
             Assert.Equal("beta", sheet.GetCell(1, 0)?.Value); Assert.Equal("alpha", sheet.GetCell(2, 0)?.Value); Assert.Equal("gamma", sheet.GetCell(3, 0)?.Value);
-            Assert.Single(page.Workbook.Tables);
+            Assert.Equal(tableID, Assert.Single(page.Workbook.Tables).Id);
+            Assert.Equal(2, Assert.Single(page.Workbook.Tables[0].Records, record => record.RecordID == alphaID).SheetRow);
+            Assert.Equal("alpha", DataTableIdentity.ReadCell(page.Workbook, tableID, alphaID, nameID)!.Value);
 
             surface = Assert.Single(page.Route.GridHost.Children.OfType<DataSpreadsheetSurface>()); Assert.True(surface.KeyDown(new HavenKeyInput(HavenKey.Y, HavenKeyModifiers.Control)));
             Assert.Equal("beta", sheet.GetCell(1, 0)?.Value); Assert.Equal("gamma", sheet.GetCell(2, 0)?.Value); Assert.Equal("alpha", sheet.GetCell(3, 0)?.Value);
             surface = Assert.Single(page.Route.GridHost.Children.OfType<DataSpreadsheetSurface>()); Assert.True(surface.KeyDown(new HavenKeyInput(HavenKey.Y, HavenKeyModifiers.Control)));
             definition = Assert.Single(page.Workbook.Tables);
+            Assert.Equal(tableID, definition.Id);
+            Assert.Equal(3, Assert.Single(definition.Records, record => record.RecordID == alphaID).SheetRow);
+            Assert.Equal("alpha", DataTableIdentity.ReadCell(page.Workbook, tableID, alphaID, nameID)!.Value);
             var redoneFilter = Assert.Single(definition.Filters); Assert.Equal(DataFilterOperator.Contains, redoneFilter.Operator); Assert.Equal(1, redoneFilter.Column); Assert.Equal("20", redoneFilter.Value);
             surface = Assert.Single(page.Route.GridHost.Children.OfType<DataSpreadsheetSurface>()); Assert.Equal(2, surface.FilteredOutRowCount);
         }

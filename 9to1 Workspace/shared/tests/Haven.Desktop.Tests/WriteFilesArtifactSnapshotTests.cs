@@ -59,6 +59,10 @@ public sealed class WriteFilesArtifactSnapshotTests
             Assert.Equal(run.Id, savedRun.Id);
             Assert.Equal("Approved original", savedRun.Text); Assert.True(savedRun.Bold);
             Assert.Equal(committed.Id, (await provider.GetAsync(fileId, token)).Value!.CurrentRevisionId);
+            var beforeStaleClaim = await File.ReadAllBytesAsync(Path.Combine(root, "drive.json"), token);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => bridge.SaveForActorAsync(
+                actor with { AuthenticationRevision = actor.AuthenticationRevision + ":stale" }, fileId, reopened, committed.Id, token));
+            Assert.Equal(beforeStaleClaim, await File.ReadAllBytesAsync(Path.Combine(root, "drive.json"), token));
         }
         finally { Directory.Delete(root, true); }
     }

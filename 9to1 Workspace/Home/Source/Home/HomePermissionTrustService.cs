@@ -313,6 +313,7 @@ public sealed class HomePermissionTrustService
         ArgumentNullException.ThrowIfNull(outcome);
         try { outcome.Validate(); }
         catch (ArgumentException exception) { return Failure("HOME_EXECUTION_OUTCOME_INVALID", exception.Message); }
+        outcome = outcome with { AffectedObjects = Array.AsReadOnly(outcome.AffectedObjects.ToArray()) };
         var now = _timeProvider.GetUtcNow();
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -322,7 +323,14 @@ public sealed class HomePermissionTrustService
             if (index < 0) return Failure("HOME_PERMISSION_REQUEST_NOT_FOUND", "The audited permission request was not found.");
             var request = state.Requests[index];
             if (request.State is not (HomePermissionRequestState.Approved or HomePermissionRequestState.Executing))
+            {
+                var recorded = state.Audit.LastOrDefault(item => item.RequestId == requestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);
+                if (request.State == outcome.State && request.ResultCode == outcome.Code && request.ResultMessage == outcome.Message &&
+                    recorded is not null && recorded.RequestState == outcome.State && recorded.ResultCode == outcome.Code &&
+                    recorded.ResultMessage == outcome.Message && recorded.AffectedObjects.SequenceEqual(outcome.AffectedObjects))
+                    return Success("HOME_EXECUTION_ALREADY_AUDITED", "The exact owner outcome was already recorded.");
                 return Failure("HOME_PERMISSION_NOT_AUTHORIZED", "The target action cannot execute without an approved request.");
+            }
             if (request.Policy.RequiresPerActionApproval && request.AppliedTrustLevel == HomeTrustLevel.AlwaysTrust)
                 return Failure("HOME_TARGET_POLICY_REQUIRES_CONFIRMATION", "The target action policy requires an explicit approval for this execution.");
 

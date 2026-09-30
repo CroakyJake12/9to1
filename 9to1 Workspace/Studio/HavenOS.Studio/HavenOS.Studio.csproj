@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../Picture/Core/HavenOS.Images.Core.csproj" />
+    <ProjectReference Include="../../Home/HavenOS.Home.csproj" />
     <ProjectReference Include="../../../9to1 Models/Dulche Alpha/Den.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <Compile Remove="App.axaml.cs;MainWindow.axaml.cs" />

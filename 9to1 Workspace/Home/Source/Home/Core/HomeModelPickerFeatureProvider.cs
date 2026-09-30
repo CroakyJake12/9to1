@@ -130,9 +130,31 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         if (capability is null || await operations.ClaimExecutionAsync(capability, AppId, "models.routes.update", scopeList, arguments, cancellationToken).ConfigureAwait(false) != actor)
             return Denied<HomeModelPickerSnapshot>();
         // CAS is the authoritative transaction; an approval cannot overwrite a concurrent or changed-owner record.
-        if (!await guardedRoutes.TrySaveGuardedAsync(route, edit.ExpectedRevision, actor, profiles, cancellationToken).ConfigureAwait(false))
-            return new(false, "Conflict", "Another route edit won; reload and request approval again.");
-        return new(true, "Saved", "Model route saved.", Snapshot(route), Revision: route.Revision);
+        bool saved;
+        try { saved = await guardedRoutes.TrySaveGuardedAsync(route, edit.ExpectedRevision, actor, profiles, cancellationToken).ConfigureAwait(false); }
+        catch
+        {
+            await RecordOutcomeAsync(capability, new(HomePermissionRequestState.PartiallyCompleted,
+                "HOME_MODEL_ROUTE_OUTCOME_UNCONFIRMED", "The model route save did not return a confirmed outcome. Reload its canonical state before any further edit.", [])).ConfigureAwait(false);
+            throw;
+        }
+        if (!saved)
+        {
+            await RecordOutcomeAsync(capability, new(HomePermissionRequestState.Failed,
+                "HOME_MODEL_ROUTE_NOT_COMMITTED", "The canonical route revision or current authority rejected the save.", [])).ConfigureAwait(false);
+            return new(false, "Conflict", "Another route edit won or authority changed; reload and request approval again.");
+        }
+        var audited = await RecordOutcomeAsync(capability, new(HomePermissionRequestState.Succeeded,
+            "HOME_MODEL_ROUTE_COMMITTED", "The canonical model route was saved.", [new("home.model-route", route.RouteId)])).ConfigureAwait(false);
+        return new(true, audited ? "Saved" : "SavedAuditPending",
+            audited ? "Model route saved." : "Model route saved; Home could not confirm its audit record. Do not repeat the save.", Snapshot(route), Revision: route.Revision);
+    }
+
+    private async Task<bool> RecordOutcomeAsync(HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome)
+    {
+        try { return (await operations.CompleteExecutionAsync(capability, outcome, CancellationToken.None).ConfigureAwait(false)).Succeeded; }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
+        { return false; } // Preserve the actual owning result; audit failure is not permission to execute again.
     }
 
     private static string DescribeRouteChange(ConfiguredModelRoute? before, ConfiguredModelRoute after)

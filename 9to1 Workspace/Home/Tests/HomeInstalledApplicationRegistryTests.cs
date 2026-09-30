@@ -79,6 +79,74 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
         else Assert.Equal(before, await File.ReadAllBytesAsync(_path));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Sole_entry_update_retains_canonical_id_and_invalidates_old_launch_revision(bool legacy)
+    {
+        var provider = new MutableProvider { Apps = [Launch(".Old", legacy ? null : "package:example")] };
+        var store = new FileHomeCoreStateStore(_path);
+        var registry = new HomeInstalledApplicationRegistry(store, new Actors(), [provider]);
+        var first = Assert.Single(await registry.RefreshAsync(default));
+        if (legacy)
+        {
+            var record = Assert.Single((await store.ReadAsync()).State!.Records);
+            Assert.True((await store.WriteAsync(record with { SchemaVersion = 1, Revision = record.Revision + 1 }, record.Revision)).IsSuccess);
+        }
+        provider.Apps = [Launch(".New", "package:example")];
+        var reopened = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), new Actors(), [provider]);
+        var updated = Assert.Single(await reopened.RefreshAsync(default));
+        Assert.Equal(first.ApplicationId, updated.ApplicationId);
+        Assert.Equal(".New", updated.Entrypoint);
+        Assert.True(updated.Revision > first.Revision);
+        Assert.Null(await reopened.ResolveLaunchAsync(first.ApplicationId, first.Revision, default));
+        Assert.NotNull(await reopened.ResolveLaunchAsync(updated.ApplicationId, updated.Revision, default));
+        Assert.Equal(2, Assert.Single((await store.ReadAsync()).State!.Records).SchemaVersion);
+    }
+
+    [Fact]
+    public async Task Historical_multiple_entries_are_not_merged_or_selected_by_package()
+    {
+        var provider = new MutableProvider { Apps = [Launch(".A", null), Launch(".B", null)] };
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), new Actors(), [provider]);
+        var first = await registry.RefreshAsync(default);
+        provider.Apps = [];
+        await registry.RefreshAsync(default);
+        provider.Apps = [Launch(".C", "package:example")];
+        var updated = await registry.RefreshAsync(default);
+        Assert.Equal(3, updated.Count);
+        var active = Assert.Single(updated, a => a.Enabled);
+        Assert.DoesNotContain(first, a => a.ApplicationId == active.ApplicationId);
+        provider.Apps = [Launch(".A", "component:A"), Launch(".C", "package:example")];
+        var restored = await registry.RefreshAsync(default);
+        Assert.Equal(first.Single(a => a.Entrypoint == ".A").ApplicationId, restored.Single(a => a.Entrypoint == ".A").ApplicationId);
+    }
+
+    [Fact]
+    public async Task Duplicate_or_conflicting_stable_keys_preserve_durable_registry()
+    {
+        var provider = new MutableProvider { Apps = [Launch(".A", "package:example")] };
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), new Actors(), [provider]);
+        await registry.RefreshAsync(default);
+        var before = await File.ReadAllBytesAsync(_path);
+        provider.Apps = [Launch(".A", "same"), Launch(".B", "same")];
+        await Assert.ThrowsAsync<InvalidDataException>(() => registry.RefreshAsync(default).AsTask());
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+        provider.Apps = [Launch(".B", "package:example"), Launch(".A", "component:A")];
+        await Assert.ThrowsAsync<InvalidDataException>(() => registry.RefreshAsync(default).AsTask());
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    private static InstalledApplicationObservation Launch(string entrypoint, string? stable) =>
+        new("example", entrypoint, "Example", "2", true) { StableLaunchIdentity = stable };
+    private sealed class MutableProvider : IInstalledApplicationObservationProvider
+    {
+        public string ProviderId => "android.launcherapps";
+        public IReadOnlyList<InstalledApplicationObservation> Apps = [];
+        public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct) =>
+            ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("personal", "Personal", false, true, Apps)]);
+    }
+
     private sealed class PausedStore(string path) : IHomeCoreStateStore
     {
         private readonly FileHomeCoreStateStore _inner = new(path);

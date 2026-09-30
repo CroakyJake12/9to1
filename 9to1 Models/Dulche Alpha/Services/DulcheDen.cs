@@ -216,11 +216,15 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(peer);
+        if (string.Equals(Path.TrimEndingDirectorySeparator(Store.RootPath), Path.TrimEndingDirectorySeparator(peer.Store.RootPath), OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+            throw new DenException(DenErrorCode.InvalidRecord, "A Den cannot sync with its own store root.");
+        var selected = namespaceIds.Distinct(StringComparer.Ordinal).Take(257).ToArray();
+        if (selected.Length > 256) throw new DenException(DenErrorCode.InvalidRecord, "Too many sync namespaces.");
         var results = new List<DenRecord>();
-        foreach (var namespaceId in namespaceIds.Distinct(StringComparer.Ordinal))
+        foreach (var namespaceId in selected)
         {
-            var localNamespace = Store.Manifest.Namespaces.FirstOrDefault(n => n.Id == namespaceId);
-            var remoteNamespace = peer.Store.Manifest.Namespaces.FirstOrDefault(n => n.Id == namespaceId);
+            var localNamespace = (await Store.ReadAuthoritySnapshotAsync(cancellationToken)).Namespaces.FirstOrDefault(n => n.Id == namespaceId);
+            var remoteNamespace = (await peer.Store.ReadAuthoritySnapshotAsync(cancellationToken)).Namespaces.FirstOrDefault(n => n.Id == namespaceId);
             if (localNamespace is null || remoteNamespace is null) throw new DenException(DenErrorCode.NotFound, "Both Dens must declare the selected sync namespace.");
             if (!localNamespace.Shared || !remoteNamespace.Shared) throw new DenException(DenErrorCode.Forbidden, "Namespace sync is disabled unless both Den namespaces are explicitly shared.");
             var left = await Store.ListAllPermittedAsync(namespaceId, AccessPolicy, PrincipalId, cancellationToken);
@@ -232,19 +236,19 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!leftById.TryGetValue(remote.Id, out var local))
                 {
-                    results.Add(await Store.SaveAsync(remote, 0, SyncOperation(namespaceId, remote.Id, remote.Revision), AccessPolicy, PrincipalId, cancellationToken, preserveOrigin: true));
+                    results.Add(await Store.SaveAsync(remote, 0, SyncOperation(namespaceId, remote.Id, remote.Revision), new SyncWriteAccessPolicy(this, peer, namespaceId, remote.Id), PrincipalId, cancellationToken, preserveOrigin: true));
                     continue;
                 }
                 if (ContentFingerprint(local) == ContentFingerprint(remote)) continue;
                 if (local.Revision > remote.Revision && ContentFingerprint(await Store.ReadRevisionAsync(namespaceId, local.Id, remote.Revision, AccessPolicy, PrincipalId, cancellationToken) ?? local) == ContentFingerprint(remote))
                 {
-                    _ = await peer.Store.SaveAsync(local, remote.Revision, SyncOperation(namespaceId, local.Id, local.Revision), peer.AccessPolicy, peer.PrincipalId, cancellationToken, preserveOrigin: true);
+                    _ = await peer.Store.SaveAsync(local, remote.Revision, SyncOperation(namespaceId, local.Id, local.Revision), new SyncWriteAccessPolicy(peer, this, namespaceId, local.Id), peer.PrincipalId, cancellationToken, preserveOrigin: true);
                     results.Add(local);
                     continue;
                 }
                 if (remote.Revision > local.Revision && ContentFingerprint(await peer.Store.ReadRevisionAsync(namespaceId, remote.Id, local.Revision, peer.AccessPolicy, peer.PrincipalId, cancellationToken) ?? remote) == ContentFingerprint(local))
                 {
-                    var caughtUp = await Store.SaveAsync(remote, local.Revision, SyncOperation(namespaceId, remote.Id, remote.Revision), AccessPolicy, PrincipalId, cancellationToken, preserveOrigin: true);
+                    var caughtUp = await Store.SaveAsync(remote, local.Revision, SyncOperation(namespaceId, remote.Id, remote.Revision), new SyncWriteAccessPolicy(this, peer, namespaceId, remote.Id), PrincipalId, cancellationToken, preserveOrigin: true);
                     results.Add(caughtUp);
                     continue;
                 }
@@ -252,8 +256,8 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
                 if (merged is not null)
                 {
                     var mergeOperation = SyncOperation(namespaceId, local.Id, long.Parse(ContentFingerprint(merged)[..15], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture));
-                    var savedLocal = await Store.SaveAsync(merged, local.Revision, mergeOperation, AccessPolicy, PrincipalId, cancellationToken);
-                    _ = await peer.Store.SaveAsync(merged, remote.Revision, mergeOperation, peer.AccessPolicy, peer.PrincipalId, cancellationToken);
+                    var savedLocal = await Store.SaveAsync(merged, local.Revision, mergeOperation, new SyncWriteAccessPolicy(this, peer, namespaceId, local.Id, true), PrincipalId, cancellationToken);
+                    _ = await peer.Store.SaveAsync(merged, remote.Revision, mergeOperation, new SyncWriteAccessPolicy(peer, this, namespaceId, local.Id, true), peer.PrincipalId, cancellationToken);
                     results.Add(savedLocal);
                     continue;
                 }
@@ -263,7 +267,7 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!rightById.ContainsKey(local.Id))
-                    _ = await peer.Store.SaveAsync(local, 0, SyncOperation(namespaceId, local.Id, local.Revision), peer.AccessPolicy, peer.PrincipalId, cancellationToken, preserveOrigin: true);
+                    _ = await peer.Store.SaveAsync(local, 0, SyncOperation(namespaceId, local.Id, local.Revision), new SyncWriteAccessPolicy(peer, this, namespaceId, local.Id), peer.PrincipalId, cancellationToken, preserveOrigin: true);
             }
         }
         return results;
@@ -285,7 +289,7 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         if (!explicitlyConfirmed) throw new DenException(DenErrorCode.PurgeConfirmationRequired, "Permanent purge requires explicit confirmation.");
         if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, id, DenPermission.Administer, cancellationToken))
             throw new DenException(DenErrorCode.Forbidden, "The principal cannot permanently purge this Den object.");
-        await Store.PurgeAsync<MemoryEntry>(namespaceId, id, operationId, cancellationToken);
+        await Store.PurgeAsync<MemoryEntry>(namespaceId, id, operationId, AccessPolicy, PrincipalId, cancellationToken);
     }
 
     public async Task<MemoryPolicyRecord> GetMemoryPolicyAsync(string namespaceId = "personal", CancellationToken cancellationToken = default) =>
@@ -329,8 +333,8 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         CancellationToken cancellationToken = default)
     {
         var bytes = await Store.ReadPortableSnapshotAsync(namespaceIds, AccessPolicy, PrincipalId, selectedBlobIds, cancellationToken);
-        RejectSecrets(Encoding.UTF8.GetString(bytes));
-        return bytes;
+        try { RejectSecrets(Encoding.UTF8.GetString(bytes)); return bytes; }
+        catch { CryptographicOperations.ZeroMemory(bytes); throw; }
     }
 
     public async Task<DenImportResult> ImportAsync(ReadOnlyMemory<byte> bytes, string operationPrefix,
@@ -389,7 +393,18 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
                     throw new DenException(DenErrorCode.RetentionBlocked, "The imported attachment would exceed the namespace quota.", recoverable: true);
             }
         }
-        foreach (var (id, data) in verifiedBlobs) await Store.WriteBlobAsync(id, data, cancellationToken);
+        foreach (var (id, data) in verifiedBlobs)
+        {
+            var owners = archive.Records.OfType<BlobReferenceRecord>().Where(reference => !reference.Deleted && reference.Sha256 == id).ToArray();
+            async ValueTask<bool> Authorized(CancellationToken ct)
+            {
+                foreach (var reference in owners)
+                    if (!await AccessPolicy.IsAllowedAsync(PrincipalId, reference.NamespaceId, reference.Id, DenPermission.Write, ct) ||
+                        !await AccessPolicy.IsAllowedAsync(PrincipalId, reference.NamespaceId, reference.OwnerId, DenPermission.Write, ct)) return false;
+                return owners.Length != 0;
+            }
+            await Store.WriteBlobAsync(id, data, cancellationToken, Authorized);
+        }
 
         foreach (var group in archive.Records.GroupBy(r => r.NamespaceId, StringComparer.Ordinal))
         {
@@ -416,7 +431,9 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
                         continue;
                     }
                     var expected = expectedRevisions?.GetValueOrDefault(record.NamespaceId + "/" + record.Id) ?? current?.Revision ?? 0;
-                    var saved = await Store.SaveAsync(record, expected, operation, AccessPolicy, PrincipalId, cancellationToken, preserveOrigin: true);
+                    var recordAccess = record is BlobReferenceRecord attachment
+                        ? new BoundWriteAccessPolicy(AccessPolicy, attachment.NamespaceId, attachment.OwnerId) : AccessPolicy;
+                    var saved = await Store.SaveAsync(record, expected, operation, recordAccess, PrincipalId, cancellationToken, preserveOrigin: true);
                     results.Add(new(record.NamespaceId, record.Id, "imported", saved));
                 }
                 catch (DenException ex) { results.Add(new(record.NamespaceId, record.Id, "failed", ErrorCode: ex.Code, Message: ex.Message, Recoverable: ex.Recoverable, Retryable: ex.Retryable)); }
@@ -458,37 +475,45 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
             throw new DenException(DenErrorCode.InvalidRecord, "The attachment media type is invalid.");
         DenStore.ValidateSegment(ownerId, "attachment owner ID");
         DenStore.ValidateSegment(ownerKind, "attachment owner type");
-        var digest = Hash(content.Span);
-        var referenceId = Hash(Encoding.UTF8.GetBytes(namespaceId + "/" + ownerKind + "/" + ownerId + "/" + digest))[..32].ToLowerInvariant();
-        if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, ownerId, DenPermission.Write, cancellationToken))
-            throw new DenException(DenErrorCode.Forbidden, "The principal cannot attach a blob to this owner.");
-        var quota = await GetStorageQuotaAsync(namespaceId, cancellationToken);
-        var references = await Store.ListBlobReferencesAsync(namespaceId, AccessPolicy, PrincipalId, cancellationToken);
-        var existingHashes = await Store.GetActiveBlobIdsAsync(namespaceId, cancellationToken);
-        var used = await SumBlobBytesAsync(existingHashes, cancellationToken);
-        if (!existingHashes.Contains(digest) && used + content.Length > quota.AttachmentBytes)
-            throw new DenException(DenErrorCode.RetentionBlocked, "The Den attachment quota would be exceeded.", recoverable: true);
-        await Store.WriteBlobAsync(digest, content, cancellationToken);
-        var prior = await GetAsync<BlobReferenceRecord>(namespaceId, referenceId, cancellationToken);
-        var record = new BlobReferenceRecord
+        var captured = content.ToArray();
+        content = captured;
+        try
         {
-            Id = referenceId, NamespaceId = namespaceId, Sha256 = digest, MediaType = mediaType,
-            Length = content.Length, OwnerId = ownerId, OwnerKind = ownerKind,
-            Deleted = false, Revision = prior?.Revision ?? 1
-        };
-        return await Store.SaveAsync(record, prior?.Revision ?? 0, operationId, AccessPolicy, PrincipalId, cancellationToken);
+            var digest = Hash(content.Span);
+            var referenceId = Hash(Encoding.UTF8.GetBytes(namespaceId + "/" + ownerKind + "/" + ownerId + "/" + digest))[..32].ToLowerInvariant();
+            if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, ownerId, DenPermission.Write, cancellationToken))
+                throw new DenException(DenErrorCode.Forbidden, "The principal cannot attach a blob to this owner.");
+            var quota = await GetStorageQuotaAsync(namespaceId, cancellationToken);
+            var existingHashes = await Store.GetActiveBlobIdsAsync(namespaceId, cancellationToken);
+            var used = await SumBlobBytesAsync(existingHashes, cancellationToken);
+            if (!existingHashes.Contains(digest) && used + content.Length > quota.AttachmentBytes)
+                throw new DenException(DenErrorCode.RetentionBlocked, "The Den attachment quota would be exceeded.", recoverable: true);
+            await Store.WriteBlobAsync(digest, content, cancellationToken,
+                ct => AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, ownerId, DenPermission.Write, ct));
+            var prior = await GetAsync<BlobReferenceRecord>(namespaceId, referenceId, cancellationToken);
+            var record = new BlobReferenceRecord
+            {
+                Id = referenceId, NamespaceId = namespaceId, Sha256 = digest, MediaType = mediaType,
+                Length = content.Length, OwnerId = ownerId, OwnerKind = ownerKind,
+                Deleted = false, Revision = prior?.Revision ?? 1
+            };
+            return await Store.SaveAsync(record, prior?.Revision ?? 0, operationId,
+                new BoundWriteAccessPolicy(AccessPolicy, namespaceId, ownerId), PrincipalId, cancellationToken);
+        }
+        finally { CryptographicOperations.ZeroMemory(captured); }
     }
 
-    public async Task<byte[]> ReadAttachmentAsync(string namespaceId, string referenceId,
-        CancellationToken cancellationToken = default)
+    private sealed class BoundWriteAccessPolicy(IDenAccessPolicy inner, string ownerNamespace, string ownerId, DenPermission requiredPermission = DenPermission.Write) : IDenAccessPolicy
     {
-        var reference = await GetAsync<BlobReferenceRecord>(namespaceId, referenceId, cancellationToken)
-            ?? throw new DenException(DenErrorCode.NotFound, "The attachment reference does not exist.");
-        if (reference.Deleted) throw new DenException(DenErrorCode.NotFound, "The attachment reference was removed.", recoverable: true);
-        var bytes = await Store.ReadBlobAsync(reference.Sha256, cancellationToken);
-        if (bytes.LongLength != reference.Length) throw new DenException(DenErrorCode.InvalidRecord, "The attachment length does not match its reference.", recoverable: true);
-        return bytes;
+        public async ValueTask<bool> IsAllowedAsync(string principalId, string namespaceId, string objectId,
+            DenPermission permission, CancellationToken cancellationToken = default) =>
+            await inner.IsAllowedAsync(principalId, namespaceId, objectId, permission, cancellationToken) &&
+            (permission != DenPermission.Write || namespaceId == ownerNamespace &&
+                await inner.IsAllowedAsync(principalId, ownerNamespace, ownerId, requiredPermission, cancellationToken));
     }
+
+    public Task<byte[]> ReadAttachmentAsync(string namespaceId, string referenceId,
+        CancellationToken cancellationToken = default) => ReadAttachmentAsync(namespaceId, referenceId, 32 * 1024 * 1024, cancellationToken);
 
     public async Task<byte[]> ReadAttachmentAsync(string namespaceId, string referenceId, int maximumBytes,
         CancellationToken cancellationToken = default)
@@ -500,12 +525,18 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         if (reference.Length < 0 || reference.Length > maximumBytes)
             throw new DenException(DenErrorCode.InvalidRecord, "The attachment exceeds the requested byte limit.");
         var bytes = await Store.ReadBlobAsync(reference.Sha256, maximumBytes, cancellationToken);
-        if (bytes.LongLength != reference.Length)
+        try
         {
-            Array.Clear(bytes);
-            throw new DenException(DenErrorCode.InvalidRecord, "The attachment length does not match its reference.", recoverable: true);
+            if (bytes.LongLength != reference.Length)
+                throw new DenException(DenErrorCode.InvalidRecord, "The attachment length does not match its reference.", recoverable: true);
+            var current = await GetAsync<BlobReferenceRecord>(namespaceId, referenceId, cancellationToken);
+            if (current is null || current.Deleted || current.Revision != reference.Revision || current.Sha256 != reference.Sha256 ||
+                current.Length != reference.Length || current.MediaType != reference.MediaType ||
+                current.OwnerId != reference.OwnerId || current.OwnerKind != reference.OwnerKind)
+                throw new DenException(DenErrorCode.Conflict, "The attachment reference changed while reading its bytes.", recoverable: true);
+            return bytes;
         }
-        return bytes;
+        catch { CryptographicOperations.ZeroMemory(bytes); throw; }
     }
 
     public async Task<BlobReferenceRecord> DeleteAttachmentReferenceAsync(string namespaceId, string referenceId,
@@ -514,7 +545,7 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         var reference = await GetAsync<BlobReferenceRecord>(namespaceId, referenceId, cancellationToken)
             ?? throw new DenException(DenErrorCode.NotFound, "The attachment reference does not exist.");
         return await Store.SaveAsync(reference with { Deleted = true }, expectedRevision, operationId,
-            AccessPolicy, PrincipalId, cancellationToken);
+            new BoundWriteAccessPolicy(AccessPolicy, namespaceId, reference.OwnerId), PrincipalId, cancellationToken);
     }
 
     public async Task<StorageQuotaRecord> GetStorageQuotaAsync(string namespaceId = "personal", CancellationToken cancellationToken = default) =>
@@ -530,7 +561,8 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
             throw new DenException(DenErrorCode.InvalidRecord, "Quota records use the stable storage-quota ID in their namespace.");
         if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, quota.Id, DenPermission.Administer, cancellationToken))
             throw new DenException(DenErrorCode.Forbidden, "Only a Den administrator can change storage quotas.");
-        return await Store.SaveAsync(quota, expectedRevision, operationId, AccessPolicy, PrincipalId, cancellationToken);
+        return await Store.SaveAsync(quota, expectedRevision, operationId,
+            new BoundWriteAccessPolicy(AccessPolicy, namespaceId, quota.Id, DenPermission.Administer), PrincipalId, cancellationToken);
     }
 
     public async Task<DenStorageUsage> GetStorageUsageAsync(string namespaceId = "personal", CancellationToken cancellationToken = default)
@@ -560,7 +592,18 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
             throw new DenException(DenErrorCode.Forbidden, "The principal cannot change this model's local installation state.");
         var quota = await GetStorageQuotaAsync(namespaceId, cancellationToken);
         var registry = new LocalModelRegistry(Store.RootPath, Store.Manifest.DeviceId, quota.ModelWeightBytes);
-        return await registry.RegisterAsync(modelId, absolutePath, artifactSha256, cancellationToken);
+        async ValueTask<bool> CurrentAuthority(CancellationToken ct)
+        {
+            if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, modelId, DenPermission.Write, ct)) return false;
+            var current = await GetModelByID(modelId, namespaceId, ct);
+            var currentQuota = await GetStorageQuotaAsync(namespaceId, ct);
+            return current is not null && current.Revision == model.Revision &&
+                string.Equals(current.ArtifactSha256, model.ArtifactSha256, StringComparison.OrdinalIgnoreCase) &&
+                current.ArtifactRevision == model.ArtifactRevision && currentQuota.Revision == quota.Revision &&
+                currentQuota.ModelWeightBytes == quota.ModelWeightBytes &&
+                await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, modelId, DenPermission.Write, ct);
+        }
+        return await registry.RegisterGuardedAsync(modelId, absolutePath, artifactSha256, CurrentAuthority, cancellationToken);
     }
 
     public async Task<long> CollectUnreferencedBlobsAsync(string namespaceId, bool explicitlyConfirmed,
@@ -569,9 +612,14 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
         if (!explicitlyConfirmed) throw new DenException(DenErrorCode.PurgeConfirmationRequired, "Blob collection requires explicit confirmation.");
         if (!await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, "storage-quota", DenPermission.Administer, cancellationToken))
             throw new DenException(DenErrorCode.Forbidden, "Only a Den administrator can collect unreferenced attachments.");
-        var references = await Store.ListBlobReferencesAsync(namespaceId, AccessPolicy, PrincipalId, cancellationToken);
-        var activeHashes = references.Where(r => !r.Deleted).Select(r => r.Sha256).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return await Store.DeleteUnreferencedBlobsAsync(activeHashes, cancellationToken);
+        // Blob storage is shared across namespaces; namespace administration alone is
+        // not authority to delete unreferenced content belonging to the whole Den.
+        async ValueTask<bool> Authorized(CancellationToken ct) =>
+            await AccessPolicy.IsAllowedAsync(PrincipalId, namespaceId, "storage-quota", DenPermission.Administer, ct) &&
+            await AccessPolicy.IsAllowedAsync(PrincipalId, Store.Manifest.DenId, Store.Manifest.DenId, DenPermission.Administer, ct);
+        if (!await Authorized(cancellationToken))
+            throw new DenException(DenErrorCode.Forbidden, "Shared blob collection requires current Den administration permission.");
+        return await Store.DeleteUnreferencedBlobsAsync(cancellationToken, Authorized);
     }
 
     private static bool ScopeMatches(MemoryEntry entry, DenSearchQuery query, string? app, string? agent) =>
@@ -634,6 +682,28 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
     private static string SyncOperation(string namespaceId, string objectId, long revision) =>
         "sync-" + Hash(Encoding.UTF8.GetBytes(namespaceId + "/" + objectId + "/" + revision))[..40];
 
+    /// <summary>Invoked by each destination Save at admission and publication. Reads current namespace
+    /// manifests without taking either Den writer lease, preventing same-store callback deadlocks.
+    /// Sync remains a sequence of individually guarded writes, not a distributed transaction.</summary>
+    private sealed class SyncWriteAccessPolicy(DulcheDen target, DulcheDen source, string namespaceId,
+        string sourceId, bool requireTargetRead = false) : IDenAccessPolicy
+    {
+        public async ValueTask<bool> IsAllowedAsync(string principalId, string requestedNamespace, string objectId,
+            DenPermission permission, CancellationToken ct)
+        {
+            if (!await target.AccessPolicy.IsAllowedAsync(principalId, requestedNamespace, objectId, permission, ct)) return false;
+            if (permission != DenPermission.Write) return true;
+            if (requestedNamespace != namespaceId) return false;
+            var targetManifest = await target.Store.ReadAuthoritySnapshotAsync(ct);
+            var sourceManifest = await source.Store.ReadAuthoritySnapshotAsync(ct);
+            if (targetManifest.Namespaces.SingleOrDefault(value => value.Id == namespaceId)?.Shared != true ||
+                sourceManifest.Namespaces.SingleOrDefault(value => value.Id == namespaceId)?.Shared != true) return false;
+            if (!await source.AccessPolicy.IsAllowedAsync(source.PrincipalId, namespaceId, sourceId, DenPermission.Read, ct)) return false;
+            if (requireTargetRead && !await target.AccessPolicy.IsAllowedAsync(target.PrincipalId, namespaceId, sourceId, DenPermission.Read, ct)) return false;
+            return await target.AccessPolicy.IsAllowedAsync(principalId, requestedNamespace, objectId, permission, ct);
+        }
+    }
+
     private static async Task<ConflictRecord> EnsureConflictAsync(DulcheDen localDen, DulcheDen peerDen, string namespaceId,
         DenRecord left, DenRecord right, CancellationToken cancellationToken)
     {
@@ -652,7 +722,8 @@ public sealed class DulcheDen(DenStore store, IDenAccessPolicy access, string pr
             var existing = await den.GetAsync<ConflictRecord>(namespaceId, id, cancellationToken);
             if (existing is not null) { savedLocal = existing; continue; }
             var saved = await den.Store.SaveAsync(conflict, 0, SyncOperation(namespaceId, "conflict-" + id, 1),
-                den.AccessPolicy, den.PrincipalId, cancellationToken);
+                new SyncWriteAccessPolicy(den, ReferenceEquals(den, localDen) ? peerDen : localDen, namespaceId, left.Id, true),
+                den.PrincipalId, cancellationToken);
             if (ReferenceEquals(den, localDen)) savedLocal = saved;
         }
         return savedLocal;

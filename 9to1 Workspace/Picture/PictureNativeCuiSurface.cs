@@ -12,7 +12,9 @@ public sealed class PictureNativeCuiSurface(
     Func<CancellationToken, Task<PictureFilesOpenResult>> open,
     PictureFilesSourceRenderer renderer,
     PictureGlycinDecoder decoder,
-    ICuiSceneReadiness readiness) : UserControl, IDisposable
+    ICuiSceneReadiness readiness,
+    Func<PictureWorkspaceCommand, CancellationToken, ValueTask>? dispatchOwner = null,
+    Func<PictureWorkspaceCommandKind, bool>? ownerAvailable = null) : UserControl, IDisposable
 {
     private readonly CancellationTokenSource _lifetime = new();
     private readonly SemaphoreSlim _operation = new(1, 1);
@@ -44,7 +46,8 @@ public sealed class PictureNativeCuiSurface(
             ObjectDisposedException.ThrowIf(_disposed, this);
             _available = true;
             _bindings = new(DispatchAsync, kind => !_disposed && _available &&
-                kind == PictureWorkspaceCommandKind.NextFrame && _source?.CanAdvanceFrames == true);
+                (kind == PictureWorkspaceCommandKind.NextFrame ? _source?.CanAdvanceFrames == true :
+                    dispatchOwner is not null && ownerAvailable?.Invoke(kind) == true));
             RefreshBindings();
             var registry = new CuiControlRegistry();
             registry.RegisterControlType("PictureRasterSurface", _ => _image);
@@ -64,10 +67,20 @@ public sealed class PictureNativeCuiSurface(
     private async ValueTask DispatchAsync(PictureWorkspaceCommand command, CancellationToken cancellationToken)
     {
         Dispatcher.UIThread.VerifyAccess();
-        if (!_available || _disposed || _artifact is null || command.Kind != PictureWorkspaceCommandKind.NextFrame ||
+        if (!_available || _disposed || _artifact is null ||
             command.DocumentId != _artifact.Document.DocumentId || command.BaseRevision != _artifact.Document.Revision ||
             command.BackingFileId != _artifact.BackingFileId)
             throw new UnauthorizedAccessException("This Picture operation is unavailable.");
+        if (command.Kind != PictureWorkspaceCommandKind.NextFrame)
+        {
+            if (dispatchOwner is null || ownerAvailable?.Invoke(command.Kind) != true)
+                throw new UnauthorizedAccessException("The owning Picture action is unavailable.");
+            await ValidateAccessAsync(cancellationToken);
+            if (_disposed || !_available || ownerAvailable?.Invoke(command.Kind) != true)
+                throw new UnauthorizedAccessException("Picture access changed before the owning action could begin.");
+            await dispatchOwner(command, cancellationToken);
+            return;
+        }
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         await _operation.WaitAsync(linked.Token);
         try
@@ -87,7 +100,8 @@ public sealed class PictureNativeCuiSurface(
     public async Task ValidateAccessAsync(CancellationToken cancellationToken = default)
     {
         Dispatcher.UIThread.VerifyAccess();
-        if (_disposed || !_available) return;
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_initialized || !_available) throw new UnauthorizedAccessException("The captured Picture source is unavailable.");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         await _operation.WaitAsync(linked.Token);
         try
@@ -114,9 +128,14 @@ public sealed class PictureNativeCuiSurface(
         var next = _source!.Render();
         var previous = _bitmap; _bitmap = next; _image.Source = next; previous?.Dispose();
     }
+    public void RefreshActionAvailability() => _bindings?.RefreshAvailability();
     private void RefreshBindings() => _bindings?.Refresh(_artifact?.Document,
-        _available ? "Canonical Files document · read-only preview" : "Source access changed. Reopen the Picture document.",
-        _available ? "Original source retained. Native animation frame stepping is available." : "Picture preview unavailable",
+        _available ? dispatchOwner is null ? "Canonical Files document · read-only preview" : "Canonical editable Picture document"
+            : "Source access changed. Reopen the Picture document.",
+        _available ? dispatchOwner is null ? _source?.CanAdvanceFrames == true
+            ? "Original source retained. Native animation frame stepping is available." : "Original source retained."
+            : "Review non-destructive edits in Home before committing. The original source is retained."
+            : "Picture preview unavailable",
         _artifact?.BackingFileId, _available ? _source?.FrameDelayMicroseconds : null);
     private void Invalidate()
     {

@@ -35,7 +35,8 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     private FormNativePreview(FormProject project, FormResponseRuntime? runtime, TimeProvider? clock)
     {
         _project = FormProjectCodec.Capture(project);
-        if (_project.Components.Count != 0 || _project.Fields.Any(field => !CanRender(field.Kind))
+        if (_project.Components.Count != 0 || _project.Fields.Any(field => !CanRender(field.Kind)
+                || field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
             || _project.Pages.Any(page => page.Layout.Columns != 1) || _project.Fields.Any(field => field.Layout.Columns != 1)
             || _project.Theme.ThemeID != "default" || _project.Theme.StyleAssetID is not null)
             throw new NotSupportedException("CapabilityUnavailable: this form needs an additional native renderer, layout or theme provider.");
@@ -48,7 +49,8 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     public static bool CanRender(FormFieldKind kind) => kind is FormFieldKind.ShortText or FormFieldKind.LongText
         or FormFieldKind.Email or FormFieldKind.Phone or FormFieldKind.Date or FormFieldKind.Time
         or FormFieldKind.DateTime or FormFieldKind.Duration or FormFieldKind.Number or FormFieldKind.Decimal
-        or FormFieldKind.Currency or FormFieldKind.Rating or FormFieldKind.SingleChoice or FormFieldKind.Dropdown;
+        or FormFieldKind.Currency or FormFieldKind.Rating or FormFieldKind.SingleChoice or FormFieldKind.Dropdown
+        or FormFieldKind.MultipleChoice or FormFieldKind.CheckboxSet or FormFieldKind.TableInput or FormFieldKind.Ranking;
 
     public void Register(CuiControlRegistry registry)
     {
@@ -100,7 +102,22 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         var response = Response;
         var answer = response.Answers.SingleOrDefault(item => item.FieldID == fieldID)?.Value;
         Control input;
-        if (definition.Kind is FormFieldKind.SingleChoice or FormFieldKind.Dropdown)
+        if (definition.Kind == FormFieldKind.Ranking)
+        {
+            var ranking = new FormNativeRankingInput(definition, answer, value => Answer(fieldID, value));
+            _detach.Add(ranking.Dispose); input = ranking;
+        }
+        else if (definition.Kind == FormFieldKind.TableInput)
+        {
+            var table = new FormNativeTableInput(definition.Table!, answer, value => Answer(fieldID, value));
+            _detach.Add(table.Dispose); input = table;
+        }
+        else if (definition.Kind is FormFieldKind.MultipleChoice or FormFieldKind.CheckboxSet)
+        {
+            var choices = new FormNativeChoiceInput(definition, answer, value => Answer(fieldID, value));
+            _detach.Add(choices.Dispose); input = choices;
+        }
+        else if (definition.Kind is FormFieldKind.SingleChoice or FormFieldKind.Dropdown)
         {
             var options = definition.Options!.ToArray();
             var choice = new ComboBox { ItemsSource = options.Select(option => option.Label).ToArray(),
@@ -115,11 +132,9 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         }
         else if (definition.Kind is FormFieldKind.Number or FormFieldKind.Decimal or FormFieldKind.Currency or FormFieldKind.Rating)
         {
-            var number = new NumericUpDown { Value = answer is { ValueKind: JsonValueKind.Number } value ? value.GetDecimal() : null,
-                Minimum = decimal.MinValue, Maximum = decimal.MaxValue };
-            void NumberChanged(object? sender, NumericUpDownValueChangedEventArgs args)
-            { if (number.IsEnabled) Answer(fieldID, JsonSerializer.SerializeToElement(number.Value)); }
-            number.ValueChanged += NumberChanged; _detach.Add(() => number.ValueChanged -= NumberChanged); input = number;
+            var number = new FormNativeNumberInput(answer is { ValueKind: JsonValueKind.Number } value ? value.GetDecimal() : null,
+                candidate => Answer(fieldID, candidate));
+            _detach.Add(number.Dispose); input = number;
         }
         else
         {
@@ -133,7 +148,13 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
             // TextChanged is queued by Avalonia. Observe the actual property synchronously so
             // Next/Submit cannot use a previous valid answer while a changed input awaits that event.
             void TextEdited(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs args)
-            { if (args.Property == TextBox.TextProperty && text.IsEnabled) Answer(fieldID, JsonSerializer.SerializeToElement(text.Text ?? "")); }
+            {
+                if (args.Property != TextBox.TextProperty || !text.IsEnabled) return;
+                var current = text.Text ?? "";
+                var emptyTypedValue = current.Length == 0 && !definition.Required && definition.Kind is
+                    FormFieldKind.Email or FormFieldKind.Date or FormFieldKind.Time or FormFieldKind.DateTime or FormFieldKind.Duration;
+                Answer(fieldID, emptyTypedValue ? JsonSerializer.SerializeToElement<object?>(null) : JsonSerializer.SerializeToElement(current));
+            }
             text.PropertyChanged += TextEdited; _detach.Add(() => text.PropertyChanged -= TextEdited); input = text;
         }
         AutomationProperties.SetName(input, definition.Label);

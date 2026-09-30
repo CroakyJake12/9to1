@@ -51,7 +51,7 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
         var approval = await permissions.GetAuthorizationAsync(requestId, cancellationToken).ConfigureAwait(false);
         if (!approval.IsAllowed || !_bindings.TryRemove(requestId, out var consumed) || consumed != binding) return null;
         if (!(await permissions.BeginExecutionAsync(requestId, cancellationToken).ConfigureAwait(false)).IsAllowed) return null;
-        var capability = new HomeResourceExecutionCapability(requestId, binding.TargetAppId, binding.ActionId,
+        var capability = new HomeResourceExecutionCapability(this, requestId, binding.TargetAppId, binding.ActionId,
             Array.AsReadOnly(binding.Scopes.ToArray()));
         return _executions.TryAdd(capability, binding) ? capability : null;
     }
@@ -69,8 +69,37 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
             binding.ActionId != actionId || binding.Digest != Digest(arguments) || !binding.Scopes.SequenceEqual(scopeSnapshot)) return null;
         if (!_executions.TryRemove(capability, out var consumed) || consumed != binding) return null;
         var current = await resources.AuthorizeAsync(binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
-        return current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false)
-            ? current : null;
+        if (current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false) &&
+            capability.MarkClaimed(this)) return current;
+        // No owner received a claim, so there is no authorized target effect to report as success.
+        // A request already revoked/terminal stays terminal; the audit service rejects overwriting it.
+        await permissions.RecordExecutionAsync(capability.RequestId, new(HomePermissionRequestState.Failed,
+            "HOME_RESOURCE_CLAIM_REJECTED", "The resource authority changed before the owning operation could begin.", []), CancellationToken.None).ConfigureAwait(false);
+        return null;
+    }
+
+    /// <summary>Records the canonical owner's observed terminal outcome after a successful claim, once.
+    /// This is an audit transition, never a new execution grant. Current ACL/actor changes cannot erase a
+    /// previously committed effect. The caller must report actual failure/partial outcome, never infer success
+    /// from approval or claim. If recording fails, retain the owning result and surface audit recovery;
+    /// do not repeat the owning mutation. The same exact outcome may retry audit recording idempotently.
+    /// No serializable request ID can manufacture this completion right.</summary>
+    public async Task<HomePermissionOperationResult> CompleteExecutionAsync(HomeResourceExecutionCapability capability,
+        HomeExecutionOutcome outcome, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(outcome);
+        try { outcome.Validate(); }
+        catch (ArgumentException) { return new(false, "HOME_EXECUTION_OUTCOME_INVALID", "The owner must supply a valid terminal execution outcome."); }
+        outcome = outcome with { AffectedObjects = Array.AsReadOnly(outcome.AffectedObjects.Take(10001).ToArray()) };
+        if (outcome.Code.Length > 128 || outcome.Message is null || outcome.Message.Length > 4096 ||
+            outcome.AffectedObjects.Count > 10000 || outcome.AffectedObjects.Any(item => item is null ||
+                string.IsNullOrWhiteSpace(item.ObjectType) || item.ObjectType.Length > 256 ||
+                string.IsNullOrWhiteSpace(item.ObjectId) || item.ObjectId.Length > 1024))
+            return new(false, "HOME_EXECUTION_OUTCOME_INVALID", "The owner outcome exceeds supported bounds.");
+        cancellationToken.ThrowIfCancellationRequested();
+        return await capability.CompleteAsync(this, Digest(JsonSerializer.SerializeToElement(outcome)),
+            () => permissions.RecordExecutionAsync(capability.RequestId, outcome, cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
     private static string Digest(JsonElement arguments) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(arguments.GetRawText())));
@@ -79,8 +108,33 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
 /// <summary>Non-serializable issuer-bound handle. Its public metadata is descriptive and never independently grants access.</summary>
 public sealed class HomeResourceExecutionCapability
 {
-    internal HomeResourceExecutionCapability(string requestId, string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes)
-    { RequestId = requestId; TargetAppId = targetAppId; ActionId = actionId; Scopes = scopes; }
+    private readonly HomeResourceOperationBroker _issuer;
+    private int _claimState;
+    private readonly SemaphoreSlim _completionGate = new(1, 1);
+    private string? _outcomeDigest;
+    private HomePermissionOperationResult? _completed;
+    internal HomeResourceExecutionCapability(HomeResourceOperationBroker issuer, string requestId, string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes)
+    { _issuer = issuer; RequestId = requestId; TargetAppId = targetAppId; ActionId = actionId; Scopes = scopes; }
+    internal bool MarkClaimed(HomeResourceOperationBroker issuer) =>
+        ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, 1, 0) == 0;
+    internal async Task<HomePermissionOperationResult> CompleteAsync(HomeResourceOperationBroker issuer, string outcomeDigest,
+        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct)
+    {
+        if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) == 0)
+            return new(false, "HOME_EXECUTION_COMPLETION_NOT_OWNED", "The completion requires this issuer's successfully claimed capability.");
+        await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_outcomeDigest is not null && _outcomeDigest != outcomeDigest)
+                return new(false, "HOME_EXECUTION_OUTCOME_CHANGED", "Retry the exact observed outcome; a completion cannot be rewritten.");
+            _outcomeDigest ??= outcomeDigest;
+            if (_completed is not null) return _completed;
+            var result = await record().ConfigureAwait(false);
+            if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, 2); }
+            return result;
+        }
+        finally { _completionGate.Release(); }
+    }
     public string RequestId { get; }
     public string TargetAppId { get; }
     public string ActionId { get; }

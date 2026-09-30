@@ -36,6 +36,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<HomeLocalProfileIdentity>();
         services.TryAddSingleton<IAuthenticatedResourceActorSource>(provider => provider.GetRequiredService<HomeLocalProfileIdentity>());
         services.AddSingleton<ResourceAuthorizationService>();
+        services.TryAddSingleton<IHomeNativeInstalledPeerVerifier, UnavailableHomeNativeInstalledPeerVerifier>();
+        services.TryAddSingleton<HomeNativeWidgetRegistry>();
         services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
         services.AddSingleton<HomeLocalStoreOwnership>();
         services.TryAddSingleton<HomeResourceStoreOwnershipAuthority>();

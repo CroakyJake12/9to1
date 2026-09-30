@@ -194,18 +194,28 @@ public static class FormAnswerValidation
             or FormFieldKind.SingleChoice or FormFieldKind.MultipleChoice or FormFieldKind.Dropdown or FormFieldKind.CheckboxSet
             or FormFieldKind.Rating or FormFieldKind.Ranking or FormFieldKind.TableInput))
             throw new NotSupportedException("CapabilityUnavailable: typed answer provider is not registered for " + field.Kind);
+        var numeric = field.Kind is FormFieldKind.Number or FormFieldKind.Decimal or FormFieldKind.Currency or FormFieldKind.Rating;
+        var text = field.Kind is FormFieldKind.ShortText or FormFieldKind.LongText or FormFieldKind.Email or FormFieldKind.Phone
+            or FormFieldKind.Date or FormFieldKind.Time or FormFieldKind.DateTime or FormFieldKind.Duration;
+        if (field.ResponseSchema.ValueKind != JsonValueKind.Object) throw new InvalidDataException("Response constraints must be an object.");
+        decimal? minimum = null, maximum = null; int? minLength = null, maxLength = null;
+        var keywords = new HashSet<string>(StringComparer.Ordinal);
         foreach (var property in field.ResponseSchema.EnumerateObject())
         {
+            if (!keywords.Add(property.Name)) throw new InvalidDataException("Duplicate response constraint.");
             if (property.Name is "minimum" or "maximum")
             {
-                if (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetDecimal(out _)) throw new InvalidDataException("Invalid numeric response constraint.");
+                if (!numeric || property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetDecimal(out _)) throw new InvalidDataException("Invalid numeric response constraint.");
+                if (property.Name == "minimum") minimum = property.Value.GetDecimal(); else maximum = property.Value.GetDecimal();
             }
             else if (property.Name is "minLength" or "maxLength")
             {
-                if (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetInt32(out var length) || length is < 0 or > 65536) throw new InvalidDataException("Invalid string response constraint.");
+                if (!text || property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetInt32(out var length) || length is < 0 or > 65536) throw new InvalidDataException("Invalid string response constraint.");
+                if (property.Name == "minLength") minLength = property.Value.GetInt32(); else maxLength = property.Value.GetInt32();
             }
             else throw new NotSupportedException("CapabilityUnavailable: response schema keyword " + property.Name);
         }
+        if (minimum > maximum || minLength > maxLength) throw new InvalidDataException("Response constraint bounds are inverted.");
     }
 
     public static string? Validate(FormField field, JsonElement value)

@@ -51,6 +51,7 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
         paused.Release.TrySetResult();
         Assert.False((await saving).Succeeded);
         Assert.Empty(await _routes.ListAsync(default));
+        Assert.Equal(HomePermissionRequestState.Failed, (await _permissions.GetAuthorizationAsync(request)).State);
     }
 
     private sealed class PausedRoutes(HomeVersionedModelRouteRepository inner, string path) : IHomeGuardedModelRouteRepository
@@ -120,6 +121,7 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
         Assert.True((await _permissions.DecideAsync(requestId, HomeApprovalChoice.Accept)).Succeeded);
         var saved = await _provider.UpdateRouteAsync(edit with { ApprovalRequestId = requestId });
         Assert.True(saved.Succeeded); Assert.Equal(1, saved.Revision);
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await _permissions.GetAuthorizationAsync(requestId)).State);
         var persisted = Assert.IsType<ConfiguredModelRoute>(await _routes.GetAsync(draft.RouteId, default));
         Assert.Equal(actor.ProfileId, persisted.ScopeId);
         var bridge = new HomeAppAiServices(_catalogue, _store,

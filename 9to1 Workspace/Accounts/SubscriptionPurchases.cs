@@ -71,7 +71,7 @@ public sealed partial class AccountLedger
                 return existing;
             }
             var purchase=new SubscriptionPurchase(Guid.NewGuid(),authenticatedAccountID,organisationID,serverOwnedQuote,
-                account.Subscription.Revision,DateTimeOffset.UtcNow,SubscriptionPurchaseState.AwaitingSettlement);
+                account.Subscription.Revision,clock.GetUtcNow(),SubscriptionPurchaseState.AwaitingSettlement);
             Write(account with{Purchases=purchases.Append(purchase).ToArray()});
             return purchase;
         }

@@ -6,6 +6,37 @@ namespace Haven.Core.Tests;
 public sealed class FormProjectRuntimeTests
 {
     [Theory]
+    [InlineData(FormFieldKind.Number, "{\"minLength\":1}")]
+    [InlineData(FormFieldKind.ShortText, "{\"minimum\":1}")]
+    [InlineData(FormFieldKind.Number, "{\"minimum\":4,\"maximum\":2}")]
+    [InlineData(FormFieldKind.ShortText, "{\"minLength\":4,\"maxLength\":2}")]
+    public void Runtime_admission_rejects_mismatched_or_unsatisfiable_authored_constraints(FormFieldKind kind, string schema)
+    {
+        var field = Text("Constrained") with { Kind = kind, ResponseSchema = JsonSerializer.Deserialize<JsonElement>(schema) };
+        var project = WithField(FormModeKind.Form, field);
+        Assert.Throws<InvalidDataException>(() => new FormResponseRuntime(project, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void Ranking_requires_option_schema_and_preserves_partial_order_through_checkpoint()
+    {
+        var first = new FormChoiceOption(Guid.NewGuid(), "Same label");
+        var second = new FormChoiceOption(Guid.NewGuid(), "Same label");
+        var third = new FormChoiceOption(Guid.NewGuid(), "Other");
+        var field = Text("Rank") with { Kind = FormFieldKind.Ranking, Options = [first, second, third] };
+        var project = WithField(FormModeKind.Form, field);
+        var runtime = new FormResponseRuntime(project, Guid.NewGuid());
+        Assert.False(runtime.Answer(1, field.FieldID, Json(new[] { first.OptionID, first.OptionID })).Success);
+        Assert.False(runtime.Answer(1, field.FieldID, Json(new[] { Guid.NewGuid() })).Success);
+        var ranked = new[] { second.OptionID, first.OptionID };
+        Assert.True(runtime.Answer(1, field.FieldID, Json(ranked)).Success);
+        var restored = FormResponseRuntime.Restore(project, runtime.CaptureCheckpoint());
+        Assert.Equal(ranked, Assert.Single(restored.Read().Answers).Value.EnumerateArray().Select(item => item.GetGuid()));
+        Assert.True(restored.Submit(restored.Read().Revision).Success);
+        Assert.Throws<InvalidDataException>(() => FormProjectCodec.Capture(project with { Fields = [field with { Options = null }] }));
+    }
+
+    [Theory]
     [InlineData(FormFieldKind.SingleChoice, true)]
     [InlineData(FormFieldKind.SingleChoice, false)]
     [InlineData(FormFieldKind.Dropdown, true)]

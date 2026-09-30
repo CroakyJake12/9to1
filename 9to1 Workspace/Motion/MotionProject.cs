@@ -62,7 +62,7 @@ public sealed class MotionProjectStore
         Guid assetId, long timelineStart, long sourceIn, long sourceOut)
     {
         EnsureRevision(project, expectedRevision);
-        if (timelineStart < 0 || sourceIn < 0 || sourceOut <= sourceIn)
+        if (timelineStart < 0 || sourceIn < 0 || sourceOut <= sourceIn || timelineStart > long.MaxValue - (sourceOut - sourceIn))
             throw new ArgumentOutOfRangeException(nameof(timelineStart), "Timeline and source ranges must be non-negative and have positive duration.");
         if (!project.AssetReferences.Any(asset => asset.AssetId == assetId))
             throw new KeyNotFoundException("AssetNotFound");
@@ -181,7 +181,8 @@ public sealed class MotionProjectStore
                 if (track is null || track.Elements is null || track.TrackId == Guid.Empty || !trackIds.Add(track.TrackId)) throw new InvalidDataException("Track IDs and element lists must be valid and unique.");
                 foreach (var element in track.Elements)
                     if (element is null || element.TrackId != track.TrackId || element.ElementId == Guid.Empty || !elementIds.Add(element.ElementId) || !assets.Contains(element.AssetId)
-                        || element.TimelineStart < 0 || element.Duration <= 0 || element.SourceIn < 0 || element.SourceOut <= element.SourceIn || element.SourceOut - element.SourceIn != element.Duration)
+                        || element.TimelineStart < 0 || element.Duration <= 0 || element.TimelineStart > long.MaxValue - element.Duration
+                        || element.SourceIn < 0 || element.SourceOut <= element.SourceIn || element.SourceOut - element.SourceIn != element.Duration)
                         throw new InvalidDataException("Motion element identity, asset, or time ranges are invalid.");
             }
         }

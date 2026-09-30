@@ -138,6 +138,8 @@ public sealed partial class HavenLauncherActivity : Activity
 
     protected override void OnDestroy()
     {
+        _root?.SetOnTouchListener(null);
+        CloseGestureDialogs();
         _folderDialog?.Dismiss();
         _launcherLifetime.Cancel();
         _launcherLifetime.Dispose();
@@ -200,6 +202,8 @@ public sealed partial class HavenLauncherActivity : Activity
 
     private void BuildSurface()
     {
+        _root?.SetOnTouchListener(null);
+        CloseGestureDialogs();
         _root = new LinearLayout(this)
         {
             Orientation = Orientation.Vertical,
@@ -209,10 +213,7 @@ public sealed partial class HavenLauncherActivity : Activity
         };
         _root.SetPadding(Dp(12), Dp(10), Dp(12), Dp(10));
         _root.SetOnTouchListener(new SwipeTouchListener(
-            swipeThresholdPixels: Dp(80),
-            onSwipeUp: ShowAppDrawer,
-            onSwipeLeft: () => ChangePage(1),
-            onSwipeRight: () => ChangePage(-1)));
+            swipeThresholdPixels: Dp(80), tapSlopPixels: Dp(12), dispatch: RunGesture));
 
         _widgetStrip = new LinearLayout(this)
         {

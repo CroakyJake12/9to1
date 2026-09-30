@@ -128,7 +128,7 @@ public static class FormProjectCodec
             Require(Enum.IsDefined(field.Kind) && field.Revision > 0 && !string.IsNullOrWhiteSpace(field.Label)
                 && field.Label.Length <= 65536 && field.ResponseSchema.ValueKind == JsonValueKind.Object, "Invalid typed field.");
             foreach (var option in field.Options ?? []) { Require(option is not null && !string.IsNullOrWhiteSpace(option.Label), "Invalid choice."); Identity(option.OptionID); }
-            if (field.Kind is FormFieldKind.SingleChoice or FormFieldKind.MultipleChoice or FormFieldKind.Dropdown or FormFieldKind.CheckboxSet)
+            if (field.Kind is FormFieldKind.SingleChoice or FormFieldKind.MultipleChoice or FormFieldKind.Dropdown or FormFieldKind.CheckboxSet or FormFieldKind.Ranking)
                 Require(field.Options is { Count: > 0 and <= 4096 }, "Choice field requires stable options.");
             if (field.Kind == FormFieldKind.TableInput)
             {

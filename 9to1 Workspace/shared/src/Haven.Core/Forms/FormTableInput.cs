@@ -36,7 +36,8 @@ public static class FormTableInput
                 throw new ArgumentException("Reference columns require a canonical Data table ID.");
         }
         var fixedRows = definition.FixedRowIDs ?? Array.Empty<Guid>();
-        if (fixedRows.Any(id => id == Guid.Empty) || fixedRows.Distinct().Count() != fixedRows.Count || fixedRows.Count > definition.MaximumRows)
+        if (fixedRows.Any(id => id == Guid.Empty) || fixedRows.Distinct().Count() != fixedRows.Count || fixedRows.Count > definition.MaximumRows
+            || !definition.AllowAddedRows && fixedRows.Count < definition.MinimumRows)
             throw new ArgumentException("Invalid fixed row identity.");
         var unique = definition.UniqueColumnIDs ?? Array.Empty<Guid>();
         if (unique.Any(id => !columns.Contains(id)) || unique.Distinct().Count() != unique.Count)

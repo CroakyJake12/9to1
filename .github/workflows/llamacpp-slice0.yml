@@ -7,6 +7,7 @@ on:
       - "9to1 OS/HUI/**"
       - "9to1 OS/packaging/systemd/user/haven-inference-broker.service"
       - "9to1 OS/packaging/bin/haven-modelctl"
+      - "9to1 OS/tests/test_modelctl_launcher.py"
       - "9to1 OS/packaging/llamacpp/**"
       - '.github/workflows/llamacpp-slice0.yml'
       - "9to1 OS/havenos.lock"
@@ -58,6 +59,8 @@ jobs:
         run: sh -n "9to1 Workspace/Home/Source/Dulche/llamacpp/build-cpu.sh"
       - name: Validate model-manager wrapper syntax
         run: sh -n "9to1 OS/packaging/bin/haven-modelctl"
+      - name: Test actual model-manager launcher
+        run: python -m unittest discover -s "9to1 OS/tests" -p test_modelctl_launcher.py -v
       - name: Validate Debian package builder syntax
         run: sh -n "9to1 OS/packaging/llamacpp/build-deb.sh"
       - name: Validate installable Debian verifier syntax

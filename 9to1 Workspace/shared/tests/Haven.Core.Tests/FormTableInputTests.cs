@@ -7,6 +7,15 @@ namespace Haven.Core.Tests;
 public sealed class FormTableInputTests
 {
     [Fact]
+    public void Fixed_only_table_cannot_require_more_rows_than_respondents_can_supply()
+    {
+        var definition = new FormTableInputDefinition(Guid.NewGuid(), [new(Guid.NewGuid(), "Name", FormTableCellType.Text)],
+            MinimumRows: 2, MaximumRows: 3, AllowAddedRows: false, FixedRowIDs: [Guid.NewGuid()]);
+        Assert.Throws<ArgumentException>(() => FormTableInput.ValidateDefinition(definition));
+        FormTableInput.ValidateDefinition(definition with { AllowAddedRows = true });
+    }
+
+    [Fact]
     public void RealTypedTablePreservesRowIdentityAndRejectsTextCoercedNumbers()
     {
         var field = Guid.NewGuid(); var column = Guid.NewGuid(); var row = Guid.NewGuid();

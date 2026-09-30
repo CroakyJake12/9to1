@@ -184,6 +184,19 @@ try
     try{new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,null,monthlyPolicy).Begin(purchaseQuote.QuoteID);throw new Exception("missing verifier accepted");}catch(InvalidOperationException){}
     try{new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,billingVerifier,null).Begin(purchaseQuote.QuoteID);throw new Exception("missing monthly policy accepted");}catch(InvalidOperationException){}
     try{new SubscriptionPurchaseService(ledger,purchaseQuotes,Guid.NewGuid(),null,billingVerifier,monthlyPolicy).Begin(purchaseQuote.QuoteID);throw new Exception("foreign owned quote context accepted");}catch(InvalidOperationException){}
+    // The purchase and verified settlement must use the ledger's authoritative clock,
+    // including hosts/tests whose clock differs from the process wall clock.
+    var purchaseClock=new FixturePurchaseClock(DateTimeOffset.UtcNow.AddDays(-2));
+    var clockLedger=new AccountLedger(Path.Combine(root,"purchase-clock-ledger"),purchaseClock);
+    clockLedger.Provision(new(purchaseAccount,null,null,true,0,new(0,0,0,0,new Dictionary<string,JsonElement>()),1));
+    var clockVerifier=new FixtureBillingVerifier();
+    var clockPurchases=new SubscriptionPurchaseService(clockLedger,purchaseQuotes,purchaseAccount,null,clockVerifier,monthlyPolicy);
+    var clockPurchase=clockPurchases.Begin(purchaseQuote.QuoteID);
+    Assert(clockPurchase.CreatedAt==purchaseClock.GetUtcNow(),"purchase creation uses ledger clock");
+    clockVerifier.Receipt=new(clockPurchase.PurchaseID,purchaseAccount,"fictional-clock-settlement",purchaseQuote.Currency,
+        purchaseQuote.Breakdown.FinalMonthlyCharge,purchaseClock.GetUtcNow().AddSeconds(1));
+    var clockActivation=await clockPurchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());
+    Assert(clockActivation.State==SubscriptionPurchaseState.Activated,"valid settlement after authoritative creation does not compare against unrelated wall clock");
     var expiryDirectory=Path.Combine(root,"expiry-ledger");var expiryClock=new FixturePurchaseClock(DateTimeOffset.UtcNow);
     var expiryLedger=new AccountLedger(expiryDirectory,expiryClock);expiryLedger.Provision(new(purchaseAccount,null,null,true,0,new(0,0,0,0,new Dictionary<string,JsonElement>()),1));
     var expiryPurchases=new SubscriptionPurchaseService(expiryLedger,purchaseQuotes,purchaseAccount,null,billingVerifier,monthlyPolicy);

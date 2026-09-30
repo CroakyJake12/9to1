@@ -7,6 +7,9 @@ artifacts/**
 build/
 cache/
 **/bin/
+!9to1 OS/packaging/bin/
+9to1 OS/packaging/bin/*
+!9to1 OS/packaging/bin/haven-modelctl
 **/obj/
 **/obj-hui/
 **/obj-apk/

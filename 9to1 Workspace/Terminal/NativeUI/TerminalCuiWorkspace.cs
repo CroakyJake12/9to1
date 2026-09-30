@@ -21,18 +21,23 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
 {
     private readonly TerminalAppSurface _surface;
     private readonly ITerminalNativeViewport _viewport;
+    private readonly Func<string, CancellationToken, Task>? _openHomePermissions;
     private readonly SemaphoreSlim _operations = new(1, 1);
     private ITerminalInteractiveSession? _attached;
     private (Guid ActionId, string RequestId)? _review;
+    private Guid? _displayedPendingCommandId;
+    private TerminalResolvedAction? _displayedResolvedAction;
     private volatile bool _disposed;
     public CuiViewModel Bindings { get; } = new();
     public Control Viewport => _viewport.View;
 
-    public TerminalCuiWorkspace(TerminalAppSurface surface, ITerminalNativeViewport viewport)
+    public TerminalCuiWorkspace(TerminalAppSurface surface, ITerminalNativeViewport viewport,
+        Func<string, CancellationToken, Task>? openHomePermissions = null)
     {
         Dispatcher.UIThread.VerifyAccess();
         _surface = surface ?? throw new ArgumentNullException(nameof(surface));
         _viewport = viewport ?? throw new ArgumentNullException(nameof(viewport));
+        _openHomePermissions = openHomePermissions;
         Bindings.Set("InputText", "");
         Bindings.Set("Status", "Ready.");
         _surface.MetadataChanged += OnMetadataChanged;
@@ -48,7 +53,8 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
         var sessionId = _surface.SessionMetadata?.SessionId;
         var mode = _surface.Mode;
         var input = Bindings.Get("InputText")?.ToString() ?? "";
-        var resolved = _surface.ResolvedAction;
+        var resolved = _displayedResolvedAction;
+        var pendingCommandId = _displayedPendingCommandId;
         await _operations.WaitAsync(cancellationToken);
         try
         {
@@ -70,6 +76,14 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
                     var submitted = await _surface.SubmitAsync(input, cancellationToken);
                     if (!_disposed) Bindings.Set("Status", submitted.Message);
                     break;
+                case "TerminalApproveCommand":
+                    var approved = await _surface.ApprovePendingAsync(pendingCommandId ?? Guid.Empty, cancellationToken);
+                    if (!_disposed) Bindings.Set("Status", approved.Message);
+                    break;
+                case "TerminalDenyCommand":
+                    var denied = _surface.DenyPending(pendingCommandId ?? Guid.Empty);
+                    Bindings.Set("Status", denied.Message);
+                    break;
                 case "TerminalExecuteResolved":
                     if (resolved is null || _surface.ResolvedAction?.Id != resolved.Id)
                         throw new InvalidOperationException("Resolve an action for this session first.");
@@ -78,6 +92,11 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
                     _review = execution.State == TerminalAppCommandState.RequiresApproval ? (resolved.Id, execution.Message) : null;
                     if (!_disposed) Bindings.Set("Status", execution.State == TerminalAppCommandState.RequiresApproval
                         ? "Review this action in Home, then retry it here." : execution.Message);
+                    if (!_disposed && _review is { } review && _surface.ResolvedAction?.Id == review.ActionId && _openHomePermissions is not null)
+                    {
+                        Refresh();
+                        await _openHomePermissions(review.RequestId, cancellationToken);
+                    }
                     break;
                 default: throw new InvalidOperationException("Unknown Terminal action.");
             }
@@ -113,7 +132,12 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
         _viewport.SetInteractiveInputEnabled(session is not null && _surface.Mode == TerminalInputMode.Command);
         Bindings.Set("Mode", _surface.ModeLabel);
         Bindings.Set("WorkingDirectory", _surface.WorkingDirectory);
-        Bindings.Set("ActionSummary", _surface.ResolvedAction?.Summary ?? "");
+        _displayedResolvedAction = _surface.ResolvedAction;
+        var pendingCommand = _surface.PendingCommandReview;
+        _displayedPendingCommandId = pendingCommand?.Id;
+        Bindings.Set("ActionSummary", _displayedResolvedAction?.Summary ?? "");
+        Bindings.Set("HasPendingCommand", pendingCommand is not null);
+        Bindings.Set("PendingCommandPreview", pendingCommand?.Preview ?? "");
         Bindings.Set("ApprovalRequestId", _review?.RequestId ?? "");
         Bindings.Set("Availability", _surface.UnavailableReason ?? "");
     }
@@ -128,6 +152,8 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
         _viewport.Detach();
         _attached = null;
         _review = null;
+        _displayedPendingCommandId = null;
+        _displayedResolvedAction = null;
         // An in-flight owner operation may still release the semaphore. Neither the
         // surface nor viewport is disposed here; their trusted host owns both.
     }

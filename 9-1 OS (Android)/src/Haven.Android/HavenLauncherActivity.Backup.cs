@@ -47,7 +47,7 @@ public sealed partial class HavenLauncherActivity
             }
             var layout = LauncherLayoutExchange.Import(new UTF8Encoding(false, true).GetString(buffer.ToArray()), snapshot.AuthorityId);
             var dialog = new AlertDialog.Builder(this); dialog.SetTitle("Restore launcher layout?");
-            dialog.SetMessage($"Replace the current layout with {layout.Pages.Count} pages and {LauncherLayoutEdits.Placements(layout).Count()} items. The current layout remains available through Restore previous layout.");
+            dialog.SetMessage($"Replace the current layout with {layout.Pages.Count} pages and {LauncherLayoutEdits.Placements(layout).Count()} items, including {layout.Drawer?.Categories.Count ?? 0} drawer categories, hidden apps, appearance and gesture settings. The current layout remains available through Restore previous layout.");
             dialog.SetPositiveButton("Restore", (_, _) => _ = EditLayoutAsync(_ => layout, snapshot));
             dialog.SetNegativeButton("Cancel", (_, _) => { }); dialog.Show();
         }

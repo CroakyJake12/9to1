@@ -16,8 +16,11 @@ namespace Haven.Desktop.Services;
 internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource actors,
     Func<AuthenticatedResourceActor, DurableDriveProvider?> providers, FilesWorkspaceDirectoryResolver directories,
     IWriteNativeDocumentPackageStore packages, ResourceAuthorizationService authorization,
-    Func<AppAiAccessMode> currentHostAccessMode)
+    Func<AppAiAccessMode> currentHostAccessMode,
+    Func<AuthenticatedResourceActor, DurableDriveProvider, CancellationToken, ValueTask<FilesCommitAuthorityGuard>>? captureCommitAuthority = null)
 {
+    internal bool HasOwnershipReceiptCommitGuard => captureCommitAuthority is not null;
+
     public async Task<NotesDocument> OpenAsync(HostedItemId fileId, CancellationToken cancellationToken = default)
     {
         var (actor, provider, reference, metadata, scope) = await ResolveAsync(fileId, ResourceAccess.Read, null, cancellationToken).ConfigureAwait(false);
@@ -42,8 +45,18 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
         return opened.Value;
     }
 
-    public async Task<FilesRevision> SaveAsync(HostedItemId fileId, NotesDocument document, FilesRevisionId? expectedFileRevision,
-        CancellationToken cancellationToken = default)
+    public Task<FilesRevision> SaveAsync(HostedItemId fileId, NotesDocument document, FilesRevisionId? expectedFileRevision,
+        CancellationToken cancellationToken = default) => SaveCoreAsync(null, fileId, document, expectedFileRevision, cancellationToken);
+
+    public Task<FilesRevision> SaveForActorAsync(AuthenticatedResourceActor expectedActor, HostedItemId fileId,
+        NotesDocument document, FilesRevisionId expectedFileRevision, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return SaveCoreAsync(expectedActor, fileId, document, expectedFileRevision, cancellationToken);
+    }
+
+    private async Task<FilesRevision> SaveCoreAsync(AuthenticatedResourceActor? expectedActor, HostedItemId fileId,
+        NotesDocument document, FilesRevisionId? expectedFileRevision, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
         // Freeze the entire package graph before any authority or directory await. The caller retains
@@ -51,7 +64,11 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
         var captured = JsonSerializer.Deserialize<NotesDocument>(JsonSerializer.SerializeToUtf8Bytes(document))
             ?? throw new InvalidDataException("The Write document cannot be captured.");
         if (currentHostAccessMode() != AppAiAccessMode.Write) throw new UnauthorizedAccessException("Write mode is required to edit the artifact.");
+        if (expectedActor is not null && await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != expectedActor)
+            throw new UnauthorizedAccessException("The claimed Write actor is no longer current.");
         var (actor, provider, reference, metadata, scope) = await ResolveAsync(fileId, ResourceAccess.Write, expectedFileRevision, cancellationToken).ConfigureAwait(false);
+        if (expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("Write authorization changed from the claimed actor.");
         if (captured.Id.ToString("N") != reference.ArtifactId) throw new InvalidDataException("Write cannot replace the canonical artifact with another document identity.");
         var root = await RootAsync(actor, cancellationToken).ConfigureAwait(false);
         var revisionId = Guid.NewGuid().ToString("N");
@@ -72,10 +89,13 @@ internal sealed class WriteFilesArtifactBridge(IAuthenticatedResourceActorSource
             throw new UnauthorizedAccessException("Authority changed; the saved candidate remains recoverable but was not published.");
         if (!ReferenceEquals(providers(actor), provider))
             throw new UnauthorizedAccessException("The trusted Files provider changed before publication.");
+        var guard = captureCommitAuthority is null
+            ? new FilesCommitAuthorityGuard(actor.ActorId, async token => currentHostAccessMode() == AppAiAccessMode.Write &&
+                await actors.GetCurrentAsync(token).ConfigureAwait(false) == actor)
+            : await captureCommitAuthority(actor, provider, cancellationToken).ConfigureAwait(false);
         var committed = await provider.CommitDurableRevisionAsync(new(fileId, "write", revisionId,
             metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, stream.Length, hash, relative, expectedFileRevision),
-            new FilesCommitAuthorityGuard(actor.ActorId, async token => currentHostAccessMode() == AppAiAccessMode.Write &&
-                await actors.GetCurrentAsync(token).ConfigureAwait(false) == actor), cancellationToken).ConfigureAwait(false);
+            guard, cancellationToken).ConfigureAwait(false);
         if (committed.Error?.Code == FilesErrorCode.PermissionDenied)
             throw new UnauthorizedAccessException(committed.Error.Message + " The candidate package remains recoverable.");
         if (!committed.IsSuccess) throw new InvalidOperationException(committed.Error!.Message + " The candidate package remains recoverable.");

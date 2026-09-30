@@ -16,7 +16,7 @@ public static class LauncherLayoutExchange
     {
         source.Current.Validate();
         if (string.IsNullOrWhiteSpace(source.AuthorityId)) throw new InvalidDataException("Launcher profile ownership is missing.");
-        var text = JsonSerializer.Serialize(new Document("9to1.launcher.layout", 5, source.AuthorityId, LauncherLayoutEdits.Clone(source.Current)), Options);
+        var text = JsonSerializer.Serialize(new Document("9to1.launcher.layout", 6, source.AuthorityId, LauncherLayoutEdits.Clone(source.Current)), Options);
         if (Encoding.UTF8.GetByteCount(text) > MaximumBytes) throw new InvalidDataException("Launcher backup exceeds the supported size.");
         return text;
     }
@@ -28,7 +28,7 @@ public static class LauncherLayoutExchange
         Document document;
         try { document = JsonSerializer.Deserialize<Document>(text, Options) ?? throw new JsonException(); }
         catch (JsonException ex) { throw new InvalidDataException("Unsupported launcher backup. The current layout was preserved.", ex); }
-        if (document.Format != "9to1.launcher.layout" || document.Version is not (1 or 2 or 3 or 4 or 5) || document.Layout is null)
+        if (document.Format != "9to1.launcher.layout" || document.Version is not (1 or 2 or 3 or 4 or 5 or 6) || document.Layout is null)
             throw new InvalidDataException("This launcher backup format requires a compatible version.");
         // Canonical application IDs are profile-owned. Cross-profile imports need an explicit owner mapping service.
         if (string.IsNullOrWhiteSpace(currentAuthorityId) || document.AuthorityId != currentAuthorityId)

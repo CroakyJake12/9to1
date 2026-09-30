@@ -33,6 +33,8 @@ public sealed record TerminalAppHostCapabilities(
     ITerminalAdviceService? Advice = null,
     ITerminalActionBroker? NaturalLanguageActions = null);
 
+public sealed record TerminalPendingCommandReview(Guid Id, string Preview);
+
 public sealed record TerminalAppCommandResult(
     TerminalAppCommandState State,
     string Command,
@@ -52,6 +54,11 @@ public sealed class TerminalAppSurface : IDisposable
     private readonly List<string> _history = [];
     private ITerminalSession? _session;
     private string? _pendingCommand;
+    private Guid _pendingCommandId;
+    private Guid _pendingSessionId;
+    private string? _pendingDirectory;
+    private long _pendingSessionRevision;
+    private long _pendingResolutionGeneration;
     private bool _disposed;
     private readonly object _resolutionGate = new();
     private long _resolutionGeneration;
@@ -133,6 +140,9 @@ public sealed class TerminalAppSurface : IDisposable
             metadata.ShellProfileId??metadata.ShellRuntime,WorkingDirectory,_history.LastOrDefault(),null,string.Empty);
     }
     public bool HasPendingApproval => _pendingCommand is not null;
+    public Guid? PendingCommandId { get { lock (_resolutionGate) return _pendingCommand is null ? null : _pendingCommandId; } }
+    public string? PendingCommandPreview { get { lock (_resolutionGate) return _pendingCommand is null ? null : SensitiveTextRedactor.Redact(_pendingCommand, 8_000); } }
+    public TerminalPendingCommandReview? PendingCommandReview { get { lock (_resolutionGate) return _pendingCommand is null ? null : new(_pendingCommandId, SensitiveTextRedactor.Redact(_pendingCommand, 8_000)); } }
     public IReadOnlyList<string> History => _history;
     public TerminalSessionMetadata? SessionMetadata => _session?.Metadata;
     /// <summary>The actual owned session for trusted in-process host composition; never a restored descriptor or replacement process.</summary>
@@ -156,6 +166,7 @@ public sealed class TerminalAppSurface : IDisposable
                 session is not ITerminalInteractiveSession interactive || session.Metadata.SessionId != expectedSessionId ||
                 TerminalCommandPolicy.Evaluate(permission()).Decision != TerminalPermissionDecision.Allowed)
                 throw new UnauthorizedAccessException("Interactive input is unavailable for the current session, mode, or command permission.");
+            _pendingCommand = null;
             return interactive.SendInputAsync(input, cancellationToken);
         }
     }
@@ -214,7 +225,17 @@ public sealed class TerminalAppSurface : IDisposable
 
         if (policy.Decision == TerminalPermissionDecision.RequiresApproval)
         {
-            _pendingCommand = value;
+            lock (_resolutionGate)
+            {
+                if (!ReferenceEquals(_session, session) || Mode != TerminalInputMode.Command)
+                    return new(TerminalAppCommandState.Cancelled, safeCommand, "The command session changed before review.");
+                _pendingCommand = value;
+                _pendingCommandId = Guid.NewGuid();
+                _pendingSessionId = session.Metadata.SessionId;
+                _pendingSessionRevision = session.Metadata.Revision;
+                _pendingDirectory = WorkingDirectory;
+                _pendingResolutionGeneration = _resolutionGeneration;
+            }
             return new(TerminalAppCommandState.RequiresApproval, safeCommand, policy.Reason);
         }
 
@@ -222,35 +243,49 @@ public sealed class TerminalAppSurface : IDisposable
         return await ExecuteCoreAsync(session, value, safeCommand, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<TerminalAppCommandResult> ApprovePendingAsync(CancellationToken cancellationToken = default)
+    public Task<TerminalAppCommandResult> ApprovePendingAsync(CancellationToken cancellationToken = default) =>
+        ApprovePendingAsync(PendingCommandId ?? Guid.Empty, cancellationToken);
+
+    public Task<TerminalAppCommandResult> ApprovePendingAsync(Guid expectedCommandId, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        if (_pendingCommand is null)
-            return new(TerminalAppCommandState.Failed, string.Empty, "There is no command awaiting approval.");
-
-        var command = _pendingCommand;
-        var safeCommand = SensitiveTextRedactor.Redact(command, 8_000);
-        _pendingCommand = null;
-
-        if (!TryGetExecutionHost(out var session, out var permission))
-            return Unavailable(safeCommand);
-
-        var policy = TerminalCommandPolicy.Evaluate(permission(), approvedOnce: true);
-        if (policy.Decision != TerminalPermissionDecision.Allowed)
-            return new(TerminalAppCommandState.Denied, safeCommand, policy.Reason);
-
-        return await ExecuteCoreAsync(session, command, safeCommand, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (_resolutionGate)
+        {
+            if (_pendingCommand is null)
+                return Task.FromResult(new TerminalAppCommandResult(TerminalAppCommandState.Failed, "", "There is no command awaiting approval."));
+            if (_pendingCommandId != expectedCommandId)
+                return Task.FromResult(new TerminalAppCommandResult(TerminalAppCommandState.Denied, "", "The displayed command review changed."));
+            var command = _pendingCommand;
+            var safeCommand = SensitiveTextRedactor.Redact(command, 8_000);
+            _pendingCommand = null;
+            if (!TryGetExecutionHost(out var session, out var permission)) return Task.FromResult(Unavailable(safeCommand));
+            if (Mode != TerminalInputMode.Command || session.Metadata.SessionId != _pendingSessionId ||
+                session.Metadata.Revision != _pendingSessionRevision || WorkingDirectory != _pendingDirectory ||
+                _resolutionGeneration != _pendingResolutionGeneration)
+                return Task.FromResult(new TerminalAppCommandResult(TerminalAppCommandState.Denied, safeCommand, "The command session context changed. Submit it again."));
+            var policy = TerminalCommandPolicy.Evaluate(permission(), approvedOnce: true);
+            if (policy.Decision != TerminalPermissionDecision.Allowed)
+                return Task.FromResult(new TerminalAppCommandResult(TerminalAppCommandState.Denied, safeCommand, policy.Reason));
+            return ExecuteCoreAsync(session, command, safeCommand, cancellationToken);
+        }
     }
 
-    public TerminalAppCommandResult DenyPending()
+    public TerminalAppCommandResult DenyPending() => DenyPending(PendingCommandId ?? Guid.Empty);
+
+    public TerminalAppCommandResult DenyPending(Guid expectedCommandId)
     {
         ThrowIfDisposed();
-        if (_pendingCommand is null)
-            return new(TerminalAppCommandState.Failed, string.Empty, "There is no command awaiting approval.");
-
-        var safeCommand = SensitiveTextRedactor.Redact(_pendingCommand, 8_000);
-        _pendingCommand = null;
-        return new(TerminalAppCommandState.Denied, safeCommand, "Command denied by user.");
+        lock (_resolutionGate)
+        {
+            if (_pendingCommand is null)
+                return new(TerminalAppCommandState.Failed, string.Empty, "There is no command awaiting approval.");
+            if (_pendingCommandId != expectedCommandId)
+                return new(TerminalAppCommandState.Denied, string.Empty, "The displayed command review changed.");
+            var safeCommand = SensitiveTextRedactor.Redact(_pendingCommand, 8_000);
+            _pendingCommand = null;
+            return new(TerminalAppCommandState.Denied, safeCommand, "Command denied by user.");
+        }
     }
 
     public async Task<bool> SetWorkingDirectoryAsync(string path, CancellationToken cancellationToken = default)
@@ -427,7 +462,7 @@ public sealed class TerminalAppSurface : IDisposable
 
     private void InvalidateResolution()
     {
-        lock(_resolutionGate){_resolutionGeneration++;_resolvedAction=null;_resolvedDirectory=null;}
+        lock(_resolutionGate){_resolutionGeneration++;_resolvedAction=null;_resolvedDirectory=null;_pendingCommand=null;}
     }
 
     private void ThrowIfDisposed()

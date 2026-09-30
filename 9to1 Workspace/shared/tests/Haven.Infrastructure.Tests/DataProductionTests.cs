@@ -12,6 +12,25 @@ public sealed class DataProductionTests : IDisposable
     private readonly DataTestPaths _paths = new();
 
     [Fact]
+    public async Task Canonical_record_identity_survives_actual_repository_reopen_and_sort_commit()
+    {
+        var repository = new DataWorkbookRepository(_paths); var workbook = DataWorkbook.Create("Canonical records");
+        var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "Name"); sheet.SetCell(1, 0, "Zoe"); sheet.SetCell(2, 0, "Ada");
+        var table = new DataTableDefinition { SheetId = sheet.Id, Range = new() { EndRow = 2 }, HasHeaders = true };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        var zoe = table.Records[0].RecordID; var field = table.Fields[0].FieldID;
+        await repository.SaveAsync(workbook, "Create canonical table", CancellationToken.None);
+        var loaded = (await new DataWorkbookRepository(_paths).LoadAsync(workbook.Id, CancellationToken.None))!;
+        DataSpreadsheetOperations.SortRange(loaded.Sheets[0], loaded.Tables[0].Range, 0, hasHeader: true);
+        var saved = await repository.SaveAsync(loaded, "Sort canonical records", CancellationToken.None);
+        var reopened = (await new DataWorkbookRepository(_paths).LoadAsync(workbook.Id, CancellationToken.None))!;
+        Assert.Equal(2, saved.Version); Assert.Equal(loaded.RevisionId, reopened.RevisionId);
+        Assert.Equal(table.Id, reopened.Tables[0].Id);
+        Assert.Equal(2, Assert.Single(reopened.Tables[0].Records, record => record.RecordID == zoe).SheetRow);
+        Assert.Equal("Zoe", DataTableIdentity.ReadCell(reopened, table.Id, zoe, field)!.Value);
+    }
+
+    [Fact]
     public void Infrastructure_registers_data_repository_format_and_query_services()
     {
         var services = new ServiceCollection();

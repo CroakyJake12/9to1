@@ -4,6 +4,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Headless;
 using Avalonia.Controls;
 using Avalonia.Automation;
+using Avalonia.VisualTree;
 using System.Runtime.InteropServices;
 using Avalonia;
 using System.Reflection;
@@ -399,59 +400,34 @@ public sealed class ImageJourneyTests
     }
 
     [AvaloniaFact]
-    public void CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState()
+    public void Owning_Cui_workspace_renders_accessible_disabled_empty_state_at_normal_and_minimum_sizes()
     {
-        var screenshotDirectory = Path.Combine(Path.GetTempPath(), "opencode", "picture-ui-qa");
-        Directory.CreateDirectory(screenshotDirectory);
-        var window = new MainWindow();
+        var registry = new CakeOS.Cui.Runtime.CuiControlRegistry();
+        registry.RegisterControlType("PictureRasterSurface", _ => new Image());
+        using var loader = new CakeOS.Cui.Runtime.CuiControlLoader(registry);
+        var bindings = new PictureCuiWorkspace((_, _) => throw new InvalidOperationException("An empty workspace cannot edit."), _ => false);
+        loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+        var root = loader.Load(PictureCuiWorkspace.LoadDocument());
+        Assert.NotNull(root);
+        var window = new Window { Content = root, MinWidth = 800, MinHeight = 560 };
         try
         {
             window.Show();
-            var cropBounds = window.FindControl<TextBox>("CropBoundsBox")!;
-            var applyCrop = window.FindControl<Button>("ApplyCropButton")!;
-            var exportCrop = window.FindControl<Button>("ExportCropButton")!;
-            var info = window.FindControl<Button>("InfoButton")!;
-            Assert.Equal("Crop bounds in current image pixels", AutomationProperties.GetName(cropBounds));
-            Assert.False(applyCrop.IsEnabled);
-            Assert.False(exportCrop.IsEnabled);
-            Assert.False(info.IsEnabled);
-            Assert.Equal("View image metadata", AutomationProperties.GetName(info));
-            Assert.True(window.FindControl<StackPanel>("EmptyState")!.IsVisible);
-            cropBounds.Focus();
-            Assert.True(cropBounds.IsFocused);
-
-            foreach (var (width, height, name) in new[] { (1080d, 760d, "normal"), (720d, 520d, "minimum") })
+            var crop = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control => control.Name == "picture-crop");
+            var export = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control => control.Name == "picture-export");
+            Assert.NotNull(crop); Assert.NotNull(export);
+            Assert.Equal("Crop Picture non-destructively", AutomationProperties.GetName(crop));
+            Assert.False(crop.IsEnabled); Assert.False(export.IsEnabled);
+            Assert.Equal("No Picture document is open", Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "picture-storage-status").Text);
+            foreach (var (width, height) in new[] { (1200d, 800d), (800d, 560d) })
             {
-                window.Width = width;
-                window.Height = height;
+                window.Width = width; window.Height = height;
                 using var frame = window.CaptureRenderedFrame();
                 Assert.NotNull(frame);
-                Assert.Equal((int)width, frame!.PixelSize.Width);
-                Assert.Equal((int)height, frame.PixelSize.Height);
-                using var output = File.Create(Path.Combine(screenshotDirectory, $"picture-{name}.png"));
-                frame.Save(output);
+                Assert.Equal((int)width, frame!.PixelSize.Width); Assert.Equal((int)height, frame.PixelSize.Height);
             }
-
-            var sourcePath = Path.Combine(screenshotDirectory, "qa-source.bmp");
-            File.WriteAllBytes(sourcePath, CreateTwoPixelBmp());
-            typeof(MainWindow).GetMethod("LoadLocalPath", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .Invoke(window, [sourcePath]);
-            Assert.True(applyCrop.IsEnabled);
-            Assert.False(exportCrop.IsEnabled);
-            Assert.True(info.IsEnabled);
-            cropBounds.Text = "not crop bounds";
-            applyCrop.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            var status = window.FindControl<TextBlock>("StatusText")!;
-            Assert.Contains("Enter crop bounds", status.Text);
-            using var errorFrame = window.CaptureRenderedFrame();
-            Assert.NotNull(errorFrame);
-            using var errorOutput = File.Create(Path.Combine(screenshotDirectory, "picture-error.png"));
-            errorFrame!.Save(errorOutput);
         }
-        finally
-        {
-            window.Close();
-        }
+        finally { window.Close(); }
     }
 
     [AvaloniaFact]

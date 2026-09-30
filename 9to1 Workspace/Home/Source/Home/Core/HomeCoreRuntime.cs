@@ -9,6 +9,7 @@ public static class HomeCoreServiceCatalog
     [
         Unavailable("home.core", "Home Core lifecycle and registry"),
         Unavailable("home.state", "Versioned Home control-plane state"),
+        Unavailable(HomeNativeWidgetRegistry.ServiceId, "Verified live native widget transport"),
         Unavailable("dulche.runtime", "Shared Dulche broker/runtime"),
         Unavailable("permissions.trust", "Permission and trust broker"),
         Unavailable("productivity.engine", "Shared Productivity Engine"),

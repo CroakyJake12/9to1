@@ -309,7 +309,10 @@ public sealed partial class HavenLauncherActivity
         var pageSearch = false;
         var categories = new LinearLayout(this) { Orientation = Orientation.Horizontal };
         var appsCategory = new Button(this) { Text = "Apps" }; var pagesCategory = new Button(this) { Text = "Launcher pages" };
-        categories.AddView(appsCategory); categories.AddView(pagesCategory); shell.AddView(categories);
+        categories.AddView(appsCategory); categories.AddView(pagesCategory);
+        var organize = new Button(this) { Text = "Categories / sort" };
+        categories.AddView(organize);
+        var categoryScroll = new HorizontalScrollView(this); categoryScroll.AddView(categories); shell.AddView(categoryScroll);
 
         var scroll = new ScrollView(this)
         {
@@ -348,6 +351,10 @@ public sealed partial class HavenLauncherActivity
                     new HashSet<string>(StringComparer.Ordinal) { "Home" }, new HashSet<string>(StringComparer.Ordinal) { "os.installed-application" },
                     new HashSet<string>(StringComparer.Ordinal) { "Open" });
                 RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.RemoveAllViews(); });
+                var drawer = _layout?.Current.Drawer ?? LauncherDrawer.Empty;
+                var selectedCategory = drawer.Categories.SingleOrDefault(c => c.Id == _drawerCategoryId);
+                if (selectedCategory is null) _drawerCategoryId = null;
+                var appMatches = new List<LauncherApp>();
                 var count = 0; var failed = false;
                 await foreach (var update in engine.QueryAsync(new(query?.Trim() ?? "", searchingPages ? "Launcher Pages" : "Apps", 1000, scope), request.Token))
                 {
@@ -374,9 +381,27 @@ public sealed partial class HavenLauncherActivity
                     }
                     if (!Guid.TryParse(result.Reference.Id, out var id) ||
                         !long.TryParse(result.Reference.Revision, out var revision) || !presentation.TryGetValue(id, out var app) || _layout?.Current.HiddenApplications.Contains(id) == true) continue;
+                    if (selectedCategory is not null && !selectedCategory.Applications.Contains(id)) continue;
                     var current = app with { Label = result.Label, RegistryRevision = revision, Available = true };
                     count++;
-                    RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.AddView(BuildAppTile(current, width, Dp(96))); });
+                    appMatches.Add(current);
+                }
+                if (!searchingPages)
+                {
+                    var order = selectedCategory?.Applications.Select((id, index) => (id, index)).ToDictionary(pair => pair.id, pair => pair.index);
+                    IEnumerable<LauncherApp> sorted = drawer.Sort switch
+                    {
+                        LauncherDrawerSort.ReverseAlphabetical => appMatches.OrderByDescending(app => app.Label, StringComparer.CurrentCultureIgnoreCase).ThenBy(app => app.ApplicationId),
+                        LauncherDrawerSort.CategoryOrder when order is not null => appMatches.OrderBy(app => order.GetValueOrDefault(app.ApplicationId, int.MaxValue)).ThenBy(app => app.ApplicationId),
+                        _ => appMatches.OrderBy(app => app.Label, StringComparer.CurrentCultureIgnoreCase).ThenBy(app => app.ApplicationId)
+                    };
+                    var visible = sorted.ToArray();
+                    RunOnUiThread(() =>
+                    {
+                        if (request.IsCancellationRequested || generation != searchGeneration) return;
+                        title.Text = selectedCategory?.Name ?? "All apps";
+                        foreach (var app in visible) grid.AddView(BuildAppTile(app, width, Dp(96)));
+                    });
                 }
                 if (count == 0)
                     RunOnUiThread(() =>
@@ -398,6 +423,11 @@ public sealed partial class HavenLauncherActivity
             }
             finally { if (ReferenceEquals(currentSearch, request)) currentSearch = null; }
         }
+        organize.Click += (_, _) =>
+        {
+            pageSearch = false; title.Text = "All apps"; search.Hint = "Search installed apps";
+            _ = RenderMatchesAsync(search.Text); ShowDrawerOrganization();
+        };
         appsCategory.Click += (_, _) => { pageSearch = false; title.Text = "All apps"; search.Hint = "Search installed apps"; _ = RenderMatchesAsync(search.Text); };
         pagesCategory.Click += (_, _) => { pageSearch = true; title.Text = "Launcher pages"; search.Hint = "Search launcher pages"; _ = RenderMatchesAsync(search.Text); };
         _refreshDrawer = () => _ = RenderMatchesAsync(search.Text);

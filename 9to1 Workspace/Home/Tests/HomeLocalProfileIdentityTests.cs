@@ -139,6 +139,38 @@ public sealed class HomeLocalProfileIdentityTests : IDisposable
         Assert.True(principal!.StartsWith("windows-sid:", StringComparison.Ordinal) || principal.StartsWith("unix-euid:", StringComparison.Ordinal));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Displayed_setup_actor_cannot_retarget_binding_or_import_after_session_change(bool import)
+    {
+        var principal = new Principal();
+        var original = new HomeLocalProfileIdentity(Store, principal);
+        var displayed = (await original.GetCurrentAsync(default))!;
+        var current = new HomeLocalProfileIdentity(Store, principal);
+        var actual = (await current.GetCurrentAsync(default))!;
+        Assert.NotEqual(displayed.AuthenticationRevision, actual.AuthenticationRevision);
+        var evidence = new Evidence { ThrowOnRead = true };
+        var permissions = new HomePermissionTrustService(Store, (_, _) => null);
+        var ownership = new HomeLocalStoreOwnership(Store, current, evidence, permissions);
+        var before = await File.ReadAllBytesAsync(Path.Combine(_root, "private", "home.json"));
+        if (import)
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ownership.RequestImportAsync(displayed, "planner", "store", "displayed-session"));
+        else
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ownership.BindNewEmptyAsync(displayed, "planner", "store"));
+        Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(_root, "private", "home.json")));
+    }
+
+    [Fact]
+    public async Task Current_displayed_actor_can_bind_explicit_new_empty_store()
+    {
+        var profile = new HomeLocalProfileIdentity(Store, new Principal());
+        var actor = (await profile.GetCurrentAsync(default))!;
+        var evidence = new Evidence { Current = new("planner", "new-store", "r1", true, true, true) };
+        var ownership = new HomeLocalStoreOwnership(Store, profile, evidence, new HomePermissionTrustService(Store, (_, _) => null));
+        Assert.Equal(actor.ProfileId, (await ownership.BindNewEmptyAsync(actor, "planner", "new-store")).ProfileId);
+    }
+
     private sealed class Principal : ITrustedHostPrincipalSource
     {
         public string Value { get; set; } = "actual-host-fixture-principal";

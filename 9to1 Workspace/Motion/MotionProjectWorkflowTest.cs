@@ -63,6 +63,19 @@ internal static class MotionProjectWorkflowTest
             if (invalidShape.ExitCode != 2 || !invalidShape.Error.Contains("InvalidProject", StringComparison.Ordinal)) return 41;
             var afterFailure = Invoke(["project", "open", path]);
             if (afterFailure.ExitCode != 0 || ReadResult(afterFailure.Output).Revision != 3) return 42;
+            var overflowing = nextRevision with { Revision = 4, Sequences = nextRevision.Sequences.Select(item => item with
+            {
+                VideoTracks = item.VideoTracks.Select(videoTrack => videoTrack with
+                {
+                    Elements = videoTrack.Elements.Select(element => element with { TimelineStart = long.MaxValue }).ToArray()
+                }).ToArray()
+            }).ToArray() };
+            var overflowSave = Invoke(["project", "save", path, "3"], JsonSerializer.Serialize(overflowing));
+            if (overflowSave.ExitCode != 2 || !overflowSave.Error.Contains("InvalidProject", StringComparison.Ordinal)
+                || !File.ReadAllBytes(path).SequenceEqual(savedBytes)) return 43;
+            var overflowInsert = Invoke(["project", "insert", path, "3", sequence.SequenceId.ToString(), track.TrackId.ToString(),
+                asset.AssetId.ToString(), long.MaxValue.ToString(System.Globalization.CultureInfo.InvariantCulture), "0", "1"]);
+            if (overflowInsert.ExitCode != 2 || !File.ReadAllBytes(path).SequenceEqual(savedBytes)) return 44;
             return 0;
         }
         finally

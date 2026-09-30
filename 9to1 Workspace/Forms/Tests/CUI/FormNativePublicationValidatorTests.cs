@@ -6,6 +6,28 @@ namespace HavenOS.Forms.Tests;
 
 public sealed class FormNativePublicationValidatorTests
 {
+    [Fact]
+    public void Typed_table_publishes_but_reference_column_requires_actual_Data_lookup()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var project = FormProjectEditor.Create("Table", FormModeKind.Form, now);
+        var fieldID = Guid.NewGuid(); var columnID = Guid.NewGuid();
+        var field = new FormField(fieldID, FormFieldKind.TableInput, "Items", null,
+            JsonSerializer.SerializeToElement(new { }), true, new(), Table: new(fieldID,
+                [new(columnID, "Description", FormTableCellType.Text, true)], 1, 10));
+        project = FormProjectEditor.AddField(project, project.Revision, project.Pages[0].PageID, field, now);
+        var validator = new FormNativePublicationValidator();
+        validator.ValidateForPublication(project.FormID, FormProjectEditor.Project(project));
+        project = FormProjectEditor.UpdateField(project, project.Revision, field with
+        {
+            Table = field.Table! with { Columns = [new(columnID, "Record", FormTableCellType.Reference,
+                ReferencedTableID: Guid.NewGuid())] }
+        }, now);
+        var captured = FormProjectEditor.Project(project);
+        validator.Validate(project.FormID, captured);
+        Assert.Throws<NotSupportedException>(() => validator.ValidateForPublication(project.FormID, captured));
+    }
+
     [Theory]
     [InlineData("audience")]
     [InlineData("data")]

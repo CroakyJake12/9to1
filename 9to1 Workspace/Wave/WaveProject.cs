@@ -75,7 +75,9 @@ public static class WaveProjectStore
             ? item with { Clips = [.. item.Clips, clip] }
             : item).ToList();
         var now = DateTimeOffset.UtcNow;
-        return project with { Tracks = tracks, Revision = checked(project.Revision + 1), ModifiedAt = now };
+        var updated = project with { Tracks = tracks, Revision = checked(project.Revision + 1), ModifiedAt = now };
+        Validate(updated);
+        return updated;
     }
 
     public static void Save(string path, WaveProject project, long? expectedRevision = null)
@@ -138,17 +140,18 @@ public static class WaveProjectStore
         if (project.SchemaVersion != CurrentSchemaVersion)
             throw new InvalidDataException($"Unsupported Wave project schema version {project.SchemaVersion}.");
         if (project.ProjectId == Guid.Empty || project.SampleRate <= 0 || project.Channels is < 1 or > 32 || project.Revision < 0
-            || project.Tracks is null || project.Tracks.Any(track => track.TrackId == Guid.Empty || string.IsNullOrWhiteSpace(track.Name) || track.Clips is null
+            || project.Tracks is null || project.Tracks.Any(track => track is null || track.TrackId == Guid.Empty || string.IsNullOrWhiteSpace(track.Name) || track.Clips is null
                 || !double.IsFinite(track.Gain) || track.Gain is < 0 or > 64 || !double.IsFinite(track.Pan) || track.Pan is < -1 or > 1))
             throw new InvalidDataException("Wave project contains invalid required data.");
         if (project.Tracks.Select(track => track.TrackId).Distinct().Count() != project.Tracks.Count)
             throw new InvalidDataException("Wave project contains duplicate track identities.");
         var clips = project.Tracks.SelectMany(track => track.Clips).ToList();
-        if (clips.Any(clip => clip.ClipId == Guid.Empty || clip.SourceReferenceId == Guid.Empty || (string.IsNullOrWhiteSpace(clip.SourcePath) && string.IsNullOrWhiteSpace(clip.SourceFileID))
+        if (clips.Any(clip => clip is null || clip.ClipId == Guid.Empty || clip.SourceReferenceId == Guid.Empty || (string.IsNullOrWhiteSpace(clip.SourcePath) && string.IsNullOrWhiteSpace(clip.SourceFileID))
             || (clip.SourceFileID is not null && (string.IsNullOrWhiteSpace(clip.SourceFileID) || string.IsNullOrWhiteSpace(clip.SourceRevisionID)))
             || (clip.SourceFileID is null && clip.SourceRevisionID is not null)
             || clip.SourceSha256 is null || clip.SourceSha256.Length != 64 || !clip.SourceSha256.All(Uri.IsHexDigit)
             || clip.SourceStartFrame < 0 || clip.FrameCount <= 0 || clip.TimelineStartFrame < 0
+            || clip.SourceStartFrame > long.MaxValue - clip.FrameCount || clip.TimelineStartFrame > long.MaxValue - clip.FrameCount
             || !double.IsFinite(clip.Gain) || clip.Gain is < 0 or > 64
             || clip.FadeInFrames < 0 || clip.FadeOutFrames < 0 || clip.FadeInFrames > clip.FrameCount || clip.FadeOutFrames > clip.FrameCount))
             throw new InvalidDataException("Wave project contains an invalid clip.");

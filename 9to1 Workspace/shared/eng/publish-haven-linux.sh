@@ -58,6 +58,13 @@ if [[ ! -x "$publish_dir/Haven" ]]; then
   exit 65
 fi
 
+# Retain actual available license/notice text and declarations. The inventory
+# explicitly records missing text; it does not claim complete native closure.
+python3 "$repo_root/eng/collect-linux-third-party-notices.py" \
+  --assets "$(dirname "$project")/obj/project.assets.json" \
+  --repo-root "$checkout_root" \
+  --output "$publish_dir/third-party-notices"
+
 tar -C "$publish_dir" -czf "$package_path" .
 
 if [[ ! -s "$package_path" ]]; then

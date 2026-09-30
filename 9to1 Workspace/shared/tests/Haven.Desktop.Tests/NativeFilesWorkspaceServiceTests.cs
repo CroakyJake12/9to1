@@ -14,6 +14,66 @@ namespace Haven.Desktop.Tests;
 public sealed class NativeFilesWorkspaceServiceTests
 {
     [Fact]
+    public async Task Setup_denies_final_configuration_publication_after_trusted_principal_changes()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var root = Path.Combine(Path.GetTempPath(), "astra-files-setup-admission-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        DelayedConfigurationStore? delayed = null;
+        Task<NativeFilesWorkspace>? setup = null;
+        try
+        {
+            var backing = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
+            var home = delayed = new DelayedConfigurationStore(backing);
+            var principal = new RevocablePrincipal();
+            var profiles = new HomeLocalProfileIdentity(home, principal);
+            var files = new NativeFilesWorkspaceService(home, profiles);
+            var ownership = new HomeLocalStoreOwnership(home, profiles, new HomeLocalStoreEvidenceRegistry([files]),
+                new HomePermissionTrustService(home, (_, _) => null));
+            var chosen = Path.Combine(root, "chosen"); Directory.CreateDirectory(chosen);
+            setup = files.ConfigureNewAsync(chosen, ownership, token);
+            await home.Entered.Task.WaitAsync(TimeSpan.FromSeconds(15), token);
+            var before = await File.ReadAllBytesAsync(Path.Combine(root, "home.json"), token);
+            principal.Revoked = true;
+            home.Release.TrySetResult();
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => setup);
+            Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(root, "home.json"), token));
+            Assert.DoesNotContain((await backing.ReadAsync(token)).State!.Records, r => r.RecordType == "files.native-workspace");
+            Assert.True(File.Exists(Path.Combine(chosen, ".9to1-files", "drive.json"))); // Preserve partial setup for recovery.
+        }
+        finally
+        {
+            delayed?.Release.TrySetResult();
+            if (setup is not null) { try { await setup; } catch { /* Preserve the primary test failure. */ } }
+            Directory.Delete(root, true);
+        }
+    }
+
+    private sealed class RevocablePrincipal : ITrustedHostPrincipalSource
+    {
+        public bool Revoked;
+        public ValueTask<string?> GetPrincipalAsync(CancellationToken token) => Revoked
+            ? ValueTask.FromResult<string?>(null) : new OperatingSystemPrincipalSource().GetPrincipalAsync(token);
+    }
+
+    private sealed class DelayedConfigurationStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken token = default) => inner.ReadAsync(token);
+        private async Task DelayAsync(HomeCoreStateRecord record, CancellationToken token)
+        {
+            if (record.RecordType != "files.native-workspace") return;
+            Entered.TrySetResult(); await Release.Task.WaitAsync(TimeSpan.FromSeconds(15), token);
+        }
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long revision, CancellationToken token = default)
+        { await DelayAsync(record, token); return await inner.WriteAsync(record, revision, token); }
+        public async Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long revision,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken token = default)
+        { await DelayAsync(record, token); return await inner.WriteGuardedAsync(record, revision, actor, guard, token); }
+    }
+
+    [Fact]
     public async Task Explicit_empty_native_Files_setup_persists_real_profile_folders_and_revoked_ownership_denies_Sites()
     {
         var root = Path.Combine(Path.GetTempPath(), "astra-native-files-" + Guid.NewGuid().ToString("N"));

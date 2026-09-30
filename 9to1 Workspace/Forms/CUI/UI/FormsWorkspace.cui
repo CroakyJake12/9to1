@@ -10,8 +10,8 @@
     </StackPanel>
     <Grid grid-row="1" columns="Auto,*,*" margin="16">
       <StackPanel spacing="8" accessible-name="Field palette">
-        <Button action="9to1.Forms.AddText" is-enabled="{Binding CanAdd}" content="Add text question" />
-        <Button action="9to1.Forms.AddNumber" is-enabled="{Binding CanAdd}" content="Add number question" />
+        <ComboBox ItemsSource="{Binding PaletteNames}" SelectedIndex="{Binding SelectedPaletteIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanAddField}" accessible-name="Field type" />
+        <Button action="9to1.Forms.AddField" is-enabled="{Binding CanAddField}" content="Add field" />
         <Button action="9to1.Forms.AddPage" is-enabled="{Binding CanAdd}" content="Add page" />
       </StackPanel>
       <StackPanel grid-column="1" spacing="8" accessible-name="Page structure">
@@ -21,15 +21,39 @@
         <ComboBox ItemsSource="{Binding FieldNames}" SelectedIndex="{Binding SelectedFieldIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanSelectField}" accessible-name="Select field" />
         <Button action="9to1.Forms.MoveToPage" is-enabled="{Binding CanEdit}" content="Move selected field to this page" />
       </StackPanel>
-      <StackPanel grid-column="2" spacing="8" accessible-name="Field inspector">
+      <ScrollViewer grid-column="2" accessible-name="Field inspector">
+      <StackPanel spacing="8">
         <TextBlock text="{Binding Field}" />
         <TextBlock text="{Binding FieldType}" />
         <TextBox text="{Binding Label, Mode=TwoWay}" is-enabled="{Binding CanEdit}" accessible-name="Question label" />
         <TextBox text="{Binding Help, Mode=TwoWay}" is-enabled="{Binding CanEdit}" accessible-name="Question help" />
         <Button action="9to1.Forms.SaveField" is-enabled="{Binding CanEdit}" content="Save question" />
+        <ComboBox ItemsSource="{Binding OptionNames}" SelectedIndex="{Binding SelectedOptionIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanEditChoice}" accessible-name="Choice option" />
+        <TextBox text="{Binding OptionLabel, Mode=TwoWay}" is-enabled="{Binding CanEditChoice}" accessible-name="Choice label" />
+        <Button action="9to1.Forms.UpdateChoice" is-enabled="{Binding CanEditChoice}" content="Save choice label" />
+        <Button action="9to1.Forms.AddChoice" is-enabled="{Binding CanAddChoice}" content="Add choice" />
+        <ComboBox ItemsSource="{Binding ColumnNames}" SelectedIndex="{Binding SelectedColumnIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanEditColumn}" accessible-name="Table column" />
+        <TextBlock text="{Binding ColumnType}" />
+        <TextBox text="{Binding ColumnLabel, Mode=TwoWay}" is-enabled="{Binding CanEditColumn}" accessible-name="Column label" />
+        <Button action="9to1.Forms.SaveColumn" is-enabled="{Binding CanEditColumn}" content="Save column label" />
+        <TextBlock text="{Binding ColumnRequired}" />
+        <Button action="9to1.Forms.ToggleColumnRequired" is-enabled="{Binding CanEditColumn}" content="Toggle required cell" />
+        <Button action="9to1.Forms.RemoveColumn" is-enabled="{Binding CanRemoveColumn}" content="Remove column" />
+        <ComboBox ItemsSource="{Binding ColumnTypeNames}" SelectedIndex="{Binding SelectedColumnTypeIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanAddColumn}" accessible-name="New column type" />
+        <Button action="9to1.Forms.AddColumn" is-enabled="{Binding CanAddColumn}" content="Add column" />
+        <TextBox text="{Binding MinimumRows, Mode=TwoWay}" is-enabled="{Binding CanEditTableBounds}" accessible-name="Minimum table rows" />
+        <TextBox text="{Binding MaximumRows, Mode=TwoWay}" is-enabled="{Binding CanEditTableBounds}" accessible-name="Maximum table rows" />
+        <Button action="9to1.Forms.SaveTableBounds" is-enabled="{Binding CanEditTableBounds}" content="Save row limits" />
+        <ComboBox ItemsSource="{Binding FixedRowNames}" SelectedIndex="{Binding SelectedFixedRowIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanRemoveFixedRow}" accessible-name="Fixed table row" />
+        <Button action="9to1.Forms.AddFixedRow" is-enabled="{Binding CanAddFixedRow}" content="Add fixed row" />
+        <Button action="9to1.Forms.RemoveFixedRow" is-enabled="{Binding CanRemoveFixedRow}" content="Remove selected fixed row" />
+        <TextBlock text="{Binding AddedRows}" />
+        <Button action="9to1.Forms.ToggleAddedRows" is-enabled="{Binding CanToggleAddedRows}" content="Toggle respondent-added rows" />
+        <Button action="9to1.Forms.DiscardInspector" is-enabled="{Binding CanDiscard}" content="Discard unsaved inspector edits" />
         <TextBlock text="{Binding Required}" />
         <Button action="9to1.Forms.ToggleRequired" is-enabled="{Binding CanEdit}" content="Toggle required answer" />
       </StackPanel>
+      </ScrollViewer>
     </Grid>
     <TextBlock grid-row="2" text="{Binding Status}" accessible-name="Forms operation status" />
   </Grid>

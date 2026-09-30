@@ -149,7 +149,7 @@ public sealed class LauncherLayoutTests
         Assert.Equal(initial.Current.Pages[0].Items.Select(i => i.Id), restored.Current.Pages[0].Items.Select(i => i.Id));
         Assert.Equal("Work", restored.Previous!.ActivePage.Name);
         Assert.Throws<UnauthorizedAccessException>(() => LauncherLayoutExchange.Import(backup, "foreign-profile"));
-        Assert.Throws<InvalidDataException>(() => LauncherLayoutExchange.Import(backup.Replace("\"Version\": 5", "\"Version\": 99"), restored.AuthorityId));
+        Assert.Throws<InvalidDataException>(() => LauncherLayoutExchange.Import(backup.Replace("\"Version\": 6", "\"Version\": 99"), restored.AuthorityId));
         await Assert.ThrowsAsync<IOException>(() => f.Store.EditAsync(moved, _ => LauncherLayoutExchange.Import(backup, moved.AuthorityId)));
         var invented = initial with { Current = LauncherLayoutEdits.AddApplication(initial.Current, initial.Current.ActivePageId, Guid.NewGuid()) };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Store.EditAsync(restored, _ => LauncherLayoutExchange.Import(LauncherLayoutExchange.Export(invented), restored.AuthorityId)));
@@ -305,6 +305,83 @@ public sealed class LauncherLayoutTests
         Assert.Equal(old.Revision + 1, saved.Revision); Assert.Single(saved.Current.Drawer!.Categories);
     }
 
+    [Fact]
+    public async Task GestureBindingsPersistAndRejectStaleUnknownOrCrossProfileWrites()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var configured = new LauncherGestures(SwipeDown: LauncherCommand.OpenPageManager, DoubleTap: LauncherCommand.OpenSettings);
+        var saved = await f.Store.EditAsync(initial, layout => LauncherLayoutEdits.SetGestures(layout, configured));
+        var reopened = await f.Store.GetAsync(); Assert.Equal(configured, reopened.Current.Gestures);
+        Assert.Equal(initial.Current.ActivePage.Items, reopened.Current.ActivePage.Items);
+        var backup = LauncherLayoutExchange.Import(LauncherLayoutExchange.Export(reopened), reopened.AuthorityId);
+        Assert.Equal(configured, backup.Gestures);
+        await Assert.ThrowsAsync<IOException>(() => f.Store.EditAsync(initial, layout => LauncherLayoutEdits.SetGestures(layout, new())));
+        await Assert.ThrowsAsync<InvalidDataException>(() => f.Store.EditAsync(saved,
+            layout => LauncherLayoutEdits.SetGestures(layout, configured with { SwipeUp = (LauncherCommand)999 })));
+        Assert.Equal(saved.Revision, (await f.Store.GetAsync()).Revision);
+        Assert.Throws<UnauthorizedAccessException>(() => LauncherLayoutExchange.Import(LauncherLayoutExchange.Export(saved), "other-profile"));
+    }
+
+    [Fact]
+    public async Task SchemaFiveGestureUpgradeReadsWithoutWritingAndKeepsPrevious()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var record = (await f.Home.ReadAsync()).State!.Records.Single(r => r.RecordType == HomeLauncherLayoutStore.RecordType);
+        var payload = System.Text.Json.Nodes.JsonNode.Parse(record.Payload.GetRawText())!;
+        payload["Current"]!["SchemaVersion"] = 5; payload["Current"]!.AsObject().Remove("Gestures");
+        var old = record with { Revision = record.Revision + 1, Payload = System.Text.Json.JsonSerializer.SerializeToElement(payload) };
+        Assert.True((await f.Home.WriteAsync(old, record.Revision)).IsSuccess);
+        var read = await f.Store.GetAsync(); Assert.Null(read.Current.Gestures);
+        Assert.Equal(old.Payload.GetRawText(), (await f.Home.ReadAsync()).State!.Records.Single(r => r.RecordId == record.RecordId).Payload.GetRawText());
+        var saved = await f.Store.EditAsync(read, layout => LauncherLayoutEdits.SetGestures(layout, new()));
+        Assert.Equal(old.Revision + 1, saved.Revision); Assert.Equal(read.Current.ActivePageId, saved.Previous!.ActivePageId);
+    }
+
+    [Fact]
+    public void BackgroundGestureInputRejectsCancellationMultitouchAndDraggedTaps()
+    {
+        var input = new LauncherGestureRecognizer(80, 12);
+        input.Down(100, 100, 0, 1); Assert.Equal(LauncherGesture.SwipeUp, input.Up(100, 0, 100, 1));
+        input.Down(100, 100, 200, 1); Assert.Equal(LauncherGesture.SwipeDown, input.Up(100, 200, 300, 1));
+        input.Down(100, 100, 400, 1); Assert.Equal(LauncherGesture.SwipeLeft, input.Up(0, 120, 500, 1));
+        input.Down(100, 100, 600, 1); Assert.Equal(LauncherGesture.SwipeRight, input.Up(200, 100, 700, 1));
+        input.Down(100, 100, 800, 1); input.Cancel(); Assert.Null(input.Up(200, 100, 900, 1));
+        input.Down(100, 100, 1000, 1); input.Move(100, 100, 2); Assert.Null(input.Up(200, 100, 1100, 1));
+        input.Down(100, 100, 1200, 1); Assert.Null(input.Up(100, 0, 2300, 1));
+        input.Down(100, 100, 2400, 1); Assert.Null(input.Up(100, 100, 2450, 1));
+        input.Down(101, 101, 2500, 1); Assert.Equal(LauncherGesture.DoubleTap, input.Up(101, 101, 2550, 1));
+        input.Down(100, 100, 2600, 1); input.Move(130, 100, 1); Assert.Null(input.Up(100, 100, 2650, 1));
+        input.Down(100, 100, 2700, 1); Assert.Null(input.Up(100, 100, 2750, 1));
+        input.Cancel(); input.Down(100, 100, 2800, 1); Assert.Null(input.Up(100, 100, 2850, 1));
+        input.Down(float.NaN, 100, 2900, 1); Assert.Null(input.Up(100, 100, 2950, 1));
+    }
+
+    [Fact]
+    public async Task SoleLauncherActivityRenamePreservesFolderDockCategoryAndPlacementIdentity()
+    {
+        using var f = new Fixture(); f.Provider.StableIdentity = "sole-launcher";
+        var initial = await f.Store.GetAsync();
+        var beforeApp = (await f.Registry.RefreshAsync(default)).Single(a => a.OsApplicationId == "first");
+        var placement = initial.Current.ActivePage.Items.Single(i => i.ApplicationId == beforeApp.ApplicationId);
+        var arranged = await f.Store.EditAsync(initial, layout =>
+        {
+            layout = LauncherLayoutEdits.CreateFolder(layout, layout.ActivePageId, "Work");
+            layout = LauncherLayoutEdits.MoveToContainer(layout, placement.Id, layout.Folders.Single().Id);
+            layout = LauncherLayoutEdits.AddDockApplication(LauncherLayoutEdits.ConfigureDock(layout, 1, 4), beforeApp.ApplicationId);
+            layout = LauncherLayoutEdits.AddDrawerCategory(layout, "Study");
+            return LauncherLayoutEdits.SetDrawerCategoryMembership(layout, layout.Drawer!.Categories.Single().Id, beforeApp.ApplicationId, true);
+        });
+        var before = LauncherLayoutExchange.Export(arranged);
+        f.Provider.FirstEntrypoint = "first/renamed-main"; f.Provider.Version = "2";
+        var afterApp = (await f.Registry.RefreshAsync(default)).Single(a => a.OsApplicationId == "first");
+        Assert.Equal(beforeApp.ApplicationId, afterApp.ApplicationId); Assert.True(afterApp.Revision > beforeApp.Revision);
+        Assert.Null(await f.Registry.ResolveLaunchAsync(beforeApp.ApplicationId, beforeApp.Revision, default));
+        Assert.Equal("first/renamed-main", (await f.Registry.ResolveLaunchAsync(afterApp.ApplicationId, afterApp.Revision, default))!.Entrypoint);
+        var reopened = await f.Store.GetAsync();
+        Assert.Equal(arranged.Revision, reopened.Revision); Assert.Equal(before, LauncherLayoutExchange.Export(reopened));
+        Assert.Equal(placement.Id, reopened.Current.Folders.Single().Items.Single().Id);
+    }
+
     private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
     {
         public AuthenticatedResourceActor Current = new("actor", "profile", null, null, "session");
@@ -313,9 +390,10 @@ public sealed class LauncherLayoutTests
     }
     private sealed class Provider : IInstalledApplicationObservationProvider
     {
+        public string FirstEntrypoint = "first/main"; public string? StableIdentity;
         public string ProviderId => "android-test"; public string Version = "1"; public string FirstLabel = "First app"; public bool IncludeApps = true;
         public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct) => ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>(
-            [new("personal", "Personal", false, true, IncludeApps ? [new("first", "first/main", FirstLabel, Version, true), new("second", "second/main", "Second app", Version, true)] : [])]);
+            [new("personal", "Personal", false, true, IncludeApps ? [new("first", FirstEntrypoint, FirstLabel, Version, true) { StableLaunchIdentity = StableIdentity }, new("second", "second/main", "Second app", Version, true)] : [])]);
     }
     private sealed class Fixture : IDisposable
     {

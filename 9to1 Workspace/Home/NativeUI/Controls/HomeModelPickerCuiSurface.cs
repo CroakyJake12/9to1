@@ -27,24 +27,8 @@ public sealed class HomeModelPickerCuiSurface : UserControl, IDisposable
             ?? throw new InvalidDataException("The shared Home model manager document is missing.");
         using var reader = new StreamReader(stream);
         var available = await _scene.ShowAsync(new("home.models", "Personal AI models", "Home",
-            new CuiRichParser().Parse(await reader.ReadToEndAsync(request.Token)), _bindings, _bindings, new Readiness(_runtime, _profiles)), request.Token);
+            new CuiRichParser().Parse(await reader.ReadToEndAsync(request.Token)), _bindings, _bindings, new HomeProfileCuiReadiness(_runtime, _profiles, [new("models.routes", HomeCoreServiceCatalog.CurrentContractVersion.Major, HomeCoreServiceCatalog.CurrentContractVersion.Minor)])), request.Token);
         if (available.State == CuiSceneAvailabilityState.Ready) await _bindings.OpenAsync(request.Token);
-    }
-    private sealed class Readiness(HomeCoreRuntime runtime, HomeLocalProfileIdentity profiles) : ICuiSceneReadiness
-    {
-        public async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken ct)
-        {
-            var actor = await profiles.GetCurrentAsync(ct);
-            if (actor is null) return new(CuiSceneAvailabilityState.Unavailable, "HomeProfileUnavailable", "Open Home to recover this operating-system profile.");
-            var snapshot = await runtime.StartAsync(ct);
-            foreach (var id in new[] { "home.core", "home.state", "permissions.trust", "models.routes" })
-                if (!snapshot.Services.Any(service => service.ServiceId == id && service.IsAvailable &&
-                    service.State == HomeServiceLifecycleState.Ready && service.ContractVersion.Major == HomeCoreServiceCatalog.CurrentContractVersion.Major &&
-                    service.ContractVersion.Minor >= HomeCoreServiceCatalog.CurrentContractVersion.Minor))
-                    return new(CuiSceneAvailabilityState.Unavailable, "HomeModelsUnavailable", "Home model routes are unavailable or need repair.");
-            if (actor != await profiles.GetCurrentAsync(ct)) return new(CuiSceneAvailabilityState.Unavailable, "HomeProfileChanged", "The Home profile changed. Reopen Models.");
-            return new(CuiSceneAvailabilityState.Ready, "HomeModelsReady", "Home model routes are ready.");
-        }
     }
     public void Dispose()
     {

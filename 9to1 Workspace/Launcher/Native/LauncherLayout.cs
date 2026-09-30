@@ -9,7 +9,8 @@ public sealed record LauncherDock(Guid Id, int Rows, int Columns, IReadOnlyList<
 public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Rows, int Columns,
     IReadOnlyList<LauncherPage> Pages, IReadOnlyList<Guid> HiddenApplications)
 {
-    public const int CurrentSchema = 5;
+    public const int CurrentSchema = 6;
+    public LauncherGestures? Gestures { get; init; }
     public LauncherPresentation? Presentation { get; init; }
     public LauncherDrawer? Drawer { get; init; }
     public LauncherDock? Dock { get; init; }
@@ -25,6 +26,7 @@ public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Ro
         if (SchemaVersion != CurrentSchema || Rows is < 3 or > 8 || Columns is < 3 or > 7 || Pages is null || Pages.Count is < 1 or > 64 ||
             Folders is null || Folders.Any(f => f is null) || Folders.Count > 256 || HiddenApplications is null || HiddenApplications.Count > 10000 || HiddenApplications.Any(id => id == Guid.Empty) || HiddenApplications.Distinct().Count() != HiddenApplications.Count)
             throw new InvalidDataException("Launcher layout requires recovery; unsupported data was preserved.");
+        Gestures?.Validate();
         Presentation?.Validate();
         var ids = new HashSet<Guid>();
         foreach (var page in Pages)
@@ -63,10 +65,17 @@ public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Ro
     }
     public static LauncherLayout UpgradeKnownSchema(LauncherLayout layout)
     {
-        // Versions 1 and 2 had pages/hidden apps and then the dock. Preserve every existing identity.
-        if (layout.Drawer is null && ((layout.SchemaVersion == 1 && layout.Dock is null || layout.SchemaVersion == 2) && layout.Folders is { Count: 0 } && layout.Presentation is null ||
-            layout.SchemaVersion == 3 && layout.Presentation is null || layout.SchemaVersion == 4))
-            layout = layout with { SchemaVersion = CurrentSchema };
+        // Known older records upgrade only in memory until an explicit owner edit.
+        var knownOlder = layout.SchemaVersion switch
+        {
+            1 => layout.Dock is null && layout.Folders is { Count: 0 } && layout.Presentation is null && layout.Drawer is null,
+            2 => layout.Folders is { Count: 0 } && layout.Presentation is null && layout.Drawer is null,
+            3 => layout.Presentation is null && layout.Drawer is null,
+            4 => layout.Drawer is null,
+            5 => true,
+            _ => false
+        };
+        if (knownOlder && layout.Gestures is null) layout = layout with { SchemaVersion = CurrentSchema };
         layout.Validate(); return layout;
     }
     private static bool ValidTarget(LauncherPlacement item) => item.FolderId is { } folder ? folder != Guid.Empty && item.ApplicationId == Guid.Empty : item.ApplicationId != Guid.Empty;

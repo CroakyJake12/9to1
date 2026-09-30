@@ -392,6 +392,23 @@ internal static class WaveSelfTest
             Require(clip.ClipId != Guid.Empty && clip.SourceReferenceId != Guid.Empty && clip.TimelineStartFrame == 4000 && clip.FrameCount == 8000,
                 "Imported clip identity, source range, or timeline placement was not preserved.");
             Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Project clip creation modified source audio.");
+            var originalProjectBytes = File.ReadAllBytes(projectPath);
+            var originalTrack = reopenedProject.Tracks[0];
+            foreach (var invalidProject in new[]
+            {
+                reopenedProject with { Tracks = [null!] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = [null!] }] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = null! }] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = [clip with { SourceStartFrame = long.MaxValue }] }] },
+                reopenedProject with { Tracks = [originalTrack with { Clips = [clip with { TimelineStartFrame = long.MaxValue }] }] }
+            })
+            {
+                var rejected = false;
+                try { WaveProjectStore.Save(projectPath, invalidProject with { Revision = reopenedProject.Revision + 1 }, reopenedProject.Revision); }
+                catch (InvalidDataException) { rejected = true; }
+                Require(rejected && File.ReadAllBytes(projectPath).SequenceEqual(originalProjectBytes),
+                    "Malformed or overflowing Wave ranges must be rejected before replacing the canonical project.");
+            }
             var exportPath = Path.Combine(directory, "project-mix.wav");
             var exportedFrames = WaveProjectExporter.ExportPcm16(reopenedProject, exportPath);
             Require(exportedFrames == 12000, "Project export did not include the leading timeline silence and full clip duration.");

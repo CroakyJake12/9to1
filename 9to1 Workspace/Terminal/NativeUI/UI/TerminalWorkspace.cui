@@ -13,6 +13,11 @@
       <Object Type="terminal.viewport" id="terminal-viewport" />
       <TextBox text="{Binding InputText}" accessible-name="Command or AI request" />
       <Button content="Submit" action="TerminalSubmit" />
+      <TextBlock text="{Binding PendingCommandPreview}" text-wrapping="Wrap" accessible-name="Command awaiting your confirmation" />
+      <StackPanel orientation="Horizontal">
+        <Button content="Run this command once" action="TerminalApproveCommand" is-enabled="{Binding HasPendingCommand}" />
+        <Button content="Deny command" action="TerminalDenyCommand" is-enabled="{Binding HasPendingCommand}" />
+      </StackPanel>
       <TextBlock text="{Binding ActionSummary}" text-wrapping="Wrap" accessible-name="Resolved action preview" />
       <Button content="Review or retry action" action="TerminalExecuteResolved" />
       <TextBlock text="{Binding ApprovalRequestId}" accessible-name="Home review request" />

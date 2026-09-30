@@ -27,12 +27,22 @@ internal sealed class AndroidLauncherPlatformCatalog(Context context) : IInstall
     {
         var observations = await Task.Run(() => Observe(), cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
-        return observations.Select(profile => new InstalledApplicationProfileObservation(
-            profile.PlatformUserSerial, profile.Label,
-            profile.UserType == "android.os.usertype.profile.MANAGED",
-            profile.IsCompleteObservation && profile.Availability == AndroidLauncherProfileAvailability.Available,
-            profile.Activities.Select(activity => new InstalledApplicationObservation(activity.PackageIdentity,
-                activity.Entrypoint, activity.Label, null, activity.Enabled)).ToArray())).ToArray();
+        return observations.Select(profile =>
+        {
+            // Stable launch keys describe observed navigation identity only. They are
+            // scoped by Home to provider, OS profile and package; they confer no trust.
+            var counts = profile.Activities.GroupBy(activity => activity.PackageIdentity, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+            return new InstalledApplicationProfileObservation(profile.PlatformUserSerial, profile.Label,
+                profile.UserType == "android.os.usertype.profile.MANAGED",
+                profile.IsCompleteObservation && profile.Availability == AndroidLauncherProfileAvailability.Available,
+                profile.Activities.Select(activity => new InstalledApplicationObservation(activity.PackageIdentity,
+                    activity.Entrypoint, activity.Label, null, activity.Enabled)
+                {
+                    StableLaunchIdentity = profile.IsCompleteObservation && counts[activity.PackageIdentity] == 1
+                        ? "android.sole-launcher" : "android.component:" + activity.Entrypoint
+                }).ToArray());
+        }).ToArray();
     }
 
     public IReadOnlyList<AndroidLauncherPlatformProfile> Observe(bool loadIcons = false)
@@ -118,6 +128,64 @@ internal sealed class AndroidLauncherPlatformCatalog(Context context) : IInstall
         if (users.IsQuietModeEnabled(profile) || !launcher.IsActivityEnabled(component, profile))
             throw new InvalidOperationException("The application is disabled or its Android profile is paused.");
         launcher.StartMainActivity(component, profile, null, null);
+    }
+
+    public IReadOnlyList<AndroidPlatformShortcut> ListShortcuts(string platformUserSerial, string entrypoint)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(25)) throw new InvalidOperationException("This Android version does not support application shortcuts.");
+        var (launcher, profile, component) = ShortcutTarget(platformUserSerial, entrypoint);
+        var result = new List<AndroidPlatformShortcut>();
+        foreach (var shortcut in QueryShortcuts(launcher, profile, component))
+        {
+            result.Add(new(shortcut.Id!, shortcut.ShortLabel ?? shortcut.Id!));
+            if (result.Count == 64) break;
+        }
+        return result;
+    }
+
+    public void LaunchShortcut(string platformUserSerial, string entrypoint, string shortcutId)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(25)) throw new InvalidOperationException("This Android version does not support application shortcuts.");
+        var (launcher, profile, component) = ShortcutTarget(platformUserSerial, entrypoint);
+        ShortcutInfo? selected = null;
+        foreach (var shortcut in QueryShortcuts(launcher, profile, component))
+        {
+            if (shortcut.Id != shortcutId) continue;
+            if (selected is not null) throw new InvalidOperationException("Android returned an ambiguous shortcut identity.");
+            selected = shortcut;
+        }
+        if (selected is null) throw new InvalidOperationException("This shortcut is no longer available. Open the app or refresh its shortcuts.");
+        launcher.StartShortcut(selected, null, null);
+    }
+
+    private (LauncherApps Launcher, UserHandle Profile, ComponentName Component) ShortcutTarget(string platformUserSerial, string entrypoint)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(25)) throw new InvalidOperationException("This Android version does not support application shortcuts.");
+        if (!long.TryParse(platformUserSerial, NumberStyles.None, CultureInfo.InvariantCulture, out var serial) || serial < 0)
+            throw new InvalidOperationException("The canonical Android profile identity is invalid.");
+        var component = ComponentName.UnflattenFromString(entrypoint)
+            ?? throw new InvalidOperationException("The canonical Android entrypoint is invalid.");
+        var launcher = context.GetSystemService(Context.LauncherAppsService) as LauncherApps
+            ?? throw new InvalidOperationException("Android LauncherApps service is unavailable.");
+        var users = context.GetSystemService(Context.UserService) as UserManager
+            ?? throw new InvalidOperationException("Android user-profile service is unavailable.");
+        if (!launcher.HasShortcutHostPermission)
+            throw new UnauthorizedAccessException("Android has not granted this launcher access to application shortcuts. Select it as the default home app in Android settings.");
+        var profile = AccessibleProfiles(launcher, users).SingleOrDefault(user => users.GetSerialNumberForUser(user) == serial)
+            ?? throw new InvalidOperationException("The application's owning Android profile is unavailable.");
+        if (users.IsQuietModeEnabled(profile) || !launcher.IsActivityEnabled(component, profile))
+            throw new InvalidOperationException("The application is disabled or its Android profile is paused.");
+        return (launcher, profile, component);
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("android25.0")]
+    private static IEnumerable<ShortcutInfo> QueryShortcuts(LauncherApps launcher, UserHandle profile, ComponentName component)
+    {
+        var query = new LauncherApps.ShortcutQuery();
+        query.SetPackage(component.PackageName);
+        query.SetQueryFlags(LauncherAppsShortcutQueryFlags.MatchDynamic | LauncherAppsShortcutQueryFlags.MatchManifest | LauncherAppsShortcutQueryFlags.MatchPinned);
+        return (launcher.GetShortcuts(query, profile) ?? []).Where(shortcut => shortcut.IsEnabled &&
+            shortcut.Package == component.PackageName && shortcut.UserHandle?.Equals(profile) == true && !string.IsNullOrWhiteSpace(shortcut.Id));
     }
 
     private static IEnumerable<UserHandle> AccessibleProfiles(LauncherApps launcher, UserManager users) =>

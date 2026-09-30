@@ -17,11 +17,12 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
     private readonly SemaphoreSlim _input = new(1, 1);
     private ITerminalInteractiveSession? _session;
     private EventHandler<TerminalSessionOutput>? _outputHandler;
+    private OutputQueue? _activeQueue;
     private Func<ReadOnlyMemory<byte>, CancellationToken, ValueTask>? _send;
     private TerminalScreen? _screen;
     private TerminalScreenSnapshot? _snapshot;
     private bool _enabled, _disposed;
-    private int _queuedBytes, _queuedInputBytes, _historyOffset;
+    private int _queuedInputBytes, _historyOffset;
     public Control View => this;
     public string? Failure { get; private set; }
     public TerminalScreenSnapshot? ScreenSnapshot => _snapshot;
@@ -38,7 +39,9 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
         _session = session;
         _send = sendInput;
         Failure = null;
-        _outputHandler = (_, output) => Receive(session, output);
+        var queue = new OutputQueue(session);
+        _activeQueue = queue;
+        _outputHandler = (_, output) => Receive(queue, output);
         session.OutputReceived += _outputHandler;
         Refresh();
     }
@@ -46,6 +49,7 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
     {
         Dispatcher.UIThread.VerifyAccess();
         if (_session is { } session && _outputHandler is { } handler) session.OutputReceived -= handler;
+        _activeQueue = null;
         _session = null; _outputHandler = null; _send = null; _enabled = false;
         _screen?.Dispose(); _screen = null; _snapshot = null; _historyOffset = 0;
         InvalidateVisual();
@@ -54,19 +58,35 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
     {
         Dispatcher.UIThread.VerifyAccess(); _enabled = enabled; InvalidateVisual();
     }
-    private void Receive(ITerminalInteractiveSession session, TerminalSessionOutput output)
+    private sealed class OutputQueue(ITerminalInteractiveSession session)
     {
-        if (output.SessionId != session.Metadata.SessionId) return;
+        public ITerminalInteractiveSession Session { get; } = session;
+        public int Bytes;
+        public int Chunks;
+        public int Faulted;
+    }
+    private void Receive(OutputQueue queue, TerminalSessionOutput output)
+    {
+        var session = queue.Session;
+        if (_disposed || !ReferenceEquals(_activeQueue, queue) || !ReferenceEquals(_session, session) || Volatile.Read(ref queue.Faulted) != 0 || output.SessionId != session.Metadata.SessionId) return;
         // Reconstructed text is not a faithful PTY stream. Providers must expose original bytes.
         if (output.RawBytes is not { } raw)
         {
-            Dispatcher.UIThread.Post(() => { if (ReferenceEquals(_session, session)) Fail("This provider does not expose original terminal bytes."); });
+            FailOutputOnce(queue, "This provider does not expose original terminal bytes.");
             return;
         }
-        if (raw.Length > 1_048_576 || Interlocked.Add(ref _queuedBytes, raw.Length) > 1_048_576)
+        if (raw.Length == 0) return;
+        if (Interlocked.Increment(ref queue.Chunks) > 256)
         {
-            if (raw.Length <= 1_048_576) Interlocked.Add(ref _queuedBytes, -raw.Length);
-            Dispatcher.UIThread.Post(() => { if (ReferenceEquals(_session, session)) Fail("Terminal output exceeded the bounded render queue."); });
+            Interlocked.Decrement(ref queue.Chunks);
+            FailOutputOnce(queue, "Terminal output exceeded the bounded render queue.");
+            return;
+        }
+        if (raw.Length > 1_048_576 || Interlocked.Add(ref queue.Bytes, raw.Length) > 1_048_576)
+        {
+            if (raw.Length <= 1_048_576) Interlocked.Add(ref queue.Bytes, -raw.Length);
+            Interlocked.Decrement(ref queue.Chunks);
+            FailOutputOnce(queue, "Terminal output exceeded the bounded render queue.");
             return;
         }
         var bytes = raw.ToArray();
@@ -74,14 +94,21 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
         {
             try
             {
-                if (!ReferenceEquals(_session, session) || _screen is null || _disposed || Failure is not null) return;
+                if (Volatile.Read(ref queue.Faulted) != 0 || !ReferenceEquals(_activeQueue, queue) || !ReferenceEquals(_session, session) || _screen is null || _disposed || Failure is not null) return;
                 _screen.Feed(bytes);
                 Refresh();
                 QueueInput(_screen.DrainResponses());
             }
             catch (Exception error) { Fail(error.Message); }
-            finally { Array.Clear(bytes); Interlocked.Add(ref _queuedBytes, -bytes.Length); }
+            finally { Array.Clear(bytes); Interlocked.Add(ref queue.Bytes, -bytes.Length); Interlocked.Decrement(ref queue.Chunks); }
         });
+    }
+    private void FailOutputOnce(OutputQueue queue, string reason)
+    {
+        // A stalled UI receives at most one failure notification per attachment,
+        // even if an unbounded child process keeps emitting after the queue fills.
+        if (Interlocked.Exchange(ref queue.Faulted, 1) != 0) return;
+        Dispatcher.UIThread.Post(() => { if (ReferenceEquals(_activeQueue, queue)) Fail(reason); });
     }
     private void Refresh()
     {
@@ -100,8 +127,9 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
     }
     private async void ResizeSession(ITerminalInteractiveSession session, ushort columns, ushort rows)
     {
+        var attachment = _activeQueue;
         try { await session.ResizeAsync(columns, rows); }
-        catch (Exception error) { if (ReferenceEquals(_session, session)) Fail(error.Message); }
+        catch (Exception error) { if (ReferenceEquals(_activeQueue, attachment)) Fail(error.Message); }
     }
     protected override void OnTextInput(TextInputEventArgs e)
     {
@@ -141,19 +169,19 @@ public sealed class LibVTermViewport : Control, ITerminalNativeViewport, IDispos
             Interlocked.Add(ref _queuedInputBytes, -bytes.Length); Array.Clear(bytes);
             Fail("Terminal input exceeded the bounded queue."); return;
         }
-        var session = _session; var send = _send;
+        var session = _session; var send = _send; var attachment = _activeQueue;
         try
         {
             await _input.WaitAsync();
             try
             {
-                if (!_enabled || _disposed || Failure is not null || session is null || !ReferenceEquals(_session, session) || send is null) return;
+                if (!_enabled || _disposed || !ReferenceEquals(_activeQueue, attachment) || Failure is not null || session is null || !ReferenceEquals(_session, session) || send is null) return;
                 _historyOffset = 0;
                 await send(bytes, default);
             }
             finally { _input.Release(); }
         }
-        catch (Exception error) { if (ReferenceEquals(_session, session)) Fail(error.Message); }
+        catch (Exception error) { if (ReferenceEquals(_activeQueue, attachment)) Fail(error.Message); }
         finally { Array.Clear(bytes); Interlocked.Add(ref _queuedInputBytes, -bytes.Length); }
     }
     protected override void OnPointerPressed(PointerPressedEventArgs e) { base.OnPointerPressed(e); Focus(); }
