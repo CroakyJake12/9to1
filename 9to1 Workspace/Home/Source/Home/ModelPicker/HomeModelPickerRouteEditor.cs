@@ -17,6 +17,8 @@ public sealed record HomeModelPickerEditorState(
         false, "NotLoaded", "Model routes have not been loaded.", null, null, null, false, null);
 
     public string? PendingApprovalRequestId { get; init; }
+    public string? PendingAuditRequestId { get; init; }
+    public bool CanFinishAudit => !IsBusy && PendingAuditRequestId is not null;
 
     public IReadOnlyList<HomeModelRouteCandidate> Candidates =>
         DraftRoute?.Candidates ?? Array.Empty<HomeModelRouteCandidate>();
@@ -72,7 +74,7 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
                 selectedRouteId,
                 selected,
                 false,
-                null));
+                null) { PendingAuditRequestId = result.Value.PendingAuditRequestId });
             return result;
         }
         catch (OperationCanceledException)
@@ -188,12 +190,16 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
     public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> SaveAsync(CancellationToken cancellationToken = default)
     {
         var initial = Current;
+        if (initial.PendingAuditRequestId is not null)
+            return Fail<HomeModelPickerSnapshot>("AuditPending", "Finish the original route audit before another save.");
         if (!initial.HasUnsavedChanges || initial.DraftRoute is not { } route || initial.Snapshot is not { } snapshot)
             return Fail<HomeModelPickerSnapshot>("NoChanges", "There are no route edits to save.");
         await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             initial = Current;
+            if (initial.PendingAuditRequestId is not null)
+                return Fail<HomeModelPickerSnapshot>("AuditPending", "Finish the original route audit before another save.");
             if (!initial.HasUnsavedChanges || initial.DraftRoute is not { } currentRoute || initial.Snapshot is not { } currentSnapshot)
                 return Fail<HomeModelPickerSnapshot>("NoChanges", "There are no route edits to save.");
             var stateBeforeSave = initial;
@@ -209,7 +215,8 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
             if (!result.Succeeded || result.Value is null)
             {
                 Publish(stateBeforeSave with { IsBusy = false, StatusCode = EmptyCode(result.Code), StatusMessage = result.Message,
-                    PendingApprovalRequestId = result.Value?.PendingApprovalRequestId });
+                    PendingApprovalRequestId = result.Value?.PendingApprovalRequestId,
+                    PendingAuditRequestId = result.Value?.PendingAuditRequestId ?? stateBeforeSave.PendingAuditRequestId });
                 return result.Succeeded
                     ? Fail<HomeModelPickerSnapshot>("InvalidProviderResult", "The model service returned no updated route snapshot.")
                     : result;
@@ -219,13 +226,13 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
             var selected = result.Value.Routes.FirstOrDefault(item => item.RouteId == updatedRoute.RouteId);
             Publish(new HomeModelPickerEditorState(
                 false,
-                selected is null ? "RouteRemoved" : "Saved",
-                selected is null ? "The saved route is no longer available." : "Model route saved.",
+                selected is null ? "RouteRemoved" : EmptyCode(result.Code),
+                selected is null ? "The saved route is no longer available." : result.Message,
                 result.Value,
                 selected?.RouteId,
                 selected,
                 false,
-                null));
+                null) { PendingAuditRequestId = result.Value.PendingAuditRequestId });
             return result;
         }
         catch (OperationCanceledException)
@@ -247,6 +254,27 @@ public sealed class HomeModelPickerRouteEditor(IHomeModelPickerFeatureProvider p
             return failed;
         }
         finally { _operationGate.Release(); }
+    }
+
+    public async Task<HomeCoreOperationResult<object>> FinishAuditAsync(CancellationToken cancellationToken = default)
+    {
+        await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (Current.PendingAuditRequestId is not { } requestId)
+                return new(false, "AuditNotOwned", "There is no retained route audit to finish.");
+            Publish(Current with { IsBusy = true, StatusCode = "FinishingAudit", StatusMessage = "Recording the original route outcome." });
+            var result = await _provider.RetryAuditAsync(requestId, cancellationToken).ConfigureAwait(false);
+            Publish(Current with { IsBusy = false, StatusCode = EmptyCode(result.Code), StatusMessage = result.Message,
+                PendingAuditRequestId = result.Succeeded ? null : requestId,
+                Snapshot = result.Succeeded && Current.Snapshot is { } snapshot ? snapshot with { PendingAuditRequestId = null } : Current.Snapshot });
+            return result;
+        }
+        finally
+        {
+            if (Current.IsBusy) Publish(Current with { IsBusy = false });
+            _operationGate.Release();
+        }
     }
 
     public async Task<HomeCoreOperationResult<HomeModelRoutePreview>> PreviewAsync(

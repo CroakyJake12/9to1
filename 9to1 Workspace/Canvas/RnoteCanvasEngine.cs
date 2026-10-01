@@ -87,6 +87,41 @@ public sealed class RnoteCanvasEngine : IDisposable
     public bool Undo() { lock (_gate) { EnsureOpen(); return Changed(Native.Undo(_handle), "undo"); } }
     public bool Redo() { lock (_gate) { EnsureOpen(); return Changed(Native.Redo(_handle), "redo"); } }
 
+    public bool SupportsStructuredStrokeMutation
+    {
+        get
+        {
+            lock (_gate)
+            {
+                EnsureOpen();
+                try { return Native.StrokeMutationApiVersion() == 1; }
+                catch (EntryPointNotFoundException) { return false; }
+            }
+        }
+    }
+
+    public void DeleteStroke(ulong key)
+    {
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsStructuredStrokeMutation) throw new NotSupportedException("The donor does not expose keyed stroke edits.");
+            Check(Native.DeleteStroke(_handle, key), "delete native stroke");
+        }
+    }
+
+    public void TranslateStroke(ulong key, double deltaX, double deltaY)
+    {
+        if (!double.IsFinite(deltaX) || !double.IsFinite(deltaY))
+            throw new ArgumentException("Native stroke translation must be finite.");
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsStructuredStrokeMutation) throw new NotSupportedException("The donor does not expose keyed stroke edits.");
+            Check(Native.TranslateStroke(_handle, key, deltaX, deltaY), "translate native stroke");
+        }
+    }
+
     public bool SupportsStructuredSelectionExport
     {
         get
@@ -263,6 +298,9 @@ public sealed class RnoteCanvasEngine : IDisposable
         [DllImport(Library, EntryPoint = "cake_canvas_end_stroke", CallingConvention = CallingConvention.Cdecl)] internal static extern int End(EngineHandle handle, RnotePointerSample sample);
         [DllImport(Library, EntryPoint = "cake_canvas_set_pen_style", CallingConvention = CallingConvention.Cdecl)] internal static extern int SetPenStyle(EngineHandle handle, uint tool, double red, double green, double blue, double alpha, double width);
         [DllImport(Library, EntryPoint = "cake_canvas_set_stroke_tool", CallingConvention = CallingConvention.Cdecl)] internal static extern int SetTool(EngineHandle handle, uint tool);
+        [DllImport(Library, EntryPoint = "cake_canvas_stroke_mutation_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint StrokeMutationApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_delete_stroke", CallingConvention = CallingConvention.Cdecl)] internal static extern int DeleteStroke(EngineHandle handle, ulong key);
+        [DllImport(Library, EntryPoint = "cake_canvas_translate_stroke", CallingConvention = CallingConvention.Cdecl)] internal static extern int TranslateStroke(EngineHandle handle, ulong key, double deltaX, double deltaY);
         [DllImport(Library, EntryPoint = "cake_canvas_undo", CallingConvention = CallingConvention.Cdecl)] internal static extern int Undo(EngineHandle handle);
         [DllImport(Library, EntryPoint = "cake_canvas_redo", CallingConvention = CallingConvention.Cdecl)] internal static extern int Redo(EngineHandle handle);
         [DllImport(Library, EntryPoint = "cake_canvas_save_rnote", CallingConvention = CallingConvention.Cdecl)] internal static extern int Save(EngineHandle handle, out NativeBuffer buffer);

@@ -15,7 +15,7 @@ internal static class OwnedSignalSpecs
         var root = Path.Combine(Path.GetTempPath(), "astra-terminal-owner-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         try
         {
-            var state = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
+            var state = new CompletionFaultStore(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
             var actors = new HomeLocalProfileIdentity(state, new OperatingSystemPrincipalSource());
             var services = new ServiceCollection();
             services.AddSingleton<IAuthenticatedResourceActorSource>(actors);
@@ -96,6 +96,60 @@ internal static class OwnedSignalSpecs
             if (second.ProcessId is not null || !HasExited(secondSnapshot.ProcessID) || (await broker.ExecuteAsync(preview, review.ResultText)).Executed)
                 throw new Exception("Broker termination or replay rejection failed.");
             registry.Unregister(second);
+            foreach (var afterPublication in new[] { false, true })
+            {
+                await using var recoverySession = await factory.CreateAsync(new(environment.Id, "fixture-shell", root));
+                var recoverySnapshot = await registry.RegisterAsync(recoverySession);
+                var recoveryPreview = await broker.ResolveAsync(recoverySnapshot.SessionID, environment.Id, "Terminate this fixture process");
+                var recoveryReview = await broker.ExecuteAsync(recoveryPreview);
+                if (!(await permissions.DecideAsync(recoveryReview.ResultText!, HomeApprovalChoice.Accept)).Succeeded)
+                    throw new Exception("Recovery fixture review failed.");
+                state.AfterPublication = afterPublication; state.Fail = true;
+                var observed = await broker.ExecuteAsync(recoveryPreview, recoveryReview.ResultText);
+                if (observed.State != "NeedsRecovery") throw new Exception("Audit fault concealed actual sent signal recovery.");
+                deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+                while ((recoverySession.ProcessId is not null || !HasExited(recoverySnapshot.ProcessID)) && DateTimeOffset.UtcNow < deadline) await Task.Delay(20);
+                if (recoverySession.ProcessId is not null || !HasExited(recoverySnapshot.ProcessID))
+                    throw new Exception("Actual signal was not observed under audit fault.");
+                if ((await broker.RetryAuditAsync(recoveryPreview.Id)).State != "AuditRecorded")
+                    throw new Exception("Exact sealed completion audit did not recover.");
+                if ((await broker.ExecuteAsync(recoveryPreview, recoveryReview.ResultText)).Executed ||
+                    (await broker.RetryAuditAsync(recoveryPreview.Id)).State != "Unavailable")
+                    throw new Exception("Consumed signal or cleared audit recovery replayed.");
+                var completion = await permissions.GetAuthorizationAsync(recoveryReview.ResultText!);
+                if (completion.State != HomePermissionRequestState.Succeeded || completion.Code != "TerminalSignalSent")
+                    throw new Exception("Audit retry changed actual owner outcome.");
+                var audits = (await permissions.GetSnapshotAsync()).RecentAuditEvents.Where(item =>
+                    item.RequestId == recoveryReview.ResultText && item.Kind == HomePermissionAuditKind.ExecutionCompleted).ToArray();
+                if (audits.Length != 1 || audits[0].AffectedObjects.Single().ObjectId != recoverySnapshot.SessionID.ToString("D"))
+                    throw new Exception("Recovery omitted exact canonical affected session or duplicated audit.");
+                registry.Unregister(recoverySession);
+            }
+            foreach (var deniedNegativeWrites in new[] { 0, 2 })
+            {
+                await using var admittedSession = await factory.CreateAsync(new(environment.Id, "fixture-shell", root));
+                var admittedSnapshot = await registry.RegisterAsync(admittedSession);
+                var admittedPreview = await broker.ResolveAsync(admittedSnapshot.SessionID, environment.Id, "Terminate this fixture process");
+                var admittedReview = await broker.ExecuteAsync(admittedPreview);
+                if (!(await permissions.DecideAsync(admittedReview.ResultText!, HomeApprovalChoice.Accept)).Succeeded)
+                    throw new Exception("Dispatch fault fixture review failed.");
+                state.FailBegin = true; state.DenyNegativeWrites = deniedNegativeWrites;
+                var stopped = await broker.ExecuteAsync(admittedPreview, admittedReview.ResultText);
+                if (stopped.State != "NeedsRecovery" || admittedSession.ProcessId != admittedSnapshot.ProcessID || HasExited(admittedSnapshot.ProcessID))
+                    throw new Exception("Rejected dispatch issued a process signal or hid admission failure.");
+                var retry = await broker.RetryAuditAsync(admittedPreview.Id);
+                if (retry.State != (deniedNegativeWrites == 0 ? "Unavailable" : "AuditRecorded"))
+                    throw new Exception("Exact negative dispatch audit recovery was not observed.");
+                var decision = await permissions.GetAuthorizationAsync(admittedReview.ResultText!);
+                if (decision.State != HomePermissionRequestState.Failed || decision.Code != "HOME_RESOURCE_BEGIN_REJECTED" ||
+                    admittedSession.ProcessId != admittedSnapshot.ProcessID || HasExited(admittedSnapshot.ProcessID))
+                    throw new Exception("Dispatch negative retry changed the owning process or failed to record exact negative outcome.");
+                if ((await broker.ExecuteAsync(admittedPreview, admittedReview.ResultText)).Executed)
+                    throw new Exception("Rejected consumed dispatch replayed.");
+                registry.Unregister(admittedSession);
+            }
+            Console.WriteLine("PASS actual Linux rejected dispatch with published Begin fault: process remains alive, fixed negative audit-only retry, no signal replay.");
+            Console.WriteLine("PASS actual Linux signals with before/after durable audit faults: exact audit-only retry, retained owner success, no action replay.");
             Console.WriteLine("Native acceptance: approved owner/broker signals passed; testing immediate disposal.");
             for (var attempt = 0; attempt < 8; attempt++)
             {
@@ -108,6 +162,42 @@ internal static class OwnedSignalSpecs
             Console.WriteLine("PASS actual Linux forkpty/Home owned signal: pending approval leaves process alive; exact one-use termination, changed signal/foreign issuer/replay denied.");
         }
         finally { Directory.Delete(root, true); }
+    }
+    private sealed class CompletionFaultStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        public bool Fail; public bool AfterPublication;
+        private int _completionCount;
+        private int _startCount;
+        public bool FailBegin; public int DenyNegativeWrites;
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expected, AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default) =>
+            inner.WriteGuardedAsync(record, expected, actor, guard, ct);
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken ct = default)
+        {
+            var json = record.Payload.GetRawText();
+            var startCount = json.Split("HOME_EXECUTION_STARTED", StringSplitOptions.None).Length - 1;
+            if (FailBegin && startCount > _startCount)
+            {
+                FailBegin = false;
+                if (!(await inner.WriteAsync(record, expected, ct)).IsSuccess) throw new Exception("Injected Begin did not publish.");
+                throw new IOException("Injected published Begin acknowledgement fault.");
+            }
+            if (DenyNegativeWrites > 0 && json.Contains("HOME_RESOURCE_BEGIN_REJECTED", StringComparison.Ordinal))
+            {
+                DenyNegativeWrites--;
+                throw new UnauthorizedAccessException("Injected fixed negative dispatch audit fault.");
+            }
+            var completionCount = json.Split("TerminalSignalSent", StringSplitOptions.None).Length - 1;
+            if (Fail && completionCount > _completionCount)
+            {
+                Fail = false;
+                if (AfterPublication) await inner.WriteAsync(record, expected, ct);
+                throw new IOException("Injected canonical completion audit acknowledgement failure.");
+            }
+            var result = await inner.WriteAsync(record, expected, ct);
+            if (result.IsSuccess) { _completionCount = completionCount; _startCount = startCount; }
+            return result;
+        }
     }
     private static async Task AssertNoInheritedPtyMasterAsync()
     {

@@ -274,6 +274,7 @@ public sealed record HomeModelPickerSnapshot(long Revision, string Scope, string
     IReadOnlyList<HomeModelRouteContract> Routes)
 {
     public string? PendingApprovalRequestId { get; init; }
+    public string? PendingAuditRequestId { get; init; }
 }
 
 public sealed record HomeModelRouteEdit(HomeModelRouteContract Route, long ExpectedRevision)
@@ -289,6 +290,8 @@ public sealed record HomeModelRoutePreviewRequest(string RouteId, string Capabil
 
 public interface IHomeModelPickerFeatureProvider
 {
+    Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new HomeCoreOperationResult<object>(false, "AuditNotOwned", "This host does not own the original route audit."));
     Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null,
         CancellationToken cancellationToken = default);
     Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> GetSnapshotAsync(string scope, string category,

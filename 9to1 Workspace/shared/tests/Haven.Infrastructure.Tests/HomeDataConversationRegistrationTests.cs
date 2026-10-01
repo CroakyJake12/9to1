@@ -26,6 +26,11 @@ public sealed class HomeDataConversationRegistrationTests
             Assert.Single(graph.GetServices<IHomeLocalStoreEvidenceProvider>(), provider => provider is ConversationLocalStoreEvidenceProvider);
             Assert.Single(graph.GetServices<ICanonicalResourceAccessResolver>(), resolver => resolver is DataWorkbookMutationAccessResolver);
             Assert.NotNull(graph.GetRequiredService<DataHomeRecordUpdateOperation>());
+            var schemaDesigner = Assert.IsType<DataHomeTableSchemaDesigner>(graph.GetRequiredService<IDataTableSchemaDesigner>());
+            Assert.Same(schemaDesigner, graph.GetRequiredService<IDataTableSchemaDesigner>());
+            Assert.Single(graph.GetServices<IDataTableSchemaDesigner>());
+            Assert.Same(graph.GetRequiredService<DataHomeTableSchemaUpdateOperation>(), graph.GetRequiredService<DataHomeTableSchemaUpdateOperation>());
+            Assert.Same(graph.GetRequiredService<DataSchemaMutationRecovery>(), graph.GetRequiredService<DataSchemaMutationRecovery>());
             Assert.Same(graph.GetRequiredService<DataRecordMutationRecovery>(), graph.GetRequiredService<IDataRecordMutationReceiptSource>());
             Assert.NotNull(graph.GetRequiredService<ConversationLocalStoreAuthority>());
             Assert.Null(await graph.GetRequiredService<HomePersonalModelRoutes>().GetAsync(Dulche.Runtime.ModelCapabilityCategory.Chat));

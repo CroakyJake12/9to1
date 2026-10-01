@@ -24,7 +24,7 @@ public sealed class NativeSpacesPageTests
             var allowed = true;
             var calls = 0;
             using var page = new NativeSpacesPage(registry, null, null,
-                deleteSpace: async id => { calls++; await registry.DeleteAsync(id, token); },
+                deleteSpace: async displayed => { calls++; await registry.DeleteAsync(displayed.Id, token); },
                 requireCurrentAccess: _ => allowed ? Task.CompletedTask : Task.FromException(new UnauthorizedAccessException("Host admission revoked.")));
             var window = new Window { Width = 1000, Height = 700, Content = page };
             try
@@ -46,6 +46,63 @@ public sealed class NativeSpacesPageTests
                 await page.DeleteSpaceAsync(retained.Id);
                 Assert.Equal(1, calls);
                 Assert.NotNull(await registry.ReadExistingAsync(retained.Id, token));
+            }
+            finally { window.Close(); }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+    [AvaloniaFact]
+    public async Task Missing_owning_delete_callback_disables_native_action_and_preserves_canonical_settings()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var root = Path.Combine(Path.GetTempPath(), "astra-spaces-delete-denial-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var settings = new VersionedAtomicSettingsStore(new Paths(root));
+            var registry = new SpaceRegistry(settings);
+            var space = await registry.CreateAsync("Retain without deletion authority", cancellationToken: token);
+            var before = (await settings.ExportAsync(token)).Settings["spaces.registry"];
+            using var page = new NativeSpacesPage(registry);
+            var window = new Window { Content = page, Width = 1000, Height = 700 };
+            try
+            {
+                window.Show(); await page.RefreshNowAsync(token); window.UpdateLayout();
+                Assert.False(page.Scene.Root!.DescendantsAndSelf().OfType<Haven.UI.Components.Button>()
+                    .Single(button => button.Name == "Delete").GetValue(HavenProperties.Enabled));
+                await page.DeleteSpaceAsync(space.Id);
+                Assert.Equal(space.Revision, (await registry.ReadExistingAsync(space.Id, token))!.Revision);
+                Assert.Equal(before, (await settings.ExportAsync(token)).Settings["spaces.registry"]);
+            }
+            finally { window.Close(); }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+    [AvaloniaFact]
+    public async Task Delete_dispatch_captures_displayed_revision_instead_of_rereading_a_newer_space()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var root = Path.Combine(Path.GetTempPath(), "astra-spaces-displayed-delete-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var settings = new VersionedAtomicSettingsStore(new Paths(root));
+            var registry = new SpaceRegistry(settings);
+            var displayed = await registry.CreateAsync("Displayed", cancellationToken: token);
+            SpaceDefinition? dispatched = null;
+            using var page = new NativeSpacesPage(registry, null, null,
+                deleteSpace: expected => { dispatched = expected; return Task.CompletedTask; });
+            var window = new Window { Content = page, Width = 1000, Height = 700 };
+            try
+            {
+                window.Show(); await page.RefreshNowAsync(token); window.UpdateLayout();
+                var updated = await registry.UpdateAsync(displayed with { Name = "Changed elsewhere" }, displayed.Revision, token);
+                var unchangedSettings = (await settings.ExportAsync(token)).Settings["spaces.registry"];
+                await page.DeleteSpaceAsync(displayed.Id);
+                Assert.NotNull(dispatched);
+                Assert.Equal(displayed.Id, dispatched.Id); Assert.Equal(displayed.Revision, dispatched.Revision);
+                Assert.Equal(updated.Revision, (await registry.ReadExistingAsync(displayed.Id, token))!.Revision);
+                Assert.Equal(unchangedSettings, (await settings.ExportAsync(token)).Settings["spaces.registry"]);
             }
             finally { window.Close(); }
         }

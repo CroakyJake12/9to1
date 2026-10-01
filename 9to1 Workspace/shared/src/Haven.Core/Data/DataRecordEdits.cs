@@ -50,6 +50,19 @@ public static class DataRecordEdits
                 throw new InvalidOperationException("DataValidationFailed");
             prepared.Add((field.SheetColumn, value.Kind, text));
         }
+        // Validate constraints over the whole proposed record edit, including incoming relationships.
+        if (workbook.Relationships.Count != 0 || workbook.Tables.Any(item => item.RelationalSchema is not null))
+        {
+            var candidate = JsonSerializer.Deserialize<DataWorkbook>(JsonSerializer.Serialize(workbook))!;
+            var proposedSheet = candidate.Sheets.Single(item => item.Id == sheet.Id);
+            foreach (var value in prepared)
+            {
+                var proposed = proposedSheet.GetOrCreateCell(row.SheetRow, value.Column);
+                proposed.Kind = value.Kind; proposed.Value = value.Text; proposed.Formula = string.Empty;
+            }
+            if (DataRelationalSchema.Inspect(candidate).Count != 0)
+                throw new InvalidOperationException("DataValidationFailed");
+        }
         // Validate the complete edit before changing any value; preserve existing cell metadata.
         foreach (var value in prepared)
         {

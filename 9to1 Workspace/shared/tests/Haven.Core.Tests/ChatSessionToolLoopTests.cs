@@ -49,6 +49,13 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         Assert.Equal("created", await File.ReadAllTextAsync(Path.Combine(_root, "tool-loop.txt")));
         var toolEvent = Assert.Single(events, item => item.Kind == ChatStreamEventKind.ToolActivity && item.ToolActivity?.Succeeded == true);
         var assistant = Assert.Single(events, item => item.Kind == ChatStreamEventKind.AssistantCompleted && item.Message?.Content == "Created and verified the file.").Message!;
+        var invocation = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<ToolInvocationEvidence>>(toolEvent.ToolActivity!.InvocationEvidence));
+        Assert.Equal("write_file", invocation.ToolName);
+        Assert.Equal("Workspace", invocation.RuntimeKey);
+        Assert.Equal(ToolInvocationObservationStatus.RuntimeReturned, invocation.Status);
+        Assert.True(invocation.ReportedResultSucceeded);
+        Assert.NotEqual(Guid.Empty, invocation.InvocationId);
+        Assert.False(toolEvent.ToolActivity.HasDeferredInvocations);
         Assert.Equal(assistant.Id, toolEvent.MessageId);
         Assert.True(assistant.Metadata.TryGetValue("toolActivities", out var toolActivities));
         Assert.Equal(JsonValueKind.Array, toolActivities.ValueKind);
@@ -82,12 +89,22 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         var active = new ActiveCapability(ExternalConnectionNaming.CapabilityKey(connection.Id), ExternalConnectionNaming.PluginName(connection.Name),
             "connection", "Use connection", "connection.mcp", "haven.connections");
 
-        await foreach (var _ in service.SendAsync(
+        var observations = new List<ToolActivity>();
+        await foreach (var observedEvent in service.SendAsync(
                            conversation, "Update the attached MCP item", model, EffortLevel.Medium, [active], "Default", "",
                            DuoMode.Solo, null, "", "", null, CancellationToken.None, commandPermission: PermissionMode.Ask))
         {
+            if (observedEvent.ToolActivity is { } activity) observations.Add(activity);
         }
 
+        var deferred = Assert.Single(observations);
+        Assert.True(deferred.HasDeferredInvocations);
+        var attempted = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<ToolInvocationEvidence>>(deferred.InvocationEvidence));
+        Assert.Equal(localToolName, attempted.ToolName);
+        Assert.Equal("Mcp", attempted.RuntimeKey);
+        Assert.Equal(ToolInvocationObservationStatus.RuntimeReturned, attempted.Status);
+        Assert.False(attempted.ReportedResultSucceeded);
+        Assert.Equal("MCP_PERMISSION_REQUIRED", attempted.ReportedFailureCode);
         Assert.Equal(0, mcpClient.InvocationCount);
         var remediation = Assert.IsType<RemediationRequest>(remediationRepository.Value);
         Assert.Equal(RemediationType.PermissionRequest, remediation.Type);
@@ -287,6 +304,67 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task DispatchEvidenceDistinguishesModelDenialAndMissingRuntimeFromInvocation(bool denied)
+    {
+        var model = new ModelDescriptor("tools-model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools }, DateTimeOffset.UtcNow);
+        var toolName = denied ? "write_file" : "unregistered_exact_tool";
+        var service = new ChatSessionService(new FakeConversations(), new SingleToolOllama(model, toolName),
+            new CapabilityPreflightService(), new PermitSafety(), new WorkspaceToolRuntime(new TestWorkspaceTools()),
+            new ComputerToolRuntime(new TestComputerTools()), modelPermissions: denied ? new ModelPermissionEvaluator(new DeniedModelStore()) : null);
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Studio, ConversationKind.StudioChat, "Test", null, null, false, false, now, now);
+        var observed = new List<ToolActivity>();
+        await foreach (var item in service.SendAsync(conversation, "Create the file", model, EffortLevel.Medium, [], "Default", "",
+            DuoMode.Solo, _root, "", "", null, CancellationToken.None))
+            if (item.ToolActivity is { } activity) observed.Add(activity);
+        var invocation = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<ToolInvocationEvidence>>(Assert.Single(observed).InvocationEvidence));
+        Assert.Equal(toolName, invocation.ToolName);
+        Assert.Equal(denied ? ToolInvocationObservationStatus.DeniedBeforeDispatch : ToolInvocationObservationStatus.UnavailableBeforeDispatch, invocation.Status);
+        Assert.Null(invocation.ReportedResultSucceeded);
+        Assert.False(File.Exists(Path.Combine(_root, "tool-loop.txt")));
+    }
+
+    [Fact]
+    public async Task AutomaticRetryRetainsBothActualDispatcherInvocations()
+    {
+        var model = new ModelDescriptor("tools-model", 1, "test", "test", "test", new HashSet<ToolCapability> { ToolCapability.Text, ToolCapability.Tools }, DateTimeOffset.UtcNow);
+        var connection = ChatMcpRepository.ReadyConnection();
+        var client = new ChatMcpClient("read_item", failFirst: true);
+        var localName = McpToolRuntime.LocalToolName(connection.Id, "read_item");
+        var runtime = new McpToolRuntime(new ChatMcpRepository(connection), client, new ApprovedMcpInvocation());
+        var service = new ChatSessionService(new FakeConversations(), new SingleToolOllama(model, localName), new CapabilityPreflightService(),
+            new PermitSafety(), new WorkspaceToolRuntime(new TestWorkspaceTools()), new ComputerToolRuntime(new TestComputerTools()),
+            mcpTools: runtime, recovery: new AutonomousRecoveryService());
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Test", null, null, false, true, now, now);
+        var active = new ActiveCapability(ExternalConnectionNaming.CapabilityKey(connection.Id), ExternalConnectionNaming.PluginName(connection.Name),
+            "connection", "Use connection", "connection.mcp", "haven.connections");
+        var observed = new List<ToolActivity>();
+        await foreach (var item in service.SendAsync(conversation, "Controlled read", model, EffortLevel.Medium, [active], "Default", "",
+            DuoMode.Solo, null, "", "", null, CancellationToken.None))
+            if (item.ToolActivity is { } activity) observed.Add(activity);
+        var resultActivity = Assert.Single(observed);
+        var evidence = Assert.IsAssignableFrom<IReadOnlyList<ToolInvocationEvidence>>(resultActivity.InvocationEvidence);
+        Assert.Equal(2, client.InvocationCount);
+        Assert.Equal(2, evidence.Count);
+        Assert.All(evidence, item => { Assert.Equal(localName, item.ToolName); Assert.Equal(ToolInvocationObservationStatus.RuntimeReturned, item.Status); });
+        Assert.False(evidence[0].ReportedResultSucceeded);
+        Assert.True(evidence[1].ReportedResultSucceeded);
+        Assert.Equal(evidence[0].InvocationId, evidence[1].RetryOfInvocationId);
+        Assert.NotEqual(evidence[0].InvocationId, evidence[1].InvocationId);
+        Assert.False(resultActivity.HasDeferredInvocations);
+    }
+
+    private sealed class DeniedModelStore : IModelPermissionStore
+    {
+        public Task<ModelPermissionPolicy> GetPolicyAsync(CancellationToken cancellationToken) => Task.FromResult(new ModelPermissionPolicy(
+            [ModelPermissionRule.Create(ModelPermissionTargetKind.ExactModel, "tools-model", ModelPermissionScope.ThisDevice, RestrictedModelCapability.EditFiles)]));
+        public Task SavePolicyAsync(ModelPermissionPolicy policy, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
     private sealed class ChatMcpRepository(ExternalConnection connection) : IExternalConnectionRepository
     {
         private ExternalConnection? _connection = connection;
@@ -306,19 +384,19 @@ public sealed class ChatSessionToolLoopTests : IDisposable
         }
     }
 
-    private sealed class ChatMcpClient : IMcpConnectionClient
+    private sealed class ChatMcpClient(string advertisedTool = "write_item", bool failFirst = false) : IMcpConnectionClient
     {
         public int InvocationCount { get; private set; }
         public Task<(McpServerIdentity Identity, IReadOnlyList<McpExternalTool> Tools)> DiscoverAsync(ExternalConnection connection, CancellationToken cancellationToken)
         {
             using var document = JsonDocument.Parse("{\"type\":\"object\",\"properties\":{}}");
-            IReadOnlyList<McpExternalTool> tools = [new McpExternalTool("write_item", "Write an external item", document.RootElement.Clone())];
+            IReadOnlyList<McpExternalTool> tools = [new McpExternalTool(advertisedTool, "Controlled external item", document.RootElement.Clone())];
             return Task.FromResult((new McpServerIdentity("test-mcp", "1", "2026-07-28", "{}"), tools));
         }
         public Task<McpToolInvocationResult> InvokeAsync(ExternalConnection connection, string toolName, IReadOnlyDictionary<string, JsonElement> arguments, CancellationToken cancellationToken)
         {
             InvocationCount++;
-            return Task.FromResult(new McpToolInvocationResult(true, "Updated external item.", null, "[]"));
+            return Task.FromResult(new McpToolInvocationResult(!failFirst || InvocationCount > 1, "Controlled runtime result.", null, "[]"));
         }
     }
 

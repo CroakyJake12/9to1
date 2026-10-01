@@ -206,7 +206,7 @@ public sealed class ConversationProductionRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task DetachSpacePreservesConversationAndClearsMembership()
+    public async Task LegacyUnscopedDetachCannotChangeCanonicalMembership()
     {
         var database = await CreateDatabaseAsync();
         var repository = new ConversationRepository(database);
@@ -215,15 +215,15 @@ public sealed class ConversationProductionRepositoryTests : IDisposable
         var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Keep me", null, null, false, false, now, now, SpaceId: spaceId);
         await SeedExistingMembershipAsync(database, repository, conversation);
 
-        await repository.DetachSpaceAsync(spaceId, CancellationToken.None);
+        await Assert.ThrowsAsync<NotSupportedException>(() => repository.DetachSpaceAsync(spaceId, CancellationToken.None));
 
         var loaded = await repository.GetAsync(conversation.Id, CancellationToken.None);
         var rows = await repository.GetBySpaceAsync(spaceId, 50, CancellationToken.None);
         Assert.NotNull(loaded);
         Assert.Equal(conversation.Id, loaded!.Id);
         Assert.Equal("Keep me", loaded.Title);
-        Assert.Null(loaded.SpaceId);
-        Assert.Empty(rows);
+        Assert.Equal(spaceId, loaded.SpaceId);
+        Assert.Equal(conversation.Id, Assert.Single(rows).Id);
     }
 
     [Fact]

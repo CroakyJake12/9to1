@@ -9,6 +9,10 @@ public interface IExternalConnectionRepository
     Task<ExternalConnection?> GetAsync(Guid id, CancellationToken cancellationToken);
     Task UpsertAsync(ExternalConnection connection, CancellationToken cancellationToken);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Publishes only while the complete expected canonical record still matches.</summary>
+    Task<bool> CompareExchangeAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken) =>
+        Task.FromException<bool>(new NotSupportedException("This connection repository does not support guarded publication."));
 }
 
 public interface IMcpConnectionClient

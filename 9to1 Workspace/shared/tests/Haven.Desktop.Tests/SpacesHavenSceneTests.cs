@@ -58,7 +58,7 @@ public sealed class SpacesHavenSceneTests
         scene.ShowDeleteConfirmation();
         var popup = Assert.Single(scene.Root.Children.OfType<PopupMenu>());
         Assert.Equal($"Delete {custom.Name}", popup.Card.Accessibility.AccessibleName);
-        var confirm = popup.Card.Children.OfType<HavenButton>().Single(button => button.Content == "Delete permanently");
+        var confirm = popup.Card.Children.OfType<HavenButton>().Single(button => button.Content == "Delete Space");
         Assert.Equal(ButtonVariant.Danger, confirm.Variant);
         popup.Dismiss();
         scene.ConfirmDelete(custom.Id);

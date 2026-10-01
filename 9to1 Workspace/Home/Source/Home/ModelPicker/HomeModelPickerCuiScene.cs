@@ -14,6 +14,7 @@ public enum HomeModelPickerAction
     MoveCandidateUp,
     MoveCandidateDown,
     SaveRoute,
+    FinishAudit,
     PreviewResolution,
 }
 
@@ -133,6 +134,7 @@ public sealed class HomeModelPickerCuiController(HomeModelPickerRouteEditor edit
                     ?? throw new ArgumentException("Candidate enabled state is required.", nameof(action)))),
                 HomeModelPickerAction.MoveCandidateUp => Box(Move(action, -1)),
                 HomeModelPickerAction.MoveCandidateDown => Box(Move(action, 1)),
+                HomeModelPickerAction.FinishAudit => Box(await _editor.FinishAuditAsync(cancellationToken).ConfigureAwait(false)),
                 HomeModelPickerAction.SaveRoute => Box(await _editor.SaveAsync(cancellationToken).ConfigureAwait(false)),
                 HomeModelPickerAction.PreviewResolution => Box(await _editor.PreviewAsync(
                     Required(action.Capability, "required capability"), action.AppId, action.AgentId, action.Context,

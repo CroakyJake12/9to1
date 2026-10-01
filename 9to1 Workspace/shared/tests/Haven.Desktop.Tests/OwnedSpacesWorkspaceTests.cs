@@ -86,6 +86,13 @@ public sealed class OwnedSpacesWorkspaceTests
             var detached = await lifecycle.AssignAsync(moved, null, token);
             Assert.Null(detached.SpaceId);
             Assert.Equal(detached, await repository.GetAsync(detached.Id, token));
+            var changedSpace = await workspace.Registry.UpdateAsync(space with { Name = "Changed after display" }, space.Revision, token);
+            var unchangedSettings = (await settings.ExportAsync(token)).Settings["spaces.registry"];
+            await Assert.ThrowsAsync<SpaceRevisionConflictException>(() => workspace.Deletion.BeginAsync(
+                space.Id, space.Revision, Guid.NewGuid(), token));
+            Assert.Equal(changedSpace.Revision, (await workspace.Registry.ReadExistingAsync(space.Id, token))!.Revision);
+            Assert.Equal(unchangedSettings, (await settings.ExportAsync(token)).Settings["spaces.registry"]);
+            Assert.Empty(await workspace.Registry.ReadPendingDeletionsAsync(token));
             available = false;
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => lifecycle.CreateAsync(fresh with { Id = Guid.NewGuid() }, space.Id, token));
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => lifecycle.AssignAsync(created, space.Id, token));

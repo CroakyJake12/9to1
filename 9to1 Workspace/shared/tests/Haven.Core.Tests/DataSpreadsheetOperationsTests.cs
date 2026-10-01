@@ -76,7 +76,7 @@ public sealed class DataSpreadsheetOperationsTests
         workbook.Charts.Add(new DataChartDefinition { SheetId = sheet.Id, Title = "Scores", SourceRange = new DataCellRange { StartRow = 0, EndRow = 3, StartColumn = 0, EndColumn = 1 }, SeriesColumns = [1] });
         workbook.RevisionId = Guid.NewGuid();
         workbook.Normalize(); var json = JsonSerializer.Serialize(workbook); var loaded = JsonSerializer.Deserialize<DataWorkbook>(json)!; loaded.Normalize();
-        Assert.Equal(5, loaded.SchemaVersion); Assert.Equal(workbook.RevisionId, loaded.RevisionId); Assert.Single(loaded.Tables); Assert.Single(loaded.Validations); Assert.Single(loaded.Charts); Assert.Equal("Scores", loaded.Charts[0].Title); Assert.Equal(DataFilterOperator.GreaterThan, loaded.Tables[0].Filters[0].Operator);
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, loaded.SchemaVersion); Assert.Equal(workbook.RevisionId, loaded.RevisionId); Assert.Single(loaded.Tables); Assert.Single(loaded.Validations); Assert.Single(loaded.Charts); Assert.Equal("Scores", loaded.Charts[0].Title); Assert.Equal(DataFilterOperator.GreaterThan, loaded.Tables[0].Filters[0].Operator);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class DataSpreadsheetOperationsTests
         Assert.Equal(3, loaded.SchemaVersion);
         Assert.Equal(Guid.Empty, loaded.RevisionId);
         loaded.Normalize();
-        Assert.Equal(5, loaded.SchemaVersion);
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, loaded.SchemaVersion);
         Assert.Equal(Guid.Empty, loaded.RevisionId); // The durable store allocates this only at successful persistence.
         Assert.Equal(workbook.Id, loaded.Id);
         Assert.Equal(sheet.Id, loaded.Sheets[0].Id);

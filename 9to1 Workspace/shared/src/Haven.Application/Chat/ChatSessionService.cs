@@ -488,6 +488,29 @@ public sealed class ChatSessionService(
                 var toolActionId = Guid.NewGuid();
                 var toolStartedAt = DateTimeOffset.UtcNow;
                 var actionParentId = activeActionId ?? parentActionId;
+                var invocationEvidence = new System.Collections.Concurrent.ConcurrentQueue<ToolInvocationEvidence>();
+
+                async Task<WorkspaceToolResult> ObserveRuntimeAsync(ToolRuntimeKind selectedRuntime, PermissionMode permission,
+                    CancellationToken token, Guid invocationId, Guid? retryOf = null)
+                {
+                    var available = selectedRuntime switch
+                    {
+                        ToolRuntimeKind.Computer => computerPass is not null,
+                        ToolRuntimeKind.Browser => browserTools is not null,
+                        ToolRuntimeKind.Automation => automationTools is not null,
+                        ToolRuntimeKind.Mcp => mcpTools is not null,
+                        ToolRuntimeKind.Plugin => pluginTools is not null && pluginBindings.Any(item => item.Definition.Name.Equals(call.Name, StringComparison.Ordinal)),
+                        ToolRuntimeKind.Calendar => calendarTools is not null,
+                        ToolRuntimeKind.Workspace => workspaceRoot is not null,
+                        _ => false
+                    };
+                    var startedAt = DateTimeOffset.UtcNow;
+                    var observed = await ExecuteRuntimeAsync(call, selectedRuntime, permission, token).ConfigureAwait(false);
+                    invocationEvidence.Enqueue(new(invocationId, call.Name, selectedRuntime.ToString(),
+                        available ? ToolInvocationObservationStatus.RuntimeReturned : ToolInvocationObservationStatus.UnavailableBeforeDispatch,
+                        available ? observed.Activity.Succeeded : null, startedAt, DateTimeOffset.UtcNow, retryOf, observed.Failure?.Code));
+                    return observed;
+                }
 
                 if (modelPermissions is not null && ModelToolPermissionMap.Map(call.Name) is { } restrictedCapability)
                 {
@@ -502,7 +525,10 @@ public sealed class ChatSessionService(
                             permissionDecision.Reason, call.Name, toolStartedAt, toolStartedAt, toolStartedAt));
                         return new WorkspaceToolResult(
                             new ToolActivity(Guid.NewGuid(), call.Name.Replace('_', ' '),
-                                $"Model {turnModel.Name} is restricted from this action by model permissions.", false, TimeSpan.Zero, DateTimeOffset.UtcNow),
+                                $"Model {turnModel.Name} is restricted from this action by model permissions.", false, TimeSpan.Zero, DateTimeOffset.UtcNow)
+                            { InvocationEvidence = Array.AsReadOnly(new[] { new ToolInvocationEvidence(toolActionId, call.Name, null,
+                                ToolInvocationObservationStatus.DeniedBeforeDispatch, null, toolStartedAt, DateTimeOffset.UtcNow,
+                                ReportedFailureCode: "MODEL_PERMISSION_DENIED") }) },
                             "Tool error: the selected model's permission policy denies this capability. Switch models in the model picker or adjust model permissions in Settings.",
                             new ToolFailureDescriptor(
                                 "MODEL_PERMISSION_DENIED", ToolFailureKind.PermissionRequired,
@@ -525,11 +551,13 @@ public sealed class ChatSessionService(
                 {
                     runtimeKind = runtime;
                     execution.Update(StageForTool(call.Name, runtime), StatusForTool(call.Name), DescribeTool(call));
-                    originalResult = await ExecuteRuntimeAsync(call, runtime, commandPermission, cancellationToken).ConfigureAwait(false);
+                    originalResult = await ObserveRuntimeAsync(runtime, commandPermission, cancellationToken, toolActionId).ConfigureAwait(false);
                 }
                 else
                 {
                     var detail = modelPlan.GetUnavailableReason(call.Name);
+                    invocationEvidence.Enqueue(new(toolActionId, call.Name, null, ToolInvocationObservationStatus.UnavailableBeforeDispatch,
+                        null, toolStartedAt, DateTimeOffset.UtcNow));
                     originalResult = new WorkspaceToolResult(
                         new ToolActivity(Guid.NewGuid(), call.Name.Replace('_', ' '), detail, false, TimeSpan.Zero, DateTimeOffset.UtcNow),
                         "Tool error: " + detail);
@@ -559,7 +587,7 @@ public sealed class ChatSessionService(
                         automaticRetryActionId = Guid.NewGuid();
                         automaticRetryStartedAt = DateTimeOffset.UtcNow;
                         await safety.EnsureMayActAsync(conversation.Id, $"chat.tool.retry.{call.Name}", cancellationToken).ConfigureAwait(false);
-                        automaticRetryResult = await ExecuteRuntimeAsync(call, retryRuntime, commandPermission, cancellationToken).ConfigureAwait(false);
+                        automaticRetryResult = await ObserveRuntimeAsync(retryRuntime, commandPermission, cancellationToken, automaticRetryActionId.Value, toolActionId).ConfigureAwait(false);
                         automaticRetryEndedAt = DateTimeOffset.UtcNow;
                         result = automaticRetryResult;
                     }
@@ -594,7 +622,7 @@ public sealed class ChatSessionService(
                             {
                                 await safety.EnsureMayActAsync(conversation.Id, $"chat.tool.resume.{call.Name}", token).ConfigureAwait(false);
                                 var retryPermission = resolution.Approved ? PermissionMode.FullAccess : commandPermission;
-                                var retryResult = await ExecuteRuntimeAsync(call, resumableRuntime, retryPermission, token).ConfigureAwait(false);
+                                var retryResult = await ObserveRuntimeAsync(resumableRuntime, retryPermission, token, Guid.NewGuid(), toolActionId).ConfigureAwait(false);
                                 return new RemediationContinuationResult(
                                     retryResult.Activity.Succeeded,
                                     retryResult.Activity.Succeeded ? retryResult.Activity.Detail : "The blocked action was retried but did not complete.",
@@ -652,7 +680,11 @@ public sealed class ChatSessionService(
                 if (remediationRequest is not null && remediations is not null)
                     await remediations.RequestAsync(remediationRequest, continuation, cancellationToken).ConfigureAwait(false);
 
-                return result;
+                return result with { Activity = result.Activity with
+                {
+                    InvocationEvidence = Array.AsReadOnly(invocationEvidence.ToArray()),
+                    HasDeferredInvocations = continuation is not null
+                } };
             }
 
             var bootstrapCall = computerPass?.TryCreateBootstrapCall(prompt);

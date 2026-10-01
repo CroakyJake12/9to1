@@ -23,7 +23,8 @@ public enum TerminalAppCommandState
     Cancelled,
     RequiresApproval,
     Denied,
-    Unavailable
+    Unavailable,
+    NeedsRecovery
 }
 
 public sealed record TerminalAppHostCapabilities(
@@ -64,6 +65,8 @@ public sealed class TerminalAppSurface : IDisposable
     private long _resolutionGeneration;
     private TerminalResolvedAction? _resolvedAction;
     private string? _resolvedDirectory;
+    private Guid? _auditRecoveryActionId;
+    private bool _actionExecutionPending;
 
     public TerminalAppSurface(TerminalAppHostCapabilities host, string? initialDirectory = null)
     {
@@ -91,6 +94,7 @@ public sealed class TerminalAppSurface : IDisposable
     public TerminalInputMode Mode { get; private set; } = TerminalInputMode.Command;
     public string ModeLabel => Mode == TerminalInputMode.Command ? "Command" : "AI";
     public TerminalResolvedAction? ResolvedAction { get { lock(_resolutionGate) return _resolvedAction; } }
+    public Guid? AuditRecoveryActionId { get { lock (_resolutionGate) return _auditRecoveryActionId; } }
     public void SetMode(TerminalInputMode mode)
     {
         ThrowIfDisposed();
@@ -106,6 +110,10 @@ public sealed class TerminalAppSurface : IDisposable
         long generation;
         lock(_resolutionGate)
         {
+            if (_actionExecutionPending)
+                return new(TerminalAppCommandState.Unavailable, "", "The current AI action is still completing; wait for its observed outcome.");
+            if (_auditRecoveryActionId is not null)
+                return new(TerminalAppCommandState.NeedsRecovery, "", "Finish the retained consumed action audit before dispatching another AI action.");
             action=_resolvedAction;
             if(action is null || action.Id.ToString("D")!=actionID || _host.NaturalLanguageActions is null || Mode!=TerminalInputMode.AI ||
                 _session is null || _session.Metadata.SessionId!=action.SessionId || _session.Metadata.EnvironmentId!=action.EnvironmentId || WorkingDirectory!=_resolvedDirectory)
@@ -113,24 +121,53 @@ public sealed class TerminalAppSurface : IDisposable
             directory = _resolvedDirectory;
             InvalidateResolution();
             generation = _resolutionGeneration;
+            _actionExecutionPending = true;
         }
-        var result=await _host.NaturalLanguageActions.ExecuteAsync(action,verificationReference,ct).ConfigureAwait(false);
-        ct.ThrowIfCancellationRequested();
-        if (!result.Executed && result.State == "PermissionRequired")
+        try
         {
-            lock (_resolutionGate)
+            var result=await _host.NaturalLanguageActions.ExecuteAsync(action,verificationReference,ct).ConfigureAwait(false);
+            if (!result.Executed && result.State == "NeedsRecovery")
             {
-                if (!_disposed && generation == _resolutionGeneration && Mode == TerminalInputMode.AI &&
-                    _session?.Metadata.SessionId == action.SessionId && _session.Metadata.EnvironmentId == action.EnvironmentId && WorkingDirectory == directory)
-                {
-                    _resolvedAction = action;
-                    _resolvedDirectory = directory;
-                    return new(TerminalAppCommandState.RequiresApproval, "", result.ResultText ?? result.Message);
-                }
+                lock (_resolutionGate) { if (!_disposed) _auditRecoveryActionId = action.Id; }
+                return new(TerminalAppCommandState.NeedsRecovery, "", result.Message);
             }
-            return new(TerminalAppCommandState.Unavailable, "", "The session context changed while approval was requested.");
+            ct.ThrowIfCancellationRequested();
+            if (!result.Executed && result.State == "PermissionRequired")
+            {
+                lock (_resolutionGate)
+                {
+                    if (!_disposed && generation == _resolutionGeneration && Mode == TerminalInputMode.AI &&
+                        _session?.Metadata.SessionId == action.SessionId && _session.Metadata.EnvironmentId == action.EnvironmentId && WorkingDirectory == directory)
+                    {
+                        _resolvedAction = action;
+                        _resolvedDirectory = directory;
+                        return new(TerminalAppCommandState.RequiresApproval, "", result.ResultText ?? result.Message);
+                    }
+                }
+                return new(TerminalAppCommandState.Unavailable, "", "The session context changed while approval was requested.");
+            }
+            return new(result.Executed?TerminalAppCommandState.Succeeded:TerminalAppCommandState.Denied,"",result.ResultText??result.Message);
         }
-        return new(result.Executed?TerminalAppCommandState.Succeeded:TerminalAppCommandState.Denied,"",result.ResultText??result.Message);
+        finally { lock (_resolutionGate) _actionExecutionPending = false; }
+    }
+    /// <summary>Finishes the consumed action's audit only, even after its process has exited or the visible session changes.</summary>
+    public async Task<TerminalAppCommandResult> RetryActionAuditAsync(Guid actionId, CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        lock (_resolutionGate)
+        {
+            if (_auditRecoveryActionId != actionId || _host.NaturalLanguageActions is null)
+                return new(TerminalAppCommandState.Unavailable, "", "No audit recovery is retained for this displayed action.");
+        }
+        var result = await _host.NaturalLanguageActions.RetryAuditAsync(actionId, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (_resolutionGate)
+        {
+            if (!_disposed && _auditRecoveryActionId == actionId && result.State is "AuditRecorded" or "Unavailable")
+                _auditRecoveryActionId = null;
+        }
+        return new(result.State == "AuditRecorded" ? TerminalAppCommandState.Succeeded :
+            result.State == "Unavailable" ? TerminalAppCommandState.Unavailable : TerminalAppCommandState.NeedsRecovery, "", result.Message);
     }
     private TerminalAdviceContext AdviceContext()
     {

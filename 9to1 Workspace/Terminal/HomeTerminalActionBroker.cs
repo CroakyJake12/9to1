@@ -20,7 +20,10 @@ public sealed class HomeTerminalActionBroker(TerminalOwnedSessionRegistry sessio
         public SemaphoreSlim Gate { get; } = new(1, 1);
         public string? RequestId;
     }
+    private enum AuditKind { Completion, RejectedClaim, UnclaimedAbort, RejectedBegin }
+    private sealed record AuditRecovery(HomeResourceExecutionCapability? Capability, string RequestId, AuditKind Kind);
     private readonly ConcurrentDictionary<Guid, Pending> _pending = new();
+    private readonly ConcurrentDictionary<Guid, AuditRecovery> _auditRecovery = new();
     private readonly CancellationTokenSource _lifetime = new();
     private bool _disposed;
 
@@ -28,7 +31,7 @@ public sealed class HomeTerminalActionBroker(TerminalOwnedSessionRegistry sessio
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (string.IsNullOrWhiteSpace(request) || request.Length > 16384) throw new ArgumentException("A bounded process-control request is required.", nameof(request));
-        if (_pending.Count >= 1024) throw new InvalidOperationException("Too many unconsumed Terminal previews; close this Terminal action session before creating more.");
+        if (_pending.Count + _auditRecovery.Count >= 1024) throw new InvalidOperationException("Too many unconsumed Terminal previews; close this Terminal action session before creating more.");
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         var snapshot = await sessions.GetAsync(sessionId, linked.Token).ConfigureAwait(false);
         if (snapshot.EnvironmentID != environmentId) throw new UnauthorizedAccessException("The requested environment is not the live session environment.");
@@ -95,33 +98,111 @@ public sealed class HomeTerminalActionBroker(TerminalOwnedSessionRegistry sessio
                 return new(false, "PermissionRequired", "Review this exact process signal in Home, then retry the unchanged preview.", pending.RequestId);
             if (!approved.IsAllowed)
             { _pending.TryRemove(action.Id, out _); return Denied(action, approved.Code, approved.Message); }
-            var capability = await home.BeginExecutionCapabilityAsync(pending.RequestId, pending.Intent.Arguments, linked.Token).ConfigureAwait(false);
+            HomeResourceExecutionCapability? capability;
+            try { capability = await home.BeginExecutionCapabilityAsync(pending.RequestId, pending.Intent.Arguments, linked.Token).ConfigureAwait(false); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
+            {
+                _pending.TryRemove(action.Id, out _);
+                _auditRecovery[action.Id] = new(null, pending.RequestId, AuditKind.RejectedBegin);
+                _ = await RetryAuditAsync(action.Id).ConfigureAwait(false);
+                return new(false, "NeedsRecovery", "Dispatch admission failed. No signal was issued; only its audit may be retried.");
+            }
             _pending.TryRemove(action.Id, out _);
             if (capability is null) return Denied(action, "TerminalApprovalUnavailable", "Home approval expired, changed or was consumed. No signal was sent by this call.");
+            HomeExecutionOutcome outcome;
+            var sent = false;
             try
             {
                 await executor.ExecuteAsync(pending.Intent, capability, linked.Token).ConfigureAwait(false);
-                if (!await RecordAsync(pending.RequestId, HomePermissionRequestState.Succeeded, "TerminalSignalSent",
-                    "The owning session sent the approved signal; process exit is not implied.").ConfigureAwait(false))
-                    return new(false, "NeedsRecovery", "The signal was sent, but Home could not record its outcome. Inspect the process; do not replay this action.");
-                return new(true, "Executed", "The approved signal was sent. Process exit is not implied.");
+                sent = true;
+                outcome = new(HomePermissionRequestState.Succeeded, "TerminalSignalSent",
+                    "The owning session sent the approved signal; process exit is not implied.",
+                    [new(pending.Intent.Scopes[0].Kind, pending.Intent.Scopes[0].Id)]);
             }
             catch (Exception error) when (error is InvalidOperationException or IOException or UnauthorizedAccessException or OperationCanceledException)
             {
-                _ = await RecordAsync(pending.RequestId, HomePermissionRequestState.PartiallyCompleted, "TerminalSignalNeedsRecovery",
-                    "Signal completion could not be confirmed. Inspect the current process before retrying.").ConfigureAwait(false);
-                return new(false, "NeedsRecovery", "Signal completion could not be confirmed. Inspect the current process before requesting another action.",
-                    Failure: new("TerminalSignalNeedsRecovery", "The signal outcome requires inspection.", action.SessionId.ToString("D"), true, false));
+                outcome = new(HomePermissionRequestState.PartiallyCompleted, "TerminalSignalNeedsRecovery",
+                    "Signal completion could not be confirmed. Inspect the current process before requesting another action.", []);
             }
+            var recorded = await RecordAsync(action.Id, capability, outcome).ConfigureAwait(false);
+            if (sent && recorded)
+                return new(true, "Executed", "The approved signal was sent. Process exit is not implied.");
+            return new(false, "NeedsRecovery", sent
+                ? "The signal was sent, but Home could not record its outcome. Retry only the audit; do not replay this action."
+                : "Signal completion could not be confirmed. Inspect the process before requesting another action.",
+                Failure: new("TerminalSignalNeedsRecovery", "The signal outcome requires inspection.", action.SessionId.ToString("D"), true, false));
         }
         finally { pending.Gate.Release(); }
     }
-    private async Task<bool> RecordAsync(string requestId, HomePermissionRequestState state, string code, string message)
+
+    private async Task<bool> RecordAsync(Guid actionId, HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome)
     {
-        try { return (await permissions.RecordExecutionAsync(requestId, new(state, code, message, []), CancellationToken.None).ConfigureAwait(false)).Succeeded; }
+        _auditRecovery[actionId] = new(capability, capability.RequestId, AuditKind.Completion);
+        try
+        {
+            var result = await home.CompleteExecutionAsync(capability, outcome, CancellationToken.None).ConfigureAwait(false);
+            if (result.Code == "HOME_EXECUTION_COMPLETION_NOT_OWNED")
+            {
+                _auditRecovery[actionId] = new(capability, capability.RequestId, AuditKind.RejectedClaim);
+                result = await home.RetryRejectedClaimAuditAsync(capability, CancellationToken.None).ConfigureAwait(false);
+                if (result.Code == "HOME_CLAIM_REJECTION_NOT_OWNED")
+                {
+                    _auditRecovery[actionId] = new(capability, capability.RequestId, AuditKind.UnclaimedAbort);
+                    result = await home.AbortUnclaimedExecutionAsync(capability, CancellationToken.None).ConfigureAwait(false);
+                }
+            }
+            if (result.Succeeded) _auditRecovery.TryRemove(actionId, out _);
+            return result.Succeeded;
+        }
         catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException) { return false; }
+    }
+
+    /// <summary>Host-lifetime recovery of an already-consumed action's exact audit only. Never resolves or signals a process.</summary>
+    public async Task<HomePermissionOperationResult> RetryAuditAsync(Guid actionId, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_auditRecovery.TryGetValue(actionId, out var recovery))
+            return new(false, "TerminalAuditNotOwned", "This host retains no pending audit for this consumed action.");
+        try
+        {
+            var result = recovery.Kind switch
+            {
+                AuditKind.Completion => await home.RetryCompletionAuditAsync(recovery.Capability!, cancellationToken).ConfigureAwait(false),
+                AuditKind.RejectedClaim => await home.RetryRejectedClaimAuditAsync(recovery.Capability!, cancellationToken).ConfigureAwait(false),
+                AuditKind.UnclaimedAbort => await home.AbortUnclaimedExecutionAsync(recovery.Capability!, cancellationToken).ConfigureAwait(false),
+                _ => await home.RetryRejectedBeginAuditAsync(recovery.RequestId, cancellationToken).ConfigureAwait(false)
+            };
+            if (!result.Succeeded && recovery.Kind != AuditKind.Completion && result.Code is
+                "HOME_BEGIN_AUDIT_NOT_OWNED" or "HOME_CLAIM_REJECTION_NOT_OWNED" or "HOME_EXECUTION_ABORT_NOT_OWNED")
+            {
+                // Automatic negative audit may already have completed and released its local handle.
+                // Observe Home's actual terminal decision rather than rewriting it or issuing another signal.
+                var observed = recovery.Capability is { } handle
+                    ? await home.GetExecutionDecisionAsync(handle, cancellationToken).ConfigureAwait(false)
+                    : await permissions.GetAuthorizationAsync(recovery.RequestId, cancellationToken).ConfigureAwait(false);
+                if (observed?.State is HomePermissionRequestState.Failed or HomePermissionRequestState.Cancelled or
+                    HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked or
+                    HomePermissionRequestState.Succeeded or HomePermissionRequestState.PartiallyCompleted)
+                    result = new(true, "TerminalAuditObserved", "Home's existing terminal decision was observed; no process operation was retried.");
+                else if (observed?.State is HomePermissionRequestState.PendingApproval or HomePermissionRequestState.Approved)
+                {
+                    _auditRecovery.TryRemove(actionId, out _);
+                    return new(false, "TerminalAuditNotOwned", "No dispatch was admitted and this host retains no failed-dispatch audit right. No signal was retried.");
+                }
+            }
+            if (result.Succeeded) _auditRecovery.TryRemove(actionId, out _);
+            return result;
+        }
+        catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException)
+        { return new(false, "TerminalAuditUnavailable", "Audit storage remains unavailable; no process signal was retried."); }
+    }
+    async Task<TerminalActionExecutionResult> ITerminalActionBroker.RetryAuditAsync(Guid actionId, CancellationToken cancellationToken)
+    {
+        var result = await RetryAuditAsync(actionId, cancellationToken).ConfigureAwait(false);
+        return new(false, result.Succeeded ? "AuditRecorded" : result.Code == "TerminalAuditNotOwned" ? "Unavailable" : "NeedsRecovery",
+            result.Succeeded ? result.Code == "TerminalAuditObserved" ? result.Message : "The original consumed action outcome was recorded; no process operation was retried." : result.Message);
     }
     private static TerminalActionExecutionResult Denied(TerminalResolvedAction action, string code, string message) =>
         new(false, "Denied", message, Failure: new(code, message, action.SessionId.ToString("D"), true));
-    public void Dispose() { if (_disposed) return; _disposed = true; _lifetime.Cancel(); _pending.Clear(); _lifetime.Dispose(); }
+    public void Dispose() { if (_disposed) return; _disposed = true; _lifetime.Cancel(); _pending.Clear(); _auditRecovery.Clear(); _lifetime.Dispose(); }
 }

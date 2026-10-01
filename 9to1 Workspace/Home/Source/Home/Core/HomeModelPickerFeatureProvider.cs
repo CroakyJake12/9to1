@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using Dulche.Runtime;
@@ -55,6 +56,8 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
     IModelProviderRegistry providers, IPrivacyPreferenceStore privacy, ResourceAuthorizationService resources,
     HomeResourceOperationBroker operations) : IHomeModelPickerFeatureProvider
 {
+    private readonly ConcurrentDictionary<string, (HomeResourceExecutionCapability Capability, string RouteId)> _pendingAudits = new();
+
     public const string AppId = "9to1.home.models";
     public static string RouteId(string profileId, ModelCapabilityCategory category) => $"home.profile:{profileId}:{category.ToString().ToLowerInvariant()}";
 
@@ -83,7 +86,8 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         if (route is not null && !Owns(route, actor)) return Denied<HomeModelPickerSnapshot>();
         if (await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor) return Denied<HomeModelPickerSnapshot>();
         route ??= new(RouteId(actor.ProfileId, parsed), 0, ModelRouteScope.User, actor.ProfileId, parsed, [], new());
-        return new(true, "Ready", route.Revision == 0 ? "New personal route draft; no model is selected until saved." : "Current personal Home route.", Snapshot(route));
+        var pendingAudit = _pendingAudits.FirstOrDefault(entry => entry.Value.RouteId == route.RouteId).Key;
+        return new(true, "Ready", route.Revision == 0 ? "New personal route draft; no model is selected until saved." : "Current personal Home route.", Snapshot(route) with { PendingAuditRequestId = pendingAudit });
     }
 
     public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit,
@@ -93,6 +97,8 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
             input.Candidates is null || input.Candidates.Count > 256 || input.Policy.ValueKind != JsonValueKind.Object || edit.ExpectedRevision < 0 ||
             input.Version != edit.ExpectedRevision + 1) return Invalid<HomeModelPickerSnapshot>();
         // Freeze all caller-owned collections and JSON before the first asynchronous authority lookup.
+        if (edit.ApprovalRequestId is { } pendingRequest && _pendingAudits.ContainsKey(pendingRequest))
+            return new(false, "AuditPending", "The original route outcome is retained. Finish its audit; do not repeat the save.");
         input = input with { Candidates = Array.AsReadOnly(input.Candidates.ToArray()), Policy = input.Policy.Clone() };
         ProviderPolicy policy;
         try { policy = input.Policy.Deserialize<ProviderPolicy>() ?? throw new JsonException(); }
@@ -134,27 +140,50 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         try { saved = await guardedRoutes.TrySaveGuardedAsync(route, edit.ExpectedRevision, actor, profiles, cancellationToken).ConfigureAwait(false); }
         catch
         {
-            await RecordOutcomeAsync(capability, new(HomePermissionRequestState.PartiallyCompleted,
-                "HOME_MODEL_ROUTE_OUTCOME_UNCONFIRMED", "The model route save did not return a confirmed outcome. Reload its canonical state before any further edit.", [])).ConfigureAwait(false);
-            throw;
+            var outcomeAudited = await RecordOutcomeAsync(capability, new(HomePermissionRequestState.PartiallyCompleted,
+                "HOME_MODEL_ROUTE_OUTCOME_UNCONFIRMED", "The model route save did not return a confirmed outcome. Reload its canonical state before any further edit.", []), route.RouteId).ConfigureAwait(false);
+            return new(false, "OutcomeUnconfirmed", "The route save did not return a confirmed result. Reload canonical state before any further edit.",
+                Snapshot(current ?? route with { Revision = 0 }) with { PendingAuditRequestId = outcomeAudited ? null : capability.RequestId });
         }
         if (!saved)
         {
-            await RecordOutcomeAsync(capability, new(HomePermissionRequestState.Failed,
-                "HOME_MODEL_ROUTE_NOT_COMMITTED", "The canonical route revision or current authority rejected the save.", [])).ConfigureAwait(false);
-            return new(false, "Conflict", "Another route edit won or authority changed; reload and request approval again.");
+            var failureAudited = await RecordOutcomeAsync(capability, new(HomePermissionRequestState.Failed,
+                "HOME_MODEL_ROUTE_NOT_COMMITTED", "The canonical route revision or current authority rejected the save.", []), route.RouteId).ConfigureAwait(false);
+            return new(false, "Conflict", "Another route edit won or authority changed; reload and request approval again.",
+                Snapshot(current ?? route with { Revision = 0 }) with { PendingAuditRequestId = failureAudited ? null : capability.RequestId });
         }
         var audited = await RecordOutcomeAsync(capability, new(HomePermissionRequestState.Succeeded,
-            "HOME_MODEL_ROUTE_COMMITTED", "The canonical model route was saved.", [new("home.model-route", route.RouteId)])).ConfigureAwait(false);
+            "HOME_MODEL_ROUTE_COMMITTED", "The canonical model route was saved.", [new("home.model-route", route.RouteId)]), route.RouteId).ConfigureAwait(false);
         return new(true, audited ? "Saved" : "SavedAuditPending",
-            audited ? "Model route saved." : "Model route saved; Home could not confirm its audit record. Do not repeat the save.", Snapshot(route), Revision: route.Revision);
+            audited ? "Model route saved." : "Model route saved; Home could not confirm its audit record. Do not repeat the save.", Snapshot(route) with { PendingAuditRequestId = audited ? null : capability.RequestId }, Revision: route.Revision);
     }
 
-    private async Task<bool> RecordOutcomeAsync(HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome)
+    private async Task<bool> RecordOutcomeAsync(HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome, string routeId)
     {
-        try { return (await operations.CompleteExecutionAsync(capability, outcome, CancellationToken.None).ConfigureAwait(false)).Succeeded; }
-        catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException)
-        { return false; } // Preserve the actual owning result; audit failure is not permission to execute again.
+        _pendingAudits.TryAdd(capability.RequestId, (capability, routeId));
+        try
+        {
+            var recorded = await operations.CompleteExecutionAsync(capability, outcome, CancellationToken.None).ConfigureAwait(false);
+            if (recorded.Succeeded) _pendingAudits.TryRemove(capability.RequestId, out _);
+            return recorded.Succeeded;
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+        { return false; } // The exact sealed outcome remains retained; never repeat the route CAS.
+    }
+
+    public async Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(requestId) || !_pendingAudits.TryGetValue(requestId, out var pending))
+            return new(false, "AuditNotOwned", "This host does not retain the original route audit.");
+        try
+        {
+            var result = await operations.RetryCompletionAuditAsync(pending.Capability, cancellationToken).ConfigureAwait(false);
+            if (!result.Succeeded) return new(false, "AuditPending", "The original outcome is retained; its audit is still unconfirmed.");
+            _pendingAudits.TryRemove(requestId, out _);
+            return new(true, "AuditRecorded", "The original route outcome audit is confirmed. No route save was repeated.");
+        }
+        catch (Exception exception) when (exception is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException)
+        { return new(false, "AuditPending", "The original outcome is retained; its audit is still unavailable."); }
     }
 
     private static string DescribeRouteChange(ConfiguredModelRoute? before, ConfiguredModelRoute after)

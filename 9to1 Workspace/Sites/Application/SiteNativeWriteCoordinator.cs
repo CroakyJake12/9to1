@@ -174,7 +174,18 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
                 audited = await home.AbortUnclaimedExecutionAsync(pending.Capability, cancellationToken).ConfigureAwait(false);
             }
             if (audited.Code == "HOME_EXECUTION_ABORT_NOT_OWNED") pending.Failure.Throw();
-            if (!audited.Succeeded) throw pending;
+            if (!audited.Succeeded)
+            {
+                // A different negative Home decision can already have stopped the request.
+                // Observe its actual issuer-bound record; do not report our proposed audit
+                // as recorded or manufacture another claim/completion right.
+                var decision = await home.GetExecutionDecisionAsync(pending.Capability, cancellationToken).ConfigureAwait(false);
+                if (decision is { Code: not "HOME_PERMISSION_REQUEST_NOT_FOUND",
+                    State: HomePermissionRequestState.Failed or HomePermissionRequestState.Cancelled or
+                        HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked })
+                    pending.Failure.Throw();
+                throw pending;
+            }
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
         {

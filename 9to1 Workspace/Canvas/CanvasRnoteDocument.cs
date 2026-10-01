@@ -152,6 +152,57 @@ public sealed class CanvasRnoteDocument : IDisposable
         }
     }
 
+    public void DeleteStroke(Guid strokeId, CanvasMutationRequest request) =>
+        EditStroke(strokeId, request, delete: true, 0, 0);
+
+    public void TranslateStroke(Guid strokeId, double deltaX, double deltaY, CanvasMutationRequest request) =>
+        EditStroke(strokeId, request, delete: false, deltaX, deltaY);
+
+    private void EditStroke(Guid strokeId, CanvasMutationRequest request, bool delete, double deltaX, double deltaY)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        lock (_gate)
+        {
+            EnsureOpen();
+            var artifact = _session.GetArtifactSnapshot();
+            var page = artifact.Pages[0];
+            RnoteCanvasEngine? candidate = null;
+            try
+            {
+                CanvasDocumentSettings Capture()
+                {
+                    var bindings = new Dictionary<Guid, ulong>(ReadPersistedState(artifact).NativeStrokeKeys ?? new Dictionary<Guid, ulong>());
+                    if (!bindings.TryGetValue(strokeId, out var key))
+                        throw new NotSupportedException("The canonical stroke has no retained native identity; an explicit migration is required.");
+                    candidate = RnoteCanvasEngine.Open(_engine.Save());
+                    var priorKeys = candidate.ReadStrokeKeys().ToHashSet();
+                    if (delete)
+                    {
+                        candidate.DeleteStroke(key);
+                        bindings.Remove(strokeId);
+                        priorKeys.Remove(key);
+                    }
+                    else candidate.TranslateStroke(key, deltaX, deltaY);
+                    if (!priorKeys.SetEquals(candidate.ReadStrokeKeys()))
+                        throw new InvalidDataException("The donor edit changed unrelated native entity identities.");
+                    return SettingsWithEngineState(artifact.DocumentSettings, candidate, CompatibilityReport, bindings);
+                }
+                var result = delete
+                    ? _session.DeleteStructuredStroke(request, page.PageId, strokeId, Capture)
+                    : _session.TranslateStructuredStroke(request, page.PageId, strokeId, deltaX, deltaY, Capture);
+                RequireSuccess(result);
+                if (candidate is not null)
+                {
+                    var prior = _engine;
+                    _engine = candidate;
+                    candidate = null;
+                    prior.Dispose();
+                }
+            }
+            finally { candidate?.Dispose(); }
+        }
+    }
+
     public void Rename(string name, Guid expectedRevision)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);

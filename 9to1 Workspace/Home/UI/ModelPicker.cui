@@ -58,6 +58,7 @@
         <TextBlock text="This route has no candidates." foreground="{Resource CuiTextSoftBrush}" />
       </StackPanel>
       <StackPanel id="model-route-actions" orientation="Horizontal" margin="0 12 0 8">
+        <Button id="finish-model-route-audit" action="FinishAudit" content="Finish audit" condition="{Binding PendingAuditRequestId}" enabled="{Binding CanFinishAudit}" accessible-name="Finish recording the original route outcome without saving again" />
         <Button id="save-model-route" action="SaveRoute" content="Save route" accessible-name="Save model route changes" />
         <Button id="preview-text-route" action="PreviewResolution" action-capability="text" content="Preview text" margin="8 0 0 0" accessible-name="Preview text model routing" />
         <Button id="preview-image-route" action="PreviewResolution" action-capability="image-generation" content="Preview image" margin="8 0 0 0" accessible-name="Preview image model routing" />

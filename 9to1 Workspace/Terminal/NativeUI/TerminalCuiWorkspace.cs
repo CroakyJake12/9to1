@@ -27,6 +27,7 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
     private (Guid ActionId, string RequestId)? _review;
     private Guid? _displayedPendingCommandId;
     private TerminalResolvedAction? _displayedResolvedAction;
+    private Guid? _displayedAuditActionId;
     private volatile bool _disposed;
     public CuiViewModel Bindings { get; } = new();
     public Control Viewport => _viewport.View;
@@ -55,11 +56,12 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
         var input = Bindings.Get("InputText")?.ToString() ?? "";
         var resolved = _displayedResolvedAction;
         var pendingCommandId = _displayedPendingCommandId;
+        var auditActionId = _displayedAuditActionId;
         await _operations.WaitAsync(cancellationToken);
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            if (_surface.SessionMetadata?.SessionId != sessionId || _surface.Mode != mode)
+            if (command != "TerminalRetryAudit" && (_surface.SessionMetadata?.SessionId != sessionId || _surface.Mode != mode))
                 throw new InvalidOperationException("The Terminal session context changed before the action ran.");
             switch (command)
             {
@@ -83,6 +85,12 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
                 case "TerminalDenyCommand":
                     var denied = _surface.DenyPending(pendingCommandId ?? Guid.Empty);
                     Bindings.Set("Status", denied.Message);
+                    break;
+                case "TerminalRetryAudit":
+                    if (auditActionId is not { } retainedAudit || _surface.AuditRecoveryActionId != retainedAudit)
+                        throw new InvalidOperationException("No displayed consumed action audit is available.");
+                    var audit = await _surface.RetryActionAuditAsync(retainedAudit, cancellationToken);
+                    if (!_disposed) Bindings.Set("Status", audit.Message);
                     break;
                 case "TerminalExecuteResolved":
                     if (resolved is null || _surface.ResolvedAction?.Id != resolved.Id)
@@ -137,6 +145,8 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
         _displayedPendingCommandId = pendingCommand?.Id;
         Bindings.Set("ActionSummary", _displayedResolvedAction?.Summary ?? "");
         Bindings.Set("HasPendingCommand", pendingCommand is not null);
+        _displayedAuditActionId = _surface.AuditRecoveryActionId;
+        Bindings.Set("HasPendingAudit", _displayedAuditActionId is not null);
         Bindings.Set("PendingCommandPreview", pendingCommand?.Preview ?? "");
         Bindings.Set("ApprovalRequestId", _review?.RequestId ?? "");
         Bindings.Set("Availability", _surface.UnavailableReason ?? "");
@@ -154,6 +164,7 @@ public sealed class TerminalCuiWorkspace : ICuiActionDispatcher, IDisposable
         _review = null;
         _displayedPendingCommandId = null;
         _displayedResolvedAction = null;
+        _displayedAuditActionId = null;
         // An in-flight owner operation may still release the semaphore. Neither the
         // surface nor viewport is disposed here; their trusted host owns both.
     }

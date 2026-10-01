@@ -33,7 +33,7 @@ public sealed class DataLocalStoreAuthority(IDataWorkbookRepository workbooks, I
         if (workbooks is not IDataGuardedWorkbookRepository actual || ownership is not IResourceStoreOwnershipReceiptAuthority receipts
             || storeID == Guid.Empty || workbookID == Guid.Empty || expectedVersion < 0
             || expectedVersion == 0 && expectedRevisionID != Guid.Empty || expectedVersion > 0 && expectedRevisionID == Guid.Empty
-            || actionID is not ("data.workbook.create" or "data.workbook.save" or "data.records.append" or "data.records.update")) return null;
+            || actionID is not ("data.workbook.create" or "data.workbook.save" or "data.records.append" or "data.records.update" or "data.table.schema.update" or "data.relationships.edit")) return null;
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         if (actor is null || actor != expectedActor || string.IsNullOrWhiteSpace(actor.ActorId)
             || string.IsNullOrWhiteSpace(actor.ProfileId) || string.IsNullOrWhiteSpace(actor.AuthenticationRevision)

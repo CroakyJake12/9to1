@@ -1,4 +1,6 @@
 using Haven.Application.Go;
+using Haven.Application.Compatibility;
+using HavenOS.Files.NativeHost;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
@@ -24,6 +26,7 @@ internal static class Program
 /// <summary>Designated central OS-session host. Child apps must attach through Home's authenticated transport.</summary>
 internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, IDisposable
 {
+    private readonly CancellationTokenSource _lifetime = new();
     private ServiceProvider? _services;
     private HomeNativeSessionLease? _lease;
     private Authority.LinuxSessionDiscoveryServer? _discoveryServer;
@@ -54,6 +57,11 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
     {
         var services = new ServiceCollection();
         services.AddHavenInfrastructure();
+        // Files content authority and OS navigation share this exact leased Home graph.
+        services.AddFilesNativeHost();
+        services.AddSingleton<CompatibilityPackageInspector>();
+        services.AddSingleton<ICompatibilityPackageOpenHandler>(sp => new OsCompatibilityPackageWindow(sp, _lifetime.Token));
+        services.AddSingleton<FilesCompatibilityPackageOpenCoordinator>();
         services.AddSingleton<IInstalledApplicationObservationProvider, LinuxInstalledApplications>();
         // No receipt, clean environment, process-local lease or developer output substitutes for trusted launch.
         services.AddSingleton<IHomeNativeControlledLaunchAuthority, UnavailableHomeNativeControlledLaunchAuthority>();
@@ -80,5 +88,5 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         _services.GetRequiredService<Authority.LinuxControlledLaunchGate>().BindHeldLease(_lease);
         return new(_services, _services.GetRequiredService<HomeCoreRuntime>(), actors);
     }
-    public void Dispose() { _discoveryServer?.Dispose(); _services?.Dispose(); _lease?.Dispose(); _endpointGate.Dispose(); }
+    public void Dispose() { _lifetime.Cancel(); _discoveryServer?.Dispose(); _services?.Dispose(); _lease?.Dispose(); _lifetime.Dispose(); _endpointGate.Dispose(); }
 }

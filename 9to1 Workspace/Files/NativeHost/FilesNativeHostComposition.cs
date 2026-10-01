@@ -1,4 +1,5 @@
 using Haven.Application;
+using Haven.Application.Compatibility;
 using Haven.Core.Media;
 using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,8 @@ public static class FilesNativeHostComposition
         services.TryAddSingleton<NativeFilesWorkspaceAuthority>();
         services.TryAddSingleton<NativeFilesMediaAssetSourceResolver>();
         services.TryAddSingleton<NativeFilesArtifactContentReader>();
+        services.TryAddSingleton<FilesCompatibilityPackageContentSource>();
+        services.TryAddSingleton<ICompatibilityPackageContentSource>(provider => provider.GetRequiredService<FilesCompatibilityPackageContentSource>());
         services.AddSingleton<IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
         services.AddSingleton<IMediaRetainedAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
         services.AddSingleton<ICanonicalResourceAccessResolver>(provider => new FilesArtifactResourceResolver(async (actor, token) =>

@@ -86,6 +86,39 @@ public sealed class SiteNativeWriteTests
         Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
     }
 
+    [Theory]
+    [InlineData(HomePermissionRequestState.Cancelled)]
+    [InlineData(HomePermissionRequestState.Failed)]
+    public async Task Admission_observes_existing_negative_Home_decision_without_rewriting_it(HomePermissionRequestState state)
+    {
+        await using var fixture = await Fixture.Create();
+        var intent = SiteNativeWriteIntent.Create(fixture.Binding, "Stopped fixture", "9to1-native", "stopped-fixture");
+        var capability = await fixture.Approve(intent);
+        Assert.True((await fixture.Permissions.RecordExecutionAsync(capability.RequestId,
+            new HomeExecutionOutcome(state, "ExistingHomeStop", "Existing canonical Home decision.", []))).Succeeded);
+        var before = await fixture.Permissions.GetAuthorizationAsync(capability.RequestId);
+        fixture.RevokeOnRead = fixture.Reads + 1;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(intent, capability));
+        Assert.Equal(before, await fixture.Home.GetExecutionDecisionAsync(capability));
+        Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
+    }
+
+    [Fact]
+    public async Task Admission_does_not_treat_existing_success_as_negative_audit_acknowledgement()
+    {
+        await using var fixture = await Fixture.Create();
+        var intent = SiteNativeWriteIntent.Create(fixture.Binding, "Uncertain fixture", "9to1-native", "uncertain-fixture");
+        var capability = await fixture.Approve(intent);
+        Assert.True((await fixture.Permissions.RecordExecutionAsync(capability.RequestId,
+            new HomeExecutionOutcome(HomePermissionRequestState.Succeeded, "ExistingSuccess", "Existing canonical success.", []))).Succeeded);
+        var before = await fixture.Permissions.GetAuthorizationAsync(capability.RequestId);
+        fixture.RevokeOnRead = fixture.Reads + 1;
+        var pending = await Assert.ThrowsAsync<SiteNativeAdmissionAuditPendingException>(() => fixture.Owner.ExecuteAsync(intent, capability));
+        await Assert.ThrowsAsync<SiteNativeAdmissionAuditPendingException>(() => fixture.Owner.RetryAdmissionAuditAsync(pending));
+        Assert.Equal(before, await fixture.Home.GetExecutionDecisionAsync(capability));
+        Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
+    }
+
     [Fact]
     public async Task Claimed_actor_with_different_profile_is_audited_failed_before_any_mutation()
     {

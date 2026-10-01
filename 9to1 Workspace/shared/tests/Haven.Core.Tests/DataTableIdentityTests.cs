@@ -79,7 +79,7 @@ public sealed class DataTableIdentityTests
         var workbook = DataWorkbook.Create("Legacy"); workbook.SchemaVersion = 4;
         workbook.Tables.Add(new() { SheetId = workbook.Sheets[0].Id, Range = new() { EndRow = 3, EndColumn = 1 } });
         var tableID = workbook.Tables[0].Id; var loaded = JsonSerializer.Deserialize<DataWorkbook>(JsonSerializer.Serialize(workbook))!;
-        loaded.Normalize(); Assert.Equal(5, loaded.SchemaVersion); Assert.Equal(tableID, loaded.Tables[0].Id);
+        loaded.Normalize(); Assert.Equal(DataWorkbook.CurrentSchemaVersion, loaded.SchemaVersion); Assert.Equal(tableID, loaded.Tables[0].Id);
         Assert.Equal(0, loaded.Tables[0].RecordIdentityVersion); Assert.Empty(loaded.Tables[0].Records); Assert.Empty(loaded.Tables[0].Fields);
     }
 

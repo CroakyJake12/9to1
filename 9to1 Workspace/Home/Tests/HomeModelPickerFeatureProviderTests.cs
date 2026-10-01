@@ -33,6 +33,67 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
         _provider = new(_profiles, _routes, _catalogue, _privacy, resources, new(resources, _permissions));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Confirmed_route_save_retains_exact_audit_retry_without_repeating_guarded_CAS(bool afterPublication)
+    {
+        var fault = new RouteAuditFaultStore(_store) { AfterPublication = afterPublication };
+        var routes = new HomeVersionedModelRouteRepository(fault);
+        var permissions = new HomePermissionTrustService(fault, new HomeModelRouteActionPolicies().TryGet);
+        var resources = new ResourceAuthorizationService(_profiles,
+            [new HomeModelRouteOwner(_profiles, routes), new HomeModelRouteProfileOwner(_profiles)]);
+        var provider = new HomeModelPickerFeatureProvider(_profiles, routes, _catalogue, _privacy, resources, new(resources, permissions));
+        var draft = Assert.Single((await provider.GetSnapshotAsync("User", "Chat")).Value!.Routes);
+        var edit = new HomeModelRouteEdit(draft with { Version = 1, Candidates = [new("local", "one", null, true, 0)] }, 0);
+        var pending = await provider.UpdateRouteAsync(edit);
+        var requestId = pending.Value!.PendingApprovalRequestId!;
+        Assert.True((await permissions.DecideAsync(requestId, HomeApprovalChoice.Accept)).Succeeded);
+        fault.FailNextCompletion = true;
+        var saved = await provider.UpdateRouteAsync(edit with { ApprovalRequestId = requestId });
+        Assert.True(saved.Succeeded);
+        Assert.Equal("SavedAuditPending", saved.Code);
+        Assert.Equal(requestId, saved.Value!.PendingAuditRequestId);
+        Assert.Equal(requestId, (await provider.GetSnapshotAsync("User", "Chat")).Value!.PendingAuditRequestId);
+        var canonical = JsonSerializer.Serialize(await routes.GetAsync(draft.RouteId, default));
+        Assert.Equal(1, fault.RouteWrites);
+        Assert.Equal("AuditPending", (await provider.UpdateRouteAsync(edit with { ApprovalRequestId = requestId })).Code);
+        // The original outcome audit may be settled after authentication changes; it conveys no new route authority.
+        _principal.Value = "changed-principal";
+        var retried = await provider.RetryAuditAsync(requestId);
+        Assert.True(retried.Succeeded);
+        Assert.Null(retried.Value);
+        Assert.Equal(1, fault.RouteWrites);
+        Assert.Equal(canonical, JsonSerializer.Serialize(await routes.GetAsync(draft.RouteId, default)));
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await permissions.GetAuthorizationAsync(requestId)).State);
+        Assert.Equal("AuditNotOwned", (await provider.RetryAuditAsync(requestId)).Code);
+        Assert.Equal("AuditNotOwned", (await provider.RetryAuditAsync("fictional-imported-request")).Code);
+    }
+
+    private sealed class RouteAuditFaultStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        public bool FailNextCompletion;
+        public bool AfterPublication;
+        public int RouteWrites;
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expected,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default)
+        {
+            if (record.RecordType == "home.model-route") RouteWrites++;
+            return inner.WriteGuardedAsync(record, expected, actor, guard, ct);
+        }
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken ct = default)
+        {
+            if (FailNextCompletion && record.Payload.GetRawText().Contains("HOME_MODEL_ROUTE_COMMITTED", StringComparison.Ordinal))
+            {
+                FailNextCompletion = false;
+                if (AfterPublication) Assert.True((await inner.WriteAsync(record, expected, ct)).IsSuccess);
+                throw new UnauthorizedAccessException("Controlled durable completion audit acknowledgment failure.");
+            }
+            return await inner.WriteAsync(record, expected, ct);
+        }
+    }
+
     [Fact]
     public async Task Approved_route_does_not_commit_if_real_principal_changes_while_Home_lease_waits()
     {

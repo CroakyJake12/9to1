@@ -45,7 +45,7 @@ public sealed record LauncherRemovePlacementCommand(Guid PlacementId) : Launcher
 
 /// <summary>Detached, reviewable proposal only. Neither this data nor a request ID grants a write.</summary>
 public sealed record LauncherSemanticPlan(string AuthorityId, long ExpectedRevision, LauncherLayout Proposed);
-public sealed record LauncherSemanticReceipt(LauncherStoredLayout? Saved = null, string? PendingApprovalRequestId = null);
+public sealed record LauncherSemanticReceipt(LauncherStoredLayout? Saved = null, string? PendingApprovalRequestId = null, string? AuditReceiptId = null);
 public sealed class LauncherSemanticActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
@@ -57,6 +57,9 @@ public sealed class LauncherSemanticActionPolicies : IHomeActionPolicySource
 /// actor-pinned owner transaction used by the native host enforces the actual revision and commit lease.</summary>
 public sealed class LauncherSemanticFeatureProvider(HomeLauncherSession sessions, HomeResourceOperationBroker operations)
 {
+    private sealed record PendingAudit(AuthenticatedResourceActor Actor, HomeResourceExecutionCapability Capability);
+    private readonly Dictionary<string, PendingAudit> _audits = new(StringComparer.Ordinal);
+    private readonly SemaphoreSlim _executionGate = new(1, 1);
     public const string AppId = "9to1.launcher";
     public const string EditAction = "launcher.layout.edit";
     public async Task<LauncherStoredLayout?> ReadAsync(CancellationToken ct = default)
@@ -115,6 +118,17 @@ public sealed class LauncherSemanticFeatureProvider(HomeLauncherSession sessions
     public async Task<HomeCoreOperationResult<LauncherSemanticReceipt>> ApplyAsync(LauncherSemanticPlan plan,
         string? approvalRequestId = null, CancellationToken ct = default)
     {
+        await _executionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_audits.Count >= 32) return new(false, "AuditRecoveryRequired", "Finish the retained Home audit before another edit.");
+            return await ApplyCoreAsync(plan, approvalRequestId, ct).ConfigureAwait(false);
+        }
+        finally { _executionGate.Release(); }
+    }
+    private async Task<HomeCoreOperationResult<LauncherSemanticReceipt>> ApplyCoreAsync(LauncherSemanticPlan plan,
+        string? approvalRequestId, CancellationToken ct)
+    {
         ArgumentNullException.ThrowIfNull(plan);
         var frozen = plan with { Proposed = LauncherLayoutEdits.Clone(plan.Proposed) }; frozen.Proposed.Validate();
         var session = await sessions.ReadAsync(ct).ConfigureAwait(false);
@@ -140,16 +154,54 @@ public sealed class LauncherSemanticFeatureProvider(HomeLauncherSession sessions
         catch
         {
             await RecordAsync(capability, new(HomePermissionRequestState.PartiallyCompleted, "LAUNCHER_OUTCOME_UNCONFIRMED",
-                "The owner did not return a confirmed layout outcome. Reload canonical state before another edit.", [])).ConfigureAwait(false);
+                "The owner did not return a confirmed layout outcome. Reload canonical state before another edit.", []), session).ConfigureAwait(false);
             throw;
         }
-        var audited = await RecordAsync(capability, new(HomePermissionRequestState.Succeeded, "LAUNCHER_LAYOUT_COMMITTED",
-            "The canonical launcher layout was saved.", [new(HomeLauncherLayoutStore.RecordType, saved.AuthorityId)])).ConfigureAwait(false);
-        return new(true, audited ? "Saved" : "SavedAuditPending", audited ? "Launcher layout saved." : "Launcher saved; Home audit is pending. Do not repeat the edit.", new(saved), Revision: saved.Revision);
+        var auditId = await RecordAsync(capability, new(HomePermissionRequestState.Succeeded, "LAUNCHER_LAYOUT_COMMITTED",
+            "The canonical launcher layout was saved.", [new(HomeLauncherLayoutStore.RecordType, saved.AuthorityId)]), session).ConfigureAwait(false);
+        return new(true, auditId is null ? "Saved" : "SavedAuditPending", auditId is null ? "Launcher layout saved." : "Launcher saved; Home audit is pending. Do not repeat the edit.", new(saved, AuditReceiptId: auditId), Revision: saved.Revision);
     }
-    private async Task<bool> RecordAsync(HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome)
+    public async Task<IReadOnlyList<string>> ReadPendingAuditIdsAsync(LauncherSessionSnapshot current, CancellationToken ct = default)
     {
-        try { return (await operations.CompleteExecutionAsync(capability, outcome, CancellationToken.None).ConfigureAwait(false)).Succeeded; }
-        catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException) { return false; }
+        await _executionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (!await sessions.IsCurrentAsync(current, ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("The current Launcher session changed.");
+            var ids = _audits.Where(pair => Matches(pair.Value, current)).Select(pair => pair.Key).ToArray();
+            if (!await sessions.IsCurrentAsync(current, ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home changed while reading Launcher audit recovery.");
+            return ids;
+        }
+        finally { _executionGate.Release(); }
+    }
+    public async Task<bool> RetryAuditAsync(LauncherSessionSnapshot current, string receiptId, CancellationToken ct = default)
+    {
+        await _executionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (!await sessions.IsCurrentAsync(current, ct).ConfigureAwait(false) ||
+                !_audits.TryGetValue(receiptId, out var pending) || !Matches(pending, current)) return false;
+            // Home retries its original fixed terminal outcome. This method cannot prepare, claim or save a layout.
+            try
+            {
+                if (!(await operations.RetryCompletionAuditAsync(pending.Capability, ct).ConfigureAwait(false)).Succeeded) return false;
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException) { return false; }
+            _audits.Remove(receiptId); return true;
+        }
+        finally { _executionGate.Release(); }
+    }
+    private static bool Matches(PendingAudit pending, LauncherSessionSnapshot current) =>
+        (pending.Actor with { AuthenticationRevision = current.Actor.AuthenticationRevision }) == current.Actor &&
+        pending.Capability.Scopes.Any(scope => scope.Kind == HomeLauncherLayoutStore.RecordType && scope.Id == current.Layout.AuthorityId);
+    private async Task<string?> RecordAsync(HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome,
+        LauncherSessionSnapshot original)
+    {
+        try
+        {
+            if ((await operations.CompleteExecutionAsync(capability, outcome, CancellationToken.None).ConfigureAwait(false)).Succeeded) return null;
+        }
+        catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException) { }
+        // This bounded in-process handle cache is not a second audit journal or a serializable permission.
+        var id = Guid.NewGuid().ToString("N"); _audits.Add(id, new(original.Actor, capability)); return id;
     }
 }

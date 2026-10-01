@@ -437,6 +437,70 @@ public sealed class CanvasArtifactSession
             return MutationChanged(pageId, stroke.StrokeId);
         });
 
+    public CanvasApiResult<CanvasMutationResult> DeleteStructuredStroke(
+        CanvasMutationRequest request, Guid pageId, Guid strokeId,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings = null) =>
+        MutateStructuredStroke(request, "Ink.Delete", pageId, strokeId, null,
+            _ => null, captureAccompanyingDocumentSettings);
+
+    public CanvasApiResult<CanvasMutationResult> TranslateStructuredStroke(
+        CanvasMutationRequest request, Guid pageId, Guid strokeId, double deltaX, double deltaY,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings = null) =>
+        MutateStructuredStroke(request, "Ink.Translate", pageId, strokeId, new { deltaX, deltaY },
+            stroke => stroke with
+            {
+                RevisionId = Guid.NewGuid(),
+                Samples = stroke.Samples.Select(sample => sample with
+                    { X = sample.X + deltaX, Y = sample.Y + deltaY }).ToList()
+            }, captureAccompanyingDocumentSettings,
+            double.IsFinite(deltaX) && double.IsFinite(deltaY), deltaX == 0 && deltaY == 0);
+
+    private CanvasApiResult<CanvasMutationResult> MutateStructuredStroke(
+        CanvasMutationRequest request, string action, Guid pageId, Guid strokeId, object? input,
+        Func<CanvasInkStroke, CanvasInkStroke?> edit,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings,
+        bool validInput = true, bool noChange = false) =>
+        Mutate(request, action, strokeId, new { pageId, input = validInput ? input : null }, artifact =>
+        {
+            if (!validInput)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Stroke translation must be finite.");
+            var pageIndex = artifact.Pages.FindIndex(page => page.PageId == pageId);
+            if (pageIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
+            var page = artifact.Pages[pageIndex];
+            var strokeIndex = page.Strokes.FindIndex(stroke => stroke.StrokeId == strokeId);
+            if (strokeIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas stroke was not found.");
+            var stroke = page.Strokes[strokeIndex];
+            if (page.Layers.First(layer => layer.LayerId == stroke.LayerId).IsLocked)
+                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on a locked layer cannot be edited.");
+            if (noChange) return MutationNoChange();
+            CanvasInkStroke? replacement;
+            try
+            {
+                replacement = edit(stroke);
+                if (replacement is not null) replacement = CloneStroke(replacement);
+            }
+            catch (CanvasArtifactFormatException)
+            { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Edited stroke failed semantic validation."); }
+            // No donor callback before revision, replay, lock and sample checks.
+            // The returned snapshot shares this mutation's revision/history boundary.
+            var settings = captureAccompanyingDocumentSettings?.Invoke();
+            if (captureAccompanyingDocumentSettings is not null && settings is null)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Accompanying document settings are required.");
+            var capturedSettings = settings is null ? null
+                : JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            var strokes = page.Strokes.ToList();
+            if (replacement is null) strokes.RemoveAt(strokeIndex);
+            else strokes[strokeIndex] = replacement;
+            artifact.Pages[pageIndex] = page with
+            {
+                Strokes = strokes,
+                StrokeOrder = replacement is null ? page.StrokeOrder.Where(id => id != strokeId).ToList() : page.StrokeOrder,
+                RevisionId = Guid.NewGuid()
+            };
+            if (capturedSettings is not null) artifact.DocumentSettings = capturedSettings;
+            return MutationChanged(pageId, strokeId);
+        });
+
     public CanvasApiResult<CanvasMutationResult> UpdateDocumentSettings(CanvasMutationRequest request, CanvasDocumentSettings settings) =>
         Mutate(request, "DocumentSettings.Update", _artifact.ArtifactId, settings, artifact =>
         {

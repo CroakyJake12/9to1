@@ -14,7 +14,7 @@ public sealed class DataWorkbookMutationAccessResolver(IDataWorkbookRepository w
         ResourceScope scope, CancellationToken cancellationToken)
     {
         ResourceAccessDecision Deny() => new(false, "PermissionDenied", actor.ActorId, scope.Revision, actor.OrganisationId);
-        if (workbooks is not IDataGuardedWorkbookRepository || actionId != DataRecordUpdateIntent.ActionId
+        if (workbooks is not IDataGuardedWorkbookRepository || actionId != DataRecordUpdateIntent.ActionId && actionId != DataTableSchemaUpdateIntent.ActionID && actionId != DataRelationshipUpdateIntent.ActionID
             || scope.Kind != ResourceKind || scope.Access != ResourceAccess.Write) return Deny();
         var parts = scope.Id.Split('/');
         if (parts.Length != 2 || !Guid.TryParse(parts[0], out var storeID) || !Guid.TryParse(parts[1], out var workbookID)
@@ -112,6 +112,6 @@ public sealed class DataHomeRecordUpdateOperation(IDataWorkbookRepository workbo
 public sealed class DataMutationActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-        appId == DataRecordUpdateIntent.TargetAppId && actionId == DataRecordUpdateIntent.ActionId
+        appId == DataRecordUpdateIntent.TargetAppId && (actionId == DataRecordUpdateIntent.ActionId || actionId == DataTableSchemaUpdateIntent.ActionID || actionId == DataRelationshipUpdateIntent.ActionID)
             ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, true, false, true) : null;
 }

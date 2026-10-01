@@ -59,6 +59,7 @@ internal static class TerminalAppSurfaceSpecs
         CreationFailureFailsClosedAndRedactsReason();
         await AdviceNeverExecutesSuggestedCommandsAsync();
         await AiResolutionCannotOutliveItsSessionContextAsync();
+        await RetainedAuditSurvivesCancellationAndSessionChangeWithoutActionReplayAsync();
     }
 
     private static async Task AiResolutionCannotOutliveItsSessionContextAsync()
@@ -99,17 +100,46 @@ internal static class TerminalAppSurfaceSpecs
         await surface.SetWorkingDirectoryAsync(Path.GetTempPath());
         Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),null)).State==TerminalAppCommandState.Unavailable,"directory transition invalidates resolved action");
     }
+    private static async Task RetainedAuditSurvivesCancellationAndSessionChangeWithoutActionReplayAsync()
+    {
+        var broker = new DelayedActionBroker { PauseExecution = true };
+        using var surface = new TerminalAppSurface(new(new FakeSessionFactory(), () => PermissionMode.FullAccess, NaturalLanguageActions: broker));
+        surface.SetMode(TerminalInputMode.AI);
+        var resolution = surface.SubmitAsync("controlled first action"); broker.Complete(); await resolution;
+        var first = surface.ResolvedAction!;
+        using var cancellation = new CancellationTokenSource();
+        var execution = surface.ExecuteResolvedActionAsync(first.Id.ToString("D"), null, cancellation.Token);
+        resolution = surface.SubmitAsync("controlled later action"); broker.Complete(); await resolution;
+        var later = surface.ResolvedAction!;
+        Check((await surface.ExecuteResolvedActionAsync(later.Id.ToString("D"), null)).State == TerminalAppCommandState.Unavailable && broker.Executions == 1,
+            "another action cannot dispatch while the first owner outcome is pending");
+        cancellation.Cancel(); broker.CompleteExecution();
+        Check((await execution).State == TerminalAppCommandState.NeedsRecovery && surface.AuditRecoveryActionId == first.Id,
+            "cancellation after owning result cannot discard exact audit recovery");
+        Check(surface.NewSession(), "replacement session for audit boundary created");
+        surface.SetMode(TerminalInputMode.Command);
+        Check((await surface.RetryActionAuditAsync(Guid.NewGuid())).State == TerminalAppCommandState.Unavailable && broker.AuditRetries == 0,
+            "foreign displayed action cannot retry retained audit");
+        Check((await surface.RetryActionAuditAsync(first.Id)).State == TerminalAppCommandState.Succeeded && surface.AuditRecoveryActionId is null &&
+            broker.Executions == 1 && broker.AuditRetries == 1, "session change audit retry cannot redispatch the consumed owner action");
+    }
+
     private sealed class DelayedActionBroker:ITerminalActionBroker
     {
         private TaskCompletionSource<TerminalResolvedAction> _pending=null!;private Guid _session;private TerminalEnvironmentId _environment;
         public List<string> Objects {get;private set;}=[];public int Executions {get;private set;}
         public bool RequireApproval { get; set; }
+        public bool PauseExecution; public int AuditRetries;
+        private readonly TaskCompletionSource<TerminalActionExecutionResult> _execution = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public void CompleteExecution() => _execution.TrySetResult(new(false, "NeedsRecovery", "Controlled owner outcome needs audit recovery."));
+        public Task<TerminalActionExecutionResult> RetryAuditAsync(Guid actionId, CancellationToken ct = default)
+        { AuditRetries++; return Task.FromResult(new TerminalActionExecutionResult(false, "AuditRecorded", "Controlled exact audit observed.")); }
         public Action? BeforeExecution { get; set; }
         public Task<TerminalResolvedAction> ResolveAsync(Guid session,TerminalEnvironmentId environment,string request,CancellationToken ct)
         { _session=session;_environment=environment;_pending=new(TaskCreationOptions.RunContinuationsAsynchronously);Objects=["fixture-file"];return _pending.Task; }
         public void Complete(bool foreign=false)=>_pending.SetResult(new(Guid.NewGuid(),foreign?Guid.NewGuid():_session,_environment,TerminalActionKind.TypedApi,"Files","List","Show files",Objects,TerminalActionRisk.ReadOnly,true,false));
         public Task<TerminalActionExecutionResult> ExecuteAsync(TerminalResolvedAction action,string? verificationToken,CancellationToken ct)
-        { BeforeExecution?.Invoke(); if (RequireApproval) return Task.FromResult(new TerminalActionExecutionResult(false,"PermissionRequired","Review in Home", "home-request")); Executions++;return Task.FromResult(new TerminalActionExecutionResult(true,"Executed","Fixture broker executed"));}
+        { BeforeExecution?.Invoke(); if (RequireApproval) return Task.FromResult(new TerminalActionExecutionResult(false,"PermissionRequired","Review in Home", "home-request")); Executions++;return PauseExecution ? _execution.Task : Task.FromResult(new TerminalActionExecutionResult(true,"Executed","Fixture broker executed"));}
     }
 
     private static async Task AdviceNeverExecutesSuggestedCommandsAsync()

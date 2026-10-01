@@ -71,13 +71,11 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         return await ReadConversationsAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task DetachSpaceAsync(Guid spaceId, CancellationToken cancellationToken)
+    /// <summary>Legacy unscoped detachment cannot bypass the supported owning Space writer.</summary>
+    public Task DetachSpaceAsync(Guid spaceId, CancellationToken cancellationToken)
     {
-        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE conversations SET space_id=NULL WHERE space_id=$spaceId;";
-        command.Parameters.AddWithValue("$spaceId", spaceId.ToString());
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        throw new NotSupportedException("Space membership changes require the owning guarded writer and exact current canonical rows.");
     }
 
     private static ConversationKind KindForScope(ConversationScopeKind kind) => kind switch

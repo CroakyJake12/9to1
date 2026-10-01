@@ -482,7 +482,7 @@ internal sealed class SpacesHavenScene : IDisposable
         var id = _selected.Id;
         var popup = new PopupMenu(Delete, Root,
         [
-            new PopupMenuItem("Delete permanently", () => ConfirmDelete(id), true, "trash"),
+            new PopupMenuItem("Delete Space", () => ConfirmDelete(id), true, "trash"),
             new PopupMenuItem("Cancel", () => { })
         ], 240d, $"Delete {_selected.Name}");
         Root.Add(popup);

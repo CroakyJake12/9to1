@@ -25,6 +25,12 @@ public sealed partial class App : Avalonia.Application
     private bool _exceptionHooksAttached;
     internal static IServiceProvider? Services { get; private set; }
 
+    internal static void AddAgentTaskRuntime(IServiceCollection collection)
+    {
+        collection.AddSingleton<AgentTaskRuntimeService>();
+        collection.AddSingleton<IRecordedAgentInvocationSource>(services => services.GetRequiredService<AgentTaskRuntimeService>());
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -152,7 +158,7 @@ public sealed partial class App : Avalonia.Application
         
         collection.AddSingleton<FloatingActivityStateStore>();
         collection.AddSingleton<Haven.Desktop.Views.Pages.Imagine.VisionWorkspaceStateStore>();
-        collection.AddSingleton<AgentTaskRuntimeService>();
+        AddAgentTaskRuntime(collection);
 #if ANDROID
         collection.AddSingleton<IFloatingActivityHost, global::Haven.Android.Compatibility.AndroidFloatingActivityHost>();
 #else

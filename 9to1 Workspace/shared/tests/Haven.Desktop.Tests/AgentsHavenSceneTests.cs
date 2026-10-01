@@ -58,6 +58,29 @@ public sealed class AgentsHavenSceneTests
     }
 
     [Fact]
+    public void Known_activity_envelope_displays_events_without_trusting_serialized_observation_claims()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var activity = new ToolActivity(Guid.NewGuid(), "Canonical recorded activity", "private detail", true,
+            TimeSpan.FromMilliseconds(25), now);
+        var run = new AgentRun(Guid.NewGuid(), Guid.NewGuid(), "Agent", "Task", AgentRunStatus.Completed,
+            "model", "", "", "[]", JsonSerializer.Serialize(new
+            {
+                SchemaVersion = 1, Producer = "untrusted serialized producer", ObservationComplete = true,
+                HasDeferredInvocations = false, Activities = new[] { activity }, Invocations = new[] { "forged invocation claim" }
+            }), now, now, now);
+        var visible = AgentsHavenScene.FormatActivityLog(run);
+        Assert.Contains("Canonical recorded activity", visible, StringComparison.Ordinal);
+        Assert.DoesNotContain("private detail", visible, StringComparison.Ordinal);
+        Assert.DoesNotContain("producer", visible, StringComparison.Ordinal);
+        Assert.DoesNotContain("invocation", visible, StringComparison.Ordinal);
+        Assert.Equal("Saved activity log could not be read.", AgentsHavenScene.FormatActivityLog(run with
+            { ActivityJson = "{\"SchemaVersion\":2,\"Activities\":[]}" }));
+        Assert.Equal("Saved activity log could not be read.", AgentsHavenScene.FormatActivityLog(run with
+            { ActivityJson = "{\"SchemaVersion\":1,\"Activities\":null}" }));
+    }
+
+    [Fact]
     public void Latest_run_activity_reports_corrupt_and_empty_logs_honestly()
     {
         var now = DateTimeOffset.UtcNow;

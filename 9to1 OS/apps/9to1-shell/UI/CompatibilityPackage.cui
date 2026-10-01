@@ -1,0 +1,17 @@
+<Cui id="compatibility-package" version="1">
+  <StackPanel spacing="12">
+    <TextBlock text="Application package" />
+    <TextBlock text="{Binding Name}" text-wrapping="Wrap" />
+    <TextBlock text="{Binding Format}" />
+    <TextBlock text="{Binding Architecture}" text-wrapping="Wrap" />
+    <TextBlock text="{Binding DeclaredIdentity}" text-wrapping="Wrap" />
+    <TextBlock text="Publisher: not verified" />
+    <TextBlock text="This host can inspect the package. Installation is currently unavailable." text-wrapping="Wrap" />
+    <TextBlock text="{Binding Status}" text-wrapping="Wrap" />
+    <WrapPanel>
+      <Button content="Check package again" action="Refresh" is-enabled="{Binding CanRefresh}" />
+      <Button content="Install" is-enabled="False" />
+      <Button content="Close" action="Close" />
+    </WrapPanel>
+  </StackPanel>
+</Cui>

@@ -30,7 +30,34 @@ public sealed class ExternalConnectionRepository(ISqliteConnectionFactory factor
     public async Task UpsertAsync(ExternalConnection item, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await WriteAsync(connection, null, item, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<bool> CompareExchangeAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken)
+    {
+        if (expected is not null && (expected.Id != replacement.Id || expected.CreatedAt != replacement.CreatedAt))
+            throw new ArgumentException("Guarded publication must preserve connection identity.", nameof(replacement));
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction();
+        ExternalConnection? current;
+        await using (var read = connection.CreateCommand())
+        {
+            read.Transaction = transaction;
+            read.CommandText = "SELECT * FROM external_connections WHERE id=$id LIMIT 1;";
+            read.Parameters.AddWithValue("$id", replacement.Id.ToString());
+            await using var reader = await read.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            current = await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ? Read(reader) : null;
+        }
+        if (current != expected) return false;
+        await WriteAsync(connection, transaction, replacement, cancellationToken).ConfigureAwait(false);
+        transaction.Commit();
+        return true;
+    }
+
+    private static async Task WriteAsync(SqliteConnection connection, SqliteTransaction? transaction, ExternalConnection item, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO external_connections(id,name,provider_key,kind,preset_key,is_enabled,state,status,configuration_json,server_name,server_version,protocol_version,created_at,updated_at,capability_snapshot_json,capability_snapshot_version)
             VALUES($id,$name,$provider,$kind,$preset,$enabled,$state,$status,$config,$serverName,$serverVersion,$protocol,$created,$updated,$snapshot,$snapshotVersion)

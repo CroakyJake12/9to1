@@ -159,12 +159,11 @@ public sealed partial class MainView
         ApplyShellVisualState();
     }
 
-    private async Task DeleteSpaceAsync(Guid spaceId)
+    private async Task DeleteSpaceAsync(SpaceDefinition displayed)
     {
         var workspace = await GetOwnedSpacesWorkspaceAsync(CancellationToken.None);
-        var space = await workspace.Registry.ReadExistingAsync(spaceId, CancellationToken.None)
-            ?? throw new InvalidOperationException("The current Space is unavailable.");
-        var operation = await workspace.Deletion.BeginAsync(spaceId, space.Revision, Guid.NewGuid(), CancellationToken.None);
+        var spaceId = displayed.Id;
+        var operation = await workspace.Deletion.BeginAsync(spaceId, displayed.Revision, Guid.NewGuid(), CancellationToken.None);
         if (operation.Stage != SpaceDeletionStage.Complete)
             throw new InvalidOperationException("Space deletion remains pending. Reopen Spaces to resume recovery.");
         if (_newChatPage?.CurrentConversation.SpaceId == spaceId)

@@ -21,7 +21,8 @@ use rnote_compose::penpath::Element;
 use rnote_compose::style::smooth::SmoothOptions;
 use rnote_compose::utils::{add_xml_header, wrap_svg_root};
 use rnote_compose::builders::ShapeBuilderType;
-use rnote_compose::Color;
+use rnote_compose::{Color, Transformable};
+use rnote_compose::shapes::Shapeable;
 use rnote_engine::engine::export::{DocExportFormat, DocExportPrefs};
 use rnote_engine::engine::import::XoppImportPrefs;
 use rnote_engine::engine::{EngineConfig, EngineConfigShared};
@@ -30,6 +31,7 @@ use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
 use rnote_engine::pens::pensconfig::eraserconfig::{EraserConfig, EraserStyle};
 use rnote_engine::pens::{PenMode, PenStyle};
 use rnote_engine::Engine;
+use rnote_engine::strokes::Content;
 
 /// One normalized CakeOS/HUI pointer sample in Canvas document coordinates.
 ///
@@ -470,6 +472,42 @@ impl HeadlessCanvasEngine {
         Self::from_snapshot(snapshot).save_rnote().await
     }
 
+    /// Remove the exact persisted donor entity, preserving surviving slot keys,
+    /// chronology, document and camera. Canonical history owns this snapshot edit.
+    pub fn delete_stroke(&mut self, key: u64) -> Result<()> {
+        if self.stroke_active { anyhow::bail!("cannot delete during an active stroke"); }
+        let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(key));
+        let mut snapshot = self.engine.take_snapshot();
+        if !snapshot.stroke_components.contains_key(key) {
+            anyhow::bail!("native stroke key is not present in the current snapshot");
+        }
+        Arc::make_mut(&mut snapshot.stroke_components).remove(key);
+        Arc::make_mut(&mut snapshot.chrono_components).remove(key);
+        let _ = self.engine.load_snapshot(snapshot);
+        Ok(())
+    }
+
+    /// Apply the donor's own structured stroke translation, never a rendered
+    /// image transform or a reconstruction from sampled canonical geometry.
+    pub fn translate_stroke(&mut self, key: u64, delta_x: f64, delta_y: f64) -> Result<()> {
+        if self.stroke_active { anyhow::bail!("cannot translate during an active stroke"); }
+        if !delta_x.is_finite() || !delta_y.is_finite() {
+            anyhow::bail!("native stroke translation must be finite");
+        }
+        let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(key));
+        let mut snapshot = self.engine.take_snapshot();
+        let stroke = Arc::make_mut(&mut snapshot.stroke_components).get_mut(key)
+            .context("native stroke key is not present in the current snapshot")?;
+        Arc::make_mut(stroke).translate(Vector2::new(delta_x, delta_y));
+        let bounds = stroke.bounds();
+        if !bounds.mins.is_finite() || !bounds.maxs.is_finite() {
+            anyhow::bail!("translated donor geometry exceeds finite coordinates");
+        }
+        Arc::make_mut(stroke).update_geometry();
+        let _ = self.engine.load_snapshot(snapshot);
+        Ok(())
+    }
+
     pub fn can_undo(&self) -> bool {
         self.engine.can_undo()
     }
@@ -821,6 +859,39 @@ mod tests {
             assert!(canvas.selected_strokes_rnote(&[first_key, first_key]).await.is_err());
             assert!(canvas.selected_strokes_rnote(&[u64::MAX]).await.is_err());
             assert_eq!(canvas.stroke_keys().len(), 2); // read-only export
+        });
+    }
+
+    #[test]
+    fn keyed_mutations_use_donor_geometry_preserve_survivors_and_reject_without_side_effects() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            canvas.begin_stroke(CanvasPointerSample::new(10.0, 20.0, 0.2)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(40.0, 60.0, 0.7)).unwrap();
+            let first = canvas.stroke_keys()[0];
+            canvas.begin_stroke(CanvasPointerSample::new(500.0, 600.0, 0.4)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(540.0, 660.0, 0.8)).unwrap();
+            let second = *canvas.stroke_keys().iter().find(|key| **key != first).unwrap();
+            let original = canvas.engine.take_snapshot();
+            let first_key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(first));
+            let second_key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(second));
+            let first_bounds = original.stroke_components[first_key].bounds();
+            let untouched = serde_json::to_value(&original.stroke_components[second_key]).unwrap();
+            canvas.translate_stroke(first, 100.0, 200.0).unwrap();
+            let moved = canvas.engine.take_snapshot();
+            let moved_bounds = moved.stroke_components[first_key].bounds();
+            assert_eq!(first_bounds.mins + Vector2::new(100.0, 200.0), moved_bounds.mins);
+            assert_eq!(first_bounds.maxs + Vector2::new(100.0, 200.0), moved_bounds.maxs);
+            assert_eq!(untouched, serde_json::to_value(&moved.stroke_components[second_key]).unwrap());
+            let before_failure = serde_json::to_value(&moved).unwrap();
+            assert!(canvas.translate_stroke(first, f64::NAN, 0.0).is_err());
+            assert!(canvas.delete_stroke(u64::MAX).is_err());
+            assert_eq!(before_failure, serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+            canvas.delete_stroke(first).unwrap();
+            assert_eq!(canvas.stroke_keys(), vec![second]);
+            let reopened = HeadlessCanvasEngine::from_rnote(canvas.save_rnote().await.unwrap()).await.unwrap();
+            assert_eq!(reopened.stroke_keys(), vec![second]);
+            assert_eq!(untouched, serde_json::to_value(&reopened.engine.take_snapshot().stroke_components[second_key]).unwrap());
         });
     }
 

@@ -10,6 +10,62 @@ namespace NineToOne.Launcher.Tests;
 public sealed class LauncherSemanticTests
 {
     [Fact]
+    public async Task RetainedAssistantContextCannotAdoptAnotherAuthenticationSession()
+    {
+        using var f = new Fixture(); await f.Store.GetAsync();
+        var original = (await f.Session.ReadAsync())!;
+        var context = new LauncherAppAiContext(f.Session, expectedSession: original);
+        var captured = await context.CaptureAsync(default);
+        f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "replacement-session" };
+        Assert.NotNull(await f.Session.ReadAsync());
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await context.CaptureAsync(default));
+        var replacement = await new LauncherAppAiContext(f.Session).CaptureAsync(default);
+        Assert.NotEqual(captured.Revision, replacement.Revision);
+    }
+
+    [Fact]
+    public async Task RetainedAssistantContextRejectsSessionChangeDuringOwnerRead()
+    {
+        using var f = new Fixture(); await f.Store.GetAsync();
+        var original = (await f.Session.ReadAsync())!;
+        var context = new LauncherAppAiContext(f.Session, expectedSession: original);
+        f.Actors.OnNextRead = () => f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "changed-during-read" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await context.CaptureAsync(default));
+    }
+
+    [Fact]
+    public async Task OriginalAssistantActionCannotCreateReviewUnderReplacementSession()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var original = (await f.Session.ReadAsync())!;
+        var captured = await new LauncherAppAiContext(f.Session, expectedSession: original).CaptureAsync(default);
+        using var actions = new LauncherAppAiActions(f.Session, f.Owner, original);
+        var request = new AppAiActionRequest(LauncherSemanticFeatureProvider.AppId, LauncherSemanticFeatureProvider.EditAction,
+            JsonSerializer.SerializeToElement(new { Commands = new LauncherSemanticCommand[] { new LauncherCreatePageCommand("Old assistant") } }),
+            null, "original-assistant", AppAiAccessMode.Write, captured.Revision);
+        f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "replacement-session" };
+        var result = await actions.ExecuteAsync(request, default);
+        Assert.False(result.Succeeded); Assert.Equal("stale-context", result.ErrorCode);
+        Assert.Null(actions.PendingReviewRequestId); Assert.Equal(initial.Revision, (await f.Store.GetAsync()).Revision);
+    }
+
+    [Fact]
+    public async Task CachedContextRevisionCannotGrantActionInAnotherAuthenticationSession()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var context = await new LauncherAppAiContext(f.Session).CaptureAsync(default);
+        using var actions = new LauncherAppAiActions(f.Session, f.Owner);
+        var request = new AppAiActionRequest(LauncherSemanticFeatureProvider.AppId, LauncherSemanticFeatureProvider.EditAction,
+            JsonSerializer.SerializeToElement(new { Commands = new LauncherSemanticCommand[] { new LauncherCreatePageCommand("Stale caller") } }),
+            null, "stale-caller", AppAiAccessMode.Write, context.Revision);
+        f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "another-session-same-layout" };
+        var current = (await f.Session.ReadAsync())!; Assert.Equal(initial.Revision, current.Layout.Revision);
+        var result = await actions.ExecuteAsync(request, default);
+        Assert.False(result.Succeeded); Assert.Equal("stale-context", result.ErrorCode); Assert.Null(actions.PendingReviewRequestId);
+        Assert.Equal(initial.Revision, (await f.Store.GetAsync()).Revision);
+    }
+
+    [Fact]
     public async Task ActualHomeApprovalPersistsExactPreparedIdsOnceAndAuditsOwnerCommit()
     {
         using var f = new Fixture(); var initial = await f.Store.GetAsync();
@@ -250,15 +306,63 @@ public sealed class LauncherSemanticTests
             => ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("personal", "Personal", false, true,
                 [new("first", "first/main", "First app", "1", true), new("second", "second/main", "Second app", "1", true)])]);
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfirmedLayoutSurvivesAuditPermissionFaultAndExactRetryNeverWritesAgain(bool afterPublication)
+    {
+        using var f = new Fixture(auditFault: true, afterPublication: afterPublication); var initial = await f.Store.GetAsync();
+        var plan = await f.Owner.PrepareAsync(initial.AuthorityId, initial.Revision, [new LauncherCreatePageCommand("Committed once")]);
+        var pending = await f.Owner.ApplyAsync(plan); var requestId = pending.Value!.PendingApprovalRequestId!;
+        Assert.True((await f.Permissions.DecideAsync(requestId, HomeApprovalChoice.Accept)).Succeeded);
+        var saved = await f.Owner.ApplyAsync(plan, requestId);
+        Assert.True(saved.Succeeded); Assert.Equal("SavedAuditPending", saved.Code);
+        var receipt = saved.Value!.AuditReceiptId!; Assert.False(string.IsNullOrEmpty(receipt));
+        Assert.Equal(initial.Revision + 1, (await f.Store.GetAsync()).Revision);
+        var current = (await f.Session.ReadAsync())!;
+        Assert.Contains(receipt, await f.Owner.ReadPendingAuditIdsAsync(current));
+        Assert.False(await f.Owner.RetryAuditAsync(current, "copied-unrelated-id"));
+        Assert.True(await f.Owner.RetryAuditAsync(current, receipt));
+        Assert.False(await f.Owner.RetryAuditAsync(current, receipt));
+        Assert.Empty(await f.Owner.ReadPendingAuditIdsAsync(current));
+        Assert.Equal(initial.Revision + 1, (await f.Store.GetAsync()).Revision);
+        Assert.False((await f.Owner.ApplyAsync(plan, requestId)).Succeeded);
+        Assert.Equal(initial.Revision + 1, (await f.Store.GetAsync()).Revision);
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await f.Permissions.GetAuthorizationAsync(requestId)).State);
+        var audit = Assert.Single((await f.Permissions.GetSnapshotAsync()).RecentAuditEvents,
+            item => item.RequestId == requestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);
+        Assert.Equal("LAUNCHER_LAYOUT_COMMITTED", audit.ResultCode);
+    }
+    private sealed class AuditFaultStore(IHomeCoreStateStore inner, Actors actors, bool afterPublication) : IHomeCoreStateStore
+    {
+        private bool _fail = true;
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expected,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default)
+            => inner.WriteGuardedAsync(record, expected, actor, guard, ct);
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken ct = default)
+        {
+            if (_fail && record.Payload.GetRawText().Contains("LAUNCHER_LAYOUT_COMMITTED", StringComparison.Ordinal))
+            {
+                _fail = false;
+                if (afterPublication) await inner.WriteAsync(record, expected, ct);
+                actors.Current = actors.Current with { AuthenticationRevision = "audit-replacement-session" };
+                throw new UnauthorizedAccessException("Injected terminal audit permission failure, not owner mutation failure.");
+            }
+            return await inner.WriteAsync(record, expected, ct);
+        }
+    }
+
     private sealed class Fixture : IDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-launcher-semantic-" + Guid.NewGuid().ToString("N"));
         public Actors Actors { get; } = new(); public HomeLauncherLayoutStore Store { get; }
         public HomeLauncherSession Session { get; } public LauncherSemanticFeatureProvider Owner { get; }
         public HomePermissionTrustService Permissions { get; }
-        public Fixture(bool includeApps = false)
+        public Fixture(bool includeApps = false, bool auditFault = false, bool afterPublication = false)
         {
-            var home = new FileHomeCoreStateStore(Path.Combine(_root, "home.json"));
+            IHomeCoreStateStore home = new FileHomeCoreStateStore(Path.Combine(_root, "home.json"));
+            if (auditFault) home = new AuditFaultStore(home, Actors, afterPublication);
             var resources = new ResourceAuthorizationService(Actors, [new LauncherLayoutResourceResolver(home)]);
             Store = new(home, Actors, resources, new HomeInstalledApplicationRegistry(home, Actors, includeApps ? [new Provider()] : []));
             Session = new(Store, Actors, new HomeNativeWidgetRegistry(new UnavailablePeer(), Actors, resources));

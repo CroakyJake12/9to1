@@ -485,7 +485,21 @@ internal sealed class AgentsHavenScene : IDisposable
         ActivityLogEvent?[] activities;
         try
         {
-            activities = JsonSerializer.Deserialize<ActivityLogEvent?[]>(run.ActivityJson, ActivityJsonOptions) ?? [];
+            using var document = JsonDocument.Parse(run.ActivityJson,
+                new JsonDocumentOptions { MaxDepth = ActivityJsonOptions.MaxDepth });
+            var saved = document.RootElement;
+            if (saved.ValueKind == JsonValueKind.Object)
+            {
+                // This is display parsing only. Serialized completeness/producer stamps confer no evidence or grant.
+                if (!saved.TryGetProperty("SchemaVersion", out var version) || version.ValueKind != JsonValueKind.Number ||
+                    !version.TryGetInt32(out var schema) || schema != AgentActivityObservation.CurrentSchemaVersion ||
+                    !saved.TryGetProperty("Activities", out var events) || events.ValueKind != JsonValueKind.Array)
+                    return "Saved activity log could not be read.";
+                saved = events;
+            }
+            if (saved.ValueKind is not (JsonValueKind.Array or JsonValueKind.Null))
+                return "Saved activity log could not be read.";
+            activities = saved.Deserialize<ActivityLogEvent?[]>(ActivityJsonOptions) ?? [];
         }
         catch (JsonException)
         {

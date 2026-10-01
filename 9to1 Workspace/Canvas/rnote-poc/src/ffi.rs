@@ -660,6 +660,30 @@ pub extern "C" fn cake_canvas_save_rnote(
 #[unsafe(no_mangle)]
 pub extern "C" fn cake_canvas_selection_api_version() -> u32 { 1 }
 
+/// Additive keyed mutation API; drawing ABI and read-only selection stay stable.
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_stroke_mutation_api_version() -> u32 { 1 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_delete_stroke(handle: *mut c_void, key: u64) -> CakeCanvasStatus {
+    guard_status(|| {
+        let Some(result) = with_engine_mut(handle, |engine| engine.delete_stroke(key)) else {
+            return CakeCanvasStatus::InvalidHandle;
+        };
+        match result { Ok(()) => CakeCanvasStatus::Ok, Err(_) => CakeCanvasStatus::InvalidArgument }
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn cake_canvas_translate_stroke(handle: *mut c_void, key: u64, delta_x: f64, delta_y: f64) -> CakeCanvasStatus {
+    guard_status(|| {
+        let Some(result) = with_engine_mut(handle, |engine| engine.translate_stroke(key, delta_x, delta_y)) else {
+            return CakeCanvasStatus::InvalidHandle;
+        };
+        match result { Ok(()) => CakeCanvasStatus::Ok, Err(_) => CakeCanvasStatus::InvalidArgument }
+    })
+}
+
 /// Owned buffer of little-endian u64 donor keys, released by buffer_release.
 #[unsafe(no_mangle)]
 pub extern "C" fn cake_canvas_stroke_keys(handle: *const c_void, out_keys: *mut CakeCanvasBuffer) -> CakeCanvasStatus {

@@ -12,6 +12,32 @@ public sealed class DataProductionTests : IDisposable
     private readonly DataTestPaths _paths = new();
 
     [Fact]
+    public async Task Authored_schema_reopens_in_actual_workbook_and_xlsx_cannot_silently_discard_constraints()
+    {
+        var repository = new DataWorkbookRepository(_paths); var workbook = DataWorkbook.Create("Typed records");
+        var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "ID"); sheet.SetCell(1, 0, "1", kind: DataCellKind.Number);
+        var table = new DataTableDefinition { SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table); workbook.Normalize();
+        var fieldID = table.Fields[0].FieldID; var recordID = table.Records[0].RecordID;
+        var key = new DataKeyDefinition(Guid.NewGuid(), "ID", DataKeyKind.Primary, [fieldID]);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(fieldID, "ID", DataFieldType.Integer, false)], [key]).Workbook!;
+        // Repository format exercise; actual Home-approved owner publication is covered separately.
+        await repository.SaveAsync(workbook, "Typed format", CancellationToken.None);
+        var reopened = (await new DataWorkbookRepository(_paths).LoadAsync(workbook.Id, CancellationToken.None))!;
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, reopened.SchemaVersion);
+        Assert.Equal(key.KeyID, Assert.Single(reopened.Tables[0].RelationalSchema!.Keys).KeyID);
+        Assert.Equal(fieldID, Assert.Single(reopened.Tables[0].RelationalSchema!.Fields).FieldID);
+        Assert.Equal("1", DataTableIdentity.ReadCell(reopened, table.Id, recordID, fieldID)!.Value);
+        var destination = Path.Combine(_paths.DataDirectory, "keep.xlsx");
+        await File.WriteAllTextAsync(destination, "existing file");
+        var error = await Assert.ThrowsAsync<NotSupportedException>(() => new DataXlsxFormatService().ExportAsync(reopened, destination, CancellationToken.None));
+        Assert.StartsWith("XlsxRelationalProjectionUnavailable", error.Message);
+        Assert.Equal("existing file", await File.ReadAllTextAsync(destination));
+        Assert.Empty(Directory.EnumerateFiles(_paths.DataDirectory, "*.tmp"));
+    }
+
+    [Fact]
     public async Task Canonical_record_identity_survives_actual_repository_reopen_and_sort_commit()
     {
         var repository = new DataWorkbookRepository(_paths); var workbook = DataWorkbook.Create("Canonical records");

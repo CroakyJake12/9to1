@@ -9,12 +9,14 @@ using Haven.Application.Go;
 namespace NineToOne.Launcher;
 
 /// <summary>Current permission-filtered owning layout, not a second application index.</summary>
-public sealed class LauncherAppAiContext(HomeLauncherSession sessions, GoService? discovery = null, IInstalledApplicationRegistry? applications = null) : IAppAiContext
+public sealed class LauncherAppAiContext(HomeLauncherSession sessions, GoService? discovery = null, IInstalledApplicationRegistry? applications = null, LauncherSessionSnapshot? expectedSession = null) : IAppAiContext
 {
     public async ValueTask<AppAiContextSnapshot> CaptureAsync(CancellationToken ct)
     {
-        var session = await sessions.ReadAsync(ct).ConfigureAwait(false)
+        var session = expectedSession ?? await sessions.ReadAsync(ct).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The current Home launcher layout is unavailable.");
+        if (!await sessions.IsCurrentAsync(session, ct).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The original Home launcher session is no longer current.");
         var layout = session.Layout;
         var state = new Dictionary<string, JsonElement> { ["layout"] = JsonSerializer.SerializeToElement(layout.Current) };
         var labels = new List<object>(); var partial = discovery is null || applications is null;
@@ -39,14 +41,15 @@ public sealed class LauncherAppAiContext(HomeLauncherSession sessions, GoService
         return new(LauncherSemanticFeatureProvider.AppId, "launcher.home", layout.AuthorityId,
             $"Launcher: {layout.Current.Pages.Count} pages; active page {layout.Current.ActivePage.Name}", null,
             state,
-            AppAiDataSensitivity.UserContent, DateTimeOffset.UtcNow, Revision(layout));
+            AppAiDataSensitivity.UserContent, DateTimeOffset.UtcNow, Revision(session));
     }
-    internal static string Revision(LauncherStoredLayout layout) => layout.AuthorityId + ":" + layout.Revision.ToString(CultureInfo.InvariantCulture);
+    internal static string Revision(LauncherSessionSnapshot session) => session.Layout.AuthorityId + ":" + session.Layout.Revision.ToString(CultureInfo.InvariantCulture) + ":" +
+        Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(session.Actor)));
 }
 
 /// <summary>Bounded host intent cache only. The exact prepared plan survives same-action retry;
 /// neither this cache nor a generic AppAi approval token can grant the owning transaction.</summary>
-public sealed class LauncherAppAiActions(HomeLauncherSession sessions, LauncherSemanticFeatureProvider owner) : IAppAiResourceBrokerActions, IDisposable
+public sealed class LauncherAppAiActions(HomeLauncherSession sessions, LauncherSemanticFeatureProvider owner, LauncherSessionSnapshot? expectedSession = null) : IAppAiResourceBrokerActions, IDisposable
 {
     private sealed record Intent(LauncherSessionSnapshot Session, LauncherSemanticPlan Plan, string? PendingRequestId);
     private sealed record CommandInput(IReadOnlyList<LauncherSemanticCommand> Commands);
@@ -109,12 +112,13 @@ public sealed class LauncherAppAiActions(HomeLauncherSession sessions, LauncherS
         try
         {
             if (_disposed) return AppAiActionResult.Rejected("This launcher session is closed.", "launcher-session-closed");
-            var session = await sessions.ReadAsync(ct).ConfigureAwait(false);
-            if (session is null || request.ExpectedRevision != LauncherAppAiContext.Revision(session.Layout))
+            var session = expectedSession ?? await sessions.ReadAsync(ct).ConfigureAwait(false);
+            if (session is null || !await sessions.IsCurrentAsync(session, ct).ConfigureAwait(false) ||
+                request.ExpectedRevision != LauncherAppAiContext.Revision(session))
                 return AppAiActionResult.Rejected("Read the current Home layout before editing it.", "stale-context", true);
             foreach (var pair in _intents.ToArray())
                 if (!await sessions.IsCurrentAsync(pair.Value.Session, ct).ConfigureAwait(false)) _intents.Remove(pair.Key);
-            var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(LauncherAppAiContext.Revision(session.Layout) + "\n" + arguments.GetRawText())));
+            var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(LauncherAppAiContext.Revision(session) + "\n" + arguments.GetRawText())));
             if (!_intents.TryGetValue(key, out var intent))
             {
                 if (_intents.Count >= 8) return AppAiActionResult.Rejected("Close old launcher drafts before preparing another edit.", "launcher-draft-limit");

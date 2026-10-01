@@ -10,6 +10,34 @@ namespace HavenOS.Home.Tests;
 public sealed class HomeModelPickerRouteEditorTests
 {
     [Fact]
+    public async Task Audit_pending_is_visible_and_finish_dispatches_only_retained_audit()
+    {
+        var initial = Snapshot();
+        var saved = initial with { Revision = initial.Revision + 1, PendingAuditRequestId = "controlled-original-request" };
+        var provider = new FakeProvider(initial)
+        {
+            UpdateResult = new(true, "SavedAuditPending", "Saved; original audit pending.", saved)
+        };
+        var editor = new HomeModelPickerRouteEditor(provider);
+        Assert.True((await editor.RefreshAsync("global", "chat")).Succeeded);
+        var candidate = editor.Current.Candidates[0];
+        Assert.True(editor.SetCandidateEnabled(candidate.ProviderId, candidate.ModelId, candidate.ArtifactRevision, !candidate.Enabled).Succeeded);
+        Assert.True((await editor.SaveAsync()).Succeeded);
+        Assert.Equal("SavedAuditPending", editor.Current.StatusCode);
+        Assert.Equal(saved.PendingAuditRequestId, editor.Current.PendingAuditRequestId);
+        Assert.True(editor.Current.CanFinishAudit);
+        var originalEdit = provider.LastEdit;
+        Assert.Equal("AuditPending", (await editor.SaveAsync()).Code);
+        var document = new CuiRichParser().ParseFile(Path.Combine(AppContext.BaseDirectory, "UI", "ModelPicker.cui"));
+        var controller = new HomeModelPickerCuiController(editor, new(document));
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.FinishAudit))).Succeeded);
+        Assert.Null(editor.Current.PendingAuditRequestId);
+        Assert.False(editor.Current.CanFinishAudit);
+        Assert.Same(originalEdit, provider.LastEdit);
+        Assert.Equal(saved.PendingAuditRequestId, provider.LastAuditRequestId);
+    }
+
+    [Fact]
     public async Task Current_provider_model_revision_is_preserved_without_inventing_an_artifact_revision()
     {
         var initial = Snapshot();
@@ -255,6 +283,9 @@ public sealed class HomeModelPickerRouteEditorTests
         public HomeCoreOperationResult<HomeModelPickerSnapshot>? UpdateResult { get; init; }
         public HomeCoreOperationResult<HomeModelRoutePreview>? PreviewResult { get; init; }
         public HomeModelRouteEdit? LastEdit { get; private set; }
+        public string? LastAuditRequestId { get; private set; }
+        public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken ct = default)
+        { LastAuditRequestId = requestId; return Task.FromResult(new HomeCoreOperationResult<object>(true, "AuditRecorded", "Controlled audit acknowledgment.")); }
         public HomeModelRoutePreviewRequest? LastPreviewRequest { get; private set; }
 
         public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null,

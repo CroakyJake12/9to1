@@ -30,7 +30,8 @@ public sealed class TerminalCuiWorkspaceTests
             var factory = new PtyTerminalSessionFactory(environment, new UnixPtyProcessFactory(),
                 [new("native-ui-shell", "Fixture shell", "/bin/sh", ["-c", "exec sleep 30"], "native-ui-pty", false, TerminalEnvironmentConnectionState.Ready)]);
             var permission = PermissionMode.FullAccess;
-            using var surface = new TerminalAppSurface(new(factory, () => permission), root);
+            var auditBroker = new AuditBoundaryBroker();
+            using var surface = new TerminalAppSurface(new(factory, () => permission, NaturalLanguageActions: auditBroker), root);
             Assert.NotNull(surface.InteractiveSession);
             await using var native = HeadlessUnitTestSession.StartNew(typeof(TerminalUiTestApplication));
             await native.Dispatch(async () =>
@@ -83,10 +84,24 @@ public sealed class TerminalCuiWorkspaceTests
                 await workspace.DispatchAsync("TerminalDenyCommand", null);
                 Assert.Null(surface.PendingCommandId);
                 permission = PermissionMode.FullAccess;
+                await workspace.DispatchAsync("TerminalAiMode", null);
+                workspace.Bindings.Set("InputText", "controlled recovery boundary");
+                await workspace.DispatchAsync("TerminalSubmit", null);
+                await workspace.DispatchAsync("TerminalExecuteResolved", null);
+                Assert.NotNull(surface.AuditRecoveryActionId);
+                Assert.True(Assert.IsType<bool>(workspace.Bindings.Get("HasPendingAudit")));
+                var recoveryButton = Assert.Single(host.GetLogicalDescendants().OfType<Button>(),
+                    button => button.Content?.ToString() == "Retry outcome audit only");
+                Assert.True(recoveryButton.IsEnabled);
                 var firstSession = probe.Session;
                 await workspace.DispatchAsync("TerminalNewSession", null);
                 Assert.NotSame(firstSession, probe.Session);
                 Assert.Same(surface.InteractiveSession, probe.Session);
+                await workspace.DispatchAsync("TerminalRetryAudit", null);
+                Assert.Null(surface.AuditRecoveryActionId);
+                Assert.False(Assert.IsType<bool>(workspace.Bindings.Get("HasPendingAudit")));
+                Assert.Equal(1, auditBroker.Executions);
+                Assert.Equal(1, auditBroker.AuditRetries);
                 await Assert.ThrowsAsync<UnauthorizedAccessException>(() => firstInput(new byte[] { 65 }, default).AsTask());
                 var lastInput = probe.Input!;
                 workspace.Dispose();
@@ -97,6 +112,24 @@ public sealed class TerminalCuiWorkspaceTests
             }, default);
         }
         finally { Directory.Delete(root, true); }
+    }
+
+    // Controlled broker boundary only. Real signal effects and Home durable audit recovery
+    // are separately exercised by OwnedSignalSpecs with genuine Linux processes.
+    private sealed class AuditBoundaryBroker : ITerminalActionBroker
+    {
+        private Guid? _retained;
+        public int Executions; public int AuditRetries;
+        public Task<TerminalResolvedAction> ResolveAsync(Guid sessionId, TerminalEnvironmentId environmentId, string request, CancellationToken ct = default) =>
+            Task.FromResult(new TerminalResolvedAction(Guid.NewGuid(), sessionId, environmentId, TerminalActionKind.TypedApi,
+                "terminal", "terminal.signal", "Controlled audit boundary", [sessionId.ToString("D")], TerminalActionRisk.Mutating, false, false));
+        public Task<TerminalActionExecutionResult> ExecuteAsync(TerminalResolvedAction action, string? token = null, CancellationToken ct = default)
+        { Executions++; _retained = action.Id; return Task.FromResult(new TerminalActionExecutionResult(false, "NeedsRecovery", "Controlled pending audit.")); }
+        public Task<TerminalActionExecutionResult> RetryAuditAsync(Guid actionId, CancellationToken ct = default)
+        {
+            Assert.Equal(_retained, actionId); AuditRetries++; _retained = null;
+            return Task.FromResult(new TerminalActionExecutionResult(false, "AuditRecorded", "Only the retained audit was retried."));
+        }
     }
 
     [Fact]

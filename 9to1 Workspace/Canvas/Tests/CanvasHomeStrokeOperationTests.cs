@@ -103,6 +103,72 @@ public sealed class CanvasHomeStrokeOperationTests
         Assert.Empty(unchanged.Artifact.Pages[0].Strokes);
     }
 
+    [Fact]
+    public async Task Actual_Home_keyed_edits_commit_only_exact_approved_native_candidates_and_never_replay()
+    {
+        await using var fixture = await Fixture.Create();
+        var opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var draw = CanvasStrokeWriteIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), [new(10, 20, .2), new(40, 60, .7)]);
+        await new CanvasHomeStrokeOperation(fixture.Files, fixture.Home, fixture.Actors)
+            .ExecuteAsync(draw, await fixture.Approve(draw));
+        opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var stroke = Assert.Single(opened.Artifact.Pages[0].Strokes);
+        var owner = new CanvasHomeStrokeEditOperation(fixture.Files, fixture.Home, fixture.Actors);
+        var edit = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, CanvasStrokeEditKind.Translate, 100, 200);
+        var capability = await fixture.Approve(edit);
+        var changed = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, edit.OperationId, stroke.StrokeId, CanvasStrokeEditKind.Translate, 900, 950);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.ExecuteAsync(changed, capability));
+        var untouched = await fixture.Files.OpenAsync(fixture.FileId);
+        Assert.Equal(opened.CasRevisionId, untouched.CasRevisionId);
+        Assert.Equal(stroke.Samples, Assert.Single(untouched.Artifact.Pages[0].Strokes).Samples);
+        var committed = await owner.ExecuteAsync(edit, await fixture.Approve(edit));
+        Assert.Equal(opened.CasRevisionId, committed.FilesRevision.ParentRevisionId);
+        Assert.Equal(stroke.StrokeId, Assert.Single(committed.Artifact.Pages[0].Strokes).StrokeId);
+        Assert.Equal(stroke.Samples.Select(sample => sample with { X = sample.X + 100, Y = sample.Y + 200 }),
+            Assert.Single(committed.Artifact.Pages[0].Strokes).Samples);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => owner.ExecuteAsync(edit, capability));
+        opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var deletion = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, CanvasStrokeEditKind.Delete);
+        var deleted = await owner.ExecuteAsync(deletion, await fixture.Approve(deletion));
+        Assert.Empty(deleted.Artifact.Pages[0].Strokes);
+        using var reopened = CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize((await fixture.Files.OpenAsync(fixture.FileId)).Artifact));
+        using var native = RnoteCanvasEngine.Open(reopened.ExportRnote());
+        Assert.Empty(native.ReadStrokeKeys());
+    }
+
+    [Theory]
+    [InlineData(CanvasStrokeEditKind.Delete)]
+    [InlineData(CanvasStrokeEditKind.Translate)]
+    public async Task Keyed_edit_rechecks_changed_actor_after_claim_and_never_publishes_or_replays(CanvasStrokeEditKind kind)
+    {
+        await using var fixture = await Fixture.Create();
+        var opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var draw = CanvasStrokeWriteIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), [new(10, 20, .2), new(40, 60, .7)]);
+        await new CanvasHomeStrokeOperation(fixture.Files, fixture.Home, fixture.Actors)
+            .ExecuteAsync(draw, await fixture.Approve(draw));
+        opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var stroke = Assert.Single(opened.Artifact.Pages[0].Strokes);
+        var edit = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, kind,
+            kind == CanvasStrokeEditKind.Translate ? 100 : 0, kind == CanvasStrokeEditKind.Translate ? 200 : 0);
+        var capability = await fixture.Approve(edit);
+        var actor = (await fixture.Actors.GetCurrentAsync(default))!;
+        fixture.OnWriteAdmission = () => fixture.ActorOverride = actor with { AuthenticationRevision = "changed-after-edit-claim" };
+        var owner = new CanvasHomeStrokeEditOperation(fixture.Files, fixture.Home, fixture.Actors);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.ExecuteAsync(edit, capability));
+        fixture.ActorOverride = null;
+        var current = await fixture.Files.OpenAsync(fixture.FileId);
+        Assert.Equal(opened.CasRevisionId, current.CasRevisionId);
+        Assert.Equal(CanvasArtifactCodec.Serialize(opened.Artifact), CanvasArtifactCodec.Serialize(current.Artifact));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.ExecuteAsync(edit, capability));
+        Assert.Equal(opened.CasRevisionId, (await fixture.Files.OpenAsync(fixture.FileId)).CasRevisionId);
+    }
+
     private sealed class CommitLeaseHold(string statePath, CancellationToken token) : IAsyncDisposable
     {
         private readonly ManualResetEventSlim _acquired = new(false), _release = new(false);
@@ -299,6 +365,15 @@ public sealed class CanvasHomeStrokeOperationTests
         {
             var pending = await Home.AuthorizeAsync(CanvasCreateIntent.TargetAppId, CanvasCreateIntent.ActionId, intent.Scopes,
                 intent.Arguments, "Create the exact captured native Canvas in the configured folder", null, "native-owner-test-session");
+            Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
+            Assert.True((await Permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+            return Assert.IsType<HomeResourceExecutionCapability>(await Home.BeginExecutionCapabilityAsync(pending.RequestId, intent.Arguments));
+        }
+
+        public async Task<HomeResourceExecutionCapability> Approve(CanvasStrokeEditIntent intent)
+        {
+            var pending = await Home.AuthorizeAsync(CanvasStrokeWriteIntent.TargetAppId, CanvasStrokeWriteIntent.ActionId, intent.Scopes,
+                intent.Arguments, "Edit exactly the captured native stroke in this Canvas revision", null, "native-owner-test-session");
             Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
             Assert.True((await Permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
             return Assert.IsType<HomeResourceExecutionCapability>(await Home.BeginExecutionCapabilityAsync(pending.RequestId, intent.Arguments));

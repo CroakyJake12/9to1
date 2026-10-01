@@ -114,6 +114,12 @@ public sealed class ExternalConnectionRegistryLifecycleTests
         public Task<IReadOnlyList<ExternalConnection>> GetAllAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<ExternalConnection>>(_items.Values.ToArray());
         public Task<ExternalConnection?> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(_items.GetValueOrDefault(id));
         public Task UpsertAsync(ExternalConnection connection, CancellationToken cancellationToken) { _items[connection.Id] = connection; return Task.CompletedTask; }
+        public Task<bool> CompareExchangeAsync(ExternalConnection? expected, ExternalConnection replacement, CancellationToken cancellationToken)
+        {
+            if (_items.GetValueOrDefault(replacement.Id) != expected) return Task.FromResult(false);
+            _items[replacement.Id] = replacement;
+            return Task.FromResult(true);
+        }
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken) { _items.Remove(id); return Task.CompletedTask; }
     }
 

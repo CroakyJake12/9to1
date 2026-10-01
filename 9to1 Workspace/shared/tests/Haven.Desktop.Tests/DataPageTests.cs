@@ -287,6 +287,90 @@ public sealed class DataPageTests
         finally { window.Content = null; window.Close(); }
     }
 
+    [AvaloniaTheory]
+    [InlineData(DataFieldType.Text, "initial", "42", DataCellKind.Text)]
+    [InlineData(DataFieldType.Duration, "00:00:00", "01:02:03", DataCellKind.Text)]
+    [InlineData(DataFieldType.Boolean, "false", "true", DataCellKind.Boolean)]
+    public async Task Authored_field_cell_edit_preserves_declared_kind_instead_of_grid_inference(
+        DataFieldType type, string initial, string edited, DataCellKind expectedKind)
+    {
+        var workbook = DataWorkbook.Create("Typed cell"); var sheet = workbook.Sheets[0];
+        sheet.SetCell(0, 0, "Value"); sheet.SetCell(1, 0, initial, kind: expectedKind);
+        var table = new DataTableDefinition { SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table); workbook.Normalize();
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "Value", type)], []).Workbook!;
+        using var page = new DataPage(new HavenEventBus(), new FakeDataRepository(workbook), new FakeDataFormats(), new FakeDataQueries());
+        await page.InitializeAsync();
+        var surface = Assert.Single(page.Route.GridHost.Children.OfType<DataSpreadsheetSurface>());
+        surface.SelectCell(1, 0); page.Route.CellValueInput.Text = edited;
+        var cell = DataTableIdentity.ReadCell(page.Workbook!, table.Id, table.Records[0].RecordID, table.Fields[0].FieldID)!;
+        Assert.Equal(edited, cell.Value); Assert.Equal(expectedKind, cell.Kind); Assert.True(page.IsDirty);
+        Assert.Empty(DataRelationalSchema.Inspect(page.Workbook!));
+    }
+
+    [AvaloniaFact]
+    public async Task Table_design_retains_invalid_and_changed_review_drafts_and_never_uses_legacy_save()
+    {
+        var workbook = DataWorkbook.Create("Schema design"); workbook.Version = 1; workbook.RevisionId = Guid.NewGuid();
+        var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "Amount"); sheet.SetCell(1, 0, "1", kind: DataCellKind.Number);
+        var table = new DataTableDefinition { SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table); workbook.Normalize();
+        var repository = new FakeDataRepository(workbook); var owner = new SchemaDesignerFixture(workbook);
+        using var page = new DataPage(new HavenEventBus(), repository, new FakeDataFormats(), new FakeDataQueries(), schemaDesigner: owner);
+        await page.InitializeAsync();
+        Input FieldName() => Assert.IsType<Input>(page.SceneRoot.DescendantsAndSelf().Single(item => item.Name == $"Data.Schema.Name.{table.Fields[0].FieldID:N}"));
+        HavenButton Button(string name) => Assert.IsType<HavenButton>(page.SceneRoot.DescendantsAndSelf().Single(item => item.Name == name));
+        var field = FieldName(); field.Text = "";
+        PressSchemaButton(Button("Data.Schema.Review"));
+        Assert.Equal(0, owner.Reviews); Assert.Equal("", FieldName().Text); Assert.Equal(0, repository.SaveCalls);
+        field.Text = "Score";
+        PressSchemaButton(Button("Data.Schema.Review")); Assert.Equal(1, owner.Reviews);
+        Assert.Equal(table.Fields[0].FieldID, Assert.Single(owner.Review!.Intent.Schema.Fields).FieldID);
+        PressSchemaButton(Button("Data.Schema.Apply")); Assert.Equal(1, owner.Commits);
+        Assert.Null(page.Workbook!.Tables[0].RelationalSchema); Assert.Equal("Score", FieldName().Text);
+        field.Text = "Changed after review";
+        PressSchemaButton(Button("Data.Schema.Apply")); Assert.Equal(1, owner.Commits); Assert.Equal(0, repository.SaveCalls);
+        field.Text = "Score"; owner.Approved = true;
+        PressSchemaButton(Button("Data.Schema.Apply")); Assert.Equal(2, owner.Commits);
+        Assert.Equal("Score", page.Workbook!.Tables[0].RelationalSchema!.Fields[0].Name);
+        Assert.Equal("1", DataTableIdentity.ReadCell(page.Workbook, table.Id, table.Records[0].RecordID, table.Fields[0].FieldID)!.Value);
+        Assert.Equal(0, repository.SaveCalls); Assert.False(page.IsDirty);
+        var stale = Button("Data.Schema.Review"); page.Dispose(); PressSchemaButton(stale);
+        Assert.Equal(1, owner.Reviews);
+    }
+
+    private static void PressSchemaButton(HavenButton button)
+    {
+        Assert.True(button.KeyDown(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+        Assert.True(button.KeyUp(new HavenKeyInput(HavenKey.Enter, HavenKeyModifiers.None)));
+    }
+
+    // Native adapter fixture only; actual Home/SQL/File admission is exercised in Infrastructure tests.
+    private sealed class SchemaDesignerFixture(DataWorkbook initial) : IDataTableSchemaDesigner
+    {
+        public int Reviews { get; private set; }
+        public int Commits { get; private set; }
+        public bool Approved { get; set; }
+        public DataTableSchemaReview? Review { get; private set; }
+        public Task<DataTableSchemaReview> ReviewAsync(Guid workbookID, Guid tableID, int expectedVersion, Guid expectedRevision,
+            long? expectedSchemaRevision, IReadOnlyList<DataFieldDefinition> fields, IReadOnlyList<DataKeyDefinition> keys,
+            CancellationToken cancellationToken = default)
+        {
+            Reviews++; Review = new("native-fixture-review", DataTableSchemaUpdateIntent.Capture(Guid.NewGuid(), initial,
+                tableID, expectedSchemaRevision, fields, keys)); return Task.FromResult(Review);
+        }
+        public Task<DataTableSchemaDesignerCommit> CommitAsync(DataTableSchemaReview review, CancellationToken cancellationToken = default)
+        {
+            Commits++;
+            if (!Approved) return Task.FromResult(new DataTableSchemaDesignerCommit(false, "ApprovalRequired", null, false));
+            var candidate = DataTableDesign.SetSchema(initial, review.Intent.TableID, initial.Version, initial.RevisionId,
+                review.Intent.ExpectedSchemaRevision, review.Intent.Schema.Fields, review.Intent.Schema.Keys).Workbook!;
+            candidate.Version++; candidate.RevisionId = Guid.NewGuid();
+            return Task.FromResult(new DataTableSchemaDesignerCommit(true, "DataTableSchemaUpdated", candidate, true));
+        }
+    }
+
     private static void Click(HavenInputRouter router, HavenElement element)
     {
         var point = new HavenPoint(element.Bounds.X + element.Bounds.Width / 2, element.Bounds.Y + element.Bounds.Height / 2);

@@ -21,7 +21,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private readonly IConversationRepository? _conversations;
     private readonly Func<Conversation, Task>? _openConversation;
     private readonly Func<SpaceDefinition, Task>? _launchSpace;
-    private readonly Func<Guid, Task>? _deleteSpace;
+    private readonly Func<SpaceDefinition, Task>? _deleteSpace;
     private readonly Func<SpaceDefinition, Task>? _manageLayout;
     private readonly SpaceGeneratedSurfaceRenderer? _generatedSurfaceRenderer;
     private readonly SpaceEditPlanner? _editPlanner;
@@ -47,14 +47,14 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         SpaceGeneratedSurfaceRenderer? generatedSurfaceRenderer,
         SpaceEditPlanner? editPlanner,
         Func<SpaceDefinition, Task>? launchSpace = null,
-        Func<Guid, Task>? deleteSpace = null,
+        Func<SpaceDefinition, Task>? deleteSpace = null,
         Func<SpaceDefinition, Task>? manageLayout = null,
         IConversationRepository? conversations = null,
         Func<Conversation, Task>? openConversation = null,
         Func<SpaceDefinition, SpaceContextReference, Task>? openCanonicalSource = null,
         Func<CancellationToken, Task>? requireCurrentAccess = null, bool allowDelete = true)
     {
-        _allowDelete = allowDelete;
+        _allowDelete = allowDelete && deleteSpace is not null;
         _requireCurrentAccess = requireCurrentAccess;
         _openCanonicalSource = openCanonicalSource;
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
@@ -67,7 +67,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _manageLayout = manageLayout;
         _scene = new SpacesHavenScene { CanonicalSourceNavigationAvailable = _openCanonicalSource is not null };
         _scene.CanonicalSourceRequested += OnCanonicalSourceRequested;
-        _scene.SetDeleteAvailable(allowDelete);
+        _scene.SetDeleteAvailable(_allowDelete);
         _scene.SetLaunchAvailable(_launchSpace is not null);
         _scene.SetLayoutEditorAvailable(_manageLayout is not null);
         _scene.SetEditWithHavenAvailable(_editPlanner is not null);
@@ -298,19 +298,20 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async void OnDeleteRequested(object? sender, Guid id) => await DeleteSpaceAsync(id);
 
-    internal Task DeleteSpaceAsync(Guid id) => RunMutationAsync(async () =>
+    internal Task DeleteSpaceAsync(Guid id)
+    {
+        // Freeze the displayed revision before any owner/admission await or projection refresh.
+        var displayed = _spaces.FirstOrDefault(space => space.Id == id);
+        return RunMutationAsync(async () =>
         {
             if (!_allowDelete) throw new NotSupportedException("Space deletion is not available in this view yet.");
-            if (_deleteSpace is not null)
-                await _deleteSpace(id);
-            else
-            {
-                if (_conversations is not null) await _conversations.DetachSpaceAsync(id, CancellationToken.None);
-                await _registry.DeleteAsync(id, CancellationToken.None);
-            }
+            if (_deleteSpace is null) throw new UnauthorizedAccessException("Open Home to recover owning Space deletion access.");
+            if (displayed is null) throw new InvalidOperationException("Refresh the displayed Space before deleting it.");
+            await _deleteSpace(displayed);
             if (_selectedId == id) _selectedId = null;
             await RefreshAsync();
         }, "delete Space");
+    }
 
     private async void OnAddFileRequested(object? sender, SpaceFilePermission permission)
     {

@@ -64,10 +64,11 @@ public sealed class DataTableDefinition
     public bool SortDescending { get; set; }
     public List<DataTableFilter> Filters { get; set; } = [];
     public Dictionary<string, string> Metadata { get; set; } = new(StringComparer.Ordinal);
+    public DataTableSchema? RelationalSchema { get; set; }
     public int RecordIdentityVersion { get; set; }
     public List<DataTableField> Fields { get; set; } = [];
     public List<DataTableRecord> Records { get; set; } = [];
-    public void Normalize() { if (RecordIdentityVersion != 0) DataTableIdentity.ValidateTable(this); if (Id == Guid.Empty && RecordIdentityVersion != 0) throw new InvalidDataException("Canonical table identity is missing."); if (Id == Guid.Empty) Id = Guid.NewGuid(); Name = string.IsNullOrWhiteSpace(Name) ? "Table1" : Name.Trim(); Range ??= new(); Range.Normalize(); if (SortColumn is < 0 || SortColumn < Range.StartColumn || SortColumn > Range.EndColumn) SortColumn = null; Filters ??= []; foreach (var filter in Filters.Where(value => value is not null)) filter.Normalize(); Filters = Filters.Where(value => value is not null && value.Column >= Range.StartColumn && value.Column <= Range.EndColumn).OrderBy(value => value.Column).ThenBy(value => value.Operator).ThenBy(value => value.Value, StringComparer.OrdinalIgnoreCase).ToList(); Metadata ??= new(StringComparer.Ordinal); Fields ??= []; Records ??= []; }
+    public void Normalize() { if (RelationalSchema is not null && RecordIdentityVersion != 1) throw new InvalidDataException("Relational schema requires canonical record identities."); if (RecordIdentityVersion != 0) DataTableIdentity.ValidateTable(this); if (Id == Guid.Empty && RecordIdentityVersion != 0) throw new InvalidDataException("Canonical table identity is missing."); if (Id == Guid.Empty) Id = Guid.NewGuid(); Name = string.IsNullOrWhiteSpace(Name) ? "Table1" : Name.Trim(); Range ??= new(); Range.Normalize(); if (SortColumn is < 0 || SortColumn < Range.StartColumn || SortColumn > Range.EndColumn) SortColumn = null; Filters ??= []; foreach (var filter in Filters.Where(value => value is not null)) filter.Normalize(); Filters = Filters.Where(value => value is not null && value.Column >= Range.StartColumn && value.Column <= Range.EndColumn).OrderBy(value => value.Column).ThenBy(value => value.Operator).ThenBy(value => value.Value, StringComparer.OrdinalIgnoreCase).ToList(); Metadata ??= new(StringComparer.Ordinal); Fields ??= []; Records ??= []; }
 }
 
 public sealed class DataValidationRule
@@ -127,9 +128,18 @@ public static class DataSpreadsheetOperations
     public static void InsertColumns(DataSheet sheet, int index, int count = 1) => ChangeStructure(sheet, index, count, rows: false, delete: false);
     public static void DeleteColumns(DataSheet sheet, int index, int count = 1) => ChangeStructure(sheet, index, count, rows: false, delete: true);
 
-    private static void ChangeStructure(DataSheet sheet, int index, int count, bool rows, bool delete)
+    private static void ChangeStructure(DataSheet sheet, int index, int count, bool rows, bool delete, bool validateRelational = true)
     {
         ArgumentNullException.ThrowIfNull(sheet); ValidateStructural(index, count);
+        // Check the complete proposed structural change before mutating canonical cells or IDs.
+        if (validateRelational && sheet.Workbook is { } workbook
+            && (workbook.Relationships.Count != 0 || workbook.Tables.Any(table => table.RelationalSchema is not null)))
+        {
+            var candidate = System.Text.Json.JsonSerializer.Deserialize<DataWorkbook>(System.Text.Json.JsonSerializer.Serialize(workbook))!;
+            candidate.Normalize();
+            ChangeStructure(candidate.Sheets.Single(item => item.Id == sheet.Id), index, count, rows, delete, false);
+            candidate.Normalize();
+        }
         var end = checked(index + count);
         if (!delete && sheet.Cells.Any(cell => (rows ? cell.Row : cell.Column) >= index && (rows ? cell.Row : cell.Column) > int.MaxValue - count))
             throw new ArgumentOutOfRangeException(nameof(count), "The shifted cells exceed the sheet coordinate range.");
