@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "11bd77295fd0d41c12ad9a45ab71ff2c44a9e74c",
+  "programTree": "6f1bfc0b17dd5259429f5ca4d03662a53e430c16",
   "files": [
     {
       "path": ".editorconfig",
@@ -2961,9 +2961,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs",
       "mode": "100644",
-      "object": "ce104be43456975ade459198d332ad72c52ee6fb",
-      "sha256": "49caafeb0f5c6ef8132f310a1ee0eebbf07b3e9257507f7ac708d5a469c9461d",
-      "bytes": 13428
+      "object": "d0f625fe7f693522d2184b405d6f6ae96b42446a",
+      "sha256": "ad57556e8b0f5331c30879538ea20f17e2f5e18c13fb4f05123bfc117f9ae12d",
+      "bytes": 13717
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs",
@@ -63588,9 +63588,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs",
       "mode": "100644",
-      "object": "5604fc244298144c53bfe92b0edd409b565288bd",
-      "sha256": "ad392bbe3d84727b0776fc25540fb0de0ef12d8c238d33c80e1d85c9e07594c7",
-      "bytes": 2730
+      "object": "bdd3314f0c4857de3a26a57710c3423b06045bf3",
+      "sha256": "86bffc7aeb8445f03d0b54a4e858ffbde612ad4a6b1601293cdbb0e84c3f7374",
+      "bytes": 3226
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
@@ -63672,9 +63672,9 @@
     {
       "path": ".github/validation/astra-go28-test-classes.json",
       "mode": "100644",
-      "object": "6440ff2ae6dd3342fbca9922f73c46d59bd71c88",
-      "sha256": "9acb2fe9ece8bc7d7cb16b16e4c48e214e02ebee84fa4a4feeb39c34cafc253d",
-      "bytes": 12126
+      "object": "f41d01a9fb4a6c021c6fa7102bfe789fdd925ad4",
+      "sha256": "f1e56c8f5952f081425da193fb7ae6ce3ab7bf19f8e8ddd549582526ef13d467",
+      "bytes": 12595
     }
   ],
   "gitlinks": [
@@ -63936,19 +63936,19 @@
   ],
   "rootIndexSha256Before": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
   "rootIndexSha256After": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
-  "limits": "Exact coherent Go29 existing sources over Root896 including twelve explicitly awaited native callbacks in five fixture classes. Full owning Core Go classes and unfiltered OS package suites; real external Files mounting, registry authority, device and hardware-pointer acceptance remain separate.",
+  "limits": "Exact coherent Go30 existing sources over Root896, full owning Core Go classes and unfiltered OS package suite. Loader fixtures use actual presentation bindings; real external Files mounting, registry authority, device and hardware-pointer acceptance remain separate.",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-go28-managed-20261001-1810",
-  "metadataManifestSha256": "aa96c79686c4311d1986fe5087573e8f1ef5f47de401f486f067bb570ad625b9",
+  "metadataManifestSha256": "6ad71ddecc15c751ca4352257fcc01a436b1fda3829b6a461865c1f3c20923e5",
   "validationOnlyPaths": [
     ".github/scripts/astra-go28-hosted-managed.py",
     ".github/validation/astra-go28-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-go28-cut.json",
-  "predecessorValidationCommit": "c0eacb5201048ae177c7d52d9ff071e5e8651b7d",
-  "preservedPredecessorManifestSha256": "2671dda759278f84fb60251b5a9332ff1da34388573bc781560a552f15938649",
+  "predecessorValidationCommit": "29ce5a862d49646cdf1ba4369768b01539775c31",
+  "preservedPredecessorManifestSha256": "70620518eb4bd5d0af2522ee8811da909617b2cd7b929a97c862932408828c59",
   "asyncFixtureSuccessor": "Only Task-returning fixture assertions/signatures corrected; all production source and test assertions retained. Fresh run required.",
-  "successorQualification": "Production CUI029 duplicate stable-identity failure corrected by distinct authored IDs in duplicated linear/grouped result templates only. Every binding/action/Key/value unchanged; other28 sources exact previous29. No compiler/test Null-assertion weakening; full unfiltered OS rerun must pass.",
-  "go29ManifestSha256": "e2ec7021f7e235ae239a2b0790d45aa93116d5bb40e8619dc046d8911c9bfd70"
+  "successorQualification": "Two loader-only fixtures now populate the actual linear presentation collection and Search view alongside the same canonical backing results. Preserve Single, canonical action-parameter and disabled/layout assertions; production unchanged. Fresh full OS suite required.",
+  "go30ManifestSha256": "100973714f7a35adee6c9eaf85ead6c5cfba0983bf324b6090f0646d883f7035"
 }

@@ -21,19 +21,30 @@ public sealed class GoDisplayNativeTests
             var file = new GoResult("provider", new("Files", "file", "same-id", "1"), "File row", "Files", [new("Open", "Open")]);
             var project = file with { Label = "Project row", Reference = file.Reference with { Owner = "Projects", Kind = "project" } };
             var other = file with { Label = "Other provider row", ProviderId = "other-provider" };
-            using var bindings = new ShellViewModel(); bindings.TrySetValue("Results", new[] { file, project, other });
+            using var bindings = new ShellViewModel();
+            var searchRows = new[] { file, project, other };
+            Assert.True(bindings.TrySetValue("Results", searchRows));
+            Assert.True(bindings.TrySetValue("LinearGoResults", searchRows));
+            Assert.True(bindings.TrySetValue("Query", "row"));
+            Assert.True(bindings.TrySetValue("GoHomeView", "Search"));
             var dispatcher = new Recorder(); using var loader = new CuiControlLoader(TaskbarLayerSurface.CreateRegistry(dispatcher));
             loader.SetBindingContext(bindings); loader.SetActionDispatcher(dispatcher);
             using var stream = typeof(ShellConfiguration).Assembly.GetManifestResourceStream("NineToOne.Os.Shell.UI.Shell.cui");
             using var reader = new StreamReader(stream!); var (root, diagnostics) = loader.LoadMarkup(reader.ReadToEnd());
             Assert.NotNull(root); Assert.DoesNotContain(diagnostics, d => d.Severity == CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             loader.WireBindings(root!);
+            var window = new Window { Width = 1100, Height = 900, Content = root };
+            window.Show(); window.UpdateLayout();
+            try
+            {
             foreach (var canonical in new[] { file, project, other })
             {
                 var button = Assert.Single(Traverse(root!).OfType<Button>(), b => Equals(b.Content, canonical.Label));
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.Equal("Open", dispatcher.Command); Assert.Same(canonical, dispatcher.Parameter);
             }
+            }
+            finally { window.Close(); }
         }, CancellationToken.None);
     }
     private static IEnumerable<Control> Traverse(Control root)

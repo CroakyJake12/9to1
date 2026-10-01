@@ -56,7 +56,11 @@ public sealed class GoAndCuiTests
             var app = new GoResult("test", new("Home", "os.installed-application", Guid.NewGuid().ToString(), "1"), "Native app", "Apps", [new("Open", "Open")]);
             var otherApp = app with { Reference = app.Reference with { Id = Guid.NewGuid().ToString() }, Label = "Other native app" };
             var navigationOnly = new GoResult("other-owner", new("Files", "folder", Guid.NewGuid().ToString(), "1"), "Navigation-only result", "Files", [new("Navigate", "Navigate")]);
-            bindings.TrySetValue("Results", new[] { app, otherApp, navigationOnly });
+            // Search rows now render from the actual linear presentation projection.
+            var searchRows = new[] { app, otherApp, navigationOnly };
+            Assert.True(bindings.TrySetValue("Results", searchRows));
+            Assert.True(bindings.TrySetValue("LinearGoResults", searchRows));
+            Assert.True(bindings.TrySetValue("GoHomeView", "Search"));
             var firstPageItem = new DesktopPageItem(Guid.NewGuid(), DesktopPageItemKind.Application, "Page app", new("Home", "os.installed-application", app.Reference.Id), 0, 0, 2, 2);
             Assert.True(bindings.TrySetValue("PageColumns", "*,*,*,*")); Assert.True(bindings.TrySetValue("PageRows", "72,72,72,72"));
             bindings.TrySetValue("PageItems", new[] { firstPageItem, firstPageItem with { Id = Guid.NewGuid(), Label = "Other page app", Column = 2, Row = 2, ColumnSpan = 1, RowSpan = 1 } });
