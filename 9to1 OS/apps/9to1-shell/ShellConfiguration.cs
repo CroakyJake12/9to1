@@ -101,6 +101,7 @@ public interface IShellConfigurationStore
 {
     Task<ShellStoredConfiguration> ReadAsync(CancellationToken cancellationToken);
     Task<bool> TryWriteAsync(long expectedRevision, ShellStoredConfiguration next, CancellationToken cancellationToken);
+    Task<bool> IsCurrentSessionAsync(string authorityId, AuthenticatedResourceActor actor, CancellationToken cancellationToken) => Task.FromResult(false);
 }
 public sealed record ShellPreview(Guid Id, long BaseRevision, ShellConfiguration Candidate, DateTimeOffset ExpiresAt, string AuthorityId)
 {
@@ -109,6 +110,7 @@ public sealed record ShellPreview(Guid Id, long BaseRevision, ShellConfiguration
 public sealed record ShellConfigurationSnapshot(ShellStoredConfiguration Stored, ShellPreview? Preview)
 {
     public ShellConfiguration Effective => Preview?.Candidate ?? Stored.Current;
+    internal long IntentGeneration { get; init; }
 }
 
 /// <summary>Shared typed mutation engine. Preview is volatile; only Keep writes canonical Home state.</summary>
@@ -117,6 +119,11 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly TimeProvider _time = time ?? TimeProvider.System;
     private ShellPreview? _preview;
+    private long _intentGeneration;
+    internal Task<bool> IsCurrentSessionAsync(ShellStoredConfiguration expected, CancellationToken ct) => expected.SessionActor is { } actor
+        ? store.IsCurrentSessionAsync(expected.AuthorityId, actor, ct) : Task.FromResult(false);
+    private async Task RequireSessionAsync(string? authority, AuthenticatedResourceActor? actor, CancellationToken ct)
+    { if (authority is null || actor is null || !await store.IsCurrentSessionAsync(authority, actor, ct)) throw new UnauthorizedAccessException("The original Home session changed; reopen the shell before editing."); }
     public async Task<ShellConfigurationSnapshot> GetAsync(CancellationToken ct = default)
     {
         await _gate.WaitAsync(ct);
@@ -125,19 +132,26 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     public Task<ShellConfigurationSnapshot> PreviewAsync(ShellStoredConfiguration expected, ShellConfiguration candidate, TimeSpan duration, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(expected);
-        return PreviewCoreAsync(expected.Revision, expected.AuthorityId, expected.SessionActor, candidate, duration, ct);
+        return PreviewCoreAsync(expected.Revision, expected.AuthorityId, expected.SessionActor, candidate, duration, ct, null);
     }
+    internal Task<ShellConfigurationSnapshot> PreviewIfUnchangedAsync(ShellConfigurationSnapshot expected, ShellConfiguration candidate, TimeSpan duration, CancellationToken ct)
+        => PreviewCoreAsync(expected.Stored.Revision, expected.Stored.AuthorityId, expected.Stored.SessionActor, candidate, duration, ct, expected.IntentGeneration);
     private async Task<ShellConfigurationSnapshot> PreviewCoreAsync(long expectedRevision, string? expectedAuthority,
-        AuthenticatedResourceActor? expectedActor, ShellConfiguration candidate, TimeSpan duration, CancellationToken ct)
+        AuthenticatedResourceActor? expectedActor, ShellConfiguration candidate, TimeSpan duration, CancellationToken ct, long? expectedIntentGeneration)
     {
         candidate.Validate(); candidate = Clone(candidate);
         if (duration < TimeSpan.FromSeconds(5) || duration > TimeSpan.FromMinutes(5)) throw new ArgumentOutOfRangeException(nameof(duration));
         await _gate.WaitAsync(ct);
         try
         {
+            await RequireSessionAsync(expectedAuthority, expectedActor, ct);
             var stored = await ReadAsync(ct);
             if (expectedAuthority != stored.AuthorityId || expectedActor != stored.SessionActor) throw new UnauthorizedAccessException("Read the current Home profile before editing its shell configuration.");
             if (stored.Revision != expectedRevision) throw new ShellConfigurationConflictException();
+            Snapshot(stored);
+            if (expectedIntentGeneration is { } generation && (generation != _intentGeneration || _preview is not null))
+                throw new InvalidOperationException("The shell preview changed. Prepare a new intent before continuing.");
+            _intentGeneration = checked(_intentGeneration + 1);
             _preview = new(Guid.NewGuid(), expectedRevision, candidate, _time.GetUtcNow() + duration, stored.AuthorityId) { SessionActor = expectedActor };
             return Snapshot(stored);
         }
@@ -148,16 +162,17 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
         await _gate.WaitAsync(ct);
         try
         {
+            if (_preview is { } original) await RequireSessionAsync(original.AuthorityId, original.SessionActor, ct);
             var stored = await ReadAsync(ct);
-            if (_preview is { } pending && (pending.AuthorityId != stored.AuthorityId || pending.SessionActor != stored.SessionActor)) { _preview = null; throw new UnauthorizedAccessException("The Home profile changed; its previous preview cannot be kept."); }
-            if (_preview is { } stale && stale.BaseRevision != stored.Revision) { _preview = null; throw new ShellConfigurationConflictException(); }
+            if (_preview is { } pending && (pending.AuthorityId != stored.AuthorityId || pending.SessionActor != stored.SessionActor)) { ClearPreview(); throw new UnauthorizedAccessException("The Home profile changed; its previous preview cannot be kept."); }
+            if (_preview is { } stale && stale.BaseRevision != stored.Revision) { ClearPreview(); throw new ShellConfigurationConflictException(); }
             Snapshot(stored);
             var preview = _preview;
             if (preview is null || preview.Id != previewId) throw new InvalidOperationException("Preview expired or was replaced; existing configuration was preserved.");
-            if (stored.Revision != preview.BaseRevision) { _preview = null; throw new ShellConfigurationConflictException(); }
+            if (stored.Revision != preview.BaseRevision) { ClearPreview(); throw new ShellConfigurationConflictException(); }
             var next = new ShellStoredConfiguration(checked(stored.Revision + 1), Clone(preview.Candidate), Clone(stored.Current), stored.AuthorityId) { SessionActor = preview.SessionActor };
-            if (!await store.TryWriteAsync(stored.Revision, next, ct)) { _preview = null; throw new ShellConfigurationConflictException(); }
-            _preview = null;
+            if (!await store.TryWriteAsync(stored.Revision, next, ct)) { ClearPreview(); throw new ShellConfigurationConflictException(); }
+            ClearPreview();
             return Snapshot(next);
         }
         finally { _gate.Release(); }
@@ -165,7 +180,7 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     public async Task<ShellConfigurationSnapshot> RevertAsync(Guid previewId, CancellationToken ct = default)
     {
         await _gate.WaitAsync(ct);
-        try { var stored = await ReadAsync(ct); if (_preview?.Id == previewId) _preview = null; return Snapshot(stored); }
+        try { var stored = await ReadAsync(ct); if (_preview?.Id == previewId) ClearPreview(); return Snapshot(stored); }
         finally { _gate.Release(); }
     }
     private async Task<ShellStoredConfiguration> ReadAsync(CancellationToken ct)
@@ -176,10 +191,12 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     }
     private ShellConfigurationSnapshot Snapshot(ShellStoredConfiguration stored)
     {
-        if (_preview is { } p && (p.ExpiresAt <= _time.GetUtcNow() || p.BaseRevision != stored.Revision || p.AuthorityId != stored.AuthorityId || p.SessionActor != stored.SessionActor)) _preview = null;
+        if (_preview is { } p && (p.ExpiresAt <= _time.GetUtcNow() || p.BaseRevision != stored.Revision || p.AuthorityId != stored.AuthorityId || p.SessionActor != stored.SessionActor)) ClearPreview();
         return new(new(stored.Revision, Clone(stored.Current), stored.Previous is null ? null : Clone(stored.Previous), stored.AuthorityId) { SessionActor = stored.SessionActor },
-            _preview is null ? null : _preview with { Candidate = Clone(_preview.Candidate) });
+            _preview is null ? null : _preview with { Candidate = Clone(_preview.Candidate) }) { IntentGeneration = _intentGeneration };
     }
+    private void ClearPreview()
+    { if (_preview is not null) { _preview = null; _intentGeneration = checked(_intentGeneration + 1); } }
     private static ShellConfiguration Clone(ShellConfiguration source) => source with { GlobalDesktopSurface = source.GlobalDesktopSurface is null ? null : DesktopPageEdits.Clone(source.GlobalDesktopSurface), Spaces = source.Spaces.Select(s => s with { DesktopSurface = s.DesktopSurface is null ? null : DesktopPageEdits.Clone(s.DesktopSurface), Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
 }
 public sealed class ShellConfigurationConflictException() : IOException("Shell configuration changed concurrently. Reload before editing; existing configuration was preserved.");

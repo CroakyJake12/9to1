@@ -59,6 +59,13 @@ public sealed class VisionVoiceSessionService(MultimodalSessionStore store, Time
         LiveTranslateLanguageSet? languages = null,
         CancellationToken cancellationToken = default)
     {
+        if (languages is not null)
+        {
+            if (languages.Validate() is { } invalidLanguages)
+                return Failure(VisionVoiceErrorCode.InvalidRequest, invalidLanguages, "Languages", "SetMode");
+            languages = languages with { Locales = Array.AsReadOnly(languages.Locales.ToArray()),
+                Outputs = Array.AsReadOnly(languages.Outputs.ToArray()), GlossaryIds = Array.AsReadOnly(languages.GlossaryIds.ToArray()) };
+        }
         var current = await ReadAsync(sessionId, "SetMode", cancellationToken).ConfigureAwait(false);
         if (!current.IsSuccess) return current;
         if (current.Value!.Revision != expectedRevision)

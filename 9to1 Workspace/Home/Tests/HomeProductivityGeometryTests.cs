@@ -75,6 +75,40 @@ public sealed class HomeProductivityGeometryTests
         Assert.Equal(HomeProductivityAffine.Identity, HomeProductivityGeometryOperations.Read(source).LocalToDocument);
     }
 
+    [Fact]
+    public void Projection_does_not_add_a_second_case_alias_for_existing_geometry()
+    {
+        var source = Project(HomeProductivityAffine.Identity);
+        var raw = source.Layout.GetRawText().Replace("\"sharedGeometry\"", "\"SharedGeometry\"");
+        source = source with { Layout = JsonDocument.Parse(raw).RootElement.Clone() };
+        Assert.Throws<InvalidOperationException>(() => HomeProductivityGeometryOperations.Project(source,
+            new(1, "document-pixel", 100, 40, HomeProductivityAffine.Identity)));
+        Assert.Equal(raw, source.Layout.GetRawText());
+    }
+
+    [Theory]
+    [InlineData("alias")]
+    [InlineData("missing")]
+    [InlineData("duplicate")]
+    [InlineData("null")]
+    public void Ambiguous_or_incomplete_geometry_rejects_without_rewriting_source(string corruption)
+    {
+        var source = Project(HomeProductivityAffine.Identity);
+        var raw = source.Layout.GetRawText();
+        raw = corruption switch
+        {
+            "alias" => raw.Replace("\"localToDocument\"", "\"LocalToDocument\""),
+            "missing" => raw.Replace("\"m12\":0,", ""),
+            "duplicate" => raw.Replace("\"m11\":1", "\"m11\":1,\"M11\":2"),
+            "null" => raw.Replace("\"m11\":1", "\"m11\":null"),
+            _ => throw new InvalidOperationException()
+        };
+        source = source with { Layout = JsonDocument.Parse(raw).RootElement.Clone() };
+        Assert.Throws<InvalidDataException>(() => HomeProductivityGeometryOperations.Transform(source,
+            HomeProductivityAffine.Identity, HomeProductivityTransformSpace.Document, 0, 0));
+        Assert.Equal(raw, source.Layout.GetRawText());
+    }
+
     private static HomeProductivityObject Project(HomeProductivityAffine transform) =>
         HomeProductivityGeometryOperations.Project(NewObject(), new(1, "document-pixel", 100, 40, transform));
     private static HomeProductivityObject NewObject() => new(Guid.NewGuid(), "media.image", 1,

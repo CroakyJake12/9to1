@@ -17,16 +17,21 @@ public sealed record HomeProductivityObject(Guid ObjectId, string ObjectType, in
         IDictionary<string, JsonElement>? extensions) : this(objectId, objectType, schemaVersion, content, formatting, accessibility, assetReferences, layout)
     { Extensions = extensions; }
 }
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record HomeProductivityStyle(string StyleId, int Version, string DisplayName, string Scope,
     JsonElement Properties, JsonElement? AppExtensions = null)
 {
     public IReadOnlyList<string> BasedOnStyleIds { get; init; } = [];
     public HomeProductivityStyleSource? Source { get; init; }
 }
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record HomeProductivityStyleSource(string AppId, string ArtifactId, Guid FileId, Guid FilesRevisionId, string OwningRevision);
 public sealed record HomeProductivityObjectBundle(int FormatVersion, IReadOnlyList<HomeProductivityObject> Objects,
     IReadOnlyList<HomeProductivityStyle> Styles, IReadOnlyList<string> AssetReferences, JsonElement Accessibility,
-    JsonElement PortableFallback);
+    JsonElement PortableFallback)
+{
+    [JsonExtensionData] public IDictionary<string, JsonElement>? Extensions { get; init; }
+}
 public sealed record HomeProductivityCompatibility(string AppId, string AppVersion, int EngineVersion,
     IReadOnlyList<string> UnsupportedRequiredTypes, bool Compatible, string State);
 /// <summary>Preserves the owner's actual revision type; a GUID revision is never hashed into a sequence.</summary>
@@ -183,6 +188,8 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
         ArgumentNullException.ThrowIfNull(bundle);
         ArgumentNullException.ThrowIfNull(target);
         if (bundle.FormatVersion != 1) { code = "BundleVersionUnsupported"; return false; }
+        if (!ValidBundleObjects(bundle)) { code = "BundleInvalid"; return false; }
+        if (bundle.Extensions is { Count: > 0 }) { code = "BundleExtensionsUnsupported"; return false; }
         foreach (var item in bundle.Objects)
         {
             var schema = GetObjectSchema(item.ObjectType);
@@ -192,6 +199,11 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
                 code = target.SupportedObjectTypes.Contains("artifact.reference") ? "OfferArtifactEmbed" : "RequiredSchemaUnsupported";
                 return false;
             }
+            if (!NineToOne.Cui.AI.ActionJsonSchemaValidator.Validate(handler.Schema.Schema.GetRawText(), item.Content, out _))
+            { code = "ObjectContentInvalid"; return false; }
+            try { _ = handler.Create(item.ObjectId, item.Content); }
+            catch (Exception error) when (error is InvalidDataException or ArgumentException or NotSupportedException or JsonException)
+            { code = "ObjectContentInvalid"; return false; }
         }
         if (bundle.Styles is null || bundle.Styles.Count > 500 || bundle.Styles.Any(style => style is null || string.IsNullOrWhiteSpace(style.StyleId) || style.Version < 1 || string.IsNullOrWhiteSpace(style.Scope)) ||
             bundle.Styles.Select(style => style.StyleId).Distinct(StringComparer.Ordinal).Count() != bundle.Styles.Count)
@@ -390,14 +402,51 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
 
     public HomeProductivityObjectBundle ParseBundle(string json)
     {
-        var bundle = JsonSerializer.Deserialize<HomeProductivityObjectBundle>(json, _json)
-            ?? throw new InvalidDataException("Productivity object bundle is empty.");
+        if (string.IsNullOrWhiteSpace(json) || json.Length > 64 * 1024 * 1024)
+            throw new InvalidDataException("The shared object envelope is empty or exceeds the supported transport bound.");
+        HomeProductivityObjectBundle bundle;
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            RequireUniqueEnvelopeProperties(document.RootElement);
+            foreach (var property in document.RootElement.EnumerateObject())
+                if ((property.Name.Equals("objects", StringComparison.OrdinalIgnoreCase) ||
+                    property.Name.Equals("styles", StringComparison.OrdinalIgnoreCase)) && property.Value.ValueKind == JsonValueKind.Array)
+                    foreach (var item in property.Value.EnumerateArray()) RequireUniqueEnvelopeProperties(item);
+            bundle = JsonSerializer.Deserialize<HomeProductivityObjectBundle>(json, _json)
+                ?? throw new InvalidDataException("Productivity object bundle is empty.");
+        }
+        catch (JsonException error) { throw new InvalidDataException("The shared object envelope is malformed or contains unsupported style metadata; preserve its original data.", error); }
         if (bundle.FormatVersion != 1) throw new InvalidDataException("Productivity object bundle version is unsupported.");
+        if (!ValidBundleObjects(bundle) || bundle.Styles is null || bundle.Styles.Count > 500 ||
+            bundle.Styles.Any(style => style is null || string.IsNullOrWhiteSpace(style.StyleId) ||
+                style.Version < 1 || string.IsNullOrWhiteSpace(style.Scope) || style.Properties.ValueKind != JsonValueKind.Object ||
+                style.BasedOnStyleIds is null || style.BasedOnStyleIds.Count > 500 || style.BasedOnStyleIds.Any(string.IsNullOrWhiteSpace)) ||
+            bundle.Styles.Select(style => style.StyleId).Distinct(StringComparer.Ordinal).Count() != bundle.Styles.Count)
+            throw new InvalidDataException("The shared object envelope has invalid or ambiguous canonical identities or metadata.");
         foreach (var item in bundle.Objects)
             if (!_schemas.TryGetValue(item.ObjectType, out var schema) || item.SchemaVersion > schema.SchemaVersion)
                 throw new InvalidDataException($"Required productivity object schema '{item.ObjectType}' version {item.SchemaVersion} is unsupported.");
         return bundle;
     }
+
+    private static void RequireUniqueEnvelopeProperties(JsonElement value)
+    {
+        if (value.ValueKind != JsonValueKind.Object || value.EnumerateObject().Select(property => property.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase).Count() != value.EnumerateObject().Count())
+            throw new InvalidDataException("Shared envelope properties must be unique typed fields.");
+    }
+
+    private static bool ValidBundleObjects(HomeProductivityObjectBundle bundle) =>
+        bundle.Objects is not null && bundle.Objects.Count <= 10000 &&
+        bundle.Objects.All(item => item is not null && item.ObjectId != Guid.Empty && !string.IsNullOrWhiteSpace(item.ObjectType) &&
+            item.SchemaVersion >= 1 && item.Content.ValueKind != JsonValueKind.Undefined &&
+            item.Formatting.ValueKind == JsonValueKind.Object && item.Accessibility.ValueKind == JsonValueKind.Object &&
+            item.Layout.ValueKind == JsonValueKind.Object && item.AssetReferences is not null &&
+            item.AssetReferences.All(reference => !string.IsNullOrWhiteSpace(reference))) &&
+        bundle.Objects.Select(item => item.ObjectId).Distinct().Count() == bundle.Objects.Count &&
+        bundle.AssetReferences is not null && bundle.AssetReferences.All(reference => !string.IsNullOrWhiteSpace(reference)) &&
+        bundle.Accessibility.ValueKind == JsonValueKind.Object && bundle.PortableFallback.ValueKind != JsonValueKind.Undefined;
 
     private static HomeProductivityObject SnapshotObject(HomeProductivityObject value) => value with
     {

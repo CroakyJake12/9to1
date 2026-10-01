@@ -9,6 +9,7 @@ using HavenOS.Forms;
 
 namespace HavenOS.Forms.Tests;
 
+[Collection("Forms native renderer")]
 public sealed class FormNativePreviewTests
 {
     [Fact]

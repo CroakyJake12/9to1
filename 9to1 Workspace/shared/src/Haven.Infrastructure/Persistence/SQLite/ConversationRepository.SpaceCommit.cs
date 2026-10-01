@@ -60,7 +60,7 @@ public sealed partial class ConversationRepository : IConversationSpaceCommitSto
         if (!await admission.CheckAsync(new(identity, captured, ConversationSpaceCommitPhase.Admission), cancellationToken).ConfigureAwait(false))
             return new(ConversationSpaceCommitStatus.AdmissionRejected);
         foreach (var change in captured)
-            await UpsertCoreAsync(connection, transaction, change.Proposed, cancellationToken).ConfigureAwait(false);
+            await UpsertCoreAsync(connection, transaction, change.Proposed, cancellationToken, allowSpaceMembership: true).ConfigureAwait(false);
         if (!await admission.CheckAsync(new(identity, captured, ConversationSpaceCommitPhase.Publication), cancellationToken).ConfigureAwait(false))
             return new(ConversationSpaceCommitStatus.AdmissionRejected);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);

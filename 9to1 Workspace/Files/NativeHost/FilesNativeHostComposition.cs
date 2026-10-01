@@ -20,6 +20,7 @@ public static class FilesNativeHostComposition
         services.TryAddSingleton<NativeFilesMediaAssetSourceResolver>();
         services.TryAddSingleton<NativeFilesArtifactContentReader>();
         services.AddSingleton<IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
+        services.AddSingleton<IMediaRetainedAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());
         services.AddSingleton<ICanonicalResourceAccessResolver>(provider => new FilesArtifactResourceResolver(async (actor, token) =>
         {
             var workspace = await provider.GetRequiredService<NativeFilesWorkspaceAuthority>().GetCurrentAsync(token).ConfigureAwait(false);

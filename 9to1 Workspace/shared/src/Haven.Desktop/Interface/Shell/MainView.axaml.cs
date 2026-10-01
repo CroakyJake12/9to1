@@ -931,6 +931,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             _customTemplate,
             Haven.Desktop.App.Services?.GetService<IMessageAttachmentService>(),
             Haven.Desktop.App.Services?.GetService<IConversationProductionRepository>());
+        page.ConfigureSpaceMembership(CreateOwnedSpaceChatAsync, AssignOwnedSpaceAsync);
         page.ModelChanged += OnNewChatModelChanged;
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
         page.AddActionSelected += OnNewChatAddActionSelected;

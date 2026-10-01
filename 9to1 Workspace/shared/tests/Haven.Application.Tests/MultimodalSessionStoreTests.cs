@@ -236,6 +236,97 @@ public sealed class MultimodalSessionStoreTests
         Assert.Equal(2, (await first.GetAsync(initial.SessionId, CancellationToken.None))!.Revision);
     }
 
+    [Fact]
+    public async Task Awaited_create_and_update_capture_nested_languages_sources_and_resume_outline()
+    {
+        var settings = new MemorySettingsStore { PauseNextRead = true };
+        var store = new MultimodalSessionStore(settings);
+        string[] locales = ["en-GB", "fr-FR"];
+        LiveTranslateOutputPreference[] outputs = [new("fr-FR", true, false)];
+        string[] glossaries = ["original-glossary"];
+        VisualSourceDescriptor[] sources = [new(Guid.NewGuid(), VisualSourceType.UploadedImage,
+            "explicit-upload", "original", VisualSourceState.Active, false, true, DateTimeOffset.UtcNow)];
+        var initial = CreateSession() with { VoiceMode = VisionVoiceMode.LiveTranslate,
+            VisualSources = sources, LiveTranslateLanguages = new("en-GB", locales,
+                LiveTranslateDirection.OneWay, outputs, glossaries) };
+        var create = store.CreateAsync(initial, TestContext.Current.CancellationToken);
+        await settings.ReadPaused.Task.WaitAsync(TestContext.Current.CancellationToken);
+        locales[1] = "de-DE"; outputs[0] = new("de-DE", false, true); glossaries[0] = "injected";
+        sources[0] = sources[0] with { DisplayName = "injected" };
+        settings.ResumeRead.TrySetResult();
+        var created = await create;
+        var reopened = (await store.GetAsync(initial.SessionId, TestContext.Current.CancellationToken))!;
+        Assert.Equal("fr-FR", reopened.LiveTranslateLanguages!.Locales[1]);
+        Assert.Equal("fr-FR", reopened.LiveTranslateLanguages.Outputs[0].Locale);
+        Assert.Equal("original-glossary", reopened.LiveTranslateLanguages.GlossaryIds[0]);
+        Assert.Equal("original", reopened.VisualSources[0].DisplayName);
+        Assert.Equal("fr-FR", created.LiveTranslateLanguages!.Locales[1]);
+        Assert.Throws<NotSupportedException>(() => ((IList<string>)created.LiveTranslateLanguages.Locales)[1] = "changed");
+
+        string[] sections = ["original-plan"]; string[] refs = ["source-entity"];
+        var updated = reopened with { Revision = 2, VoiceMode = VisionVoiceMode.Monologue,
+            LiveTranslateLanguages = null, Monologue = new(Guid.NewGuid(), "Brief", null, sections, 0, TimeSpan.Zero, true, refs) };
+        settings.ReadPaused = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        settings.ResumeRead = new(TaskCreationOptions.RunContinuationsAsynchronously); settings.PauseNextRead = true;
+        var update = store.UpdateAsync(initial.SessionId, 1, updated, TestContext.Current.CancellationToken);
+        await settings.ReadPaused.Task.WaitAsync(TestContext.Current.CancellationToken);
+        sections[0] = "injected-plan"; refs[0] = "injected-ref";
+        settings.ResumeRead.TrySetResult();
+        await update;
+        reopened = (await store.GetAsync(initial.SessionId, TestContext.Current.CancellationToken))!;
+        Assert.Equal("original-plan", reopened.Monologue!.Sections[0]);
+        Assert.Equal("source-entity", reopened.Monologue.SourceRefs[0]);
+    }
+
+    [Fact]
+    public async Task Unsupported_capture_state_and_missing_translation_language_set_never_replace_metadata()
+    {
+        var settings = new MemorySettingsStore(); var store = new MultimodalSessionStore(settings);
+        var original = CreateSession(); await store.CreateAsync(original, TestContext.Current.CancellationToken);
+        foreach (var invalid in new[]
+        {
+            original with { Revision = 2, VoiceMode = (VisionVoiceMode)99 },
+            original with { Revision = 2, State = (MultimodalSessionState)99 },
+            original with { Revision = 2, MicrophoneState = (MicrophoneCaptureState)99 },
+            original with { Revision = 2, SpaceId = Guid.Empty },
+            original with { Revision = 2, SpaceId = Guid.NewGuid() },
+            original with { Revision = 2, VoiceMode = VisionVoiceMode.LiveTranslate, LiveTranslateLanguages = null },
+            original with { Revision = 2, VisualSources = [null!] }
+        })
+        {
+            await Assert.ThrowsAsync<ArgumentException>(() => store.UpdateAsync(original.SessionId, 1, invalid, TestContext.Current.CancellationToken));
+            Assert.Equal(JsonSerializer.Serialize(original), JsonSerializer.Serialize(await store.GetAsync(original.SessionId, TestContext.Current.CancellationToken)));
+        }
+        var key = "visionvoice.multimodal-session.v1." + original.SessionId.ToString("N");
+        var unknownState = new MultimodalSessionStore.MultimodalSessionEnvelope(1, original with { State = (MultimodalSessionState)99 });
+        await settings.SetAsync(key, unknownState, TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<InvalidDataException>(() => store.GetAsync(original.SessionId, TestContext.Current.CancellationToken));
+        Assert.Same(unknownState, await settings.GetAsync<MultimodalSessionStore.MultimodalSessionEnvelope>(key, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Mode_change_captures_selected_languages_before_awaited_canonical_session_read()
+    {
+        var settings = new MemorySettingsStore(); var store = new MultimodalSessionStore(settings);
+        var initial = CreateSession(); await store.CreateAsync(initial, TestContext.Current.CancellationToken);
+        string[] locales = ["en-GB", "fr-FR"];
+        LiveTranslateOutputPreference[] outputs = [new("fr-FR", true, false)];
+        string[] glossaries = ["selected-glossary"];
+        settings.PauseNextGet = true;
+        var change = new VisionVoiceSessionService(store).SetModeAsync(initial.SessionId, 1, VisionVoiceMode.LiveTranslate,
+            new("en-GB", locales, LiveTranslateDirection.OneWay, outputs, glossaries), TestContext.Current.CancellationToken);
+        await settings.ReadPaused.Task.WaitAsync(TestContext.Current.CancellationToken);
+        locales[1] = "de-DE"; outputs[0] = new("de-DE", false, true); glossaries[0] = "injected-glossary";
+        settings.ResumeRead.TrySetResult();
+        var result = await change;
+        Assert.True(result.IsSuccess);
+        Assert.Equal(initial.ConversationId, result.Value!.ConversationId);
+        Assert.Equal(initial.SpaceId, result.Value.SpaceId);
+        Assert.Equal("fr-FR", result.Value.LiveTranslateLanguages!.Locales[1]);
+        Assert.Equal("fr-FR", result.Value.LiveTranslateLanguages.Outputs[0].Locale);
+        Assert.Equal("selected-glossary", result.Value.LiveTranslateLanguages.GlossaryIds[0]);
+    }
+
     private static MultimodalSession CreateSession() => new(
         Guid.NewGuid(),
         Guid.NewGuid(),
@@ -258,6 +349,9 @@ public sealed class MultimodalSessionStoreTests
     {
         private readonly Dictionary<string, object> _values = new(StringComparer.OrdinalIgnoreCase);
         public bool SynchronizeTwoReads { get; set; }
+        public bool PauseNextRead; public bool PauseNextGet;
+        public TaskCompletionSource ReadPaused = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ResumeRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly TaskCompletionSource _bothRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private int _readCount;
         public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expectedJson, string? replacementJson, CancellationToken token)
@@ -273,10 +367,16 @@ public sealed class MultimodalSessionStoreTests
             }
         }
 
-        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
+        public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken) where T : class
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(_values.TryGetValue(key, out var value) ? value as T : null);
+            var captured = _values.TryGetValue(key, out var value) ? value as T : null;
+            if (PauseNextGet)
+            {
+                PauseNextGet = false; ReadPaused.TrySetResult();
+                await ResumeRead.Task.WaitAsync(cancellationToken);
+            }
+            return captured;
         }
 
         public Task SetAsync<T>(string key, T value, CancellationToken cancellationToken) where T : class
@@ -301,6 +401,11 @@ public sealed class MultimodalSessionStoreTests
             {
                 Settings = _values.ToDictionary(pair => pair.Key, pair => JsonSerializer.Serialize(pair.Value), StringComparer.OrdinalIgnoreCase)
             };
+            if (PauseNextRead)
+            {
+                PauseNextRead = false; ReadPaused.TrySetResult();
+                await ResumeRead.Task.WaitAsync(cancellationToken);
+            }
             if (SynchronizeTwoReads)
             {
                 if (Interlocked.Increment(ref _readCount) == 2) { SynchronizeTwoReads = false; _bothRead.TrySetResult(); }

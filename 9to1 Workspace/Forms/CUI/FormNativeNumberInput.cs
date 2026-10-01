@@ -11,13 +11,24 @@ internal sealed class FormNativeNumberInput : NumericUpDown, IDisposable
     private readonly Action<JsonElement> _changed;
     private string? _last;
     private bool _disposed;
+    private string? _initialDraft;
 
     public FormNativeNumberInput(decimal? value, Action<JsonElement> changed, string? draftText = null)
     {
         Minimum = decimal.MinValue; Maximum = decimal.MaxValue; Value = value;
+        _initialDraft = draftText;
         if (draftText is not null) Text = draftText;
         _changed = changed;
         ValueChanged += ChangedValue; PropertyChanged += ChangedText;
+        // NumericUpDown's initialization formats Value, replacing unparseable Text.
+        // Restore the retained draft after that formatting and before template binding.
+        Initialized += RestoreInitialDraft;
+    }
+    private void RestoreInitialDraft(object? sender, EventArgs args)
+    {
+        if (_initialDraft is { } draft && !_disposed) Text = draft;
+        _initialDraft = null;
+        Initialized -= RestoreInitialDraft;
     }
     private void ChangedValue(object? sender, NumericUpDownValueChangedEventArgs args) => Publish(JsonSerializer.SerializeToElement(Value));
     private void ChangedText(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs args)
@@ -37,6 +48,7 @@ internal sealed class FormNativeNumberInput : NumericUpDown, IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; ValueChanged -= ChangedValue; PropertyChanged -= ChangedText; IsEnabled = false;
+        _disposed = true; Initialized -= RestoreInitialDraft;
+        ValueChanged -= ChangedValue; PropertyChanged -= ChangedText; IsEnabled = false;
     }
 }

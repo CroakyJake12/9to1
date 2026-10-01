@@ -92,6 +92,108 @@ public sealed class CanvasNativeHostTests
             finally { Directory.Delete(root, true); }
         }, CancellationToken.None);
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Actual_host_retries_only_negative_audit_after_claim_or_admission_storage_failure(bool beginFailure)
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        await native.Dispatch(async () =>
+        {
+            var ct = CancellationToken.None;
+            var root = Path.Combine(Path.GetTempPath(), "canvas-native-host-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            try
+            {
+                var home = new RejectionFaultStore(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
+                var profiles = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+                var files = new NativeFilesWorkspaceService(home, profiles);
+                var permissions = new HomePermissionTrustService(home, new CanvasNativeActionPolicies().TryGet);
+                var ownership = new HomeLocalStoreOwnership(home, profiles, new HomeLocalStoreEvidenceRegistry([files]), permissions);
+                var authority = new NativeFilesWorkspaceAuthority(files, profiles, new HomeResourceStoreOwnershipAuthority(ownership, profiles));
+                var chosen = Path.Combine(root, "selected-empty-workspace"); Directory.CreateDirectory(chosen);
+                await files.ConfigureNewAsync(chosen, ownership, ct);
+                var workspace = (await authority.GetCurrentAsync(ct))!;
+                var resources = new ResourceAuthorizationService(profiles, [new FilesArtifactResourceResolver(async (actor, token) =>
+                { home.CheckClaim(); var current = await authority.GetCurrentAsync(token); return current?.Actor == actor ? current.Provider : null; },
+                async (actor, app, token) =>
+                { var current = await authority.GetCurrentAsync(token); return current?.Actor == actor && current.Configuration.AppFolders.TryGetValue(app, out var folder) ? folder : null; })]);
+                var broker = new HomeResourceOperationBroker(resources, permissions);
+                await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home), new HomePermissionsCoreService(permissions, profiles)]);
+                var services = new ServiceCollection();
+                services.AddSingleton(runtime); services.AddSingleton(profiles); services.AddSingleton<IAuthenticatedResourceActorSource>(profiles);
+                services.AddSingleton(files); services.AddSingleton(authority); services.AddSingleton(resources); services.AddSingleton(broker);
+                services.AddSingleton(permissions); services.AddSingleton(ownership);
+                await using var provider = services.BuildServiceProvider();
+                var folderId = workspace.Configuration.AppFolders["canvas"];
+                var window = new CanvasHostWindow(provider); window.Show();
+                try
+                {
+                    await window.Initialization;
+                    Click(window, "Create canvas");
+                    await Until(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1);
+                    Assert.Empty((await workspace.Provider.ListAsync(folderId, new("", Limit: 100), null, ct)).Items);
+                    await Until(() => Task.FromResult(Button(window, "Accept once").IsEnabled));
+                    Click(window, "Accept once");
+                    await Until(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 0);
+                    home.Arm(beginFailure);
+                    Click(window, "Finish approved request");
+                    await Until(() => Task.FromResult(home.RejectionFailures == 2 && Button(window, "Finish approved request").IsEnabled));
+                    Assert.Empty((await workspace.Provider.ListAsync(folderId, new("", Limit: 100), null, ct)).Items);
+                    Assert.Contains((await permissions.GetSnapshotAsync(cancellationToken: ct)).RecentAuditEvents, audit => audit.ResultCode == "HOME_EXECUTION_STARTED");
+                    Click(window, "Finish approved request");
+                    await Until(() => Task.FromResult(!Button(window, "Finish approved request").IsEnabled && Button(window, "Create canvas").IsEnabled));
+                    Assert.Empty((await workspace.Provider.ListAsync(folderId, new("", Limit: 100), null, ct)).Items);
+                    Assert.Contains((await permissions.GetSnapshotAsync(cancellationToken: ct)).RecentAuditEvents,
+                        audit => audit.ResultCode == (beginFailure ? "HOME_RESOURCE_BEGIN_REJECTED" : "HOME_RESOURCE_CLAIM_REJECTED") && audit.RequestState == HomePermissionRequestState.Failed);
+                    Assert.Equal(1, home.Admissions);
+                    Assert.Equal(beginFailure ? 0 : 1, home.ClaimFailures);
+                }
+                finally { window.Close(); }
+            }
+            finally { Directory.Delete(root, true); }
+        }, CancellationToken.None);
+    }
+
+    private sealed class RejectionFaultStore(FileHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        private bool _armed, _beginFailure, _claimPending;
+        public int Admissions { get; private set; }
+        public int ClaimFailures { get; private set; }
+        public int RejectionFailures { get; private set; }
+        public void Arm(bool beginFailure) { _armed = true; _beginFailure = beginFailure; }
+        public void CheckClaim()
+        {
+            if (!_claimPending) return;
+            _claimPending = false; ClaimFailures++;
+            throw new IOException("Actual claim authority resolver fault.");
+        }
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long revision, CancellationToken ct = default)
+        {
+            var payload = _armed && record.RecordType == "home.permissions-trust"
+                ? record.Payload.GetProperty("Requests").EnumerateArray().Last().GetProperty("ResultCode").GetString() ?? ""
+                : "";
+            if (_armed && record.RecordType == "home.permissions-trust")
+            {
+                if (payload.Contains("HOME_RESOURCE_BEGIN_REJECTED") || payload.Contains("HOME_RESOURCE_CLAIM_REJECTED"))
+                {
+                    if (RejectionFailures < 2) { RejectionFailures++; throw new IOException("Actual negative audit persistence fault."); }
+                }
+                else if (Admissions == 0 && payload.Contains("HOME_EXECUTION_STARTED"))
+                {
+                    var result = await inner.WriteAsync(record, revision, ct); Admissions++;
+                    if (_beginFailure) throw new IOException("Actual admission publication followed by storage fault.");
+                    _claimPending = true; return result;
+                }
+            }
+            return await inner.WriteAsync(record, revision, ct);
+        }
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long revision,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default) =>
+            inner.WriteGuardedAsync(record, revision, actor, guard, ct);
+    }
+
     private static Button Button(Control root, string text) => Assert.Single(root.GetVisualDescendants().OfType<Button>(), value => Equals(value.Content, text));
     private static void Click(Control root, string text)
     { root.UpdateLayout(); var button = Button(root, text); Assert.True(button.IsEnabled); button.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent)); }

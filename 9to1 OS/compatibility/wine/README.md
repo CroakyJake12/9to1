@@ -5,6 +5,18 @@ This directory contains the current broker substrate for the required unified
 capabilities are recorded below; it is not a complete implementation of that
 framework. Historical HavenOS names remain in surrounding internal interfaces.
 
+The shared Application compatibility routing port uses Home's canonical
+`InstalledApplicationReference` Guid/revision and an owning runtime observation.
+It produces an immutable read-only framework proposal, rejects a changed Home
+session or installed entrypoint, and preserves an ineligible preferred backend
+instead of silently switching frameworks. Policy denial and unverified package
+trust never produce a proposed backend. Its observations and proposals are not
+execution permission or human approval. A production canonical runtime owner,
+permission admission, installation manager and execution adapter are still
+required; this port is not registered by the native shell. The Python registry
+below remains a development runtime substrate, not a second canonical Home
+application database or production installed-app authority.
+
 ## Unified package inspection and routing
 
 The shared broker now exposes `listBackends`, `inspectPackage` and

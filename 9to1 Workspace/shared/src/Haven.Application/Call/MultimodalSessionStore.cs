@@ -31,7 +31,7 @@ public sealed class MultimodalSessionStore
         var envelope = await ReadEnvelopeAsync(key, cancellationToken).ConfigureAwait(false);
         if (envelope is null && await ContainsKeyAsync(key, cancellationToken).ConfigureAwait(false))
             throw new InvalidDataException("Existing session metadata could not be read; stored data was preserved.");
-        return envelope?.Session;
+        return envelope is null ? null : Detach(envelope.Session);
     }
 
     /// <summary>Creates the initial durable metadata snapshot for a new session.</summary>
@@ -40,6 +40,7 @@ public sealed class MultimodalSessionStore
         ArgumentNullException.ThrowIfNull(session);
         var validation = session.Validate();
         if (validation is not null) throw new ArgumentException(validation, nameof(session));
+        session = Detach(session);
         if (session.Revision != 1) throw new ArgumentException("A new multimodal session must begin at revision 1.", nameof(session));
 
         await _mutations.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -71,6 +72,7 @@ public sealed class MultimodalSessionStore
         var validation = updated.Validate();
         if (validation is not null) throw new ArgumentException(validation, nameof(updated));
 
+        updated = Detach(updated);
         await _mutations.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -87,8 +89,8 @@ public sealed class MultimodalSessionStore
                 throw new InvalidOperationException($"Session revision conflict: expected {expectedRevision}, found {current.Session.Revision}.");
             if (updated.Revision != expectedRevision + 1)
                 throw new ArgumentException("An update must increment the session revision by exactly one.", nameof(updated));
-            if (updated.ConversationId != current.Session.ConversationId || updated.CreatedAt != current.Session.CreatedAt)
-                throw new ArgumentException("ConversationID and CreatedAt are immutable for a session.", nameof(updated));
+            if (updated.ConversationId != current.Session.ConversationId || updated.SpaceId != current.Session.SpaceId || updated.CreatedAt != current.Session.CreatedAt)
+                throw new ArgumentException("ConversationID, SpaceID and CreatedAt are immutable for a session; reassignment requires its canonical owning workflow.", nameof(updated));
 
             await ExchangeAsync(key, stored.Json, new MultimodalSessionEnvelope(CurrentSchemaVersion, updated), cancellationToken).ConfigureAwait(false);
             return updated;
@@ -98,6 +100,24 @@ public sealed class MultimodalSessionStore
             _mutations.Release();
         }
     }
+
+    // Capture every caller-owned nested collection before the first await. Strings and descriptor
+    // records are immutable; read-only list wrappers also keep returned snapshots detached.
+    private static MultimodalSession Detach(MultimodalSession session) => session with
+    {
+        VisualSources = Array.AsReadOnly(session.VisualSources.ToArray()),
+        LiveTranslateLanguages = session.LiveTranslateLanguages is { } languages ? languages with
+        {
+            Locales = Array.AsReadOnly(languages.Locales.ToArray()),
+            Outputs = Array.AsReadOnly(languages.Outputs.ToArray()),
+            GlossaryIds = Array.AsReadOnly(languages.GlossaryIds.ToArray())
+        } : null,
+        Monologue = session.Monologue is { } monologue ? monologue with
+        {
+            Sections = Array.AsReadOnly(monologue.Sections.ToArray()),
+            SourceRefs = Array.AsReadOnly(monologue.SourceRefs.ToArray())
+        } : null
+    };
 
     private async Task ExchangeAsync(string key, string? expectedJson, MultimodalSessionEnvelope replacement, CancellationToken token)
     {

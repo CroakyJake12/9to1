@@ -37,11 +37,67 @@ public sealed class SiteNativeWriteTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => foreign.ExecuteAsync(intent, capability));
         var changed = SiteNativeWriteIntent.Create(fixture.Binding, "Changed", "9to1-native", "changed");
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(changed, capability));
+        capability = await fixture.Approve(intent); // changed arguments consumed the prior handle as a negative abort
         fixture.RevokeOnRead = fixture.Reads + 2; // first owner check passes; canonical precommit binding fails
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(intent, capability));
         Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
         fixture.RevokeOnRead = int.MaxValue;
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(intent, capability));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Admission_rejection_audit_recovers_only_same_negative_handle_without_a_project_write(bool rejectedClaim, bool afterPublication)
+    {
+        await using var fixture = await Fixture.Create(afterPublication);
+        var intent = SiteNativeWriteIntent.Create(fixture.Binding, "Denied fixture", "9to1-native", "denied-fixture");
+        var capability = await fixture.Approve(intent);
+        fixture.Store.FailureCode = rejectedClaim ? "HOME_RESOURCE_CLAIM_REJECTED" : "HOME_RESOURCE_EXECUTION_ABORTED";
+        fixture.Store.FailAuditWrites = rejectedClaim ? 2 : 1; // claim attempts its own negative audit before owner recovery
+        if (rejectedClaim) fixture.DenyResources = true;
+        else fixture.RevokeOnRead = fixture.Reads + 1;
+        var admissionFailure = await Record.ExceptionAsync(() => fixture.Owner.ExecuteAsync(intent, capability));
+        Assert.NotNull(admissionFailure);
+        Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
+        if (admissionFailure is SiteNativeAdmissionAuditPendingException pending)
+        {
+            Assert.Equal(capability.RequestId, pending.RequestId);
+            var foreign = new SiteNativeWriteCoordinator(fixture, fixture.Home);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => foreign.RetryAdmissionAuditAsync(pending));
+            fixture.Store.FailAuditWrites = 0;
+            var original = await Assert.ThrowsAnyAsync<Exception>(() => fixture.Owner.RetryAdmissionAuditAsync(pending));
+            Assert.IsNotType<SiteNativeAdmissionAuditPendingException>(original);
+        }
+        else
+        {
+            // A claim audit published before throwing can be acknowledged by the owner's
+            // immediate audit-only retry. Preserve the original failure without a fake pending right.
+            Assert.True(rejectedClaim && afterPublication);
+            Assert.IsType<IOException>(admissionFailure);
+        }
+        var terminal = await fixture.Permissions.GetAuthorizationAsync(capability.RequestId);
+        Assert.Equal(HomePermissionRequestState.Failed, terminal.State);
+        Assert.Equal(fixture.Store.FailureCode, terminal.Code);
+        Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(intent, capability));
+        Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
+    }
+
+    [Fact]
+    public async Task Claimed_actor_with_different_profile_is_audited_failed_before_any_mutation()
+    {
+        await using var fixture = await Fixture.Create();
+        fixture.UseMismatchedProfile();
+        var intent = SiteNativeWriteIntent.Create(fixture.Binding, "Wrong profile", "9to1-native", "wrong-profile");
+        var capability = await fixture.Approve(intent);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(intent, capability));
+        var terminal = await fixture.Permissions.GetAuthorizationAsync(capability.RequestId);
+        Assert.Equal(HomePermissionRequestState.Failed, terminal.State);
+        Assert.Equal("SitesAdmissionRejected", terminal.Code);
+        Assert.False(File.Exists(Path.Combine(fixture.Binding.RootDirectory, ".9to1-sites-index.json")));
     }
 
     [Theory]
@@ -80,6 +136,8 @@ public sealed class SiteNativeWriteTests
         public SiteNativeWriteCoordinator Owner { get; private set; } = null!;
         public int Reads { get; private set; }
         public int RevokeOnRead { get; set; } = int.MaxValue;
+        public bool DenyResources { get; set; }
+        public void UseMismatchedProfile() => Binding = Binding with { ProfileId = Guid.NewGuid().ToString() };
         public string ResourceKind => "files.item";
         public FaultStore Store { get; private set; } = null!;
         public static async Task<Fixture> Create(bool afterPublication = false)
@@ -105,7 +163,7 @@ public sealed class SiteNativeWriteTests
         public Task<SiteNativeWorkspaceBinding?> GetCurrentAsync(CancellationToken ct = default)
             => Task.FromResult(++Reads >= RevokeOnRead ? null : Binding);
         public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken ct)
-            => ValueTask.FromResult(new ResourceAccessDecision(actor.ActorId == Binding.ActorId && actor.AuthenticationRevision == Binding.AuthenticationRevision &&
+            => ValueTask.FromResult(new ResourceAccessDecision(!DenyResources && actor.ActorId == Binding.ActorId && actor.AuthenticationRevision == Binding.AuthenticationRevision &&
                 scope.Id == Binding.FilesFolderId.ToString() && scope.Revision == Binding.FolderRevision && scope.Access == ResourceAccess.Write &&
                 actionId is "sites.project.create" or "sites.project.save", "explicit-fixture-files-authority", actor.ActorId, scope.Revision, null));
         public ValueTask DisposeAsync() { Directory.Delete(Binding.RootDirectory, true); return ValueTask.CompletedTask; }
@@ -114,12 +172,15 @@ public sealed class SiteNativeWriteTests
     private sealed class FaultStore(IHomeCoreStateStore inner, bool afterPublication) : IHomeCoreStateStore
     {
         public bool FailAudit;
+        public string FailureCode = "SitesWriteCommitted";
+        public int FailAuditWrites;
         public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
         public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken ct = default)
         {
-            if (FailAudit && record.RecordType == "home.permissions-trust" && record.Payload.GetRawText().Contains("SitesWriteCommitted", StringComparison.Ordinal))
+            if ((FailAudit || FailAuditWrites > 0) && record.RecordType == "home.permissions-trust" && record.Payload.GetRawText().Contains(FailureCode, StringComparison.Ordinal))
             {
                 FailAudit = false;
+                if (FailAuditWrites > 0) FailAuditWrites--;
                 if (afterPublication) _ = await inner.WriteAsync(record, expected, ct);
                 throw new IOException("Injected actual audit storage failure.");
             }

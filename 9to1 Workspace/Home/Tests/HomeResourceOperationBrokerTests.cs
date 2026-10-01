@@ -142,6 +142,7 @@ public sealed class HomeResourceOperationBrokerTests : IDisposable
         Assert.False((await _broker.CompleteExecutionAsync(capability,
             new(HomePermissionRequestState.Succeeded, "FORGED", "No owner committed.", []))).Succeeded);
         Assert.Equal(HomePermissionRequestState.Failed, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
+        Assert.Equal(HomePermissionRequestState.Failed, (await _broker.GetExecutionDecisionAsync(capability))!.State);
     }
 
     [Theory]

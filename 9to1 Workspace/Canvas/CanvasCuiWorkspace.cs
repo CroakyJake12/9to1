@@ -5,7 +5,7 @@ using Haven.Application;
 
 namespace HavenOS.Apps.Canvas;
 
-public enum CanvasWorkspaceCommandKind { Open, Import, Flush, Undo, Redo }
+public enum CanvasWorkspaceCommandKind { Open, Import, Flush, Undo, Redo, FitView, ZoomIn, ZoomOut }
 public sealed record CanvasWorkspaceCommand(CanvasWorkspaceCommandKind Kind, Guid? ArtifactId, Guid? BaseRevisionId);
 
 /// <summary>App-owned semantic bindings; the native host supplies Home-brokered typed dispatch.</summary>
@@ -83,6 +83,9 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
             "CanImport" => IsActionAvailable("9to1.Canvas.Import") == true,
             "CanFlush" => IsActionAvailable("9to1.Canvas.Artifact.Save") == true,
             "CanUndo" => IsActionAvailable("9to1.Canvas.History.Undo") == true,
+            "CanFitView" => IsActionAvailable("9to1.Canvas.View.Fit") == true,
+            "CanZoomIn" => IsActionAvailable("9to1.Canvas.View.ZoomIn") == true,
+            "CanZoomOut" => IsActionAvailable("9to1.Canvas.View.ZoomOut") == true,
             "CanRedo" => IsActionAvailable("9to1.Canvas.History.Redo") == true,
             "CanEditInk" => IsActionAvailable("9to1.Canvas.Ink.Solid") == true,
             "SelectedToolName" => _tools?.Selected.ToString() ?? "Select",
@@ -154,6 +157,9 @@ public sealed class CanvasCuiWorkspace : ICuiBindingContext, ICuiActionDispatche
             "9to1.Canvas.Artifact.Save" => CanvasWorkspaceCommandKind.Flush,
             "9to1.Canvas.History.Undo" => CanvasWorkspaceCommandKind.Undo,
             "9to1.Canvas.History.Redo" => CanvasWorkspaceCommandKind.Redo,
+            "9to1.Canvas.View.Fit" => CanvasWorkspaceCommandKind.FitView,
+            "9to1.Canvas.View.ZoomIn" => CanvasWorkspaceCommandKind.ZoomIn,
+            "9to1.Canvas.View.ZoomOut" => CanvasWorkspaceCommandKind.ZoomOut,
             _ => (CanvasWorkspaceCommandKind)(-1)
         };
         return Enum.IsDefined(kind);

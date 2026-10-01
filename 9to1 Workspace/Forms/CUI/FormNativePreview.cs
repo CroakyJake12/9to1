@@ -35,15 +35,21 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     private FormNativePreview(FormProject project, FormResponseRuntime? runtime, TimeProvider? clock)
     {
         _project = FormProjectCodec.Capture(project);
-        if (_project.Components.Count != 0 || _project.Fields.Any(field => !CanRender(field.Kind)
-                || field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
-            || _project.Pages.Any(page => page.Layout.Columns != 1) || _project.Fields.Any(field => field.Layout.Columns != 1)
-            || _project.Theme.ThemeID != "default" || _project.Theme.StyleAssetID is not null)
-            throw new NotSupportedException("CapabilityUnavailable: this form needs an additional native renderer, layout or theme provider.");
+        RequireNativeLayout(_project.Fields, _project.Pages, _project.Components.Count, _project.Theme);
         _runtime = runtime ?? new(_project, Guid.NewGuid(), clock);
         var response = _runtime.Read();
         if (response.FormID != _project.FormID || response.ProjectRevision != _project.Revision)
             throw new InvalidDataException("The preview runtime belongs to a different form revision.");
+    }
+
+    internal static void RequireNativeLayout(IReadOnlyList<FormField> fields, IReadOnlyList<FormPage> pages,
+        int componentCount, FormThemeReference theme)
+    {
+        if (componentCount != 0 || fields.Any(field => !CanRender(field.Kind)
+                || field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
+            || pages.Any(page => page.Layout.Columns != 1) || fields.Any(field => field.Layout.Columns != 1)
+            || theme.ThemeID != "default" || theme.StyleAssetID is not null)
+            throw new NotSupportedException("CapabilityUnavailable: this form needs an additional native renderer, layout or theme provider.");
     }
 
     public static bool CanRender(FormFieldKind kind) => kind is FormFieldKind.ShortText or FormFieldKind.LongText
@@ -101,62 +107,9 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         var definition = _project.Fields.Single(item => item.FieldID == fieldID);
         var response = Response;
         var answer = response.Answers.SingleOrDefault(item => item.FieldID == fieldID)?.Value;
-        Control input;
-        if (definition.Kind == FormFieldKind.Ranking)
-        {
-            var ranking = new FormNativeRankingInput(definition, answer, value => Answer(fieldID, value));
-            _detach.Add(ranking.Dispose); input = ranking;
-        }
-        else if (definition.Kind == FormFieldKind.TableInput)
-        {
-            var table = new FormNativeTableInput(definition.Table!, answer, value => Answer(fieldID, value));
-            _detach.Add(table.Dispose); input = table;
-        }
-        else if (definition.Kind is FormFieldKind.MultipleChoice or FormFieldKind.CheckboxSet)
-        {
-            var choices = new FormNativeChoiceInput(definition, answer, value => Answer(fieldID, value));
-            _detach.Add(choices.Dispose); input = choices;
-        }
-        else if (definition.Kind is FormFieldKind.SingleChoice or FormFieldKind.Dropdown)
-        {
-            var options = definition.Options!.ToArray();
-            var choice = new ComboBox { ItemsSource = options.Select(option => option.Label).ToArray(),
-                SelectedIndex = answer is { ValueKind: JsonValueKind.String } value && value.TryGetGuid(out var selected)
-                    ? Array.FindIndex(options, option => option.OptionID == selected) : -1 };
-            void Choose(object? sender, SelectionChangedEventArgs args)
-            {
-                if (choice.IsEnabled && choice.SelectedIndex >= 0 && choice.SelectedIndex < options.Length)
-                    Answer(fieldID, JsonSerializer.SerializeToElement(options[choice.SelectedIndex].OptionID));
-            }
-            choice.SelectionChanged += Choose; _detach.Add(() => choice.SelectionChanged -= Choose); input = choice;
-        }
-        else if (definition.Kind is FormFieldKind.Number or FormFieldKind.Decimal or FormFieldKind.Currency or FormFieldKind.Rating)
-        {
-            var number = new FormNativeNumberInput(answer is { ValueKind: JsonValueKind.Number } value ? value.GetDecimal() : null,
-                candidate => Answer(fieldID, candidate));
-            _detach.Add(number.Dispose); input = number;
-        }
-        else
-        {
-            var text = new TextBox { Text = answer is { ValueKind: JsonValueKind.String } value ? value.GetString() : "",
-                AcceptsReturn = definition.Kind == FormFieldKind.LongText,
-                PlaceholderText = definition.Kind switch
-                {
-                    FormFieldKind.Date => "yyyy-MM-dd", FormFieldKind.Time => "HH:mm:ss",
-                    FormFieldKind.DateTime => "yyyy-MM-ddTHH:mm:ss.fffffff+00:00", FormFieldKind.Duration => "d.hh:mm:ss", _ => null
-                } };
-            // TextChanged is queued by Avalonia. Observe the actual property synchronously so
-            // Next/Submit cannot use a previous valid answer while a changed input awaits that event.
-            void TextEdited(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs args)
-            {
-                if (args.Property != TextBox.TextProperty || !text.IsEnabled) return;
-                var current = text.Text ?? "";
-                var emptyTypedValue = current.Length == 0 && !definition.Required && definition.Kind is
-                    FormFieldKind.Email or FormFieldKind.Date or FormFieldKind.Time or FormFieldKind.DateTime or FormFieldKind.Duration;
-                Answer(fieldID, emptyTypedValue ? JsonSerializer.SerializeToElement<object?>(null) : JsonSerializer.SerializeToElement(current));
-            }
-            text.PropertyChanged += TextEdited; _detach.Add(() => text.PropertyChanged -= TextEdited); input = text;
-        }
+        var ownedInput = FormNativeAnswerInput.Create(definition, answer, value => Answer(fieldID, value));
+        var input = ownedInput.Control;
+        _detach.Add(ownedInput.Dispose);
         AutomationProperties.SetName(input, definition.Label);
         _inputs.Add((fieldID, input));
         var detachInput = _detach[^1];

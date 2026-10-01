@@ -9,8 +9,7 @@ namespace HavenOS.Images.Tests;
 
 public static class PictureTestAppBuilder
 {
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
-        .WithInterFont()
+    public static AppBuilder BuildAvaloniaApp() => CakeOS.Cui.Runtime.CuiNativeHost.ConfigureFonts(AppBuilder.Configure<App>())
         .UseSkia()
         .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
 }

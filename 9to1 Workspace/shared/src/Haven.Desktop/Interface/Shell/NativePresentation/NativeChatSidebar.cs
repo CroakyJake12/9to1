@@ -48,7 +48,8 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         NativeChatUiStateStore? stateStore = null,
         IConversationProductionRepository? production = null,
         SpaceRegistry? spaces = null,
-        HavenOS.Apps.Spaces.PluginSidebarRegistry? pluginSidebar = null)
+        HavenOS.Apps.Spaces.PluginSidebarRegistry? pluginSidebar = null,
+        Func<Conversation, Guid?, CancellationToken, Task<Conversation>>? assignSpace = null)
     {
         _conversations = conversations ?? throw new ArgumentNullException(nameof(conversations));
         _containers = containers ?? throw new ArgumentNullException(nameof(containers));
@@ -59,6 +60,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
         _production = production;
         _spaces = spaces;
         _pluginSidebar = pluginSidebar;
+        _assignSpace = assignSpace;
 
         _scene = new ChatSidebarHavenScene();
         SceneHost = new HavenSceneControl { Root = _scene.Root };
@@ -85,6 +87,7 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
     internal Guid? CurrentSpaceId => _currentSpaceId;
 
     private readonly HavenOS.Apps.Spaces.PluginSidebarRegistry? _pluginSidebar;
+    private readonly Func<Conversation, Guid?, CancellationToken, Task<Conversation>>? _assignSpace;
 
     private async Task OpenPluginSidebarItemAsync(Guid spaceId, string pluginId, string itemId)
     {
@@ -541,8 +544,17 @@ internal sealed class NativeChatSidebar : UserControl, IDisposable
 
     private async Task MoveConversationToSpaceAsync(Conversation chat, Guid? spaceId)
     {
-        await _conversations.UpsertConversationAsync(chat with { SpaceId = spaceId, UpdatedAt = DateTimeOffset.UtcNow }, _lifetime.Token);
-        await RefreshAsync();
+        try
+        {
+            if (_assignSpace is null) throw new UnauthorizedAccessException("Open Home to recover Space membership access.");
+            await _assignSpace(chat, spaceId, _lifetime.Token);
+            await RefreshAsync();
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            if (!_lifetime.IsCancellationRequested) _scene.SetStatus(exception.Message);
+        }
     }
 
     private async Task StartChatAsync(Guid? groupId)

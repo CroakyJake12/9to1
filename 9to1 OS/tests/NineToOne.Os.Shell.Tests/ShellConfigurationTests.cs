@@ -91,9 +91,11 @@ public sealed class ShellConfigurationTests
         using var fixture = new Fixture(); var service = new ShellConfigurationService(fixture.Store);
         var before = await service.GetAsync();
         var preview = await service.PreviewAsync(before.Stored, ShellEdits.RenameSpace(before.Effective, "Private"), TimeSpan.FromSeconds(30));
+        var bytes = await File.ReadAllBytesAsync(fixture.StatePath);
         fixture.Actors.Current = fixture.Actors.Current with { ProfileId = "other-profile" };
-        // A different profile has a different canonical record, not a claim to the old one.
+        // An old action must not initialize another profile while checking its stale preview.
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.KeepAsync(preview.Preview!.Id));
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(fixture.StatePath));
     }
     [Fact]
     public async Task SameProfileSessionChangeInvalidatesPreviewAndCannotRebindAnOldRead()

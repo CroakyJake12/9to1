@@ -77,6 +77,13 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
         }, token);
 
     public Task<MapsJourneyResult<MapJourneyProgress>> StartNavigationAsync(long revision, Guid journeyId, CancellationToken token = default) =>
+        StartNavigationCoreAsync(revision, journeyId, null, token);
+
+    internal Task<MapsJourneyResult<MapJourneyProgress>> StartNavigationAdmittedAsync(long revision, Guid journeyId,
+        ISettingsCommitAdmission admission, CancellationToken token) => StartNavigationCoreAsync(revision, journeyId, admission, token);
+
+    private Task<MapsJourneyResult<MapJourneyProgress>> StartNavigationCoreAsync(long revision, Guid journeyId,
+        ISettingsCommitAdmission? admission, CancellationToken token) =>
         MutateAsync(revision, library =>
         {
             var journey = library.Journeys.FirstOrDefault(item => item.JourneyId == journeyId) ?? throw new KeyNotFoundException("Journey not found.");
@@ -84,7 +91,7 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
             if (existing is not null) return (library, existing);
             var progress = MapJourneyLogic.Start(journey, DateTimeOffset.UtcNow);
             return (library with { ActiveJourneys = library.ActiveJourneys.Where(item => item.JourneyId != journeyId).Append(progress).ToArray() }, progress);
-        }, token);
+        }, token, admission);
 
     public Task<MapsJourneyResult<MapJourneyProgress>> CompleteCurrentStepAsync(long revision, Guid journeyId, bool skip,
         CancellationToken token = default) =>
@@ -96,7 +103,8 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
             return (library with { ActiveJourneys = library.ActiveJourneys.Select(item => item.JourneyId == journeyId ? next : item).ToArray() }, next);
         }, token);
 
-    private async Task<MapsJourneyResult<T>> MutateAsync<T>(long revision, Func<MapsJourneyLibrary, (MapsJourneyLibrary Library, T Value)> apply, CancellationToken token)
+    private async Task<MapsJourneyResult<T>> MutateAsync<T>(long revision, Func<MapsJourneyLibrary, (MapsJourneyLibrary Library, T Value)> apply, CancellationToken token,
+        ISettingsCommitAdmission? admission = null)
     {
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
@@ -112,7 +120,17 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
             var (next, value) = apply(current);
             next = next with { Revision = checked(revision + 1) };
             Validate(next);
-            if (!(await atomic.CompareExchangeAsync(Key, expectedJson, JsonSerializer.Serialize(next), token).ConfigureAwait(false)).Exchanged)
+            if (admission is not null)
+            {
+                if (_settings is not IVersionedSettingsGuardedCompareExchange guarded)
+                    return new(default, "AtomicStoreUnavailable", "Maps requires guarded atomic storage.");
+                var committed = await guarded.CompareExchangeGuardedAsync(Key, expectedJson, JsonSerializer.Serialize(next),
+                    new Dictionary<string, string?>(), admission, token).ConfigureAwait(false);
+                if (!committed.Exchanged) return committed.AdmissionRejected
+                    ? new(default, "Denied", "Current resource permissions do not allow this action.")
+                    : new(default, "RevisionConflict", "Maps changed; refresh before applying this action.");
+            }
+            else if (!(await atomic.CompareExchangeAsync(Key, expectedJson, JsonSerializer.Serialize(next), token).ConfigureAwait(false)).Exchanged)
                 return new(default, "RevisionConflict", "Maps changed; refresh before applying this action.");
             return new(value, null, null);
         }

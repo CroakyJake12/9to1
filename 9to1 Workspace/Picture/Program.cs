@@ -12,9 +12,8 @@ internal static class Program
 
     public static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure<App>()
+        return CakeOS.Cui.Runtime.CuiNativeHost.ConfigureFonts(AppBuilder.Configure<App>())
             .UsePlatformDetect()
-            .WithInterFont()
             .LogToTrace();
     }
 }

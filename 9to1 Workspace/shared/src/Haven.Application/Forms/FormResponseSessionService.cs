@@ -3,6 +3,14 @@ using Haven.Core.Forms;
 
 namespace Haven.Application;
 
+public sealed record FormResponseSessionScope(Guid StoreID, AuthenticatedResourceActor Actor);
+/// <summary>Presentation projection of the retained version. It deliberately excludes authored marking rules,
+/// Data target bindings, audience grants and question banks; it is not a saveable authored project.</summary>
+public sealed record FormResponsePresentation(Guid FormID, long ProjectRevision, string Title, FormModeKind Mode,
+    IReadOnlyList<FormPage> Pages, IReadOnlyList<FormField> Fields, int ComponentCount, FormThemeReference Theme);
+public sealed record FormResponseDefinitionResult(bool Success, string? Code, FormResponsePresentation? Presentation, FormResponse? Response,
+    FormResponseSessionScope? Scope = null);
+
 public sealed record FormResponseSessionResult(bool Success, string? Code, FormResponse? Response);
 public sealed record FormSubmittedResponseResult(bool Success, string? Code, FormProject? Project, FormResponse? Response,
     AuthenticatedResourceActor? Actor = null, Guid StoreID = default);
@@ -51,7 +59,25 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
 
     /// <summary>Loads the owner's retained submitted response and its exact immutable published schema.
     /// Callers cannot substitute authored JSON, response marks or a newer draft during Data preparation.</summary>
-    public async Task<FormSubmittedResponseResult> ReadSubmittedAsync(Guid formID, Guid responseID, CancellationToken token = default)
+    public Task<FormSubmittedResponseResult> ReadSubmittedAsync(Guid formID, Guid responseID, CancellationToken token = default) =>
+        ReadDefinitionAsync(formID, responseID, true, null, token);
+
+    /// <summary>Loads respondent-safe controls from the retained published version. The returned scope
+    /// pins subsequent operations to this actor/root and never supplies an authorization grant.</summary>
+    public async Task<FormResponseDefinitionResult> ReadSessionAsync(Guid formID, Guid responseID,
+        CancellationToken token = default, FormResponseSessionScope? scope = null)
+    {
+        var loaded = await ReadDefinitionAsync(formID, responseID, false, scope, token).ConfigureAwait(false);
+        if (!loaded.Success) return new(false, loaded.Code, null, null);
+        var project = loaded.Project!;
+        var presentation = new FormResponsePresentation(project.FormID, project.Revision, project.Title, project.ModeDefinition.Kind,
+            project.Pages, project.Fields.Select(field => field with { Assessment = null, DataBindingID = null }).ToArray(),
+            project.Components.Count, project.Theme);
+        return new(true, null, presentation, loaded.Response, new(loaded.StoreID, loaded.Actor!));
+    }
+
+    private async Task<FormSubmittedResponseResult> ReadDefinitionAsync(Guid formID, Guid responseID,
+        bool submittedOnly, FormResponseSessionScope? scope, CancellationToken token)
     {
         if (formID == Guid.Empty || responseID == Guid.Empty) return new(false, "InvalidArgument", null, null);
         var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
@@ -60,17 +86,20 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
         if (!loaded.Success) return new(false, loaded.Code, null, null);
         var publication = loaded.Publication!;
         var actor = await AuthorizeAsync(originalRoot.StoreId, publication, "forms.response.read", token).ConfigureAwait(false);
-        if (actor is null) return new(false, "PermissionDenied", null, null);
+        if (actor is null || scope is not null && (scope.StoreID != originalRoot.StoreId || scope.Actor != actor))
+            return new(false, "PermissionDenied", null, null);
         var (state, _, rootID) = await LoadAsync(formID, token).ConfigureAwait(false);
         if (rootID != originalRoot.StoreId) return new(false, "PermissionDenied", null, null);
         var entry = state.Responses.SingleOrDefault(entry => entry.Checkpoint.ResponseID == responseID);
         if (entry is null || entry.Owner != Owner.From(actor)) return new(false, "ResponseUnavailable", null, null);
-        if (entry.Checkpoint.SubmittedAt is null) return new(false, "ResponseNotSubmitted", null, null);
+        if (submittedOnly && entry.Checkpoint.SubmittedAt is null) return new(false, "ResponseNotSubmitted", null, null);
         var version = publication.Versions.SingleOrDefault(version => version.FormVersionID == entry.Checkpoint.FormVersionID)
             ?? throw new InvalidDataException("Response refers to a missing immutable form version.");
         var project = FormAuthoringService.Decode(version.Project);
+        if (!submittedOnly && entry.Checkpoint.SubmittedAt is null && !project.RuntimeSettings.AllowResume)
+            return new(false, "ResumeDisabled", null, null);
         var response = FormResponseRuntime.Restore(project, entry.Checkpoint, _clock).Read();
-        if (response.State != FormResponseState.Submitted) return new(false, "ResponseNotSubmitted", null, null);
+        if (submittedOnly && response.State != FormResponseState.Submitted) return new(false, "ResponseNotSubmitted", null, null);
         return await AuthorizeAsync(rootID, publication, "forms.response.read", token).ConfigureAwait(false) == actor
             ? new(true, null, project, response, actor, rootID) : new(false, "PermissionDenied", null, null);
     }
@@ -78,18 +107,18 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
     public Task<FormResponseSessionResult> ResumeAsync(Guid formID, Guid responseID, CancellationToken token = default) =>
         OperateAsync(formID, responseID, null, "forms.response.read", null, token);
     public Task<FormResponseSessionResult> AnswerAsync(Guid formID, Guid responseID, long expectedRevision, Guid fieldID,
-        JsonElement answer, CancellationToken token = default)
+        JsonElement answer, CancellationToken token = default, FormResponseSessionScope? scope = null)
     {
         var captured = answer.Clone();
-        return OperateAsync(formID, responseID, expectedRevision, "forms.response.answer", runtime => runtime.Answer(expectedRevision, fieldID, captured), token);
+        return OperateAsync(formID, responseID, expectedRevision, "forms.response.answer", runtime => runtime.Answer(expectedRevision, fieldID, captured), token, scope);
     }
-    public Task<FormResponseSessionResult> AdvanceAsync(Guid formID, Guid responseID, long expectedRevision, CancellationToken token = default) =>
-        OperateAsync(formID, responseID, expectedRevision, "forms.response.advance", runtime => runtime.Advance(expectedRevision), token);
-    public Task<FormResponseSessionResult> SubmitAsync(Guid formID, Guid responseID, long expectedRevision, CancellationToken token = default) =>
-        OperateAsync(formID, responseID, expectedRevision, "forms.response.submit", runtime => runtime.Submit(expectedRevision), token);
+    public Task<FormResponseSessionResult> AdvanceAsync(Guid formID, Guid responseID, long expectedRevision, CancellationToken token = default, FormResponseSessionScope? scope = null) =>
+        OperateAsync(formID, responseID, expectedRevision, "forms.response.advance", runtime => runtime.Advance(expectedRevision), token, scope);
+    public Task<FormResponseSessionResult> SubmitAsync(Guid formID, Guid responseID, long expectedRevision, CancellationToken token = default, FormResponseSessionScope? scope = null) =>
+        OperateAsync(formID, responseID, expectedRevision, "forms.response.submit", runtime => runtime.Submit(expectedRevision), token, scope);
 
     private async Task<FormResponseSessionResult> OperateAsync(Guid formID, Guid responseID, long? expectedRevision,
-        string action, Func<FormResponseRuntime, FormResponseOperation>? operation, CancellationToken token)
+        string action, Func<FormResponseRuntime, FormResponseOperation>? operation, CancellationToken token, FormResponseSessionScope? scope = null)
     {
         if (formID == Guid.Empty || responseID == Guid.Empty) return new(false, "InvalidArgument", null);
         var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
@@ -98,7 +127,7 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
         if (!loaded.Success) return new(false, loaded.Code, null);
         var publication = loaded.Publication!;
         var actor = await AuthorizeAsync(originalRoot.StoreId, publication, action, token).ConfigureAwait(false);
-        if (actor is null) return new(false, "PermissionDenied", null);
+        if (actor is null || scope is not null && (scope.StoreID != originalRoot.StoreId || scope.Actor != actor)) return new(false, "PermissionDenied", null);
         var (state, expectedJson, rootID) = await LoadAsync(formID, token).ConfigureAwait(false);
         if (rootID != originalRoot.StoreId) return new(false, "PermissionDenied", null);
         var entry = state.Responses.SingleOrDefault(entry => entry.Checkpoint.ResponseID == responseID);

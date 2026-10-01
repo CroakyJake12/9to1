@@ -130,8 +130,14 @@ public sealed class MapsPlannerJourneyTests
     private static MapsPlannerJourneyService Facade(MapsJourneyService maps, IPlannerRepository repository, Policy policy, Actors actors)
     {
         var events = new PlannerEventJourneyAccessService(repository, policy);
-        return new(maps, events, new ResourceAuthorizationService(actors,
-            [new PlannerEventResourceResolver(repository, new ProfilePlannerCalendarResourceBinding("local-profile")), new MapsJourneyResourceResolver(maps, maps, new BoundOwner(maps.GetStoreIdentityAsync(default).AsTask().GetAwaiter().GetResult().StoreId.ToString("D")))]));
+        var mapOwner = new BoundOwner(maps.GetStoreIdentityAsync(default).AsTask().GetAwaiter().GetResult().StoreId.ToString("D"));
+        var resources = new ResourceAuthorizationService(actors,
+            [new PlannerEventResourceResolver(repository, new ProfilePlannerCalendarResourceBinding("local-profile")),
+             new MapsJourneyResourceResolver(maps, maps, mapOwner)]);
+        // Controlled receipt ports keep this SQL relationship fixture focused. The Desktop owning
+        // admission fixture separately uses actual Home imports and both concrete evidence providers.
+        return new(maps, events, resources, new MapsJourneyCommitAuthority(maps, actors, mapOwner),
+            new PlannerJourneyCommitAuthority((IPlannerJourneySnapshotSource)repository, actors, new BoundOwner(null, "planner")));
     }
     private static PlannerEvent Event(DateTimeOffset now) => new(Guid.NewGuid(), PlannerDefaults.LocalCalendarId,
         "College appointment", "", "", now.AddHours(1), now.AddHours(2), false, null, null, false, null, null, now, now);
@@ -139,13 +145,19 @@ public sealed class MapsPlannerJourneyTests
         [new(Guid.NewGuid(), MapJourneyStepKind.ManualInstruction, "Use the side entrance"),
          new(Guid.NewGuid(), MapJourneyStepKind.Wait, "Wait ten minutes", Duration: TimeSpan.FromMinutes(10))],
         MapObjectVisibility.Private, now, now, 0);
-    private sealed class BoundOwner(string storeID) : IResourceStoreOwnershipAuthority
+    private sealed class BoundOwner(string? storeID, string expectedKind = "maps") : IResourceStoreOwnershipReceiptAuthority
     {
         public bool RevokeAfterFirstRead { get; set; }
         public int Reads { get; set; }
         public ValueTask<VerifiedResourceStoreOwnership?> GetVerifiedAsync(string kind, string id, CancellationToken token) =>
-            ValueTask.FromResult<VerifiedResourceStoreOwnership?>(!(RevokeAfterFirstRead && ++Reads > 1) && kind == "maps" && id == storeID
-                ? new(kind, id, "local-profile", "controlled-binding-revision") : null);
+            ValueTask.FromResult<VerifiedResourceStoreOwnership?>(!(RevokeAfterFirstRead && ++Reads > 1) && kind == expectedKind
+                && (storeID is null ? Guid.TryParse(id, out var parsed) && parsed != Guid.Empty : id == storeID)
+                ? new(kind, id, "local-profile", "controlled-binding-revision") { Receipt = new(1, "controlled-receipt") } : null);
+        public ValueTask<bool> IsCurrentAsync(VerifiedResourceStoreOwnership captured, AuthenticatedResourceActor expectedActor,
+            CancellationToken token) => ValueTask.FromResult(captured.ResourceKind == expectedKind
+                && (storeID is null || captured.StoreId == storeID) && captured.Receipt == new ResourceStoreBindingReceipt(1, "controlled-receipt")
+                && expectedActor == new AuthenticatedResourceActor("trusted-user", "local-profile", null, null, "session-1")
+                && !(RevokeAfterFirstRead && Reads > 1));
     }
     private sealed class Actors : IAuthenticatedResourceActorSource
     {

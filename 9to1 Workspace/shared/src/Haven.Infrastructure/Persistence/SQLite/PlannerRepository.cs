@@ -20,7 +20,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents planner repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class PlannerRepository(ISqliteConnectionFactory factory) : IPlannerRepository, ICalendarSyncStore, IPlannerStructuredEntityRepository
+public sealed partial class PlannerRepository(ISqliteConnectionFactory factory) : IPlannerRepository, ICalendarSyncStore, IPlannerStructuredEntityRepository
 {
     /// <summary>
     /// Performs ensure defaults asynchronously so I/O does not block the caller's thread.

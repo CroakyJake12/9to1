@@ -51,13 +51,22 @@ public sealed record HomeProductivityGeometry(int SchemaVersion, string Unit, do
 public static class HomeProductivityGeometryOperations
 {
     public const string LayoutProperty = "sharedGeometry";
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = false };
 
     public static HomeProductivityGeometry Read(HomeProductivityObject source)
     {
         if (source.Layout.ValueKind != JsonValueKind.Object || !source.Layout.TryGetProperty(LayoutProperty, out var value))
             throw new NotSupportedException("This shared object has no explicit canonical geometry projection.");
-        var geometry = value.Deserialize<HomeProductivityGeometry>(Json);
+        ValidateObject(source.Layout);
+        ValidateObject(value, "schemaVersion");
+        if (value.GetProperty("schemaVersion").ValueKind != JsonValueKind.Number ||
+            !value.GetProperty("schemaVersion").TryGetInt32(out var version) || version != 1)
+            throw new NotSupportedException("The shared geometry version is unsupported.");
+        ValidateObject(value, "schemaVersion", "unit", "width", "height", "localToDocument");
+        ValidateObject(value.GetProperty("localToDocument"), "m11", "m12", "m21", "m22", "dx", "dy");
+        HomeProductivityGeometry? geometry;
+        try { geometry = value.Deserialize<HomeProductivityGeometry>(Json); }
+        catch (JsonException error) { throw new InvalidDataException("The shared geometry contains invalid typed values.", error); }
         if (geometry is not { IsValid: true }) throw new NotSupportedException("The shared geometry version, unit or bounds are unsupported.");
         return geometry;
     }
@@ -66,11 +75,25 @@ public static class HomeProductivityGeometryOperations
     {
         if (source.ObjectId == Guid.Empty || !geometry.IsValid || source.Layout.ValueKind != JsonValueKind.Object)
             throw new InvalidDataException("A geometry projection requires valid bounds and an existing shared object identity.");
-        if (source.Layout.TryGetProperty(LayoutProperty, out _))
+        if (source.Layout.EnumerateObject().Any(property => string.Equals(property.Name, LayoutProperty, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("An existing shared geometry projection must be transformed, not silently replaced.");
+        ValidateObject(source.Layout);
         var layout = JsonNode.Parse(source.Layout.GetRawText())!.AsObject();
         layout[LayoutProperty] = JsonSerializer.SerializeToNode(geometry, Json);
         return source with { Layout = JsonSerializer.SerializeToElement(layout, Json) };
+    }
+
+    private static void ValidateObject(JsonElement value, params string[] required)
+    {
+        if (value.ValueKind != JsonValueKind.Object)
+            throw new InvalidDataException("Shared geometry envelopes must be JSON objects.");
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var property in value.EnumerateObject())
+            if (!names.Add(property.Name))
+                throw new InvalidDataException("Shared geometry envelopes cannot contain ambiguous property names.");
+        foreach (var name in required)
+            if (!value.TryGetProperty(name, out _))
+                throw new InvalidDataException($"Shared geometry requires the exact '{name}' member.");
     }
 
     public static HomeProductivityObject Transform(HomeProductivityObject source, HomeProductivityAffine operation,

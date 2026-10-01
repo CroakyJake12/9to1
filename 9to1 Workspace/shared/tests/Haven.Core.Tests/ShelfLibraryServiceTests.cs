@@ -136,20 +136,66 @@ public sealed class ShelfLibraryServiceTests
         Assert.Throws<ArgumentException>(() => adapter.CreateItem(original with { ProviderId = "untrusted" }));
     }
 
-    private sealed class InstalledProvider(string providerID) : IGoProvider
+    [Fact]
+    public async Task Restart_resolves_current_app_revision_by_identity_and_preserves_unavailable_entry()
+    {
+        var settings = new MemorySettings(); var library = new ShelfLibraryService(settings);
+        var provider = new InstalledProvider("os.installed-applications"); var go = new GoService([provider]);
+        var adapter = new ShelfInstalledApplicationActivation(library, go, provider.ProviderId);
+        var item = adapter.CreateItem(provider.Result()) with { Name = "My custom label" };
+        Assert.True((await library.AddItemAsync(0, item)).Success);
+        provider.Revision = "2"; provider.Label = "Renamed owner app";
+        var reopenedLibrary = new ShelfLibraryService(settings);
+        var reopened = new ShelfInstalledApplicationActivation(reopenedLibrary, go, provider.ProviderId);
+        Assert.True((await reopened.ActivateCurrentAsync(item.Id, 1)).Requested);
+        Assert.Equal("2", provider.LastReference!.Revision);
+        Assert.Equal("My custom label", Assert.Single((await reopenedLibrary.ReadAsync()).Library.Items).Name);
+        provider.Allowed = false;
+        var denied = await reopened.ActivateCurrentAsync(item.Id, 1);
+        Assert.False(denied.Requested); Assert.Equal("TargetUnavailable", denied.Code);
+        Assert.Single((await reopenedLibrary.ReadAsync()).Library.Items);
+        Assert.Equal(1, provider.Activations);
+    }
+
+    [Fact]
+    public async Task Shelf_revision_change_during_owner_resolution_prevents_activation()
+    {
+        var library = new ShelfLibraryService(new MemorySettings());
+        var provider = new InstalledProvider("os.installed-applications") { PauseResolve = true };
+        var adapter = new ShelfInstalledApplicationActivation(library, new GoService([provider]), provider.ProviderId);
+        var item = adapter.CreateItem(provider.Result()); Assert.True((await library.AddItemAsync(0, item)).Success);
+        var resolving = adapter.ActivateCurrentAsync(item.Id, 1);
+        await provider.ResolveEntered.Task;
+        Assert.True((await library.SetItemArchivedAsync(1, item.Id, true)).Success);
+        provider.ResolveRelease.TrySetResult();
+        Assert.Equal("RevisionConflict", (await resolving).Code); Assert.Equal(0, provider.Activations);
+    }
+
+    private sealed class InstalledProvider(string providerID) : IGoCanonicalResolver
     {
         public string ProviderId => providerID;
         public Guid ID { get; } = Guid.NewGuid();
         public string Revision { get; set; } = "1";
+        public string Label { get; set; } = "Editor";
+        public bool PauseResolve { get; init; }
+        public TaskCompletionSource ResolveEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ResolveRelease { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public bool Allowed { get; set; } = true;
         public int Activations { get; private set; }
         public GoCanonicalReference? LastReference { get; private set; }
-        public GoResult Result() => new(ProviderId, new("Home", "os.installed-application", ID.ToString("D"), Revision), "Editor", "Apps", [new("Open", "Open")]);
+        public GoResult Result() => new(ProviderId, new("Home", "os.installed-application", ID.ToString("D"), Revision), Label, "Apps", [new("Open", "Open")]);
         public async IAsyncEnumerable<GoResult> QueryAsync(GoQuery query, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
         {
             await Task.Yield(); token.ThrowIfCancellationRequested();
             Assert.Equal("Apps", query.Category); Assert.Contains(ProviderId, query.Scope!.ProviderIds!);
             if (Allowed) yield return Result();
+        }
+        public async Task<GoResult?> ResolveAsync(GoCanonicalLocator locator, CancellationToken token)
+        {
+            ResolveEntered.TrySetResult();
+            if (PauseResolve) await ResolveRelease.Task.WaitAsync(token);
+            return Allowed && locator.Owner == "Home" && locator.Kind == "os.installed-application" && locator.Id == ID.ToString("D")
+                ? Result() : null;
         }
         public Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken token)
         {

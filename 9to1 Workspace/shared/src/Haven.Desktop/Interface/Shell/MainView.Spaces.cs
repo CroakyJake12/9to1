@@ -14,10 +14,13 @@ public sealed partial class MainView
     private NativeSpacesPage? _spacesPage;
     private SpaceRegistry? _spaceRegistry;
 
-    private SpaceRegistry SpacesRegistry => _spaceRegistry ??= new SpaceRegistry(_versionedSettings);
+    private SpaceRegistry SpacesRegistry => _spaceRegistry ??= new SpaceRegistry(_versionedSettings, CaptureSpaceWriteAdmissionAsync);
 
     private async Task OpenSpacesAsync()
     {
+        var workspace = await GetOwnedSpacesWorkspaceAsync(CancellationToken.None);
+        foreach (var pending in await workspace.Registry.ReadPendingDeletionsAsync(CancellationToken.None))
+            await workspace.Deletion.ResumeAsync(pending.OperationId, CancellationToken.None);
         _spacesPage ??= new NativeSpacesPage(
             SpacesRegistry,
             new SpaceGeneratedSurfaceRenderer(
@@ -36,7 +39,7 @@ public sealed partial class MainView
             OpenSpaceLayoutAsync,
             _conversations,
             OpenSpaceConversationAsync,
-            OpenSpaceCanonicalSourceAsync);
+            OpenSpaceCanonicalSourceAsync, workspace.RequireCurrentAccessAsync);
 
         AddOrSelectTab("spaces", "Spaces", _spacesPage, false, HavenSurface.Spaces);
         await _spacesPage.ActivateAsync(CancellationToken.None);
@@ -134,8 +137,7 @@ public sealed partial class MainView
         }
         else
         {
-            await _newChatPage.StartFreshConversationAsync(HavenMode.Chat, null);
-            await _newChatPage.AssignSpaceAsync(space.Id);
+            await _newChatPage.StartFreshConversationAsync(HavenMode.Chat, null, spaceId: space.Id);
             _newChatPage.ConfigureRegisteredContext(plan.RegisteredContext, plan.EffortOverride);
             if (plan.Files.Count > 0)
                 await _newChatPage.AddFilesAsync(plan.Files.Select(file => file.Path));
@@ -159,15 +161,17 @@ public sealed partial class MainView
 
     private async Task DeleteSpaceAsync(Guid spaceId)
     {
-        var conversations = await _conversations.GetRecentAsync(HavenMode.Chat, int.MaxValue, CancellationToken.None);
-        var now = DateTimeOffset.UtcNow;
-        foreach (var conversation in conversations.Where(item => item.SpaceId == spaceId))
-            await _conversations.UpsertConversationAsync(conversation with { SpaceId = null, UpdatedAt = now }, CancellationToken.None);
-
+        var workspace = await GetOwnedSpacesWorkspaceAsync(CancellationToken.None);
+        var space = await workspace.Registry.ReadExistingAsync(spaceId, CancellationToken.None)
+            ?? throw new InvalidOperationException("The current Space is unavailable.");
+        var operation = await workspace.Deletion.BeginAsync(spaceId, space.Revision, Guid.NewGuid(), CancellationToken.None);
+        if (operation.Stage != SpaceDeletionStage.Complete)
+            throw new InvalidOperationException("Space deletion remains pending. Reopen Spaces to resume recovery.");
         if (_newChatPage?.CurrentConversation.SpaceId == spaceId)
-            await _newChatPage.AssignSpaceAsync(null);
-
-        await SpacesRegistry.DeleteAsync(spaceId, CancellationToken.None);
+        {
+            var current = await _conversations.GetAsync(_newChatPage.CurrentConversation.Id, CancellationToken.None);
+            if (current is not null) await _newChatPage.LoadConversationAsync(current);
+        }
         if (_nativeChatSidebar is not null)
             await _nativeChatSidebar.ReloadSpaceScopeAsync();
     }

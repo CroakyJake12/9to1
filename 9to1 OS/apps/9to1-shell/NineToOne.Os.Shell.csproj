@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../../HUI/Platform/CakeOS.Platform.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Home/HavenOS.Home.csproj" />

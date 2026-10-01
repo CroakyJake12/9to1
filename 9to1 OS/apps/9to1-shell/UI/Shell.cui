@@ -75,7 +75,7 @@
       <StackPanel orientation="Horizontal"><Button id="keep" content="Keep" action="Keep" is-enabled="{Binding HasPreview}" /><Button id="revert" content="Revert" action="Revert" is-enabled="{Binding HasPreview}" /></StackPanel>
       <TextBlock text="Go search categories" font-size="18" margin="0,12" />
       <WrapPanel><Button content="All results" action="GoFilter.All" /><Button content="Apps" action="GoFilter.Apps" /><Button content="Desktop Spaces" action="GoFilter.Desktop Spaces" /><Button content="Desktop Pages" action="GoFilter.Desktop Pages" /><Button content="Taskbar Layers" action="GoFilter.Taskbar Layers" /></WrapPanel>
-      <Button content="Personal AI models" action="Models" />
+      <WrapPanel><Button content="Personal AI models" action="Models" /><Button content="Ask Dulche" action="Dulche" /></WrapPanel>
     </StackPanel>
   </ScrollViewer>
 </Cui>

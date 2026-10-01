@@ -38,6 +38,7 @@ public sealed class FilesNativeHostCompositionTests
             Assert.Same(files, Assert.Single(provider.GetServices<IHomeLocalStoreEvidenceProvider>()));
             Assert.Single(provider.GetServices<ICanonicalResourceAccessResolver>());
             Assert.Same(provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>(), provider.GetRequiredService<IMediaAssetSourceResolver>());
+            Assert.Same(provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>(), provider.GetRequiredService<IMediaRetainedAssetSourceResolver>());
             var authority = provider.GetRequiredService<NativeFilesWorkspaceAuthority>();
             Assert.Null(await authority.GetCurrentAsync(token));
             Assert.Null(await files.GetConfigurationAsync(token));

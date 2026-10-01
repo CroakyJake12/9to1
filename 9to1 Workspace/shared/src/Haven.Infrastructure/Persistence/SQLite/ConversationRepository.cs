@@ -189,26 +189,29 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
     }
 
     /// <summary>
-    /// Performs upsert conversation asynchronously so I/O does not block the caller's thread.
+    /// Creates an unscoped conversation or updates ordinary content while preserving the current SQL
+    /// Space membership. Explicit membership creation/changes require the guarded owning CAS port.
     /// </summary>
     public async Task UpsertConversationAsync(Conversation conversation, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await UpsertCoreAsync(connection, null, conversation, cancellationToken).ConfigureAwait(false);
+        await UpsertCoreAsync(connection, null, conversation, cancellationToken, allowSpaceMembership: false).ConfigureAwait(false);
     }
 
     private static async Task UpsertCoreAsync(SqliteConnection connection, SqliteTransaction? transaction,
-        Conversation conversation, CancellationToken cancellationToken)
+        Conversation conversation, CancellationToken cancellationToken, bool allowSpaceMembership)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO conversations(id, mode, kind, title, container_id, lesson_id, is_pinned, is_temporary, created_at, updated_at,is_archived,parent_conversation_id,compacted_at,space_id)
-            VALUES($id,$mode,$kind,$title,$containerId,$lessonId,$isPinned,$isTemporary,$createdAt,$updatedAt,$isArchived,$parentConversationId,$compactedAt,$spaceId)
+            SELECT $id,$mode,$kind,$title,$containerId,$lessonId,$isPinned,$isTemporary,$createdAt,$updatedAt,$isArchived,$parentConversationId,$compactedAt,$spaceId
+            WHERE $allowSpace=1 OR $spaceId IS NULL OR EXISTS(SELECT 1 FROM conversations WHERE id=$id)
             ON CONFLICT(id) DO UPDATE SET mode=excluded.mode, kind=excluded.kind, title=excluded.title,
               container_id=excluded.container_id, lesson_id=excluded.lesson_id, is_pinned=excluded.is_pinned,
               is_temporary=excluded.is_temporary, updated_at=excluded.updated_at,is_archived=excluded.is_archived,
-              parent_conversation_id=excluded.parent_conversation_id,compacted_at=excluded.compacted_at,space_id=excluded.space_id;
+              parent_conversation_id=excluded.parent_conversation_id,compacted_at=excluded.compacted_at,
+              space_id=CASE WHEN $allowSpace=1 THEN excluded.space_id ELSE conversations.space_id END;
             """;
         command.Parameters.AddWithValue("$id", conversation.Id.ToString());
         command.Parameters.AddWithValue("$mode", (int)conversation.Mode);
@@ -224,7 +227,9 @@ public sealed partial class ConversationRepository(ISqliteConnectionFactory fact
         command.Parameters.AddWithValue("$parentConversationId", (object?)conversation.ParentConversationId?.ToString() ?? DBNull.Value);
         command.Parameters.AddWithValue("$compactedAt", (object?)conversation.CompactedAt?.ToString("O") ?? DBNull.Value);
         command.Parameters.AddWithValue("$spaceId", (object?)conversation.SpaceId?.ToString() ?? DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        command.Parameters.AddWithValue("$allowSpace", allowSpaceMembership ? 1 : 0);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 0)
+            throw new UnauthorizedAccessException("Creating a conversation with Space membership requires the owning guarded assignment operation.");
     }
 
     /// <summary>

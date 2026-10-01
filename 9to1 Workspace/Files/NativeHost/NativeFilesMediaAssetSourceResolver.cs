@@ -5,7 +5,7 @@ namespace HavenOS.Files.NativeHost;
 
 /// <summary>Resolves each operation through the current verified native Files workspace.</summary>
 public sealed class NativeFilesMediaAssetSourceResolver(NativeFilesWorkspaceAuthority workspaces,
-    IAuthenticatedResourceActorSource actors, ResourceAuthorizationService authorization) : IMediaAssetSourceResolver
+    IAuthenticatedResourceActorSource actors, ResourceAuthorizationService authorization) : IMediaRetainedAssetSourceResolver
 {
     public Task<MediaEngineResult<MediaAssetReadLease>> ResolveAsync(string fileID, MediaAssetId assetID,
         string? expectedRevision, CancellationToken cancellationToken = default) =>

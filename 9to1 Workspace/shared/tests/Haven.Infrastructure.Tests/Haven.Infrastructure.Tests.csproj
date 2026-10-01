@@ -13,6 +13,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../Wave/HavenOS.Wave.csproj" />
+    <ProjectReference Include="../../../Motion/HavenOS.Motion.csproj" />
     <ProjectReference Include="..\..\src\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="../Haven.PluginFixture/Haven.PluginFixture.csproj" />

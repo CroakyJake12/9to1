@@ -19,6 +19,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     private readonly SemaphoreSlim _actions = new(1, 1);
     private readonly DispatcherTimer _timer;
     public Func<CancellationToken, Task>? OpenModels { get; set; }
+    public Func<CancellationToken, CancellationToken, Task>? OpenDulche { get; set; }
     private ShellConfigurationService? _configuration;
     private GoService? _go;
     private LinuxApplicationLauncher? _launcher;
@@ -53,6 +54,13 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         await Dispatcher.UIThread.InvokeAsync(() => { _configuration = configuration; _go = go; _launcher = launcher; Populate(snapshot); _timer.Start(); });
         _ = SearchSafelyAsync(_lifetimeToken);
     }
+    public async Task RefreshAsync(CancellationToken ct)
+    {
+        if (_configuration is null) return;
+        using var request = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetimeToken);
+        var snapshot = await _configuration.GetAsync(request.Token);
+        await Dispatcher.UIThread.InvokeAsync(() => { if (!request.IsCancellationRequested) Populate(snapshot); });
+    }
     private async Task RefreshExpiryAsync()
     {
         if (_configuration is null || _snapshot?.Preview is null || _actions.CurrentCount == 0) return;
@@ -67,6 +75,8 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     }
     private void Populate(ShellConfigurationSnapshot snapshot)
     {
+        if (_snapshot is { } shown && shown.Stored.AuthorityId == snapshot.Stored.AuthorityId && shown.Stored.SessionActor == snapshot.Stored.SessionActor &&
+            (shown.Stored.Revision > snapshot.Stored.Revision || shown.Stored.Revision == snapshot.Stored.Revision && shown.IntentGeneration > snapshot.IntentGeneration)) return;
         _snapshot = snapshot; var config = snapshot.Effective; var space = config.ActiveSpace; var bar = space.Taskbar;
         _bindings.Set("HasPreview", snapshot.Preview is not null);
         var surface = DesktopPageEdits.Effective(config);
@@ -154,6 +164,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                 await _go.InvokeAsync(ownerAction.Result, ownerAction.Action.Id, GoScope(), request.Token);
                 Populate(await _configuration.GetAsync(request.Token)); return;
             }
+            if (command == "Dulche" && OpenDulche is { } openDulche) { await openDulche(request.Token, _lifetimeToken); return; }
             if (command == "Models" && OpenModels is { } openModels) { await openModels(request.Token); return; }
             if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", GoScope(), request.Token); return; }
             if (command == "SelectPageItem" && parameter is DesktopPageItem selected)

@@ -40,6 +40,7 @@ public sealed partial class MainWindow : Window
     private PictureFilesOpenResult? _opened;
     private IDisposable? _view;
     private string? _pendingRequest;
+    private string? _pendingBeginAudit;
     private JsonElement _pendingArguments;
     private Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>>? _pendingExecute;
     private IDisposable? _pendingDisposable;
@@ -140,7 +141,7 @@ public sealed partial class MainWindow : Window
     private void RefreshBindings()
     {
         var idle = !_busy && !_closed && !_requestUncertain;
-        var noPending = _pendingRequest is null && _pendingOwnership is null && _pendingAudit is null;
+        var noPending = _pendingRequest is null && _pendingOwnership is null && _pendingAudit is null && _pendingBeginAudit is null;
         _model.Set("CanNavigate", idle && noPending);
         _model.Set("CanSetup", idle && _ready && _configuration is null && noPending);
         _model.Set("CanWrite", idle && WriteAvailable() && noPending);
@@ -167,7 +168,7 @@ public sealed partial class MainWindow : Window
             if (current.CasRevisionId != captured.CasRevisionId) throw new InvalidOperationException("This Picture changed. Refresh and reopen it.");
             return current;
         }, _renderer!, new(), readiness, DispatchDocumentAsync,
-            kind => !_busy && _pendingRequest is null && _pendingAudit is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
+            kind => !_busy && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
                 PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export,
             motionPreferences: Get<Haven.Application.IMotionPreferenceSource>());
         surface.SourceUnavailable += (_, _) =>
@@ -193,7 +194,7 @@ public sealed partial class MainWindow : Window
     private async Task<string> RequestAsync(string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview,
         Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>> execute, IDisposable? owned, CancellationToken ct)
     {
-        if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _requestUncertain) { owned?.Dispose(); throw new InvalidOperationException("Finish the existing Home request first."); }
+        if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain) { owned?.Dispose(); throw new InvalidOperationException("Finish the existing Home request first."); }
         _pendingDisposable = owned; _requestUncertain = true; RefreshBindings();
         var pending = await Get<HomeResourceOperationBroker>().AuthorizeAsync("picture", action, scopes, arguments, preview, null, "picture-native-host", ct);
         _requestUncertain = false; _pendingRequest = pending.RequestId; _pendingArguments = arguments.Clone(); _pendingExecute = execute;
@@ -205,7 +206,7 @@ public sealed partial class MainWindow : Window
     private async ValueTask DispatchDocumentAsync(PictureWorkspaceCommand command, CancellationToken ct)
     {
         if (_busy || _requestUncertain || _opened is not { } opened || command.DocumentId != opened.Artifact.Document.DocumentId || command.BaseRevision != opened.Artifact.Document.Revision ||
-            command.BackingFileId != opened.Artifact.BackingFileId || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null)
+            command.BackingFileId != opened.Artifact.BackingFileId || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _pendingBeginAudit is not null)
             throw new UnauthorizedAccessException("This Picture action is no longer available.");
         _busy = true; RefreshBindings();
         try
@@ -256,6 +257,18 @@ public sealed partial class MainWindow : Window
                         SetStatus("The operation will not run again. Home could not record the unclaimed request's outcome: " + aborted.Message + " Choose Finish to retry recording only.");
                         return false;
                     }
+                    var rejected = await Get<HomeResourceOperationBroker>().RetryRejectedClaimAuditAsync(pending.Capability, ct);
+                    if (rejected.Succeeded)
+                    {
+                        _pendingAudit = null;
+                        SetStatus("Home recorded the rejected claim. No owning operation will run again. " + rejected.Message);
+                        return true;
+                    }
+                    if (rejected.Code != "HOME_CLAIM_REJECTION_NOT_OWNED")
+                    {
+                        SetStatus("The operation will not run again. Home rejection recording needs recovery: " + rejected.Message + " Choose Finish to retry recording only.");
+                        return false;
+                    }
                     var state = await Get<HomePermissionTrustService>().GetAuthorizationAsync(pending.Capability.RequestId, ct);
                     if (state.State is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked or
                         HomePermissionRequestState.Cancelled or HomePermissionRequestState.Failed)
@@ -280,6 +293,30 @@ public sealed partial class MainWindow : Window
             SetStatus("The operation will not run again. Home outcome recording needs recovery: " + error.Message + " Choose Finish to retry recording only.");
         }
         return false;
+    }
+
+    private async Task FinishRejectedBeginAuditAsync(CancellationToken ct)
+    {
+        var request = _pendingBeginAudit ?? throw new InvalidOperationException("There is no failed dispatch admission to record.");
+        try
+        {
+            var result = await Get<HomeResourceOperationBroker>().RetryRejectedBeginAuditAsync(request, ct);
+            if (result.Succeeded) _pendingBeginAudit = null;
+            else if (result.Code == "HOME_BEGIN_AUDIT_NOT_OWNED")
+            {
+                // The initial automatic audit may already have finished. Read its actual terminal state.
+                var state = await Get<HomePermissionTrustService>().GetAuthorizationAsync(request, ct);
+                if (state.State is HomePermissionRequestState.Failed or HomePermissionRequestState.Denied or
+                    HomePermissionRequestState.Blocked or HomePermissionRequestState.Cancelled) _pendingBeginAudit = null;
+            }
+            SetStatus(_pendingBeginAudit is null
+                ? "Home ended dispatch admission. No owning operation was issued or replayed."
+                : "Dispatch admission recording needs recovery. Choose Finish to retry recording only. " + result.Message);
+        }
+        catch (Exception error)
+        {
+            SetStatus("Dispatch admission recording needs recovery. Choose Finish to retry recording only. " + error.Message);
+        }
     }
 
     private async Task<bool> ReleaseTerminalRequestAsync(string requestId, bool ownershipRequest, CancellationToken ct)
@@ -308,7 +345,11 @@ public sealed partial class MainWindow : Window
         _busy = true; RefreshBindings();
         try
         {
-            if (action == "picture.host.finish" && _pendingAudit is not null)
+            if (action == "picture.host.finish" && _pendingBeginAudit is not null)
+            {
+                await FinishRejectedBeginAuditAsync(ct);
+            }
+            else if (action == "picture.host.finish" && _pendingAudit is not null)
             {
                 await FinishAuditAsync(ct);
             }
@@ -322,7 +363,17 @@ public sealed partial class MainWindow : Window
             {
                 if (_pendingRequest is null || _pendingExecute is null) throw new InvalidOperationException("There is no captured request to finish.");
                 if (await ReleaseTerminalRequestAsync(_pendingRequest, false, ct)) return;
-                var cap = await Get<HomeResourceOperationBroker>().BeginExecutionCapabilityAsync(_pendingRequest, _pendingArguments, ct);
+                HomeResourceExecutionCapability? cap;
+                try { cap = await Get<HomeResourceOperationBroker>().BeginExecutionCapabilityAsync(_pendingRequest, _pendingArguments, ct); }
+                catch
+                {
+                    // Admission may have consumed the intent before storage failed. Never dispatch it again.
+                    _pendingBeginAudit = _pendingRequest;
+                    _pendingRequest = null; _pendingExecute = null; _pendingArguments = default;
+                    _pendingDisposable?.Dispose(); _pendingDisposable = null;
+                    await FinishRejectedBeginAuditAsync(CancellationToken.None);
+                    return;
+                }
                 if (cap is null) { SetStatus("Home has not approved this exact request. Review it in Home."); return; }
                 var execute = _pendingExecute; _pendingExecute = null; _pendingRequest = null;
                 OwnerCommit? committed = null;
@@ -345,8 +396,14 @@ public sealed partial class MainWindow : Window
                 finally { _pendingDisposable?.Dispose(); _pendingDisposable = null; }
                 await FinishAuditAsync(CancellationToken.None);
                 if (committed.Opened is not null) await OpenAsync(committed.Opened, ct);
+                else if (_opened is { } source)
+                {
+                    // A rendered export creates a separate Files item. Restore the source editor from
+                    // current owning authority instead of leaving its completed request form mounted.
+                    await OpenAsync(await _files!.OpenAsync(new(source.Artifact.BackingFileId), ct), ct);
+                }
             }
-            else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
+            else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
             else if (action == "picture.host.refresh") await RefreshAsync(null, ct);
             else if (action == "picture.host.page") await RefreshAsync(_nextPage, ct);
             else if (action == "picture.host.previous" && _selected > 0) _selected--;

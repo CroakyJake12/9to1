@@ -7,7 +7,7 @@ public sealed partial class MapsJourneyService
     // Only the authorised cross-app facade calls this commit; the normal library remains the sole store.
     internal Task<MapsJourneyResult<MapPlannerJourneyReference>> CommitPlannerReferenceAsync(long libraryRevision,
         PlannerEvent authorisedEvent, Guid journeyID, long expectedJourneyRevision, long? expectedLinkRevision,
-        CancellationToken cancellationToken) => MutateAsync(libraryRevision, library =>
+        ISettingsCommitAdmission admission, CancellationToken cancellationToken) => MutateAsync(libraryRevision, library =>
         {
             var journey = library.Journeys.FirstOrDefault(item => item.JourneyId == journeyID)
                 ?? throw new KeyNotFoundException("Journey not found.");
@@ -20,5 +20,5 @@ public sealed partial class MapsJourneyService
                 journeyID, journey.Revision, checked((current?.Revision ?? 0) + 1));
             return (library with { PlannerJourneyReferences = library.PlannerJourneyReferences
                 .Where(reference => reference.EventID != authorisedEvent.Id || reference.JourneyID != journeyID).Append(saved).ToArray() }, saved);
-        }, cancellationToken);
+        }, cancellationToken, admission);
 }

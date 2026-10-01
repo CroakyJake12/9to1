@@ -63,11 +63,33 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
             if (await workspace.GetCurrentAsync(ct).ConfigureAwait(false) != intent.Binding)
                 throw new UnauthorizedAccessException("The canonical Sites Files/profile binding changed.");
         }
-        await CheckBinding(cancellationToken).ConfigureAwait(false);
-        var actor = await home.ClaimExecutionAsync(capability, SiteNativeWriteIntent.TargetAppId, intent.ActionId, intent.Scopes, intent.Arguments, cancellationToken).ConfigureAwait(false);
+        try { await CheckBinding(cancellationToken).ConfigureAwait(false); }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            await RejectAdmissionAsync(capability, error, SiteNativeAdmissionAuditKind.UnclaimedAbort).ConfigureAwait(false);
+            throw;
+        }
+        AuthenticatedResourceActor? actor;
+        try
+        {
+            actor = await home.ClaimExecutionAsync(capability, SiteNativeWriteIntent.TargetAppId, intent.ActionId, intent.Scopes, intent.Arguments, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            await RejectAdmissionAsync(capability, error, SiteNativeAdmissionAuditKind.RejectedClaim).ConfigureAwait(false);
+            throw;
+        }
+        if (actor is null)
+            await RejectAdmissionAsync(capability, new UnauthorizedAccessException("Home did not authorise this exact current Sites write."), SiteNativeAdmissionAuditKind.RejectedClaim).ConfigureAwait(false);
         if (actor is null || actor.AccountId is not null || actor.OrganisationId is not null || actor.ActorId != intent.Binding.ActorId ||
             actor.ProfileId != intent.Binding.ProfileId || actor.AuthenticationRevision != intent.Binding.AuthenticationRevision)
-            throw new UnauthorizedAccessException("Home did not authorise this exact current Sites write.");
+        {
+            var admissionFailure = ExceptionDispatchInfo.Capture(new UnauthorizedAccessException("Home did not authorise this exact current Sites write."));
+            var rejected = new SiteNativeWriteAuditPendingException(this, capability,
+                new(HomePermissionRequestState.Failed, "SitesAdmissionRejected", "The owning Sites binding rejected the claimed operation before any mutation.", []), null, admissionFailure);
+            await RecordCompletionAsync(rejected).ConfigureAwait(false);
+            admissionFailure.Throw();
+        }
         var projects = new SiteProjectService(new FileSiteWorkspaceStore(intent.Binding.RootDirectory, CheckBinding));
         var authoring = new SiteAuthoringService(projects);
         var payload = intent.Payload;
@@ -91,7 +113,7 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
                 : result!.IsSuccess ? "The canonical Sites revision was committed." : "The owning Sites write was rejected.",
             Array.AsReadOnly(capability.Scopes.Select(scope => new HomeObjectReference(scope.Kind, scope.Id)).ToArray()));
         var recovery = new SiteNativeWriteAuditPendingException(this, capability, outcome, result, failure);
-        return await RetryAuditAsync(recovery, CancellationToken.None).ConfigureAwait(false);
+        return await RecordCompletionAsync(recovery).ConfigureAwait(false);
 
         async Task<SiteApiResult<SiteProject>> MutateAsync() => intent.Operation switch
         {
@@ -115,6 +137,54 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
         };
     }
 
+    private async Task<SiteApiResult<SiteProject>> RecordCompletionAsync(SiteNativeWriteAuditPendingException pending)
+    {
+        try
+        {
+            var audited = await home.CompleteExecutionAsync(pending.Capability, pending.Outcome, CancellationToken.None).ConfigureAwait(false);
+            if (!audited.Succeeded) throw pending;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
+        { throw pending; }
+        pending.Failure?.Throw();
+        return pending.Result!;
+    }
+
+    private async Task RejectAdmissionAsync(HomeResourceExecutionCapability capability, Exception error, SiteNativeAdmissionAuditKind kind)
+    {
+        var pending = new SiteNativeAdmissionAuditPendingException(this, capability, ExceptionDispatchInfo.Capture(error), kind);
+        await RetryAdmissionAuditAsync(pending, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    /// <summary>Finishes only the retained negative admission audit; never claims, resolves or writes a project.</summary>
+    public async Task RetryAdmissionAuditAsync(SiteNativeAdmissionAuditPendingException pending, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pending);
+        if (!ReferenceEquals(pending.Owner, this)) throw new UnauthorizedAccessException("Sites admission recovery belongs to another coordinator.");
+        try
+        {
+            var audited = pending.Kind == SiteNativeAdmissionAuditKind.UnclaimedAbort
+                ? await home.AbortUnclaimedExecutionAsync(pending.Capability, cancellationToken).ConfigureAwait(false)
+                : await home.RetryRejectedClaimAuditAsync(pending.Capability, cancellationToken).ConfigureAwait(false);
+            if (audited.Code == "HOME_CLAIM_REJECTION_NOT_OWNED" && pending.Kind == SiteNativeAdmissionAuditKind.RejectedClaim)
+            {
+                // An exact-operation mismatch may leave the handle unclaimed. Consume it as an abort,
+                // without turning a foreign or already claimed handle into a new completion right.
+                pending = new(this, pending.Capability, pending.Failure, SiteNativeAdmissionAuditKind.UnclaimedAbort);
+                audited = await home.AbortUnclaimedExecutionAsync(pending.Capability, cancellationToken).ConfigureAwait(false);
+            }
+            if (audited.Code == "HOME_EXECUTION_ABORT_NOT_OWNED") pending.Failure.Throw();
+            if (!audited.Succeeded) throw pending;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
+        {
+            // NOT_OWNED must surface the original denial, not manufacture an audit recovery grant.
+            if (ReferenceEquals(error, pending.Failure.SourceException)) throw;
+            throw pending;
+        }
+        pending.Failure.Throw();
+    }
+
     /// <summary>Retries only the exact retained Home audit. Never claims or executes another write.</summary>
     public async Task<SiteApiResult<SiteProject>> RetryAuditAsync(SiteNativeWriteAuditPendingException pending,
         CancellationToken cancellationToken = default)
@@ -123,7 +193,7 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
         if (!ReferenceEquals(pending.Owner, this)) throw new UnauthorizedAccessException("Sites audit recovery belongs to another coordinator.");
         try
         {
-            var audited = await home.CompleteExecutionAsync(pending.Capability, pending.Outcome, cancellationToken).ConfigureAwait(false);
+            var audited = await home.RetryCompletionAuditAsync(pending.Capability, cancellationToken).ConfigureAwait(false);
             if (!audited.Succeeded) throw pending;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
@@ -133,6 +203,22 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
         pending.Failure?.Throw();
         return pending.Result!;
     }
+}
+
+internal enum SiteNativeAdmissionAuditKind { UnclaimedAbort, RejectedClaim }
+
+/// <summary>Owner-held negative audit recovery; it is never a resource execution grant.</summary>
+public sealed class SiteNativeAdmissionAuditPendingException : Exception
+{
+    internal SiteNativeAdmissionAuditPendingException(SiteNativeWriteCoordinator owner, HomeResourceExecutionCapability capability,
+        ExceptionDispatchInfo failure, SiteNativeAdmissionAuditKind kind)
+        : base("The Sites write was stopped before owner admission, but its Home audit requires recovery. Do not repeat the write.")
+    { Owner = owner; Capability = capability; Failure = failure; Kind = kind; }
+    internal SiteNativeWriteCoordinator Owner { get; }
+    internal HomeResourceExecutionCapability Capability { get; }
+    internal ExceptionDispatchInfo Failure { get; }
+    internal SiteNativeAdmissionAuditKind Kind { get; }
+    public string RequestId => Capability.RequestId;
 }
 
 /// <summary>In-process owner-held audit recovery, not a serializable execution grant.</summary>

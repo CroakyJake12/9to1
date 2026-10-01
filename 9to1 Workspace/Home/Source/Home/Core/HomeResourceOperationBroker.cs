@@ -169,8 +169,30 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
                 string.IsNullOrWhiteSpace(item.ObjectId) || item.ObjectId.Length > 1024))
             return new(false, "HOME_EXECUTION_OUTCOME_INVALID", "The owner outcome exceeds supported bounds.");
         cancellationToken.ThrowIfCancellationRequested();
-        return await capability.CompleteAsync(this, Digest(JsonSerializer.SerializeToElement(outcome)),
+        return await capability.CompleteAsync(this, outcome, Digest(JsonSerializer.SerializeToElement(outcome)),
             () => permissions.RecordExecutionAsync(capability.RequestId, outcome, cancellationToken), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Retries only the first detached owner outcome retained by this host's claimed handle.
+    /// No outcome arguments, owner resolution or resource mutation are accepted on this recovery path.</summary>
+    public Task<HomePermissionOperationResult> RetryCompletionAuditAsync(HomeResourceExecutionCapability capability,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        return capability.RetryCompletionAsync(this,
+            outcome => permissions.RecordExecutionAsync(capability.RequestId, outcome, cancellationToken), cancellationToken);
+    }
+
+    /// <summary>Reads Home's current decision for this issuer's original live handle, including after
+    /// a negative/terminal transition. This observation is neither an owner claim nor an execution grant.</summary>
+    public Task<HomePermissionAuthorization?> GetExecutionDecisionAsync(HomeResourceExecutionCapability capability,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        cancellationToken.ThrowIfCancellationRequested();
+        return capability.IssuedBy(this) ? ReadAsync() : Task.FromResult<HomePermissionAuthorization?>(null);
+        async Task<HomePermissionAuthorization?> ReadAsync() =>
+            await permissions.GetAuthorizationAsync(capability.RequestId, cancellationToken).ConfigureAwait(false);
     }
 
     private static string Digest(JsonElement arguments) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(arguments.GetRawText())));
@@ -183,9 +205,11 @@ public sealed class HomeResourceExecutionCapability
     private int _claimState;
     private readonly SemaphoreSlim _completionGate = new(1, 1);
     private string? _outcomeDigest;
+    private HomeExecutionOutcome? _outcome;
     private HomePermissionOperationResult? _completed;
     internal HomeResourceExecutionCapability(HomeResourceOperationBroker issuer, string requestId, string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes)
     { _issuer = issuer; RequestId = requestId; TargetAppId = targetAppId; ActionId = actionId; Scopes = scopes; }
+    internal bool IssuedBy(HomeResourceOperationBroker issuer) => ReferenceEquals(_issuer, issuer);
     internal bool MarkClaimed(HomeResourceOperationBroker issuer) =>
         ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, 1, 0) == 0;
     internal bool MarkRejected(HomeResourceOperationBroker issuer, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim) =>
@@ -206,7 +230,7 @@ public sealed class HomeResourceExecutionCapability
         }
         finally { _completionGate.Release(); }
     }
-    internal async Task<HomePermissionOperationResult> CompleteAsync(HomeResourceOperationBroker issuer, string outcomeDigest,
+    internal async Task<HomePermissionOperationResult> CompleteAsync(HomeResourceOperationBroker issuer, HomeExecutionOutcome outcome, string outcomeDigest,
         Func<Task<HomePermissionOperationResult>> record, CancellationToken ct)
     {
         if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) <= 0)
@@ -217,8 +241,26 @@ public sealed class HomeResourceExecutionCapability
             if (_outcomeDigest is not null && _outcomeDigest != outcomeDigest)
                 return new(false, "HOME_EXECUTION_OUTCOME_CHANGED", "Retry the exact observed outcome; a completion cannot be rewritten.");
             _outcomeDigest ??= outcomeDigest;
+            _outcome ??= outcome;
             if (_completed is not null) return _completed;
             var result = await record().ConfigureAwait(false);
+            if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, 2); }
+            return result;
+        }
+        finally { _completionGate.Release(); }
+    }
+    internal async Task<HomePermissionOperationResult> RetryCompletionAsync(HomeResourceOperationBroker issuer,
+        Func<HomeExecutionOutcome, Task<HomePermissionOperationResult>> record, CancellationToken ct)
+    {
+        if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) <= 0)
+            return new(false, "HOME_EXECUTION_COMPLETION_NOT_OWNED", "The completion requires this issuer's successfully claimed capability.");
+        await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_outcome is null)
+                return new(false, "HOME_EXECUTION_OUTCOME_NOT_RECORDED", "No observed owner outcome is retained for audit recovery.");
+            if (_completed is not null) return _completed;
+            var result = await record(_outcome).ConfigureAwait(false);
             if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, 2); }
             return result;
         }

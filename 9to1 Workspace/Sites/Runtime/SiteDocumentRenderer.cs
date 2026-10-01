@@ -71,7 +71,11 @@ public sealed class SiteDocumentRenderer
                 if(node.Layout.Mode != SiteLayoutMode.Flow)
                     layout.TryAdd("display",JsonSerializer.SerializeToElement(node.Layout.Mode == SiteLayoutMode.Grid ? "grid" : "flex"));
                 AppendStyle(css,selector,layout,diagnostics,pageID,id);
-                foreach(var responsive in node.Layout.BreakpointOverrides)
+                // Wider max-width rules must precede narrower ones so phone overrides
+                // inherit tablet properties and win independently of persisted map order.
+                foreach(var responsive in node.Layout.BreakpointOverrides
+                    .OrderByDescending(pair => project.DesignSystem.Breakpoints.GetValueOrDefault(pair.Key))
+                    .ThenBy(pair => pair.Key, StringComparer.Ordinal))
                 {
                     if(!project.DesignSystem.Breakpoints.TryGetValue(responsive.Key,out var width)||width<=0)
                     {diagnostics.Add(new("BreakpointUnknown","Responsive override references an undefined breakpoint.",pageID,id,true));continue;}

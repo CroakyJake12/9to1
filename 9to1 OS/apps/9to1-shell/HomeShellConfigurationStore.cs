@@ -13,6 +13,8 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
     public const string RecordType = "os.shell.configuration";
     public static string RecordId(string profileId) => RecordType + "." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(profileId)));
     private sealed record Payload(string ProfileId, ShellConfiguration Current, ShellConfiguration? Previous);
+    public async Task<bool> IsCurrentSessionAsync(string authorityId, AuthenticatedResourceActor actor, CancellationToken ct)
+        => authorityId == RecordId(actor.ProfileId) && actor == await actors.GetCurrentAsync(ct);
     public async Task<ShellStoredConfiguration> ReadAsync(CancellationToken ct)
     {
         var actor = await ActorAsync(ct);
@@ -86,7 +88,7 @@ public sealed class ShellConfigurationResourceResolver(IHomeCoreStateStore home)
     {
         var denied = new ResourceAccessDecision(false, "ShellOwnershipUnavailable", actor.ActorId, scope.Revision, actor.OrganisationId);
         if (actor.OrganisationId is not null || scope.Id != HomeShellConfigurationStore.RecordId(actor.ProfileId) ||
-            !((actionId == "os.shell.configuration.keep" && scope.Access == ResourceAccess.Write) ||
+            !(((actionId is "os.shell.configuration.keep" or ShellSemanticFeatureProvider.PreviewAction) && scope.Access == ResourceAccess.Write) ||
                 (actionId == "os.shell.configuration.read" && scope.Access == ResourceAccess.Read))) return denied;
         var read = await home.ReadAsync(ct);
         var record = read.State?.Records.SingleOrDefault(r => r.RecordId == scope.Id);

@@ -39,6 +39,7 @@ public sealed class CanvasNativeInkInput : IDisposable
         viewport.PointerCaptureLost += CaptureLost;
         viewport.DetachedFromVisualTree += Detached;
         tools.Changed += ToolChanged;
+        viewport.ViewChanged += ViewChanged;
     }
 
     private bool CanCapture => !_disposed && !_submitting && !_submitted && _tools.Selected == CanvasPrimaryTool.Pen && _tools.Capability(CanvasPrimaryTool.Pen).Available && _isAvailable();
@@ -120,6 +121,8 @@ public sealed class CanvasNativeInkInput : IDisposable
     { if (!_releasing && _pointer is not null) CancelCapture("Native pointer capture ended; no change was submitted."); }
     private void ToolChanged(object? sender, EventArgs args)
     { if (_pointer is not null && !CanCapture) CancelCapture("The selected tool changed; no stroke was submitted."); }
+    private void ViewChanged(object? sender, EventArgs args)
+    { if (_pointer is not null) CancelCapture("The Canvas view changed; no stroke was submitted."); }
     private void Detached(object? sender, Avalonia.VisualTreeAttachmentEventArgs args)
     { if (_pointer is not null) CancelCapture("The Canvas surface was closed; no stroke was submitted."); }
     public void Dispose()
@@ -127,6 +130,7 @@ public sealed class CanvasNativeInkInput : IDisposable
         if (_disposed) return; _disposed = true; _lifetime.Cancel(); CancelCapture("Canvas input closed.");
         _viewport.PointerPressed -= Pressed; _viewport.PointerMoved -= Moved; _viewport.PointerReleased -= Released;
         _viewport.PointerCaptureLost -= CaptureLost; _viewport.DetachedFromVisualTree -= Detached; _tools.Changed -= ToolChanged;
+        _viewport.ViewChanged -= ViewChanged;
         _lifetime.Dispose();
     }
 }

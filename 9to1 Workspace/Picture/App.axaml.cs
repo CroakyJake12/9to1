@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Markup.Xaml;
 using Haven.Infrastructure;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
@@ -13,7 +12,7 @@ public sealed partial class App : Application
     private ServiceProvider? _services;
     private bool _shutdownApproved;
     private bool _shutdownInProgress;
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize() => CakeOS.Cui.Runtime.CuiNativeHost.InitialisePrimitiveTheme(this);
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

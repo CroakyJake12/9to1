@@ -11,7 +11,7 @@ public sealed record FilesMediaSourceBinding(IFilesProvider Provider, FilesMater
 /// never an app-private import. Owning export hosts must separately broker their output action.</summary>
 public sealed class FilesMediaAssetSourceResolver(IAuthenticatedResourceActorSource actors,
     Func<AuthenticatedResourceActor, FilesMediaSourceBinding?> bindings,
-    FilesWorkspaceDirectoryResolver directories, ResourceAuthorizationService authorization) : IMediaAssetSourceResolver
+    FilesWorkspaceDirectoryResolver directories, ResourceAuthorizationService authorization) : IMediaRetainedAssetSourceResolver
 {
     public Task<MediaEngineResult<MediaAssetReadLease>> ResolveAsync(string fileID, MediaAssetId assetID,
         string? expectedRevision, CancellationToken cancellationToken = default) =>
@@ -56,6 +56,8 @@ public sealed class FilesMediaAssetSourceResolver(IAuthenticatedResourceActorSou
             if (expectedRevision is not null &&
                 (!Guid.TryParse(expectedRevision, out var expectedContentRevision) || expectedContentRevision != contentRevision.Value))
                 return Fail(MediaEngineErrorCode.RevisionConflict, "The media project references another Files revision.");
+            // Preserve the caller's opaque token only after validating this Files GUID revision.
+            if (retained) revisionText = expectedRevision!;
             var scope = new ResourceScope("files.item", fileId.ToString(), revision.ToString(), ResourceAccess.Read);
             if (await authorization.AuthorizeAsync("media.asset.read", [scope], cancellationToken).ConfigureAwait(false) != actor)
                 return Fail(MediaEngineErrorCode.PermissionDenied, "Current Files access does not permit this media source.");

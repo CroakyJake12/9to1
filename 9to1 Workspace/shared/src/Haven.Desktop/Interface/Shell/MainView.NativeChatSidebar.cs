@@ -19,7 +19,8 @@ public sealed partial class MainView
             StartNativeConversationAsync,
             OpenNativeContainerAsync,
             production: services.GetRequiredService<IConversationProductionRepository>(),
-            spaces: services.GetService<SpaceRegistry>(),
+            spaces: SpacesRegistry,
+            assignSpace: AssignOwnedSpaceAsync,
             pluginSidebar: services.GetService<HavenOS.Apps.Spaces.PluginSidebarRegistry>());
         _nativeChatSidebar.ManageSpacesRequested += (_, _) => _ = OpenSpacesAsync();
 

@@ -1,13 +1,16 @@
 <Cui id="9to1.Canvas.Workspace" version="1">
   <Grid id="canvas-shell" rows="Auto,*,Auto" accessible-name="Canvas workspace">
-    <StackPanel id="canvas-document-controls" orientation="Horizontal" spacing="8">
+    <WrapPanel id="canvas-document-controls" orientation="Horizontal">
       <Button id="canvas-open" action="9to1.Canvas.Artifact.Open" is-enabled="{Binding CanOpen}" content="Open" accessible-name="Open Canvas artifact through Files" />
       <Button id="canvas-import" action="9to1.Canvas.Import" is-enabled="{Binding CanImport}" content="Import" accessible-name="Import Rnote or Xournal++ document" />
       <TextBlock id="canvas-title" text="{Binding DisplayName}" accessible-name="Canvas document name" />
       <Button id="canvas-save" action="9to1.Canvas.Artifact.Save" is-enabled="{Binding CanFlush}" content="Flush" accessible-name="Flush Canvas revision to Files" />
       <Button id="canvas-undo" action="9to1.Canvas.History.Undo" is-enabled="{Binding CanUndo}" content="Undo" accessible-name="Undo Canvas document operation" />
       <Button id="canvas-redo" action="9to1.Canvas.History.Redo" is-enabled="{Binding CanRedo}" content="Redo" accessible-name="Redo Canvas document operation" />
-    </StackPanel>
+      <Button id="canvas-fit" action="9to1.Canvas.View.Fit" is-enabled="{Binding CanFitView}" content="Fit" accessible-name="Fit the canvas in this view" />
+      <Button id="canvas-zoom-out" action="9to1.Canvas.View.ZoomOut" is-enabled="{Binding CanZoomOut}" content="−" accessible-name="Zoom out the canvas view" />
+      <Button id="canvas-zoom-in" action="9to1.Canvas.View.ZoomIn" is-enabled="{Binding CanZoomIn}" content="+" accessible-name="Zoom in the canvas view" />
+    </WrapPanel>
     <CanvasSpatialSurface id="canvas-surface" grid-row="1" accessible-name="Editable Canvas drawing surface" />
     <Button id="canvas-ai-indicator" grid-row="1" horizontal-alignment="Right" vertical-alignment="Top" margin="12"
       action="9to1.Canvas.Tool.ai" is-enabled="{Binding CanAITool}" content="{Binding AiIndicatorLabel}" is-visible="{Binding AiIndicatorVisible}" accessible-name="Restore existing Canvas AI session" />

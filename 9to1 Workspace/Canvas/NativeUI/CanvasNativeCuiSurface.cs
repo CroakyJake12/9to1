@@ -45,12 +45,17 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
             {
                 if (_document.Identity != (ink.ArtifactId, ink.ArtifactRevision))
                     throw new InvalidDataException("The pen context differs from the exact displayed Canvas identity/revision.");
-                _tools = new CanvasToolState(tool => tool == CanvasPrimaryTool.Pen && _available &&
-                    ink.IsAvailable() && _ink?.HasSubmittedStroke != true
-                        ? new(true, "Capture native pen input, then review the exact stroke in Home.")
-                        : CanvasToolCapability.Unavailable(_ink?.Status ?? "This native tool has no current owning input operation."), _ => { });
             }
-            _bindings = new CanvasCuiWorkspace((_, _) => throw new NotSupportedException("This command has no authorised owning operation."), _ => false, _tools);
+            _tools = new CanvasToolState(tool =>
+                tool == CanvasPrimaryTool.Pan && _available
+                    ? new(true, "Pan this view with the pointer; wheel zooms around its position. The document is unchanged.")
+                    : tool == CanvasPrimaryTool.Pen && _available && ink is not null &&
+                      ink.IsAvailable() && _ink?.HasSubmittedStroke != true
+                        ? new(true, "Capture native pen input, then review the exact stroke in Home.")
+                        : CanvasToolCapability.Unavailable(_ink?.Status ?? "This native tool has no current owning input operation."),
+                selection => _viewport.PanWithPrimaryButton = selection.Tool == CanvasPrimaryTool.Pan);
+            _bindings = new CanvasCuiWorkspace(DispatchView,
+                kind => _available && kind is CanvasWorkspaceCommandKind.FitView or CanvasWorkspaceCommandKind.ZoomIn or CanvasWorkspaceCommandKind.ZoomOut, _tools);
             _bindings.Refresh(_document.Snapshot, ink is null ? "Opened canonical Files revision · read-only view" : "Opened canonical Files revision · native pen input requires Home approval");
             var availability = await _scene.ShowAsync(new("canvas", "Canvas", "Canvas", CanvasCuiWorkspace.LoadDocument(),
                 _bindings, _bindings, readiness), token);
@@ -71,6 +76,7 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
                     () => _available && !_disposed && ink.IsAvailable(), ink.RequestOperation);
                 _ink.Changed += InkChanged;
             }
+            else _tools.Select(CanvasPrimaryTool.Pan);
             _bindings.RefreshAvailability();
         }
         catch
@@ -96,6 +102,20 @@ public sealed class CanvasNativeCuiSurface(Func<CancellationToken, Task<CanvasRn
         }
         catch { Dispose(); throw; }
         finally { EndOperation(); }
+    }
+
+    private ValueTask DispatchView(CanvasWorkspaceCommand command, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_available || _disposed || _viewport is null || _document is null ||
+            _document.Identity != (command.ArtifactId, command.BaseRevisionId))
+            throw new InvalidOperationException("The displayed Canvas view is no longer available.");
+        if (command.Kind == CanvasWorkspaceCommandKind.FitView) _viewport.ResetView();
+        else if (command.Kind is CanvasWorkspaceCommandKind.ZoomIn or CanvasWorkspaceCommandKind.ZoomOut)
+            _viewport.ZoomAt(command.Kind == CanvasWorkspaceCommandKind.ZoomIn ? 1.2 : 1 / 1.2,
+                new(_viewport.Bounds.Width / 2, _viewport.Bounds.Height / 2));
+        else throw new NotSupportedException("This command has no authorised owning operation.");
+        return ValueTask.CompletedTask;
     }
 
     private void InkChanged(object? sender, EventArgs args)

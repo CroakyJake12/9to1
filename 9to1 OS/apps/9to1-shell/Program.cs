@@ -46,6 +46,7 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         { return new(CuiSceneAvailabilityState.Unavailable, "HomeDiscoveryEndpointUnavailable", "The native Home endpoint could not be published safely. Existing Home data was preserved; repair the installed runtime location."); }
         finally { _endpointGate.Release(); }
         model.OpenModels = token => OsModelPickerWindow.OpenAsync(result.Services, token);
+        model.OpenDulche = (token, lifetime) => OsDulcheWindow.OpenAsync(result.Services, model.RefreshAsync, token, lifetime);
         await model.StartAsync(result.Services.GetRequiredService<ShellConfigurationService>(), result.Services.GetRequiredService<GoService>(), result.Services.GetRequiredService<LinuxApplicationLauncher>(), ct);
         return new(CuiSceneAvailabilityState.Ready, "HomeSessionReady", "The canonical OS session Home services are ready.");
     }
@@ -65,6 +66,8 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         services.AddSingleton<ICanonicalResourceAccessResolver, InstalledApplicationResourceResolver>();
         services.AddSingleton<IShellConfigurationStore, HomeShellConfigurationStore>();
         services.AddSingleton<ShellConfigurationService>();
+        services.AddSingleton<IHomeActionPolicySource, ShellSemanticActionPolicies>();
+        services.AddSingleton<ShellSemanticFeatureProvider>();
         services.AddSingleton<LinuxApplicationLauncher>();
         services.AddSingleton<IGoProvider, InstalledApplicationsGoProvider>();
         services.AddSingleton<IGoProvider, ShellNavigationGoProvider>();

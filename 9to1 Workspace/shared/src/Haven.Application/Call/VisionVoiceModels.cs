@@ -155,6 +155,9 @@ public sealed record MultimodalSession(
     {
         if (SessionId == Guid.Empty) return "A multimodal session requires a stable SessionID.";
         if (ConversationId == Guid.Empty) return "A multimodal session requires its canonical ConversationID.";
+        if (SpaceId == Guid.Empty) return "An optional canonical SpaceID cannot be empty.";
+        if (!Enum.IsDefined(VoiceMode) || !Enum.IsDefined(State) || !Enum.IsDefined(MicrophoneState))
+            return "The session contains an unsupported voice, lifecycle or microphone state.";
         if (Revision < 1) return "A multimodal session revision must be positive.";
         if (string.IsNullOrWhiteSpace(EffectiveModelPolicy)) return "A multimodal session requires an effective model policy.";
         if (Retention is null) return "A multimodal session requires an explicit retention policy.";
@@ -162,8 +165,10 @@ public sealed record MultimodalSession(
             (Retention.RetainAudio || Retention.RetainTranscript) && Retention.ExplicitlyEnabledAt is null)
             return "Ambient audio or transcript retention requires a separate explicit opt-in timestamp.";
         if (VisualSources is null) return "VisualSources must be an explicit collection, including when empty.";
-        if (VisualSources.Any(source => source.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(source.Provenance)))
+        if (VisualSources.Any(source => source is null || source.SourceId == Guid.Empty || string.IsNullOrWhiteSpace(source.Provenance)))
             return "Each visual source requires a stable identity and provenance.";
+        if (VisualSources.Any(source => !Enum.IsDefined(source.Type) || !Enum.IsDefined(source.State)))
+            return "The session contains an unsupported visual source type or state.";
         if (VisualSources.Select(source => source.SourceId).Distinct().Count() != VisualSources.Count)
             return "Visual source identities must be unique within a session.";
         if (VisualSources.Any(source => source.IsContinuous && !source.IsEphemeral &&
@@ -171,9 +176,14 @@ public sealed record MultimodalSession(
             return "Continuous camera and screen frames must remain ephemeral.";
         if (VoiceMode == VisionVoiceMode.LiveTranslate)
         {
-            var languageError = LiveTranslateLanguages?.Validate();
+            if (LiveTranslateLanguages is null) return "Live Translate requires an explicit selected language set.";
+            var languageError = LiveTranslateLanguages.Validate();
             if (languageError is not null) return languageError;
         }
+        if (Monologue is { } outline && (outline.Sections is null || outline.SourceRefs is null))
+            return "A Monologue outline requires explicit section and source-reference collections.";
+        if (LiveTranslateLanguages is { } retainedLanguages && retainedLanguages.Validate() is { } retainedError)
+            return retainedError;
         if (VoiceMode == VisionVoiceMode.Monologue && Monologue is { RunId: var runId } && runId == Guid.Empty)
             return "A Monologue run requires a stable RunID.";
         return null;
@@ -187,6 +197,9 @@ public static class LiveTranslateLanguageSetRules
     public static string? Validate(this LiveTranslateLanguageSet languages)
     {
         ArgumentNullException.ThrowIfNull(languages);
+        if (languages.Locales is null || languages.Outputs is null || languages.GlossaryIds is null)
+            return "Language, output and glossary selections must be explicit collections.";
+        if (languages.Outputs.Any(output => output is null)) return "Translated output preferences cannot be null.";
         if (languages.Locales.Any(string.IsNullOrWhiteSpace)) return "Selected language locales cannot be empty.";
         if (languages.Locales.Distinct(StringComparer.OrdinalIgnoreCase).Count() != languages.Locales.Count)
             return "Selected language locales must be unique.";

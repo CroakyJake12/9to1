@@ -305,11 +305,42 @@ public sealed partial class NewChatPage : UserControl, IDisposable
         _effortOverride = effortOverride;
     }
 
+    private Func<Conversation, CancellationToken, Task<Conversation>>? _createSpaceChat;
+    private Func<Conversation, Guid?, CancellationToken, Task<Conversation>>? _assignSpace;
+
+    internal void ConfigureSpaceMembership(Func<Conversation, CancellationToken, Task<Conversation>> create,
+        Func<Conversation, Guid?, CancellationToken, Task<Conversation>> assign)
+    {
+        _createSpaceChat = create; _assignSpace = assign;
+    }
+
+    private async Task<Conversation> CreateSpaceConversationAsync(Conversation proposed, CancellationToken token)
+    {
+        if (_createSpaceChat is not null) return await _createSpaceChat(proposed, token);
+        if (proposed.SpaceId is not null) throw new UnauthorizedAccessException("Open Home to recover Space membership access.");
+        await _conversations.UpsertConversationAsync(proposed, token);
+        return proposed;
+    }
+
+    private async Task<Conversation> SaveSpaceConversationAsync(Conversation proposed, CancellationToken token)
+    {
+        var existing = await _conversations.GetAsync(proposed.Id, token);
+        if (existing is null) return await CreateSpaceConversationAsync(proposed, token);
+        await _conversations.UpsertConversationAsync(proposed, token);
+        return proposed with { SpaceId = (await _conversations.GetAsync(proposed.Id, token))?.SpaceId };
+    }
+
     public async Task AssignSpaceAsync(Guid? spaceId)
     {
-        _conversation = _conversation with { SpaceId = spaceId, UpdatedAt = DateTimeOffset.UtcNow };
-        if (!_conversation.IsTemporary)
-            await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+        if (_conversation.IsTemporary) throw new InvalidOperationException("Temporary chats cannot change persistent Space membership.");
+        if (_assignSpace is null) throw new UnauthorizedAccessException("Open Home to recover Space membership access.");
+        var existing = await _conversations.GetAsync(_conversation.Id, CancellationToken.None);
+        if (existing is null)
+        {
+            if (spaceId is null) return;
+            _conversation = await CreateSpaceConversationAsync(_conversation with { SpaceId = spaceId }, CancellationToken.None);
+        }
+        else _conversation = await _assignSpace(_conversation, spaceId, CancellationToken.None);
         ConversationStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -442,7 +473,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable
             await _conversations.MarkMessagesCompactedAsync(
                 _conversation.Id, compactable.Select(message => message.Id).ToArray(), CancellationToken.None);
             _conversation = _conversation with { CompactedAt = now, UpdatedAt = now };
-            await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+            _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         }
 
         var compactedIds = compactable.Select(message => message.Id).ToHashSet();
@@ -464,14 +495,14 @@ public sealed partial class NewChatPage : UserControl, IDisposable
     public async Task StartFreshConversationAsync(Guid? chatGroupId = null)
     {
         ResetToFreshConversation(_modeDefinition?.BaseMode ?? HavenMode.Chat, chatGroupId, null);
-        await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+        _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         NotifyFreshConversationReady();
     }
 
     public async Task StartFreshConversationAsync(HavenMode mode, Guid? containerId, Guid? lessonId = null, Guid? spaceId = null)
     {
         ResetToFreshConversation(mode, containerId, lessonId, spaceId);
-        await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+        _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         NotifyFreshConversationReady();
     }
 
@@ -606,7 +637,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable
 
         try
         {
-            await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+            _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {
@@ -731,7 +762,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable
     public async Task TogglePinAsync()
     {
         _conversation = _conversation with { IsPinned = !_conversation.IsPinned, UpdatedAt = DateTimeOffset.UtcNow };
-        await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+        _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         SetProjectionStatus(_conversation.IsPinned ? "Chat pinned." : "Chat unpinned.");
     }
 
@@ -740,7 +771,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable
         if (_messages.Count > 0)
         {
             _conversation = _conversation with { IsArchived = true, UpdatedAt = DateTimeOffset.UtcNow };
-            await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+            _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         }
         StartFreshConversation();
     }
@@ -761,7 +792,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable
             async title =>
             {
                 _conversation = _conversation with { Title = title.Trim(), UpdatedAt = DateTimeOffset.UtcNow };
-                await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+                _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
                 ConversationStateChanged?.Invoke(this, EventArgs.Empty);
             });
     }
@@ -785,7 +816,7 @@ public sealed partial class NewChatPage : UserControl, IDisposable
             IsTemporary = !_conversation.IsTemporary,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        await _conversations.UpsertConversationAsync(_conversation, CancellationToken.None);
+        _conversation = await SaveSpaceConversationAsync(_conversation, CancellationToken.None);
         if (!_conversation.IsTemporary)
             foreach (var message in _messages)
                 await _conversations.AddMessageAsync(message, CancellationToken.None);
@@ -1739,12 +1770,13 @@ public sealed partial class NewChatPage : UserControl, IDisposable
         var now = DateTimeOffset.UtcNow;
         var branch = new Conversation(
             Guid.NewGuid(), source.Mode, source.Kind, $"Branch of {source.Title}", source.ContainerId, source.LessonId,
-            false, source.IsTemporary, now, now, ParentConversationId: source.Id);
+            false, source.IsTemporary, now, now, ParentConversationId: source.Id, SpaceId: source.SpaceId);
         var copies = _messages.Take(index + 1)
             .Select((message, order) => message with { Id = Guid.NewGuid(), ConversationId = branch.Id, CreatedAt = now.AddTicks(order) })
             .ToArray();
-        await _conversations.UpsertConversationAsync(branch, CancellationToken.None);
-        foreach (var copy in copies) await _conversations.AddMessageAsync(copy, CancellationToken.None);
+        branch = await CreateSpaceConversationAsync(branch, CancellationToken.None);
+        if (!branch.IsTemporary)
+            foreach (var copy in copies) await _conversations.AddMessageAsync(copy, CancellationToken.None);
         _conversation = branch;
         ClearPendingPersistedAttachmentsFromComposer();
         _messages.Clear();
@@ -1835,7 +1867,8 @@ public sealed partial class NewChatPage : UserControl, IDisposable
     {
         try
         {
-            await _conversations.UpsertConversationAsync(conversation, CancellationToken.None);
+            var saved = await SaveSpaceConversationAsync(conversation, CancellationToken.None);
+            if (_conversation.Id == saved.Id) _conversation = saved;
         }
         catch (Exception exception) when (exception is IOException or InvalidOperationException)
         {

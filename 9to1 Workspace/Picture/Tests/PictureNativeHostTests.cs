@@ -39,7 +39,7 @@ public sealed class PictureNativeHostTests
             var workspace = (await authority.GetCurrentAsync(ct))!;
             Assert.NotNull(workspace);
             var resources = new ResourceAuthorizationService(profiles,
-                [new FilesArtifactResourceResolver(async (actor, token) =>
+                [new FaultingClaimResolver(home, new FilesArtifactResourceResolver(async (actor, token) =>
                 {
                     var current = await authority.GetCurrentAsync(token);
                     return current?.Actor == actor ? current.Provider : null;
@@ -47,7 +47,7 @@ public sealed class PictureNativeHostTests
                 {
                     var current = await authority.GetCurrentAsync(token);
                     return current?.Actor == actor && current.Configuration.AppFolders.TryGetValue(app, out var folder) ? folder : null;
-                })]);
+                }))]);
             var broker = new HomeResourceOperationBroker(resources, permissions);
             await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home), new HomePermissionsCoreService(permissions, profiles)]);
             var media = new NativeFilesMediaAssetSourceResolver(authority, profiles, resources);
@@ -220,6 +220,25 @@ public sealed class PictureNativeHostTests
                 var pngBytes = await File.ReadAllBytesAsync(lease.Source.SourceUri.LocalPath, ct);
                 var png = new PictureGlycinSharedRasterDecoder().DecodeFirstFrame(pngBytes, ct);
                 Assert.Equal(2, png.Width); Assert.Equal(1, png.Height);
+                foreach (var beginFailure in new[] { false, true })
+                {
+                    await UntilAsync(() => Descendants(window).OfType<PictureNativeCuiSurface>().Any(), ct);
+                    surface = Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
+                    Button(surface, "Rotate clockwise").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                    await ApprovePendingAsync(window, permissions, ct);
+                    home.ArmRejection(beginFailure);
+                    Button(window, "Finish approved request").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                    await UntilAsync(() => home.RejectionFailures == 2 && HasEnabledButton(window, "Finish approved request"), ct);
+                    Assert.Equal(imported.CasRevisionId, (await bridge.OpenAsync(importedMetadata.Id, ct)).CasRevisionId);
+                    Button(window, "Finish approved request").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                    await UntilAsync(() => !HasEnabledButton(window, "Finish approved request") && HasEnabledButton(window, "Import image"), ct);
+                    Assert.Equal(imported.CasRevisionId, (await bridge.OpenAsync(importedMetadata.Id, ct)).CasRevisionId);
+                    Assert.Contains((await permissions.GetSnapshotAsync(cancellationToken: ct)).RecentAuditEvents,
+                        audit => audit.ResultCode == (beginFailure ? "HOME_RESOURCE_BEGIN_REJECTED" : "HOME_RESOURCE_CLAIM_REJECTED") && audit.RequestState == HomePermissionRequestState.Failed);
+                    Assert.Equal(1, home.Admissions);
+                    Assert.Equal(beginFailure ? 0 : 1, home.ClaimFailures);
+                }
+
 
             }
             finally { window.Close(); }
@@ -231,8 +250,20 @@ public sealed class PictureNativeHostTests
     private sealed class FailFirstPictureCompletionStore(FileHomeCoreStateStore inner) : IHomeCoreStateStore
     {
         public int CompletionFailures { get; private set; }
+        private bool _armed, _beginFailure, _claimPending;
+        public int Admissions { get; private set; }
+        public int ClaimFailures { get; private set; }
+        public int RejectionFailures { get; private set; }
+        public void ArmRejection(bool beginFailure)
+        { _armed = true; _beginFailure = beginFailure; Admissions = ClaimFailures = RejectionFailures = 0; }
+        public void CheckClaim(ResourceScope scope)
+        {
+            if (!_claimPending || scope.Access != ResourceAccess.Write) return;
+            _claimPending = false; ClaimFailures++;
+            throw new IOException("Actual Picture claim resolver fault.");
+        }
         public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
-        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRevision, CancellationToken ct = default)
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRevision, CancellationToken ct = default)
         {
             if (CompletionFailures == 0 && record.RecordType == "home.permissions-trust" &&
                 record.Payload.GetRawText().Contains("PICTURE_COMMITTED", StringComparison.Ordinal))
@@ -240,11 +271,36 @@ public sealed class PictureNativeHostTests
                 CompletionFailures++;
                 throw new IOException("Injected first actual Picture completion persistence failure.");
             }
-            return inner.WriteAsync(record, expectedRevision, ct);
+            var payload = _armed && record.RecordType == "home.permissions-trust"
+                ? record.Payload.GetProperty("Requests").EnumerateArray().Last().GetProperty("ResultCode").GetString() ?? ""
+                : "";
+            if (_armed && record.RecordType == "home.permissions-trust")
+            {
+                if (payload.Contains("HOME_RESOURCE_BEGIN_REJECTED") || payload.Contains("HOME_RESOURCE_CLAIM_REJECTED"))
+                {
+                    if (RejectionFailures < 2) { RejectionFailures++; throw new IOException("Actual Picture negative audit persistence fault."); }
+                    _armed = false;
+                }
+                else if (Admissions == 0 && payload.Contains("HOME_EXECUTION_STARTED"))
+                {
+                    var result = await inner.WriteAsync(record, expectedRevision, ct); Admissions++;
+                    if (_beginFailure) throw new IOException("Actual Picture admission publication followed by fault.");
+                    _claimPending = true; return result;
+                }
+            }
+            return await inner.WriteAsync(record, expectedRevision, ct);
         }
         public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRevision,
             AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default) =>
             inner.WriteGuardedAsync(record, expectedRevision, actor, guard, ct);
+    }
+
+    private sealed class FaultingClaimResolver(FailFirstPictureCompletionStore store, ICanonicalResourceAccessResolver inner) : ICanonicalResourceAccessResolver
+    {
+        public string ResourceKind => inner.ResourceKind;
+        public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string action,
+            ResourceScope scope, CancellationToken ct)
+        { store.CheckClaim(scope); return inner.EvaluateAsync(actor, action, scope, ct); }
     }
 
     private static async Task ApprovePendingAsync(MainWindow window, HomePermissionTrustService permissions, CancellationToken ct)

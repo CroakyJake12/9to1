@@ -5,6 +5,7 @@ using Haven.Core.Shelf;
 namespace Haven.Application.Shelf;
 
 public sealed record ShelfActivationResult(bool Requested, string Code);
+public sealed record ShelfActivationResolution(bool Available, string Code, GoResult? Result, long LibraryRevision);
 
 /// <summary>Invokes the actual host's canonical Go owner action. Completion means platform activation
 /// was requested, never proof of a running process or authenticated installed Home IPC.</summary>
@@ -27,6 +28,37 @@ public sealed class ShelfInstalledApplicationActivation
 
     public IAsyncEnumerable<GoUpdate> DiscoverAsync(string query, CancellationToken token = default) =>
         _go.QueryAsync(new(query, "Apps", 100, Scope), token);
+
+    /// <summary>Resolves the retained identity through its actual owner after restart or rename.
+    /// Missing targets remain in Shelf; text matching and cross-platform substitution are never used.</summary>
+    public async Task<ShelfActivationResolution> ResolveAsync(Guid itemID, long expectedLibraryRevision, CancellationToken token = default)
+    {
+        var snapshot = await _library.ReadAsync(token).ConfigureAwait(false);
+        if (snapshot.Library.Revision != expectedLibraryRevision) return new(false, "RevisionConflict", null, snapshot.Library.Revision);
+        var item = snapshot.Library.Items.SingleOrDefault(item => item.Id == itemID);
+        if (item is null || snapshot.ArchivedItemIds.Contains(itemID)) return new(false, "ItemUnavailable", null, snapshot.Library.Revision);
+        var target = item.Target;
+        if (target.Kind != ShelfTargetKind.InstalledApplication || target.ProviderId != _providerID || target.OwnerApp != "Home"
+            || !Guid.TryParse(target.CanonicalId, out var id) || id == Guid.Empty)
+            return new(false, "TargetMismatch", null, snapshot.Library.Revision);
+        if (item.Behaviour is not (ShelfLaunchBehaviour.Open or ShelfLaunchBehaviour.Launch)
+            || target.Arguments is { Count: > 0 } || !string.IsNullOrEmpty(target.WorkingDirectory))
+            return new(false, "ActivationCapabilityUnavailable", null, snapshot.Library.Revision);
+        var current = await _go.ResolveAsync(_providerID, new("Home", "os.installed-application", id.ToString("D")), Scope, token).ConfigureAwait(false);
+        var refreshed = await _library.ReadAsync(token).ConfigureAwait(false);
+        if (refreshed.Library.Revision != snapshot.Library.Revision) return new(false, "RevisionConflict", null, refreshed.Library.Revision);
+        if (current is null || !current.Actions.Any(action => action.Id == "Open"))
+            return new(false, "TargetUnavailable", null, refreshed.Library.Revision);
+        return new(true, "Resolved", Capture(current), refreshed.Library.Revision);
+    }
+
+    public async Task<ShelfActivationResult> ActivateCurrentAsync(Guid itemID, long expectedLibraryRevision, CancellationToken token = default)
+    {
+        var resolved = await ResolveAsync(itemID, expectedLibraryRevision, token).ConfigureAwait(false);
+        return resolved.Available
+            ? await ActivateAsync(itemID, resolved.LibraryRevision, resolved.Result!, token).ConfigureAwait(false)
+            : new(false, resolved.Code);
+    }
 
     public ShelfLaunchItem CreateItem(GoResult originalResult)
     {

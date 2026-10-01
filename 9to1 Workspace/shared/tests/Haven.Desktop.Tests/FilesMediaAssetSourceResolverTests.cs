@@ -70,17 +70,34 @@ public sealed class FilesMediaAssetSourceResolverTests
             await File.WriteAllBytesAsync(sourcePath, bytes, token);
             var current = (await provider.GetAsync(fileId, token)).Value!;
             var competing = new DurableDriveProvider(statePath, location, actor.ActorId);
+            byte[] replacementBytes = [82, 73, 70, 70, 8, 7, 6, 5];
+            await File.WriteAllBytesAsync(Path.Combine(root, "replacement.wav"), replacementBytes, token);
+            var replacement = upload with { ContentHash = "sha256:" + Convert.ToHexString(SHA256.HashData(replacementBytes)).ToLowerInvariant(),
+                ProviderContentReference = "replacement.wav", SizeBytes = replacementBytes.Length };
             var results = await Task.WhenAll(
-                provider.CommitUploadedContentAsync(upload with { Name = "renamed.wav", RevisionId = new(Guid.NewGuid()), ExpectedRevision = current.CurrentRevisionId }, token),
-                competing.CommitUploadedContentAsync(upload with { Name = "renamed.wav", RevisionId = new(Guid.NewGuid()), ExpectedRevision = current.CurrentRevisionId }, token));
+                provider.CommitUploadedContentAsync(replacement with { Name = "renamed.wav", RevisionId = new(Guid.NewGuid()), ExpectedRevision = current.CurrentRevisionId }, token),
+                competing.CommitUploadedContentAsync(replacement with { Name = "renamed.wav", RevisionId = new(Guid.NewGuid()), ExpectedRevision = current.CurrentRevisionId }, token));
             Assert.Single(results, result => result.IsSuccess);
             Assert.Single(results, result => result.Error?.Code == FilesErrorCode.RevisionConflict);
             Assert.Equal(MediaEngineErrorCode.RevisionConflict,
                 (await resolver.ResolveAsync(fileId.ToString(), assetId, revision.ToString(), token)).Error!.Code);
-            var retained = await resolver.ResolveRetainedAsync(fileId.ToString(), assetId, revision.ToString(), token);
+            var currentWinner = results.Single(item => item.IsSuccess).Value!;
+            await materializations.MoveMappingAsync(fileId, Path.Combine(root, "replacement.wav"), token);
+            await materializations.RegisterValidatedAsync(Path.Combine(root, "replacement.wav"),
+                new(fileId, currentWinner.Id, replacement.ContentHash, replacementBytes.Length, now), SyncAvailability.AvailableOffline, token);
+            var replacementRead = await resolver.ResolveAsync(fileId.ToString(), assetId, currentWinner.Id.ToString(), token);
+            Assert.True(replacementRead.IsSuccess, replacementRead.Error?.Message);
+            await using (var replacementLease = replacementRead.Value!)
+                Assert.Equal(replacementBytes, await File.ReadAllBytesAsync(replacementLease.Source.SourceUri.LocalPath, token));
+            IMediaRetainedAssetSourceResolver retainedResolver = resolver;
+            var retainedToken = revision.Value.ToString("D");
+            var retained = await retainedResolver.ResolveRetainedAsync(fileId.ToString(), assetId, retainedToken, token);
             Assert.True(retained.IsSuccess, retained.Error?.Message);
             await using (var retainedLease = retained.Value!)
+            {
+                Assert.Equal(retainedToken, retainedLease.Source.SourceRevisionId);
                 Assert.Equal(bytes, await File.ReadAllBytesAsync(retainedLease.Source.SourceUri.LocalPath, token));
+            }
             await File.WriteAllBytesAsync(sourcePath, [9, 9, 9, 9], token);
             Assert.False((await resolver.ResolveRetainedAsync(fileId.ToString(), assetId, revision.ToString(), token)).IsSuccess);
             var folderCurrent = (await provider.GetAsync(folder.ItemId, token)).Value!;

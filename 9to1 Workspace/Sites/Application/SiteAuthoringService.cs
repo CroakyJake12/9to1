@@ -48,8 +48,11 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
             return project with { Components = project.Components.Select(c =>
             {
                 if (c.ComponentId != componentID) return c;
+                var originalChildren = c.ChildIds.ToArray();
+                var originalSlots = c.Slots.ToDictionary(slot => slot.Key,
+                    slot => (IReadOnlyList<Guid>)slot.Value.ToArray(), StringComparer.Ordinal);
                 var next = update(c);
-                if (next.ComponentId != c.ComponentId || !next.ChildIds.SequenceEqual(c.ChildIds) || !SameSlots(next.Slots, c.Slots))
+                if (next.ComponentId != c.ComponentId || !next.ChildIds.SequenceEqual(originalChildren) || !SameSlots(next.Slots, originalSlots))
                     throw Invalid("Use structural actions to change hierarchy.");
                 return next with { Revision = c.Revision + 1 };
             }).ToArray() };

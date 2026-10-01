@@ -21,6 +21,67 @@ namespace HavenOS.Apps.Canvas.NativeUI.Tests;
 [Collection("Canvas native UI")]
 public sealed class CanvasNativeInputTests
 {
+    [Fact]
+    public async Task Native_view_navigation_preserves_document_coordinates_and_cancels_unsubmitted_ink()
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
+        await native.Dispatch(async () =>
+        {
+            var ct = CancellationToken.None;
+            await using var fixture = await Fixture.Create(ct);
+            var submissions = 0;
+            using var surface = new CanvasNativeCuiSurface(token => fixture.OpenDocument(token), fixture.Readiness,
+                new(fixture.FileId, fixture.Opened.CasRevisionId, fixture.Opened.Artifact.ArtifactId, fixture.Opened.Artifact.RevisionId,
+                    () => true, (_, _) => { submissions++; return Task.CompletedTask; }));
+            var window = new Window { Width = 1000, Height = 800, Content = surface }; window.Show();
+            try
+            {
+                await surface.InitializeAsync(ct); window.UpdateLayout();
+                var viewport = Assert.Single(surface.GetVisualDescendants().OfType<CanvasNativeViewport>());
+                var center = new Point(viewport.Bounds.Width / 2, viewport.Bounds.Height / 2);
+                var original = viewport.ToDocumentPoint(center)!.Value;
+                var nativeCenter = viewport.TranslatePoint(center, window)!.Value;
+                window.MouseWheel(nativeCenter, new Vector(0, 1));
+                Assert.Equal(1.2, viewport.ViewZoom, 8);
+                var anchored = viewport.ToDocumentPoint(center)!.Value;
+                Assert.Equal(original.X, anchored.X, 8); Assert.Equal(original.Y, anchored.Y, 8);
+                window.MouseDown(nativeCenter, MouseButton.Middle);
+                window.MouseMove(nativeCenter + new Vector(20, 10), RawInputModifiers.MiddleMouseButton);
+                window.MouseUp(nativeCenter + new Vector(20, 10), MouseButton.Middle);
+                var moved = viewport.ToDocumentPoint(center + new Vector(20, 10))!.Value;
+                Assert.Equal(original.X, moved.X, 8); Assert.Equal(original.Y, moved.Y, 8);
+                Assert.Null(viewport.ToDocumentPoint(new Point(-1, 10)));
+                Assert.False(viewport.ZoomAt(double.NaN, center));
+                Assert.False(viewport.PanBy(new Vector(double.PositiveInfinity, 0)));
+                var nativeStart = viewport.TranslatePoint(center, window)!.Value;
+                window.MouseDown(nativeStart, MouseButton.Left);
+                window.MouseMove(nativeStart + new Vector(10, 5), RawInputModifiers.LeftMouseButton);
+                viewport.ResetView(); // Inverse coordinates changed mid-gesture: never submit a distorted stroke.
+                window.MouseUp(nativeStart + new Vector(10, 5), MouseButton.Left);
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+                Assert.Equal(0, submissions);
+                var panTool = Assert.Single(surface.GetVisualDescendants().OfType<Button>(),
+                    value => value.Content?.ToString()?.EndsWith(" Pan", StringComparison.Ordinal) == true);
+                Assert.True(panTool.IsEnabled);
+                panTool.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+                Assert.True(viewport.PanWithPrimaryButton);
+                window.MouseDown(nativeStart, MouseButton.Left);
+                window.MouseMove(nativeStart + new Vector(12, 8), RawInputModifiers.LeftMouseButton);
+                window.MouseUp(nativeStart + new Vector(12, 8), MouseButton.Left);
+                Assert.Equal(new Vector(12, 8), viewport.ViewPan);
+                Assert.Equal(0, submissions);
+                Button(surface, "Fit").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+                Assert.Equal(1, viewport.ViewZoom);
+                Assert.Equal(original, viewport.ToDocumentPoint(center));
+                Assert.Equal(fixture.Opened.CasRevisionId, (await fixture.Bridge.OpenAsync(fixture.FileId, ct)).CasRevisionId);
+                Assert.Empty((await fixture.Bridge.OpenAsync(fixture.FileId, ct)).Artifact.Pages[0].Strokes);
+            }
+            finally { window.Close(); }
+        }, CancellationToken.None);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

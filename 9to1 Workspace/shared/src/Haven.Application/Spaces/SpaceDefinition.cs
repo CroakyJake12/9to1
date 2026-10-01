@@ -144,4 +144,4 @@ public sealed class SpaceRevisionConflictException(Guid spaceId, long expectedRe
     public long ActualRevision { get; } = actualRevision;
 }
 
-internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces);
+internal sealed record SpaceRegistryState(int Version, IReadOnlyList<SpaceDefinition> Spaces, IReadOnlyList<SpaceDeletionOperation>? Deletions = null);

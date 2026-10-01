@@ -11,6 +11,36 @@ namespace Haven.Infrastructure.Tests;
 public sealed class ConversationSpaceCommitTests
 {
     [Fact]
+    public async Task Ordinary_cached_content_saves_cannot_reattach_or_remove_guarded_membership()
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync(); await fixture.BindAsync();
+        var actor = (await fixture.Actors.GetCurrentAsync(default))!;
+        var original = NewConversation() with { SpaceId = Guid.NewGuid() };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Repository.UpsertConversationAsync(original, default));
+        Assert.Null(await fixture.Repository.GetAsync(original.Id, default));
+        async Task CommitAsync(Conversation? before, Conversation after)
+        {
+            ConversationSpaceChange[] change = [new(before, after)];
+            var admission = (await fixture.Authority.CaptureAsync(actor, fixture.Identity.StoreId, change, new AllowSpace()))!;
+            Assert.Equal(ConversationSpaceCommitStatus.Committed,
+                (await fixture.Repository.CompareExchangeSpaceAsync(fixture.Identity.StoreId, change, admission)).Status);
+        }
+        await CommitAsync(null, original);
+        var detached = original with { SpaceId = null };
+        await CommitAsync(original, detached);
+        await fixture.Repository.UpsertConversationAsync(original with { Title = "Saved after detach", IsPinned = true }, default);
+        var saved = (await fixture.Repository.GetAsync(original.Id, default))!;
+        Assert.Null(saved.SpaceId); Assert.Equal("Saved after detach", saved.Title); Assert.True(saved.IsPinned);
+        var reassigned = saved with { SpaceId = Guid.NewGuid() };
+        await CommitAsync(saved, reassigned);
+        await fixture.Repository.UpsertConversationAsync(saved with { Title = "Saved after reassignment" }, default);
+        var current = (await fixture.Repository.GetAsync(original.Id, default))!;
+        Assert.Equal(reassigned.SpaceId, current.SpaceId); Assert.Equal("Saved after reassignment", current.Title);
+        var neutral = NewConversation(); await fixture.Repository.UpsertConversationAsync(neutral, default);
+        Assert.Equal(neutral, await fixture.Repository.GetAsync(neutral.Id, default));
+    }
+
+    [Fact]
     public async Task Membership_pages_include_archived_and_temporary_rows_pin_actual_root_and_never_mutate()
     {
         using var fixture = new Fixture(); await fixture.InitializeAsync();
@@ -18,7 +48,11 @@ public sealed class ConversationSpaceCommitTests
         var first = NewConversation() with { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), SpaceId = space, IsArchived = true };
         var second = NewConversation() with { Id = Guid.Parse("00000000-0000-0000-0000-000000000002"), SpaceId = space, IsTemporary = true };
         var other = NewConversation() with { SpaceId = Guid.NewGuid() };
-        foreach (var row in new[] { first, second, other }) await fixture.Repository.UpsertConversationAsync(row, default);
+        await fixture.BindAsync();
+        var actor = (await fixture.Actors.GetCurrentAsync(default))!;
+        ConversationSpaceChange[] seeds = [new(null, first), new(null, second), new(null, other)];
+        var admission = (await fixture.Authority.CaptureAsync(actor, fixture.Identity.StoreId, seeds, new AllowSpace()))!;
+        Assert.Equal(ConversationSpaceCommitStatus.Committed, (await fixture.Repository.CompareExchangeSpaceAsync(fixture.Identity.StoreId, seeds, admission)).Status);
         Assert.Empty(await fixture.Repository.GetBySpaceAsync(space, 100, default));
         var page = await fixture.Repository.ReadSpaceMembershipAsync(fixture.Identity.StoreId, space, limit: 1);
         Assert.Equal(ConversationSpaceReadStatus.Available, page.Status);

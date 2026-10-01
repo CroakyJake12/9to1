@@ -2,11 +2,11 @@ using System.Text.Json;
 
 namespace Haven.Application;
 
-public sealed class SpaceRegistry
+public sealed partial class SpaceRegistry
 {
     private const string SettingsKey = "spaces.registry";
     private const string CurrentSpaceSettingsKey = "spaces.current";
-    private const int CurrentVersion = 2;
+    private const int CurrentVersion = 3;
     private readonly IVersionedSettingsStore _settings;
     private readonly Func<DateTimeOffset> _clock;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -74,7 +74,8 @@ public sealed class SpaceRegistry
     {
         var state = await _settings.GetAsync<SpaceRegistryState>(SettingsKey, cancellationToken).ConfigureAwait(false);
         if (state is null) return null;
-        if (state.Version != CurrentVersion) throw new InvalidDataException("A stored Space snapshot requires the current schema.");
+        if (state.Version is < 2 or > CurrentVersion) throw new InvalidDataException("A stored Space snapshot requires a supported schema.");
+        ValidateDeletionState(state);
         ValidateRegistry(state.Spaces);
         var matches = state.Spaces.Where(space => space.Id == id).ToArray();
         return matches.Length == 1 ? CloneSpace(matches[0]) : null;
@@ -373,8 +374,16 @@ public sealed class SpaceRegistry
 
     private async Task<TResult> MutateAsync<TResult>(
         Func<SpaceRegistryState, (SpaceRegistryState State, TResult Result)> mutation,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool allowPendingDeletion = false)
     {
+        var requestedMutation = mutation;
+        mutation = state =>
+        {
+            var result = requestedMutation(state);
+            if (!allowPendingDeletion) EnsurePendingDeletionsUnchanged(state, result.State);
+            ValidateDeletionState(result.State);
+            return result;
+        };
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -383,7 +392,7 @@ public sealed class SpaceRegistry
             var state = await LoadAndReconcileAsync(cancellationToken).ConfigureAwait(false);
             var (next, result) = mutation(state);
             await _settings.SetAsync(SettingsKey,
-                new SpaceRegistryState(next.Version, next.Spaces.Select(CloneSpace).ToArray()), cancellationToken).ConfigureAwait(false);
+                next with { Spaces = next.Spaces.Select(CloneSpace).ToArray(), Deletions = next.Deletions?.ToArray() ?? [] }, cancellationToken).ConfigureAwait(false);
             return result is SpaceDefinition space ? (TResult)(object)CloneSpace(space) : result;
         }
         finally
@@ -413,6 +422,7 @@ public sealed class SpaceRegistry
             ?? new SpaceRegistryState(CurrentVersion, []);
         if (state.Version > CurrentVersion)
             throw new InvalidDataException($"Space registry version {state.Version} is newer than supported version {CurrentVersion}.");
+        ValidateDeletionState(state);
         var spaces = state.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
         var changed = state.Version != CurrentVersion;
@@ -423,7 +433,7 @@ public sealed class SpaceRegistry
             changed = true;
         }
         if (!changed) return state with { Spaces = spaces.Select(CloneSpace).ToArray() };
-        var reconciled = new SpaceRegistryState(CurrentVersion, spaces);
+        var reconciled = state with { Version = CurrentVersion, Spaces = spaces, Deletions = state.Deletions?.ToArray() ?? [] };
         await _settings.SetAsync(SettingsKey, reconciled, cancellationToken).ConfigureAwait(false);
         return reconciled with { Spaces = reconciled.Spaces.Select(CloneSpace).ToArray() };
     }
@@ -454,6 +464,7 @@ public sealed class SpaceRegistry
         var stored = raw is null ? new SpaceRegistryState(CurrentVersion, []) :
             JsonSerializer.Deserialize<SpaceRegistryState>(raw) ?? throw new InvalidDataException("The Space registry is invalid.");
         if (stored.Version > CurrentVersion) throw new InvalidDataException("The Space registry schema is newer than supported.");
+        ValidateDeletionState(stored);
         var spaces = stored.Spaces?.Select(NormalizeStoredSpace).ToList() ?? [];
         ValidateRegistry(spaces);
         var changed = stored.Version != CurrentVersion;
@@ -462,7 +473,7 @@ public sealed class SpaceRegistry
             if (spaces.Any(space => space.Id == builtIn.Id)) continue;
             spaces.Add(builtIn); changed = true;
         }
-        return (new(CurrentVersion, spaces.Select(CloneSpace).ToArray()), changed);
+        return (stored with { Version = CurrentVersion, Spaces = spaces.Select(CloneSpace).ToArray(), Deletions = stored.Deletions?.ToArray() ?? [] }, changed);
     }
 
     private async Task<TResult> MutateComparedAsync<TResult>(Func<SpaceRegistryState, (SpaceRegistryState Next, TResult Result)> mutation,
@@ -475,7 +486,7 @@ public sealed class SpaceRegistry
             exported.Settings.TryGetValue(SettingsKey, out var raw);
             var (state, _) = ReadComparedState(raw);
             var (next, result) = mutation(state);
-            var replacement = JsonSerializer.Serialize(new SpaceRegistryState(next.Version, next.Spaces.Select(CloneSpace).ToArray()));
+            var replacement = JsonSerializer.Serialize(next with { Spaces = next.Spaces.Select(CloneSpace).ToArray(), Deletions = next.Deletions?.ToArray() ?? [] });
             if (await TryCommitAsync(SettingsKey, raw, replacement, new Dictionary<string, string?>(), admission, token).ConfigureAwait(false))
                 return result is SpaceDefinition space ? (TResult)(object)CloneSpace(space) : result;
         }
