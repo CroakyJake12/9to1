@@ -151,17 +151,27 @@ public sealed partial class CanvasHostWindow : Window
     { _view?.Dispose(); _view = owner; _content.Content = control; }
     private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct)
     {
-        var files = _files!; var captured = opened;
+        var files = _files!; var captured = opened with { Artifact=CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(opened.Artifact)) };
+        var original=_workspace ?? throw new UnauthorizedAccessException("The original Files workspace is unavailable.");
+        if(captured.StoreId!=original.Configuration.StoreId)throw new UnauthorizedAccessException("Canvas store identity differs from its original workspace.");
         var readiness = new HomeResourceCuiReadiness(Get<HomeCoreRuntime>(), Get<IAuthenticatedResourceActorSource>(), Get<ResourceAuthorizationService>(),
             "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", fileId.ToString(), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
+        var originalReadiness=new OriginalCanvasReadiness(readiness,async token=>
+        {
+            await RequireOriginalOwnerAsync(original,captured.StoreId,token);
+            var current=await files.OpenAsync(fileId,captured.StoreId,token);
+            if(current.CasRevisionId!=captured.CasRevisionId || current.Artifact.ArtifactId!=captured.Artifact.ArtifactId || current.Artifact.RevisionId!=captured.Artifact.RevisionId)
+                throw new InvalidOperationException("This Canvas revision changed; reopen it.");
+        });
         var strokeOwner = _stroke!;
         var surface = new CanvasNativeCuiSurface(async token =>
         {
-            var current = await files.OpenAsync(fileId, token);
+            await RequireOriginalOwnerAsync(original,captured.StoreId,token);
+            var current = await files.OpenAsync(fileId,captured.StoreId, token);
             if (current.CasRevisionId != captured.CasRevisionId || current.Artifact.ArtifactId != captured.Artifact.ArtifactId ||
                 current.Artifact.RevisionId != captured.Artifact.RevisionId) throw new InvalidOperationException("This Canvas changed. Refresh and reopen it.");
             return CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(current.Artifact));
-        }, readiness, new(fileId, opened.CasRevisionId, opened.Artifact.ArtifactId, opened.Artifact.RevisionId,
+        }, originalReadiness, new(fileId, opened.CasRevisionId, opened.Artifact.ArtifactId, opened.Artifact.RevisionId,
             () => WriteAvailable() && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && !_requestUncertain,
             async (intent, token) =>
             {
@@ -174,14 +184,15 @@ public sealed partial class CanvasHostWindow : Window
                         "Add this exact captured stroke to the displayed Canvas revision", async (cap, cancel) =>
                         {
                             var committed = await strokeOwner.ExecuteAsync(intent, cap, cancel);
-                            var current = await files.OpenAsync(committed.FileId, cancel);
+                            await RequireOriginalOwnerAsync(original,captured.StoreId,cancel);
+                            var current = await files.OpenAsync(committed.FileId,captured.StoreId, cancel);
                             if (current.Artifact.ArtifactId != committed.Artifact.ArtifactId || current.Artifact.RevisionId != committed.Artifact.RevisionId)
                                 throw new InvalidOperationException("The Canvas changed after the stroke commit. Reopen its current revision.");
                             return new(current, committed.FileId);
                         }, null, token));
                 }
                 finally { _busy = false; RefreshBindings(); }
-            }));
+            },captured.StoreId),CreateEraserContext(fileId,captured,files,original));
         try { await surface.InitializeAsync(ct); }
         catch { surface.Dispose(); throw; }
         _opened = opened; _openedFile = fileId; ShowView(surface, surface);
@@ -370,17 +381,22 @@ public sealed partial class CanvasHostWindow : Window
                     throw new ArgumentException("Enter a name for the new canvas.");
                 var name = value.ToString()!.Trim();
                 if (name.Length > 256) throw new ArgumentException("Canvas names must be at most 256 characters.");
-                var workspace = _workspace!; var folderId = workspace.Configuration.AppFolders["canvas"];
+                var workspace = _workspace!; var originalStoreId = workspace.Configuration.StoreId;
+                var folderId = workspace.Configuration.AppFolders["canvas"];
+                await RequireOriginalOwnerAsync(workspace, originalStoreId, ct);
+                await workspace.Provider.GetStoreEvidenceAsync(originalStoreId, ct);
                 var folder = await workspace.Provider.GetAsync(folderId, ct);
                 if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
                 using var blank = CanvasRnoteDocument.Create(name);
-                var intent = CanvasCreateIntent.Capture(blank.Snapshot, new(folderId, folder.Value!.CurrentRevisionId));
+                var intent = CanvasCreateIntent.Capture(blank.Snapshot, new(folderId, folder.Value!.CurrentRevisionId) { ExpectedStoreId = originalStoreId });
                 var create = _create!; var files = _files!;
                 SetStatus(await RequestAsync(CanvasCreateIntent.ActionId, intent.Scopes, intent.Arguments,
                     "Create this new editable Canvas in the configured Files folder", async (cap, cancel) =>
                     {
+                        await RequireOriginalOwnerAsync(workspace, originalStoreId, cancel);
                         var committed = await create.ExecuteAsync(intent, cap, cancel);
-                        var opened = await files.OpenAsync(committed.FileId, cancel);
+                        await RequireOriginalOwnerAsync(workspace, originalStoreId, cancel);
+                        var opened = await files.OpenAsync(committed.FileId, originalStoreId, cancel);
                         if (opened.Artifact.ArtifactId != committed.Artifact.ArtifactId || opened.Artifact.RevisionId != committed.Artifact.RevisionId)
                             throw new InvalidOperationException("The new Canvas changed after its commit. Reopen its current revision.");
                         return new(opened, committed.FileId);

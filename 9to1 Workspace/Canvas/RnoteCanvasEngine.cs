@@ -84,6 +84,22 @@ public sealed class RnoteCanvasEngine : IDisposable
         }
     }
 
+    public void EraseWholeStrokes(IReadOnlyList<RnotePointerSample> samples, double width)
+    {
+        var captured = CaptureSamples(samples);
+        if (!double.IsFinite(width) || width is < 1 or > 500)
+            throw new ArgumentException("Native eraser width must be finite and in 1..500.", nameof(width));
+        lock (_gate)
+        {
+            EnsureOpen();
+            Check(Native.SetEraser(_handle, width, 0), "configure native trash-colliding eraser");
+            Check(Native.SetTool(_handle, 2), "select genuine eraser");
+            Check(Native.Begin(_handle, captured[0]), "begin eraser stroke");
+            for (var index = 1; index < captured.Length - 1; index++) Check(Native.Append(_handle, captured[index]), "append eraser stroke");
+            Check(Native.End(_handle, captured[^1]), "end eraser stroke");
+        }
+    }
+
     public bool Undo() { lock (_gate) { EnsureOpen(); return Changed(Native.Undo(_handle), "undo"); } }
     public bool Redo() { lock (_gate) { EnsureOpen(); return Changed(Native.Redo(_handle), "redo"); } }
 
@@ -97,6 +113,52 @@ public sealed class RnoteCanvasEngine : IDisposable
                 try { return Native.StrokeMutationApiVersion() == 1; }
                 catch (EntryPointNotFoundException) { return false; }
             }
+        }
+    }
+
+    public bool SupportsSplitEraseCandidate
+    {
+        get { lock (_gate) { EnsureOpen(); try { return Native.SplitEraseApiVersion() == 1; }
+            catch (EntryPointNotFoundException) { return false; } } }
+    }
+
+    /// <summary>Genuine SplitColliding on a detached donor. This instance never mutates.</summary>
+    public RnoteSplitCandidate CreateSplitEraseCandidate(IReadOnlyList<RnotePointerSample> samples, double width)
+    {
+        var captured = CaptureSamples(samples);
+        if (!double.IsFinite(width) || width is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(width));
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsSplitEraseCandidate) throw new NotSupportedException("The donor does not expose exact split materialization.");
+            var native = new NativeBuffer(); var receipt = new NativeBuffer();
+            try
+            {
+                Check(Native.SplitEraseCandidate(_handle, captured.ToArray(), (nuint)captured.Length, width, out native, out receipt),
+                    "prepare genuine detached split eraser candidate");
+                if (receipt.Length > 64 * 1024 * 1024) throw new InvalidDataException("Split receipt exceeds supported materialization size.");
+                return new(CopyDrawingPayload(native.Data, native.Length), Copy(receipt.Data, receipt.Length));
+            }
+            finally { Native.ReleaseBuffer(ref native); Native.ReleaseBuffer(ref receipt); }
+        }
+    }
+
+    public bool SupportsQuickEraseTarget
+    {
+        get { lock (_gate) { EnsureOpen(); try { return Native.QuickEraseApiVersion() == 1; }
+            catch (EntryPointNotFoundException) { return false; } } }
+    }
+
+    /// <summary>Read-only actual donor hitboxes/render order. Null is a miss.</summary>
+    public ulong? FindQuickEraseTarget(double x, double y)
+    {
+        if (!double.IsFinite(x) || !double.IsFinite(y)) throw new ArgumentException("Quick erase coordinates must be finite.");
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsQuickEraseTarget) throw new NotSupportedException("The donor does not expose genuine Quick erase targeting.");
+            Check(Native.QuickEraseTarget(_handle, x, y, out var key), "resolve native Quick erase target");
+            return key == 0 ? null : key;
         }
     }
 
@@ -145,6 +207,30 @@ public sealed class RnoteCanvasEngine : IDisposable
             try
             {
                 Check(Native.StrokeKeys(_handle, out buffer), "read native stroke keys");
+                if (buffer.Length == 0) return [];
+                if (buffer.Length % 8 != 0 || buffer.Length > MaximumStrokeSamples * 8)
+                    throw new InvalidDataException("Native stroke key buffer exceeds its packed u64 contract.");
+                var bytes = Copy(buffer.Data, buffer.Length);
+                var keys = ImmutableArray.CreateBuilder<ulong>(bytes.Length / 8);
+                for (var offset = 0; offset < bytes.Length; offset += 8)
+                    keys.Add(BinaryPrimitives.ReadUInt64LittleEndian(bytes.AsSpan(offset, 8)));
+                if (keys.Distinct().Count() != keys.Count) throw new InvalidDataException("The native snapshot contains duplicate stroke keys.");
+                return keys.MoveToImmutable();
+            }
+            finally { Native.ReleaseBuffer(ref buffer); }
+        }
+    }
+
+    public ImmutableArray<ulong> ReadRenderedStrokeKeys()
+    {
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (!SupportsQuickEraseTarget) throw new NotSupportedException("The donor does not expose retained render ordering.");
+            var buffer = new NativeBuffer();
+            try
+            {
+                Check(Native.RenderedStrokeKeys(_handle, out buffer), "read native render-order keys");
                 if (buffer.Length == 0) return [];
                 if (buffer.Length % 8 != 0 || buffer.Length > MaximumStrokeSamples * 8)
                     throw new InvalidDataException("Native stroke key buffer exceeds its packed u64 contract.");
@@ -298,7 +384,13 @@ public sealed class RnoteCanvasEngine : IDisposable
         [DllImport(Library, EntryPoint = "cake_canvas_end_stroke", CallingConvention = CallingConvention.Cdecl)] internal static extern int End(EngineHandle handle, RnotePointerSample sample);
         [DllImport(Library, EntryPoint = "cake_canvas_set_pen_style", CallingConvention = CallingConvention.Cdecl)] internal static extern int SetPenStyle(EngineHandle handle, uint tool, double red, double green, double blue, double alpha, double width);
         [DllImport(Library, EntryPoint = "cake_canvas_set_stroke_tool", CallingConvention = CallingConvention.Cdecl)] internal static extern int SetTool(EngineHandle handle, uint tool);
+        [DllImport(Library, EntryPoint = "cake_canvas_set_eraser", CallingConvention = CallingConvention.Cdecl)] internal static extern int SetEraser(EngineHandle handle, double width, uint style);
         [DllImport(Library, EntryPoint = "cake_canvas_stroke_mutation_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint StrokeMutationApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_split_erase_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint SplitEraseApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_split_erase_candidate", CallingConvention = CallingConvention.Cdecl)] internal static extern int SplitEraseCandidate(EngineHandle handle, RnotePointerSample[] samples, nuint count, double width, out NativeBuffer native, out NativeBuffer receipt);
+        [DllImport(Library, EntryPoint = "cake_canvas_quick_erase_api_version", CallingConvention = CallingConvention.Cdecl)] internal static extern uint QuickEraseApiVersion();
+        [DllImport(Library, EntryPoint = "cake_canvas_rendered_stroke_keys", CallingConvention = CallingConvention.Cdecl)] internal static extern int RenderedStrokeKeys(EngineHandle handle, out NativeBuffer buffer);
+        [DllImport(Library, EntryPoint = "cake_canvas_quick_erase_target", CallingConvention = CallingConvention.Cdecl)] internal static extern int QuickEraseTarget(EngineHandle handle, double x, double y, out ulong key);
         [DllImport(Library, EntryPoint = "cake_canvas_delete_stroke", CallingConvention = CallingConvention.Cdecl)] internal static extern int DeleteStroke(EngineHandle handle, ulong key);
         [DllImport(Library, EntryPoint = "cake_canvas_translate_stroke", CallingConvention = CallingConvention.Cdecl)] internal static extern int TranslateStroke(EngineHandle handle, ulong key, double deltaX, double deltaY);
         [DllImport(Library, EntryPoint = "cake_canvas_undo", CallingConvention = CallingConvention.Cdecl)] internal static extern int Undo(EngineHandle handle);

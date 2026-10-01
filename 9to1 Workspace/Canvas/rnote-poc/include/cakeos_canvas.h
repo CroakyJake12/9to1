@@ -127,6 +127,33 @@ CakeCanvasStatus cake_canvas_stroke_keys(const void *handle, CakeCanvasBuffer *o
 CakeCanvasStatus cake_canvas_export_selected_strokes(const void *handle, const uint64_t *keys,
                                                     size_t key_count, CakeCanvasBuffer *out_native);
 
+
+/* Additive canonical stroke mutation API v1. Existing ABI 3 is unchanged. */
+uint32_t cake_canvas_stroke_mutation_api_version(void);
+CakeCanvasStatus cake_canvas_delete_stroke(void *handle, uint64_t key);
+CakeCanvasStatus cake_canvas_translate_stroke(void *handle, uint64_t key,
+                                             double delta_x, double delta_y);
+
+/* Additive read-only Quick hit API v1. A miss returns OK and out_key=0.
+ * The actual donor render order is authoritative; a hit grants no authority. */
+uint32_t cake_canvas_quick_erase_api_version(void);
+CakeCanvasStatus cake_canvas_quick_erase_target(const void *handle, double x,
+                                               double y, uint64_t *out_key);
+/* Owned packed little-endian u64 render-order keys; buffer_release owns release. */
+CakeCanvasStatus cake_canvas_rendered_stroke_keys(const void *handle,
+                                                 CakeCanvasBuffer *out_keys);
+
+/* Additive detached Split candidate API v1: original engine is unchanged.
+ * Both distinct output buffers are owned and must each be buffer_released.
+ * out_native is genuine Rnote bytes; out_receipt is exact typed path JSON.
+ * Inputs use document coordinates and the existing ABI 3 pointer layout.
+ * Invalid input resets valid output buffers; alias/null outputs are refused.
+ * A candidate/receipt conveys no Home, Files, actor or store authority. */
+uint32_t cake_canvas_split_erase_api_version(void);
+CakeCanvasStatus cake_canvas_split_erase_candidate(const void *handle,
+    const CakeCanvasPointerSample *samples, size_t count, double width,
+    CakeCanvasBuffer *out_native, CakeCanvasBuffer *out_receipt);
+
 #ifdef __cplusplus
 }
 #endif

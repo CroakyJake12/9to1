@@ -32,7 +32,7 @@ public sealed class CanvasNativeInputTests
             var submissions = 0;
             using var surface = new CanvasNativeCuiSurface(token => fixture.OpenDocument(token), fixture.Readiness,
                 new(fixture.FileId, fixture.Opened.CasRevisionId, fixture.Opened.Artifact.ArtifactId, fixture.Opened.Artifact.RevisionId,
-                    () => true, (_, _) => { submissions++; return Task.CompletedTask; }));
+                    () => true, (_, _) => { submissions++; return Task.CompletedTask; },fixture.Opened.StoreId));
             var window = new Window { Width = 1000, Height = 800, Content = surface }; window.Show();
             try
             {
@@ -102,7 +102,7 @@ public sealed class CanvasNativeInputTests
                         pending = await fixture.Broker.AuthorizeAsync(CanvasStrokeWriteIntent.TargetAppId,
                             CanvasStrokeWriteIntent.ActionId, intent.Scopes, intent.Arguments,
                             "Draw the exact captured red stroke in this Canvas revision", null, "native-canvas-test-session", token);
-                    }));
+                    },fixture.Opened.StoreId));
             using var approvals = new HomeApprovalCuiSurface(fixture.Runtime, fixture.Profiles, fixture.Permissions);
             var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("2*,*") };
             Grid.SetColumn(approvals, 1); grid.Children.Add(surface); grid.Children.Add(approvals);
@@ -123,6 +123,7 @@ public sealed class CanvasNativeInputTests
                 Assert.NotNull(captured);
                 Assert.Equal(HomePermissionRequestState.PendingApproval, pending!.State);
                 Assert.Equal("#FFFF0000", captured!.Style.Color);
+                Assert.Equal(fixture.Opened.StoreId,captured.ExpectedStoreId);
                 Assert.Equal(fixture.Opened.CasRevisionId, (await fixture.Bridge.OpenAsync(fixture.FileId, ct)).CasRevisionId);
                 Assert.Empty((await fixture.Bridge.OpenAsync(fixture.FileId, ct)).Artifact.Pages[0].Strokes);
                 await approvals.FocusRequestAsync(pending.RequestId, ct);

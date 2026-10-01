@@ -12,6 +12,7 @@ public sealed class CanvasNativeInkInput : IDisposable
     private readonly CanvasToolState _tools;
     private readonly HostedItemId _fileId;
     private readonly FilesRevisionId _filesRevision;
+    private readonly Guid _expectedStoreId;
     private readonly Func<bool> _isAvailable;
     private readonly Func<CanvasStrokeWriteIntent, CancellationToken, Task> _requestOperation;
     private readonly CancellationTokenSource _lifetime = new();
@@ -27,12 +28,12 @@ public sealed class CanvasNativeInkInput : IDisposable
 
     public CanvasNativeInkInput(CanvasNativeViewport viewport, CanvasRnoteDocument document, CanvasToolState tools,
         HostedItemId fileId, FilesRevisionId filesRevision, Func<bool> isAvailable,
-        Func<CanvasStrokeWriteIntent, CancellationToken, Task> requestOperation)
+        Func<CanvasStrokeWriteIntent, CancellationToken, Task> requestOperation,Guid expectedStoreId=default)
     {
         if (fileId.Value == Guid.Empty || filesRevision.Value == Guid.Empty)
             throw new ArgumentException("Native ink input requires the exact displayed Files revision.");
         _viewport = viewport; _document = document; _tools = tools; _fileId = fileId; _filesRevision = filesRevision;
-        _isAvailable = isAvailable; _requestOperation = requestOperation;
+        _expectedStoreId=expectedStoreId;_isAvailable = isAvailable; _requestOperation = requestOperation;
         viewport.PointerPressed += Pressed;
         viewport.PointerMoved += Moved;
         viewport.PointerReleased += Released;
@@ -80,8 +81,9 @@ public sealed class CanvasNativeInkInput : IDisposable
             var current = _document.Identity;
             if (current.ArtifactId != _captured.Value.ArtifactId || current.RevisionId != _captured.Value.RevisionId)
             { CancelCapture("The Canvas revision changed during input. Reopen its current revision."); return; }
-            var intent = CanvasStrokeWriteIntent.Capture(_fileId, _filesRevision, _captured.Value.ArtifactId,
-                _captured.Value.RevisionId, Guid.NewGuid(), _samples, _style);
+            var intent = _expectedStoreId==Guid.Empty
+                ? CanvasStrokeWriteIntent.Capture(_fileId,_filesRevision,_captured.Value.ArtifactId,_captured.Value.RevisionId,Guid.NewGuid(),_samples,_style)
+                : CanvasStrokeWriteIntent.Capture(_fileId,_filesRevision,_captured.Value.ArtifactId,_captured.Value.RevisionId,Guid.NewGuid(),_expectedStoreId,_samples,_style);
             ReleaseCapture(); _samples.Clear(); _captured = null; _style = null;
             _submitting = true; _submitted = true; Status = "Review this captured stroke in Home."; Changed?.Invoke(this, EventArgs.Empty);
             await _requestOperation(intent, _lifetime.Token);

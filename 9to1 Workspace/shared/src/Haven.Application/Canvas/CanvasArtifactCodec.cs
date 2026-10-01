@@ -1,3 +1,4 @@
+using Haven.Application.Canvas;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -69,7 +70,7 @@ public static class CanvasArtifactCodec
         if (includeHistory && artifact.SemanticHistory is not null) ValidateHistory(artifact);
         var file = new CanvasArtifactFile
         {
-            SchemaVersion = CanvasArtifact.CurrentSchemaVersion,
+            SchemaVersion = artifact.SchemaVersion,
             Artifact = artifact,
             SemanticHistory = includeHistory ? artifact.SemanticHistory : null,
             ExtensionData = artifact.EnvelopeExtensionData
@@ -102,12 +103,15 @@ public static class CanvasArtifactCodec
             throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument, "Canvas document has no root value.");
         if (!string.Equals(file.Format, CanvasArtifactFile.CanonicalFormat, StringComparison.Ordinal))
             throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.UnsupportedFormat, $"Unsupported Canvas format '{file.Format}'.");
-        if (file.SchemaVersion != CanvasArtifact.CurrentSchemaVersion)
+        if (!CanvasArtifact.IsSupportedSchemaVersion(file.SchemaVersion))
             throw UnsupportedVersion("envelope", file.SchemaVersion);
         if (file.Artifact is null)
             throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument, "Canvas document has no artifact payload.");
-        if (file.Artifact.SchemaVersion != CanvasArtifact.CurrentSchemaVersion)
+        if (!CanvasArtifact.IsSupportedSchemaVersion(file.Artifact.SchemaVersion))
             throw UnsupportedVersion("artifact", file.Artifact.SchemaVersion);
+
+        if (file.SchemaVersion != file.Artifact.SchemaVersion)
+            throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument, "Canvas envelope and artifact schema versions must match.");
 
         file.Artifact.EnvelopeExtensionData = file.ExtensionData;
         file.Artifact.SemanticHistory = file.SemanticHistory;
@@ -156,7 +160,7 @@ public static class CanvasArtifactCodec
                 Require(entityIds.Add(id), "duplicate_id", path, "Stable entity IDs must be unique within the artifact.");
         }
 
-        Require(artifact.SchemaVersion == CanvasArtifact.CurrentSchemaVersion, "unsupported_schema", "schemaVersion", "The artifact schema version is not supported.");
+        Require(CanvasArtifact.IsSupportedSchemaVersion(artifact.SchemaVersion), "unsupported_schema", "schemaVersion", "The artifact schema version is not supported.");
         AddId(artifact.ArtifactId, "artifactId");
         Require(artifact.RevisionId != Guid.Empty, "empty_revision", "revisionId", "Revision IDs cannot be empty.");
         Require(!string.IsNullOrWhiteSpace(artifact.DisplayName), "missing_name", "displayName", "DisplayName cannot be empty.");
@@ -275,6 +279,11 @@ public static class CanvasArtifactCodec
                 Require(stroke.RevisionId != Guid.Empty, "empty_revision", $"{strokePath}.revisionId", "Revision IDs cannot be empty.");
                 Require(layerIds.Contains(stroke.LayerId), "unknown_layer", $"{strokePath}.layerId", "Each stroke must reference a layer on its page.");
                 Require(!string.IsNullOrWhiteSpace(stroke.ToolDefinitionId), "missing_tool", $"{strokePath}.toolDefinitionId", "Tool definition ID is required.");
+                if (stroke.PathGeometry is { } geometry)
+                {
+                    Require(artifact.SchemaVersion >= 2, "geometry_requires_schema2", $"{strokePath}.pathGeometry", "Authoritative path geometry requires schema2; schema1 readers cannot infer a polyline.");
+                    Require(CanvasStrokePathCapture.TryCapture(geometry, out _), "invalid_path_geometry", $"{strokePath}.pathGeometry", "Path geometry schema, finite elements, exact controls and bounded segments are required.");
+                }
                 Require(stroke.Samples is { Count: > 0 }, "missing_samples", $"{strokePath}.samples", "A persisted stroke must contain at least one sample.");
                 Require(stroke.ResolvedBrushProperties is not null && ValidBrush(stroke.ResolvedBrushProperties), "invalid_brush", $"{strokePath}.resolvedBrushProperties", "Resolved brush properties are invalid.");
                 Require(stroke.Transform is not null && ValidTransform(stroke.Transform), "invalid_transform", $"{strokePath}.transform", "Stroke transforms must contain finite values and non-zero scales.");

@@ -1,3 +1,4 @@
+using Haven.Application.Canvas;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -92,8 +93,9 @@ public sealed record CanvasModeConversionPreview(
 /// persist committed snapshots through Files; this class owns document rules,
 /// semantic history, operation idempotency, and meaningful change events.
 /// </summary>
-public sealed class CanvasArtifactSession
+public sealed partial class CanvasArtifactSession
 {
+    private bool _applyingMutation;
     public const string CanonicalApiNamespace = "9to1.Canvas";
     public const int MaximumPageSize = 500;
     private const int MaximumIdempotencyEntries = 512;
@@ -463,21 +465,26 @@ public sealed class CanvasArtifactSession
             try { clonedStroke = CloneStroke(stroke); }
             catch (CanvasArtifactFormatException)
             { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Structured stroke failed semantic validation."); }
-            // Engine-derived state is captured only after revision/idempotency
-            // and layer checks. It belongs to this stroke's single history and
-            // persistence boundary, rather than a second settings mutation.
+            var candidate = CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.SerializeSnapshot(artifact));
+            if (clonedStroke.PathGeometry is not null) candidate.SchemaVersion = 2;
+            candidate.Pages[pageIndex] = page with
+            {
+                Strokes = page.Strokes.Append(clonedStroke).ToList(),
+                StrokeOrder = page.StrokeOrder.Append(clonedStroke.StrokeId).ToList(),
+                RevisionId = Guid.NewGuid()
+            };
+            try { CanvasArtifactCodec.SerializeSnapshot(candidate); }
+            catch (Exception exception) when (exception is CanvasArtifactFormatException or JsonException)
+            { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "The complete stroke candidate failed validation before donor preparation."); }
             var settings = captureAccompanyingDocumentSettings?.Invoke();
             if (captureAccompanyingDocumentSettings is not null && settings is null)
                 return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Accompanying document settings are required.");
-            var strokes = page.Strokes.Append(clonedStroke).ToList();
-            artifact.Pages[pageIndex] = page with
-            {
-                Strokes = strokes,
-                StrokeOrder = page.StrokeOrder.Append(stroke.StrokeId).ToList(),
-                RevisionId = Guid.NewGuid()
-            };
             if (settings is not null)
-                artifact.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+                candidate.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            CanvasArtifactCodec.SerializeSnapshot(candidate);
+            artifact.SchemaVersion = candidate.SchemaVersion;
+            artifact.Pages[pageIndex] = candidate.Pages[pageIndex];
+            artifact.DocumentSettings = candidate.DocumentSettings;
             return MutationChanged(pageId, stroke.StrokeId);
         });
 
@@ -517,6 +524,8 @@ public sealed class CanvasArtifactSession
             if (page.Layers.First(layer => layer.LayerId == stroke.LayerId).IsLocked)
                 return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on a locked layer cannot be edited.");
             if (noChange) return MutationNoChange();
+            if (action == "Ink.Translate" && stroke.PathGeometry is not null)
+                return MutationFailure(CanvasApiErrorCode.UnsupportedFeature, "Authoritative donor paths require an exact owner path replacement; original Samples are provenance.");
             CanvasInkStroke? replacement;
             try
             {
@@ -588,7 +597,7 @@ public sealed class CanvasArtifactSession
 
             var warnings = crossingObjects.Count + crossingStrokes.Count == 0
                 ? Array.Empty<string>()
-                : [$"{crossingObjects.Count} object(s) and {crossingStrokes.Count} stroke(s) extend beyond the proposed page bounds; their stored geometry will be preserved."];
+                : [$"{crossingObjects.Count} object(s) and {crossingStrokes.Count} stroke(s) may extend beyond the proposed page bounds (conservative geometry check); their stored geometry will be preserved."];
             return CanvasApiResult<CanvasModeConversionPreview>.Success(new CanvasModeConversionPreview(
                 Guid.NewGuid(),
                 _artifact.ArtifactId,
@@ -664,6 +673,7 @@ public sealed class CanvasArtifactSession
         CanvasApiResult<CanvasMutationResult> result;
         lock (_gate)
         {
+            if (_applyingMutation) return Failure<CanvasMutationResult>(CanvasApiErrorCode.InvalidArgument, action, "A preparation callback cannot mutate the same canonical session.", targetId);
             var requestError = ValidateRequest(request, action, targetId);
             if (requestError is not null) return CanvasApiResult<CanvasMutationResult>.Failure(requestError);
             var fingerprint = Fingerprint(action, targetId, request.ActorContext.CallerId, input);
@@ -677,7 +687,18 @@ public sealed class CanvasArtifactSession
                 return Failure<CanvasMutationResult>(CanvasApiErrorCode.RevisionConflict, action, "Canvas revision changed before the mutation was applied.", targetId, canRetry: true);
 
             var before = CanvasArtifactCodec.SerializeSnapshot(_artifact);
-            var plan = apply(_artifact);
+            MutationPlan plan;
+            try
+            {
+                _applyingMutation = true;
+                plan = apply(_artifact);
+            }
+            catch
+            {
+                _artifact = CanvasArtifactCodec.Deserialize(before);
+                throw;
+            }
+            finally { _applyingMutation = false; }
             if (plan.Error is not null)
             {
                 _artifact = CanvasArtifactCodec.Deserialize(before);
@@ -719,6 +740,7 @@ public sealed class CanvasArtifactSession
         CanvasApiResult<CanvasMutationResult> result;
         lock (_gate)
         {
+            if (_applyingMutation) return Failure<CanvasMutationResult>(CanvasApiErrorCode.InvalidArgument, action, "A preparation callback cannot mutate the same canonical session.", _artifact.ArtifactId);
             var requestError = ValidateRequest(request, action, _artifact.ArtifactId);
             if (requestError is not null) return CanvasApiResult<CanvasMutationResult>.Failure(requestError);
             var fingerprint = Fingerprint(action, _artifact.ArtifactId, request.ActorContext.CallerId, null);
@@ -738,7 +760,12 @@ public sealed class CanvasArtifactSession
 
             var restored = CanvasArtifactCodec.Deserialize(source[^1]);
             restored.RevisionId = Guid.NewGuid();
-            prepareRestoredSnapshot?.Invoke(Clone(restored));
+            try
+            {
+                _applyingMutation = true;
+                prepareRestoredSnapshot?.Invoke(Clone(restored));
+            }
+            finally { _applyingMutation = false; }
             destination.Add(CanvasArtifactCodec.SerializeSnapshot(_artifact));
             source.RemoveAt(source.Count - 1);
             TrimHistory();
@@ -823,6 +850,27 @@ public sealed class CanvasArtifactSession
 
     private static bool StrokeInsidePage(CanvasInkStroke stroke, CanvasPageBounds bounds)
     {
+        if (stroke.PathGeometry is { } path)
+        {
+            // Affine-transformed Bezier control hull is conservative centerline containment,
+            // not an exact painted brush/hitbox claim. Samples never render a fragment polyline.
+            var radians = (stroke.Transform.RotationDegrees % 360) * Math.PI / 180;
+            var cos = Math.Cos(radians); var sin = Math.Sin(radians);
+            bool Inside(double x, double y)
+            {
+                var sx = x * stroke.Transform.ScaleX; var sy = y * stroke.Transform.ScaleY;
+                var tx = sx * cos - sy * sin + stroke.Transform.TranslateX;
+                var ty = sx * sin + sy * cos + stroke.Transform.TranslateY;
+                return double.IsFinite(tx) && double.IsFinite(ty) && tx >= bounds.X && tx <= bounds.X + bounds.Width
+                    && ty >= bounds.Y && ty <= bounds.Y + bounds.Height;
+            }
+            if (!Inside(path.Start.X, path.Start.Y)) return false;
+            foreach (var segment in path.Segments)
+                if (!Inside(segment.End.X, segment.End.Y)
+                    || segment.Control1 is { } first && !Inside(first.X, first.Y)
+                    || segment.Control2 is { } second && !Inside(second.X, second.Y)) return false;
+            return true;
+        }
         if (stroke.Samples.Count == 0) return true;
         return stroke.Samples.All(sample => sample.X >= bounds.X && sample.X <= bounds.X + bounds.Width
             && sample.Y >= bounds.Y && sample.Y <= bounds.Y + bounds.Height);
@@ -859,5 +907,5 @@ public sealed class CanvasArtifactSession
 
     private sealed record MutationPlan(IReadOnlyList<Guid> ChangedIds, IReadOnlyList<string> Warnings, MutationError? Error);
     private sealed record MutationError(CanvasApiErrorCode Code, string Message, bool CanRetry, bool IsRecoverable = true);
-    private sealed record IdempotencyEntry(string Fingerprint, CanvasMutationResult Result);
+    private sealed record IdempotencyEntry(string Fingerprint, CanvasMutationResult Result, int? StructuredStrokeOrderCount = null);
 }
