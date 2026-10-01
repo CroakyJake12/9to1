@@ -50,7 +50,10 @@ jobs:
           dotnet --info > artifacts/logs/dotnet-info-after.txt
           dotnet workload list > artifacts/logs/workloads.txt
           java -version 2> artifacts/logs/java.txt
-          sdkmanager --list_installed > artifacts/logs/android-sdk.txt
+          sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sdkmanager_path" || { echo "Missing exact hosted SDK manager: $sdkmanager_path" >&2; exit 127; }
+          printf '%s\n' "$sdkmanager_path" > artifacts/logs/android-sdkmanager-path.txt
+          "$sdkmanager_path" --list_installed > artifacts/logs/android-sdk.txt
           git submodule status > artifacts/logs/submodules.txt
       - name: Ephemeral debug certificate only
         shell: bash
