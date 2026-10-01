@@ -1,0 +1,37 @@
+{
+  "status": "FROZEN_METADATA_ONLY_SAME_BUILD08_APK_FRESH_NORMALIZED_SMOKE_PENDING",
+  "metadataFiles": [
+    {
+      "path": ".github/workflows/build-haven-android.yml",
+      "mode": "100644",
+      "sha256": "e9281d19759c46bc30561ffd5b044ea8dba09fc1747e993862261cc2d5dc21a0"
+    },
+    {
+      "path": ".github/scripts/astra-android32-two-launch.py",
+      "mode": "100644",
+      "sha256": "20fc02258604f405fd907b75b78c96109ef5ddacbe4901cf5692b62c216aaeec"
+    },
+    {
+      "path": ".github/scripts/astra-android-activity-observation.py",
+      "mode": "100644",
+      "sha256": "b8dc9d6f19c02b18d33889e1b59cdda6f06e4d4b9772d931fbb86e0c81d64f9b"
+    },
+    {
+      "path": ".github/scripts/astra-android08-reuse.py",
+      "mode": "100644",
+      "sha256": "5ba5a8d491ade94069e998075eb8740a612e2907b19d975631c7c6657faeff86"
+    }
+  ],
+  "buildCommit": "d3e265272f410e0e1323b87b30971ad647d0c371",
+  "buildRun": "36903571809",
+  "buildManifestSha256": "653c1bc219797b96e2190ad45561a79ac8bdd887dbdb97e2bee4a029348b94ee",
+  "artifactId": 11183780711,
+  "archiveSha256": "37145cb6f1339dd3b7c347dbbf1eebe801bf68c233fadb3636fcf2b0b8b90237",
+  "archiveBytes": 118239638,
+  "apkSha256": "faf45b3d1521fdc5d199be9722d41f9604aaf8170aef6e01ab605426c97e122c",
+  "apkBytes": 118833539,
+  "certificateSha256": "2e2193e3754cd3e2d7deb586b87560a681b13eb10029dbeb9029ce286fdbb0c6",
+  "ownerManifestSha256": "ed3330c911ecb408be555350dd291211eea0da2d9377ab1b6a5e65e950a1f42a",
+  "rootQualifiedAndroid08ReviewSha256": "1b91c852a719c2f819ccbff0272083fbd10bef14c7cdac13698969424b9c8ad7",
+  "qualification": "Reuse unchanged original Android08 APK and production crypto. New smoke run and metadata commit remain distinct from original build run/head. Prior positive credential reads accepted; normalized three-sample closure still requires this actual run."
+}

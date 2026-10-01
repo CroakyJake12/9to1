@@ -1,155 +1,52 @@
-name: Astra Android29 frozen branch validation
+name: Astra Android08 existing APK normalized startup validation
 on:
   workflow_dispatch:
     inputs:
       expected_commit:
-        description: Exact reviewed validation commit (40 hex)
+        description: Exact reviewed metadata-only validation commit
         required: true
         type: string
       expected_manifest_sha256:
-        description: Exact reviewed frozen91 manifest SHA256
+        description: Exact external metadata/provenance manifest SHA256
         required: true
         type: string
 permissions:
   contents: read
+  actions: read
 concurrency:
-  group: astra-android29-validation-${{ github.ref }}
+  group: astra-android08-smoke-reuse-${{ github.ref }}
   cancel-in-progress: false
 env:
-  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-  DOTNET_CLI_USE_MSBUILD_SERVER: '0'
-  MSBUILDDISABLENODEREUSE: '1'
-  AVALONIA_TELEMETRY_OPTOUT: '1'
   EXPECTED_COMMIT: ${{ inputs.expected_commit }}
   EXPECTED_MANIFEST_SHA256: ${{ inputs.expected_manifest_sha256 }}
+  AVALONIA_TELEMETRY_OPTOUT: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_CLI_USE_MSBUILD_SERVER: '0'
 jobs:
-  android:
-    if: startsWith(github.ref, 'refs/heads/validation/astra-android29-frozen91-')
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Verify exact source cut before preparation
-        run: python3 .github/scripts/astra-android29-verify.py source
-      - name: Prepare existing pinned CUI source
-        run: bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
-      - uses: actions/setup-dotnet@v6
-        with:
-          global-json-file: global.json
-      - name: Resolve hosted Android workload and retain toolchain evidence
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/logs
-          dotnet --info | tee artifacts/logs/dotnet-info-before.txt
-          dotnet workload install android --skip-manifest-update --disable-parallel 2>&1 | tee artifacts/logs/workload-install.txt
-          dotnet --info > artifacts/logs/dotnet-info-after.txt
-          dotnet workload list > artifacts/logs/workloads.txt
-          java -version 2> artifacts/logs/java.txt
-          sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          test -x "$sdkmanager_path" || { echo "Missing exact hosted SDK manager: $sdkmanager_path" >&2; exit 127; }
-          printf '%s\n' "$sdkmanager_path" > artifacts/logs/android-sdkmanager-path.txt
-          "$sdkmanager_path" --list_installed > artifacts/logs/android-sdk.txt
-          git submodule status > artifacts/logs/submodules.txt
-      - name: Ephemeral debug certificate only
-        shell: bash
-        run: |
-          set -euo pipefail
-          umask 077
-          keytool -genkeypair -keystore "$RUNNER_TEMP/android29-debug.keystore" -storepass android -keypass android -alias androiddebugkey -dname 'CN=Android Debug,O=Android,C=US' -keyalg RSA -keysize 2048 -validity 7
-          keytool -exportcert -keystore "$RUNNER_TEMP/android29-debug.keystore" -storepass android -alias androiddebugkey -file "$RUNNER_TEMP/android29-cert.der"
-      - name: Build physically isolated exact-source normal and probe variants
-        shell: bash
-        run: |
-          set -euo pipefail
-          original="$GITHUB_WORKSPACE"
-          project='9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj'
-          common=(--disable-build-servers -m:1 -nr:false -p:UseSharedCompilation=false -p:Configuration=Release)
-          sign=(-p:AndroidKeyStore=true "-p:AndroidSigningKeyStore=$RUNNER_TEMP/android29-debug.keystore" -p:AndroidSigningKeyAlias=androiddebugkey -p:AndroidSigningKeyPass=android -p:AndroidSigningStorePass=android)
-          properties=BaseIntermediateOutputPath,MSBuildProjectExtensionsPath,IntermediateOutputPath,BaseOutputPath,OutputPath,DefineConstants,RuntimeIdentifiers,RuntimeIdentifier,TargetFramework,AndroidEnableMarshalMethods,AndroidUseMarshalMethods,AndroidEnableLLVM,AndroidPackageFormat
-          for variant in normal probe; do
-            checkout="$RUNNER_TEMP/${variant}35-source"
-            test ! -e "$checkout"
-            git clone --shared --no-checkout "$original" "$checkout"
-            git -C "$checkout" checkout --detach "$GITHUB_SHA"
-            (
-              cd "$checkout"
-              mkdir -p artifacts/logs
-              python3 .github/scripts/astra-android29-verify.py source
-              python3 .github/scripts/astra-android35-source-receipts.py "$variant" before-preparation
-              git submodule update --init --recursive -- 'framework/CUI/vendor/Avalonia/external/XamlX' 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus' '9to1 Workspace/Terminal/Source/libvterm'
-              bash '9to1 Workspace/shared/eng/prepare-cui-source.sh' --check
-              python3 .github/scripts/astra-android35-source-receipts.py "$variant" before-build
-              flags=()
-              if test "$variant" = probe; then flags=(-p:AstraAndroidCredentialProbe=true); fi
-              dotnet msbuild "$project" -nologo -m:1 -nr:false -p:Configuration=Release -p:TargetFramework=net10.0-android "${flags[@]}" "-getProperty:$properties" > artifacts/logs/evaluated-app-properties.json
-              dotnet msbuild '9to1 Workspace/Sites/HavenOS.Sites.csproj' -nologo -m:1 -nr:false -p:Configuration=Release "${flags[@]}" "-getProperty:$properties" > artifacts/logs/evaluated-sites-properties.json
-              dotnet restore "$project" "${common[@]}" "${flags[@]}" 2>&1 | tee artifacts/logs/restore.txt
-              if test "$variant" = normal; then
-                dotnet build "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${sign[@]}" 2>&1 | tee artifacts/logs/build.txt
-                python3 .github/scripts/astra-android33-manifest.py normal --apk-root '9-1 OS (Android)/src/Haven.Android/bin/Release'
-              else
-                dotnet publish "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${flags[@]}" "${sign[@]}" -p:AndroidPackageFormat=apk 2>&1 | tee artifacts/logs/publish.txt
-                ASTRA_ANDROID_APK_OUTPUT_ROOT='9-1 OS (Android)/src/Haven.Android/bin/Release' python3 .github/scripts/astra-android29-verify.py apk
-                python3 .github/scripts/astra-android33-manifest.py validation
-              fi
-              python3 .github/scripts/astra-android35-jni-receipts.py "$variant"
-              python3 .github/scripts/astra-android29-verify.py source
-              bash '9to1 Workspace/shared/eng/prepare-cui-source.sh' --check
-              python3 .github/scripts/astra-android35-source-receipts.py "$variant" after-build
-            )
-          done
-          cp -a "$RUNNER_TEMP/probe35-source/artifacts/apk" "$original/artifacts/apk"
-      - name: Preserve both checkout receipts even on failure
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/artifacts/logs/variants"
-          for variant in normal probe; do
-            checkout="$RUNNER_TEMP/${variant}35-source"
-            if test -d "$checkout/artifacts/logs"; then
-              (cd "$checkout"; python3 .github/scripts/astra-android35-jni-receipts.py "$variant") || {
-                printf '%s\n' 'JNI receipt collection failed; preserve original build logs and do not infer registration acceptance.' > "$checkout/artifacts/logs/jni-collection-failed.txt"
-              }
-              mkdir -p "$GITHUB_WORKSPACE/artifacts/logs/variants/$variant"
-              cp -a "$checkout/artifacts/logs/." "$GITHUB_WORKSPACE/artifacts/logs/variants/$variant/"
-            fi
-          done
-      - uses: actions/upload-artifact@v7
-        with:
-          name: Astra-Android29-APK-${{ github.sha }}
-          path: artifacts/apk/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: Astra-Android29-build-evidence-${{ github.sha }}
-          path: artifacts/logs/
   android-smoke:
-    needs: android
+    if: startsWith(github.ref, 'refs/heads/validation/astra-android29-frozen91-')
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
+          submodules: false
           persist-credentials: false
-      - uses: actions/download-artifact@v8
-        with:
-          name: Astra-Android29-APK-${{ github.sha }}
-          path: artifacts/apk/
+      - name: Pin and download ONLY existing build08 source and APK artifact
+        env:
+          GH_ARTIFACT_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/astra-android08-reuse.py
       - name: Enable hosted KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Verify downloaded receipt before install and run existing LAUNCHER startup smoke
+      - name: Verify original APK before EACH install and observe normalized closure
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        env:
+          ASTRA_ANDROID_BUILD_SOURCE_ROOT: ${{ runner.temp }}/build08-source
         with:
           api-level: 36
           target: google_apis
@@ -158,18 +55,14 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save
           script: python3 .github/scripts/astra-android32-two-launch.py
-      - name: Record limited acceptance and private log collection status
+      - name: Preserve distinct startup and original-input receipts including failure
         if: always()
-        shell: bash
-        run: |
-          mkdir -p artifacts/smoke
-          printf '%s\n' 'LAUNCHER startup only: AndroidBootstrapActivity -> MainActivity; not HOME/Launcher readiness, widgets, inference, physical device or production authority acceptance.' > artifacts/smoke/acceptance-limits.txt
-          test -f artifacts/smoke/run-as-availability.txt || echo see-distinct-launch-evidence-for-status > artifacts/smoke/run-as-availability.txt
-      - uses: actions/upload-artifact@v7
-        if: always()
+        uses: actions/upload-artifact@v7
         with:
-          name: Astra-Android29-startup-evidence-${{ github.sha }}
+          name: Astra-Android08-normalized-startup-${{ github.sha }}-${{ github.run_id }}
           path: |
-            artifacts/smoke/
             artifacts/android-launches/
+            artifacts/reuse-input/
+            !artifacts/reuse-input/original-apk-artifact.zip
             !artifacts/android-launches/**/artifacts/android/*.apk
+          if-no-files-found: error
