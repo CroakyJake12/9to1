@@ -30,7 +30,7 @@ public sealed class InstalledApplicationsOriginalActorReadTests
         f.Principal.Value = "replacement-principal"; f.Observations.Release.TrySetResult();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
         Assert.Equal(1, f.Observations.Calls); await f.AssertNoInstalledRecordsAsync();
-        Assert.NotEqual(original, await f.Actors.GetCurrentAsync(default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => { await f.Actors.GetCurrentAsync(default); });
     }
     [Fact]
     public async Task SuspendedDiscoveryRejectsActualNewIdentitySessionRevisionForSameProfile()

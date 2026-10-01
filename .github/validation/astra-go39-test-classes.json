@@ -1,5 +1,5 @@
 {
-  "ownerManifestSha256": "211f8d352528d9730071d5180fa4c966e553200e2c93e0c97074390275119515",
+  "ownerManifestSha256": "192cb609b40bbb60076d3772e249d2a4ff3279fd74774d6523d117af7d9576d6",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "classes": [
     {
@@ -238,7 +238,7 @@
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs",
       "class": "InstalledApplicationsOriginalActorReadTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "2657e3536b4d31ef0c6a2aacf90c806c363c1b9f8ec89fb2613fc872cc6d249c",
+      "sha256": "347635bcc3642d099e4545d7c73803ae7368c1b812086bdc704478da130d156d",
       "source": "/workspace/astra-source/worker5-go-private-original-read-registry-interface-coherent39/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs",
       "origin": "Go39newactualOSownerfixture"
     }

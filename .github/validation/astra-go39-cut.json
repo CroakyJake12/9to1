@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d611178860c2c2436307b5652e5a752ed7d62893",
-  "programTree": "c1a4d5ac76330a2b74d21dcad56a264b3bfafe94",
+  "baselineCommit": "8d362f4e5d9e5a59767beb77d592aaf5417a3d69",
+  "programTree": "743520cb21c330644978aab6fe89e171521f389e",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-go39-test-classes.json",
       "mode": "100644",
-      "object": "8b22a96c008d74bfb4267f0746ff53dec84c1b95",
+      "object": "faf56d340f811676a11934f26005007591dffbd9",
       "bytes": 14757,
-      "sha256": "43ed1033171fdd89664ed92c697bf9765a2cef37cc2be069a7b0974c8b8fda28"
+      "sha256": "2fb3371edb6f04678e63566e08064fd17d48d82b7f6696a8f82341a47301cf6b"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -3116,9 +3116,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs",
       "mode": "100644",
-      "object": "ad45d6dc0b000e56de7397d96a80fd2dfc9acd51",
-      "bytes": 10564,
-      "sha256": "2657e3536b4d31ef0c6a2aacf90c806c363c1b9f8ec89fb2613fc872cc6d249c"
+      "object": "04b4dba9286e60a5021c64db3bee7ecc9991eac8",
+      "bytes": 10609,
+      "sha256": "347635bcc3642d099e4545d7c73803ae7368c1b812086bdc704478da130d156d"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LeaseBlockingHomeStore.cs",
@@ -63831,14 +63831,13 @@
   "limits": "Controlledmanagedscope only; no realbackend/direct700HTTP/currentrevocation/Homegrant/nativeinstalledtransport. Correctiveprogram retainsold896base explicitly, currentnormal977/indexpreserved.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker4-go39-hosted-validation-plan-sol4/manifest.json",
-      "sha256": "f634718cf2c42f15413630ccccf45cb7d6788dec16831ab20dfeb59de1d9c0f4"
+      "path": "/workspace/astra-source/worker4-go39-hosted-validation-plan-sol5/manifest.json",
+      "sha256": "8db52a7497f8d9a09c600fdc14e48bfc142f1c835271d928e696300d3d397018"
     },
     {
-      "path": "/workspace/astra-source/worker5-go-private-original-read-registry-interface-coherent39/manifest.json",
-      "sha256": "211f8d352528d9730071d5180fa4c966e553200e2c93e0c97074390275119515"
+      "path": "/workspace/astra-source/worker5-go-private-original-read-principal-recovery-coherent39/manifest.json",
+      "sha256": "192cb609b40bbb60076d3772e249d2a4ff3279fd74774d6523d117af7d9576d6"
     }
   ],
-  "sharedCakeIdContractReference": null,
-  "productActivation": "Corrective isolated cohort only"
+  "sharedCakeIdContract": null
 }
