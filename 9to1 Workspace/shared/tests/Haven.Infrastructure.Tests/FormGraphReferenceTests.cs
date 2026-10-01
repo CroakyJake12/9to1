@@ -14,7 +14,7 @@ public sealed class FormGraphReferenceTests
         using var paths = new Paths();
         var settings = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var publications = new FormPublicationService(settings, settings, authority, new StructuralValidator());
+        var publications = new FormPublicationService(settings, settings, authority, new StructuralValidator(), actors: new PublicationActor());
         var schema = new NodeGraphSchemaRegistry([new("forms.start", 1, "forms", "forms.read",
             JsonSerializer.SerializeToElement(new { type = "object" }), [])],
             [new(FormGraphReferenceService.StateProfile, new HashSet<string> { "forms.start" }, new HashSet<string> { "forms.read" })]);
@@ -80,4 +80,10 @@ public sealed class FormGraphReferenceTests
         public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken) => ValueTask.FromResult(allowed());
     }
 
+
+    private sealed class PublicationActor : IAuthenticatedResourceActorSource
+    {
+        private readonly AuthenticatedResourceActor _actor = new("forms-author", "forms-profile", null, null, "forms-login");
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) => ValueTask.FromResult<AuthenticatedResourceActor?>(_actor);
+    }
 }

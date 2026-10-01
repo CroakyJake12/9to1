@@ -28,6 +28,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
     private readonly TextBox _search = new() { PlaceholderText = "Search this folder", Width = 280, MaxLength = 256 };
     private CuiSceneHost? _scene;
     private FilesNativeBrowserPage? _page;
+    private Guid? _boundStoreId;
     private int _historyIndex;
     private bool _busy;
     private bool _disposed;
@@ -73,7 +74,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
             await RequireReadyAsync(linked.Token);
             linked.Token.ThrowIfCancellationRequested();
-            _page = page; _items.ItemsSource = page.Items; Content = _scene;
+            _boundStoreId = page.StoreID; _page = page; _items.ItemsSource = page.Items; Content = _scene;
             _status = $"{page.Items.Count} items"; Changed();
         }
         catch { Dispose(); throw; }
@@ -163,7 +164,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
                 { destination = (selected.Id.Value, selected.Name); appendHistory = true; _query = ""; _search.Text = ""; }
                 else
                 {
-                    var selection = await _browser.ReadPackageSelectionAsync(selected, _originalActor, 256L * 1024 * 1024, linked.Token);
+                    var selection = await _browser.ReadPackageSelectionAsync(originalPage!, selected, _originalActor, 256L * 1024 * 1024, linked.Token);
                     RequireRetainedPage();
                     await _packages.OpenAsync(selection, linked.Token);
                     RequireRetainedPage();
@@ -177,7 +178,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
             else if (command == "9to1.Files.Forward") { index++; destination = _history[index]; _query = ""; _search.Text = ""; }
             else if (command == "9to1.Files.Search") _query = originalSearch;
             else if (command == "9to1.Files.More") cursor = _page!.Next;
-            var page = await _browser.ListAsync(_originalActor, destination.ID, _query, cursor, linked.Token);
+            var page = await _browser.ListAsync(_originalActor, destination.ID, _query, cursor, linked.Token, expectedStoreId: _boundStoreId);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
             await RequireReadyAsync(linked.Token); linked.Token.ThrowIfCancellationRequested();
             RequireRetainedPage();

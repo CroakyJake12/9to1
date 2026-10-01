@@ -18,6 +18,8 @@ public sealed class OsCompatibilityPackageWindow(IServiceProvider services, Canc
 {
     public async Task OpenAsync(CompatibilityPackageSource selection, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(selection);
+        if (selection.StoreId == Guid.Empty) throw new InvalidOperationException("Select this package again from its current Files store.");
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             var actors = services.GetRequiredService<IAuthenticatedResourceActorSource>();
@@ -103,8 +105,8 @@ public sealed class OsCompatibilityPackageBindings(CompatibilityPackageInspector
             _bindings.Set("CanRefresh", false);
             if (await actors.GetCurrentAsync(request.Token) != expected.ObservedActor)
                 throw new UnauthorizedAccessException("The original Home session changed.");
-            var result = await inspector.InspectAsync(expected.FileId, expected.ContentRevision, request.Token);
-            if (result.FileId != expected.FileId || result.ContentRevision != expected.ContentRevision ||
+            var result = await inspector.InspectAsync(expected.StoreId, expected.ObservedActor, expected.FileId, expected.ContentRevision, request.Token);
+            if (expected.StoreId == Guid.Empty || result.StoreId != expected.StoreId || result.FileId != expected.FileId || result.ContentRevision != expected.ContentRevision ||
                 result.MetadataRevision != expected.MetadataRevision || result.Name != expected.Name || result.Length != expected.Length ||
                 !result.Sha256.Equals(expected.Sha256, StringComparison.OrdinalIgnoreCase) ||
                 await actors.GetCurrentAsync(request.Token) != expected.ObservedActor)

@@ -14,9 +14,12 @@ namespace HavenOS.Forms;
 /// controls affordances only; every persisted operation still checks the store's actual authority.</summary>
 public sealed class FormsCuiWorkspace(FormPublicationService publications, FormAuthoringService authoring,
     Func<Guid?> selectedForm, Func<string, bool> available,
-    Func<FormNativePreview, CancellationToken, Task>? showPreview = null) : ICuiWritableBindingContext,
+    Func<FormNativePreview, CancellationToken, Task>? showPreview = null,
+    FormResponseSessionService? responseSessions = null,
+    Func<FormNativeResponseSurface, CancellationToken, Task>? showResponse = null) : ICuiWritableBindingContext,
     ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
+    private readonly Dictionary<Guid, Guid> _responseIDs = [];
     private FormPublication? _opened;
     private FormProject? _project;
     private Guid? _pageID, _fieldID, _optionID, _columnID, _fixedRowID;
@@ -44,6 +47,17 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
     public event PropertyChangedEventHandler? PropertyChanged;
     public Guid? FormID => _opened?.FormID;
     private FormPage? Page => _project?.Pages.SingleOrDefault(page => page.PageID == _pageID);
+    private (FormPage Page, int Index)? FieldPosition
+    {
+        get
+        {
+            if (_project is null || _fieldID is not { } fieldID) return null;
+            foreach (var page in _project.Pages)
+                for (var index = 0; index < page.Children.Count; index++)
+                    if (page.Children[index].Kind == FormChildKind.Field && page.Children[index].ID == fieldID) return (page, index);
+            return null;
+        }
+    }
     private FormField? Field => _project?.Fields.SingleOrDefault(item => item.FieldID == _fieldID);
 
     private FormChoiceOption? Choice => Field?.Options?.SingleOrDefault(option => option.OptionID == _optionID);
@@ -120,6 +134,10 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
             "CanAdd" => IsActionAvailable("9to1.Forms.AddText"), "CanEdit" => IsActionAvailable("9to1.Forms.SaveField"),
             "CanSelectPage" => IsActionAvailable("9to1.Forms.NextPage"), "CanSelectField" => IsActionAvailable("9to1.Forms.NextField"),
             "CanPreview" => IsActionAvailable("9to1.Forms.Preview"),
+            "CanNewResponse" => IsActionAvailable("9to1.Forms.NewResponse"),
+            "CanMoveEarlier" => IsActionAvailable("9to1.Forms.MoveEarlier"),
+            "CanMoveLater" => IsActionAvailable("9to1.Forms.MoveLater"),
+            "CanRespond" => IsActionAvailable("9to1.Forms.Respond"),
             "CanPublish" => IsActionAvailable("9to1.Forms.Publish"), "CanClose" => IsActionAvailable("9to1.Forms.Close"),
             _ => null
         };
@@ -130,7 +148,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
             or "ColumnTypeNames" or "SelectedColumnTypeIndex" or "CanAddColumn" or "CanEditColumn" or "CanRemoveColumn"
             or "CanDiscard" or "CanAddField" or "CanAddChoice" or "CanEditChoice" or "Title" or "Label" or "Help" or "Status" or "PreviewLabel" or "Page" or "Field" or "FieldType" or "Required"
             or "Contents" or "PageNames" or "FieldNames" or "SelectedPageIndex" or "SelectedFieldIndex"
-            or "CanCreate" or "CanOpen" or "CanAdd" or "CanEdit" or "CanSelectPage" or "CanSelectField" or "CanPreview" or "CanPublish" or "CanClose";
+            or "CanCreate" or "CanOpen" or "CanAdd" or "CanEdit" or "CanSelectPage" or "CanSelectField" or "CanPreview" or "CanPublish" or "CanClose" or "CanRespond" or "CanNewResponse" or "CanMoveEarlier" or "CanMoveLater";
     }
 
     public bool TrySetValue(string path, object? value)
@@ -184,6 +202,10 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
 
     public bool? IsActionAvailable(string command) => !_busy && available(command) && (command switch
     {
+        "9to1.Forms.NewResponse" => responseSessions is not null && showResponse is not null && _opened?.State == FormPublicationState.Published && !HasDirtyInspector && _responseIDs.ContainsKey(_opened.FormID),
+        "9to1.Forms.MoveEarlier" => _opened is not null && !HasDirtyInspector && FieldPosition is { Index: > 0 },
+        "9to1.Forms.MoveLater" => _opened is not null && !HasDirtyInspector && FieldPosition is { } position && position.Index < position.Page.Children.Count - 1,
+        "9to1.Forms.Respond" => responseSessions is not null && showResponse is not null && _opened?.State == FormPublicationState.Published && !HasDirtyInspector,
         "9to1.Forms.Create" => true, "9to1.Forms.Open" => selectedForm() is not null,
         "9to1.Forms.AddField" or "9to1.Forms.AddText" or "9to1.Forms.AddNumber" or "9to1.Forms.AddPage" or "9to1.Forms.NextPage"
             or "9to1.Forms.NextField" or "9to1.Forms.Close" => _opened is not null,
@@ -321,6 +343,28 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                     }
                     else _status = $"Preview validated at revision {opened.Revision}: {runtime.Read().State}";
                     return;
+                case "9to1.Forms.NewResponse":
+                case "9to1.Forms.Respond":
+                    // Retain the actual durable ID before presentation. A failed native mount must not
+                    // start a duplicate response when the user retries presentation.
+                    if (!_responseIDs.TryGetValue(opened!.FormID, out var responseID) || command == "9to1.Forms.NewResponse")
+                    {
+                        var started = await responseSessions!.StartAsync(opened.FormID, opened.Revision, cancellationToken);
+                        if (!started.Success) throw new InvalidOperationException(started.Code);
+                        responseID = started.Response!.ResponseID; _responseIDs[opened.FormID] = responseID;
+                    }
+                    var responseOpen = await FormNativeResponseSurface.OpenAsync(responseSessions!, opened.FormID, responseID, cancellationToken);
+                    if (!responseOpen.Success) throw new InvalidOperationException(responseOpen.Code);
+                    using (var responseSurface = responseOpen.Surface!) await showResponse!(responseSurface, cancellationToken);
+                    _status = "Response closed; its saved answers remain in the published version.";
+                    return;
+                case "9to1.Forms.MoveEarlier":
+                case "9to1.Forms.MoveLater":
+                    var originalPosition = FieldPosition!.Value;
+                    result = await authoring.MoveFieldAsync(opened!.FormID, opened.Revision, field!.FieldID,
+                        originalPosition.Page.PageID, originalPosition.Index + (command == "9to1.Forms.MoveEarlier" ? -1 : 1), cancellationToken);
+                    if (result.Success) _pageID = originalPosition.Page.PageID;
+                    break;
                 case "9to1.Forms.Publish": result = await publications.PublishAsync(opened!.FormID, opened.Revision, cancellationToken); break;
                 case "9to1.Forms.Close": result = await publications.CloseAsync(opened!.FormID, opened.Revision, cancellationToken); break;
             }

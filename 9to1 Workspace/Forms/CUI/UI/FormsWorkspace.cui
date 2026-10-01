@@ -5,7 +5,9 @@
       <Button action="9to1.Forms.Create" is-enabled="{Binding CanCreate}" content="Create form" />
       <Button action="9to1.Forms.Open" is-enabled="{Binding CanOpen}" content="Open selected form" />
       <Button action="9to1.Forms.Preview" is-enabled="{Binding CanPreview}" content="{Binding PreviewLabel}" />
-      <Button action="9to1.Forms.Publish" is-enabled="{Binding CanPublish}" content="Publish version" />
+      <Button action="9to1.Forms.NewResponse" is-enabled="{Binding CanNewResponse}" content="Start another response" />
+        <Button action="9to1.Forms.Respond" is-enabled="{Binding CanRespond}" content="Open my response" />
+        <Button action="9to1.Forms.Publish" is-enabled="{Binding CanPublish}" content="Publish version" />
       <Button action="9to1.Forms.Close" is-enabled="{Binding CanClose}" content="Close responses" />
     </StackPanel>
     <Grid grid-row="1" columns="Auto,*,*" margin="16">
@@ -19,6 +21,8 @@
         <TextBlock text="{Binding Contents}" />
         <ComboBox ItemsSource="{Binding PageNames}" SelectedIndex="{Binding SelectedPageIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanSelectPage}" accessible-name="Select page" />
         <ComboBox ItemsSource="{Binding FieldNames}" SelectedIndex="{Binding SelectedFieldIndex, mode=TwoWay, type=int}" is-enabled="{Binding CanSelectField}" accessible-name="Select field" />
+        <Button action="9to1.Forms.MoveEarlier" is-enabled="{Binding CanMoveEarlier}" content="Move field earlier" />
+        <Button action="9to1.Forms.MoveLater" is-enabled="{Binding CanMoveLater}" content="Move field later" />
         <Button action="9to1.Forms.MoveToPage" is-enabled="{Binding CanEdit}" content="Move selected field to this page" />
       </StackPanel>
       <ScrollViewer grid-column="2" accessible-name="Field inspector">

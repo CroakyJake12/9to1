@@ -9,7 +9,7 @@ public sealed partial class DurableDriveProvider
     public Task<FilesResult<FilesImportedArtifactCommit>> CommitImportedArtifactAsync(
         FilesUploadedContent source, FilesArtifactReference artifact, FilesOwningAppRevisionCommit commit,
         IReadOnlyList<FilesItemRevisionPrecondition> preconditions, CancellationToken cancellationToken = default) =>
-        CommitImportedArtifactCoreAsync(source, artifact, commit, preconditions, null, cancellationToken);
+        CommitImportedArtifactCoreAsync(source, artifact, commit, preconditions, null, null, cancellationToken);
 
     public Task<FilesResult<FilesImportedArtifactCommit>> CommitImportedArtifactAsync(
         FilesUploadedContent source, FilesArtifactReference artifact, FilesOwningAppRevisionCommit commit,
@@ -17,12 +17,28 @@ public sealed partial class DurableDriveProvider
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(authority);
-        return CommitImportedArtifactCoreAsync(source, artifact, commit, preconditions, authority, cancellationToken);
+        return CommitImportedArtifactCoreAsync(source, artifact, commit, preconditions, null, authority, cancellationToken);
+    }
+
+    /// <summary>Final original-store fence inside the same compound source/artifact publication transaction.</summary>
+    public Task<FilesResult<FilesImportedArtifactCommit>> CommitImportedArtifactAsync(
+        FilesUploadedContent source, FilesArtifactReference artifact, FilesOwningAppRevisionCommit commit,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, Guid expectedStoreId,
+        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(artifact);
+        ArgumentNullException.ThrowIfNull(commit); ArgumentNullException.ThrowIfNull(preconditions);
+        ArgumentNullException.ThrowIfNull(authority);
+        if (expectedStoreId == Guid.Empty)
+            return Task.FromResult(Fail<FilesImportedArtifactCommit>(FilesErrorCode.InvalidState,
+                "Select the original Files store UUID before import.", "ImportArtifact", artifact.FileId));
+        return CommitImportedArtifactCoreAsync(source, artifact, commit, preconditions, expectedStoreId, authority, cancellationToken);
     }
 
     private async Task<FilesResult<FilesImportedArtifactCommit>> CommitImportedArtifactCoreAsync(
         FilesUploadedContent source, FilesArtifactReference artifact, FilesOwningAppRevisionCommit commit,
-        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, Guid? expectedStoreId,
+        FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source); ArgumentNullException.ThrowIfNull(artifact);
         ArgumentNullException.ThrowIfNull(commit); ArgumentNullException.ThrowIfNull(preconditions);
@@ -63,6 +79,8 @@ public sealed partial class DurableDriveProvider
         {
         await _store.UpdateAsync(state =>
         {
+            if (expectedStoreId is { } originalStore && state.StoreId != originalStore)
+                throw new OriginalFilesStoreChangedException();
             foreach (var guard in guards)
             {
                 var item = state.Items.SingleOrDefault(e => e.Metadata.Id == guard.ItemId);
@@ -111,6 +129,8 @@ public sealed partial class DurableDriveProvider
             };
         }, authority is null ? null : authority.ValidateAsync, cancellationToken).ConfigureAwait(false);
         }
+        catch (OriginalFilesStoreChangedException)
+        { return Error(FilesErrorCode.RevisionConflict, "The original Files store changed before import."); }
         catch (FilesCommitAuthorityChangedException)
         { return Error(FilesErrorCode.PermissionDenied, "Commit authority changed before publication."); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);

@@ -26,6 +26,12 @@ public sealed class HomeDataConversationRegistrationTests
             Assert.Single(graph.GetServices<IHomeLocalStoreEvidenceProvider>(), provider => provider is ConversationLocalStoreEvidenceProvider);
             Assert.Single(graph.GetServices<ICanonicalResourceAccessResolver>(), resolver => resolver is DataWorkbookMutationAccessResolver);
             Assert.NotNull(graph.GetRequiredService<DataHomeRecordUpdateOperation>());
+            var recordCreator = Assert.IsType<DataHomeRecordCreator>(graph.GetRequiredService<IDataRecordCreator>());
+            Assert.Same(recordCreator, graph.GetRequiredService<IDataRecordCreator>());
+            Assert.Same(recordCreator, graph.GetRequiredService<DataHomeRecordCreator>());
+            Assert.Single(graph.GetServices<IDataRecordCreator>());
+            Assert.Same(graph.GetRequiredService<DataHomeRecordCreateOperation>(), graph.GetRequiredService<DataHomeRecordCreateOperation>());
+            Assert.Same(graph.GetRequiredService<DataRecordCreateRecovery>(), graph.GetRequiredService<DataRecordCreateRecovery>());
             var schemaDesigner = Assert.IsType<DataHomeTableSchemaDesigner>(graph.GetRequiredService<IDataTableSchemaDesigner>());
             Assert.Same(schemaDesigner, graph.GetRequiredService<IDataTableSchemaDesigner>());
             Assert.Single(graph.GetServices<IDataTableSchemaDesigner>());

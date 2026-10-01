@@ -14,6 +14,50 @@ namespace HavenOS.Forms.Tests;
 public sealed class FormNativeResponseSurfaceTests
 {
     [Fact]
+    public async Task Published_workspace_retry_opens_same_durable_response_and_real_native_answers_save()
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
+        await native.Dispatch(async () =>
+        {
+            using var fixture = new Fixture(); var (project, _) = await fixture.Create(maximumAttempts: 2);
+            var IDs = new List<Guid>(); var failMount = true;
+            var workspace = new FormsCuiWorkspace(fixture.Publications, new FormAuthoringService(fixture.Publications),
+                () => project.FormID, _ => true, responseSessions: fixture.Sessions, showResponse: async (surface, token) =>
+                {
+                    IDs.Add(surface.Response!.ResponseID);
+                    if (failMount) { failMount = false; throw new IOException("Actual mount unavailable"); }
+                    var registry = new CuiControlRegistry(); surface.Register(registry);
+                    var window = await CuiSceneHost.CreateWindowAsync(new CuiNativeScene("joined-response", "Response", "forms",
+                        surface.CreateDocument(), surface, surface, new Ready()) { ControlRegistry = registry });
+                    using var host = Assert.IsType<CuiSceneHost>(window.Content); window.Show();
+                    try
+                    {
+                        Assert.Single(host.GetVisualDescendants().OfType<TextBox>(), input => Avalonia.Automation.AutomationProperties.GetName(input) == "Name").Text = "Ada";
+                        await surface.DispatchAsync("Save", null, token);
+                        Assert.Equal("Ada", Assert.Single(surface.Response!.Answers).Value.GetString());
+                    }
+                    finally { window.Close(); }
+                });
+            await workspace.DispatchAsync("9to1.Forms.Open", null);
+            Assert.True(workspace.IsActionAvailable("9to1.Forms.Respond"));
+            await Assert.ThrowsAsync<IOException>(async () => await workspace.DispatchAsync("9to1.Forms.Respond", null));
+            await workspace.DispatchAsync("9to1.Forms.Respond", null);
+            Assert.Equal(2, IDs.Count); Assert.Equal(IDs[0], IDs[1]);
+            var durable = await fixture.Sessions.ResumeAsync(project.FormID, IDs[0]);
+            Assert.True(durable.Success); Assert.Equal("Ada", Assert.Single(durable.Response!.Answers).Value.GetString());
+            // The actual runtime limit denies another attempt; retaining the existing response
+            // must not be mistaken for a fresh successful Start or drop its saved answers.
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await workspace.DispatchAsync("9to1.Forms.NewResponse", null));
+            Assert.Equal(2, IDs.Count);
+            await workspace.DispatchAsync("9to1.Forms.Respond", null);
+            Assert.Equal(IDs[0], IDs[2]);
+            await workspace.DispatchAsync("9to1.Forms.Close", null);
+            Assert.False(workspace.IsActionAvailable("9to1.Forms.Respond"));
+            return true;
+        }, default);
+    }
+
+    [Fact]
     public async Task Native_answers_save_through_durable_owner_and_invalid_visible_draft_blocks_submission_after_partial_save()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
@@ -130,18 +174,19 @@ public sealed class FormNativeResponseSurfaceTests
         public FormResponseSessionService Sessions { get; }
         public Fixture()
         {
-            _store = new(_paths); Publications = new(_store, _store, _authority, new FormNativePublicationValidator());
+            _store = new(_paths); Publications = new(_store, _store, _authority, new FormNativePublicationValidator(), actors: Actor);
             Sessions = new(Publications, _store, _store, _authority, Actor);
         }
         public FormResponseSessionService Reopen()
         {
             var store = new VersionedAtomicSettingsStore(_paths);
-            return new(new(store, store, _authority, new FormNativePublicationValidator()), store, store, _authority, Actor);
+            return new(new(store, store, _authority, new FormNativePublicationValidator(), actors: Actor), store, store, _authority, Actor);
         }
-        public async Task<(FormProject, FormResponse)> Create(bool marked = false)
+        public async Task<(FormProject, FormResponse)> Create(bool marked = false, int maximumAttempts = 1)
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Durable response", FormModeKind.Form, now);
+            project = project with { RuntimeSettings = project.RuntimeSettings with { MaximumAttempts = maximumAttempts } };
             foreach (var (kind, label) in new[] { (FormFieldKind.ShortText, "Name"), (FormFieldKind.Number, "Amount") })
                 project = FormProjectEditor.AddField(project, project.Revision, project.Pages[0].PageID,
                     new(Guid.NewGuid(), kind, label, null, JsonSerializer.SerializeToElement(new { }), true, new(),

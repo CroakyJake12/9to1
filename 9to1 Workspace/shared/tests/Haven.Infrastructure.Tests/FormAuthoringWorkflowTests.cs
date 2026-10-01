@@ -14,7 +14,7 @@ public sealed class FormAuthoringWorkflowTests
         var token = CancellationToken.None;
         var store = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var publications = new FormPublicationService(store, store, authority, new Validator());
+        var publications = new FormPublicationService(store, store, authority, new Validator(), actors: new PublicationActor());
         var editor = new FormAuthoringService(publications);
         var created = (await editor.CreateAsync("Hardware", FormModeKind.Test, token)).Publication!;
         var project = Decode(created.Draft);
@@ -34,7 +34,7 @@ public sealed class FormAuthoringWorkflowTests
         var updated = await editor.UpdateFieldAsync(project.FormID, published.Revision, field with { Label = "Edited draft label" }, token);
         Assert.True(updated.Success);
         var restartedStore = new VersionedAtomicSettingsStore(paths);
-        var restarted = new FormPublicationService(restartedStore, restartedStore, authority, new Validator());
+        var restarted = new FormPublicationService(restartedStore, restartedStore, authority, new Validator(), actors: new PublicationActor());
         var reopened = (await restarted.ReadAsync(project.FormID, token)).Publication!;
         Assert.Equal("Edited draft label", Assert.Single(Decode(reopened.Draft).Fields).Label);
         var pinned = Decode(Assert.Single(reopened.Versions).Project);
@@ -100,4 +100,10 @@ public sealed class FormAuthoringWorkflowTests
         public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken) => ValueTask.FromResult(allowed());
     }
 
+
+    private sealed class PublicationActor : IAuthenticatedResourceActorSource
+    {
+        private readonly AuthenticatedResourceActor _actor = new("forms-author", "forms-profile", null, null, "forms-login");
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) => ValueTask.FromResult<AuthenticatedResourceActor?>(_actor);
+    }
 }

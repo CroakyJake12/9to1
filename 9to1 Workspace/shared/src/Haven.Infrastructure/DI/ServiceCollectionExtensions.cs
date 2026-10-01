@@ -116,6 +116,10 @@ public static class ServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, DataMutationActionPolicies>());
         services.TryAddSingleton<DataHomeRecordUpdateOperation>();
         services.TryAddSingleton<DataRecordMutationRecovery>();
+        services.TryAddSingleton<DataHomeRecordCreator>();
+        services.TryAddSingleton<IDataRecordCreator>(provider => provider.GetRequiredService<DataHomeRecordCreator>());
+        services.TryAddSingleton<DataHomeRecordCreateOperation>();
+        services.TryAddSingleton<DataRecordCreateRecovery>();
         services.TryAddSingleton<IDataTableSchemaDesigner, DataHomeTableSchemaDesigner>();
         services.TryAddSingleton<DataHomeTableSchemaUpdateOperation>();
         services.TryAddSingleton<DataSchemaMutationRecovery>();

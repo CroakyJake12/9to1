@@ -28,6 +28,10 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
 
     public async Task<FormResponseSessionResult> StartAsync(Guid formID, long expectedPublicationRevision, CancellationToken token = default)
     {
+        // Bind this typed operation to the originating authenticated session before publication/storage awaits.
+        // A reauthenticated or switched actor must start a new operation, not inherit this one.
+        var originatingActor = await actors.GetCurrentAsync(token).ConfigureAwait(false);
+        if (originatingActor is null) return new(false, "PermissionDenied", null);
         var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
         if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId == Guid.Empty) return new(false, "PermissionDenied", null);
         var loaded = await publications.ReadAsync(formID, token).ConfigureAwait(false);
@@ -40,7 +44,7 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
         var project = FormAuthoringService.Decode(version.Project);
         if (!project.PublishingSettings.AcceptResponses) return new(false, "FormClosed", null);
         var actor = await AuthorizeAsync(originalRoot.StoreId, publication, "forms.response.create", token).ConfigureAwait(false);
-        if (actor is null) return new(false, "PermissionDenied", null);
+        if (actor is null || actor != originatingActor) return new(false, "PermissionDenied", null);
         var (state, expectedJson, rootID) = await LoadAsync(formID, token).ConfigureAwait(false);
         if (rootID != originalRoot.StoreId) return new(false, "PermissionDenied", null);
         var owner = Owner.From(actor);
@@ -80,13 +84,15 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
         bool submittedOnly, FormResponseSessionScope? scope, CancellationToken token)
     {
         if (formID == Guid.Empty || responseID == Guid.Empty) return new(false, "InvalidArgument", null, null);
+        var originatingActor = await actors.GetCurrentAsync(token).ConfigureAwait(false);
+        if (originatingActor is null) return new(false, "PermissionDenied", null, null);
         var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
         if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId == Guid.Empty) return new(false, "PermissionDenied", null, null);
         var loaded = await publications.ReadAsync(formID, token).ConfigureAwait(false);
         if (!loaded.Success) return new(false, loaded.Code, null, null);
         var publication = loaded.Publication!;
         var actor = await AuthorizeAsync(originalRoot.StoreId, publication, "forms.response.read", token).ConfigureAwait(false);
-        if (actor is null || scope is not null && (scope.StoreID != originalRoot.StoreId || scope.Actor != actor))
+        if (actor is null || actor != originatingActor || scope is not null && (scope.StoreID != originalRoot.StoreId || scope.Actor != actor))
             return new(false, "PermissionDenied", null, null);
         var (state, _, rootID) = await LoadAsync(formID, token).ConfigureAwait(false);
         if (rootID != originalRoot.StoreId) return new(false, "PermissionDenied", null, null);
@@ -121,13 +127,15 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
         string action, Func<FormResponseRuntime, FormResponseOperation>? operation, CancellationToken token, FormResponseSessionScope? scope = null)
     {
         if (formID == Guid.Empty || responseID == Guid.Empty) return new(false, "InvalidArgument", null);
+        var originatingActor = await actors.GetCurrentAsync(token).ConfigureAwait(false);
+        if (originatingActor is null) return new(false, "PermissionDenied", null);
         var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
         if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId == Guid.Empty) return new(false, "PermissionDenied", null);
         var loaded = await publications.ReadAsync(formID, token).ConfigureAwait(false);
         if (!loaded.Success) return new(false, loaded.Code, null);
         var publication = loaded.Publication!;
         var actor = await AuthorizeAsync(originalRoot.StoreId, publication, action, token).ConfigureAwait(false);
-        if (actor is null || scope is not null && (scope.StoreID != originalRoot.StoreId || scope.Actor != actor)) return new(false, "PermissionDenied", null);
+        if (actor is null || actor != originatingActor || scope is not null && (scope.StoreID != originalRoot.StoreId || scope.Actor != actor)) return new(false, "PermissionDenied", null);
         var (state, expectedJson, rootID) = await LoadAsync(formID, token).ConfigureAwait(false);
         if (rootID != originalRoot.StoreId) return new(false, "PermissionDenied", null);
         var entry = state.Responses.SingleOrDefault(entry => entry.Checkpoint.ResponseID == responseID);

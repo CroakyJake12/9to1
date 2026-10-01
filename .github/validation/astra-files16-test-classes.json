@@ -1,0 +1,280 @@
+{
+  "ownerManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
+  "classes": [
+    {
+      "path": "9to1 Workspace/Files/CUI.Tests/FilesDomainContractTests.cs",
+      "class": "FilesDomainContractTests",
+      "namespace": "HavenOS.Files.CUI.Tests",
+      "sha256": "12e43fb491b30922b34cf64ae4b268c01c0fc38fe0bfaf2d05eb80a69f063882",
+      "origin": "owner16overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesMediaOriginalStoreTests.cs",
+      "class": "NativeFilesMediaOriginalStoreTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "1f152922cd67edf5f0bf0707a22aaeb11d7d47b1770bc9c01a6c67c3c5615798",
+      "origin": "owner16overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs",
+      "class": "FilesNativeChildFolderReadTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "deafffd9402fe03385d6dba4c4152e3222a475e124db653cf248b46f0f1bf4fe",
+      "origin": "owner16overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "class": "FilesCompatibilityPackageContentSourceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "97bf566c0cd09b2620fed3a6a042218894de89080ce0f05b6e5bed1f5e839d51",
+      "origin": "owner16overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "class": "FilesNativeBrowserSurfaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "0cb33b5176ee4dbf0368f60a25fa094b11ecfc84beeb64b75ddd617752209925",
+      "origin": "Root12 immutable Git blob"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "class": "FilesNativeBrowserAuthorityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "48d095641a6328aee39b053417ec527428bacb7760108280fdb742f4a68c69e4",
+      "origin": "Root12 immutable Git blob"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "class": "FilesExistingStoreHostAuthorityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "f543be9db16d9c4ce51da890896380bac4db5c30193b203e94917754bbf206d6",
+      "origin": "Root12 immutable Git blob"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "class": "CompatibilityPackageInspectorTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "origin": "owner16overlay"
+    },
+    {
+      "class": "DataRecordCreationTests",
+      "fullClass": "Haven.Core.Tests.DataRecordCreationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationTests.cs",
+      "sha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1",
+      "joinedSource": "/workspace/astra-source/worker3-data-record-keys-final/source/DataRecordCreationTests.cs",
+      "joinedSourceSha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1",
+      "namespace": "Haven.Core.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "class": "DataRecordCreationProjectionTests",
+      "fullClass": "Haven.Core.Tests.DataRecordCreationProjectionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationProjectionTests.cs",
+      "sha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0",
+      "joinedSource": "/workspace/astra-source/worker3-data-record-keys-final/source/DataRecordCreationProjectionTests.cs",
+      "joinedSourceSha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0",
+      "namespace": "Haven.Core.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "class": "DataLocalStoreAuthorityTests",
+      "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "sha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6",
+      "joinedSource": "/workspace/astra-source/worker3-data-bounded-values-successor-02/DataLocalStoreAuthorityTests.cs",
+      "joinedSourceSha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "class": "HomeDataConversationRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "joinedSource": "/workspace/astra-source/worker1-data-record-di-draft03/HomeDataConversationRegistrationTests.cs",
+      "joinedSourceSha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "class": "DataPageTests",
+      "fullClass": "Haven.Desktop.Tests.DataPageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataPageTests.cs",
+      "sha256": "2ce04557385d02394bc2e5a89fb7fe9d0fedf39de28d04babfe5f4246160bbcb",
+      "joinedSource": "/workspace/astra-source/worker3-data-native-fixture-successor-03/DataPageTests.cs",
+      "joinedSourceSha256": "2ce04557385d02394bc2e5a89fb7fe9d0fedf39de28d04babfe5f4246160bbcb",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "class": "DataRecordDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataRecordDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
+      "sha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
+      "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-08/DataRecordDocumentWorkspaceHostTests.cs",
+      "joinedSourceSha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "class": "DataRelationshipDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataRelationshipDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "sha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382",
+      "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-07/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "joinedSourceSha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "exact Data22 joined source"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
+      "class": "FormNativeHomePublicationResponseTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "cd139a29c2fe1ed5db08d069da7e5a3508a0a9c2c2839287a814d1b5210f473b",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
+      "class": "FormNativePageOrderOwnerTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "529b5fae26a162ec84e7cc85827f6239babb03f5855c6f2ad524025ab0989e55",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "class": "FormNativePreviewTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
+      "origin": "Root896 immutable blob"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs",
+      "class": "FormNativePublicationValidatorTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "bab42479e82d96d883fd43aa1e07f558a52d7bcd05c9ece7e37955c005e632a2",
+      "origin": "Root896 immutable blob"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
+      "class": "FormNativeResponseSurfaceTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "e0cf5d711b65501445372ffa66ae0fa2a85f29f0c930d5f71583768f28ced0d3",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
+      "class": "FormsCuiWorkspaceTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "2d86ab1d7dbc5626f0b346d839775c8a828e490434f7453ded17883fcaa8477a",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormDataRecordUpdateProjectionTests.cs",
+      "class": "FormDataRecordUpdateProjectionTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "b3c435b391c8f5e1875e5abe2cabe52d30e903bfba818c34537b9e0cb43417ed",
+      "origin": "Root896 immutable blob"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormMarkingTests.cs",
+      "class": "FormMarkingTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "bc9752f69289d1e2854a65e6308add435edab847de70af8f6a04d3539c1a1020",
+      "origin": "Root896 immutable blob"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormProjectRuntimeTests.cs",
+      "class": "FormProjectRuntimeTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "cafc5c834d92dbe45ee85d0cdf2db547f608609b205e695f3978c7b1741b050c",
+      "origin": "Root896 immutable blob"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormTableInputTests.cs",
+      "class": "FormTableInputTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "574d9b306d33f681d603c5bf9ee4cf54dacd584f4ccd148a80b0cb56967bd5a6",
+      "origin": "Root896 immutable blob"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
+      "class": "FormsNativeWorkspaceHostTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "393e3742f5eb0c1d4603c3ea1e3f9957961bd7014d09d398034b624115961edf",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs",
+      "class": "FormAuthoringWorkflowTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "6ad0808410c7b8c15394bc90da8a0b0fed95ef937ab4e0b6b6d1601e669a483e",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
+      "class": "FormDataPreparationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "dcf0bf4ec33978f7f21b00fe551142e1609cf1bf5cb47e1e83bae4986fcd75f9",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
+      "class": "FormGraphReferenceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "efec344e536f3cbcb98633e9726df8364da703310071aa680c3ad3eb5f9f4c72",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs",
+      "class": "FormLocalStoreAuthorityTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "deb0abb8824be3a78a8e3fe2b88c2f89843b34c69d4be6dd97ce071b88a1ddc8",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
+      "class": "FormPublicationOriginatingActorTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "5e6d107b16d587ed2015e276ca9f0b07020037973a624540ca6a5022b7d40b86",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
+      "class": "FormPublicationRegistrationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "4737ee8b8fc4c1d91a34250e98606ef812469bb1d050362880a7ebd3418d06d8",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs",
+      "class": "FormPublicationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "e926b6c3e26dc93155f32066b7c9730694510b54ac380491e674ecf284d5efdf",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs",
+      "class": "FormResponseSessionTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "a9ab42186095b5cdf65644dc20962da0013eafce9d0c0b58009dbce5b6b8d7da",
+      "origin": "exact Forms25 overlay"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs",
+      "class": "FormsSubmissionStoreTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "375c979fdb259d553d77d593be852c4c8a2423462d597f4b733aa50b253c2e99",
+      "origin": "Root896 immutable blob"
+    }
+  ],
+  "consoleHarness": {
+    "path": "9to1 Workspace/Files/CUI.Tests/Program.cs",
+    "sha256": "b837c0a84fc24fff5e9093577e46147bb8690a74b9d3530a8aea75767f9e050d",
+    "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
+  },
+  "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
+  "data22ManifestSha256": "79ca75b41c9df7de7c41a0038df621d55309d6a32ede10b26e0ed519a0b189a7",
+  "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-02/joined-source25.json",
+  "forms25ManifestSha256": "cadfbead0eeb51af24b7754fd6aa6c8657f5c6811ec5e6dbec1a2ff1cabd87cb"
+}

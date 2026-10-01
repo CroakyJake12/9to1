@@ -54,6 +54,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenDesktopCallServices();
         collection.AddSingleton<SpaceRegistry>();
         collection.AddFilesNativeHost();
+        collection.AddHavenFormsPublication(new HavenOS.Forms.FormNativePublicationValidator());
         HavenOS.Apps.Terminal.TerminalNativeComposition.AddTerminalNativeActions(collection);
         collection.AddSingleton<HavenOS.Apps.Sites.Application.ISiteNativeWorkspaceAuthority, SitesNativeWorkspaceAuthority>();
         collection.AddSingleton<ICanonicalResourceAccessResolver, HavenOS.Apps.Sites.Application.SiteNativeProjectAccessResolver>();
