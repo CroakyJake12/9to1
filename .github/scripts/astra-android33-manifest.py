@@ -1,11 +1,12 @@
 """Actual APK manifest evidence, no source-condition inference."""
-import hashlib,json,os,pathlib,subprocess,sys,xml.etree.ElementTree as ET
-mode=sys.argv[1];root=pathlib.Path.cwd();out=root/'artifacts/logs';out.mkdir(parents=True,exist_ok=True)
+import argparse,hashlib,json,os,pathlib,subprocess,sys,xml.etree.ElementTree as ET
+parser=argparse.ArgumentParser();parser.add_argument('mode',choices=['normal','validation']);parser.add_argument('--apk-root');args=parser.parse_args();mode=args.mode;root=pathlib.Path.cwd();out=root/'artifacts/logs';out.mkdir(parents=True,exist_ok=True)
 def sha(p):
  with p.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
 if mode=='normal':
- candidates=list((root/'9-1 OS (Android)/src/Haven.Android/bin/Release').rglob('*-Signed.apk'))
- if not candidates:candidates=list((root/'9-1 OS (Android)/src/Haven.Android/bin/Release').rglob('*.apk'))
+ if args.apk_root!='9-1 OS (Android)/src/Haven.Android/bin/Release':raise SystemExit('explicit normal output root required')
+ candidates=list((root/args.apk_root).rglob('*-Signed.apk'))
+ if not candidates:candidates=list((root/args.apk_root).rglob('*.apk'))
  if not candidates or len({sha(p) for p in candidates})!=1:raise SystemExit('missing or ambiguous normal-build APK')
  apk=candidates[0]
 elif mode=='validation':apk=root/'artifacts/apk/android29-frozen91-Signed.apk'

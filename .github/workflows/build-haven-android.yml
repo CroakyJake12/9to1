@@ -62,22 +62,64 @@ jobs:
           umask 077
           keytool -genkeypair -keystore "$RUNNER_TEMP/android29-debug.keystore" -storepass android -keypass android -alias androiddebugkey -dname 'CN=Android Debug,O=Android,C=US' -keyalg RSA -keysize 2048 -validity 7
           keytool -exportcert -keystore "$RUNNER_TEMP/android29-debug.keystore" -storepass android -alias androiddebugkey -file "$RUNNER_TEMP/android29-cert.der"
-      - name: Release Android restore build and APK publish
+      - name: Build physically isolated exact-source normal and probe variants
         shell: bash
         run: |
           set -euo pipefail
+          original="$GITHUB_WORKSPACE"
           project='9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj'
           common=(--disable-build-servers -m:1 -nr:false -p:UseSharedCompilation=false -p:Configuration=Release)
           sign=(-p:AndroidKeyStore=true "-p:AndroidSigningKeyStore=$RUNNER_TEMP/android29-debug.keystore" -p:AndroidSigningKeyAlias=androiddebugkey -p:AndroidSigningKeyPass=android -p:AndroidSigningStorePass=android)
-          dotnet restore "$project" "${common[@]}" 2>&1 | tee artifacts/logs/restore.txt
-          dotnet build "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${sign[@]}" 2>&1 | tee artifacts/logs/build.txt
-          python3 .github/scripts/astra-android33-manifest.py normal
-          dotnet publish "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${sign[@]}" -p:AndroidPackageFormat=apk -p:AstraAndroidCredentialProbe=true 2>&1 | tee artifacts/logs/publish.txt
-          dotnet msbuild "$project" -nologo -m:1 -nr:false -p:UseSharedCompilation=false -p:Configuration=Release -p:TargetFramework=net10.0-android -getProperty:RuntimeIdentifiers,RuntimeIdentifier,AndroidTargetSdkVersion,TargetFramework,ApplicationVersion,ApplicationDisplayVersion > artifacts/logs/evaluated-mobile-properties.json
-      - name: Verify universal signed APK and bind receipt
+          properties=BaseIntermediateOutputPath,MSBuildProjectExtensionsPath,IntermediateOutputPath,BaseOutputPath,OutputPath,DefineConstants,RuntimeIdentifiers,RuntimeIdentifier,TargetFramework,AndroidEnableMarshalMethods,AndroidUseMarshalMethods,AndroidEnableLLVM,AndroidPackageFormat
+          for variant in normal probe; do
+            checkout="$RUNNER_TEMP/${variant}35-source"
+            test ! -e "$checkout"
+            git clone --shared --no-checkout "$original" "$checkout"
+            git -C "$checkout" checkout --detach "$GITHUB_SHA"
+            (
+              cd "$checkout"
+              mkdir -p artifacts/logs
+              python3 .github/scripts/astra-android29-verify.py source
+              python3 .github/scripts/astra-android35-source-receipts.py "$variant" before-preparation
+              git submodule update --init --recursive -- 'framework/CUI/vendor/Avalonia/external/XamlX' 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus' '9to1 Workspace/Terminal/Source/libvterm'
+              bash '9to1 Workspace/shared/eng/prepare-cui-source.sh' --check
+              python3 .github/scripts/astra-android35-source-receipts.py "$variant" before-build
+              flags=()
+              if test "$variant" = probe; then flags=(-p:AstraAndroidCredentialProbe=true); fi
+              dotnet msbuild "$project" -nologo -m:1 -nr:false -p:Configuration=Release -p:TargetFramework=net10.0-android "${flags[@]}" "-getProperty:$properties" > artifacts/logs/evaluated-app-properties.json
+              dotnet msbuild '9to1 Workspace/Sites/HavenOS.Sites.csproj' -nologo -m:1 -nr:false -p:Configuration=Release "${flags[@]}" "-getProperty:$properties" > artifacts/logs/evaluated-sites-properties.json
+              dotnet restore "$project" "${common[@]}" "${flags[@]}" 2>&1 | tee artifacts/logs/restore.txt
+              if test "$variant" = normal; then
+                dotnet build "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${sign[@]}" 2>&1 | tee artifacts/logs/build.txt
+                python3 .github/scripts/astra-android33-manifest.py normal --apk-root '9-1 OS (Android)/src/Haven.Android/bin/Release'
+              else
+                dotnet publish "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${flags[@]}" "${sign[@]}" -p:AndroidPackageFormat=apk 2>&1 | tee artifacts/logs/publish.txt
+                ASTRA_ANDROID_APK_OUTPUT_ROOT='9-1 OS (Android)/src/Haven.Android/bin/Release' python3 .github/scripts/astra-android29-verify.py apk
+                python3 .github/scripts/astra-android33-manifest.py validation
+              fi
+              python3 .github/scripts/astra-android35-jni-receipts.py "$variant"
+              python3 .github/scripts/astra-android29-verify.py source
+              bash '9to1 Workspace/shared/eng/prepare-cui-source.sh' --check
+              python3 .github/scripts/astra-android35-source-receipts.py "$variant" after-build
+            )
+          done
+          cp -a "$RUNNER_TEMP/probe35-source/artifacts/apk" "$original/artifacts/apk"
+      - name: Preserve both checkout receipts even on failure
+        if: always()
+        shell: bash
         run: |
-          python3 .github/scripts/astra-android29-verify.py apk
-          python3 .github/scripts/astra-android33-manifest.py validation
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/logs/variants"
+          for variant in normal probe; do
+            checkout="$RUNNER_TEMP/${variant}35-source"
+            if test -d "$checkout/artifacts/logs"; then
+              (cd "$checkout"; python3 .github/scripts/astra-android35-jni-receipts.py "$variant") || {
+                printf '%s\n' 'JNI receipt collection failed; preserve original build logs and do not infer registration acceptance.' > "$checkout/artifacts/logs/jni-collection-failed.txt"
+              }
+              mkdir -p "$GITHUB_WORKSPACE/artifacts/logs/variants/$variant"
+              cp -a "$checkout/artifacts/logs/." "$GITHUB_WORKSPACE/artifacts/logs/variants/$variant/"
+            fi
+          done
       - uses: actions/upload-artifact@v7
         with:
           name: Astra-Android29-APK-${{ github.sha }}

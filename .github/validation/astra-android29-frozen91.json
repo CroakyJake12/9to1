@@ -455,15 +455,27 @@
     },
     {
       "path": ".github/scripts/astra-android33-manifest.py",
-      "sha256": "d64a4ee4200594364b1141c9234d95bbfc49c5c3ce2d0a8fae7e317b8c662a77"
+      "sha256": "965b86c851d1a506de27c655dc089a3c789380137b2f2d2236af2a9057cb2126"
     },
     {
       "path": ".github/workflows/build-haven-android.yml",
-      "sha256": "3e1643f1ce2a4982c2a46888bb2f5099623b5fbad29cb68a398678d8b0704de2"
+      "sha256": "d3ecb01495d5ef2b401f03da94493ead832da4808258e89a239fd7996088ddd1"
     },
     {
       "path": ".github/scripts/astra-android32-two-launch.py",
       "sha256": "d76a401baae2c61eeb90747c4d27547449463b346a1859667ff8bbda686564c4"
+    },
+    {
+      "path": ".github/scripts/astra-android29-verify.py",
+      "sha256": "26eeaf445575603e8f73dfadcda00f0ea099692b1631c4f4d259f310b8bdeb35"
+    },
+    {
+      "path": ".github/scripts/astra-android35-jni-receipts.py",
+      "sha256": "672c241b72f7eaa254147aa10af93d004f35187958ad97342754a22ff1b94f43"
+    },
+    {
+      "path": ".github/scripts/astra-android35-source-receipts.py",
+      "sha256": "3dc62676b90856e3b1be6b6fd607a2cc26f67324b9bc328509fbf2676d132022"
     }
   ],
   "gitlinks": [
@@ -492,13 +504,17 @@
     "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
     "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
     "9-1 OS (Android)/src/Haven.Android/MainActivity.cs",
-    "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Layout.cs"
+    "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Layout.cs",
+    ".github/scripts/astra-android35-jni-receipts.py",
+    ".github/scripts/astra-android35-source-receipts.py"
   ],
   "package": "com.cakemods.haven",
   "versionCode": 20001,
   "versionName": "0.2.1-mobile-preview",
   "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; activity replacement, failed startup, HOME/Launcher/widget/inference/device/production-authority remain independently unverified unless actually observed",
-  "validationParentCommit": "223c7f0fc43e383854d65e5fd13556b8bc340760",
+  "validationParentCommit": "7d3e65b3ae7fe7d020c9d276bfa582dcad15349d",
   "preservedAndroid29ManifestSha256": "7a8099494b9518b49007ea1ba8987141c0237aaea87d28f3e8f4d7bf7b016d60",
-  "cohort": "Android34 exact conditional-probe compile correction; production credential source and 116 source selection preserved"
+  "cohort": "Android35 physically separate normal/probe exact source checkouts; unchanged application/probe/credential/marshal/trimming source",
+  "isolation": "Two fresh detached source clones, default graph output paths, only read-only Git objects and global NuGet packages shared",
+  "preservedAndroid34ManifestSha256": "573c6d4f21845236579f8d6fd916a841c7368a4fbef3d95ff01be3e485e4b52a"
 }

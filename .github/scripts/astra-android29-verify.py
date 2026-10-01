@@ -24,7 +24,9 @@ if mode=='source':
 elif mode in ('apk','download'):
  root=Path('artifacts/apk')
  if mode=='apk':
-  candidates=list(Path('9-1 OS (Android)/src/Haven.Android/bin/Release').rglob('*-Signed.apk'))
+  output=Path(os.environ['ASTRA_ANDROID_APK_OUTPUT_ROOT'])
+  assert output==Path('9-1 OS (Android)/src/Haven.Android/bin/Release'),'Unexpected explicit probe output root'
+  candidates=list(output.rglob('*-Signed.apk'))
   assert candidates,'No signed Release APK'
   hashes={sha(p) for p in candidates};assert len(hashes)==1,'Ambiguous distinct signed APKs'
   root.mkdir(parents=True,exist_ok=True);shutil.copyfile(candidates[0],root/'android29-frozen91-Signed.apk')
