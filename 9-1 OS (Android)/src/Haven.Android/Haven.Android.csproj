@@ -28,6 +28,9 @@
     <HavenGoogleCalendarClientId Condition="'$(HavenGoogleCalendarClientId)' == ''">$(HAVEN_GOOGLE_CALENDAR_CLIENT_ID)</HavenGoogleCalendarClientId>
     <HavenMicrosoftCalendarClientId Condition="'$(HavenMicrosoftCalendarClientId)' == ''">$(HAVEN_MICROSOFT_CALENDAR_CLIENT_ID)</HavenMicrosoftCalendarClientId>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(AstraAndroidCredentialProbe)' == 'true'">
+    <DefineConstants>$(DefineConstants);ASTRA_ANDROID_CREDENTIAL_PROBE</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../9to1 Workspace/Picture/Core/HavenOS.Images.Core.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Launcher/Native/NineToOne.Launcher.csproj" />

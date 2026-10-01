@@ -95,7 +95,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/AndroidSecureCredentialStores.cs",
-      "sha256": "85ea6b247a30c81b757e329a0701cb6989238e10b4a512d4bb2391cffb6ad346"
+      "sha256": "1f2940488849055111c09e4f5075a285c30d113cafb6e98b0ee7900e72ad7798"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/AndroidServiceRegistration.cs",
@@ -123,7 +123,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
-      "sha256": "90b3be7066725e70bb7f2aeb416a8e8f4f8c76e174c8c2dd04bb9ebd2b994177"
+      "sha256": "bfae385945187b39a11d10c3c8052a62cade0f4fb8d0e46642004e5e4840efbd"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenImeService.cs",
@@ -448,6 +448,22 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml",
       "sha256": "b0172700b57330b6f1fb8d24ea275d909ab4122030c4865e097725da1f27f45f"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AstraCredentialProbeActivity.cs",
+      "sha256": "984a724ea37c2414fb859262740091a91cb39454e4c859dc7376cdc54f0367f2"
+    },
+    {
+      "path": ".github/scripts/astra-android33-manifest.py",
+      "sha256": "d64a4ee4200594364b1141c9234d95bbfc49c5c3ce2d0a8fae7e317b8c662a77"
+    },
+    {
+      "path": ".github/workflows/build-haven-android.yml",
+      "sha256": "3e1643f1ce2a4982c2a46888bb2f5099623b5fbad29cb68a398678d8b0704de2"
+    },
+    {
+      "path": ".github/scripts/astra-android32-two-launch.py",
+      "sha256": "d76a401baae2c61eeb90747c4d27547449463b346a1859667ff8bbda686564c4"
     }
   ],
   "gitlinks": [
@@ -466,9 +482,13 @@
   ],
   "allowedChanges": [
     ".github/scripts/astra-android29-verify.py",
+    ".github/scripts/astra-android32-two-launch.py",
+    ".github/scripts/astra-android33-manifest.py",
     ".github/validation/astra-android29-frozen91.json",
     ".github/workflows/build-haven-android.yml",
     "9-1 OS (Android)/src/Haven.Android/AndroidHavenBootstrap.cs",
+    "9-1 OS (Android)/src/Haven.Android/AndroidSecureCredentialStores.cs",
+    "9-1 OS (Android)/src/Haven.Android/AstraCredentialProbeActivity.cs",
     "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
     "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
     "9-1 OS (Android)/src/Haven.Android/MainActivity.cs",
@@ -478,7 +498,7 @@
   "versionCode": 20001,
   "versionName": "0.2.1-mobile-preview",
   "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; activity replacement, failed startup, HOME/Launcher/widget/inference/device/production-authority remain independently unverified unless actually observed",
-  "validationParentCommit": "faf097c62000257d6992ed01878aa8ef2e2d4457",
+  "validationParentCommit": "5ff4ad5aa5b279ca74164923b30e35129d8bd7a1",
   "preservedAndroid29ManifestSha256": "7a8099494b9518b49007ea1ba8987141c0237aaea87d28f3e8f4d7bf7b016d60",
-  "cohort": "Android31 layout successor: three Android30 replacements and actual named shared content-host shape; original Android29 snapshot preserved"
+  "cohort": "Android33 credential source and isolated probe: normal component absence, actual fresh/restart crypto reads; original Android29 snapshot retained"
 }
