@@ -231,7 +231,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                     throw new UnauthorizedAccessException("Choose an original displayed Go section.");
                 var home = _displayedGoHome!;
                 var position = home.Sections.ToList().FindIndex(s => ReferenceEquals(s, section));
-                var candidate = command switch
+                var sectionCandidate = command switch
                 {
                     "GoSectionEarlier" => GoHomeEdits.Move(expected.Effective, section.Kind, Math.Max(0, position - 1)),
                     "GoSectionLater" => GoHomeEdits.Move(expected.Effective, section.Kind, Math.Min(3, position + 1)),
@@ -241,7 +241,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                     _ => GoHomeEdits.Present(expected.Effective, section.Kind, section.Visible, section.Size,
                         string.IsNullOrWhiteSpace(requestedGoGroup) ? null : requestedGoGroup)
                 };
-                Populate(await _configuration.PreviewAsync(expected.Stored, candidate, TimeSpan.FromSeconds(30), request.Token));
+                Populate(await _configuration.PreviewAsync(expected.Stored, sectionCandidate, TimeSpan.FromSeconds(30), request.Token));
                 await SearchSafelyAsync(request.Token); return;
             }
             if (command.StartsWith("GoLayout.", StringComparison.Ordinal))
@@ -249,8 +249,8 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                 if (!ReferenceEquals(expected, _snapshot)) throw new UnauthorizedAccessException("The displayed Go home changed; choose the current layout.");
                 var layout = command[9..] switch { "CompactSearch" => GoHomeLayout.CompactSearch, "StartMenu" => GoHomeLayout.StartMenu, "Dashboard" => GoHomeLayout.Dashboard,
                     _ => throw new InvalidOperationException("This Go layout is unavailable.") };
-                var candidate = GoHomeEdits.Configure(expected.Effective, expected.Effective.EffectiveGoHome with { Layout = layout });
-                Populate(await _configuration.PreviewAsync(expected.Stored, candidate, TimeSpan.FromSeconds(30), request.Token));
+                var layoutCandidate = GoHomeEdits.Configure(expected.Effective, expected.Effective.EffectiveGoHome with { Layout = layout });
+                Populate(await _configuration.PreviewAsync(expected.Stored, layoutCandidate, TimeSpan.FromSeconds(30), request.Token));
                 await SearchSafelyAsync(request.Token); return;
             }
             if (command == "InvokeGoAction" && parameter is ShellGoAction ownerAction)

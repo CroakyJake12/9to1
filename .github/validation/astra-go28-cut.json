@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "2e2d07c6eb20b99b3b5b8f76c316dc83007dfa85",
+  "programTree": "a0c4b12a0ad8e26a5dab65c99f1a05914eab00b5",
   "files": [
     {
       "path": ".editorconfig",
@@ -2170,9 +2170,9 @@
     {
       "path": "9to1 OS/apps/9to1-shell/ShellViewModel.cs",
       "mode": "100644",
-      "object": "e71f71d201b84605b8eacd404fd756bf7bd378e4",
-      "sha256": "d12f7b2fb0b1d132abaf23bcfadc3f3b5aadd5e39fd06f510a80998ffeed428e",
-      "bytes": 38143
+      "object": "7eea7807ba9f46e8906e16fe911656562ac9cc68",
+      "sha256": "286ae22fd35a15ca2f7fe6bea048028c383d49f054d353ebac7f1d377b88d405",
+      "bytes": 38169
     },
     {
       "path": "9to1 OS/apps/9to1-shell/TaskbarLayerSurface.cs",
@@ -63672,9 +63672,9 @@
     {
       "path": ".github/validation/astra-go28-test-classes.json",
       "mode": "100644",
-      "object": "c24b170df46125cbb16b9c4722aa4b2125691aa4",
-      "sha256": "3338de1d0c8010738c568cd5b62b492647d3559940d8e5ce4f48f8c887f2e080",
-      "bytes": 11913
+      "object": "75e629c3be279d6a183d69e16712374805fa8150",
+      "sha256": "3cda792795551b8d814933d7e9b51587246c45cd75c628a102fd2d32098ef10a",
+      "bytes": 12120
     }
   ],
   "gitlinks": [
@@ -63939,15 +63939,16 @@
   "limits": "Exact source28 over Root896 plus isolated workflow/runner/provenance, selfmanifest externally SHA-pinned. Core boundary and full OS managed regression only; native transport/login/provider/package/device acceptance remains separate.",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-go28-managed-20261001-1810",
-  "go28ManifestSha256": "e8c939373565fe4661135d41272ddf56228dc7e18fd3ac2868aa11b446d1e30d",
-  "metadataManifestSha256": "db786b46372ac81c33124036bf346b7d36287a906478457dcca00429d8838eeb",
+  "go28ManifestSha256": "c7f10ca302d778cb6e32de1f9037d0bfe767426691f67a07e7fbe98297544de6",
+  "metadataManifestSha256": "6256ac39bf0709261afc85cc69675503d98f5dcd681de0b03d035db659d7cecc",
   "validationOnlyPaths": [
     ".github/scripts/astra-go28-hosted-managed.py",
     ".github/validation/astra-go28-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-go28-cut.json",
-  "predecessorValidationCommit": "c12913a0259013a9149d8cd5f5ae66e5c57a8294",
-  "preservedPredecessorManifestSha256": "4c5b287dc45f0502943f388b9c019b5c26f5dde16db299b9b8d0e18f84d8dfc6",
-  "asyncFixtureSuccessor": "Only Task-returning fixture assertions/signatures corrected; all production source and test assertions retained. Fresh run required."
+  "predecessorValidationCommit": "8f686ea7a056f85f709bba5075213d33c494d90e",
+  "preservedPredecessorManifestSha256": "6694ff7920c7a426889a76725b99ced294ff4856427044bfba0ae8d871dc5e26",
+  "asyncFixtureSuccessor": "Only Task-returning fixture assertions/signatures corrected; all production source and test assertions retained. Fresh run required.",
+  "successorQualification": "Only two inner ShellViewModel candidate variables and their references renamed; behavior and other27source files unchanged. Actual prior Core4 pass followed OS compile CS0136; fresh complete OS managed regression required."
 }

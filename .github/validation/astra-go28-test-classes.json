@@ -1,5 +1,5 @@
 {
-  "ownerManifestSha256": "e8c939373565fe4661135d41272ddf56228dc7e18fd3ac2868aa11b446d1e30d",
+  "ownerManifestSha256": "c7f10ca302d778cb6e32de1f9037d0bfe767426691f67a07e7fbe98297544de6",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "classes": [
     {
@@ -211,5 +211,10 @@
       "source": "/workspace/astra-source/worker5-go-coherent-root896-async-source28/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs"
     }
   ],
-  "scope": "Actual Core optional original-actor invocation controlled provider boundaries + whole OS regression, NOT installed transport/device/boot readiness"
+  "scope": "Actual Core optional original-actor invocation controlled provider boundaries + whole OS regression, NOT installed transport/device/boot readiness",
+  "sourceOnlyCorrection": {
+    "path": "9to1 OS/apps/9to1-shell/ShellViewModel.cs",
+    "sha256": "286ae22fd35a15ca2f7fe6bea048028c383d49f054d353ebac7f1d377b88d405",
+    "testClassFilesChanged": false
+  }
 }
