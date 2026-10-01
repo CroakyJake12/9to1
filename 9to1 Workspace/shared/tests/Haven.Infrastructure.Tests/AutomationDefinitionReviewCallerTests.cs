@@ -14,7 +14,8 @@ public sealed class AutomationDefinitionReviewCallerTests
     [Fact]
     public async Task Actual_Home_review_keeps_SQL_unchanged_until_individual_approval_then_finishes_same_disabled_definition_once()
     {
-        var token = TestContext.Current.CancellationToken;
+        using var owningLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = owningLifetime.Token;
         var root = Path.Combine(Path.GetTempPath(), "astra-automation-caller-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try

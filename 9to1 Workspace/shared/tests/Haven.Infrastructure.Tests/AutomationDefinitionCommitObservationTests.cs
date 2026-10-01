@@ -19,7 +19,8 @@ public sealed class AutomationDefinitionCommitObservationTests
     [InlineData("direct-unexpected-fault")]
     public async Task Actual_SQL_confirmed_receipt_survives_audit_fault_then_supersession_without_claim_or_write_replay(string fault)
     {
-        var token = TestContext.Current.CancellationToken;
+        using var owningLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = owningLifetime.Token;
         var root = Path.Combine(Path.GetTempPath(), "astra-automation-confirmed-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try
@@ -136,7 +137,8 @@ public sealed class AutomationDefinitionCommitObservationTests
     [Fact]
     public async Task Actual_canonical_read_paths_never_invoke_deferred_owner_issuer_accessor()
     {
-        var token = TestContext.Current.CancellationToken;
+        using var owningLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = owningLifetime.Token;
         var root = Path.Combine(Path.GetTempPath(), "astra-automation-deferred-read-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try

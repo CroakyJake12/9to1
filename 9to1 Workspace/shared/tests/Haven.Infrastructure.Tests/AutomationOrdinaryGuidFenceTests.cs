@@ -17,7 +17,8 @@ public sealed class AutomationOrdinaryGuidFenceTests
     [InlineData(true, false, true)]
     public async Task Actual_SQL_ordinary_writer_preserves_legacy_UUID_spelling_and_denies_protected_or_ambiguous_aliases(bool reusable, bool protect, bool ambiguous)
     {
-        var token = TestContext.Current.CancellationToken;
+        using var owningLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = owningLifetime.Token;
         var root = Path.Combine(Path.GetTempPath(), "astra-automation-guid-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try

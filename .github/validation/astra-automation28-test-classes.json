@@ -10,25 +10,25 @@
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionCommitObservationTests.cs",
       "class": "AutomationDefinitionCommitObservationTests",
       "namespace": "Haven.Infrastructure.Tests",
-      "sha256": "5a3bfa849d268ac6567448b77eda7eee234168c2d715f09a899f2f02e08c149d"
+      "sha256": "95155ad89adbb259ef60b9f780a4edf622bf5a977981ab45fb902c3f9844fb08"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationOrdinaryGuidFenceTests.cs",
       "class": "AutomationOrdinaryGuidFenceTests",
       "namespace": "Haven.Infrastructure.Tests",
-      "sha256": "ef836a23e00d50257d9f9b04224290b8db2ec3da526417bfad87cb11ab904ac4"
+      "sha256": "be61fb35a9dd489cef92ae82cc0353de9a47c8e2bcc075d2d373a9d87d9ea60b"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionReviewCallerTests.cs",
       "class": "AutomationDefinitionReviewCallerTests",
       "namespace": "Haven.Infrastructure.Tests",
-      "sha256": "19975ddf599c7d55190855c4be1f9cb53991af4ce1e23aeaf4ace94e01d9cbb5"
+      "sha256": "8e4c8bdfb5896dfd3af932e5b7cf061cb90c00692a02ef0638e17238ac55c51d"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
       "class": "NativeAutomationDefinitionOwnerTests",
       "namespace": "Haven.Desktop.Tests",
-      "sha256": "05328f2fbbb529982da51f108b82b464cba3c4c51b68abcf0dc23244d0955b02"
+      "sha256": "2cbd1c13bff78b7a6a7bb1225d05fbde1911b8a3fc0f03766d084a803f2441d3"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",
@@ -50,5 +50,5 @@
     }
   ],
   "dependencyPins": [],
-  "ownerManifestSha256": "002301be5f8e9c36706bf619b0d09f0350c8fbd4cb25664380c6ac28b1b5bd5a"
+  "ownerManifestSha256": "77d5bf40c002032c5981df1457cd3c1b17710fea361967dcb6039ba967caf114"
 }

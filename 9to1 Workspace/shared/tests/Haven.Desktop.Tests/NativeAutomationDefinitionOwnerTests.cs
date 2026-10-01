@@ -24,7 +24,8 @@ public sealed class NativeAutomationDefinitionOwnerTests
     [AvaloniaFact]
     public async Task Actual_native_definition_save_requires_individual_Home_review_and_archive_keeps_canonical_row_without_run_or_raw_delete()
     {
-        var token = TestContext.Current.CancellationToken;
+        using var owningLifetime = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = owningLifetime.Token;
         var root = Path.Combine(Path.GetTempPath(), "astra-native-automation-owner-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         Window? window = null;

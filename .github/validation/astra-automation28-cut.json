@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "ae9589c6f5285dd8f220092ee60fa17bd4d12ba9",
-  "programTree": "8b629ffb85660d561d5bb314eb2c82cb5010bdb9",
+  "baselineCommit": "a89567190858d9c8063c19b95c1a2fef6a194c6d",
+  "programTree": "d21ec000888f63ac0d3bb34df06a9fbd8c76f586",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-automation28-test-classes.json",
       "mode": "100644",
-      "object": "c6d66ab4e9a9a2f84d03a9aa42f660d97f89f138",
+      "object": "6aa59e2ab3c8b4547c05fb53aa0a232d573a8c7d",
       "bytes": 2581,
-      "sha256": "08ddb83b2eac5a14e3e9f4602c3f3005675ab2ccf8fe00a456f6fb3818014ff4"
+      "sha256": "58136a94468fa8cf14b0919947fa11b292ca47dc48ff884323d6e5bc3eb4f194"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -38452,9 +38452,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
       "mode": "100644",
-      "object": "ffa6957966eacc53177a6f436b3670736281fc4d",
-      "bytes": 9411,
-      "sha256": "05328f2fbbb529982da51f108b82b464cba3c4c51b68abcf0dc23244d0955b02"
+      "object": "9f5a82e378650267b5a145c6c45f0bcd3a1d74de",
+      "bytes": 9484,
+      "sha256": "2cbd1c13bff78b7a6a7bb1225d05fbde1911b8a3fc0f03766d084a803f2441d3"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",
@@ -39257,23 +39257,23 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionCommitObservationTests.cs",
       "mode": "100644",
-      "object": "682164f686adcecc47e261fee4f88794f2073e1f",
-      "bytes": 15649,
-      "sha256": "5a3bfa849d268ac6567448b77eda7eee234168c2d715f09a899f2f02e08c149d"
+      "object": "d60a2d05a4d8b9dec97f4d99441ff35108617af8",
+      "bytes": 15795,
+      "sha256": "95155ad89adbb259ef60b9f780a4edf622bf5a977981ab45fb902c3f9844fb08"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionReviewCallerTests.cs",
       "mode": "100644",
-      "object": "9f85fc324abbe99eacd857b6dc62d3c60ef6f6ee",
-      "bytes": 16031,
-      "sha256": "19975ddf599c7d55190855c4be1f9cb53991af4ce1e23aeaf4ace94e01d9cbb5"
+      "object": "891d682541a720f44676aa57e5a546acef5a602c",
+      "bytes": 16104,
+      "sha256": "8e4c8bdfb5896dfd3af932e5b7cf061cb90c00692a02ef0638e17238ac55c51d"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationOrdinaryGuidFenceTests.cs",
       "mode": "100644",
-      "object": "a70c9a72e55cd73cae7241e3d6f33e6951b2415d",
-      "bytes": 6119,
-      "sha256": "ef836a23e00d50257d9f9b04224290b8db2ec3da526417bfad87cb11ab904ac4"
+      "object": "8b77531406990e64ba9715fc7c5a02f70646337b",
+      "bytes": 6192,
+      "sha256": "be61fb35a9dd489cef92ae82cc0353de9a47c8e2bcc075d2d373a9d87d9ea60b"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationOwnerSchemaMigrationTests.cs",
@@ -64076,12 +64076,12 @@
   "limits": "Preserve actual failed firstcut and fullowningcoverage; exact4/3source compilecorrector only; no execution claims.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker2-automation-owner-native-root13-joined28-compilefix01/manifest.json",
-      "sha256": "002301be5f8e9c36706bf619b0d09f0350c8fbd4cb25664380c6ac28b1b5bd5a"
+      "path": "/workspace/astra-source/worker2-automation-owner-native-root13-joined28-fixturefix02/manifest.json",
+      "sha256": "77d5bf40c002032c5981df1457cd3c1b17710fea361967dcb6039ba967caf114"
     },
     {
-      "path": "/workspace/astra-source/worker4-automation28-hosted-plan-sol3/manifest.json",
-      "sha256": "f791ccb0d46da5ad972139d6098e5738c3e1a69a78645e8dfcc1dcd2bf7facc0"
+      "path": "/workspace/astra-source/worker4-automation28-hosted-plan-sol4/manifest.json",
+      "sha256": "92636a1bd4b7c64d1a10e2c95b292b06bd2cf51b9c0eb36aa7df9bfdf4e9bb66"
     }
   ],
   "sharedCakeIdContract": null
