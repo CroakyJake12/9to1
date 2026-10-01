@@ -1,5 +1,5 @@
 {
-  "status": "Exactjoined21 +frozenRoot12 baseline owningclass sources verified, NOTexecuted",
+  "status": "Exactjoined22 source class identities verified; no new execution claim",
   "classes": [
     {
       "class": "DataRecordCreationTests",
@@ -21,9 +21,9 @@
       "class": "DataLocalStoreAuthorityTests",
       "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
-      "sha256": "07264a7d981657cc2b7b86be3a04ebf71d5750e182bc2366f64c4b5c092f51bb",
-      "joinedSource": "/workspace/astra-source/worker3-data-display-selection-successor/source/DataLocalStoreAuthorityTests.cs",
-      "joinedSourceSha256": "07264a7d981657cc2b7b86be3a04ebf71d5750e182bc2366f64c4b5c092f51bb"
+      "sha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6",
+      "joinedSource": "/workspace/astra-source/worker3-data-bounded-values-successor-02/DataLocalStoreAuthorityTests.cs",
+      "joinedSourceSha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6"
     },
     {
       "class": "HomeDataConversationRegistrationTests",
@@ -58,6 +58,6 @@
       "joinedSourceSha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382"
     }
   ],
-  "joined21Manifest": "/workspace/astra-source/worker3-data-display-selection-successor/joined-source21.json",
-  "joined21Sha256": "8e32f2b36d53ce700443f47bebb2bf186641cc4d735010b0c9cc4fd50bf8714a"
+  "joined22Manifest": "/workspace/astra-source/worker3-data-bounded-values-successor-02/joined-source22.json",
+  "joined22Sha256": "3a6442db09f5cbcdc794a0688b258062483cd87e239b90417d9d49b8bec73749"
 }

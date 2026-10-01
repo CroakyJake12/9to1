@@ -18,10 +18,9 @@ public sealed class DataRecordCreateIntent
         IReadOnlyDictionary<Guid, DataScalarRecordValue> values, Guid operationID, DateTimeOffset calculationAt)
     {
         ArgumentNullException.ThrowIfNull(workbook); ArgumentNullException.ThrowIfNull(values);
-        if (values.Count > 256) throw new ArgumentException("Create at most 256 canonical scalar fields.");
         if (storeID == Guid.Empty || workbook.Id == Guid.Empty || workbook.Version < 1 || workbook.RevisionId == Guid.Empty || operationID == Guid.Empty)
             throw new ArgumentException("An exact persisted record creation target is required.");
-        var captured = values.OrderBy(pair => pair.Key).ToDictionary(pair => pair.Key, pair => DataRecordEdits.Capture(pair.Value));
+        var captured = DataRecordCreationValues.Capture(values).OrderBy(pair => pair.Key).ToDictionary(pair => pair.Key, pair => pair.Value);
         var prepared = DataRecordCreationProjection.Prepare(workbook, tableID, recordID, workbook.Version, workbook.RevisionId, captured, calculationAt);
         if (!prepared.Success) throw new InvalidDataException("RecordCreationPreviewFailed: " + prepared.Issues[0].Code);
         _calculation = prepared.Calculation! with { Issues = Array.AsReadOnly(prepared.Calculation!.Issues.ToArray()) };

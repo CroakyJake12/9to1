@@ -16,7 +16,10 @@ public static class DataRecordCreation
         var table = workbook.Tables.SingleOrDefault(table => table.Id == tableID);
         if (table is null) return Failure("TableNotFound", tableID, recordID);
         if (table.RecordIdentityVersion != 1) return Failure("RecordIdentityRequired", tableID, recordID);
-        if (values.Count > 256 || table.Fields.Count > 256) return Failure("RecordCreationFieldCapacity", tableID, recordID);
+        if (table.Fields.Count > 256) return Failure("RecordCreationFieldCapacity", tableID, recordID);
+        Dictionary<Guid, DataScalarRecordValue> captured;
+        try { captured = DataRecordCreationValues.Capture(values); }
+        catch (DataRecordCreationValues.CapacityExceededException) { return Failure("RecordCreationFieldCapacity", tableID, recordID); }
         var existingIssues = DataRelationalSchema.Inspect(workbook);
         if (existingIssues.Count != 0) return new(null, existingIssues);
         var identities = workbook.Tables.SelectMany(item => item.Fields.Select(field => field.FieldID)
@@ -25,7 +28,7 @@ public static class DataRecordCreation
         if (recordID == Guid.Empty || identities.Contains(recordID)) return Failure("RecordIdentityConflict", tableID, recordID);
         if (table.Records.Count >= 1_000_000 || table.Range.EndRow >= int.MaxValue - 1)
             return Failure("RecordCreationCapacity", tableID, recordID);
-        if (values.Keys.Any(id => table.Fields.All(field => field.FieldID != id))) return Failure("FieldNotFound", tableID, recordID);
+        if (captured.Keys.Any(id => table.Fields.All(field => field.FieldID != id))) return Failure("FieldNotFound", tableID, recordID);
         var row = table.Range.EndRow + 1;
         var obstruction = workbook.Tables.FirstOrDefault(other => other.Id != tableID && other.SheetId == table.SheetId
             && other.Range.StartRow <= row && other.Range.EndRow >= row
@@ -35,7 +38,6 @@ public static class DataRecordCreation
         if (originalSheet.Cells.Any(cell => cell.Row == row && cell.Column >= table.Range.StartColumn && cell.Column <= table.Range.EndColumn
             && (cell.Value.Length != 0 || cell.Formula.Length != 0 || cell.Kind == DataCellKind.Formula)))
             return Failure("RecordStorageOccupied", tableID, recordID);
-        var captured = values.ToDictionary(pair => pair.Key, pair => DataRecordEdits.Capture(pair.Value));
         foreach (var field in table.RelationalSchema?.Fields ?? [])
             if (!captured.ContainsKey(field.FieldID) && field.DefaultValue is { Length: > 0 } defaultValue)
                 captured.Add(field.FieldID, Default(field, defaultValue));

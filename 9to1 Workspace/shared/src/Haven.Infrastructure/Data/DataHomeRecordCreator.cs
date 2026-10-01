@@ -55,8 +55,7 @@ public sealed class DataHomeRecordCreator(IDataWorkbookRepository workbooks, IDa
         Guid expectedRevision, IReadOnlyDictionary<Guid, DataScalarRecordValue> values, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(values);
-        if (values.Count > 256) throw new ArgumentException("Create at most 256 canonical scalar fields.", nameof(values));
-        var capturedValues = values.ToDictionary(pair => pair.Key, pair => DataRecordEdits.Capture(pair.Value));
+        var capturedValues = DataRecordCreationValues.Capture(values);
         if (workbooks is not IDataGuardedWorkbookRepository guarded) throw new NotSupportedException("Data guarded storage is unavailable.");
         var selection = await RequireSelectionAsync(display, workbookID, cancellationToken).ConfigureAwait(false);
         var actor = selection.Actor;

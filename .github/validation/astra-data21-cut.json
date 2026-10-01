@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_VALIDATION_SOURCE_FRESH_HOSTED_CHECKS_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "227007d76169ff183a95064ed701fdb88918e9a2",
+  "programTree": "8afa47a46f64bcc73a6cc4901cba6a64d99f69ba",
   "files": [
     {
       "path": ".editorconfig",
@@ -38997,9 +38997,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
       "mode": "100644",
-      "object": "72ef7ce865b28e66d224a1a83025006347d9c5b7",
-      "sha256": "07264a7d981657cc2b7b86be3a04ebf71d5750e182bc2366f64c4b5c092f51bb",
-      "bytes": 60408
+      "object": "676fc58f063dd445ac3e5f5d81e5df27df4d153d",
+      "sha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6",
+      "bytes": 64556
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataProductionTests.cs",
@@ -63539,16 +63539,16 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordCreator.cs",
       "mode": "100644",
-      "object": "d2b4df72d23fa6b5aa472e18818fb74cd6fe91d3",
-      "sha256": "18615f99480b8f867c4a0292260474d623cee75f0701e27ec254d63421163480",
-      "bytes": 11424
+      "object": "84ffa9a6d98869731309f890c46d8611337450de",
+      "sha256": "0566c9a485c96b67a5c9c206b479a50b2e98897c4ba61da5de2d4fcb9d3711d9",
+      "bytes": 11258
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreateIntent.cs",
       "mode": "100644",
-      "object": "2ce9ccdf6a916e53600b5bafacb31ac71b43d019",
-      "sha256": "bc14e5e2b048c567cee695a40b7e090af596acb7d3e483c0f4c8f2b723f6f8da",
-      "bytes": 7277
+      "object": "dffdea135aefca0ae55f42b2ef785ace92890b61",
+      "sha256": "b9983f77367fc8686a0ffab8ecb81f09a711941cb834a9d74d328c0228d175dd",
+      "bytes": 7178
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataRecordCreateRecovery.cs",
@@ -63560,9 +63560,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreation.cs",
       "mode": "100644",
-      "object": "60be8439d41fdf53877f96756013ee853eb832b2",
-      "sha256": "3186d2043c1e0de5d1a327a866f449bb0d9b9e9214558c2cdcba790d3f2436b3",
-      "bytes": 5902
+      "object": "78e44ded92fbaf46c915203cf5d2b0b49cda644c",
+      "sha256": "d59c2b930fe251a2c9080dd1109f5ac70e30b3e42b17843af59d198256820c17",
+      "bytes": 6039
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationDraft.cs",
@@ -63614,6 +63614,13 @@
       "bytes": 7610
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreationValues.cs",
+      "mode": "100644",
+      "object": "35e1b8e9d7f8e2cc5af13770f864ebf2dfb2f3f6",
+      "sha256": "78c5626b1937dda33d9b9281ff932b9b0e6e954b492b99b874da9d77cfc605fa",
+      "bytes": 965
+    },
+    {
       "path": ".github/scripts/astra-data21-hosted-managed.py",
       "mode": "100644",
       "object": "5f259d64198cbba557d0042a933ed630a1bd490c",
@@ -63623,9 +63630,9 @@
     {
       "path": ".github/validation/astra-data21-test-classes.json",
       "mode": "100644",
-      "object": "26d2259b401c7ac281489347a299bb2d8e18c3c2",
-      "sha256": "5f93117ca463f355953ba80f2b2d4c8c74767548434ad24e437be68b121fad18",
-      "bytes": 4096
+      "object": "b28157717d3b81eaab5a0cfe0bccef68c9b6d97c",
+      "sha256": "5c98f9f25d3b569d0bd22d90a2cfdc38ac5209af88a4078a3ae1d3b859eb6cc8",
+      "bytes": 4081
     }
   ],
   "gitlinks": [
@@ -63813,10 +63820,10 @@
       "sourceSelections": 12
     },
     {
-      "label": "following-data-original-display-record21",
-      "manifest": "/workspace/astra-source/worker3-data-display-selection-successor/joined-source21.json",
-      "sha256": "8e32f2b36d53ce700443f47bebb2bf186641cc4d735010b0c9cc4fd50bf8714a",
-      "sourceSelections": 21
+      "label": "following-data-original-display-record22",
+      "manifest": "/workspace/astra-source/worker3-data-bounded-values-successor-02/joined-source22.json",
+      "sha256": "3a6442db09f5cbcdc794a0688b258062483cd87e239b90417d9d49b8bec73749",
+      "sourceSelections": 22
     }
   ],
   "overrides": [
@@ -63836,8 +63843,8 @@
       }
     }
   ],
-  "selectedPaths": 66,
-  "sourceSelections": 73,
+  "selectedPaths": 67,
+  "sourceSelections": 74,
   "changedPaths": [
     "9to1 Workspace/Files/CUI.Tests/FilesDomainContractTests.cs",
     "9to1 Workspace/Files/CUI.Tests/Program.cs",
@@ -63871,6 +63878,7 @@
     "9to1 Workspace/shared/src/Haven.Application/Productivity/ProductivitySnapshotHistory.cs",
     "9to1 Workspace/shared/src/Haven.Core/Data/DataJunctionTableDesign.cs",
     "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreation.cs",
+    "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreationValues.cs",
     "9to1 Workspace/shared/src/Haven.Desktop/Controls/ContextualAiBar.cs",
     "9to1 Workspace/shared/src/Haven.Desktop/Controls/ContextualAiCuiSurface.cs",
     "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.DocumentWorkspaces.cs",
@@ -63910,7 +63918,7 @@
   "rootIndexSha256After": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
   "limits": "Complete program source plus three isolated validation overlays; externally SHA-pinned manifest excludes itself. Only managed follow-up checked; no GUI/auth/provider/package/WPE/Android acceptance. Validation workflow is not for merging into the product branch.",
   "root12ProgramTree": "04b498b60e9fd400f121dce71ffe7bbba11516af",
-  "data21OverlayManifestSha256": "8e32f2b36d53ce700443f47bebb2bf186641cc4d735010b0c9cc4fd50bf8714a",
+  "data22OverlayManifestSha256": "3a6442db09f5cbcdc794a0688b258062483cd87e239b90417d9d49b8bec73749",
   "programCutSha256": "c2efcebcb424b7053c31b1bb9edaf5b5254fd09a5ef6672d2cd5e026ebbce7a3",
   "validationOnlyPaths": [
     ".github/scripts/astra-data21-hosted-managed.py",

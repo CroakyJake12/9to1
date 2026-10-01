@@ -12,6 +12,60 @@ public sealed class DataLocalStoreAuthorityTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task Lying_scalar_collection_is_bounded_before_actual_display_review_without_pending_or_writes(bool duplicate)
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync(CancellationToken.None);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets.Single(); sheet.SetCell(0, 0, "Amount");
+        var table = new DataTableDefinition { Name = "Amounts", SheetId = sheet.Id, Range = new() { EndRow = 0 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "Amount", DataFieldType.Integer, false)], []).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed amounts", (await fixture.CaptureAsync(CancellationToken.None))!, CancellationToken.None);
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var creator = new DataHomeRecordCreator(fixture.Repository, fixture.Authority!, fixture.Actor!, broker);
+        var display = await creator.LoadForDisplayAsync(workbook.Id);
+        var values = new LyingRecordValues(table.Fields[0].FieldID, duplicate);
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => creator.ReviewAsync(display.Selection, workbook.Id, table.Id,
+            Guid.NewGuid(), workbook.Version, workbook.RevisionId, values));
+        Assert.Equal(duplicate ? 2 : 257, values.Consumed);
+        var intentValues = new LyingRecordValues(table.Fields[0].FieldID, duplicate);
+        Assert.ThrowsAny<ArgumentException>(() => DataRecordCreateIntent.Capture(fixture.StoreID, workbook, table.Id, Guid.NewGuid(), intentValues));
+        Assert.Equal(duplicate ? 2 : 257, intentValues.Consumed);
+        var coreValues = new LyingRecordValues(table.Fields[0].FieldID, duplicate);
+        if (duplicate)
+            Assert.ThrowsAny<ArgumentException>(() => DataRecordCreation.Prepare(workbook, table.Id, Guid.NewGuid(), workbook.Version, workbook.RevisionId, coreValues));
+        else Assert.False(DataRecordCreation.Prepare(workbook, table.Id, Guid.NewGuid(), workbook.Version, workbook.RevisionId, coreValues).Success);
+        Assert.Equal(duplicate ? 2 : 257, coreValues.Consumed);
+        Assert.Empty((await fixture.Permissions!.GetSnapshotAsync()).PendingRequests);
+        Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath));
+    }
+
+    private sealed class LyingRecordValues(Guid originalField, bool duplicate) : IReadOnlyDictionary<Guid, DataScalarRecordValue>
+    {
+        public int Consumed { get; private set; }
+        public int Count => 1;
+        public IEnumerable<Guid> Keys => throw new InvalidOperationException("Caller metadata must not be enumerated.");
+        public IEnumerable<DataScalarRecordValue> Values => throw new InvalidOperationException("Caller metadata must not be enumerated.");
+        public DataScalarRecordValue this[Guid key] => throw new NotSupportedException();
+        public bool ContainsKey(Guid key) => throw new NotSupportedException();
+        public bool TryGetValue(Guid key, out DataScalarRecordValue value) { value = null!; throw new NotSupportedException(); }
+        public IEnumerator<KeyValuePair<Guid, DataScalarRecordValue>> GetEnumerator()
+        {
+            for (var index = 0; index < 1_000_000; index++)
+            {
+                Consumed++;
+                yield return new(duplicate || index == 0 ? originalField : Guid.NewGuid(),
+                    new(DataCellKind.Number, JsonSerializer.SerializeToElement(7)));
+            }
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task Originally_displayed_selection_denies_replacement_before_review_even_with_colliding_workbook_identity(bool replaceStore)
     {
         using var fixture = new Fixture(); using var foreign = new Fixture(); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25)); var token = timeout.Token;
@@ -58,7 +112,8 @@ public sealed class DataLocalStoreAuthorityTests
         public IDataWorkbookCommitAuthority Current { get; set; } = original;
         public ValueTask<IDataWorkbookCommitAdmission?> CaptureAsync(Guid storeID, Guid workbookID, int version, Guid revision,
             string action, AuthenticatedResourceActor? actor = null, CancellationToken token = default)
-            => Current.CaptureAsync(storeID, workbookID, version, revision, action, actor, token);
+            => Current.CaptureAsync(storeID, workbookID, version, revision, action,
+                actor ?? throw new InvalidOperationException("The actual display fixture requires a bound actor."), token);
     }
     private sealed class SwitchableDisplayRepository(IDataGuardedWorkbookRepository original) : IDataGuardedWorkbookRepository
     {
