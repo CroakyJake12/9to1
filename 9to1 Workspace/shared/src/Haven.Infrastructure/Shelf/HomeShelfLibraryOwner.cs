@@ -36,7 +36,7 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
         public HomeShelfLibraryOwner Issuer { get; } = issuer;
         public Selection Selection { get; } = selection;
         public ShelfLaunchItem Proposed { get; } = proposed;
-        public long Revision => selection.Revision;
+        public long Revision => Selection.Revision;
         public long? ExpectedObjectRevision { get; } = expectedObjectRevision;
         public JsonElement Arguments { get; } = arguments;
         public ResourceScope[] Scopes { get; } = scopes;

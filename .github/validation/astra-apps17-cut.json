@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "programTree": "f9b69b08ff7b84db1536e7bad77481e53bb4f653",
+  "baselineCommit": "11b815b2dc04f0d3b2bf7f79cf77fee88223bf11",
+  "programTree": "439658dc791aa73d5157a8f3c90e0208c0d143b1",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-apps17-test-classes.json",
       "mode": "100644",
-      "object": "91fec3c204eac44e90d014d8bed5913bf897ac06",
+      "object": "41d1df9c315ba0ab933693f06a25f667c63fc8d5",
       "bytes": 3415,
-      "sha256": "a8590140d99271eb3460358c6e808b2243d83b66f5143b7c51a3a4b73bb9973b"
+      "sha256": "765db20aa44d6a0aa9a9cf7004f52923fe879209014948fbc221ba5e61c39f56"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -35358,9 +35358,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Maps/HomeMapsLibraryOwner.cs",
       "mode": "100644",
-      "object": "703abd90a2329cd116372a7b2c7ed1021a8313ae",
+      "object": "baeacc47f15aa3d68417341789df308f32b6c284",
       "bytes": 18048,
-      "sha256": "199dda044cf709db03c38a57989a13dae5e142d8a0350454ab6a39f9ef34ee1f"
+      "sha256": "d3b9960daa387cb351aa7bc3590f9577163014c7979046d5e13c2132b1c770f4"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Maps/MapsOwnedLibraryAccessResolver.cs",
@@ -35372,9 +35372,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Maps/MapsOwnedLibraryEvidence.cs",
       "mode": "100644",
-      "object": "edb2539968001fad812be6f6828878a83c5d8a38",
-      "bytes": 1832,
-      "sha256": "8ac87db27f43db63628d9f891c78b4c85760a0e5924ed71b532b87c8a4fb2945"
+      "object": "17bd505f1ebe7419c943330918aeda5c6aa06a67",
+      "bytes": 1875,
+      "sha256": "af2d978bf2fcf8487b979c77e6ecf75d4f9881f89a19d99836cf1c93b445b7bc"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Maps/MapsSavedPlaceStore.cs",
@@ -36072,9 +36072,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/HomeShelfLibraryOwner.cs",
       "mode": "100644",
-      "object": "0b657e17474df348e3193cd34052fc0bb88024dc",
+      "object": "4afb9f509699b42b6790bdf620d2a9860af03278",
       "bytes": 17385,
-      "sha256": "da901c21721d4a84288dd0dd2d7765024ad6c1066d40ba0d3243d1db4d370a6c"
+      "sha256": "ae959721d132be534c8712f6527ffcfb9de97f5708d55bca2b6632164dcce225"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/ShelfOwnedLibraryAccessResolver.cs",
@@ -36086,9 +36086,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/ShelfOwnedLibraryEvidence.cs",
       "mode": "100644",
-      "object": "7d05d3a8d496e638f061c28e9dad323d52f7e8c5",
-      "bytes": 1838,
-      "sha256": "9870aa4c54f2216523144ca20a8fef1a451a1e2f1a96d3482c60da9143c2fe0f"
+      "object": "8b1e2c68b23dfb025ac32b72aa3b66c7f4810bbe",
+      "bytes": 1881,
+      "sha256": "543fbe4a1726307d00010d97bca995303c65027bdadccb2ec5e68856136ba69f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Speech/CallFallbackServices.cs",
@@ -64031,15 +64031,15 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-apps17-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
+  "limits": "Preserve actual failed firstcut and fullowningcoverage; exact4/3source compilecorrector only; no execution claims.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker4-apps17-hosted-plan-sol3/manifest.json",
-      "sha256": "944ea5ad200355a58e299eb3aa69f5e11fb30f6cb4bccf33ce579b28de4c263a"
+      "path": "/workspace/astra-source/worker3-shelf-maps-owning-home09/apps17-plan.json",
+      "sha256": "f631604b3963bc8e2e4a258853531b1f38167ffde9b2b1fdcc5994a8ae253010"
     },
     {
-      "path": "/workspace/astra-source/worker3-apps-owner08-integration-plan01/apps17-plan.json",
-      "sha256": "4356cb340caa29f10ea0d27827960f22f249b086fb97243b06ee612abdc2ed48"
+      "path": "/workspace/astra-source/worker4-apps17-hosted-plan-sol4/manifest.json",
+      "sha256": "4faaf5760aec94b2da92c5f1cfdf8e78e0ae5daf86a60202faf2223a1329b59e"
     }
   ],
   "sharedCakeIdContract": null

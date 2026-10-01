@@ -27,5 +27,5 @@ public sealed class ShelfOwnedLibraryActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appID, string actionID) =>
         appID == "shelf" && actionID == HomeShelfLibraryOwner.ActionID
-            ? new(HomePermissionRisk.High, true, false, true) : null;
+            ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, true, false, true) : null;
 }

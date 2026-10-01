@@ -27,5 +27,5 @@ public sealed class MapsOwnedLibraryActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appID, string actionID) =>
         appID == "maps" && actionID == HomeMapsLibraryOwner.ActionID
-            ? new(HomePermissionRisk.High, true, false, true) : null;
+            ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, true, false, true) : null;
 }

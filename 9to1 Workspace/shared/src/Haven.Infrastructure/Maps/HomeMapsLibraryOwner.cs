@@ -36,7 +36,7 @@ public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthentica
         public HomeMapsLibraryOwner Issuer { get; } = issuer;
         public Selection Selection { get; } = selection;
         public MapSavedJourney Proposed { get; } = proposed;
-        public long Revision => selection.Revision;
+        public long Revision => Selection.Revision;
         public long? ExpectedObjectRevision { get; } = expectedObjectRevision;
         public JsonElement Arguments { get; } = arguments;
         public ResourceScope[] Scopes { get; } = scopes;
