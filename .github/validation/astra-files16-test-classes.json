@@ -111,7 +111,7 @@
       "class": "DataRecordDocumentWorkspaceHostTests",
       "fullClass": "Haven.Desktop.Tests.DataRecordDocumentWorkspaceHostTests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
-      "sha256": "6726c373ce41122efecca466736207c06a6e4ef1b12991e5eabf8f031242a51e",
+      "sha256": "dfd414001ffa61ae041f4348ff830ca0747415544bf06d279e4d367731e4da6a",
       "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-08/DataRecordDocumentWorkspaceHostTests.cs",
       "joinedSourceSha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
       "namespace": "Haven.Desktop.Tests",
@@ -276,7 +276,7 @@
     "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
   },
   "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
-  "data22ManifestSha256": "7587235c3c12403a36aace56636670d73011e281f5b08cec07dd0e5540253530",
+  "data22ManifestSha256": "1747fee9e62509924a802f25d6c7cabb3349f066912ef2dd0d360600a50f0715",
   "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-04/joined-source25.json",
   "forms25ManifestSha256": "3e3e7b9563d97d4ab9d3767f7f5caceb332c21b0d4bbcb2be7a7f9b02b2bba62",
   "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",

@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "697309a3096de4db1b8f21c39932fc9072f0fd20",
+  "programTree": "bf027cec2995de176a2907234445d82bcef08f80",
   "files": [
     {
       "path": ".editorconfig",
@@ -63616,9 +63616,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
       "mode": "100644",
-      "object": "1c41364c191aa0cdde6c00d71fa349a370723659",
-      "sha256": "6726c373ce41122efecca466736207c06a6e4ef1b12991e5eabf8f031242a51e",
-      "bytes": 17105
+      "object": "a5e8bc14223ab05a5deae27217c40c134e33bcfa",
+      "sha256": "dfd414001ffa61ae041f4348ff830ca0747415544bf06d279e4d367731e4da6a",
+      "bytes": 17108
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
@@ -63700,8 +63700,8 @@
     {
       "path": ".github/validation/astra-files16-test-classes.json",
       "mode": "100644",
-      "object": "0122e57d3c631b4f6ed2589e17b90b12b178a356",
-      "sha256": "7a8426d481ee0d98863e713e570c62df42addf354cead2cfa6e8f110d1832f6f",
+      "object": "e7c3dcb895845a339a07698697494bcace29292f",
+      "sha256": "44094ab23e635f6318eb437718ded50607d39c899a2280d3999dc6f220841e29",
       "bytes": 25729
     }
   ],
@@ -63968,17 +63968,17 @@
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-files16-data22-forms25-managed-20261001-1830",
   "files16ManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
-  "data22ManifestSha256": "7587235c3c12403a36aace56636670d73011e281f5b08cec07dd0e5540253530",
-  "metadataManifestSha256": "527d019de8be118b226c4f1cea50bfb0748631af20e92cb571a26ebbe761e96c",
+  "data22ManifestSha256": "1747fee9e62509924a802f25d6c7cabb3349f066912ef2dd0d360600a50f0715",
+  "metadataManifestSha256": "53ff834a889101d4decbb06f7bd77d09dc9216caf574bf77c1326a6d65d70e4f",
   "validationOnlyPaths": [
     ".github/scripts/astra-files16-hosted-managed.py",
     ".github/validation/astra-files16-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-files16-cut.json",
-  "predecessorValidationCommit": "7efb124d5f80acad991cb351e97afff698b4385c",
-  "preservedPredecessorManifestSha256": "1cfd5dee645605d9cc62edf1b01a8718d8672ec23c2061f83461bd0d76326a88",
-  "successorQualification": "Qualify the genuine persisted HomePermissionRequest type in one read-only test observer to resolve namespace ambiguity; preserve all production guards, full suite coverage and exact physical byte assertions. Fresh complete cohort proof required.",
+  "predecessorValidationCommit": "3681a8b622b5e55c709d2b4604ebfcb2ca7f0eff",
+  "preservedPredecessorManifestSha256": "dca6c25f8464c697b54cb115cdacaf0814c148bdb22f9922165b017bd95e3872",
+  "successorQualification": "Use Assert.DoesNotContain for the exact no-matching-durable-Home-request assertion, satisfying xUnit2029 without changing predicate, collection, guards, physical assertions or coverage. Fresh full source64 proof required.",
   "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
   "sourceSelections64": [
     {
@@ -64351,7 +64351,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
       "cohort": "Data22",
       "beforeSha256": null,
-      "sha256": "6726c373ce41122efecca466736207c06a6e4ef1b12991e5eabf8f031242a51e"
+      "sha256": "dfd414001ffa61ae041f4348ff830ca0747415544bf06d279e4d367731e4da6a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",

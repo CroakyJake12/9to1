@@ -199,7 +199,7 @@ public sealed class DataRecordDocumentWorkspaceHostTests
         Assert.Equal(1, record.SchemaVersion);
         var requests = record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()
             ?? throw new InvalidDataException("Actual persisted permission requests are required.");
-        Assert.Empty(requests.Where(request => request.State == HomePermissionRequestState.PendingApproval));
+        Assert.DoesNotContain(requests, request => request.State == HomePermissionRequestState.PendingApproval);
     }
 
     private static void Press(HavenButton button)
