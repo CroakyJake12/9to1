@@ -14,7 +14,8 @@ public sealed class CuiActionCompletionObservationTests
     [Fact]
     public async Task Actual_click_snapshot_awaits_dispatcher_cleanup_after_disposal_and_retained_click_is_inert()
     {
-        var token = TestContext.Current.CancellationToken;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = timeout.Token;
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
         await native.Dispatch<bool>(async () =>
         {
@@ -42,7 +43,8 @@ public sealed class CuiActionCompletionObservationTests
     [Fact]
     public async Task Snapshot_does_not_dispatch_or_wait_for_a_future_click()
     {
-        var token = TestContext.Current.CancellationToken;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        var token = timeout.Token;
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CuiRuntimeTestApplication));
         await native.Dispatch<bool>(async () =>
         {

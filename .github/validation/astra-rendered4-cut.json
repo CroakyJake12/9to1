@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "programTree": "eecafff6a40c1b1fb320641ab000659c5d215a81",
+  "baselineCommit": "ddba3b01d643d105ec52b61f5ad0a9f419545633",
+  "programTree": "6a08102c490f061e8088f591fda60052114d494e",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-rendered4-test-classes.json",
       "mode": "100644",
-      "object": "f4440922b1a44c5f237cc2839b6196169aa94896",
+      "object": "f003fe052dd09d7d11929a03b7f88f0bd08333cd",
       "bytes": 1261,
-      "sha256": "f997cdf0ed954f239eaacc91ffaa5920cb2cf437bcba3b7b32fc4e4694ad9d31"
+      "sha256": "94ac6faeeaa571ee165136767bda154784b08f36e879a4468e682057e135cf5a"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40797,9 +40797,9 @@
     {
       "path": "framework/CUI/Runtime.Tests/CuiActionCompletionObservationTests.cs",
       "mode": "100644",
-      "object": "f185ac75d42432d160e1069cff0ebde042267c2e",
-      "bytes": 3969,
-      "sha256": "21805a4a802da14d70bcae84175df4a2fe76ceae2d41eee82cf309debe41c663"
+      "object": "7a748be55ec8de19b4586f40f5ec43e87119ea3c",
+      "bytes": 4087,
+      "sha256": "bbb87b863ab057ad8ddd3fa5ffb1f884a2ce5ef6a99ed10fc7e65e0eb96cc076"
     },
     {
       "path": "framework/CUI/Runtime.Tests/CuiAuthoredAiBarTests.cs",
@@ -63964,12 +63964,12 @@
   "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker4-rendered4-hosted-plan-sol3/manifest.json",
-      "sha256": "aadeb29cc99f13836df08fdd923754462dbf4e0347a8aa76187ef53fdf00deb9"
+      "path": "/workspace/astra-source/worker1-cui-action-completion-fixture02/manifest.json",
+      "sha256": "e4a6b8c36cd3ed5056e511d0504a92d7e69804e9e80bb91f124ce54ad2f71837"
     },
     {
-      "path": "/workspace/astra-source/worker3-apps-owner-and-rendered-plans01/rendered4-plan.json",
-      "sha256": "a84b8a40f540980d5cad25721924a0e55e81ec5892dac37edf2eecc25d908e6a"
+      "path": "/workspace/astra-source/worker4-rendered4-hosted-plan-sol4/manifest.json",
+      "sha256": "247702e0b3a27f6fd8548b56e2d46ac357972729055ddbaa9ee0d58ef92aefcd"
     }
   ],
   "sharedCakeIdContract": null
