@@ -111,7 +111,7 @@
       "class": "DataRecordDocumentWorkspaceHostTests",
       "fullClass": "Haven.Desktop.Tests.DataRecordDocumentWorkspaceHostTests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
-      "sha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
+      "sha256": "22cb9d432756e440422a64fa860bf36c47cf2a4e2c6f28f6cca2d984be79c02b",
       "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-08/DataRecordDocumentWorkspaceHostTests.cs",
       "joinedSourceSha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
       "namespace": "Haven.Desktop.Tests",
@@ -202,7 +202,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
       "class": "FormsNativeWorkspaceHostTests",
       "namespace": "Haven.Desktop.Tests",
-      "sha256": "393e3742f5eb0c1d4603c3ea1e3f9957961bd7014d09d398034b624115961edf",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
       "origin": "corrected Forms26 awaited06 overlay"
     },
     {
@@ -276,10 +276,10 @@
     "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
   },
   "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
-  "data22ManifestSha256": "79ca75b41c9df7de7c41a0038df621d55309d6a32ede10b26e0ed519a0b189a7",
+  "data22ManifestSha256": "4ec99035118a093a475dd986d412dc4a55008c63cc775134500ad1fb456843dc",
   "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-04/joined-source25.json",
   "forms25ManifestSha256": "3e3e7b9563d97d4ab9d3767f7f5caceb332c21b0d4bbcb2be7a7f9b02b2bba62",
-  "forms26ManifestSha256": "ac5b4aa1b44d4781d09360bf5336ef6929cbf004803540214c31096b431744d7",
+  "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
   "forms26OwnerRows": [
     {
       "source": "/workspace/astra-source/worker3-forms-host-session-successor/FormPublicationService.cs",
@@ -416,9 +416,9 @@
       "expectedOriginalSHA256": null
     },
     {
-      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/FormsNativeWorkspaceHostTests.cs",
+      "source": "/workspace/astra-source/worker2-forms-closed-response-fixture-06/FormsNativeWorkspaceHostTests.cs",
       "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
-      "sha256": "393e3742f5eb0c1d4603c3ea1e3f9957961bd7014d09d398034b624115961edf",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
       "expectedOriginalSHA256": null
     },
     {

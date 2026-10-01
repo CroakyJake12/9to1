@@ -86,8 +86,9 @@ public sealed class FormsNativeWorkspaceHostTests
             var beforeClosedAction = await File.ReadAllBytesAsync(Path.Combine(root, "settings.json"), token);
             host.Dispose();
             await Assert.ThrowsAsync<ObjectDisposedException>(() => host.RequireCurrentAsync(token));
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+            var closedResponse = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 await workspace.DispatchAsync("9to1.Forms.Respond", null, token));
+            Assert.Equal("PermissionDenied", closedResponse.Message);
             Assert.True(Enumerable.SequenceEqual(beforeClosedAction,
                 await File.ReadAllBytesAsync(Path.Combine(root, "settings.json"), token)));
 

@@ -133,7 +133,7 @@ public sealed class DataRecordDocumentWorkspaceHostTests
                         await ownership.CompleteImportAsync(import.RequestId, token);
                     }
                     Assert.NotNull(await ownership.GetVerifiedAsync("data", currentStoreID.ToString("D"), token));
-                    Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+                    await AssertNoPersistedPendingAsync(graph.GetRequiredService<IHomeCoreStateStore>(), token);
                     var freshAdmission = await authority.CaptureAsync(currentStoreID, workbook.Id, originalVersion, workbook.RevisionId,
                         DataRecordCreateIntent.ActionID, currentActor, token);
                     Assert.NotNull(freshAdmission);
@@ -141,7 +141,7 @@ public sealed class DataRecordDocumentWorkspaceHostTests
                         DataWorkbookCommitPhase.Publication), token));
                     Press(Button("Data.RecordCreate.Review"));
                     await UntilAsync(() => Task.FromResult(Status().StartsWith("Review failed;", StringComparison.Ordinal)), token);
-                    Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+                    await AssertNoPersistedPendingAsync(graph.GetRequiredService<IHomeCoreStateStore>(), token);
                     Assert.Equal(originalBytes, await File.ReadAllBytesAsync(saved.CurrentPath, token));
                     if (foreignSettings is not null) Assert.True(Enumerable.SequenceEqual(foreignSettings, await File.ReadAllBytesAsync(settingsPath, token)));
                     if (foreignHome is not null) Assert.True(Enumerable.SequenceEqual(foreignHome, await File.ReadAllBytesAsync(Path.Combine(root, "home.json"), token)));
@@ -186,6 +186,20 @@ public sealed class DataRecordDocumentWorkspaceHostTests
             finally { window.Content = null; window.Close(); }
         }
         finally { SqliteConnection.ClearAllPools(); Directory.Delete(root, true); }
+    }
+
+    private static async Task AssertNoPersistedPendingAsync(IHomeCoreStateStore home, CancellationToken token)
+    {
+        // GetSnapshotAsync expires grants and always persists a new Home revision. Read the actual
+        // durable permission requests without allowing the observer to change supplied foreign bytes.
+        var read = await home.ReadAsync(token);
+        Assert.True(read.IsSuccess);
+        var record = Assert.Single(read.State!.Records, item => item.RecordId == "home.permissions-trust");
+        Assert.Equal("home.permissions-trust", record.RecordType);
+        Assert.Equal(1, record.SchemaVersion);
+        var requests = record.Payload.GetProperty("Requests").Deserialize<HomePermissionRequest[]>()
+            ?? throw new InvalidDataException("Actual persisted permission requests are required.");
+        Assert.Empty(requests.Where(request => request.State == HomePermissionRequestState.PendingApproval));
     }
 
     private static void Press(HavenButton button)

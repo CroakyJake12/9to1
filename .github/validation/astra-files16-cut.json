@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "29be4a3b406d2918a199e867579b530d5adc6ad9",
+  "programTree": "0833289cd93ba1bbd7d787ff8bf4796f33faccd0",
   "files": [
     {
       "path": ".editorconfig",
@@ -63616,9 +63616,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
       "mode": "100644",
-      "object": "79407c672bf2e687d9e17f9eb4e83d2c78494050",
-      "sha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
-      "bytes": 16118
+      "object": "e0e185b24c312db0a4ae242b785cb7dfe1b94a74",
+      "sha256": "22cb9d432756e440422a64fa860bf36c47cf2a4e2c6f28f6cca2d984be79c02b",
+      "bytes": 17062
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
@@ -63686,9 +63686,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
       "mode": "100644",
-      "object": "6abe539f5fac3333678cf97478f0df5ff35deda4",
-      "sha256": "393e3742f5eb0c1d4603c3ea1e3f9957961bd7014d09d398034b624115961edf",
-      "bytes": 6497
+      "object": "b3ad78b392098a1dcd1c8bee44b92f35fcdc9da8",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
+      "bytes": 6586
     },
     {
       "path": ".github/scripts/astra-files16-hosted-managed.py",
@@ -63700,9 +63700,9 @@
     {
       "path": ".github/validation/astra-files16-test-classes.json",
       "mode": "100644",
-      "object": "bf5825cd6af96f2b97180cd524c1764b594793ec",
-      "sha256": "510e7d0480e4f613020f322d3b61580cc55d10f3d98ae7d1b1c3d395c073d95e",
-      "bytes": 25722
+      "object": "20b3971cafa2abfa68a1df596a50a24cab9ed53e",
+      "sha256": "5fda5881e3e6ac07f3286363b6cbca4a3509bdd9f61c145a2ab6734293ebdea4",
+      "bytes": 25729
     }
   ],
   "gitlinks": [
@@ -63968,18 +63968,18 @@
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-files16-data22-forms25-managed-20261001-1830",
   "files16ManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
-  "data22ManifestSha256": "79ca75b41c9df7de7c41a0038df621d55309d6a32ede10b26e0ed519a0b189a7",
-  "metadataManifestSha256": "db7fd7d2a1cfb24e4b6a9a6f729e8f33b75de6c6772fac4e3b569488a9109f6d",
+  "data22ManifestSha256": "4ec99035118a093a475dd986d412dc4a55008c63cc775134500ad1fb456843dc",
+  "metadataManifestSha256": "dca3092c428cfc49fe5188793e0ed4f9e64b0d52230c93019cd378a7fcd2d52c",
   "validationOnlyPaths": [
     ".github/scripts/astra-files16-hosted-managed.py",
     ".github/validation/astra-files16-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-files16-cut.json",
-  "predecessorValidationCommit": "1fdbbe0b94e874269a5790d180b16ade56cf9dd8",
-  "preservedPredecessorManifestSha256": "f5d0c380e77907e22c7fc853cae12a5d183411e3615174d37bdc957485d2efb1",
-  "successorQualification": "Correct four existing Forms fixtures only: explicit awaited typed Headless callbacks, genuinely join Home action and preserve exact physical settings bytes; compare all durable export fields excluding observation-time ExportedAt. Preview/Response already returned bool and had awaited callbacks; explicit generic removes ambiguity. Production guards/assertions unchanged; failed predecessors retained. New source64/full unfiltered suites must pass.",
-  "forms26ManifestSha256": "ac5b4aa1b44d4781d09360bf5336ef6929cbf004803540214c31096b431744d7",
+  "predecessorValidationCommit": "121263f83f8f164e2a5fc5f99ff8a6f830d7fd7b",
+  "preservedPredecessorManifestSha256": "6871f0e0aab5dc59417ee03da7fbaf351777cb5a85ff047b47fcf8135b9d8229",
+  "successorQualification": "Correct exactly two existing Desktop fixtures: read genuine durable Home pending requests without test-observer Save side effects, and assert canonical InvalidOperationException(PermissionDenied) on disposed Forms response. All production/original actor/store/revision guards and exact physical byte assertions preserved; fresh complete cohort proof required.",
+  "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
   "sourceSelections64": [
     {
       "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Import.cs",
@@ -64195,7 +64195,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
       "cohort": "Data22",
       "beforeSha256": null,
-      "sha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd"
+      "sha256": "22cb9d432756e440422a64fa860bf36c47cf2a4e2c6f28f6cca2d984be79c02b"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
@@ -64339,7 +64339,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
       "cohort": "Forms26",
       "beforeSha256": null,
-      "sha256": "393e3742f5eb0c1d4603c3ea1e3f9957961bd7014d09d398034b624115961edf"
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
@@ -64365,5 +64365,6 @@
       "beforeSha256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
       "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36"
     }
-  ]
+  ],
+  "resource64OwnerManifestSha256": "c11eee248a2c5aee72c03867935c234407253a14ed72dc811783fe9de5fd2d19"
 }
