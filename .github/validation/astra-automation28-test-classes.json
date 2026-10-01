@@ -1,0 +1,54 @@
+{
+  "classes": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationOwnerSchemaMigrationTests.cs",
+      "class": "AutomationOwnerSchemaMigrationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "45ee7f490820fb040b738de69a8e9d52df0174a346bc0c2d30e1a701859b7f3a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionCommitObservationTests.cs",
+      "class": "AutomationDefinitionCommitObservationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "5a3bfa849d268ac6567448b77eda7eee234168c2d715f09a899f2f02e08c149d"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationOrdinaryGuidFenceTests.cs",
+      "class": "AutomationOrdinaryGuidFenceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "ef836a23e00d50257d9f9b04224290b8db2ec3da526417bfad87cb11ab904ac4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionReviewCallerTests.cs",
+      "class": "AutomationDefinitionReviewCallerTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "19975ddf599c7d55190855c4be1f9cb53991af4ce1e23aeaf4ace94e01d9cbb5"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
+      "class": "NativeAutomationDefinitionOwnerTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "05328f2fbbb529982da51f108b82b464cba3c4c51b68abcf0dc23244d0955b02"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",
+      "class": "NativeAutomationsPageTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "edcfc1838681232d6e405144f2065c3b354a73cb0ea971df8c4395168d4a8139"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AutomationDefinitionCallerRegistrationTests.cs",
+      "class": "AutomationDefinitionCallerRegistrationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "273570e6d99d3a5896052ded89f34801b8a03b8b625d98add7ec74cd8106fa99"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/AutomationFinishReviewRoutingTests.cs",
+      "class": "AutomationFinishReviewRoutingTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "7e19ec6bf149e751bef1574c451f51dcd8bbc337da0858b253819a7ec84769a2"
+    }
+  ],
+  "dependencyPins": [],
+  "ownerManifestSha256": "625c6a54468fd9c1c4b2ac74da4c74f573940e09943525cfcb9b98c4836d828c"
+}
