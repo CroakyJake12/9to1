@@ -53,7 +53,7 @@ public sealed class FormDataPreparationTests
         form = FormProjectEditor.BindData(form, form.Revision, new(Guid.NewGuid(), field.FieldID, workbook.Id, table.Id,
             table.Fields[0].FieldID, FormDataBindingKind.UpdateRecord), now);
         // This focused fixture admits this known scalar binding; production publication still requires its real capability validator.
-        var publications = new FormPublicationService(settings, settings, formAuthority, new ScalarFixtureValidator());
+        var publications = new FormPublicationService(settings, settings, formAuthority, new ScalarFixtureValidator(), actors: actors);
         var created = await publications.CreateAsync(form.FormID, FormProjectEditor.Project(form)); Assert.True(created.Success);
         var published = (await publications.PublishAsync(form.FormID, created.Publication!.Revision)).Publication!;
         var responses = new FormResponseSessionService(publications, settings, settings, formAuthority, actors);
@@ -161,7 +161,7 @@ public sealed class FormDataPreparationTests
             // Simulated process interruption: target committed while Forms still records Pending.
             Assert.Equal(FormsDataWriteStatus.Pending, Assert.Single((await journal.ReadAsync(form.FormID, responseID)).Attempts).Status);
             var reopenedSettings = new VersionedAtomicSettingsStore(paths);
-            var reopenedPublications = new FormPublicationService(reopenedSettings, reopenedSettings, formAuthority, new ScalarFixtureValidator());
+            var reopenedPublications = new FormPublicationService(reopenedSettings, reopenedSettings, formAuthority, new ScalarFixtureValidator(), actors: actors);
             var reopenedResponses = new FormResponseSessionService(reopenedPublications, reopenedSettings, reopenedSettings, formAuthority, actors);
             var reopenedJournal = new FormDataResponseWriteService(
                 new FormDataRecordPreparationService(reopenedResponses, workbooks, dataAuthority, actors), reopenedResponses, recovery);

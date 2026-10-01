@@ -6,7 +6,8 @@ using Haven.Application.Compatibility;
 namespace NineToOne.Os.Shell;
 
 public sealed record CompatibilityInspectedPackage(Guid FileId, string ContentRevision, string MetadataRevision, string Name, string PackageContentIdentity,
-    string Format, IReadOnlyList<string> Architectures, string? DeclaredApplicationIdentity, long Length, string Sha256);
+    string Format, IReadOnlyList<string> Architectures, string? DeclaredApplicationIdentity, long Length, string Sha256)
+{ public required Guid StoreId { get; init; } }
 
 /// <summary>Canonical Files admission and package metadata inspection. No publisher-trust, installation or execution grant.</summary>
 public sealed class CompatibilityPackageInspector(ICompatibilityPackageContentSource files,
@@ -14,22 +15,25 @@ public sealed class CompatibilityPackageInspector(ICompatibilityPackageContentSo
 {
     public const long MaximumBytes = 2L * 1024 * 1024 * 1024;
 
-    public async Task<CompatibilityInspectedPackage> InspectAsync(Guid fileId, string expectedContentRevision,
+    public async Task<CompatibilityInspectedPackage> InspectAsync(Guid expectedStoreId, AuthenticatedResourceActor expectedActor, Guid fileId, string expectedContentRevision,
         CancellationToken cancellationToken = default)
     {
-        if (fileId == Guid.Empty || string.IsNullOrWhiteSpace(expectedContentRevision) || expectedContentRevision.Length > 512)
+        if (expectedStoreId == Guid.Empty || fileId == Guid.Empty || string.IsNullOrWhiteSpace(expectedContentRevision) || expectedContentRevision.Length > 512)
             throw new ArgumentException("A canonical Files identity and content revision are required.");
-        var actor = await actors.GetCurrentAsync(cancellationToken)
-            ?? throw new UnauthorizedAccessException("Open the current Home profile before inspecting a package.");
-        await using var lease = await files.ReadAsync(fileId, expectedContentRevision, MaximumBytes, cancellationToken);
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        var actor = expectedActor;
+        if (await actors.GetCurrentAsync(cancellationToken) != actor)
+            throw new UnauthorizedAccessException("The original Home session is no longer current.");
+        await using var lease = await files.ReadAsync(expectedStoreId, actor, fileId, expectedContentRevision, MaximumBytes, cancellationToken);
         var source = lease.Source;
-        if (source.FileId != fileId || source.ContentRevision != expectedContentRevision || source.ObservedActor != actor ||
+        if (source.StoreId != expectedStoreId || source.FileId != fileId || source.ContentRevision != expectedContentRevision || source.ObservedActor != actor ||
             string.IsNullOrWhiteSpace(source.MetadataRevision) || source.MetadataRevision.Length > 512 ||
             string.IsNullOrWhiteSpace(source.Name) || source.Name.Length > 4096 ||
             source.Length < 64 || source.Length > MaximumBytes || source.Sha256.Length != 64 ||
             source.Sha256.Any(c => !char.IsAsciiHexDigit(c)))
             throw new IOException("The Files owner did not supply a matching bounded content revision.");
         await lease.RevalidateAsync(cancellationToken);
+        if (lease.Source != source) throw new IOException("The Files source identity changed before package read.");
         await using var stream = await lease.OpenReadAsync(cancellationToken);
         if (!stream.CanRead || !stream.CanSeek || stream.CanWrite || stream.Length != source.Length)
             throw new IOException("Files must supply a read-only seekable immutable package revision.");
@@ -53,13 +57,14 @@ public sealed class CompatibilityPackageInspector(ICompatibilityPackageContentSo
         async Task<CompatibilityInspectedPackage> FinishAsync(CompatibilityPackageMetadata metadata)
         {
             await lease.RevalidateAsync(cancellationToken);
+            if (lease.Source != source) throw new IOException("The Files source identity changed during inspection.");
             if (await actors.GetCurrentAsync(cancellationToken) != actor)
                 throw new UnauthorizedAccessException("Home changed while inspecting the package.");
             cancellationToken.ThrowIfCancellationRequested();
             // Content identity survives moving the source file, not changing installer bytes/version.
             var prefix = metadata.Format == "android-apk" ? "android-package:sha256:" : "windows-package:sha256:";
             return new(fileId, expectedContentRevision, source.MetadataRevision, source.Name, prefix + digest.ToLowerInvariant(),
-                metadata.Format, metadata.Architectures, metadata.DeclaredApplicationIdentity, source.Length, digest);
+                metadata.Format, metadata.Architectures, metadata.DeclaredApplicationIdentity, source.Length, digest) { StoreId = expectedStoreId };
         }
         if (header[0] != 'M' || header[1] != 'Z')
             return await FinishAsync(await CompatibilityPackageMetadataReader.ReadArchiveOrInstallerAsync(stream, header, cancellationToken));

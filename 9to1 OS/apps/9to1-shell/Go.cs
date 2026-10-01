@@ -4,7 +4,7 @@ using Haven.Application.Go;
 
 namespace NineToOne.Os.Shell;
 
-public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistry registry, LinuxApplicationLauncher launcher) : IGoCanonicalResolver
+public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistry registry, LinuxApplicationLauncher launcher) : IGoCanonicalResolver, IGoOriginalActorInvocation
 {
     public string ProviderId => "os.installed-applications";
     public async IAsyncEnumerable<GoResult> QueryAsync(GoQuery query, [EnumeratorCancellation] CancellationToken ct)
@@ -30,6 +30,12 @@ public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistr
         catch (UnauthorizedAccessException) { return null; }
         return new(ProviderId, new("Home", "os.installed-application", visible.ApplicationId.ToString("D"), visible.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture)),
             visible.Label, "Apps", [new("Open", "Open")]);
+    }
+    public Task InvokeForActorAsync(GoCanonicalReference reference, string actionId, AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        if (reference.Owner != "Home" || reference.Kind != "os.installed-application" || actionId != "Open" || !Guid.TryParse(reference.Id, out var id) || !long.TryParse(reference.Revision, out var revision))
+            throw new UnauthorizedAccessException("Unknown canonical application action.");
+        return launcher.LaunchForActorAsync(id, revision, expectedActor, ct);
     }
     public Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken ct)
     {

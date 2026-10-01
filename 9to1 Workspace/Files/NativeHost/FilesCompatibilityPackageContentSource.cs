@@ -11,14 +11,21 @@ public sealed class FilesCompatibilityPackageContentSource(NativeFilesWorkspaceA
 {
     private const string Action = "os.compatibility.package.read";
 
-    public async ValueTask<ICompatibilityPackageContentLease> ReadAsync(Guid fileId, string expectedContentRevision,
+    public async ValueTask<ICompatibilityPackageContentLease> ReadAsync(Guid expectedStoreId, AuthenticatedResourceActor expectedActor, Guid fileId, string expectedContentRevision,
         long maximumBytes, CancellationToken token)
     {
-        if (fileId == Guid.Empty || !Guid.TryParse(expectedContentRevision, out var expected) || expected == Guid.Empty || maximumBytes < 1)
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (expectedStoreId == Guid.Empty || fileId == Guid.Empty || !Guid.TryParse(expectedContentRevision, out var expected) || expected == Guid.Empty || maximumBytes < 1)
             throw new ArgumentException("Select a canonical package and a bounded immutable content revision.");
-        var workspace = await workspaces.GetCurrentAsync(token).ConfigureAwait(false)
+        if (await actors.GetCurrentAsync(token).ConfigureAwait(false) != expectedActor)
+            throw new UnauthorizedAccessException("The original package selection actor changed.");
+        var workspace = await workspaces.GetCurrentAsync(expectedStoreId, token).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("Set up and verify Files storage in Home before opening this package.");
-        var actor = workspace.Actor;
+        if (workspace.Configuration.StoreId != expectedStoreId ||
+            (await workspace.Provider.GetStoreEvidenceAsync(expectedStoreId, token).ConfigureAwait(false)).StoreId != expectedStoreId)
+            throw new UnauthorizedAccessException("The original package store changed.");
+        var actor = expectedActor;
+        if (workspace.Actor != actor) throw new UnauthorizedAccessException("The original package selection actor changed.");
         if (await actors.GetCurrentAsync(token).ConfigureAwait(false) != actor)
             throw new UnauthorizedAccessException("The package profile changed.");
         var id = new HostedItemId(fileId);
@@ -47,6 +54,7 @@ public sealed class FilesCompatibilityPackageContentSource(NativeFilesWorkspaceA
             OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
             throw new UnauthorizedAccessException("The package source escapes its registered Files folder.");
         RequireNoRedirects(path, directory);
+        await RequireCurrentAsync(token).ConfigureAwait(false);
         string? leaseDirectory = Path.Combine(directory, ".9to1-package-leases", Guid.NewGuid().ToString("N"));
         try
         {
@@ -76,7 +84,7 @@ public sealed class FilesCompatibilityPackageContentSource(NativeFilesWorkspaceA
             }
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(leasePath, UnixFileMode.UserRead);
             await RequireCurrentAsync(token).ConfigureAwait(false);
-            var source = new CompatibilityPackageSource(fileId, expectedContentRevision, cas.ToString(), item.Name, size, hash, actor);
+            var source = new CompatibilityPackageSource(fileId, expectedContentRevision, cas.ToString(), item.Name, size, hash, actor) { StoreId = expectedStoreId };
             var lease = new Lease(source, leasePath, leaseDirectory, RequireCurrentAsync);
             leaseDirectory = null;
             return lease;
@@ -85,8 +93,10 @@ public sealed class FilesCompatibilityPackageContentSource(NativeFilesWorkspaceA
 
         async Task RequireCurrentAsync(CancellationToken cancellationToken)
         {
-            var currentWorkspace = await workspaces.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
-            if (currentWorkspace?.Actor != actor || currentWorkspace.Configuration.StoreId != workspace.Configuration.StoreId ||
+            var currentWorkspace = await workspaces.GetCurrentAsync(expectedStoreId, cancellationToken).ConfigureAwait(false);
+            if (currentWorkspace?.Actor != actor || currentWorkspace.Configuration.StoreId != expectedStoreId ||
+                !ReferenceEquals(currentWorkspace.Provider, workspace.Provider) ||
+                (await currentWorkspace.Provider.GetStoreEvidenceAsync(expectedStoreId, cancellationToken).ConfigureAwait(false)).StoreId != expectedStoreId ||
                 await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor ||
                 await resources.AuthorizeAsync(Action, [scope], cancellationToken).ConfigureAwait(false) != actor)
                 throw new UnauthorizedAccessException("Current Home ownership no longer permits this package source.");
@@ -97,6 +107,11 @@ public sealed class FilesCompatibilityPackageContentSource(NativeFilesWorkspaceA
             if (await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor ||
                 await resources.AuthorizeAsync(Action, [scope], cancellationToken).ConfigureAwait(false) != actor)
                 throw new UnauthorizedAccessException("Package source access changed during revalidation.");
+            var finalWorkspace = await workspaces.GetCurrentAsync(expectedStoreId, cancellationToken).ConfigureAwait(false);
+            if (finalWorkspace?.Actor != actor || finalWorkspace.Configuration.StoreId != expectedStoreId ||
+                !ReferenceEquals(finalWorkspace.Provider, workspace.Provider) ||
+                (await finalWorkspace.Provider.GetStoreEvidenceAsync(expectedStoreId, cancellationToken).ConfigureAwait(false)).StoreId != expectedStoreId)
+                throw new UnauthorizedAccessException("The original package store changed during revalidation.");
         }
     }
 

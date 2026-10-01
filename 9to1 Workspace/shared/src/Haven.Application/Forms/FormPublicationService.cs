@@ -44,10 +44,14 @@ public sealed record FormPublicationResult(bool Success, string? Code, FormPubli
 /// Exact serialized compare/exchange rejects concurrent changes across service instances.
 /// Builder, preview and runtime retain one project projection.</summary>
 public sealed class FormPublicationService(IVersionedSettingsStore settings, IResourceStoreIdentitySource identities,
-    IFormStoreAuthority authority, IFormProjectPublicationValidator validator, TimeProvider? clock = null)
+    IFormStoreAuthority authority, IFormProjectPublicationValidator validator, TimeProvider? clock = null,
+    IAuthenticatedResourceActorSource? actors = null)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly TimeProvider _clock = clock ?? TimeProvider.System;
+    public Task<FormHostSession> OpenHostSessionAsync(AuthenticatedResourceActor expectedActor, CancellationToken token = default) =>
+        FormHostSession.CreateAsync(settings, identities, authority, validator, actors, expectedActor, _clock, token);
+
     private static string Key(Guid id) => "forms.publication.v1." + id.ToString("N");
 
     public async Task<FormPublicationResult> CreateAsync(Guid formID, JsonElement canonicalProject, CancellationToken token = default)
@@ -80,6 +84,8 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
 
     public async Task<FormPublicationResult> ReadAsync(Guid id, CancellationToken token = default)
     {
+        var originatingActor = actors is null ? null : await actors.GetCurrentAsync(token).ConfigureAwait(false);
+        if (originatingActor is null) return new(false, "PermissionDenied", null);
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
@@ -87,6 +93,7 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
             if (form is null) return new(false, "NotFound", null);
             var root = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
             return await authority.AuthorizeAsync(root.StoreId, id, form.Revision, "forms.read", token).ConfigureAwait(false)
+                && await actors!.GetCurrentAsync(token).ConfigureAwait(false) == originatingActor
                 ? new(true, null, Clone(form)) : new(false, "PermissionDenied", null);
         }
         finally { _gate.Release(); }
@@ -96,6 +103,8 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
         Func<FormPublication?, FormPublication> change, CancellationToken token)
     {
         if (id == Guid.Empty || expected < 0) return new(false, "InvalidArgument", null);
+        var originatingActor = actors is null ? null : await actors.GetCurrentAsync(token).ConfigureAwait(false);
+        if (originatingActor is null) return new(false, "PermissionDenied", null);
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
@@ -111,20 +120,22 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
                 if (current.FormID != id) throw new InvalidDataException("Stored form identity mismatch.");
             }
             var revision = current?.Revision ?? 0;
-            if (!await authority.AuthorizeAsync(root.StoreId, id, revision, action, token).ConfigureAwait(false))
+            if (!await authority.AuthorizeAsync(root.StoreId, id, revision, action, token).ConfigureAwait(false)
+                || await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
                 return new(false, "PermissionDenied", null);
             if (expected != revision) return new(false, "RevisionConflict", null);
             if (snapshot.StoreIdentity is not { SchemaVersion: 1 } identity || identity.StoreId != root.StoreId
                 || authority is not IFormStoreCommitAuthority commitAuthority) return new(false, "PermissionDenied", null);
-            var admission = await commitAuthority.CaptureCommitAdmissionAsync(root.StoreId, id, revision, action, null, token).ConfigureAwait(false);
-            if (admission is null) return new(false, "PermissionDenied", null);
+            var admission = await commitAuthority.CaptureCommitAdmissionAsync(root.StoreId, id, revision, action, originatingActor, token).ConfigureAwait(false);
+            if (admission is null || await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor) return new(false, "PermissionDenied", null);
             var updated = change(current);
             FormPublicationValidation.Validate(updated);
             // Recheck after preparing the publication; an ownership/ACL revoke prevents commit.
-            if (!await authority.AuthorizeAsync(root.StoreId, id, revision, action, token).ConfigureAwait(false))
+            if (!await authority.AuthorizeAsync(root.StoreId, id, revision, action, token).ConfigureAwait(false)
+                || await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
                 return new(false, "PermissionDenied", null);
             var exchanged = await atomic.CompareExchangeGuardedAsync(Key(id), expectedJson,
-                JsonSerializer.Serialize(updated), new Dictionary<string, string?>(), new FormCommitAdmission(root.StoreId, admission), token).ConfigureAwait(false);
+                JsonSerializer.Serialize(updated), new Dictionary<string, string?>(), new FormCommitAdmission(root.StoreId, admission, actors, originatingActor), token).ConfigureAwait(false);
             if (!exchanged.Exchanged) return new(false, exchanged.AdmissionRejected ? "PermissionDenied" : "RevisionConflict", null);
             return new(true, null, Clone(updated));
         }

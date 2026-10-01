@@ -2,7 +2,11 @@ namespace Haven.Application.Compatibility;
 
 /// <summary>Observed canonical source revision. A content hash does not establish publisher trust or installation.</summary>
 public sealed record CompatibilityPackageSource(Guid FileId, string ContentRevision, string MetadataRevision, string Name, long Length,
-    string Sha256, AuthenticatedResourceActor ObservedActor);
+    string Sha256, AuthenticatedResourceActor ObservedActor)
+{
+    /// <summary>Actual owning Files store UUID captured with the original selection; empty is never admissible.</summary>
+    public required Guid StoreId { get; init; }
+}
 
 /// <summary>
 /// Files owns a read-only immutable content lease, admitted under os.compatibility.package.read.
@@ -18,9 +22,9 @@ public interface ICompatibilityPackageContentLease : IAsyncDisposable
     ValueTask RevalidateAsync(CancellationToken cancellationToken);
 }
 
-/// <summary>Implemented by the Files owner. Bounds copy before allocation; absent owner means inspection is unavailable.</summary>
+/// <summary>Implemented by the Files owner. Checks original expected actor and store before lookup/materialization and bounds copy before allocation; absent owner means inspection is unavailable.</summary>
 public interface ICompatibilityPackageContentSource
 {
-    ValueTask<ICompatibilityPackageContentLease> ReadAsync(Guid fileId, string expectedContentRevision,
+    ValueTask<ICompatibilityPackageContentLease> ReadAsync(Guid expectedStoreId, AuthenticatedResourceActor expectedActor, Guid fileId, string expectedContentRevision,
         long maximumBytes, CancellationToken cancellationToken);
 }

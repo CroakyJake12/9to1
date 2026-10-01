@@ -62,6 +62,20 @@ internal static class DataRelationshipEditorAdapter
 
 public sealed partial class DataPage
 {
+    private DataRecordCreationPanel? _recordCreation;
+    private void InitializeRecordCreation(IDataRecordCreator? creator)
+    {
+        _recordCreation = new(() => Workbook,
+            (saved, calculation) =>
+            {
+                Workbook = saved; _lastQueryResult = null;
+                // The approved projection already saved its formula caches. Do
+                // not rerun volatile formulas using the display clock.
+                _formulaReport = calculation ?? new(0, 0, 0, []);
+                RenderCurrent();
+            }, creator, () => !_disposed && !_dirty && !_busy, () => _recordDisplaySelection);
+        _route.Editor.Add(_recordCreation);
+    }
     private DataTableDesignPanel? _tableDesign;
     private DataRelationshipDesignPanel? _relationships;
     private void InitializeRelationships(IDataRelationshipDesigner? designer)
@@ -109,6 +123,7 @@ public sealed partial class DataPage
         SyncChartUi();
         _tableDesign?.Refresh();
         _relationships?.Refresh();
+        _recordCreation?.Refresh();
     }
 
     private DataTableDefinition? CurrentTableDefinition(DataSheet sheet, DataSpreadsheetSurface? surface = null)
@@ -191,6 +206,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
     private readonly HashSet<Guid> _keyFields = [];
     private IReadOnlyList<DataKeyDefinition> _keys = [];
     private Guid? _tableID;
+    private Guid _workbookID, _primaryKeyID;
     private long? _schemaRevision;
     private int _workbookVersion;
     private Guid _workbookRevision;
@@ -199,10 +215,10 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
     private bool _disposed;
     private readonly HavenText _status = new() { Name = "Data.Schema.Status", Level = TextLevel.Caption };
     private string _keyName = "Primary key";
-    private readonly Dictionary<Guid, Draft> _retained = [];
+    private readonly Dictionary<(Guid WorkbookID, Guid TableID), Draft> _retained = [];
     private sealed record Draft(long? SchemaRevision, int WorkbookVersion, Guid WorkbookRevision,
         IReadOnlyList<DataFieldDefinition> Fields, IReadOnlyList<DataKeyDefinition> Keys,
-        IReadOnlySet<Guid> KeyFields, string KeyName, int Page, string Status);
+        IReadOnlySet<Guid> KeyFields, Guid PrimaryKeyID, string KeyName, int Page, string Status);
 
     public DataTableDesignPanel(Func<DataWorkbook?> workbook, Func<DataTableDefinition?> table, Action<DataWorkbook> apply, IDataTableSchemaDesigner? designer, Func<bool> canReview)
     {
@@ -218,7 +234,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
     {
         if (_disposed) return;
         var table = _table(); var workbook = _workbook();
-        if (_tableID == table?.Id)
+        if (_tableID == table?.Id && _workbookID == workbook?.Id)
         {
             if (_schemaRevision != table?.RelationalSchema?.Revision || _workbookVersion != workbook?.Version
                 || _workbookRevision != workbook?.RevisionId)
@@ -226,21 +242,22 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
             return;
         }
         if (_tableID is { } prior)
-            _retained[prior] = new(_schemaRevision, _workbookVersion, _workbookRevision, _fields.ToArray(),
-                _keys.ToArray(), _keyFields.ToHashSet(), _keyName, _page, _status.Content);
-        if (table is not null && _retained.TryGetValue(table.Id, out var draft))
+            _retained[(_workbookID, prior)] = new(_schemaRevision, _workbookVersion, _workbookRevision, _fields.ToArray(),
+                _keys.ToArray(), _keyFields.ToHashSet(), _primaryKeyID, _keyName, _page, _status.Content);
+        if (table is not null && workbook is not null && _retained.TryGetValue((workbook!.Id, table.Id), out var draft))
         {
-            _tableID = table.Id; _schemaRevision = draft.SchemaRevision; _workbookVersion = draft.WorkbookVersion;
+            _review = null; _workbookID = workbook!.Id; _tableID = table.Id; _schemaRevision = draft.SchemaRevision; _workbookVersion = draft.WorkbookVersion;
             _workbookRevision = draft.WorkbookRevision; _fields.Clear(); _fields.AddRange(draft.Fields);
             _keys = draft.Keys; _keyFields.Clear(); _keyFields.UnionWith(draft.KeyFields);
-            _keyName = draft.KeyName; _page = draft.Page; _status.Content = draft.Status; Build(); return;
+            _primaryKeyID = draft.PrimaryKeyID; _keyName = draft.KeyName; _page = draft.Page; _status.Content = draft.Status; Build(); return;
         }
         Load(table, workbook);
     }
     private void Load(DataTableDefinition? table, DataWorkbook? workbook)
     {
-        if (table is not null) _retained.Remove(table.Id);
+        if (table is not null && workbook is not null) _retained.Remove((workbook!.Id, table.Id));
         _review = null;
+        _workbookID = workbook?.Id ?? Guid.Empty; _primaryKeyID = Guid.NewGuid();
         _tableID = table?.Id; _schemaRevision = table?.RelationalSchema?.Revision;
         _workbookVersion = workbook?.Version ?? 0; _workbookRevision = workbook?.RevisionId ?? Guid.Empty;
         _fields.Clear(); _keyFields.Clear(); _keys = table?.RelationalSchema?.Keys ?? [];
@@ -253,7 +270,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
                     table.HasHeaders ? sheet.GetCell(table.Range.StartRow, field.SheetColumn)?.Value ?? $"Field {field.SheetColumn + 1}"
                         : $"Field {field.SheetColumn + 1}", InferType(sheet, table, field))).ToArray());
             if (_keys.SingleOrDefault(key => key.Kind == DataKeyKind.Primary) is { } primary)
-            { _keyFields.UnionWith(primary.FieldIDs); _keyName = primary.Name; }
+            { _primaryKeyID = primary.KeyID; _keyFields.UnionWith(primary.FieldIDs); _keyName = primary.Name; }
         }
         _status.Content = ""; Build();
     }
@@ -299,6 +316,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         }
         var nameInput = Edit("Data.Schema.PrimaryKey.Name", "Primary key name", _keyName);
         nameInput.TextChanged += (_, _) => { if (Current(generation)) _keyName = nameInput.Text; }; Add(nameInput);
+        BuildUniqueKeys(generation);
         var controls = new Container { Name = "Data.Schema.Actions", Layout = HavenLayout.Horizontal };
         controls.Add(Action("Data.Schema.Review", "Review schema change", () => _ = ReviewAsync(), generation));
         controls.Add(Action("Data.Schema.Apply", "Apply approved change", () => _ = CommitAsync(), generation));
@@ -306,6 +324,49 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         if (_page > 0) controls.Add(Action("Data.Schema.Previous", "Previous fields", () => { _page--; Build(); }, generation));
         if ((_page + 1) * 64 < _fields.Count) controls.Add(Action("Data.Schema.Next", "Next fields", () => { _page++; Build(); }, generation));
         Add(controls); Add(_status);
+    }
+    private void BuildUniqueKeys(int generation)
+    {
+        Add(new HavenText("Unique keys") { Level = TextLevel.H3 });
+        foreach (var key in _keys.Where(key => key.Kind == DataKeyKind.Unique))
+        {
+            var keyID = key.KeyID;
+            var name = Edit($"Data.Schema.Unique.Name.{keyID:N}", "Unique key name", key.Name);
+            name.TextChanged += (_, _) => { if (Current(generation)) { Replace(keyID, key with { Name = name.Text }); _review = null; } }; Add(name);
+            var members = new Container { Layout = HavenLayout.Horizontal };
+            foreach (var id in key.FieldIDs)
+            {
+                var field = _fields.SingleOrDefault(field => field.FieldID == id); var label = field?.Name ?? "Missing field";
+                members.Add(new HavenText(label));
+                members.Add(Action($"Data.Schema.Unique.Earlier.{keyID:N}.{id:N}", "Move " + label + " earlier", () =>
+                {
+                    var current = _keys.Single(item => item.KeyID == keyID); var order = current.FieldIDs.ToList(); var index = order.IndexOf(id);
+                    if (index > 0) { (order[index - 1], order[index]) = (order[index], order[index - 1]); Replace(keyID, current with { FieldIDs = order.ToArray() }); _review = null; Build(); }
+                }, generation));
+            }
+            Add(members);
+            foreach (var field in _fields.Skip(_page * 64).Take(64))
+            {
+                var id = field.FieldID;
+                var toggle = new Toggle { Name = $"Data.Schema.Unique.Member.{keyID:N}.{id:N}", IsChecked = key.FieldIDs.Contains(id) };
+                toggle.Accessibility.AccessibleName = key.Name + " includes " + field.Name;
+                toggle.CheckedChanged += (_, _) =>
+                {
+                    if (!Current(generation)) return;
+                    var current = _keys.Single(item => item.KeyID == keyID); var order = current.FieldIDs.Where(item => item != id).ToList();
+                    if (toggle.IsChecked) order.Add(id); Replace(keyID, current with { FieldIDs = order.ToArray() }); _review = null; Build();
+                }; Add(new HavenText(field.Name)); Add(toggle);
+            }
+            Add(Action($"Data.Schema.Unique.Remove.{keyID:N}", "Remove " + key.Name, () =>
+            { _keys = _keys.Where(item => item.KeyID != keyID).ToArray(); _review = null; Build(); }, generation));
+        }
+        Add(Action("Data.Schema.Unique.Add", "Add unique key", () =>
+        {
+            if (_keys.Count >= 256) { _status.Content = "This draft has reached the supported key limit."; return; }
+            _keys = _keys.Append(new DataKeyDefinition(Guid.NewGuid(), "Unique key", DataKeyKind.Unique, [_fields[0].FieldID])).ToArray();
+            _review = null; Build();
+        }, generation));
+        void Replace(Guid id, DataKeyDefinition replacement) => _keys = _keys.Select(item => item.KeyID == id ? replacement : item).ToArray();
     }
     private DataTableDesignResult Candidate()
     {
@@ -317,7 +378,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
             var current = _keys.SingleOrDefault(key => key.Kind == DataKeyKind.Primary);
             var members = current is not null && current.FieldIDs.ToHashSet().SetEquals(_keyFields)
                 ? current.FieldIDs : _fields.Where(field => _keyFields.Contains(field.FieldID)).Select(field => field.FieldID).ToArray();
-            keys.Add(new(current?.KeyID ?? Guid.NewGuid(), _keyName, DataKeyKind.Primary, members));
+            keys.Add(new(current?.KeyID ?? _primaryKeyID, _keyName, DataKeyKind.Primary, members));
         }
         return DataTableDesign.SetSchema(workbook, tableID, _workbookVersion, _workbookRevision, _schemaRevision, _fields, keys);
     }
@@ -328,14 +389,14 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         if (!_canReview()) { _status.Content = "Save or reload workbook edits before reviewing a schema change."; return; }
         var edited = Candidate();
         if (!edited.Success) { _status.Content = "Schema not reviewed: " + string.Join(", ", edited.Issues.Take(5).Select(issue => issue.Code)); return; }
-        var workbook = edited.Workbook!; var tableID = _tableID!.Value;
+        var workbook = edited.Workbook!; var tableID = _tableID!.Value; var generation = _generation; var workbookID = workbook.Id;
         var schema = workbook.Tables.Single(table => table.Id == tableID).RelationalSchema!;
         _working = true; SetValue(HavenProperties.Enabled, false);
         try
         {
             var review = await _designer.ReviewAsync(workbook.Id, tableID, _workbookVersion, _workbookRevision,
                 _schemaRevision, schema.Fields, schema.Keys, _lifetime.Token);
-            if (_disposed) return;
+            if (!SameSession(generation, workbookID, tableID)) return;
             _review = review;
             // Retain generated key identity so unchanged drafts match the exact reviewed proposal.
             _keys = schema.Keys;
@@ -343,7 +404,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException
             or ArgumentException or NotSupportedException or KeyNotFoundException or OperationCanceledException)
-        { if (!_disposed) _status.Content = "Schema review failed; draft retained: " + error.Message; }
+        { if (SameSession(generation, workbookID, tableID)) _status.Content = "Schema review failed; draft retained: " + error.Message; }
         finally { _working = false; if (!_disposed) SetValue(HavenProperties.Enabled, true); }
     }
     private async Task CommitAsync()
@@ -355,11 +416,11 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         if (!edited.Success || JsonSerializer.Serialize(edited.Workbook!.Tables.Single(table => table.Id == _tableID).RelationalSchema)
             != JsonSerializer.Serialize(_review.Intent.Schema))
         { _status.Content = "The draft changed after review. Request a new review; your draft is retained."; return; }
-        var review = _review; _working = true; SetValue(HavenProperties.Enabled, false);
+        var review = _review; var generation = _generation; var workbookID = _workbookID; var tableID = _tableID!.Value; _working = true; SetValue(HavenProperties.Enabled, false);
         try
         {
             var result = await _designer.CommitAsync(review, _lifetime.Token);
-            if (_disposed) return;
+            if (!SameSession(generation, workbookID, tableID)) return;
             if (result.Committed)
             {
                 if (result.Workbook is not null && _workbook()?.Id == result.Workbook.Id && _canReview())
@@ -370,7 +431,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException
             or ArgumentException or NotSupportedException or KeyNotFoundException or OperationCanceledException)
-        { if (!_disposed) _status.Content = "Schema result unavailable; draft retained. Reload to inspect saved state: " + error.Message; }
+        { if (SameSession(generation, workbookID, tableID)) _status.Content = "Schema result unavailable; draft retained. Reload to inspect saved state: " + error.Message; }
         finally { _working = false; if (!_disposed) SetValue(HavenProperties.Enabled, true); }
     }
     private static DataFieldType InferType(DataSheet sheet, DataTableDefinition table, DataTableField field)
@@ -385,6 +446,9 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
             _ => DataFieldType.Text
         };
     }
+    private bool SameSession(int generation, Guid workbookID, Guid tableID) => !_disposed && generation == _generation
+        && _workbookID == workbookID && _tableID == tableID && _workbook()?.Id == workbookID && _table()?.Id == tableID
+        && _workbook()?.Version == _workbookVersion && _workbook()?.RevisionId == _workbookRevision;
     private bool Current(int generation) => !_disposed && !_working && generation == _generation;
     private HavenButton Action(string name, string label, Action action, int generation)
     {
@@ -402,6 +466,7 @@ internal sealed class DataTableDesignPanel : Container, IDisposable
         _fields.Clear(); _keyFields.Clear(); _retained.Clear(); SetValue(HavenProperties.Enabled, false);
     }
 }
+
 
 internal sealed class DataRelationshipDesignPanel : Container, IDisposable
 {
@@ -633,5 +698,195 @@ internal sealed class DataRelationshipDesignPanel : Container, IDisposable
     {
         _disposed = true; _generation++; _editor.DocumentChanged -= GraphChanged; _lifetime.Cancel(); _lifetime.Dispose(); _review = null;
         foreach (var child in Children.ToArray()) Remove(child); _retained.Clear(); SetValue(HavenProperties.Enabled, false);
+    }
+}
+
+internal sealed class DataRecordCreationPanel : Container, IDisposable
+{
+    private readonly Func<DataWorkbook?> _workbook;
+    private readonly Action<DataWorkbook, DataFormulaRecalculationReport?> _apply;
+    private readonly IDataRecordCreator? _creator;
+    private readonly Func<IDataRecordDisplaySelection?> _selection;
+    private readonly Func<bool> _canReview;
+    private readonly CancellationTokenSource _lifetime = new();
+    private readonly HavenText _status = new() { Name = "Data.RecordCreate.Status", Level = TextLevel.Caption };
+    private DataWorkbook? _snapshot;
+    private Guid _tableID, _recordID;
+    private readonly Dictionary<Guid, DataRecordDraftField> _fields = [];
+    private DataRecordCreateReview? _review;
+    private int _generation;
+    private bool _working, _disposed;
+    private readonly Dictionary<(Guid WorkbookID, Guid TableID), Retained> _retained = [];
+    private readonly Dictionary<Guid, Guid> _selectedTables = [];
+    private sealed record Retained(DataWorkbook Snapshot, Guid TableID, Guid RecordID, DataRecordDraftField[] Fields, string Status);
+    public DataRecordCreationPanel(Func<DataWorkbook?> workbook, Action<DataWorkbook, DataFormulaRecalculationReport?> apply,
+        IDataRecordCreator? creator, Func<bool> canReview, Func<IDataRecordDisplaySelection?> selection)
+    {
+        _workbook = workbook; _apply = apply; _creator = creator; _canReview = canReview; _selection = selection;
+        Name = "Data.RecordCreate.Design"; Layout = HavenLayout.Vertical; SetValue(HavenProperties.Gap, HavenLength.Px(8)); Reload();
+    }
+    public void Refresh()
+    {
+        if (_disposed) return; var current = _workbook();
+        if (current?.Id != _snapshot?.Id)
+        {
+            RetainDraft();
+            _review = null;
+            if (current is not null && _selectedTables.TryGetValue(current.Id, out var selected) && _retained.TryGetValue((current.Id, selected), out var retained))
+            { _snapshot = retained.Snapshot; _tableID = retained.TableID; _recordID = retained.RecordID; _fields.Clear(); foreach (var field in retained.Fields) _fields.Add(field.FieldID, field); _status.Content = retained.Status; Build(); }
+            else Reload();
+        }
+        if (current?.Version != _snapshot?.Version || current?.RevisionId != _snapshot?.RevisionId)
+            _status.Content = "Workbook changed. Your record creation draft is retained; reload to use saved schemas.";
+    }
+    private void Reload()
+    {
+        if (_workbook() is { } current) _retained.Remove((current.Id, _tableID));
+        var selectedTable = _tableID;
+        _review = null; _recordID = Guid.NewGuid();
+        _snapshot = _workbook() is { } workbook ? JsonSerializer.Deserialize<DataWorkbook>(JsonSerializer.Serialize(workbook)) : null;
+        _tableID = _snapshot?.Tables.FirstOrDefault(table => table.RecordIdentityVersion == 1 && table.Id == selectedTable)?.Id
+            ?? _snapshot?.Tables.FirstOrDefault(table => table.RecordIdentityVersion == 1)?.Id ?? Guid.Empty;
+        if (_snapshot is not null) _selectedTables[_snapshot.Id] = _tableID;
+        ResetFields(); _status.Content = "Enter a complete record. Omitted fields use authored defaults when available."; Build();
+    }
+    private void ResetFields()
+    {
+        _fields.Clear(); var table = _snapshot?.Tables.SingleOrDefault(table => table.Id == _tableID);
+        if (table is null) return;
+        foreach (var field in table.Fields)
+        {
+            var authored = table.RelationalSchema?.Fields.SingleOrDefault(item => item.FieldID == field.FieldID);
+            _fields.Add(field.FieldID, new(field.FieldID, authored is null || (!authored.Nullable && string.IsNullOrEmpty(authored.DefaultValue)), ""));
+        }
+    }
+    private void Build()
+    {
+        _generation++; var generation = _generation;
+        foreach (var child in Children.ToArray()) Remove(child);
+        Add(new HavenText("Create record") { Level = TextLevel.H2 });
+        var table = _snapshot?.Tables.SingleOrDefault(table => table.Id == _tableID);
+        if (_snapshot is null || table is null) { Add(new HavenText("Create or select a table before creating a record.")); return; }
+        var tables = _snapshot.Tables.Where(item => item.RecordIdentityVersion == 1).ToArray();
+        var tableSelect = new Select { Name = "Data.RecordCreate.Table", Items = tables.Select(item => item.Name).ToArray(),
+            SelectedIndex = Array.FindIndex(tables, item => item.Id == _tableID) };
+        tableSelect.Accessibility.AccessibleName = "Record table";
+        tableSelect.SelectionChanged += (_, _) =>
+        {
+            if (!Current(generation) || tableSelect.SelectedIndex < 0) return;
+            RetainDraft(); _tableID = tables[tableSelect.SelectedIndex].Id; _review = null;
+            _selectedTables[_snapshot!.Id] = _tableID;
+            if (_retained.TryGetValue((_snapshot.Id, _tableID), out var retained))
+            { _snapshot = retained.Snapshot; _recordID = retained.RecordID; _fields.Clear(); foreach (var value in retained.Fields) _fields.Add(value.FieldID, value); _status.Content = retained.Status; }
+            else { _recordID = Guid.NewGuid(); ResetFields(); _status.Content = "Enter a complete record. Omitted fields use authored defaults when available."; }
+            Build();
+        }; Add(tableSelect);
+        foreach (var field in table.Fields.OrderBy(field => field.SheetColumn))
+        {
+            var id = field.FieldID; var draft = _fields[id];
+            var authored = table.RelationalSchema?.Fields.SingleOrDefault(item => item.FieldID == id);
+            var label = authored?.Name ?? _snapshot.Sheets.Single(sheet => sheet.Id == table.SheetId).GetCell(table.Range.StartRow, field.SheetColumn)?.Value ?? "Field";
+            Add(new HavenText(label + " · " + (authored?.Type.ToString() ?? "Text")));
+            Add(new HavenText("Enter value (leave off to use a default)") { Level = TextLevel.Caption });
+            var supplied = new Toggle { Name = $"Data.RecordCreate.Supply.{id:N}", IsChecked = draft.Supplied };
+            supplied.Accessibility.AccessibleName = "Enter a value for " + label;
+            supplied.CheckedChanged += (_, _) => { if (Current(generation)) { _fields[id] = _fields[id] with { Supplied = supplied.IsChecked }; _review = null; } }; Add(supplied);
+            var value = new Input { Name = $"Data.RecordCreate.Value.{id:N}", Text = draft.Text,
+                Placeholder = authored?.DefaultValue is { Length: > 0 } defaultValue ? "Default when omitted: " + defaultValue : "Value" };
+            value.Accessibility.AccessibleName = label + " value";
+            value.TextChanged += (_, _) =>
+            {
+                if (!Current(generation)) return;
+                _fields[id] = _fields[id] with { Text = value.Text, Supplied = true };
+                supplied.IsChecked = true; _review = null;
+            }; Add(value);
+        }
+        var actions = new Container { Layout = HavenLayout.Horizontal };
+        actions.Add(Button("Data.RecordCreate.Review", "Review record", () => _ = ReviewAsync(), generation));
+        actions.Add(Button("Data.RecordCreate.Apply", "Create approved record", () => _ = CommitAsync(), generation));
+        actions.Add(Button("Data.RecordCreate.Reload", "Reload (discard draft)", Reload, generation)); Add(actions); Add(_status);
+    }
+    private void RetainDraft()
+    {
+        if (_snapshot is not { } snapshot) return;
+        _retained[(snapshot.Id, _tableID)] = new(snapshot, _tableID, _recordID, _fields.Values.ToArray(), _status.Content);
+        _selectedTables[snapshot.Id] = _tableID;
+    }
+    private DataRecordDraftCapture Values() => _snapshot?.Tables.SingleOrDefault(table => table.Id == _tableID) is { } table
+        ? DataRecordCreationDraft.Capture(table, _fields.Values.ToArray()) : new(null, [new("TableNotFound", _tableID)]);
+    private DataTableDesignResult Candidate(IReadOnlyDictionary<Guid, DataScalarRecordValue> values) => _workbook() is { } current && _snapshot is not null
+        ? DataRecordCreation.Prepare(current, _tableID, _recordID, _snapshot.Version, _snapshot.RevisionId, values)
+        : new(null, [new("RecordDefinitionRequired", _tableID)]);
+    private async Task ReviewAsync()
+    {
+        if (_disposed || _working) return;
+        if (_creator is null) { _status.Content = "Record creation review is unavailable in this session."; return; }
+        if (!_canReview()) { _status.Content = "Save or reload workbook edits before reviewing a record."; return; }
+        var values = Values();
+        if (!values.Success) { _status.Content = "Check values for: " + string.Join(", ", values.Issues.Select(issue => FieldLabel(issue.FieldID)).Distinct()) + ". Draft retained."; return; }
+        var candidate = Candidate(values.Values!);
+        if (!candidate.Success) { _status.Content = "Record not reviewed: " + string.Join(", ", candidate.Issues.Take(5).Select(issue => FieldLabel(issue.FieldID) + ": " + issue.Code)) + ". Draft retained."; return; }
+        var snapshot = _snapshot!; var tableID = _tableID; var recordID = _recordID; var generation = _generation;
+        _working = true; SetValue(HavenProperties.Enabled, false);
+        try
+        {
+            var review = await _creator.ReviewAsync(_selection() ?? throw new UnauthorizedAccessException("Reload the owning workbook before review."), snapshot.Id, tableID, recordID, snapshot.Version, snapshot.RevisionId, values.Values!, _lifetime.Token);
+            if (SameSession(generation, snapshot.Id)) { _review = review; var defaults = review.Intent.Arguments.GetProperty("actualValues").EnumerateArray().Count(value => value.GetProperty("defaultApplied").GetBoolean());
+                var calculation = review.Intent.Calculation;
+                _status.Content = $"Review requested in Home: one record, {defaults} authored defaults, {calculation.ChangedCells} changed formula results. Approve that change, then create the record here."; }
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or NotSupportedException or KeyNotFoundException or OperationCanceledException)
+        { if (SameSession(generation, snapshot.Id)) _status.Content = "Review failed; draft retained: " + error.Message; }
+        finally { _working = false; if (!_disposed) SetValue(HavenProperties.Enabled, true); }
+    }
+    private async Task CommitAsync()
+    {
+        if (_disposed || _working) return;
+        if (_creator is null || _review is null) { _status.Content = "Request and approve a record creation review first."; return; }
+        if (!_canReview()) { _status.Content = "Save or reload workbook edits before creating the reviewed record."; return; }
+        var values = Values();
+        if (!values.Success) { _status.Content = "Check values for: " + string.Join(", ", values.Issues.Select(issue => FieldLabel(issue.FieldID)).Distinct()) + ". Draft retained."; return; }
+        var candidate = Candidate(values.Values!);
+        if (!candidate.Success || _review.Intent.TableID != _tableID || _review.Intent.RecordID != _recordID
+            || JsonSerializer.Serialize(values.Values!.OrderBy(pair => pair.Key)) != JsonSerializer.Serialize(_review.Intent.Values.OrderBy(pair => pair.Key)))
+        { _status.Content = "The draft changed after review. Request a new review; your draft is retained."; return; }
+        var review = _review; var workbookID = _snapshot!.Id; var generation = _generation;
+        _working = true; SetValue(HavenProperties.Enabled, false);
+        try
+        {
+            var result = await _creator.CommitAsync(review, _lifetime.Token);
+            if (!SameSession(generation, workbookID)) return;
+            if (result.Committed)
+            {
+                if (result.Workbook is not null && _workbook()?.Id == result.Workbook.Id && _canReview()) { _apply(result.Workbook, result.Calculation); Reload(); }
+                _review = null; _status.Content = result.AuditRecorded ? "Record created." : "Record created; activity confirmation is pending.";
+            }
+            else _status.Content = "Record not created: " + result.Code + ". Draft retained.";
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or NotSupportedException or KeyNotFoundException or OperationCanceledException)
+        { if (SameSession(generation, workbookID)) _status.Content = "Result unavailable; draft retained. Reload to inspect saved records: " + error.Message; }
+        finally { _working = false; if (!_disposed) SetValue(HavenProperties.Enabled, true); }
+    }
+    private string FieldLabel(Guid? id)
+    {
+        var table = _snapshot?.Tables.SingleOrDefault(table => table.Id == _tableID);
+        if (table is null || id is null) return "record fields";
+        if (table.RelationalSchema?.Fields.SingleOrDefault(field => field.FieldID == id) is { } authored) return authored.Name;
+        var field = table.Fields.SingleOrDefault(field => field.FieldID == id);
+        return field is null ? "record fields" : _snapshot!.Sheets.Single(sheet => sheet.Id == table.SheetId)
+            .GetCell(table.Range.StartRow, field.SheetColumn)?.Value ?? "field";
+    }
+    private bool Current(int generation) => !_disposed && !_working && generation == _generation;
+    private bool SameSession(int generation, Guid workbookID) => !_disposed && generation == _generation && _snapshot?.Id == workbookID && _workbook()?.Id == workbookID
+        && _workbook()?.Version == _snapshot?.Version && _workbook()?.RevisionId == _snapshot?.RevisionId;
+    private HavenButton Button(string name, string label, Action action, int generation)
+    {
+        var button = new HavenButton { Name = name, Content = label, Variant = ButtonVariant.Tertiary };
+        button.Accessibility.AccessibleName = label; button.Invoked += (_, _) => { if (Current(generation)) action(); }; return button;
+    }
+    public void Dispose()
+    {
+        _disposed = true; _generation++; _lifetime.Cancel(); _lifetime.Dispose(); _review = null; _retained.Clear(); _selectedTables.Clear();
+        foreach (var child in Children.ToArray()) Remove(child); SetValue(HavenProperties.Enabled, false);
     }
 }

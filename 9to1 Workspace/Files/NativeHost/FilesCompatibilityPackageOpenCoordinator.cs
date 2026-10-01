@@ -12,7 +12,7 @@ public sealed class FilesCompatibilityPackageOpenCoordinator(ICompatibilityPacka
     public async Task OpenAsync(CompatibilityPackageSource selection, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(selection);
-        if (selection.FileId == Guid.Empty || selection.Length is < 1 or > MaximumBytes ||
+        if (selection.StoreId == Guid.Empty || selection.FileId == Guid.Empty || selection.Length is < 1 or > MaximumBytes ||
             selection.Name is not { Length: > 0 } || selection.MetadataRevision is not { Length: > 0 } ||
             selection.Sha256 is not { Length: 64 } ||
             await actors.GetCurrentAsync(token).ConfigureAwait(false) != selection.ObservedActor)
@@ -20,7 +20,7 @@ public sealed class FilesCompatibilityPackageOpenCoordinator(ICompatibilityPacka
         var extension = Path.GetExtension(selection.Name);
         if (!new[] { ".exe", ".msi", ".apk" }.Contains(extension, StringComparer.OrdinalIgnoreCase))
             throw new NotSupportedException("This file does not identify a supported package type.");
-        await using var lease = await files.ReadAsync(selection.FileId, selection.ContentRevision,
+        await using var lease = await files.ReadAsync(selection.StoreId, selection.ObservedActor, selection.FileId, selection.ContentRevision,
             MaximumBytes, token).ConfigureAwait(false);
         if (lease.Source != selection)
             throw new InvalidOperationException("The selected package changed. Select its current Files revision again.");

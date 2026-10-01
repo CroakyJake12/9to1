@@ -1,4 +1,5 @@
 using Haven.Application;
+using Haven.Application.Go;
 using HavenOS.Home.Core;
 using NineToOne.Os.Shell;
 
@@ -174,6 +175,154 @@ public sealed class ShellConfigurationTests
         imported.Validate();
     }
     private sealed class Clock : TimeProvider { public DateTimeOffset Utc = DateTimeOffset.UtcNow; public override DateTimeOffset GetUtcNow() => Utc; }
+    [Fact]
+    public async Task DisplayedGoQueryRetainsOriginalActualHomeSessionAndRejectsCopiedOwner()
+    {
+        using var f = new Fixture(); var service = new ShellConfigurationService(f.Store);
+        var snapshot = await service.GetAsync(); var owner = new ShellGoSearchOwner(service);
+        var displayed = owner.Begin(snapshot.Stored, new("original", "Apps"));
+        Assert.True(await owner.IsCurrentAsync(displayed, default));
+        Assert.False(await new ShellGoSearchOwner(service).IsCurrentAsync(displayed, default));
+        f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "changed" };
+        Assert.False(await owner.IsCurrentAsync(displayed, default));
+        Assert.Equal("original", displayed.Query.Text);
+    }
+
+    [Fact]
+    public async Task SerializedShellFieldsCannotRecreateDisplayedGoActorAdmission()
+    {
+        using var f = new Fixture(); var service = new ShellConfigurationService(f.Store);
+        var stored = (await service.GetAsync()).Stored;
+        var unbound = new ShellStoredConfiguration(stored.Revision, stored.Current, stored.Previous, stored.AuthorityId);
+        var owner = new ShellGoSearchOwner(service);
+        Assert.False(await owner.IsCurrentAsync(owner.Begin(unbound, new("copied fields")), default));
+    }
+
+    [Fact]
+    public async Task NewGoQueryCannotBeClearedOrUpdatedByPreviousDisplayedQuery()
+    {
+        using var f = new Fixture(); var service = new ShellConfigurationService(f.Store);
+        var snapshot = await service.GetAsync(); var owner = new ShellGoSearchOwner(service);
+        var ids = new HashSet<string>(StringComparer.Ordinal) { "original-provider" };
+        var older = owner.Begin(snapshot.Stored, new("older", Scope: new(ids)));
+        ids.Clear(); ids.Add("substituted-provider");
+        Assert.Contains("original-provider", older.Query.Scope!.ProviderIds!);
+        Assert.DoesNotContain("substituted-provider", older.Query.Scope.ProviderIds!);
+        var newer = owner.Begin(snapshot.Stored, new("newer"));
+        Assert.False(await owner.IsCurrentAsync(older, default));
+        Assert.True(await owner.IsCurrentAsync(newer, default));
+        owner.Invalidate(); Assert.False(await owner.IsCurrentAsync(newer, default));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SuspendedActualHomeActorReadCannotAdmitOldQueryAfterReplacement(bool replaceActor)
+    {
+        using var f = new Fixture(); var original = await f.Store.ReadAsync(default);
+        var paused = new PausedGoActors(f.Actors);
+        var store = new HomeShellConfigurationStore(f.Home, paused,
+            new ResourceAuthorizationService(paused, [new ShellConfigurationResourceResolver(f.Home)]));
+        var owner = new ShellGoSearchOwner(new ShellConfigurationService(store));
+        var older = owner.Begin(original, new("original displayed query"));
+        var pending = owner.IsCurrentAsync(older, default);
+        await paused.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        if (replaceActor) f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "other-session" };
+        else owner.Begin(original, new("replacement query"));
+        paused.Release.TrySetResult();
+        Assert.False(await pending.WaitAsync(TimeSpan.FromSeconds(5)));
+    }
+    private sealed class PausedGoActors(Actors actual) : IAuthenticatedResourceActorSource
+    {
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct)
+        { Entered.TrySetResult(); await Release.Task.WaitAsync(ct); return await actual.GetCurrentAsync(ct); }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OriginalActorGoNavigationUsesActualOwnerPreviewOrDeniesChangedSession(bool changeSession)
+    {
+        using var f = new Fixture(); var service = new ShellConfigurationService(f.Store);
+        var provider = new ShellNavigationGoProvider(service); var actor = f.Actors.Current;
+        var before = await service.GetAsync(); GoResult? selected = null;
+        await foreach (var result in provider.QueryAsync(new("", "Desktop Spaces"), default)) { selected = result; break; }
+        Assert.NotNull(selected);
+        if (changeSession) f.Actors.Current = actor with { AuthenticationRevision = "replacement" };
+        if (changeSession)
+        {
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => provider.InvokeForActorAsync(selected!.Reference, "Navigate", actor, default));
+            Assert.Null((await service.GetAsync()).Preview);
+        }
+        else
+        {
+            await provider.InvokeForActorAsync(selected!.Reference, "Navigate", actor, default);
+            Assert.NotNull((await service.GetAsync()).Preview);
+        }
+        Assert.Equal(before.Stored.Revision, (await service.GetAsync()).Stored.Revision);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OriginalGoLaunchDeniesUnavailableOrChangedActorBeforeRegistryRead(bool unavailableSource)
+    {
+        using var f = new Fixture(); var original = f.Actors.Current;
+        var registry = new CountingGoRegistry();
+        var resources = new ResourceAuthorizationService(f.Actors, []);
+        var launcher = new LinuxApplicationLauncher(registry, resources, unavailableSource ? null : f.Actors);
+        f.Actors.Current = original with { AuthenticationRevision = "replacement" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => launcher.LaunchForActorAsync(Guid.NewGuid(), 1, original, default));
+        Assert.Equal(0, registry.Reads);
+    }
+    private sealed class CountingGoRegistry : IInstalledApplicationRegistry
+    {
+        public int Reads;
+        public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct)
+        { Reads++; return ValueTask.FromResult<IReadOnlyList<InstalledApplicationReference>>([]); }
+        public ValueTask<InstalledApplicationReference?> ResolveLaunchAsync(Guid id, long revision, CancellationToken ct)
+        { Reads++; return ValueTask.FromResult<InstalledApplicationReference?>(null); }
+    }
+
+    [Fact]
+    public async Task OriginalLaunchRejectsActorSwitchAfterActualInstalledRegistryReadBeforeInventory()
+    {
+        using var f = new Fixture(); var actor = f.Actors.Current;
+        var actual = new HomeInstalledApplicationRegistry(f.Home, f.Actors, [new FixtureInstalledObservation()]);
+        var app = Assert.Single(await actual.RefreshAsync(default));
+        var paused = new PausedInstalledRegistry(actual);
+        var resources = new ResourceAuthorizationService(f.Actors, [new InstalledApplicationResourceResolver(paused)]);
+        var launcher = new LinuxApplicationLauncher(paused, resources, f.Actors);
+        var pending = launcher.LaunchForActorAsync(app.ApplicationId, app.Revision, actor, default);
+        await paused.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        f.Actors.Current = actor with { AuthenticationRevision = "changed-after-owner-read" };
+        paused.Release.TrySetResult();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
+        Assert.Equal(2, paused.Reads);
+    }
+    private sealed class FixtureInstalledObservation : IInstalledApplicationObservationProvider
+    {
+        public string ProviderId => "linux.xdg-desktop";
+        public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct) =>
+            ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("fixture-platform", "Fixture platform", false, true,
+                [new("desktop:fixture.desktop", "desktop:fixture.desktop", "Fixture app", "fixture-digest", true)])]);
+    }
+    private sealed class PausedInstalledRegistry(IInstalledApplicationRegistry actual) : IInstalledApplicationRegistry
+    {
+        public int Reads;
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct) => actual.RefreshAsync(ct);
+        public async ValueTask<InstalledApplicationReference?> ResolveLaunchAsync(Guid id, long revision, CancellationToken ct)
+        {
+            var observed = await actual.ResolveLaunchAsync(id, revision, ct);
+            if (Interlocked.Increment(ref Reads) == 2) { Entered.TrySetResult(); await Release.Task.WaitAsync(ct); }
+            return observed;
+        }
+    }
+
     private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
     {
         public AuthenticatedResourceActor Current = new("actor", "profile", null, null, "session");

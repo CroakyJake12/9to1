@@ -16,18 +16,32 @@ public sealed partial class DurableDriveProvider
 
     public Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
         IReadOnlyList<FilesItemRevisionPrecondition> preconditions, CancellationToken cancellationToken = default) =>
-        CommitUploadedContentCoreAsync(content, preconditions, null, cancellationToken);
+        CommitUploadedContentCoreAsync(content, preconditions, null, null, cancellationToken);
 
     public Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
         IReadOnlyList<FilesItemRevisionPrecondition> preconditions, FilesCommitAuthorityGuard authority,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(authority);
-        return CommitUploadedContentCoreAsync(content, preconditions, authority, cancellationToken);
+        return CommitUploadedContentCoreAsync(content, preconditions, null, authority, cancellationToken);
+    }
+
+    /// <summary>Final original-destination store fence under the same Files publication lease.</summary>
+    public Task<FilesResult<FilesRevision>> CommitUploadedContentAsync(FilesUploadedContent content,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, Guid expectedStoreId,
+        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(content); ArgumentNullException.ThrowIfNull(preconditions);
+        ArgumentNullException.ThrowIfNull(authority);
+        if (expectedStoreId == Guid.Empty)
+            return Task.FromResult(Fail<FilesRevision>(FilesErrorCode.InvalidState,
+                "Select the original Files destination UUID before upload.", "CommitFileContent", content.FileId));
+        return CommitUploadedContentCoreAsync(content, preconditions, expectedStoreId, authority, cancellationToken);
     }
 
     private async Task<FilesResult<FilesRevision>> CommitUploadedContentCoreAsync(FilesUploadedContent content,
-        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, Guid? expectedStoreId,
+        FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(preconditions);
@@ -48,6 +62,8 @@ public sealed partial class DurableDriveProvider
         {
         await _store.UpdateAsync(state =>
         {
+            if (expectedStoreId is { } originalStore && state.StoreId != originalStore)
+                throw new OriginalFilesStoreChangedException();
             foreach (var condition in captured)
             {
                 var guarded = state.Items.SingleOrDefault(item => item.Metadata.Id == condition.ItemId);
@@ -100,6 +116,8 @@ public sealed partial class DurableDriveProvider
             };
         }, authority is null ? null : authority.ValidateAsync, cancellationToken).ConfigureAwait(false);
         }
+        catch (OriginalFilesStoreChangedException)
+        { return Fail<FilesRevision>(FilesErrorCode.RevisionConflict, "The original Files destination changed before publication.", "CommitFileContent", content.FileId); }
         catch (FilesCommitAuthorityChangedException)
         { return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority changed before publication.", "CommitFileContent", content.FileId); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);

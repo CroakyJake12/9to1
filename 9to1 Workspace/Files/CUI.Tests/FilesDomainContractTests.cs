@@ -28,6 +28,7 @@ internal static class FilesDomainContractTests
         await CreatedArtifactsPublishIdentityAndContentAtomically();
         await DurableRevisionChecksRawSourcePreconditionsBeforePublication();
         await ExistingStoreEvidenceDoesNotCreateAdoptOrRewriteState();
+        await CompoundImportAndUploadedContentRetainOriginalStoreIdentity();
 	}
 
 
@@ -208,6 +209,63 @@ internal static class FilesDomainContractTests
             var committedBytes = await File.ReadAllBytesAsync(path);
             Check.Equal(FilesErrorCode.InvalidState, (await reopened.CommitCreatedArtifactAsync(artifact, commit, guards, allowed, default)).Error!.Code);
             Check.True(Enumerable.SequenceEqual(committedBytes, await File.ReadAllBytesAsync(path)));
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task CompoundImportAndUploadedContentRetainOriginalStoreIdentity()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var provider = new DurableDriveProvider(path, new(Guid.NewGuid()), "owner");
+            var now = DateTimeOffset.UtcNow; var folder = HostedItemId.New();
+            Check.True((await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folder,
+                null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null), "Imports", default)).IsSuccess);
+            var storeID = (await provider.GetStoreEvidenceAsync(default)).StoreId;
+            var parent = (await provider.GetAsync(folder, default)).Value!;
+            var guards = new[] { new FilesItemRevisionPrecondition(folder, parent.CurrentRevisionId) };
+            var raw = new FilesUploadedContent(HostedItemId.New(), folder, "original.png", "image/png",
+                new(Guid.NewGuid()), null, "owner", now, 4, new string('a', 64), "immutable/original.png");
+            var artifact = new FilesArtifactReference("picture", Guid.NewGuid().ToString("N"), HostedItemId.New(),
+                folder, "PictureDocument", "Picture.9to1p");
+            var commit = new FilesOwningAppRevisionCommit(artifact.FileId, "picture", "document:1", "owner", now,
+                8, new string('b', 64), "immutable/picture.9to1p", null);
+            var upload = raw with { FileId = HostedItemId.New(), RevisionId = new(Guid.NewGuid()), Name = "export.png",
+                ProviderContentReference = "immutable/export.png" };
+            var authority = new FilesCommitAuthorityGuard("owner", _ => ValueTask.FromResult(true));
+            var original = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitImportedArtifactAsync(raw, artifact, commit,
+                guards, Guid.Empty, authority, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitImportedArtifactAsync(raw, artifact, commit,
+                guards, Guid.NewGuid(), authority, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitUploadedContentAsync(upload,
+                guards, Guid.Empty, authority, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitUploadedContentAsync(upload,
+                guards, Guid.NewGuid(), authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(original, await File.ReadAllBytesAsync(path)));
+            var envelope = System.Text.Json.Nodes.JsonNode.Parse(original)!.AsObject();
+            envelope["state"]!["storeId"] = Guid.NewGuid();
+            envelope["retainedOpaqueEnvelope"] = System.Text.Json.Nodes.JsonNode.Parse("{\"future\":true}");
+            envelope["state"]!["retainedUnknownPayload"] = System.Text.Json.Nodes.JsonNode.Parse("{\"value\":null}");
+            await File.WriteAllTextAsync(path, envelope.ToJsonString());
+            var replacement = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitImportedArtifactAsync(raw, artifact, commit,
+                guards, storeID, authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(replacement, await File.ReadAllBytesAsync(path)));
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitUploadedContentAsync(upload,
+                guards, storeID, authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(replacement, await File.ReadAllBytesAsync(path)));
+            Check.False((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.False((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            Check.False((await provider.GetAsync(upload.FileId, default)).IsSuccess);
+            await File.WriteAllBytesAsync(path, original);
+            Check.True((await provider.CommitImportedArtifactAsync(raw, artifact, commit, guards, storeID, authority, default)).IsSuccess);
+            Check.True((await provider.GetAsync(raw.FileId, default)).IsSuccess);
+            Check.True((await provider.GetArtifactAsync(artifact.FileId)).IsSuccess);
+            Check.True((await provider.CommitUploadedContentAsync(upload, guards, storeID, authority, default)).IsSuccess);
+            Check.True((await provider.GetAsync(upload.FileId, default)).IsSuccess);
         }
         finally { Directory.Delete(directory, true); }
     }

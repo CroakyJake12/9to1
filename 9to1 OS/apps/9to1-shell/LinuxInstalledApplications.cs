@@ -99,7 +99,7 @@ public sealed class InstalledApplicationResourceResolver(IInstalledApplicationRe
     }
 }
 
-public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry registry, ResourceAuthorizationService resources)
+public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry registry, ResourceAuthorizationService resources, IAuthenticatedResourceActorSource? actors = null)
 {
     public async Task<InstalledApplicationReference> ResolveForReadAsync(Guid id, long revision, CancellationToken ct)
     {
@@ -118,14 +118,28 @@ public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry regis
             ?? throw new IOException("This pinned application is unavailable for the current Home profile.");
         await LaunchAsync(app.ApplicationId, app.Revision, ct);
     }
-    public async Task LaunchAsync(Guid id, long revision, CancellationToken ct)
+    public Task LaunchAsync(Guid id, long revision, CancellationToken ct) => LaunchCoreAsync(id, revision, null, ct);
+    public Task LaunchForActorAsync(Guid id, long revision, AuthenticatedResourceActor expectedActor, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return LaunchCoreAsync(id, revision, expectedActor, ct);
+    }
+    private async Task LaunchCoreAsync(Guid id, long revision, AuthenticatedResourceActor? expectedActor, CancellationToken ct)
+    {
+        if (expectedActor is not null && (actors is null || await actors.GetCurrentAsync(ct) != expectedActor))
+            throw new UnauthorizedAccessException("The original Go actor is no longer current.");
         var scope = new ResourceScope("os.installed-application", id.ToString("D"), revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Execute);
         var actor = await resources.AuthorizeAsync("os.application.launch", [scope], ct);
-        if (actor is null) throw new UnauthorizedAccessException("The installed application is no longer authorized for this profile.");
+        if (actor is null || expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The installed application is not authorized for the original Go actor.");
         var app = await registry.ResolveLaunchAsync(id, revision, ct);
+        if (expectedActor is not null && (actors is null || await actors.GetCurrentAsync(ct) != expectedActor))
+            throw new UnauthorizedAccessException("The original Go actor changed during installed application resolution.");
         if (app is null || app.HomeProfileId != actor.ProfileId || app.ProviderId != "linux.xdg-desktop") throw new IOException("Application changed; refresh Go before launching.");
-        var desktop = (await Task.Run(() => LinuxInstalledApplications.ReadInventory(ct), ct)).SingleOrDefault(a => "desktop:" + a.DesktopId == app.Entrypoint && a.Digest == app.Version && a.Enabled);
+        var inventory = await Task.Run(() => LinuxInstalledApplications.ReadInventory(ct), ct);
+        if (expectedActor is not null && (actors is null || await actors.GetCurrentAsync(ct) != expectedActor))
+            throw new UnauthorizedAccessException("The original Go actor changed during desktop entrypoint resolution.");
+        var desktop = inventory.SingleOrDefault(a => "desktop:" + a.DesktopId == app.Entrypoint && a.Digest == app.Version && a.Enabled);
         if (desktop is null) throw new IOException("Installed entrypoint changed; refresh Go before launching.");
         if (await resources.AuthorizeAsync("os.application.launch", [scope], ct) != actor) throw new UnauthorizedAccessException("Profile or installed application authority changed before launch.");
         ct.ThrowIfCancellationRequested();

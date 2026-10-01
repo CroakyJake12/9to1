@@ -12,7 +12,7 @@ public sealed class FormPublicationTests
         using var paths = new Paths();
         var store = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var service = new FormPublicationService(store, store, authority, new FixtureValidator());
+        var service = new FormPublicationService(store, store, authority, new FixtureValidator(), actors: new PublicationActor());
         var id = Guid.NewGuid();
         var field = Guid.NewGuid();
         Assert.True((await service.CreateAsync(id, Project(id, field, "Original"))).Success);
@@ -20,7 +20,7 @@ public sealed class FormPublicationTests
         var version = Assert.Single(initial.Versions);
         Assert.True((await service.SaveDraftAsync(id, 2, Project(id, field, "Renamed"))).Success);
         store = new VersionedAtomicSettingsStore(paths);
-        service = new(store, store, authority, new FixtureValidator());
+        service = new(store, store, authority, new FixtureValidator(), actors: new PublicationActor());
         var restored = (await service.ReadAsync(id)).Publication!;
         Assert.Equal("Renamed", Label(restored.Draft));
         Assert.Equal("Original", Label(Assert.Single(restored.Versions).Project));
@@ -40,7 +40,7 @@ public sealed class FormPublicationTests
         using var paths = new Paths();
         var store = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var service = new FormPublicationService(store, store, authority, new FixtureValidator());
+        var service = new FormPublicationService(store, store, authority, new FixtureValidator(), actors: new PublicationActor());
         var id = Guid.NewGuid();
         Assert.True((await service.CreateAsync(id, Project(id, Guid.NewGuid(), "Question"))).Success);
         var initial = (await service.PublishAsync(id, 1)).Publication!;
@@ -62,14 +62,14 @@ public sealed class FormPublicationTests
         var root = new VersionedAtomicSettingsStore(paths);
         var fault = new FaultStore(root);
         var authority = new Authority();
-        var service = new FormPublicationService(fault, root, authority, new FixtureValidator());
+        var service = new FormPublicationService(fault, root, authority, new FixtureValidator(), actors: new PublicationActor());
         var id = Guid.NewGuid();
         Assert.True((await service.CreateAsync(id, Project(id, Guid.NewGuid(), "Question"))).Success);
         var initial = (await service.PublishAsync(id, 1)).Publication!;
         fault.FailWrites = true;
         Assert.Equal("StorageUnavailable", (await service.PublishAsync(id, 2)).Code);
         var restoredRoot = new VersionedAtomicSettingsStore(paths);
-        var restored = (await new FormPublicationService(restoredRoot, restoredRoot, authority, new FixtureValidator()).ReadAsync(id)).Publication!;
+        var restored = (await new FormPublicationService(restoredRoot, restoredRoot, authority, new FixtureValidator(), actors: new PublicationActor()).ReadAsync(id)).Publication!;
         Assert.Equal(initial.ActiveVersionID, restored.ActiveVersionID);
         Assert.Equal(initial.Revision, restored.Revision);
         Assert.Single(restored.Versions);
@@ -81,17 +81,17 @@ public sealed class FormPublicationTests
         using var paths = new Paths();
         var firstRoot = new VersionedAtomicSettingsStore(paths);
         var secondRoot = new VersionedAtomicSettingsStore(paths);
-        var initialService = new FormPublicationService(firstRoot, firstRoot, new Authority(), new FixtureValidator());
+        var initialService = new FormPublicationService(firstRoot, firstRoot, new Authority(), new FixtureValidator(), actors: new PublicationActor());
         var id = Guid.NewGuid();
         Assert.True((await initialService.CreateAsync(id, Project(id, Guid.NewGuid(), "Question"))).Success);
         var barrier = new PublicationBarrier();
-        var first = new FormPublicationService(firstRoot, firstRoot, barrier, new FixtureValidator());
-        var second = new FormPublicationService(secondRoot, secondRoot, barrier, new FixtureValidator());
+        var first = new FormPublicationService(firstRoot, firstRoot, barrier, new FixtureValidator(), actors: new PublicationActor());
+        var second = new FormPublicationService(secondRoot, secondRoot, barrier, new FixtureValidator(), actors: new PublicationActor());
         var attempts = await Task.WhenAll(first.PublishAsync(id, 1), second.PublishAsync(id, 1));
         Assert.Single(attempts, item => item.Success);
         Assert.Single(attempts, item => item.Code == "RevisionConflict");
         var reopened = new VersionedAtomicSettingsStore(paths);
-        var result = (await new FormPublicationService(reopened, reopened, new Authority(), new FixtureValidator()).ReadAsync(id)).Publication!;
+        var result = (await new FormPublicationService(reopened, reopened, new Authority(), new FixtureValidator(), actors: new PublicationActor()).ReadAsync(id)).Publication!;
         Assert.Equal(2, result.Revision);
         Assert.Single(result.Versions);
         Assert.Equal(attempts.Single(item => item.Success).Publication!.ActiveVersionID, result.ActiveVersionID);
@@ -172,4 +172,10 @@ public sealed class FormPublicationTests
         public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken) => ValueTask.FromResult(allowed());
     }
 
+
+    private sealed class PublicationActor : IAuthenticatedResourceActorSource
+    {
+        private readonly AuthenticatedResourceActor _actor = new("forms-author", "forms-profile", null, null, "forms-login");
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) => ValueTask.FromResult<AuthenticatedResourceActor?>(_actor);
+    }
 }
