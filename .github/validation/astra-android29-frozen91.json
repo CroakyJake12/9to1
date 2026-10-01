@@ -243,7 +243,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Layout.cs",
-      "sha256": "9bb7c9a8545a1e19edb9bd0b4c645c2eaf64cfc4c92bafbfcbcf8bf1015b2ad9"
+      "sha256": "9f2e6de1c27b813dcade3f95137d2c3a98f0ecc710188d0080b407474f6f06a7"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Models.cs",
@@ -444,6 +444,10 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/StudioFileRow.hui",
       "sha256": "e2fedb413dbaa0c98c08c60131efc007acc3b1c2aeac4553c7eb8a032cc03e83"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml",
+      "sha256": "b0172700b57330b6f1fb8d24ea275d909ab4122030c4865e097725da1f27f45f"
     }
   ],
   "gitlinks": [
@@ -467,13 +471,14 @@
     "9-1 OS (Android)/src/Haven.Android/AndroidHavenBootstrap.cs",
     "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
     "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
-    "9-1 OS (Android)/src/Haven.Android/MainActivity.cs"
+    "9-1 OS (Android)/src/Haven.Android/MainActivity.cs",
+    "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Layout.cs"
   ],
   "package": "com.cakemods.haven",
   "versionCode": 20001,
   "versionName": "0.2.1-mobile-preview",
   "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; activity replacement, failed startup, HOME/Launcher/widget/inference/device/production-authority remain independently unverified unless actually observed",
-  "validationParentCommit": "025b6e7c5b666388f5899b4742badef3f2669ac1",
+  "validationParentCommit": "faf097c62000257d6992ed01878aa8ef2e2d4457",
   "preservedAndroid29ManifestSha256": "7a8099494b9518b49007ea1ba8987141c0237aaea87d28f3e8f4d7bf7b016d60",
-  "cohort": "Android30 startup successor: original Android29 sources with three explicit reviewed replacements plus twenty unchanged genuine paired HUI resources"
+  "cohort": "Android31 layout successor: three Android30 replacements and actual named shared content-host shape; original Android29 snapshot preserved"
 }
