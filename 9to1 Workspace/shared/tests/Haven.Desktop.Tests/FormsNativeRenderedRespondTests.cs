@@ -121,7 +121,7 @@ public sealed class FormsNativeRenderedRespondTests
         Assert.Equal("home.permissions-trust", record.RecordType); Assert.Equal(1, record.SchemaVersion);
         var requests = record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()
             ?? throw new InvalidDataException("Actual persisted permission requests required.");
-        Assert.DoesNotContain(requests, request => request.State == HomePermissionRequestState.PendingApproval);
+        Assert.DoesNotContain(requests, request => request.State == HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.PendingApproval);
     }
     private static async Task UntilAsync(Func<Task<bool>> condition, CancellationToken token)
     {

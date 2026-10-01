@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "ddba3b01d643d105ec52b61f5ad0a9f419545633",
-  "programTree": "6a08102c490f061e8088f591fda60052114d494e",
+  "baselineCommit": "c77177f42a859d0f9ef12f750cf555ffb7c599e9",
+  "programTree": "972be70ff4ba97e70ae7a5d16b08f04b89377b2a",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-rendered4-test-classes.json",
       "mode": "100644",
-      "object": "f003fe052dd09d7d11929a03b7f88f0bd08333cd",
-      "bytes": 1261,
-      "sha256": "94ac6faeeaa571ee165136767bda154784b08f36e879a4468e682057e135cf5a"
+      "object": "13ec5c827370b9c0f2dfaf2e59e7e0d4bd7b6e54",
+      "bytes": 1359,
+      "sha256": "55e1ced0b34e6b8e08394918caeedcb562be6e711475621b4f9d7b9b3105cca1"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -37962,9 +37962,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeRenderedRespondTests.cs",
       "mode": "100644",
-      "object": "bdee3e26f31b08646d51f3e36dda18b7f3b4e386",
-      "bytes": 11692,
-      "sha256": "a807c077423790b1a078be333fb0370e8e88c8b1444570e7a5f060a371630dcc"
+      "object": "7dfb6a138fcb0049527609fc93983895df9e8593",
+      "bytes": 11735,
+      "sha256": "3249622dd089526bd8ee5b9abd7611e350a710cd7b8b103f5ef777b3f356e534"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
@@ -63961,7 +63961,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-rendered4-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
+  "limits": "Only actual canonical enum qualification; all assertions and passing loader sources unchanged. Full source bindings/filters/runners/strictcounts/compiledclosures unchanged; no execution or acceptance claim; Root14 HOLD.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker1-cui-action-completion-fixture02/manifest.json",
@@ -63970,6 +63970,14 @@
     {
       "path": "/workspace/astra-source/worker4-rendered4-hosted-plan-sol4/manifest.json",
       "sha256": "247702e0b3a27f6fd8548b56e2d46ac357972729055ddbaa9ee0d58ef92aefcd"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-rendered-enum-fixturefix01/manifest.json",
+      "sha256": "5ccf89b14c305075236b702a9a087866b38796a48975cf250d0932e4682ffaf7"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-rendered4-hosted-plan-sol5/manifest.json",
+      "sha256": "132d16627c43e6307f665b209d1ae7618047b5d2c8682ac5238f813e308468c5"
     }
   ],
   "sharedCakeIdContract": null

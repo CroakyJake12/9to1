@@ -4,7 +4,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeRenderedRespondTests.cs",
       "class": "FormsNativeRenderedRespondTests",
       "namespace": "Haven.Desktop.Tests",
-      "sha256": "a807c077423790b1a078be333fb0370e8e88c8b1444570e7a5f060a371630dcc"
+      "sha256": "3249622dd089526bd8ee5b9abd7611e350a710cd7b8b103f5ef777b3f356e534"
     },
     {
       "path": "framework/CUI/Runtime.Tests/CuiActionCompletionObservationTests.cs",
@@ -26,5 +26,6 @@
     }
   ],
   "dependencyPins": [],
-  "ownerManifestSha256": "e4a6b8c36cd3ed5056e511d0504a92d7e69804e9e80bb91f124ce54ad2f71837"
+  "ownerManifestSha256": "e4a6b8c36cd3ed5056e511d0504a92d7e69804e9e80bb91f124ce54ad2f71837",
+  "correctionManifestSha256": "5ccf89b14c305075236b702a9a087866b38796a48975cf250d0932e4682ffaf7"
 }
