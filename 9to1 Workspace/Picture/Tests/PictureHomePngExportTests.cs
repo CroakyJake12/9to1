@@ -18,7 +18,7 @@ public sealed class PictureHomePngExportTests
         var ct = TestContext.Current.CancellationToken;
         var actor = (await fixture.GetCurrentAsync(ct))!;
         await using var lease = new CommitLeaseHold(Path.Combine(fixture.Root, "drive.json"), ct);
-        fixture.OnBridgeProviderResolution = count => { if (count == 2) lease.Acquire(); };
+        fixture.OnFinalCommitAdmission = lease.Acquire;
         var creation = fixture.Files.CreateAsync(new PictureDocument { CanvasWidth = 2, CanvasHeight = 2, DisplayName = "Guarded new picture" }, cancellationToken: ct);
         await Task.WhenAny(lease.Entered, creation).WaitAsync(TimeSpan.FromSeconds(10), ct);
         Assert.True(lease.Entered.IsCompletedSuccessfully);
@@ -68,7 +68,7 @@ public sealed class PictureHomePngExportTests
         var actor = (await fixture.GetCurrentAsync(ct))!;
         var source = await fixture.Files.OpenAsync(fixture.FileId, ct);
         await using var lease = new CommitLeaseHold(Path.Combine(fixture.Root, "drive.json"), ct);
-        fixture.OnBridgeProviderResolution = count => { if (count == 2) lease.Acquire(); };
+        fixture.OnFinalCommitAdmission = lease.Acquire;
         var execution = fixture.Files.SaveAsync(source.Artifact with { Document = source.Artifact.Document.Resize(2, 2) }, source.CasRevisionId, actor, ct);
         await Task.WhenAny(lease.Entered, execution).WaitAsync(TimeSpan.FromSeconds(10), ct);
         Assert.True(lease.Entered.IsCompletedSuccessfully);
@@ -107,7 +107,7 @@ public sealed class PictureHomePngExportTests
         {
             using var picked = await PicturePickedImage.PickAsync(new PicturePickerFixture(
                 await File.ReadAllBytesAsync(Path.Combine(fixture.Root, "source.gif"), ct)).Provider, new(), ct);
-            import = await fixture.Import.PrepareAsync(picked!, ct);
+            import = await fixture.Import.PrepareAsync(picked!, fixture.StoreId, ct);
             var capability = await fixture.ApproveImport(import);
             execute = () => fixture.Import.ExecuteAsync(import, capability, ct);
             newIds = [import.RawFileId, import.BackingFileId];
@@ -115,13 +115,13 @@ public sealed class PictureHomePngExportTests
         else
         {
             var export = await fixture.Owner.PrepareAsync(fixture.FileId, source.CasRevisionId,
-                source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, "guarded.png", true, ct);
+                source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, "guarded.png", true, source.StoreId, ct);
             var capability = await fixture.Approve(export);
             execute = () => fixture.Owner.ExecuteAsync(export, capability, ct);
             newIds = [export.OutputFileId];
         }
         await using var lease = new CommitLeaseHold(Path.Combine(fixture.Root, "drive.json"), ct);
-        fixture.OnOwnerProviderResolution = count => { if (count == 2) lease.Acquire(); };
+        fixture.OnFinalCommitAdmission = lease.Acquire;
         try
         {
             var execution = execute();
@@ -172,7 +172,7 @@ public sealed class PictureHomePngExportTests
         var ct = TestContext.Current.CancellationToken;
         var picker = new PicturePickerFixture(await File.ReadAllBytesAsync(Path.Combine(fixture.Root, "source.gif"), ct));
         PictureImportIntent? requested = null;
-        using var form = new PictureImportCuiRequest(fixture.Import, picker.Provider, new(), () => fixture.WritesAllowed,
+        using var form = new PictureImportCuiRequest(fixture.Import, picker.Provider, new(), fixture.StoreId, () => fixture.WritesAllowed,
             async (intent, token) => { requested = intent; return await fixture.RequestPendingImport(intent, token); });
         try
         {
@@ -199,7 +199,7 @@ public sealed class PictureHomePngExportTests
         var picker = new PicturePickerFixture(original, "misleading-extension.png");
         using var picked = await PicturePickedImage.PickAsync(picker.Provider, new(), ct);
         Assert.NotNull(picked); Assert.True(picker.Disposed);
-        using var intent = await fixture.Import.PrepareAsync(picked, ct);
+        using var intent = await fixture.Import.PrepareAsync(picked, fixture.StoreId, ct);
         Assert.Equal("image/gif", picked.MimeType);
         Assert.Equal("image/gif", intent.Arguments.GetProperty("mimeType").GetString());
         Array.Clear(original); picked.Dispose(); // Approval owns the exact capture, not a mutable picker stream.
@@ -233,7 +233,7 @@ public sealed class PictureHomePngExportTests
         var ct = TestContext.Current.CancellationToken;
         using var picked = await PicturePickedImage.PickAsync(new PicturePickerFixture(
             await File.ReadAllBytesAsync(Path.Combine(fixture.Root, "source.gif"), ct)).Provider, new(), ct);
-        using var intent = await fixture.Import.PrepareAsync(picked!, ct);
+        using var intent = await fixture.Import.PrepareAsync(picked!, fixture.StoreId, ct);
         var capability = await fixture.ApproveImport(intent);
         var folder = (await fixture.Provider.GetAsync(fixture.FolderId, ct)).Value!;
         var now = DateTimeOffset.UtcNow;
@@ -250,7 +250,7 @@ public sealed class PictureHomePngExportTests
         await using var fixture = await Fixture.Create();
         var source = await fixture.Files.OpenAsync(fixture.FileId, TestContext.Current.CancellationToken);
         var intent = await fixture.Owner.PrepareAsync(fixture.FileId, source.CasRevisionId, source.Artifact.Document.DocumentId,
-            source.Artifact.Document.Revision, "snapshot.png", true, TestContext.Current.CancellationToken);
+            source.Artifact.Document.Revision, "snapshot.png", true, source.StoreId, TestContext.Current.CancellationToken);
         var capability = await fixture.Approve(intent);
         var result = await fixture.Owner.ExecuteAsync(intent, capability, TestContext.Current.CancellationToken);
         Assert.NotEqual(fixture.FileId, result.FileId);
@@ -274,9 +274,9 @@ public sealed class PictureHomePngExportTests
         await using var fixture = await Fixture.Create();
         var source = await fixture.Files.OpenAsync(fixture.FileId, TestContext.Current.CancellationToken);
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Owner.PrepareAsync(fixture.FileId, source.CasRevisionId,
-            source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, "snapshot.png", false, TestContext.Current.CancellationToken));
+            source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, "snapshot.png", false, source.StoreId, TestContext.Current.CancellationToken));
         var intent = await fixture.Owner.PrepareAsync(fixture.FileId, source.CasRevisionId, source.Artifact.Document.DocumentId,
-            source.Artifact.Document.Revision, "snapshot.png", true, TestContext.Current.CancellationToken);
+            source.Artifact.Document.Revision, "snapshot.png", true, source.StoreId, TestContext.Current.CancellationToken);
         var capability = await fixture.Approve(intent);
         fixture.DenyRaw = true;
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(intent, capability, TestContext.Current.CancellationToken));
@@ -298,7 +298,7 @@ public sealed class PictureHomePngExportTests
         var source = await fixture.Files.OpenAsync(fixture.FileId, ct);
         PicturePngExportIntent? requested = null;
         var bindings = new PicturePngExportCuiRequest(fixture.Owner, fixture.FileId, source.CasRevisionId,
-            source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, () => fixture.WritesAllowed,
+            source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, source.StoreId, () => fixture.WritesAllowed,
             async (intent, token) => { requested = intent; return await fixture.RequestPending(intent, token); });
         var scene = PicturePngExportCuiRequest.LoadDocument();
         Assert.Equal("picture-png-export", Assert.Single(scene.Components).AuthoredId);
@@ -386,10 +386,49 @@ public sealed class PictureHomePngExportTests
         Assert.Equal(second.CasRevisionId, (await fixture.Files.OpenAsync(new(second.Artifact.BackingFileId), ct)).CasRevisionId);
     }
 
+    [AvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Import_and_export_refuse_original_store_replacement_after_approval_preserving_foreign_envelope(bool import)
+    {
+        await using var fixture = await Fixture.Create();
+        var ct = TestContext.Current.CancellationToken;
+        PictureImportIntent? importIntent = null;
+        PicturePngExportIntent? exportIntent = null;
+        HomeResourceExecutionCapability capability;
+        if (import)
+        {
+            using var picked = await PicturePickedImage.PickAsync(new PicturePickerFixture(
+                await File.ReadAllBytesAsync(Path.Combine(fixture.Root, "source.gif"), ct)).Provider, new(), ct);
+            importIntent = await fixture.Import.PrepareAsync(picked!, fixture.StoreId, ct);
+            capability = await fixture.ApproveImport(importIntent);
+        }
+        else
+        {
+            var source = await fixture.Files.OpenAsync(fixture.FileId, fixture.StoreId, ct);
+            exportIntent = await fixture.Owner.PrepareAsync(fixture.FileId, source.CasRevisionId,
+                source.Artifact.Document.DocumentId, source.Artifact.Document.Revision, "original-store.png", true, source.StoreId, ct);
+            capability = await fixture.Approve(exportIntent);
+        }
+        try
+        {
+            var path = Path.Combine(fixture.Root, "drive.json");
+            var envelope = System.Text.Json.Nodes.JsonNode.Parse(await File.ReadAllBytesAsync(path, ct))!.AsObject();
+            envelope["state"]!.AsObject()["storeId"] = Guid.NewGuid().ToString();
+            var foreign = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(envelope);
+            await File.WriteAllBytesAsync(path, foreign, ct);
+            if (import) await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Import.ExecuteAsync(importIntent!, capability, ct));
+            else await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Owner.ExecuteAsync(exportIntent!, capability, ct));
+            Assert.Equal(foreign, await File.ReadAllBytesAsync(path, ct));
+        }
+        finally { importIntent?.Dispose(); }
+    }
+
     private sealed class Fixture : IAsyncDisposable, ICanonicalResourceAccessResolver, IAuthenticatedResourceActorSource
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "picture-export-" + Guid.NewGuid().ToString("N"));
         public DurableDriveProvider Provider { get; private set; } = null!;
+        public Guid StoreId { get; private set; }
         public PictureFilesArtifactBridge Files { get; private set; } = null!;
         public PictureHomePngExportOperation Owner { get; private set; } = null!;
         public PictureHomeImportOperation Import { get; private set; } = null!;
@@ -401,6 +440,14 @@ public sealed class PictureHomePngExportTests
         private int _ownerProviderResolutions;
         private int _bridgeProviderResolutions;
         public AuthenticatedResourceActor? ActorOverride { get; set; }
+        public Action? OnFinalCommitAdmission { get; set; }
+        public ValueTask<FilesCommitAuthorityGuard> CaptureCommitAuthority(AuthenticatedResourceActor original, DurableDriveProvider provider, CancellationToken ct)
+        {
+            if (!ReferenceEquals(provider, Provider)) throw new UnauthorizedAccessException("Fixture owner provider changed.");
+            var callback = OnFinalCommitAdmission; OnFinalCommitAdmission = null; callback?.Invoke();
+            return ValueTask.FromResult(new FilesCommitAuthorityGuard(original.ActorId, async token =>
+                await GetCurrentAsync(token) == original && WritesAllowed));
+        }
         public Action<int>? OnOwnerProviderResolution { get; set; }
         public Action<int>? OnBridgeProviderResolution { get; set; }
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken cancellationToken) =>
@@ -439,7 +486,7 @@ public sealed class PictureHomePngExportTests
                 id => id == profile ? fixture.Provider : null);
             Assert.True((await directories.RegisterProfileAsync(profile, fixture.FolderId, "picture", fixture.Root, ct)).IsSuccess);
             var resources = new ResourceAuthorizationService(actors, [fixture]);
-            fixture.Files = new(actors, current => current == actor ? fixture.ResolveBridgeProvider() : null, directories, resources, () => fixture.WritesAllowed);
+            fixture.Files = new(actors, current => current == actor ? fixture.ResolveBridgeProvider() : null, directories, resources, () => fixture.WritesAllowed, fixture.CaptureCommitAuthority);
             var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
             var rawId = HostedItemId.New(); var rawRevision = new FilesRevisionId(Guid.NewGuid());
             var path = Path.Combine(fixture.Root, "source.gif");
@@ -457,9 +504,10 @@ public sealed class PictureHomePngExportTests
             fixture._home = new(resources, fixture._permissions);
             fixture.Edits = new(fixture.Files, fixture._home, actors);
             fixture.Owner = new(fixture.Files, renderer, new(), new(), fixture._home, actors,
-                current => current == actor ? fixture.ResolveOwnerProvider() : null, directories, resources, () => fixture.WritesAllowed);
+                current => current == actor ? fixture.ResolveOwnerProvider() : null, directories, resources, () => fixture.WritesAllowed, fixture.CaptureCommitAuthority);
             fixture.Import = new(fixture._home, actors, current => current == actor ? fixture.ResolveOwnerProvider() : null,
-                directories, resources, () => fixture.WritesAllowed);
+                directories, resources, () => fixture.WritesAllowed, fixture.CaptureCommitAuthority);
+            fixture.StoreId = (await fixture.Provider.GetStoreEvidenceAsync()).StoreId;
             return fixture;
         }
         public async Task<string> RequestPending(PicturePngExportIntent intent, CancellationToken cancellationToken)
