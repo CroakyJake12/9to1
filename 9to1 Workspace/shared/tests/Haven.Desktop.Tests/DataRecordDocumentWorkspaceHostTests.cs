@@ -197,7 +197,7 @@ public sealed class DataRecordDocumentWorkspaceHostTests
         var record = Assert.Single(read.State!.Records, item => item.RecordId == "home.permissions-trust");
         Assert.Equal("home.permissions-trust", record.RecordType);
         Assert.Equal(1, record.SchemaVersion);
-        var requests = record.Payload.GetProperty("Requests").Deserialize<HomePermissionRequest[]>()
+        var requests = record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()
             ?? throw new InvalidDataException("Actual persisted permission requests are required.");
         Assert.Empty(requests.Where(request => request.State == HomePermissionRequestState.PendingApproval));
     }

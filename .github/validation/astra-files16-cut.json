@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "0833289cd93ba1bbd7d787ff8bf4796f33faccd0",
+  "programTree": "697309a3096de4db1b8f21c39932fc9072f0fd20",
   "files": [
     {
       "path": ".editorconfig",
@@ -63616,9 +63616,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
       "mode": "100644",
-      "object": "e0e185b24c312db0a4ae242b785cb7dfe1b94a74",
-      "sha256": "22cb9d432756e440422a64fa860bf36c47cf2a4e2c6f28f6cca2d984be79c02b",
-      "bytes": 17062
+      "object": "1c41364c191aa0cdde6c00d71fa349a370723659",
+      "sha256": "6726c373ce41122efecca466736207c06a6e4ef1b12991e5eabf8f031242a51e",
+      "bytes": 17105
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
@@ -63700,8 +63700,8 @@
     {
       "path": ".github/validation/astra-files16-test-classes.json",
       "mode": "100644",
-      "object": "20b3971cafa2abfa68a1df596a50a24cab9ed53e",
-      "sha256": "5fda5881e3e6ac07f3286363b6cbca4a3509bdd9f61c145a2ab6734293ebdea4",
+      "object": "0122e57d3c631b4f6ed2589e17b90b12b178a356",
+      "sha256": "7a8426d481ee0d98863e713e570c62df42addf354cead2cfa6e8f110d1832f6f",
       "bytes": 25729
     }
   ],
@@ -63968,17 +63968,17 @@
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-files16-data22-forms25-managed-20261001-1830",
   "files16ManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
-  "data22ManifestSha256": "4ec99035118a093a475dd986d412dc4a55008c63cc775134500ad1fb456843dc",
-  "metadataManifestSha256": "dca3092c428cfc49fe5188793e0ed4f9e64b0d52230c93019cd378a7fcd2d52c",
+  "data22ManifestSha256": "7587235c3c12403a36aace56636670d73011e281f5b08cec07dd0e5540253530",
+  "metadataManifestSha256": "527d019de8be118b226c4f1cea50bfb0748631af20e92cb571a26ebbe761e96c",
   "validationOnlyPaths": [
     ".github/scripts/astra-files16-hosted-managed.py",
     ".github/validation/astra-files16-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-files16-cut.json",
-  "predecessorValidationCommit": "121263f83f8f164e2a5fc5f99ff8a6f830d7fd7b",
-  "preservedPredecessorManifestSha256": "6871f0e0aab5dc59417ee03da7fbaf351777cb5a85ff047b47fcf8135b9d8229",
-  "successorQualification": "Correct exactly two existing Desktop fixtures: read genuine durable Home pending requests without test-observer Save side effects, and assert canonical InvalidOperationException(PermissionDenied) on disposed Forms response. All production/original actor/store/revision guards and exact physical byte assertions preserved; fresh complete cohort proof required.",
+  "predecessorValidationCommit": "7efb124d5f80acad991cb351e97afff698b4385c",
+  "preservedPredecessorManifestSha256": "1cfd5dee645605d9cc62edf1b01a8718d8672ec23c2061f83461bd0d76326a88",
+  "successorQualification": "Qualify the genuine persisted HomePermissionRequest type in one read-only test observer to resolve namespace ambiguity; preserve all production guards, full suite coverage and exact physical byte assertions. Fresh complete cohort proof required.",
   "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
   "sourceSelections64": [
     {
@@ -64076,138 +64076,6 @@
       "cohort": "Files16",
       "beforeSha256": null,
       "sha256": "deafffd9402fe03385d6dba4c4152e3222a475e124db653cf248b46f0f1bf4fe"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordCreateOperation.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "ea7c39a0685f90d32b8f5e2cca8f729e2eff7c26432d23309511b2180e7f5efd"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordCreator.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "0566c9a485c96b67a5c9c206b479a50b2e98897c4ba61da5de2d4fcb9d3711d9"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordUpdateOperation.cs",
-      "cohort": "Data22",
-      "beforeSha256": "dad1839a2cffe962b127db9a8fe35baf2406b7e9dbe8daa01760b10436a6bee2",
-      "sha256": "58dabe099443fbd9c075d7ff2d61208b43aff58e39dc7ea1aee8f356c87660e4"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataLocalStoreAuthority.cs",
-      "cohort": "Data22",
-      "beforeSha256": "ff32f792b1054e77e0b052d04c0a5f3582947b3394550c96836bde9189196d97",
-      "sha256": "15a6ffde1094701ca3c4c8417d6e142f277280ebab39f4ebb50a11cd73f9a91d"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": "58a081e83f7d5f107dd62d56961d3a3bbca2aca15e3651f53310137cdd8b19f9",
-      "sha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Data/DataPage.DesktopChrome.cs",
-      "cohort": "Data22",
-      "beforeSha256": "2f6e3c9d46824f21922d6058044c587fbdd286e4f24392e87c9f9108b03a3ed6",
-      "sha256": "20525f669b29c8e05cb1fd35629e4d1911e337a0d00d7431cbfe233bbf76cfe8"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Data/DataPage.axaml.cs",
-      "cohort": "Data22",
-      "beforeSha256": "f783ed5d9812555e150992b82a4e4359844863590c0c904290747f0f2a3e7679",
-      "sha256": "0bb12956060c4ec3d3ec7baebf91ddbb943582d47cf0de7001fea9b7ed3ea5de"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataPageTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": "7c34e40b1a6330380774894dac157ae598ea48f36d67f43b820bad4e611a620c",
-      "sha256": "2ce04557385d02394bc2e5a89fb7fe9d0fedf39de28d04babfe5f4246160bbcb"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreateIntent.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "b9983f77367fc8686a0ffab8ecb81f09a711941cb834a9d74d328c0228d175dd"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataRecordCreateRecovery.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "babcb76cb31e28eb62e91cfd8e26492852ec7c704655262c0657adb80595f175"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreation.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "d59c2b930fe251a2c9080dd1109f5ac70e30b3e42b17843af59d198256820c17"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationDraft.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "77a832a3d7df77e0d3d6227944ec066980950d8e94c9097b0e51d7718051046d"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationProjection.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "58110222dba2c4089bb80d19fe0f21560d3607839d4176e6ec2b5f0daa43f336"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationProjectionTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataRecordCreator.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "a03f137b5aba41d29877a963885ebc905da95c3c93740747bb75b750d3b3ac79"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
-      "cohort": "Data22",
-      "beforeSha256": "21606050482a65cf35bb4c031609522f052471561cf3a69619f078d451d78723",
-      "sha256": "115601c40f13f9944b60c6f889cd0caea7d0e0599807aef2cf8bab9ebf6c367e"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": "30e112eb00f4d07559cb90c13e1a2b44984b3dc9febe4724143d3852fbe168ce",
-      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.DocumentWorkspaces.cs",
-      "cohort": "Data22",
-      "beforeSha256": "e7a41f2f4f092fd7f4d1fd45ebc14014f2ce16283b0be9c0a0321028a8fa2b5c",
-      "sha256": "464346aba9d1a48118b2e804b6e1ae32a520b33bd29e7498cb33e1eb47e50e5a"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "22cb9d432756e440422a64fa860bf36c47cf2a4e2c6f28f6cca2d984be79c02b"
-    },
-    {
-      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382"
-    },
-    {
-      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreationValues.cs",
-      "cohort": "Data22",
-      "beforeSha256": null,
-      "sha256": "78c5626b1937dda33d9b9281ff932b9b0e6e954b492b99b874da9d77cfc605fa"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
@@ -64364,7 +64232,138 @@
       "cohort": "Forms26",
       "beforeSha256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
       "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordCreateOperation.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "ea7c39a0685f90d32b8f5e2cca8f729e2eff7c26432d23309511b2180e7f5efd"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordCreator.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "0566c9a485c96b67a5c9c206b479a50b2e98897c4ba61da5de2d4fcb9d3711d9"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeRecordUpdateOperation.cs",
+      "cohort": "Data22",
+      "beforeSha256": "dad1839a2cffe962b127db9a8fe35baf2406b7e9dbe8daa01760b10436a6bee2",
+      "sha256": "58dabe099443fbd9c075d7ff2d61208b43aff58e39dc7ea1aee8f356c87660e4"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataLocalStoreAuthority.cs",
+      "cohort": "Data22",
+      "beforeSha256": "ff32f792b1054e77e0b052d04c0a5f3582947b3394550c96836bde9189196d97",
+      "sha256": "15a6ffde1094701ca3c4c8417d6e142f277280ebab39f4ebb50a11cd73f9a91d"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": "58a081e83f7d5f107dd62d56961d3a3bbca2aca15e3651f53310137cdd8b19f9",
+      "sha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Data/DataPage.DesktopChrome.cs",
+      "cohort": "Data22",
+      "beforeSha256": "2f6e3c9d46824f21922d6058044c587fbdd286e4f24392e87c9f9108b03a3ed6",
+      "sha256": "20525f669b29c8e05cb1fd35629e4d1911e337a0d00d7431cbfe233bbf76cfe8"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Data/DataPage.axaml.cs",
+      "cohort": "Data22",
+      "beforeSha256": "f783ed5d9812555e150992b82a4e4359844863590c0c904290747f0f2a3e7679",
+      "sha256": "0bb12956060c4ec3d3ec7baebf91ddbb943582d47cf0de7001fea9b7ed3ea5de"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataPageTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": "7c34e40b1a6330380774894dac157ae598ea48f36d67f43b820bad4e611a620c",
+      "sha256": "2ce04557385d02394bc2e5a89fb7fe9d0fedf39de28d04babfe5f4246160bbcb"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreateIntent.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "b9983f77367fc8686a0ffab8ecb81f09a711941cb834a9d74d328c0228d175dd"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataRecordCreateRecovery.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "babcb76cb31e28eb62e91cfd8e26492852ec7c704655262c0657adb80595f175"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreation.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "d59c2b930fe251a2c9080dd1109f5ac70e30b3e42b17843af59d198256820c17"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationDraft.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "77a832a3d7df77e0d3d6227944ec066980950d8e94c9097b0e51d7718051046d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Data/DataRecordCreationProjection.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "58110222dba2c4089bb80d19fe0f21560d3607839d4176e6ec2b5f0daa43f336"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationProjectionTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Data/IDataRecordCreator.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "a03f137b5aba41d29877a963885ebc905da95c3c93740747bb75b750d3b3ac79"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
+      "cohort": "Data22",
+      "beforeSha256": "21606050482a65cf35bb4c031609522f052471561cf3a69619f078d451d78723",
+      "sha256": "115601c40f13f9944b60c6f889cd0caea7d0e0599807aef2cf8bab9ebf6c367e"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": "30e112eb00f4d07559cb90c13e1a2b44984b3dc9febe4724143d3852fbe168ce",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.DocumentWorkspaces.cs",
+      "cohort": "Data22",
+      "beforeSha256": "e7a41f2f4f092fd7f4d1fd45ebc14014f2ce16283b0be9c0a0321028a8fa2b5c",
+      "sha256": "464346aba9d1a48118b2e804b6e1ae32a520b33bd29e7498cb33e1eb47e50e5a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "6726c373ce41122efecca466736207c06a6e4ef1b12991e5eabf8f031242a51e"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataRecordCreationValues.cs",
+      "cohort": "Data22",
+      "beforeSha256": null,
+      "sha256": "78c5626b1937dda33d9b9281ff932b9b0e6e954b492b99b874da9d77cfc605fa"
     }
-  ],
-  "resource64OwnerManifestSha256": "c11eee248a2c5aee72c03867935c234407253a14ed72dc811783fe9de5fd2d19"
+  ]
 }
