@@ -11,11 +11,11 @@ public sealed class GoOriginalActorInvocationTests
     private static readonly GoResult Result = new("owner", new("app", "item", "id", "1"), "Item", "Items", [new("open", "Open")]);
 
     [Fact]
-    public void CurrentOnlyProviderCannotReceiveOriginalSessionInvocation()
+    public async Task CurrentOnlyProviderCannotReceiveOriginalSessionInvocation()
     {
         var provider = new CurrentOnly();
         var service = new GoService([provider]);
-        Assert.Throws<UnauthorizedAccessException>(() => service.InvokeForActorAsync(Result, "open", Original));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.InvokeForActorAsync(Result, "open", Original));
         Assert.Equal(0, provider.Calls);
     }
 
@@ -31,12 +31,12 @@ public sealed class GoOriginalActorInvocationTests
     }
 
     [Fact]
-    public void ScopeAndDisplayedActionDenyBeforeOwnerPort()
+    public async Task ScopeAndDisplayedActionDenyBeforeOwnerPort()
     {
         var provider = new OriginalOwner();
         var service = new GoService([provider]);
-        Assert.Throws<UnauthorizedAccessException>(() => service.InvokeForActorAsync(Result, "remove", Original));
-        Assert.Throws<UnauthorizedAccessException>(() => service.InvokeForActorAsync(Result, "open", Original,
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.InvokeForActorAsync(Result, "remove", Original));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await service.InvokeForActorAsync(Result, "open", Original,
             new GoScope(ActionIds: new HashSet<string> { "other" })));
         Assert.Null(provider.Actor);
     }

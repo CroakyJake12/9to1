@@ -1,5 +1,5 @@
 {
-  "ownerManifestSha256": "efcec8052218c2621f30c35288826f5ba835a4ce437b35bbdd1c41a695d0423e",
+  "ownerManifestSha256": "e8c939373565fe4661135d41272ddf56228dc7e18fd3ac2868aa11b446d1e30d",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "classes": [
     {
@@ -206,9 +206,9 @@
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs",
       "class": "GoOriginalActorInvocationTests",
       "namespace": "Haven.Core.Tests",
-      "sha256": "cf23bfa2ae3568fda014895ad2707dc97b1e966b4801420e8758f8b30c4a6994",
+      "sha256": "a153ed11fbe6ae389583636e755fdcf80621e3f91afa9a65a874632dfce1ef49",
       "origin": "Go28 overlay",
-      "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs"
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-async-source28/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs"
     }
   ],
   "scope": "Actual Core optional original-actor invocation controlled provider boundaries + whole OS regression, NOT installed transport/device/boot readiness"
