@@ -17,6 +17,7 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
     private readonly Action _revokeOrigin;
     private readonly HashSet<Window> _children = [];
     private CuiControlLoader? _loader;
+    private CuiControlLoader? _workspaceActionLoader;
     private bool _disposed;
 
     public FormsNativeWorkspaceHost(Func<CancellationToken, Task> requireOriginal, Func<Window?> owner, Action revokeOrigin)
@@ -25,6 +26,11 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
         _owner = owner;
         _revokeOrigin = revokeOrigin;
     }
+
+    /// <summary>Read-only snapshot of actual workspace-root button pipelines already accepted by the
+    /// real loader. Capture after Click; disposal does not replace pending work with a completed task.
+    /// This observes completion, never grants dispatch or attests owner success; it excludes future clicks.</summary>
+    public Task WhenActionsIdleAsync() => _workspaceActionLoader?.WhenActionsIdleAsync() ?? Task.CompletedTask;
 
     public async Task RequireCurrentAsync(CancellationToken token)
     {
@@ -51,6 +57,7 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
             linked.Token.ThrowIfCancellationRequested();
             Content = loaded.Root;
             _loader = candidate;
+            _workspaceActionLoader = candidate;
         }
         catch { candidate.Dispose(); throw; }
     }

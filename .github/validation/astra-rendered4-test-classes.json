@@ -1,0 +1,30 @@
+{
+  "classes": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeRenderedRespondTests.cs",
+      "class": "FormsNativeRenderedRespondTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "a807c077423790b1a078be333fb0370e8e88c8b1444570e7a5f060a371630dcc"
+    },
+    {
+      "path": "framework/CUI/Runtime.Tests/CuiActionCompletionObservationTests.cs",
+      "class": "CuiActionCompletionObservationTests",
+      "namespace": "CakeOS.Cui.Runtime.Tests",
+      "sha256": "21805a4a802da14d70bcae84175df4a2fe76ceae2d41eee82cf309debe41c663"
+    },
+    {
+      "path": "framework/CUI/Runtime.Tests/CuiDynamicActionLifetimeTests.cs",
+      "class": "CuiDynamicActionLifetimeTests",
+      "namespace": "CakeOS.Cui.Runtime.Tests",
+      "sha256": "d1b0830b0fedf4f90a0e401b93fe9be4f437378d148c8ed6fd543ed1963d11ff"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
+      "class": "FormsNativeWorkspaceHostTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49"
+    }
+  ],
+  "dependencyPins": [],
+  "ownerManifestSha256": "a84b8a40f540980d5cad25721924a0e55e81ec5892dac37edf2eecc25d908e6a"
+}
