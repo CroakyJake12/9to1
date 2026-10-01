@@ -20,7 +20,7 @@ public sealed class GoHomeLayoutNativeTests
     public async Task DashboardShowsActualSectionsGridThenKeyboardSwitchesCompactAndSearchWithAccessibleNames()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); var original = await f.Configuration.GetAsync();
             var candidate = DesktopPageEdits.PinApplication(original.Stored.Current, f.AppId, "Saved pin label");
@@ -50,17 +50,18 @@ public sealed class GoHomeLayoutNativeTests
                 Assert.Equal("Go search", AutomationProperties.GetName(input)); input.Text = "canonical query"; input.Focus();
                 window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter"); window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
                 await WaitAsync(() => Rows(model).Any(r => r.Label == "All Apps owner label")); Assert.Empty(Groups(model));
-                var open = Button(root!, "All Apps owner label"); open.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var open = Button(root!, "All Apps owner label"); open.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await provider.Invoked.Task.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Equal(f.Actors.Current, provider.ExpectedActor);
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     [Fact]
     public async Task NamedGroupUsesActualBothOwnersThenSuspendedOwnerActorChangeClearsEveryGroup()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); var original = await f.Configuration.GetAsync();
             var candidate = DesktopPageEdits.PinApplication(original.Stored.Current, f.AppId, "Saved label");
@@ -77,13 +78,14 @@ public sealed class GoHomeLayoutNativeTests
             var pending = model.DispatchAsync("Search", null).AsTask(); await provider.QueryEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
             f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "replacement" }; provider.QueryRelease.TrySetResult(); await pending;
             Assert.Empty(Groups(model)); Assert.Empty(Rows(model)); Assert.Null(provider.ExpectedActor);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     [Fact]
     public async Task QueuedOldLayoutClickCannotReplaceASectionPreviewThatCompletesFirst()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); using var model = new ShellViewModel();
             await model.StartAsync(f.Configuration, new GoService([]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
@@ -95,7 +97,8 @@ public sealed class GoHomeLayoutNativeTests
             Assert.False(current.Effective.EffectiveGoHome.Sections.Single(s => s.Kind == GoHomeSectionKind.Pinned).Visible);
             Assert.Equal(GoHomeLayout.StartMenu, current.Effective.EffectiveGoHome.Layout);
             Assert.True(current.Stored.Current.EffectiveGoHome.Sections.Single(s => s.Kind == GoHomeSectionKind.Pinned).Visible);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     private static IReadOnlyList<GoHomeResultGroup> Groups(ShellViewModel m)
     { Assert.True(m.TryGetValue("GoResultGroups", out var v)); return Assert.IsAssignableFrom<IEnumerable<GoHomeResultGroup>>(v).ToArray(); }

@@ -16,7 +16,7 @@ public sealed class GoNativeSessionTests
     public async Task SuspendedOriginalSessionReadKeepsSubmittedQueryOrRejectsReplacedSearch(bool replaceSearch)
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             var root = Path.Combine(Path.GetTempPath(), "astra-go-native-" + Guid.NewGuid());
             try
@@ -50,7 +50,8 @@ public sealed class GoNativeSessionTests
                 Assert.Equal(1, provider.Invocations);
             }
             finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
     {

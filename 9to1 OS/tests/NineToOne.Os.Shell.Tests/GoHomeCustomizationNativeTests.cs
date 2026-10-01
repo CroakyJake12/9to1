@@ -18,7 +18,7 @@ public sealed class GoHomeCustomizationNativeTests
     public async Task ActualButtonsPreviewHideResizeGroupLayoutThenKeepPersistsOnReopen()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); using var model = new ShellViewModel();
             await model.StartAsync(f.Configuration, new GoService([new Provider(f.AppId)]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
@@ -29,21 +29,21 @@ public sealed class GoHomeCustomizationNativeTests
             loader.WireBindings(root!); var window = new Window { Content = root }; window.Show();
             try
             {
-                Button(root!, "Hide Pinned").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Hide Pinned").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => Visible(model).All(s => s.Kind != GoHomeSectionKind.Pinned)); window.UpdateLayout();
                 Assert.DoesNotContain(Traverse(root!).OfType<Button>(), b => Equals(b.Content, "Pinned"));
                 Assert.True((await f.Configuration.GetAsync()).Stored.Current.EffectiveGoHome.Sections.Single(s => s.Kind == GoHomeSectionKind.Pinned).Visible);
-                Button(root!, "Resize All Apps (Standard)").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Resize All Apps (Standard)").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => Visible(model).Single(s => s.Kind == GoHomeSectionKind.AllApps).Size == GoHomeSectionSize.Large);
                 Assert.True(model.TrySetValue("GoGroup", "Work"));
-                Button(root!, "Group All Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Group All Apps").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => Visible(model).Single(s => s.Kind == GoHomeSectionKind.AllApps).Group == "Work");
-                Button(root!, "Move All Apps earlier").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Move All Apps earlier").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => Settings(model).ToList().FindIndex(s => s.Kind == GoHomeSectionKind.AllApps) == 2);
-                Button(root!, "Dashboard layout").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Dashboard layout").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => model.TryGetValue("GoLayout", out var v) && Equals(v, "Dashboard")); window.UpdateLayout();
                 Assert.Equal(22, Button(root!, "All Apps").FontSize);
-                Button(root!, "Keep").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Keep").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => model.TryGetValue("HasPreview", out var v) && Equals(v, false));
                 var reopened = (await f.Reopen().GetAsync()).Stored.Current.EffectiveGoHome;
                 Assert.Equal(GoHomeLayout.Dashboard, reopened.Layout);
@@ -51,13 +51,14 @@ public sealed class GoHomeCustomizationNativeTests
                 Assert.Equal("Work", reopened.Sections.Single(s => s.Kind == GoHomeSectionKind.AllApps).Group);
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     [Fact]
     public async Task CopiedSectionAndOriginalSessionReplacementCannotPublishCustomization()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); using var model = new ShellViewModel();
             await model.StartAsync(f.Configuration, new GoService([]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
@@ -68,13 +69,14 @@ public sealed class GoHomeCustomizationNativeTests
             await model.DispatchAsync("GoSectionVisibility", original);
             var current = await f.Configuration.GetAsync(); Assert.Null(current.Preview); Assert.Equal(baseline, current.Stored.Revision);
             Assert.True(current.Stored.Current.EffectiveGoHome.Sections.Single(s => s.Kind == original.Kind).Visible);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     [Fact]
     public async Task RefreshDuringSectionAdmissionCannotAdoptTheReplacementDisplayedHome()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); using var model = new ShellViewModel(); var provider = new Provider(f.AppId);
             await model.StartAsync(f.Configuration, new GoService([provider]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
@@ -85,7 +87,8 @@ public sealed class GoHomeCustomizationNativeTests
             await f.Actors.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
             await model.RefreshAsync(default); f.Actors.Release.TrySetResult(); await pending;
             Assert.Equal(0, provider.Queries);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     private static IReadOnlyList<GoHomeSection> Settings(ShellViewModel m) { Assert.True(m.TryGetValue("GoHomeSettings", out var v)); return Assert.IsAssignableFrom<IEnumerable<GoHomeSection>>(v).ToArray(); }
     private static IReadOnlyList<GoHomeSection> Visible(ShellViewModel m) { Assert.True(m.TryGetValue("GoVisibleSections", out var v)); return Assert.IsAssignableFrom<IEnumerable<GoHomeSection>>(v).ToArray(); }

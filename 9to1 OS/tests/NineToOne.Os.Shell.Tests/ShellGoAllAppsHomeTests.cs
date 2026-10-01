@@ -34,7 +34,7 @@ public sealed class ShellGoAllAppsHomeTests
         public string Id = "os.installed-applications";
         public string ProviderId => Id;
         public int Queries;
-        public bool Suspend;
+        public bool Suspend = false; // This read-only fixture starts unpaused.
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public async Task<GoResult?> ResolveAsync(GoCanonicalLocator locator, CancellationToken ct)

@@ -18,7 +18,7 @@ public sealed class GoHomeNativeTests
     public async Task ActualGoHomeButtonsResolveCanonicalPinSwitchToAllAppsAndDispatchOriginalActor()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); var original = await f.Configuration.GetAsync();
             var preview = await f.Configuration.PreviewAsync(original.Stored,
@@ -36,21 +36,22 @@ public sealed class GoHomeNativeTests
                 await WaitAsync(() => Rows(model).Any(x => x.Label == "Current pinned owner label")); window.UpdateLayout();
                 Assert.DoesNotContain(Rows(model), x => x.Label == "Saved old label");
                 Assert.False(Button(root!, "Recent").IsEnabled); Assert.False(Button(root!, "Suggested").IsEnabled);
-                Button(root!, "Current pinned owner label").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "Current pinned owner label").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await provider.Invoked.Task.WaitAsync(TimeSpan.FromSeconds(5)); Assert.Equal(f.Actors.Current, provider.ExpectedActor);
-                Button(root!, "All Apps").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Button(root!, "All Apps").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await WaitAsync(() => Rows(model).Any(x => x.Label == "All Apps owner label")); window.UpdateLayout();
                 Assert.Equal(1, provider.Queries); Assert.DoesNotContain(Rows(model), x => x.Label == "Current pinned owner label");
                 Assert.NotNull(Button(root!, "All Apps owner label"));
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     [Fact]
     public async Task ActualGoHomeSessionReplacementClearsRowsAndRejectsCopiedOrOldPinActions()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             using var f = new Fixture(); using var model = new ShellViewModel(); var provider = new Provider(f.AppId);
             await model.StartAsync(f.Configuration, new GoService([provider]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
@@ -59,7 +60,8 @@ public sealed class GoHomeNativeTests
             f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "new-session" };
             await model.RefreshAsync(default); Assert.Empty(Rows(model));
             await model.DispatchAsync("Open", row); Assert.Null(provider.ExpectedActor);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     private static IReadOnlyList<GoResult> Rows(ShellViewModel model)
     { Assert.True(model.TryGetValue("Results", out var value)); return Assert.IsAssignableFrom<IEnumerable<GoResult>>(value).ToArray(); }

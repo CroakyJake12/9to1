@@ -1,5 +1,5 @@
 {
-  "ownerManifestSha256": "c7f10ca302d778cb6e32de1f9037d0bfe767426691f67a07e7fbe98297544de6",
+  "ownerManifestSha256": "a5b51cb35f555b892a611f938edb46de6fbd283088b087f4cfc3076e1b0ecc44",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "classes": [
     {
@@ -47,7 +47,7 @@
       "class": "GoDisplayKeyTests",
       "namespace": "NineToOne.Os.Shell.Tests",
       "sha256": "df61234ede087f13e9dc2fa84d83d7ad1ef1b79f75fad55b4c73374d2b0c6380",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs"
     },
     {
@@ -55,55 +55,55 @@
       "class": "GoDisplayNativeTests",
       "namespace": "NineToOne.Os.Shell.Tests",
       "sha256": "ad392bbe3d84727b0776fc25540fb0de0ef12d8c238d33c80e1d85c9e07594c7",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
       "class": "GoHomeCustomizationNativeTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "ef870841b1441b96c7cd43ffbf14bb64e06a7e84b086f8f9fce09adab816a004",
-      "origin": "Go28 overlay",
-      "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs"
+      "sha256": "cc0a0665c0e31edc4a38cff974e7f17743f48a4cec51d39ccb01bad422ec3d95",
+      "origin": "Go29 awaited source overlay",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-fixtures-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs",
       "class": "GoHomeCustomizationTests",
       "namespace": "NineToOne.Os.Shell.Tests",
       "sha256": "5628b8cdee6bdd1da9839c90260faed1afbe0278135316cf2c88a6158ccf1291",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs",
       "class": "GoHomeLayoutNativeTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "609c9156584346b9dcd87d11835c7bb12745b679a88fd430a004bba14800be4d",
-      "origin": "Go28 overlay",
-      "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs"
+      "sha256": "56876159a19469e4be5532a59cfb2142658606fddb7839cc58428ae3b7718ffe",
+      "origin": "Go29 awaited source overlay",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-fixtures-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs",
       "class": "GoHomeNativeTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "d481fe361012ac263cebfc08f95ba0be67330917712159de7637f5db2834e3e0",
-      "origin": "Go28 overlay",
-      "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs"
+      "sha256": "08c78dc44572d4d0b1a6b2285a13d7c1736fe405d2eb2689f4b7118e238afea9",
+      "origin": "Go29 awaited source overlay",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-fixtures-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs",
       "class": "GoKeyboardTests",
       "namespace": "NineToOne.Os.Shell.Tests",
       "sha256": "2b098b0fbe61e73cf23721296f4ee7ee31db623c510834710b0e35ec6174d8df",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs",
       "class": "GoNativeSessionTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "e3a3f88f876d07520896065217a1536ec1e07600f2ebf2256d48d18a3ab73731",
-      "origin": "Go28 overlay",
+      "sha256": "218d729299943f7fbe3fe637e27940fc05317467fa7e7a3ceba50e32f2917e04",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs"
     },
     {
@@ -158,32 +158,31 @@
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs",
       "class": "ModelPickerTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "4064ad9b4123e31c5801c8b8e28813e4188bb6fe52c61935d6ed8f1b51b7db0f",
-      "origin": "Root896 immutable Git blob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs"
+      "sha256": "3dc14fd3317fd555961ec5aa007e510f195fb7a0a33d3207b106fe9db0458e4c",
+      "origin": "Go29 selected-existing baseline awaited correction"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs",
       "class": "ShellConfigurationTests",
       "namespace": "NineToOne.Os.Shell.Tests",
       "sha256": "4da0a697817ea4086f3e0ba59efe1edb65d0af2a2ea1f8054d0483e560699617",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs",
       "class": "ShellGoAllAppsHomeTests",
       "namespace": "NineToOne.Os.Shell.Tests",
-      "sha256": "653610e745f4d4c2492a99085613535671f4f27a2aa9b165faaec3ebe9ad6694",
-      "origin": "Go28 overlay",
-      "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs"
+      "sha256": "2aaa4e616c200c37a60cee5d60aee86f81810973557062f57ee22231d345ce9d",
+      "origin": "Go29 awaited source overlay",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-fixtures-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs",
       "class": "ShellGoPinnedHomeTests",
       "namespace": "NineToOne.Os.Shell.Tests",
       "sha256": "faddab5d5784079b571fe06b78b18f1b9cf58853fb6aa2f764af8c50c080beb5",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-source28/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs"
     },
     {
@@ -207,14 +206,10 @@
       "class": "GoOriginalActorInvocationTests",
       "namespace": "Haven.Core.Tests",
       "sha256": "a153ed11fbe6ae389583636e755fdcf80621e3f91afa9a65a874632dfce1ef49",
-      "origin": "Go28 overlay",
+      "origin": "Go29 awaited source overlay",
       "source": "/workspace/astra-source/worker5-go-coherent-root896-async-source28/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs"
     }
   ],
   "scope": "Actual Core optional original-actor invocation controlled provider boundaries + whole OS regression, NOT installed transport/device/boot readiness",
-  "sourceOnlyCorrection": {
-    "path": "9to1 OS/apps/9to1-shell/ShellViewModel.cs",
-    "sha256": "286ae22fd35a15ca2f7fe6bea048028c383d49f054d353ebac7f1d377b88d405",
-    "testClassFilesChanged": false
-  }
+  "go29ManifestSha256": "9600c781a4fc756af5b35151bd52b7c7d42351385ee269040b60ce6883028470"
 }

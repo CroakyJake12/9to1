@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "a0c4b12a0ad8e26a5dab65c99f1a05914eab00b5",
+  "programTree": "8177abe712129b3d575e989ed1ac618c4cb2cd3e",
   "files": [
     {
       "path": ".editorconfig",
@@ -3017,9 +3017,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs",
       "mode": "100644",
-      "object": "6f6e4dbb8bf4915fb606c12137a417e5a87d9176",
-      "sha256": "4064ad9b4123e31c5801c8b8e28813e4188bb6fe52c61935d6ed8f1b51b7db0f",
-      "bytes": 7410
+      "object": "3e366373007d3b75d0d59523713aecc9763b8b6a",
+      "sha256": "3dc14fd3317fd555961ec5aa007e510f195fb7a0a33d3207b106fe9db0458e4c",
+      "bytes": 7542
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/NineToOne.Os.Shell.Tests.csproj",
@@ -63595,9 +63595,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
       "mode": "100644",
-      "object": "2f704d4b2e22a6d63ae0f3e6c954f2990c446cdd",
-      "sha256": "ef870841b1441b96c7cd43ffbf14bb64e06a7e84b086f8f9fce09adab816a004",
-      "bytes": 11498
+      "object": "586f0a0601860fcdff76d9dae118914d0daa3c2e",
+      "sha256": "cc0a0665c0e31edc4a38cff974e7f17743f48a4cec51d39ccb01bad422ec3d95",
+      "bytes": 11738
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs",
@@ -63609,16 +63609,16 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs",
       "mode": "100644",
-      "object": "f9ea41d4e71d10d12cf4069bde2e0ee7942e64d1",
-      "sha256": "609c9156584346b9dcd87d11835c7bb12745b679a88fd430a004bba14800be4d",
-      "bytes": 14058
+      "object": "c969ec836abaf69a895ec4e5f3f877dcf382d6c5",
+      "sha256": "56876159a19469e4be5532a59cfb2142658606fddb7839cc58428ae3b7718ffe",
+      "bytes": 14208
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs",
       "mode": "100644",
-      "object": "890b2c23a21f495b1ef3fe856700e90686e9268c",
-      "sha256": "d481fe361012ac263cebfc08f95ba0be67330917712159de7637f5db2834e3e0",
-      "bytes": 8217
+      "object": "1310daf01d3b07ca11bbbe81716036382dc11730",
+      "sha256": "08c78dc44572d4d0b1a6b2285a13d7c1736fe405d2eb2689f4b7118e238afea9",
+      "bytes": 8341
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs",
@@ -63630,16 +63630,16 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs",
       "mode": "100644",
-      "object": "9276c898f4354ad7685c05391e6d214eecef169a",
-      "sha256": "e3a3f88f876d07520896065217a1536ec1e07600f2ebf2256d48d18a3ab73731",
-      "bytes": 5723
+      "object": "773aba5154d23d9a9707ac41c88c6a5297c334b7",
+      "sha256": "218d729299943f7fbe3fe637e27940fc05317467fa7e7a3ceba50e32f2917e04",
+      "bytes": 5767
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs",
       "mode": "100644",
-      "object": "2a3d5653f57cc93fe433e3454ee6f8c8159295e1",
-      "sha256": "653610e745f4d4c2492a99085613535671f4f27a2aa9b165faaec3ebe9ad6694",
-      "bytes": 5003
+      "object": "43f5a97865056a1c6d1bdae3b2c9da8afcbcce4b",
+      "sha256": "2aaa4e616c200c37a60cee5d60aee86f81810973557062f57ee22231d345ce9d",
+      "bytes": 5054
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs",
@@ -63672,9 +63672,9 @@
     {
       "path": ".github/validation/astra-go28-test-classes.json",
       "mode": "100644",
-      "object": "75e629c3be279d6a183d69e16712374805fa8150",
-      "sha256": "3cda792795551b8d814933d7e9b51587246c45cd75c628a102fd2d32098ef10a",
-      "bytes": 12120
+      "object": "beb8d821215f7725cae8d1736e174f32c7e0aa77",
+      "sha256": "af3c0f9bc4eac1a3346781894c814fb7fcce792e9b8ddae447772c9d1945aa24",
+      "bytes": 12126
     }
   ],
   "gitlinks": [
@@ -63936,19 +63936,19 @@
   ],
   "rootIndexSha256Before": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
   "rootIndexSha256After": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
-  "limits": "Exact source28 over Root896 plus isolated workflow/runner/provenance, selfmanifest externally SHA-pinned. Core boundary and full OS managed regression only; native transport/login/provider/package/device acceptance remains separate.",
+  "limits": "Exact coherent Go29 existing sources over Root896 including twelve explicitly awaited native callbacks in five fixture classes. Full owning Core Go classes and unfiltered OS package suites; real external Files mounting, registry authority, device and hardware-pointer acceptance remain separate.",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-go28-managed-20261001-1810",
-  "go28ManifestSha256": "c7f10ca302d778cb6e32de1f9037d0bfe767426691f67a07e7fbe98297544de6",
-  "metadataManifestSha256": "6256ac39bf0709261afc85cc69675503d98f5dcd681de0b03d035db659d7cecc",
+  "metadataManifestSha256": "8cbe960a780b353e91f13533c631d1198bc45106cac77373a06518d1d2632d2b",
   "validationOnlyPaths": [
     ".github/scripts/astra-go28-hosted-managed.py",
     ".github/validation/astra-go28-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-go28-cut.json",
-  "predecessorValidationCommit": "8f686ea7a056f85f709bba5075213d33c494d90e",
-  "preservedPredecessorManifestSha256": "6694ff7920c7a426889a76725b99ced294ff4856427044bfba0ae8d871dc5e26",
+  "predecessorValidationCommit": "d94768968bdb29d4a544cdadc207031fee8f537e",
+  "preservedPredecessorManifestSha256": "efcde647a1dea50fd1526c074a859e86838d588f2b4a76f3b67a4dded3c40cd3",
   "asyncFixtureSuccessor": "Only Task-returning fixture assertions/signatures corrected; all production source and test assertions retained. Fresh run required.",
-  "successorQualification": "Only two inner ShellViewModel candidate variables and their references renamed; behavior and other27source files unchanged. Actual prior Core4 pass followed OS compile CS0136; fresh complete OS managed regression required."
+  "successorQualification": "Narrow fixture corrections only: qualify Button.ClickEvent, explicitly initialize existing false pause flag, and actually await12 Headless async callbacks in five selected existing fixture classes. New selected-existing ModelPickerTests covers three baseline hazards included by full OS suite. All assertions and production behavior unchanged; full unfiltered OS proof pending.",
+  "go29ManifestSha256": "9600c781a4fc756af5b35151bd52b7c7d42351385ee269040b60ce6883028470"
 }
