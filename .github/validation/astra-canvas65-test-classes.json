@@ -94,7 +94,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasSchema2Tests.cs",
       "class": "CanvasSchema2Tests",
       "namespace": "Haven.Core.Tests",
-      "sha256": "b3530ee0aef06f91160691554edc5f15ceb46d7c47bdabb8e9b5d3c043882a05"
+      "sha256": "b0254229eb84d1dd29de0d58cdf9be00b4ba86515456a686fe126608c64c7c11"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
@@ -116,5 +116,6 @@
     }
   ],
   "dependencyPins": [],
-  "ownerManifestSha256": "1b5e9006827716be5da78e3c0192b0a08d2c1dced94ca61fbe856fe4ae24f5d5"
+  "ownerManifestSha256": "1b5e9006827716be5da78e3c0192b0a08d2c1dced94ca61fbe856fe4ae24f5d5",
+  "correctionSelectionSha256": "8bbd59047cf761db5e32499ed17adfa064f82f9f3f77984941a96b458bc5dd27"
 }

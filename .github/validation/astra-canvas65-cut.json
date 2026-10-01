@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "programTree": "31b5b55257acf29fe00b9a6c52d7432625710ad9",
+  "baselineCommit": "d5b4d47da47762287ea339081baf3ff6a5f27403",
+  "programTree": "b663d22ef52b932f04feae4b18fb7507c120b3b1",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "8b58c70055d00c5bf8d16f90ba93fea9f6c908f2",
-      "bytes": 5414,
-      "sha256": "428277af8f4f484ebd3e3517092b7182fe437ac8ad71dd89739215b8cdbda229"
+      "object": "e50c351dd370acfdc06c7420d605681a305f39d2",
+      "bytes": 5513,
+      "sha256": "ea5658242667e5df488c96defd1616570d29544d740e4603f9a12a4a577a2906"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -36898,9 +36898,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasSchema2Tests.cs",
       "mode": "100644",
-      "object": "ab8a8069e897e87e73d2d47667e77c667dc793a9",
-      "bytes": 12253,
-      "sha256": "b3530ee0aef06f91160691554edc5f15ceb46d7c47bdabb8e9b5d3c043882a05"
+      "object": "8138581280c3e3e884e30b68fe22aef22479ccb3",
+      "bytes": 12395,
+      "sha256": "b0254229eb84d1dd29de0d58cdf9be00b4ba86515456a686fe126608c64c7c11"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CapabilityPreflightTests.cs",
@@ -37262,9 +37262,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
       "mode": "100644",
-      "object": "2105813be85a34a94dc9fe4ea581f8a15bb7819e",
-      "bytes": 1186,
-      "sha256": "d4c13417c5d7259806c777325fd3b90c6b71c472218282375ce8f72577d9dcaf"
+      "object": "78fc521a733d82bbcce86df40e69be3eb6f48002",
+      "bytes": 1355,
+      "sha256": "c5a4b50032e30cf90fe59872b148b14bd26a8c2bf8a31ec71c4a8b9afbc3caf5"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
@@ -64136,7 +64136,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
+  "limits": "Exacttwo fixture/projectitem corrective againstactualfailed65. All66 bindings/strictsixCore/86Canvas/sevenNativeUI cases/freshnativeRust/ABI/fullclosure/parts unchanged. Predecessor18Rust+Files/5Corepass1fail retained; no runtime claim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-canvas65-hosted-plan-sol9/manifest.json",
@@ -64145,6 +64145,14 @@
     {
       "path": "/workspace/astra-source/worker6-canvas-root13-selection-01/manifest.json",
       "sha256": "1b5e9006827716be5da78e3c0192b0a08d2c1dced94ca61fbe856fe4ae24f5d5"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-schema2-fixture-embedded-fix-01/root13-selection.json",
+      "sha256": "8bbd59047cf761db5e32499ed17adfa064f82f9f3f77984941a96b458bc5dd27"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas66-hosted-plan-sol1/manifest.json",
+      "sha256": "be344319b9d4c715cb9bb01847eba5e7920ee52cdceb8ecf52bbf2948c7961d5"
     }
   ],
   "sharedCakeIdContract": null,

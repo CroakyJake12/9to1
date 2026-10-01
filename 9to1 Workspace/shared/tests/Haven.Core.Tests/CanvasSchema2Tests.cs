@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -15,7 +14,7 @@ public sealed class CanvasSchema2Tests
     [Fact]
     public void Retained_actual_schema1_native_artifact_preserves_identity_samples_and_native_state()
     {
-        var bytes = File.ReadAllBytes(LegacyFixture());
+        var bytes = LegacyFixture();
         Assert.Equal("835e8cfea997ca120a34bd860eeaeb5bbcb29ab840d16dc89799e18e7030669d",
             Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant());
         var artifact = CanvasArtifactCodec.Deserialize(bytes);
@@ -144,8 +143,12 @@ public sealed class CanvasSchema2Tests
         Assert.Equal(1025, strokes.Consumed);
         Assert.Equal(0, calls); Assert.Equal(before, CanvasArtifactCodec.Serialize(session.GetArtifactSnapshot()));
     }
-    private static string LegacyFixture([CallerFilePath] string source = "") =>
-        System.IO.Path.Combine(System.IO.Path.GetDirectoryName(source)!, "Fixtures", "CanvasSchema1Native13.9to1c");
+    private static byte[] LegacyFixture()
+    {
+        using var stream=typeof(CanvasSchema2Tests).Assembly.GetManifestResourceStream("Haven.Core.Tests.Fixtures.CanvasSchema1Native13.9to1c")
+            ?? throw new InvalidDataException("The exact retained Canvas native13 fixture resource is missing.");
+        using var copy=new MemoryStream();stream.CopyTo(copy);return copy.ToArray();
+    }
     private static CanvasArtifact Seed()
     {
         var artifact = CanvasArtifact.Create("Controlled schema fixture"); artifact.SchemaVersion = 1;
