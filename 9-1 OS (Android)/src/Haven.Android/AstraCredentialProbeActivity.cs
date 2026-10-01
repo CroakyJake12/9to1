@@ -65,7 +65,7 @@ public sealed class AstraCredentialProbeActivity : Activity
             {
                 AndroidCredentialRecoveryRequiredException recovery => recovery.Code,
                 ProbeFailure failure => failure.Code,
-                OperationCanceledException => "Cancelled",
+                System.OperationCanceledException => "Cancelled",
                 _ => "ProbeOperationFailed"
             };
             // Report only fixed status/code/count/binding. Never plaintext, ciphertext, IV or key material.
@@ -78,7 +78,7 @@ public sealed class AstraCredentialProbeActivity : Activity
         }
     }
     private string Marker(string result, string code) =>
-        $"phase={_phase}|run={_run}|head={_head}|uid={global::Android.OS.Process.MyUid()}|positive={_positive}|result={result}|code={code}|complete=true";
+        $"phase={_phase}|run={_run}|head={_head}|uid={(global::Android.OS.Process.MyUid())}|positive={_positive}|result={result}|code={code}|complete=true";
     private sealed class ProbeFailure(string code) : IOException("The reserved validation fixture failed.")
     { public string Code { get; } = code; }
 }

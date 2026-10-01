@@ -451,7 +451,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/AstraCredentialProbeActivity.cs",
-      "sha256": "984a724ea37c2414fb859262740091a91cb39454e4c859dc7376cdc54f0367f2"
+      "sha256": "b9ef203753be5c94a6f9f8814daf0f3e1f2f7754d0025cf7baa4195c236e1b6b"
     },
     {
       "path": ".github/scripts/astra-android33-manifest.py",
@@ -498,7 +498,7 @@
   "versionCode": 20001,
   "versionName": "0.2.1-mobile-preview",
   "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; activity replacement, failed startup, HOME/Launcher/widget/inference/device/production-authority remain independently unverified unless actually observed",
-  "validationParentCommit": "5ff4ad5aa5b279ca74164923b30e35129d8bd7a1",
+  "validationParentCommit": "223c7f0fc43e383854d65e5fd13556b8bc340760",
   "preservedAndroid29ManifestSha256": "7a8099494b9518b49007ea1ba8987141c0237aaea87d28f3e8f4d7bf7b016d60",
-  "cohort": "Android33 credential source and isolated probe: normal component absence, actual fresh/restart crypto reads; original Android29 snapshot retained"
+  "cohort": "Android34 exact conditional-probe compile correction; production credential source and 116 source selection preserved"
 }
