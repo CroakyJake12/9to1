@@ -110,6 +110,12 @@ public sealed record AppAiActionResult(
     string? ErrorCode = null,
     bool CanRetry = false)
 {
+    /// <summary>In-process audit-only handle; never an action retry, persisted capability, or owner grant.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IAppAiAuditRecovery? AuditRecovery { get; init; }
+    public bool ActionGraphPending { get; init; }
+    public bool CompletionAuditPending { get; init; }
+
     public static AppAiActionResult Success(string summary, JsonElement? value = null) =>
         new(true, summary, value);
 
@@ -139,8 +145,27 @@ public interface IAppAiResourceBrokerActions : IAppAiActions
     ValueTask<AppAiActionResult> ExecuteWithOwnedApprovalAsync(AppAiActionRequest request, CancellationToken cancellationToken);
 }
 
+public sealed record AppAiCompletionObservation(bool AuditRecorded, IAppAiAuditRecovery? Recovery = null);
+
+/// <summary>Issuer-bound audit-only completion. Implementations retain the first observed owner outcome.</summary>
+public interface IAppAiAuditRecovery
+{
+    ValueTask<AppAiCompletionObservation> FinishAsync(CancellationToken cancellationToken = default);
+}
+
 public interface IAppAiApprovalVerifier
 {
+    ValueTask<AppAiCompletionObservation> CompleteRejectedVerificationAsync(AppAiActionRequest request,
+        CancellationToken cancellationToken) => ValueTask.FromResult(new AppAiCompletionObservation(false));
+
+    async ValueTask<AppAiCompletionObservation> CompleteWithRecoveryAsync(AppAiActionRequest request,
+        AppAiActionResult result, CancellationToken cancellationToken)
+    {
+        await CompleteAsync(request, result, cancellationToken).ConfigureAwait(false);
+        // A legacy return has no issued durable completion evidence or recovery handle.
+        return new(false);
+    }
+
     ValueTask CompleteAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
     ValueTask<bool> VerifyRequestAsync(AppAiActionRequest request, CancellationToken cancellationToken) =>
@@ -213,7 +238,12 @@ public sealed record AppAiRequestedAction(string ActionId, JsonElement Arguments
 public sealed record AppAiResponseChunk(
     string Text,
     bool IsFinal = false,
-    AppAiRequestedAction? RequestedAction = null);
+    AppAiRequestedAction? RequestedAction = null)
+{
+    // Only the coordinator supplies observed owner outcomes; model-originated chunks are stripped.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public AppAiActionResult? ActionObservation { get; init; }
+}
 
 public sealed record AppAiApprovalRequest(
     string CallerId,

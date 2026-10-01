@@ -17,15 +17,33 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
     private readonly ConcurrentDictionary<string, Binding> _bindings = new();
     private readonly ConcurrentDictionary<string, HomeResourceExecutionCapability> _rejectedBegins = new();
 
-    public async Task<HomePermissionAuthorization> AuthorizeAsync(string targetAppId, string actionId,
+    public Task<HomePermissionAuthorization> AuthorizeAsync(string targetAppId, string actionId,
         IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview, string? backupId,
-        string sessionId, CancellationToken cancellationToken = default)
+        string sessionId, CancellationToken cancellationToken = default) =>
+        AuthorizeCoreAsync(null, targetAppId, actionId, scopes, arguments, preview, backupId, sessionId, cancellationToken);
+
+    /// <summary>Preserves the originating owner's immutable actor across admission awaits. A current
+    /// different actor cannot receive the original owner's pending Home review or execution binding.</summary>
+    public Task<HomePermissionAuthorization> AuthorizeForActorAsync(AuthenticatedResourceActor expectedActor,
+        string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        string preview, string? backupId, string sessionId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return AuthorizeCoreAsync(expectedActor, targetAppId, actionId, scopes, arguments, preview, backupId,
+            sessionId, cancellationToken);
+    }
+
+    private async Task<HomePermissionAuthorization> AuthorizeCoreAsync(AuthenticatedResourceActor? expectedActor,
+        string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        string preview, string? backupId, string sessionId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(scopes);
         if (_bindings.Count + _rejectedBegins.Count >= 1024) throw new InvalidOperationException("Too many outstanding resource approval requests.");
         var scopeSnapshot = scopes.ToArray();
         var actor = await resources.AuthorizeAsync(actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false);
         if (actor is null) throw new UnauthorizedAccessException("The authenticated actor lacks current canonical resource access.");
+        if (expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The originating owner actor changed before Home review admission.");
         var objects = scopeSnapshot.Select(scope => new HomeObjectReference(scope.Kind, scope.Id)).ToArray();
         var digest = Digest(arguments);
         var caller = new HomePermissionCallerIdentity(actor.ActorId, actor.ActorId, actor.ProfileId, actor.AuthenticationRevision, true);

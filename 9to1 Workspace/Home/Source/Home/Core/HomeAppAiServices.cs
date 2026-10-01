@@ -25,7 +25,7 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     private readonly string _sessionId = Guid.NewGuid().ToString("N");
     private readonly ConcurrentDictionary<(string AppId, string ActionId), HomePermissionActionPolicy> _policies = new();
     private readonly ConcurrentDictionary<string, (string AppId, string ActionId, string? ArgumentsDigest)> _approvalTargets = new();
-    private readonly ConcurrentDictionary<string, (string AppId, string ActionId)> _executingTargets = new();
+    private readonly ConcurrentDictionary<string, CompletionEntry> _executingTargets = new();
     private readonly ModelRouteRegistry _routes;
     private readonly HomePersonalModelRoutes? _personalRoutes;
     public HomePermissionTrustService Permissions { get; }
@@ -157,25 +157,105 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
 
     public async ValueTask<bool> VerifyAsync(string appId, string actionId, string approvalToken, CancellationToken cancellationToken)
     {
-        if (!_approvalTargets.TryRemove(approvalToken, out var target) || (target.AppId != appId || target.ActionId != actionId)) return false;
-        var allowed = (await Permissions.BeginExecutionAsync(approvalToken, cancellationToken).ConfigureAwait(false)).IsAllowed;
-        if (allowed) _executingTargets[approvalToken] = (appId, actionId);
-        return allowed;
+        if (!_approvalTargets.TryGetValue(approvalToken, out var target) || target.AppId != appId || target.ActionId != actionId ||
+            !_approvalTargets.TryRemove(new KeyValuePair<string, (string AppId, string ActionId, string? ArgumentsDigest)>(approvalToken, target))) return false;
+        var entry = new CompletionEntry(this, approvalToken, appId, actionId, target.ArgumentsDigest);
+        if (!_executingTargets.TryAdd(approvalToken, entry)) return false;
+        try
+        {
+            if ((await Permissions.BeginExecutionAsync(approvalToken, cancellationToken).ConfigureAwait(false)).IsAllowed)
+            { entry.AdmissionConfirmed = true; return true; }
+        }
+        catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+        { /* The request may already be Executing; never Begin again or dispatch the owner. */ }
+        entry.AdmissionRejected = true;
+        entry.Outcome = AppAiActionResult.Rejected("The execution admission did not return a confirmed allowance; the owner action was not dispatched.", "HOME_ACTION_ADMISSION_REJECTED");
+        return false;
+    }
+
+    public async ValueTask<AppAiCompletionObservation> CompleteRejectedVerificationAsync(AppAiActionRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.ApprovalToken is not { } token || !_executingTargets.TryGetValue(token, out var entry)) return new(false);
+        if (!entry.AdmissionRejected || entry.AppId != request.AppId || entry.ActionId != request.ActionId ||
+            entry.ArgumentsDigest != Digest(request.Arguments))
+            throw new InvalidOperationException("This exact rejected admission is not owned by the issuer.");
+        return await entry.FinishAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async ValueTask CompleteAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken cancellationToken)
     {
-        if (request.ApprovalToken is not { } token || !_executingTargets.TryGetValue(token, out var target) ||
-            target.AppId != request.AppId || target.ActionId != request.ActionId || !_executingTargets.TryRemove(token, out _)) return;
-        var state = result.Succeeded ? HomePermissionRequestState.Succeeded : result.ErrorCode switch
+        var observation = await CompleteWithRecoveryAsync(request, result, cancellationToken).ConfigureAwait(false);
+        if (!observation.AuditRecorded) throw new InvalidOperationException("Home completion audit remains pending.");
+    }
+
+    public async ValueTask<AppAiCompletionObservation> CompleteWithRecoveryAsync(AppAiActionRequest request,
+        AppAiActionResult result, CancellationToken cancellationToken)
+    {
+        if (request.ApprovalToken is not { } token) return new(false);
+        if (!_executingTargets.TryGetValue(token, out var entry) || entry.AppId != request.AppId ||
+            entry.ActionId != request.ActionId || entry.ArgumentsDigest != Digest(request.Arguments) || !entry.AdmissionConfirmed)
+            throw new InvalidOperationException("The execution is not owned by this exact action request.");
+        await entry.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            "action-cancelled" => HomePermissionRequestState.Cancelled,
-            "database-result-unverified" => HomePermissionRequestState.PartiallyCompleted,
-            _ => HomePermissionRequestState.Failed
-        };
-        var recorded = await Permissions.RecordExecutionAsync(token,
-            new(state, result.Succeeded ? "HOME_ACTION_SUCCEEDED" : result.ErrorCode ?? "HOME_ACTION_FAILED", result.Summary, []), cancellationToken).ConfigureAwait(false);
-        if (!recorded.Succeeded) throw new InvalidOperationException("Home could not record the approved action outcome: " + recorded.Code);
+            // Capture once before durable I/O. A later caller cannot rewrite an observed owner outcome.
+            if (entry.Outcome is { } first && (first.Succeeded != result.Succeeded || first.Summary != result.Summary ||
+                first.ErrorCode != result.ErrorCode || first.Value?.GetRawText() != result.Value?.GetRawText()))
+                throw new InvalidOperationException("The first observed owner outcome cannot be replaced.");
+            entry.Outcome ??= result with { Value = result.Value?.Clone(), AuditRecovery = null };
+            return await entry.RecordLockedAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally { entry.Gate.Release(); }
+    }
+
+    private sealed class CompletionEntry(HomeAppAiServices issuer, string token, string appId,
+        string actionId, string? argumentsDigest) : IAppAiAuditRecovery
+    {
+        internal string AppId { get; } = appId;
+        internal string ActionId { get; } = actionId;
+        internal string? ArgumentsDigest { get; } = argumentsDigest;
+        internal SemaphoreSlim Gate { get; } = new(1, 1);
+        internal AppAiActionResult? Outcome { get; set; }
+        internal bool AdmissionRejected { get; set; }
+        internal bool AdmissionConfirmed { get; set; }
+        private bool _recorded;
+        public async ValueTask<AppAiCompletionObservation> FinishAsync(CancellationToken cancellationToken = default)
+        {
+            await Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try { return await RecordLockedAsync(cancellationToken).ConfigureAwait(false); }
+            finally { Gate.Release(); }
+        }
+        internal async ValueTask<AppAiCompletionObservation> RecordLockedAsync(CancellationToken cancellationToken)
+        {
+            if (_recorded) return new(true);
+            if (Outcome is not { } outcome || !issuer._executingTargets.TryGetValue(token, out var owned) ||
+                !ReferenceEquals(owned, this)) throw new InvalidOperationException("Completion recovery is not owned by this issuer.");
+            var state = outcome.Succeeded ? HomePermissionRequestState.Succeeded : outcome.ErrorCode switch
+            {
+                "action-cancelled" => HomePermissionRequestState.Cancelled,
+                "database-result-unverified" or "action-outcome-unconfirmed" => HomePermissionRequestState.PartiallyCompleted,
+                _ => HomePermissionRequestState.Failed
+            };
+            try
+            {
+                var recorded = await issuer.Permissions.RecordExecutionAsync(token,
+                    new(state, outcome.Succeeded ? "HOME_ACTION_SUCCEEDED" : outcome.ErrorCode ?? "HOME_ACTION_FAILED", outcome.Summary, []), cancellationToken).ConfigureAwait(false);
+                if (!recorded.Succeeded)
+                {
+                    if (!AdmissionRejected) return new(false, this);
+                    var actual = await issuer.Permissions.GetAuthorizationAsync(token, cancellationToken).ConfigureAwait(false);
+                    if (actual.State is not (HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked or HomePermissionRequestState.Cancelled))
+                        return new(false, this);
+                    // Read an actual terminal negative decision; false/NOT_AUTHORIZED alone never acknowledges recovery.
+                }
+                _recorded = true;
+                issuer._executingTargets.TryRemove(new KeyValuePair<string, CompletionEntry>(token, this));
+                return new(true);
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            { return new(false, this); }
+        }
     }
 
     public async ValueTask<bool> AuthorizeAsync(ExternalConnection connection, string toolName, JsonElement arguments, CancellationToken cancellationToken)

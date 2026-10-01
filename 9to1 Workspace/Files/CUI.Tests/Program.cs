@@ -84,10 +84,15 @@ internal static class FilesInterprocessTests
                 await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15));
                 if (process.ExitCode != 0) throw new InvalidOperationException(await process.StandardError.ReadToEndAsync());
             }
+            var actualState = await new VersionedJsonStateStore<DurableDriveProvider.State>(path, 1,
+                () => throw new InvalidOperationException()).ReadExistingAsync();
+            var originalStoreId = actualState.StoreId!.Value;
             var holder = Start("hold", path);
             Check.Equal("HELD", await Line(holder));
             using (var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)))
                 await Check.ThrowsAsync<OperationCanceledException>(() => provider.GetAsync(raw.FileId, cancellation.Token));
+            using (var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)))
+                await Check.ThrowsAsync<OperationCanceledException>(() => provider.GetStoreEvidenceAsync(originalStoreId, cancellation.Token));
             Check.True(Enumerable.SequenceEqual(original, await File.ReadAllBytesAsync(path)));
             var first = Start("rename", path, location.Value.ToString(), raw.FileId.Value.ToString(), raw.RevisionId.Value.ToString(), "first.bin");
             var second = Start("rename", path, location.Value.ToString(), raw.FileId.Value.ToString(), raw.RevisionId.Value.ToString(), "second.bin");
@@ -110,6 +115,8 @@ internal static class FilesInterprocessTests
             await crashHolder.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10));
             using (var recovered = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
                 Check.True((await provider.GetAsync(raw.FileId, recovered.Token)).IsSuccess);
+            using (var recovered = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                Check.Equal(originalStoreId, (await provider.GetStoreEvidenceAsync(originalStoreId, recovered.Token)).StoreId);
             Check.Equal("persistent lease sentinel", await File.ReadAllTextAsync(lockPath));
         }
         finally

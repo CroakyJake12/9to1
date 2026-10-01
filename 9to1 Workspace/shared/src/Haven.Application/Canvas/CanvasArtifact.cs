@@ -44,6 +44,9 @@ public sealed class CanvasArtifact
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 
     [JsonIgnore]
+    public ProductivitySnapshotHistory? SemanticHistory { get; set; }
+
+    [JsonIgnore]
     public Dictionary<string, JsonElement>? EnvelopeExtensionData { get; set; }
 
     public static CanvasArtifact Create(string? displayName = null, CanvasDocumentMode mode = CanvasDocumentMode.Infinite)
