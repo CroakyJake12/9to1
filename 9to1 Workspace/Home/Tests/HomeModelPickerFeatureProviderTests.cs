@@ -42,8 +42,17 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
         var before = await File.ReadAllBytesAsync(Path.Combine(_root, "home.json"));
         var result = await _provider.UpdateRouteForActorAsync(original, new(draft with { Version = 1, Candidates = values }, 0));
         Assert.False(result.Succeeded); Assert.Equal(257, values.Consumed);
-        Assert.Empty((await _permissions.GetSnapshotAsync()).PendingRequests);
+        await AssertNoPendingRequestsReadOnlyAsync();
         Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(_root, "home.json")));
+    }
+    private async Task AssertNoPendingRequestsReadOnlyAsync()
+    {
+        var read = await _store.ReadAsync();
+        Assert.Null(read.Failure);
+        var record = read.State!.Records.SingleOrDefault(item => item.RecordId == "home.permissions-trust");
+        if (record is not null)
+            Assert.DoesNotContain(record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()!,
+                request => request.State == HomePermissionRequestState.PendingApproval);
     }
     private sealed class LyingCandidates : IReadOnlyList<HomeModelRouteCandidate>
     {
@@ -62,11 +71,12 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
         var original = (await _profiles.GetCurrentAsync(default))!;
         var draft = Assert.Single((await _provider.GetSnapshotAsync("User", "Chat")).Value!.Routes);
         var edit = new HomeModelRouteEdit(draft with { Version = 1, Candidates = [new("local", "one", null, true, 0)] }, 0);
+        var before = await File.ReadAllBytesAsync(Path.Combine(_root, "home.json"));
         _principal.Value = "different-real-fixture-principal";
-        var denied = await _provider.UpdateRouteForActorAsync(original, edit);
-        Assert.False(denied.Succeeded);
-        Assert.Empty((await _permissions.GetSnapshotAsync()).PendingRequests);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _provider.UpdateRouteForActorAsync(original, edit));
+        await AssertNoPendingRequestsReadOnlyAsync();
         Assert.Null(await _routes.GetAsync(draft.RouteId, default));
+        Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(_root, "home.json")));
     }
 
     [Fact]
