@@ -35,7 +35,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/AndroidHavenBootstrap.cs",
-      "sha256": "106cce2520c02e0dc4cc7228a40d73dca0a9d211bff1d8455823e1413eb61575"
+      "sha256": "8cf0c55016e680eae87a969f4a5c424a02a8f440878a8d3688e76d72f8fa14dc"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/AndroidHavenFloatingContent.cs",
@@ -123,7 +123,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
-      "sha256": "5e05dbdca516227febdc2218ba7e9d42e18f5cfbe0123d47f8cfff06aabd4e11"
+      "sha256": "90b3be7066725e70bb7f2aeb416a8e8f4f8c76e174c8c2dd04bb9ebd2b994177"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenImeService.cs",
@@ -227,7 +227,7 @@
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/MainActivity.cs",
-      "sha256": "6f6de9383cc70b5f76e3a36f79941e29632c15bdb82878362cd0dcd616ed7012"
+      "sha256": "ce28a7b0e713f8e7554e2610b011faef2d86d9fcf8014015849572cacf1dc928"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Android.cs",
@@ -364,6 +364,86 @@
     {
       "path": "9-1 OS (Android)/tests/Haven.Android.Hui.Tests/Haven.Android.Hui.Tests.csproj",
       "sha256": "748d2e68cf84f1568e322a800f69aa68dcf9f11c5a8ea526f2d80e56c4ef2e30"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/ChatAddMenu.hui",
+      "sha256": "4a3ddab079621cd800383560a1c371c3aed1e583e820776dd5333b11ac03e365"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Prefabs/Chatbox.hui",
+      "sha256": "f57092ce9d5a46d14f57be581c6fbf482b0d631a29fe9051e9ec50b0aa7fad3d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/AgentCatalogCard.hui",
+      "sha256": "76784880db28f01fc99005519c077fa5102284959d4f915a6c31856ad4dec8bd"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ChatAssistantMessage.hui",
+      "sha256": "ff86aa0f21df4889e4e6509dcb08e251039f87aad7102ce18e4830427a44623c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ChatSidebarConversationRow.hui",
+      "sha256": "a35a95b658c08a702cd84f25e5772fbeb2e575e2ac5b39ee349cdc10d45babfc"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ChatSidebarFileRow.hui",
+      "sha256": "fc4fd3bf4cffad87eb18058c8d1fe97026c0b649d3138882eae90d7f884f7946"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ChatSidebarGroupRow.hui",
+      "sha256": "673b416f6eaa7a2301055f4232d967c14c4df26cb0c36ed3fc2000a60dbb47b6"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ChatToolActivity.hui",
+      "sha256": "d6144c61e01540e229c224478b5fcb9b3e1590fe8ac5ac88026f32e73f250066"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ChatUserMessage.hui",
+      "sha256": "d18fa56c9a5f4717c978055094a69c25b710d57a8e03c7caadd4f0b86bb38ceb"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ImagineAssetRow.hui",
+      "sha256": "eedfd74adf5a52a461364d0a3fed5fc7b84474ffbc79153591a1fdfc8e60154c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ImagineComponentRow.hui",
+      "sha256": "c861307443506a2f1cdf52196772b9d8ebb8c6bc423453563e0393b944c11228"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ImagineLayerRow.hui",
+      "sha256": "cb428819a9f77924d5e35157320dafe8770940083d33b713dc124bbefca5070c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/ImagineProjectRow.hui",
+      "sha256": "21d7496023d69b6ce6c38f15003613470142ab855ee641c3de824c8b35825549"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/OverlayActionChip.hui",
+      "sha256": "349671209b9d611779baaae88942e322b99aa5f9a1f2faf6828a9f7d7f6cc2c8"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/OverlaySessionTab.hui",
+      "sha256": "23c87a4ec551383aa165be3cae5da3df29818fa18eea45a2f48969db31ca763c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/PlanCountdown.hui",
+      "sha256": "eaae071f5087ed614793a230d94d0a06b1e5d303b8194be6f35c0369eb79bd3b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/PlanDayItem.hui",
+      "sha256": "cf0715530b42fbdd401349e89f18c37ff41a7cd7e5c119fa133175a57f9e39f5"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/PlanFreeWindow.hui",
+      "sha256": "223cd17d94a07a9c2f39115db31cf2982086e088346143baf74cd4e01a956dbc"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/StudioConversationRow.hui",
+      "sha256": "d8f5e5d9edc31af1cae38862acafea8fd92c90705fc1ce4792eba2743560eecb"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/StudioFileRow.hui",
+      "sha256": "e2fedb413dbaa0c98c08c60131efc007acc3b1c2aeac4553c7eb8a032cc03e83"
     }
   ],
   "gitlinks": [
@@ -381,13 +461,19 @@
     }
   ],
   "allowedChanges": [
-    "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
-    ".github/workflows/build-haven-android.yml",
     ".github/scripts/astra-android29-verify.py",
-    ".github/validation/astra-android29-frozen91.json"
+    ".github/validation/astra-android29-frozen91.json",
+    ".github/workflows/build-haven-android.yml",
+    "9-1 OS (Android)/src/Haven.Android/AndroidHavenBootstrap.cs",
+    "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
+    "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
+    "9-1 OS (Android)/src/Haven.Android/MainActivity.cs"
   ],
   "package": "com.cakemods.haven",
   "versionCode": 20001,
   "versionName": "0.2.1-mobile-preview",
-  "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; no HOME/Launcher/widget/inference/device/production-authority proof"
+  "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; activity replacement, failed startup, HOME/Launcher/widget/inference/device/production-authority remain independently unverified unless actually observed",
+  "validationParentCommit": "025b6e7c5b666388f5899b4742badef3f2669ac1",
+  "preservedAndroid29ManifestSha256": "7a8099494b9518b49007ea1ba8987141c0237aaea87d28f3e8f4d7bf7b016d60",
+  "cohort": "Android30 startup successor: original Android29 sources with three explicit reviewed replacements plus twenty unchanged genuine paired HUI resources"
 }
