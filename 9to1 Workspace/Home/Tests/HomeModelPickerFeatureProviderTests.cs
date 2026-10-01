@@ -33,6 +33,56 @@ public sealed class HomeModelPickerFeatureProviderTests : IDisposable
         _provider = new(_profiles, _routes, _catalogue, _privacy, resources, new(resources, _permissions));
     }
 
+    [Fact]
+    public async Task Original_route_input_bounded_actual_enumeration_denies_before_Home_review()
+    {
+        var original = (await _profiles.GetCurrentAsync(default))!;
+        var draft = Assert.Single((await _provider.GetSnapshotAsync("User", "Chat")).Value!.Routes);
+        var values = new LyingCandidates();
+        var before = await File.ReadAllBytesAsync(Path.Combine(_root, "home.json"));
+        var result = await _provider.UpdateRouteForActorAsync(original, new(draft with { Version = 1, Candidates = values }, 0));
+        Assert.False(result.Succeeded); Assert.Equal(257, values.Consumed);
+        Assert.Empty((await _permissions.GetSnapshotAsync()).PendingRequests);
+        Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(_root, "home.json")));
+    }
+    private sealed class LyingCandidates : IReadOnlyList<HomeModelRouteCandidate>
+    {
+        public int Count => 1; public int Consumed;
+        public HomeModelRouteCandidate this[int index] => throw new NotSupportedException();
+        public IEnumerator<HomeModelRouteCandidate> GetEnumerator()
+        {
+            for (var i = 0; i < 1_000_000; i++) { Consumed++; yield return new("local", "one", null, true, i); }
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    [Fact]
+    public async Task Original_route_actor_port_denies_changed_principal_before_creating_review()
+    {
+        var original = (await _profiles.GetCurrentAsync(default))!;
+        var draft = Assert.Single((await _provider.GetSnapshotAsync("User", "Chat")).Value!.Routes);
+        var edit = new HomeModelRouteEdit(draft with { Version = 1, Candidates = [new("local", "one", null, true, 0)] }, 0);
+        _principal.Value = "different-real-fixture-principal";
+        var denied = await _provider.UpdateRouteForActorAsync(original, edit);
+        Assert.False(denied.Succeeded);
+        Assert.Empty((await _permissions.GetSnapshotAsync()).PendingRequests);
+        Assert.Null(await _routes.GetAsync(draft.RouteId, default));
+    }
+
+    [Fact]
+    public async Task Original_route_actor_port_creates_only_same_actor_exact_review()
+    {
+        var original = (await _profiles.GetCurrentAsync(default))!;
+        var draft = Assert.Single((await _provider.GetSnapshotAsync("User", "Chat")).Value!.Routes);
+        var edit = new HomeModelRouteEdit(draft with { Version = 1, Candidates = [new("local", "one", null, true, 0)] }, 0);
+        var pending = await _provider.UpdateRouteForActorAsync(original, edit);
+        Assert.Equal("ApprovalRequired", pending.Code);
+        var request = Assert.Single((await _permissions.GetSnapshotAsync()).PendingRequests);
+        Assert.Equal(original.ActorId, request.Caller.CallerId);
+        Assert.Equal(original.AuthenticationRevision, request.Caller.IdentityVersion);
+        Assert.Null(await _routes.GetAsync(draft.RouteId, default));
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
