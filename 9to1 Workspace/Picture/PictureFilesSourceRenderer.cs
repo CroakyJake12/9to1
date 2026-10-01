@@ -154,6 +154,33 @@ public sealed class PicturePinnedRasterSource : IDisposable
     public Guid DocumentId => _snapshot.Document.DocumentId;
     public long Revision => _snapshot.Document.Revision;
 
+    /// <summary>Read-only information from the same authorized native frame; original source metadata is not rewritten.</summary>
+    public string InformationSummary
+    {
+        get
+        {
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_decoded is not { } frame) return "Native source information is unavailable.";
+                var lines = new List<string> { $"Decoded source: {frame.Width} × {frame.Height} pixels", $"Original file size: {_snapshot.SourceAsset?.SizeBytes} bytes" };
+                if (frame.Metadata is { } metadata)
+                {
+                    lines.Insert(0, "Detected format: " + metadata.MimeType);
+                    lines.Add("Source orientation (EXIF value): " + metadata.SourceOrientation);
+                    lines.Add("Embedded text fields:");
+                    if (metadata.Fields.Count == 0) lines.Add("No embedded text fields available.");
+                    foreach (var item in metadata.Fields.Take(32))
+                        lines.Add(item.Key + ": " + (item.Value.Length <= 512 ? item.Value : item.Value[..512] + "… [display shortened]"));
+                    if (metadata.Fields.Count > 32) lines.Add("Additional fields are retained in the original source; this view shows the first 32.");
+                }
+                if (frame.MetadataNotice is not null) lines.Add("Embedded information unavailable: " + frame.MetadataNotice);
+                lines.Add("The original source is retained.");
+                return string.Join(Environment.NewLine, lines);
+            }
+        }
+    }
+    public PictureGlycinMetadata? Metadata { get { lock (_gate) { ObjectDisposedException.ThrowIf(_disposed, this); return _decoded?.Metadata; } } }
     public bool CanAdvanceFrames { get { lock (_gate) return !_disposed && _frames is not null; } }
     public long FrameDelayMicroseconds { get { lock (_gate) { ObjectDisposedException.ThrowIf(_disposed, this); return _decoded?.DelayMicroseconds ?? 0; } } }
 

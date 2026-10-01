@@ -77,6 +77,39 @@ public sealed class SiteAddressAndStoreTests
         Assert.Equal(original, await File.ReadAllBytesAsync(path));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Revocation_or_cancellation_after_staging_preserves_authoritative_index(bool cancel)
+    {
+        using var directory = new TemporaryDirectory();
+        var initial = new FileSiteWorkspaceStore(directory.Path);
+        Assert.True(await ReserveAsync(initial, Guid.NewGuid()));
+        var index = Path.Combine(directory.Path, ".9to1-sites-index.json");
+        var original = await File.ReadAllBytesAsync(index);
+        using var cancellation = new CancellationTokenSource();
+        var checks = 0;
+        var store = new FileSiteWorkspaceStore(directory.Path, ct =>
+        {
+            checks++;
+            if (checks == 1) Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
+            else
+            {
+                Assert.Single(Directory.GetFiles(directory.Path, "*.tmp"));
+                if (cancel) cancellation.Cancel();
+                else throw new UnauthorizedAccessException("Authority revoked during serialization.");
+            }
+            return Task.CompletedTask;
+        });
+        var mutation = () => store.MutateAsync(state => (state with { SlugReservations = [] }, true), cancellation.Token);
+        if (cancel) await Assert.ThrowsAnyAsync<OperationCanceledException>(mutation);
+        else await Assert.ThrowsAsync<SiteOperationException>(mutation);
+        Assert.Equal(2, checks);
+        Assert.Equal(original, await File.ReadAllBytesAsync(index));
+        Assert.Empty(Directory.GetFiles(directory.Path, "*.tmp"));
+        Assert.Single(await initial.ReadAsync(state => state.SlugReservations));
+    }
+
     private static async Task<bool> ReserveAsync(FileSiteWorkspaceStore store, Guid siteId)
     {
         try

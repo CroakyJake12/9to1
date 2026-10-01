@@ -24,17 +24,25 @@ public sealed partial class HavenLauncherActivity
             _launcherStatus.Text = "Loading apps…";
         try
         {
+            var actors = (App.Services ?? throw new InvalidOperationException("Home is unavailable.")).GetRequiredService<IAuthenticatedResourceActorSource>();
+            var actor = await actors.GetCurrentAsync(_launcherLifetime.Token)
+                ?? throw new UnauthorizedAccessException("Open the current Home profile first.");
             var apps = await QueryAppsAsync();
+            if (await actors.GetCurrentAsync(_launcherLifetime.Token) != actor) throw new UnauthorizedAccessException("Home changed while reading applications.");
             if (generation != Volatile.Read(ref _appLoadGeneration))
                 return;
 
             await _layoutEdits.WaitAsync(_launcherLifetime.Token);
             try
             {
+                if (await actors.GetCurrentAsync(_launcherLifetime.Token) != actor) throw new UnauthorizedAccessException("Home changed while waiting to load the launcher.");
                 var layout = await LayoutStore.GetAsync(ApplySavedOrder(apps).Select(a => a.ApplicationId).ToArray(),
                     Math.Clamp(Preferences.GetInt(RowsKey, 5), 3, 8), Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7), _launcherLifetime.Token);
-                if (generation != Volatile.Read(ref _appLoadGeneration)) return;
-                _apps.Clear(); _apps.AddRange(apps); _layout = layout;
+                var session = await WidgetSessions.ReadAsync(_launcherLifetime.Token);
+                if (session is null || session.Layout.AuthorityId != layout.AuthorityId || session.Layout.Revision != layout.Revision ||
+                    await actors.GetCurrentAsync(_launcherLifetime.Token) != actor) throw new UnauthorizedAccessException("Home changed while reading the launcher layout.");
+                if (generation != Volatile.Read(ref _appLoadGeneration) || !_activityStarted) return;
+                _apps.Clear(); _apps.AddRange(apps); _layout = DisplayedLayouts.Bind(session);
                 _page = layout.Current.Pages.ToList().FindIndex(p => p.Id == layout.Current.ActivePageId);
             }
             finally { _layoutEdits.Release(); }
@@ -52,6 +60,8 @@ public sealed partial class HavenLauncherActivity
             if (generation != Volatile.Read(ref _appLoadGeneration))
                 return;
 
+            _apps.Clear(); _layout = null; _grid?.RemoveAllViews(); _dockHost?.RemoveAllViews();
+            _folderDialog?.Dismiss(); _refreshDrawer?.Invoke();
             if (_launcherStatus is not null)
                 _launcherStatus.Text = "Could not load apps: " + ex.Message;
             Toast.MakeText(this, "Could not load apps", ToastLength.Long)?.Show();
@@ -352,6 +362,9 @@ public sealed partial class HavenLauncherActivity
             try
             {
                 await Task.Delay(120, request.Token);
+                var displayed = _layout ?? throw new UnauthorizedAccessException("Reload the current launcher layout first.");
+                var displayedSession = DisplayedLayouts.Require(displayed);
+                if (!await WidgetSessions.IsCurrentAsync(displayedSession, request.Token)) throw new UnauthorizedAccessException("Home changed before drawer discovery.");
                 var searchingPages = pageSearch;
                 var presentation = searchingPages ? new Dictionary<Guid, LauncherApp>() : (await QueryAppsAsync(request.Token)).ToDictionary(app => app.ApplicationId);
                 var scope = searchingPages ? new GoScope(new HashSet<string>(StringComparer.Ordinal) { LauncherNavigationGoProvider.Id },
@@ -360,7 +373,7 @@ public sealed partial class HavenLauncherActivity
                     new HashSet<string>(StringComparer.Ordinal) { "Home" }, new HashSet<string>(StringComparer.Ordinal) { "os.installed-application" },
                     new HashSet<string>(StringComparer.Ordinal) { "Open" });
                 RunOnUiThread(() => { if (!request.IsCancellationRequested && generation == searchGeneration) grid.RemoveAllViews(); });
-                var drawer = _layout?.Current.Drawer ?? LauncherDrawer.Empty;
+                var drawer = displayed.Current.Drawer ?? LauncherDrawer.Empty;
                 var selectedCategory = drawer.Categories.SingleOrDefault(c => c.Id == _drawerCategoryId);
                 if (selectedCategory is null) _drawerCategoryId = null;
                 var appMatches = new List<LauncherApp>();
@@ -395,6 +408,7 @@ public sealed partial class HavenLauncherActivity
                     count++;
                     appMatches.Add(current);
                 }
+                if (!await WidgetSessions.IsCurrentAsync(displayedSession, request.Token)) throw new UnauthorizedAccessException("Home changed during drawer discovery.");
                 if (!searchingPages)
                 {
                     var order = selectedCategory?.Applications.Select((id, index) => (id, index)).ToDictionary(pair => pair.id, pair => pair.index);

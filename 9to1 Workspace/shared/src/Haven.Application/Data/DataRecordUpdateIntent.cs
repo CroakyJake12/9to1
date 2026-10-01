@@ -17,7 +17,7 @@ public sealed class DataRecordUpdateIntent
         IReadOnlyDictionary<Guid, DataScalarRecordValue> values, Guid operationID, DataRecordMutationOrigin? origin)
     {
         if (operationID == Guid.Empty || origin is { } source && (source.FormID == Guid.Empty || source.FormVersionID == Guid.Empty
-            || source.ResponseID == Guid.Empty || source.ResponseRevision < 1)) throw new ArgumentException("A stable operation and valid source identity are required.");
+            || source.ResponseID == Guid.Empty || source.ResponseRevision < 1 || source.SourceStoreID == Guid.Empty)) throw new ArgumentException("A stable operation and valid source identity are required.");
         if (storeID == Guid.Empty || workbookID == Guid.Empty || revisionID == Guid.Empty || tableID == Guid.Empty
             || recordID == Guid.Empty || version < 1 || values is null || values.Count is < 1 or > 256)
             throw new ArgumentException("An exact canonical record target, persisted revision and scalar fields are required.");

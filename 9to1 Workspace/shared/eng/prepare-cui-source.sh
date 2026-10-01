@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Materialize only the two source dependencies consumed by the vendored UI graph.
+# Materialize only the pinned source dependencies consumed by the native UI graph.
 # Never float a donor branch or recursively acquire unrelated product sources.
 repo="$(git rev-parse --show-toplevel)"
 cd "$repo"
-for path in framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus; do
+for path in framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Avalonia/external/Avalonia.DBus "9to1 Workspace/Terminal/Source/libvterm"; do
   entry="$(git ls-tree HEAD -- "$path")"
   read -r mode type revision rest <<< "$entry"
   test "$mode" = 160000 && test "$type" = commit
@@ -17,3 +17,5 @@ for path in framework/CUI/vendor/Avalonia/external/XamlX framework/CUI/vendor/Av
 done
 test -f framework/CUI/vendor/Avalonia/external/XamlX/src/XamlX/XamlX.csproj
 test -f framework/CUI/vendor/Avalonia/external/Avalonia.DBus/src/Avalonia.DBus/Avalonia.DBus.csproj
+test -f "9to1 Workspace/Terminal/Source/libvterm/include/vterm.h"
+test -f "9to1 Workspace/Terminal/Source/libvterm/LICENSE"

@@ -19,6 +19,12 @@ internal static class AndroidHavenBootstrap
     private static bool _applicationStarted;
     private static string? _pendingSurface;
     private static string? _pendingPrompt;
+    private static string? _pendingHomeReview;
+    private static string? HomeReviewRequest(Intent? intent)
+    {
+        var value = intent?.GetStringExtra("haven_home_review_request");
+        return string.IsNullOrWhiteSpace(value) || value.Length > 256 || value.Any(char.IsControl) ? null : value;
+    }
     private static WeakReference<MainView>? _activeMainView;
     private static bool _activeMainViewReady;
 
@@ -26,6 +32,7 @@ internal static class AndroidHavenBootstrap
     {
         _pendingSurface = intent?.GetStringExtra("haven_surface");
         _pendingPrompt = intent?.GetStringExtra("haven_prompt");
+        _pendingHomeReview = HomeReviewRequest(intent);
     }
 
     public static void NotifyConfigurationChanged()
@@ -42,29 +49,33 @@ internal static class AndroidHavenBootstrap
     {
         var surface = intent?.GetStringExtra("haven_surface");
         var prompt = intent?.GetStringExtra("haven_prompt");
-        if (string.IsNullOrWhiteSpace(surface) && string.IsNullOrWhiteSpace(prompt))
+        var review = HomeReviewRequest(intent);
+        if (string.IsNullOrWhiteSpace(surface) && string.IsNullOrWhiteSpace(prompt) && review is null)
             return;
 
         if (_activeMainViewReady
             && _activeMainView is not null
             && _activeMainView.TryGetTarget(out var mainView))
         {
-            Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, surface, prompt));
+            Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, surface, prompt, review));
             return;
         }
 
         _pendingSurface = surface;
         _pendingPrompt = prompt;
+        _pendingHomeReview = review;
     }
 
     private static async Task ApplyLaunchRequestToMainViewAsync(
         MainView mainView,
         string? surface,
-        string? prompt)
+        string? prompt,
+        string? review = null)
     {
         try
         {
-            await mainView.ApplyMobileLaunchRequestAsync(surface, prompt);
+            if (review is not null) await mainView.ReviewHomeRequestAsync(review);
+            else await mainView.ApplyMobileLaunchRequestAsync(surface, prompt);
         }
         catch (Exception exception)
         {
@@ -75,11 +86,12 @@ internal static class AndroidHavenBootstrap
         }
     }
 
-    private static (string? Surface, string? Prompt) TakeLaunchRequest()
+    private static (string? Surface, string? Prompt, string? HomeReview) TakeLaunchRequest()
     {
-        var request = (_pendingSurface, _pendingPrompt);
+        var request = (_pendingSurface, _pendingPrompt, _pendingHomeReview);
         _pendingSurface = null;
         _pendingPrompt = null;
+        _pendingHomeReview = null;
         return request;
     }
 
@@ -180,9 +192,14 @@ internal static class AndroidHavenBootstrap
                     launchRequest.Prompt);
                 mainView.IsVisible = true;
                 _activeMainViewReady = true;
+                // Approval UI can remain open. Do not hold the startup gate while awaiting its closure.
+                if (launchRequest.HomeReview is { } review)
+                    Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, null, null, review));
 
                 var deferredLaunchRequest = TakeLaunchRequest();
-                if (!string.IsNullOrWhiteSpace(deferredLaunchRequest.Surface)
+                if (deferredLaunchRequest.HomeReview is { } deferredReview)
+                    Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, null, null, deferredReview));
+                else if (!string.IsNullOrWhiteSpace(deferredLaunchRequest.Surface)
                     || !string.IsNullOrWhiteSpace(deferredLaunchRequest.Prompt))
                 {
                     await mainView.ApplyMobileLaunchRequestAsync(

@@ -18,6 +18,7 @@ public sealed class PictureNativeCuiSurface(
     Func<PictureWorkspaceCommandKind, bool>? ownerAvailable = null,
     IMotionPreferenceSource? motionPreferences = null) : UserControl, IDisposable
 {
+    public event EventHandler? SourceUnavailable;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly SemaphoreSlim _operation = new(1, 1);
     private readonly Image _image = new() { Stretch = Stretch.Uniform };
@@ -56,6 +57,7 @@ public sealed class PictureNativeCuiSurface(
             _bindings = new(DispatchAsync, kind => !_disposed && _available &&
                 (kind switch
                 {
+                    PictureWorkspaceCommandKind.ShowInformation => _source is not null,
                     PictureWorkspaceCommandKind.NextFrame => !_playing && _source?.CanAdvanceFrames == true,
                     PictureWorkspaceCommandKind.PlayAnimation => !_playing && _motionAllowsPlayback && _source?.CanAdvanceFrames == true,
                     PictureWorkspaceCommandKind.PauseAnimation => _playing,
@@ -84,6 +86,12 @@ public sealed class PictureNativeCuiSurface(
             command.DocumentId != _artifact.Document.DocumentId || command.BaseRevision != _artifact.Document.Revision ||
             command.BackingFileId != _artifact.BackingFileId)
             throw new UnauthorizedAccessException("This Picture operation is unavailable.");
+        if (command.Kind == PictureWorkspaceCommandKind.ShowInformation)
+        {
+            await ValidateAccessAsync(cancellationToken);
+            if (_disposed || !_available) throw new UnauthorizedAccessException("Picture information is unavailable.");
+            _informationVisible = !_informationVisible; RefreshBindings(); return;
+        }
         if (command.Kind == PictureWorkspaceCommandKind.PauseAnimation) { PausePlayback(); return; }
         if (command.Kind == PictureWorkspaceCommandKind.PlayAnimation)
         {
@@ -214,6 +222,7 @@ public sealed class PictureNativeCuiSurface(
         var state = await readiness.CheckAsync(cancellationToken);
         if (state.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(state.Message);
     }
+    private bool _informationVisible;
     private void Render()
     {
         if (_disposed || !_available) throw new UnauthorizedAccessException("Picture access changed.");
@@ -228,12 +237,16 @@ public sealed class PictureNativeCuiSurface(
             ? "Original source retained. Native frame stepping is available." : "Original source retained."
             : "Review non-destructive edits in Home before committing. The original source is retained."
             : "Picture preview unavailable") + (_available && _source?.CanAdvanceFrames == true && !_motionAllowsPlayback ? " " + _motionStatus : ""),
-        _artifact?.BackingFileId, _available ? _source?.FrameDelayMicroseconds : null, _playing);
+        _artifact?.BackingFileId, _available ? _source?.FrameDelayMicroseconds : null, _playing,
+        _available && _informationVisible ? _source?.InformationSummary ?? "" : "", _available && _informationVisible);
     private void Invalidate()
     {
+        var notify = _available && !_disposed;
         _playing = false; _playTimer.Stop();
-        _available = false; _image.Source = null; _bitmap?.Dispose(); _bitmap = null;
+        _available = false; _artifact = null; _informationVisible = false;
+        _image.Source = null; _bitmap?.Dispose(); _bitmap = null;
         RefreshBindings();
+        if (notify) SourceUnavailable?.Invoke(this, EventArgs.Empty);
     }
     private void ReleaseSource() { _source?.Dispose(); _source = null; }
     public void Dispose()

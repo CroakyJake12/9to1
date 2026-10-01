@@ -7,11 +7,16 @@ namespace HavenOS.Home.Core;
 /// <summary>Current Home-owned native personal routing state. This reader never claims legacy/global, foreign,
 /// app, Agent or organisation records and never invents a route when a profile has only an unsaved draft.</summary>
 public sealed class HomePersonalModelRoutes(HomeLocalProfileIdentity profiles, IVersionedModelRouteRepository routes,
-    ResourceAuthorizationService resources)
+    Func<ResourceAuthorizationService> resourceSource)
 {
+    public HomePersonalModelRoutes(HomeLocalProfileIdentity profiles, IVersionedModelRouteRepository routes,
+        ResourceAuthorizationService resources) : this(profiles, routes, () => resources) { }
+
     public async Task<ConfiguredModelRoute?> GetAsync(ModelCapabilityCategory category, CancellationToken cancellationToken = default)
     {
         if (!Enum.IsDefined(category)) return null;
+        // Resolve the same host singleton at use, after the full owning authority graph is composed.
+        var resources = resourceSource();
         var actor = await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         if (actor is null || actor.AccountId is not null || actor.OrganisationId is not null) return null;
         var scope = new ResourceScope("home.profile-model-routes", actor.ProfileId, actor.AuthenticationRevision, ResourceAccess.Read);

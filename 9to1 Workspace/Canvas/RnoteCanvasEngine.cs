@@ -13,7 +13,7 @@ public sealed class RnoteCanvasEngine : IDisposable
 {
     private const string Library = "cakeos_canvas_rnote_poc";
     private const int MaximumPayloadBytes = 256 * 1024 * 1024;
-    internal const int MaximumStrokeSamples = 1_000_000;
+    public const int MaximumStrokeSamples = 1_000_000;
     private readonly object _gate = new();
     private readonly EngineHandle _handle;
 
@@ -275,6 +275,6 @@ public sealed class RnoteCanvasEngine : IDisposable
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct RnotePointerSample(double X, double Y, double Pressure, double TiltX = 0, double TiltY = 0)
 {
-    internal bool IsValid => double.IsFinite(X) && double.IsFinite(Y) && double.IsFinite(Pressure)
+    public bool IsValid => double.IsFinite(X) && double.IsFinite(Y) && double.IsFinite(Pressure)
         && double.IsFinite(TiltX) && double.IsFinite(TiltY) && Pressure is >= 0 and <= 1;
 }

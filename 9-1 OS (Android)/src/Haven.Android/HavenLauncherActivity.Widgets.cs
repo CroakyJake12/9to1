@@ -116,7 +116,7 @@ public sealed partial class HavenLauncherActivity
                 var owned = await WidgetSessions.ReadWidgetAsync(expected, target, _launcherLifetime.Token);
                 if (owned?.Placement.Android != provider) throw new UnauthorizedAccessException("The saved widget owner changed. Refresh before associating it.");
                 WidgetBindings.Associate(binding with { PlacementId = target });
-                if (await WidgetSessions.IsCurrentAsync(expected, _launcherLifetime.Token)) { _layout = expected.Layout; RenderPage(); }
+                if (await WidgetSessions.IsCurrentAsync(expected, _launcherLifetime.Token)) { _layout = DisplayedLayouts.Bind(expected); RenderPage(); }
                 return;
             }
             var label = _widgetManager?.GetAppWidgetInfo(widgetId)?.LoadLabel(PackageManager ?? throw new InvalidOperationException("Android package manager is unavailable.")) ?? "Android widget";
@@ -128,7 +128,7 @@ public sealed partial class HavenLauncherActivity
             }, _launcherLifetime.Token);
             WidgetBindings.Associate(binding with { PlacementId = placement });
             var current = await WidgetSessions.ReadAsync(_launcherLifetime.Token);
-            if (current is not null && current.Layout.AuthorityId == saved.AuthorityId && current.Layout.Revision == saved.Revision) _layout = saved;
+            if (current is not null && current.Layout.AuthorityId == saved.AuthorityId && current.Layout.Revision == saved.Revision) _layout = DisplayedLayouts.Bind(current);
             RenderPage();
         }
         catch (Exception error) { Toast.MakeText(this, error.Message, ToastLength.Long)?.Show(); }

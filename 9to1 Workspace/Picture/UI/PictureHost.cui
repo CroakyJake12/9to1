@@ -16,10 +16,10 @@
         <Button content="Next page" action="picture.host.page" is-enabled="{Binding CanPage}" />
       </StackPanel>
       <WrapPanel orientation="Horizontal">
-        <StackPanel spacing="4"><TextBlock text="Left (px)" /><TextBox text="{Binding CropX, Mode=TwoWay}" accessible-name="Crop left coordinate in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
-        <StackPanel spacing="4"><TextBlock text="Top (px)" /><TextBox text="{Binding CropY, Mode=TwoWay}" accessible-name="Crop top coordinate in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
-        <StackPanel spacing="4"><TextBlock text="Width (px)" /><TextBox text="{Binding Width, Mode=TwoWay}" accessible-name="Crop or resize width in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
-        <StackPanel spacing="4"><TextBlock text="Height (px)" /><TextBox text="{Binding Height, Mode=TwoWay}" accessible-name="Crop or resize height in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Left (px)" /><TextBox id="picture-host-left" text="{Binding CropX, Mode=TwoWay}" accessible-name="Crop left coordinate in pixels" is-enabled="{Binding CanEditGeometry}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Top (px)" /><TextBox id="picture-host-top" text="{Binding CropY, Mode=TwoWay}" accessible-name="Crop top coordinate in pixels" is-enabled="{Binding CanEditGeometry}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Width (px)" /><TextBox id="picture-host-width" text="{Binding Width, Mode=TwoWay}" accessible-name="Crop or resize width in pixels" is-enabled="{Binding CanEditGeometry}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Height (px)" /><TextBox id="picture-host-height" text="{Binding Height, Mode=TwoWay}" accessible-name="Crop or resize height in pixels" is-enabled="{Binding CanEditGeometry}" /></StackPanel>
       </WrapPanel>
     </StackPanel>
     <PictureHostContent id="picture-native-content" grid-row="2" accessible-name="Picture document and requests" />

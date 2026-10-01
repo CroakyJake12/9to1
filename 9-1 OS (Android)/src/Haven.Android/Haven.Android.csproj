@@ -33,6 +33,7 @@
     <ProjectReference Include="../../../9to1 Workspace/Launcher/Native/NineToOne.Launcher.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Games/CUI/HavenOS.Games.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />
     <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="HavenGoogleCalendarClientId" Value="$(HavenGoogleCalendarClientId)" Condition="'$(HavenGoogleCalendarClientId)' != ''" />
     <AssemblyMetadata Include="HavenMicrosoftCalendarClientId" Value="$(HavenMicrosoftCalendarClientId)" Condition="'$(HavenMicrosoftCalendarClientId)' != ''" />

@@ -59,7 +59,9 @@ public static class ServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeProductivityEngineService>());
         services.TryAddSingleton<HomeCoreRuntime>();
         services.TryAddSingleton<IVersionedModelRouteRepository, HomeVersionedModelRouteRepository>();
-        services.TryAddSingleton<HomePersonalModelRoutes>();
+        services.TryAddSingleton<HomePersonalModelRoutes>(provider => new(
+            provider.GetRequiredService<HomeLocalProfileIdentity>(), provider.GetRequiredService<IVersionedModelRouteRepository>(),
+            () => provider.GetRequiredService<ResourceAuthorizationService>()));
         services.TryAddSingleton<NodeGraphSchemaRegistry>(provider => new(provider.GetServices<GraphNodeType>(), provider.GetServices<GraphCapabilityProfile>()));
         services.TryAddSingleton<IVersionedNodeGraphRepository, HomeVersionedNodeGraphRepository>();
         services.TryAddSingleton<NodeGraphRuntimeRegistry>();
@@ -108,6 +110,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPresentImportService, PresentPptxImportService>();
         services.AddSingleton<IDocumentShapeGallery, DocumentShapeGalleryRepository>();
         services.AddSingleton<IDataWorkbookRepository, DataWorkbookRepository>();
+        services.TryAddSingleton<IDataWorkbookCommitAuthority, DataLocalStoreAuthority>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeLocalStoreEvidenceProvider, DataLocalStoreEvidenceProvider>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, DataWorkbookMutationAccessResolver>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, DataMutationActionPolicies>());
+        services.TryAddSingleton<DataHomeRecordUpdateOperation>();
+        services.TryAddSingleton<DataRecordMutationRecovery>();
         services.AddSingleton<IDataWorkbookFormatService, DataXlsxFormatService>();
         services.AddSingleton<IDataWorkbookQueryService, DataWorkbookQueryService>();
         services.AddSingleton<NotesAttachmentStore>();
@@ -156,6 +164,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProviderPricingService, ProviderPricingService>();
         services.AddSingleton<IModelUsageRepository, ModelUsageRepository>();
         services.AddSingleton<ConversationRepository>();
+        services.TryAddSingleton<IConversationSpaceCommitStore>(provider => provider.GetRequiredService<ConversationRepository>());
+        services.TryAddSingleton<ConversationLocalStoreAuthority>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeLocalStoreEvidenceProvider, ConversationLocalStoreEvidenceProvider>());
         services.AddSingleton<UsageTrackingConversationRepository>();
         services.AddSingleton<IConversationRepository>(provider => provider.GetRequiredService<UsageTrackingConversationRepository>());
         services.AddSingleton<ConversationProductionRepository>();

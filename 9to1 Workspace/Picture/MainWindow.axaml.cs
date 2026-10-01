@@ -144,6 +144,7 @@ public sealed partial class MainWindow : Window
         _model.Set("CanNavigate", idle && noPending);
         _model.Set("CanSetup", idle && _ready && _configuration is null && noPending);
         _model.Set("CanWrite", idle && WriteAvailable() && noPending);
+        _model.Set("CanEditGeometry", idle && WriteAvailable() && noPending && _opened is not null);
         _model.Set("CanFinish", idle && !noPending);
         _model.Set("CanReviewWorkspace", idle && _ready && _workspace is null && _configuration is not null && noPending);
         if (_view is PictureNativeCuiSurface surface) surface.RefreshActionAvailability();
@@ -169,6 +170,13 @@ public sealed partial class MainWindow : Window
             kind => !_busy && _pendingRequest is null && _pendingAudit is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
                 PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export,
             motionPreferences: Get<Haven.Application.IMotionPreferenceSource>());
+        surface.SourceUnavailable += (_, _) =>
+        {
+            if (!ReferenceEquals(_view, surface)) return;
+            _opened = null;
+            _model.Set("CropX", ""); _model.Set("CropY", ""); _model.Set("Width", ""); _model.Set("Height", "");
+            RefreshBindings();
+        };
         try { await surface.InitializeAsync(ct); }
         catch { surface.Dispose(); throw; }
         _opened = opened; _model.Set("Width", opened.Artifact.Document.CanvasWidth.ToString(CultureInfo.InvariantCulture));

@@ -15,6 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Haven.Desktop\Haven.Desktop.csproj" />
+    <ProjectReference Include="../../../Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/CUI/HavenOS.Files.CUI.csproj" />
     <PackageReference Include="Avalonia.Headless.XUnit" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

@@ -1,11 +1,20 @@
 using System.Runtime.InteropServices;
+using System.Collections.ObjectModel;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 
 namespace HavenOS.Images;
 
 public sealed record PictureGlycinCicp(byte Primaries, byte Transfer, byte Matrix, byte FullRange);
 public sealed record PictureGlycinFrame(uint Width, uint Height, uint Stride, byte[] BgraPremultipliedPixels,
-    long DelayMicroseconds, int ColorMode, byte[]? IccProfile, PictureGlycinCicp? Cicp);
+    long DelayMicroseconds, int ColorMode, byte[]? IccProfile, PictureGlycinCicp? Cicp)
+{
+    public PictureGlycinMetadata? Metadata { get; init; }
+    public string? MetadataNotice { get; init; }
+}
+
+/// <summary>Actual donor key-value metadata and image orientation in EXIF numeric format. This is not an EXIF/IPTC/XMP editor.</summary>
+public sealed record PictureGlycinMetadata(string MimeType, ushort SourceOrientation, IReadOnlyDictionary<string, string> Fields);
 
 /// <summary>
 /// Controlled libglycin C ABI with bounded individual frame materialization. Native package,
@@ -45,6 +54,8 @@ public sealed class PictureGlycinDecoder
         private int _nativeOperationActive;
         private bool _disposed;
         private bool _ended;
+        private PictureGlycinMetadata? _metadata;
+        private string? _metadataNotice;
         private const int NoMoreFramesError = 2; // GlyLoaderError from the pinned public C header.
         private readonly bool _loopAnimation;
         private FrameSession(GBytesHandle bytes, GObjectHandle loader, GObjectHandle image, GObjectHandle cancellable, bool loopAnimation)
@@ -65,6 +76,55 @@ public sealed class PictureGlycinDecoder
                     return mime;
                 }
             }
+        }
+
+        /// <summary>Copies the pinned donor's transfer-full metadata using the public C ABI and bounded UTF-8 strings.</summary>
+        public PictureGlycinMetadata ReadMetadata()
+        {
+            lock (_gate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (_metadata is not null) return _metadata;
+                var orientation = Native.gly_image_get_transformation_orientation(_image);
+                if (orientation is < 1 or > 8) throw new InvalidDataException("The donor returned an invalid image orientation.");
+                var fields = new SortedDictionary<string, string>(StringComparer.Ordinal);
+                var keys = Native.gly_image_get_metadata_keys(_image); // transfer-full GStrv
+                var totalBytes = 0;
+                try
+                {
+                    if (keys != IntPtr.Zero)
+                        for (var i = 0; ; i++)
+                        {
+                            var keyPointer = Marshal.ReadIntPtr(keys, checked(i * IntPtr.Size));
+                            if (keyPointer == IntPtr.Zero) break;
+                            if (i == 256) throw new NotSupportedException("The image exceeds the supported metadata field count.");
+                            var key = ReadBoundedUtf8(keyPointer, 2048, ref totalBytes);
+                            var valuePointer = Native.gly_image_get_metadata_key_value(_image, key); // transfer-full gchar*
+                            try
+                            {
+                                if (valuePointer == IntPtr.Zero || !fields.TryAdd(key, ReadBoundedUtf8(valuePointer, 65536, ref totalBytes)))
+                                    throw new InvalidDataException("The donor returned missing or duplicate image metadata.");
+                            }
+                            finally { if (valuePointer != IntPtr.Zero) Native.g_free(valuePointer); }
+                        }
+                }
+                finally { if (keys != IntPtr.Zero) Native.g_strfreev(keys); }
+                return _metadata = new(MimeType, orientation, new ReadOnlyDictionary<string, string>(fields));
+            }
+        }
+        private static string ReadBoundedUtf8(IntPtr pointer, int maximum, ref int totalBytes)
+        {
+            var length = 0;
+            while (Marshal.ReadByte(pointer, length) != 0)
+            {
+                if (length == maximum) throw new NotSupportedException("The image metadata string exceeds its supported bound.");
+                length++;
+            }
+            totalBytes = checked(totalBytes + length);
+            if (totalBytes > 1024 * 1024) throw new NotSupportedException("The image metadata exceeds its materialization budget.");
+            var bytes = new byte[length]; Marshal.Copy(pointer, bytes, 0, length);
+            try { return new UTF8Encoding(false, true).GetString(bytes); }
+            finally { Array.Clear(bytes); }
         }
 
         internal static FrameSession Create(ReadOnlySpan<byte> encoded, bool loopAnimation, CancellationToken cancellationToken)
@@ -131,6 +191,18 @@ public sealed class PictureGlycinDecoder
                 }
                 using var frame = new GObjectHandle(RequireSuccess(pointer, error, "next frame"));
                 var result = ReadFrame(frame);
+                try
+                {
+                    if (_metadataNotice is null) result = result with { Metadata = ReadMetadata() };
+                    else result = result with { MetadataNotice = _metadataNotice };
+                }
+                catch (Exception metadataError) when (metadataError is InvalidDataException or NotSupportedException or DecoderFallbackException)
+                {
+                    // Unsupported metadata must not hide otherwise valid native pixels. Original bytes remain authoritative.
+                    _metadataNotice = metadataError.Message;
+                    result = result with { MetadataNotice = _metadataNotice };
+                }
+                catch { PictureFilesSourceRenderer.ClearFrame(result); throw; }
                 if (cancellationToken.IsCancellationRequested || Native.g_cancellable_is_cancelled(_cancellable) != 0)
                 {
                     PictureFilesSourceRenderer.ClearFrame(result);
@@ -289,6 +361,11 @@ public sealed class PictureGlycinDecoder
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_bytes_get_data(IntPtr bytes, out nuint length);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_bytes_unref(IntPtr bytes);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_error_free(IntPtr error);
+        [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_free(IntPtr value);
+        [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_strfreev(IntPtr value);
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_image_get_metadata_keys(GObjectHandle image);
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_image_get_metadata_key_value(GObjectHandle image, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern ushort gly_image_get_transformation_orientation(GObjectHandle image);
         [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_frame_request_new();
         [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern void gly_frame_request_set_loop_animation(GObjectHandle request, int loopAnimation);
         [DllImport(Glycin, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr gly_image_get_specific_frame(GObjectHandle image, GObjectHandle request, out IntPtr error);

@@ -11,10 +11,12 @@
       <Button id="picture-play" action="9to1.Picture.Animation.Play" is-enabled="{Binding CanPlay}" content="Play" accessible-name="Play original animation" />
       <Button id="picture-pause" action="9to1.Picture.Animation.Pause" is-enabled="{Binding CanPause}" content="Pause" accessible-name="Pause original animation" />
       <Button id="picture-next-frame" action="9to1.Picture.Animation.NextFrame" is-enabled="{Binding CanAdvanceFrames}" content="Next frame" accessible-name="Show next animation frame without editing the Picture document" />
+      <Button id="picture-information" action="9to1.Picture.Information" is-enabled="{Binding CanShowInformation}" content="Information" accessible-name="Show image information" />
       <Button id="picture-export" action="9to1.Picture.Export" is-enabled="{Binding CanExport}" content="Export" accessible-name="Export Picture as a separate asset" />
     </WrapPanel>
     <PictureRasterSurface id="picture-surface" grid-row="1" accessible-name="Picture image composition surface" />
     <StackPanel id="picture-status" grid-row="2" spacing="4">
+      <ScrollViewer id="picture-information-scroll" is-visible="{Binding InformationVisible}" max-height="180"><TextBlock id="picture-information-summary" text="{Binding InformationSummary}" text-wrapping="Wrap" /></ScrollViewer>
       <TextBlock id="picture-animation-status" text="{Binding AnimationSummary}" accessible-name="Picture animation frame timing" />
       <TextBlock id="picture-geometry" text="{Binding GeometrySummary}" accessible-name="Picture canvas dimensions" />
       <TextBlock id="picture-storage-status" text="{Binding PersistenceStatus}" accessible-name="Picture persistence state" />

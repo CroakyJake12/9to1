@@ -6,6 +6,11 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="CSharpMath" />
+    <PackageReference Include="CSharpMath.Rendering" />
+    <PackageReference Include="CSharpMath.SkiaSharp" />
+    <EmbeddedResource Include="ThirdParty/CSharpMath/**/*" />
+    <Content Include="ThirdParty/CSharpMath/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <ProjectReference Include="../HavenOS.Home.csproj" />
     <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <EmbeddedResource Include="Resources/Cui/Models.cui" LogicalName="HavenOS.Home.NativeUI.Resources.Cui.Models.cui" />

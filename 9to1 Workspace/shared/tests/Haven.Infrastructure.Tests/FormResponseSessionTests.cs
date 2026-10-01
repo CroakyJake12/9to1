@@ -83,6 +83,7 @@ public sealed class FormResponseSessionTests
         var started = await sessions.StartAsync(project.FormID, published.Revision);
         Assert.True(started.Success);
         var responseID = started.Response!.ResponseID;
+        Assert.Equal("ResponseNotSubmitted", (await sessions.ReadSubmittedAsync(project.FormID, responseID)).Code);
         Assert.Equal("AttemptLimitReached", (await sessions.StartAsync(project.FormID, published.Revision)).Code);
         var answered = await sessions.AnswerAsync(project.FormID, responseID, 1, field.FieldID, JsonSerializer.SerializeToElement("CPU"));
         Assert.True(answered.Success); Assert.Empty(answered.Response!.ReleasedResults);
@@ -117,6 +118,16 @@ public sealed class FormResponseSessionTests
         Assert.Equal(FormResponseState.Submitted, submitted.Response!.State);
         Assert.Single(submitted.Response.ReleasedResults);
         Assert.Equal(started.Response.FormVersionID, submitted.Response.FormVersionID);
+        var retained = await reopened.ReadSubmittedAsync(project.FormID, responseID);
+        Assert.True(retained.Success); Assert.Equal(owner, retained.Actor);
+        Assert.Equal(FormFieldKind.ShortText, Assert.Single(retained.Project!.Fields).Kind);
+        Assert.Equal("Processor", Assert.Single(retained.Project.Fields).Label);
+        Assert.Equal(submitted.Response.FormVersionID, retained.Response!.FormVersionID);
+        actor.Current = owner with { ActorId = "other", ProfileId = "other-profile" };
+        Assert.Equal("ResponseUnavailable", (await reopened.ReadSubmittedAsync(project.FormID, responseID)).Code);
+        actor.Current = owner; authority.Allowed = false;
+        Assert.Equal("PermissionDenied", (await reopened.ReadSubmittedAsync(project.FormID, responseID)).Code);
+        authority.Allowed = true;
         Assert.Equal("ResponseClosed", (await reopened.AnswerAsync(project.FormID, responseID, submitted.Response.Revision,
             field.FieldID, JsonSerializer.SerializeToElement("CPU"))).Code);
     }

@@ -9,6 +9,9 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="CSharpMath" Version="[1.0.0-pre.1]" />
+    <PackageVersion Include="CSharpMath.Rendering" Version="[1.0.0-pre.1]" />
+    <PackageVersion Include="CSharpMath.SkiaSharp" Version="[1.0.0-pre.1]" />
     <PackageVersion Include="Avalonia" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Android" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.0.1" />

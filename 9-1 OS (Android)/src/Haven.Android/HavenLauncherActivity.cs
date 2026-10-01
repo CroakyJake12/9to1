@@ -108,6 +108,7 @@ public sealed partial class HavenLauncherActivity : Activity
     protected override void OnStop()
     {
         _activityStarted = false;
+        PauseLauncherDulche();
         ClearMountedWidgets();
         CloseWidgetDialogs();
         _grid?.RemoveAllViews();
@@ -126,6 +127,7 @@ public sealed partial class HavenLauncherActivity : Activity
         base.OnResume();
         if (!_homeReady) return;
         ApplyWallpaper();
+        _ = RevalidateLauncherDulcheAsync();
         RenderWidgets();
         LoadAppsAsync(showLoading: _apps.Count == 0);
     }
@@ -143,6 +145,7 @@ public sealed partial class HavenLauncherActivity : Activity
 
     protected override void OnDestroy()
     {
+        CloseLauncherDulche();
         _root?.SetOnTouchListener(null);
         CloseGestureDialogs();
         CloseWidgetDialogs();
@@ -290,6 +293,7 @@ public sealed partial class HavenLauncherActivity : Activity
         SetContentView(_root);
         AndroidTypography.ApplyTree(_root);
         ApplyWallpaper();
+        _ = RevalidateLauncherDulcheAsync();
         RenderWidgets();
     }
 

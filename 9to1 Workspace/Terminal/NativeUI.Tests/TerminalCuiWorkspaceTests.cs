@@ -18,6 +18,8 @@ public sealed class TerminalCuiWorkspaceTests
     public async Task Real_session_mount_routes_input_and_denies_ai_permission_and_replaced_session()
     {
         if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This acceptance requires the actual Linux PTY adapter.");
+        var capability = TerminalViewportCapability.Check();
+        Assert.True(capability.Available, capability.Message);
         var root = Path.Combine(Path.GetTempPath(), "astra-terminal-cui-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         try

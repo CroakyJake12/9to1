@@ -4,12 +4,14 @@ using Haven.Core.Forms;
 namespace Haven.Application;
 
 public sealed record FormResponseSessionResult(bool Success, string? Code, FormResponse? Response);
+public sealed record FormSubmittedResponseResult(bool Success, string? Code, FormProject? Project, FormResponse? Response,
+    AuthenticatedResourceActor? Actor = null, Guid StoreID = default);
 
 /// <summary>Authenticated response save/resume over the canonical publication and Home-backed settings ports.
 /// One compare/exchange contains attempt admission and the response checkpoint; no respondent supplies
 /// owner identity, marks, timers, checkpoints or authored rules. Anonymous/live sessions need their own
 /// trusted respondent admission and are not inferred from an arbitrary request ID.</summary>
-public sealed class FormResponseSessionService(FormPublicationService publications, IVersionedSettingsStore settings,
+public sealed partial class FormResponseSessionService(FormPublicationService publications, IVersionedSettingsStore settings,
     IResourceStoreIdentitySource identities, IFormStoreAuthority authority, IAuthenticatedResourceActorSource actors,
     TimeProvider? clock = null)
 {
@@ -42,6 +44,35 @@ public sealed class FormResponseSessionService(FormPublicationService publicatio
         catch (NotSupportedException) { return new(false, "CapabilityUnavailable", null); }
         var updated = state with { Responses = state.Responses.Append(new Entry(owner, runtime.CaptureCheckpoint())).ToArray() };
         return await CommitAsync(publication, "forms.response.create", actor, rootID, expectedJson, updated, runtime.Read(), token).ConfigureAwait(false);
+    }
+
+    /// <summary>Identity of the actual settings root used by this response owner; acquisition may initialize that root UUID.</summary>
+    public ValueTask<ResourceStoreIdentity> GetSourceStoreIdentityAsync(CancellationToken token = default) => identities.GetStoreIdentityAsync(token);
+
+    /// <summary>Loads the owner's retained submitted response and its exact immutable published schema.
+    /// Callers cannot substitute authored JSON, response marks or a newer draft during Data preparation.</summary>
+    public async Task<FormSubmittedResponseResult> ReadSubmittedAsync(Guid formID, Guid responseID, CancellationToken token = default)
+    {
+        if (formID == Guid.Empty || responseID == Guid.Empty) return new(false, "InvalidArgument", null, null);
+        var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
+        if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId == Guid.Empty) return new(false, "PermissionDenied", null, null);
+        var loaded = await publications.ReadAsync(formID, token).ConfigureAwait(false);
+        if (!loaded.Success) return new(false, loaded.Code, null, null);
+        var publication = loaded.Publication!;
+        var actor = await AuthorizeAsync(originalRoot.StoreId, publication, "forms.response.read", token).ConfigureAwait(false);
+        if (actor is null) return new(false, "PermissionDenied", null, null);
+        var (state, _, rootID) = await LoadAsync(formID, token).ConfigureAwait(false);
+        if (rootID != originalRoot.StoreId) return new(false, "PermissionDenied", null, null);
+        var entry = state.Responses.SingleOrDefault(entry => entry.Checkpoint.ResponseID == responseID);
+        if (entry is null || entry.Owner != Owner.From(actor)) return new(false, "ResponseUnavailable", null, null);
+        if (entry.Checkpoint.SubmittedAt is null) return new(false, "ResponseNotSubmitted", null, null);
+        var version = publication.Versions.SingleOrDefault(version => version.FormVersionID == entry.Checkpoint.FormVersionID)
+            ?? throw new InvalidDataException("Response refers to a missing immutable form version.");
+        var project = FormAuthoringService.Decode(version.Project);
+        var response = FormResponseRuntime.Restore(project, entry.Checkpoint, _clock).Read();
+        if (response.State != FormResponseState.Submitted) return new(false, "ResponseNotSubmitted", null, null);
+        return await AuthorizeAsync(rootID, publication, "forms.response.read", token).ConfigureAwait(false) == actor
+            ? new(true, null, project, response, actor, rootID) : new(false, "PermissionDenied", null, null);
     }
 
     public Task<FormResponseSessionResult> ResumeAsync(Guid formID, Guid responseID, CancellationToken token = default) =>
@@ -100,6 +131,8 @@ public sealed class FormResponseSessionService(FormPublicationService publicatio
         if (authority is not IFormStoreCommitAuthority commitAuthority) return new(false, "PermissionDenied", null);
         var admission = await commitAuthority.CaptureCommitAdmissionAsync(rootID, publication.FormID, publication.Revision, action, actor, token).ConfigureAwait(false);
         if (admission is null) return new(false, "PermissionDenied", null);
+        state = state with { SchemaVersion = 2, Responses = state.Responses.Select(entry =>
+            entry with { DataWrites = entry.DataWrites ?? [] }).ToArray() };
         var json = JsonSerializer.Serialize(state);
         if (System.Text.Encoding.UTF8.GetByteCount(json) > FormProjectCodec.MaximumBytes) return new(false, "ResponseCapacityReached", null);
         var current = await publications.ReadAsync(publication.FormID, token).ConfigureAwait(false);
@@ -140,17 +173,30 @@ public sealed class FormResponseSessionService(FormPublicationService publicatio
             throw new InvalidDataException("Response store exceeds its configured byte bound.");
         var state = json is null ? new State(1, formID, []) : JsonSerializer.Deserialize<State>(json)
             ?? throw new InvalidDataException("Response store is missing.");
-        if (state.SchemaVersion != 1 || state.FormID != formID || state.Responses is null || state.Responses.Count > 10000
+        if (state.SchemaVersion is not (1 or 2) || state.FormID != formID || state.Responses is null || state.Responses.Count > 10000
             || state.Responses.Any(entry => entry is null || entry.Owner is null || entry.Checkpoint is null
                 || entry.Checkpoint.FormID != formID || entry.Checkpoint.ResponseID == Guid.Empty)
             || state.Responses.Select(entry => entry.Checkpoint.ResponseID).Distinct().Count() != state.Responses.Count)
             throw new InvalidDataException("Response store identity or schema is invalid.");
         if (snapshot.StoreIdentity is not { SchemaVersion: 1 } identity || identity.StoreId == Guid.Empty)
             throw new InvalidDataException("Response store identity is unavailable.");
+        foreach (var entry in state.Responses)
+        {
+            if (state.SchemaVersion == 2 && entry.DataWrites is null || state.SchemaVersion == 1 && entry.DataWrites is { Count: > 0 }
+                || entry.DataWrites is { Count: > 256 } || entry.Checkpoint.SubmittedAt is null && entry.DataWrites is { Count: > 0 })
+                throw new InvalidDataException("Invalid response Data journal schema.");
+            var operations = new HashSet<Guid>();
+            foreach (var attempt in entry.DataWrites ?? [])
+            {
+                var captured = FormDataWriteAttemptValidation.Capture(attempt, formID, entry.Checkpoint.ResponseID,
+                    entry.Checkpoint.FormVersionID, entry.Checkpoint.Revision, identity.StoreId);
+                if (!operations.Add(captured.Operation.OperationID)) throw new InvalidDataException("Duplicate response Data operation.");
+            }
+        }
         return (state, json, identity.StoreId);
     }
     private sealed record State(int SchemaVersion, Guid FormID, IReadOnlyList<Entry> Responses);
-    private sealed record Entry(Owner Owner, FormResponseCheckpoint Checkpoint);
+    private sealed record Entry(Owner Owner, FormResponseCheckpoint Checkpoint, IReadOnlyList<FormDataWriteAttempt>? DataWrites = null);
     private sealed record Owner(string ActorID, string ProfileID, Guid? AccountID, Guid? OrganisationID)
     {
         public static Owner From(AuthenticatedResourceActor actor) => new(actor.ActorId, actor.ProfileId, actor.AccountId, actor.OrganisationId);

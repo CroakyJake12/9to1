@@ -1,9 +1,11 @@
 using System.Globalization;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Apps.Sites.Domain;
 using HavenOS.Apps.Sites.Infrastructure;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace HavenOS.Apps.Sites.Application;
 
@@ -70,7 +72,28 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
         var authoring = new SiteAuthoringService(projects);
         var payload = intent.Payload;
         string Text(string name) => payload.GetProperty(name).GetString() ?? "";
-        return intent.Operation switch
+        SiteApiResult<SiteProject>? result = null;
+        ExceptionDispatchInfo? failure = null;
+        try
+        {
+            result = await MutateAsync().ConfigureAwait(false);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            // An unexpected owner failure is not proof that no effect occurred.
+            failure = ExceptionDispatchInfo.Capture(error);
+        }
+        var outcome = new HomeExecutionOutcome(
+            failure is not null ? HomePermissionRequestState.PartiallyCompleted : result!.IsSuccess
+                ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
+            failure is not null ? "SitesWriteNeedsRecovery" : result!.IsSuccess ? "SitesWriteCommitted" : "SitesWriteRejected",
+            failure is not null ? "The Sites write outcome requires inspection; do not repeat the mutation."
+                : result!.IsSuccess ? "The canonical Sites revision was committed." : "The owning Sites write was rejected.",
+            Array.AsReadOnly(capability.Scopes.Select(scope => new HomeObjectReference(scope.Kind, scope.Id)).ToArray()));
+        var recovery = new SiteNativeWriteAuditPendingException(this, capability, outcome, result, failure);
+        return await RetryAuditAsync(recovery, CancellationToken.None).ConfigureAwait(false);
+
+        async Task<SiteApiResult<SiteProject>> MutateAsync() => intent.Operation switch
         {
             "create" => await projects.CreateProjectAsync(new(intent.Binding.FilesFolderId, null, null, intent.Binding.FolderRevision,
                 Text("name"), Text("frameworkID"), Text("relativePath")), cancellationToken).ConfigureAwait(false),
@@ -91,4 +114,39 @@ public sealed class SiteNativeWriteCoordinator(ISiteNativeWorkspaceAuthority wor
             _ => throw new InvalidOperationException("Unknown captured Sites operation.")
         };
     }
+
+    /// <summary>Retries only the exact retained Home audit. Never claims or executes another write.</summary>
+    public async Task<SiteApiResult<SiteProject>> RetryAuditAsync(SiteNativeWriteAuditPendingException pending,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(pending);
+        if (!ReferenceEquals(pending.Owner, this)) throw new UnauthorizedAccessException("Sites audit recovery belongs to another coordinator.");
+        try
+        {
+            var audited = await home.CompleteExecutionAsync(pending.Capability, pending.Outcome, cancellationToken).ConfigureAwait(false);
+            if (!audited.Succeeded) throw pending;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
+        {
+            throw pending;
+        }
+        pending.Failure?.Throw();
+        return pending.Result!;
+    }
+}
+
+/// <summary>In-process owner-held audit recovery, not a serializable execution grant.</summary>
+public sealed class SiteNativeWriteAuditPendingException : Exception
+{
+    internal SiteNativeWriteAuditPendingException(SiteNativeWriteCoordinator owner, HomeResourceExecutionCapability capability,
+        HomeExecutionOutcome outcome, SiteApiResult<SiteProject>? result, ExceptionDispatchInfo? failure)
+        : base("The Sites operation has finished but its Home audit requires recovery. Do not repeat the write.")
+    { Owner = owner; Capability = capability; Outcome = outcome; Result = result; Failure = failure; }
+    internal SiteNativeWriteCoordinator Owner { get; }
+    internal HomeResourceExecutionCapability Capability { get; }
+    internal HomeExecutionOutcome Outcome { get; }
+    internal ExceptionDispatchInfo? Failure { get; }
+    public SiteApiResult<SiteProject>? Result { get; }
+    public bool CommitAcknowledged => Result?.IsSuccess == true;
+    public string RequestId => Capability.RequestId;
 }

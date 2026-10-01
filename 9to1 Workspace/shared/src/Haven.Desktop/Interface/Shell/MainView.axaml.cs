@@ -120,7 +120,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private GoPage? _goPage;
     private NewChatPage? _newChatPage;
     private PlanPageViewModel? _planPage;
-    private TerminalPage? _terminalPage;
+    private HomeTerminalCuiPage? _terminalPage;
     private Haven.Desktop.Views.Pages.Mail.MailPage? _mailPage;
     private PlayPage? _playPage;
     private readonly DispatcherTimer _reminderTimer;
@@ -857,37 +857,6 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         AddOrSelectTab("mail", "Mail", _mailPage, false, HavenSurface.Mail);
         ApplyShellVisualState();
     }
-    private void OpenTerminal(bool forceNewTab = false, string? initialDirectory = null)
-    {
-        var hub = Haven.Desktop.App.Services?.GetService(typeof(TerminalCommandActivityHub)) as TerminalCommandActivityHub;
-        var sessionFactory = Haven.Desktop.App.Services?.GetService(typeof(ITerminalSessionFactory)) as ITerminalSessionFactory;
-        if (hub is null || sessionFactory is null)
-        {
-            _notifications.Show("Terminal unavailable", "The Terminal session runtime is not available.", ToastKind.Warning, TimeSpan.FromSeconds(5));
-            return;
-        }
-
-        var terminalFactory = sessionFactory;
-
-        TerminalPage page;
-        string key;
-        if (forceNewTab)
-        {
-            page = new TerminalPage(terminalFactory, _preferences, hub, initialDirectory);
-            key = "terminal-" + Guid.NewGuid().ToString("N")[..8];
-        }
-        else
-        {
-            _terminalPage ??= new TerminalPage(terminalFactory, _preferences, hub, initialDirectory);
-            page = _terminalPage;
-            key = "terminal";
-        }
-
-        AddOrSelectTab(key, "Terminal", page, forceNewTab, HavenSurface.Terminal, forceNewTab);
-        ApplyShellVisualState();
-        page.FocusCommandLine();
-    }
-
     private async Task OpenDashboardAsync()
     {
         _newDashboardPage ??= CreateNewDashboardPage();
@@ -3674,6 +3643,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         if (IsDisposed) return;
         IsDisposed = true;
+        _terminalLifetime.Cancel();
         _reminderTimer.Stop();
         StopAutomationScheduler();
         lock (_goSuggestionRefreshes)

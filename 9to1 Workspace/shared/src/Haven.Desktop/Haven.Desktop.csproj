@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../Games/CUI/HavenOS.Games.csproj" />
     <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />
     <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
     <ProjectReference Include="../../../Picture/Core/HavenOS.Images.Core.csproj" />
     <ProjectReference Include="../../../Canvas/HavenOS.Canvas.csproj" />

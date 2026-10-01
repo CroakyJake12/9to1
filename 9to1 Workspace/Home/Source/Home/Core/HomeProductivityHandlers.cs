@@ -12,6 +12,7 @@ public sealed record HomeProductivityObjectRenderResult(string CuiSource, IReadO
     public IReadOnlyList<HomeProductivityRasterBinding> RasterBindings { get; init; } = [];
     public IReadOnlyList<HomeProductivityNotesBinding> NotesBindings { get; init; } = [];
     public IReadOnlyList<HomeProductivityVectorBinding> VectorBindings { get; init; } = [];
+    public IReadOnlyList<HomeProductivityEquationBinding> EquationBindings { get; init; } = [];
 }
 
 /// <summary>One app-neutral object implementation. Pure transformations do not grant artifact write permission.</summary>

@@ -55,15 +55,16 @@ public sealed class DataLocalStoreAuthorityTests
         var changed = DataRecordUpdateIntent.Capture(fixture.StoreID, workbook.Id, workbook.Version, workbook.RevisionId, table.Id, recordID, values);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(changed, capability));
         var result = await operation.ExecuteAsync(intent, capability);
-        Assert.Equal(!invalid, result.Committed); Assert.True(result.AuditRecorded);
-        Assert.Equal(invalid ? "DataValidationFailed" : "DataRecordUpdated", result.Code);
+        var committed = !invalid && !fromForm;
+        Assert.Equal(committed, result.Committed); Assert.True(result.AuditRecorded);
+        Assert.Equal(fromForm ? "SourceAuthorityUnavailable" : invalid ? "DataValidationFailed" : "DataRecordUpdated", result.Code);
         var reopened = (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!;
-        Assert.Equal(invalid ? 2 : 3, reopened.Version);
-        Assert.Equal(invalid ? "1" : "42", DataTableIdentity.ReadCell(reopened, table.Id, recordID, fieldID)!.Value);
+        Assert.Equal(committed ? 3 : 2, reopened.Version);
+        Assert.Equal(committed ? "42" : "1", DataTableIdentity.ReadCell(reopened, table.Id, recordID, fieldID)!.Value);
         Assert.Equal(DataCellKind.Number, DataTableIdentity.ReadCell(reopened, table.Id, recordID, fieldID)!.Kind);
         var recovery = new DataRecordMutationRecovery(new DataWorkbookRepository(fixture.Paths), fixture.Authority!, fixture.Actor!);
         var receipt = await recovery.ReadAsync(intent);
-        if (invalid) Assert.Null(receipt);
+        if (!committed) Assert.Null(receipt);
         else
         {
             Assert.NotNull(receipt); Assert.Equal(intent.OperationID, receipt!.OperationID);
@@ -75,7 +76,7 @@ public sealed class DataLocalStoreAuthorityTests
             Assert.Equal(3, (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!.Version);
         }
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
-        Assert.Equal(invalid ? HomePermissionRequestState.Failed : HomePermissionRequestState.Succeeded,
+        Assert.Equal(committed ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
             (await fixture.Permissions.GetAuthorizationAsync(pending.RequestId)).State);
         Assert.Single((await fixture.Permissions.GetSnapshotAsync()).RecentAuditEvents,
             item => item.RequestId == pending.RequestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);

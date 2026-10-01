@@ -7,19 +7,22 @@ using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace HavenOS.Home.Core;
 
+internal enum HomeResourceRejectionKind { Claim = -1, Begin = -3, UnclaimedAbort = -5 }
+
 /// <summary>Shared native/web operation bridge; resource ACLs intersect Home consent rather than being replaced by it.</summary>
 public sealed class HomeResourceOperationBroker(ResourceAuthorizationService resources, HomePermissionTrustService permissions)
 {
     private sealed record Binding(AuthenticatedResourceActor Actor, string TargetAppId, string ActionId, ResourceScope[] Scopes, string Digest);
     private readonly ConcurrentDictionary<HomeResourceExecutionCapability, Binding> _executions = new();
     private readonly ConcurrentDictionary<string, Binding> _bindings = new();
+    private readonly ConcurrentDictionary<string, HomeResourceExecutionCapability> _rejectedBegins = new();
 
     public async Task<HomePermissionAuthorization> AuthorizeAsync(string targetAppId, string actionId,
         IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview, string? backupId,
         string sessionId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(scopes);
-        if (_bindings.Count >= 1024) throw new InvalidOperationException("Too many outstanding resource approval requests.");
+        if (_bindings.Count + _rejectedBegins.Count >= 1024) throw new InvalidOperationException("Too many outstanding resource approval requests.");
         var scopeSnapshot = scopes.ToArray();
         var actor = await resources.AuthorizeAsync(actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false);
         if (actor is null) throw new UnauthorizedAccessException("The authenticated actor lacks current canonical resource access.");
@@ -50,10 +53,57 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
         if (current != binding.Actor) return null;
         var approval = await permissions.GetAuthorizationAsync(requestId, cancellationToken).ConfigureAwait(false);
         if (!approval.IsAllowed || !_bindings.TryRemove(requestId, out var consumed) || consumed != binding) return null;
-        if (!(await permissions.BeginExecutionAsync(requestId, cancellationToken).ConfigureAwait(false)).IsAllowed) return null;
         var capability = new HomeResourceExecutionCapability(this, requestId, binding.TargetAppId, binding.ActionId,
             Array.AsReadOnly(binding.Scopes.ToArray()));
+        try
+        {
+            if (!(await permissions.BeginExecutionAsync(requestId, cancellationToken).ConfigureAwait(false)).IsAllowed) return null;
+        }
+        catch
+        {
+            // No capability crossed the owner boundary. Even a post-publication storage exception
+            // cannot turn this consumed intent into a second dispatch attempt.
+            capability.MarkRejected(this, HomeResourceRejectionKind.Begin);
+            _rejectedBegins[requestId] = capability;
+            try { await RetryRejectedBeginAuditAsync(requestId, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception auditFailure) when (auditFailure is IOException or UnauthorizedAccessException or InvalidOperationException) { }
+            throw;
+        }
         return _executions.TryAdd(capability, binding) ? capability : null;
+    }
+
+    /// <summary>Originating host recovery for a failed dispatch admission. This request ID identifies
+    /// only an already-consumed local negative outcome; it cannot reconstruct a capability or invoke an owner.</summary>
+    public async Task<HomePermissionOperationResult> RetryRejectedBeginAuditAsync(string requestId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(requestId) || !_rejectedBegins.TryGetValue(requestId, out var capability))
+            return new(false, "HOME_BEGIN_AUDIT_NOT_OWNED", "No failed dispatch admission is retained by this host.");
+        var result = await capability.AuditRejectedAsync(this, () => permissions.RecordExecutionAsync(requestId,
+            new(HomePermissionRequestState.Failed, "HOME_RESOURCE_BEGIN_REJECTED",
+                "Dispatch admission failed; no execution capability was issued to the owner.", []), cancellationToken), cancellationToken, HomeResourceRejectionKind.Begin).ConfigureAwait(false);
+        if (result.Succeeded) _rejectedBegins.TryRemove(requestId, out _);
+        return result;
+    }
+
+    /// <summary>Atomically consumes this issuer's still-unclaimed handle, then records a fixed negative
+    /// outcome. A concurrent owner claim wins or this abort wins, never both. Retry this same handle only
+    /// to finish its abort audit. NOT_OWNED means no abort right; other false results or storage exceptions
+    /// retain the negative handle for audit recovery and must not be treated as successful recording.</summary>
+    public async Task<HomePermissionOperationResult> AbortUnclaimedExecutionAsync(HomeResourceExecutionCapability capability,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        cancellationToken.ThrowIfCancellationRequested();
+        HomePermissionOperationResult NotOwned() => new(false, "HOME_EXECUTION_ABORT_NOT_OWNED",
+            "This host cannot abort a foreign, already claimed, or differently rejected execution handle.");
+        if (_executions.TryRemove(capability, out _) && !capability.MarkRejected(this, HomeResourceRejectionKind.UnclaimedAbort))
+            return NotOwned();
+        var result = await capability.AuditRejectedAsync(this, () => permissions.RecordExecutionAsync(capability.RequestId,
+            new(HomePermissionRequestState.Failed, "HOME_RESOURCE_EXECUTION_ABORTED",
+                "The owning operation stopped before any resource execution claim was issued.", []), cancellationToken),
+            cancellationToken, HomeResourceRejectionKind.UnclaimedAbort).ConfigureAwait(false);
+        return result.Code == "HOME_CLAIM_REJECTION_NOT_OWNED" ? NotOwned() : result;
     }
 
     /// <summary>Fresh actor, owner ACL and exact operation check followed by one-use claim. This is not a transaction
@@ -138,19 +188,20 @@ public sealed class HomeResourceExecutionCapability
     { _issuer = issuer; RequestId = requestId; TargetAppId = targetAppId; ActionId = actionId; Scopes = scopes; }
     internal bool MarkClaimed(HomeResourceOperationBroker issuer) =>
         ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, 1, 0) == 0;
-    internal bool MarkRejected(HomeResourceOperationBroker issuer) =>
-        ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, -1, 0) == 0;
+    internal bool MarkRejected(HomeResourceOperationBroker issuer, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim) =>
+        ReferenceEquals(_issuer, issuer) && Enum.IsDefined(kind) && Interlocked.CompareExchange(ref _claimState, (int)kind, 0) == 0;
     internal async Task<HomePermissionOperationResult> AuditRejectedAsync(HomeResourceOperationBroker issuer,
-        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct)
+        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim)
     {
-        if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) is not (-1 or -2))
+        var state = Volatile.Read(ref _claimState);
+        if (!ReferenceEquals(_issuer, issuer) || !Enum.IsDefined(kind) || (state != (int)kind && state != (int)kind - 1))
             return new(false, "HOME_CLAIM_REJECTION_NOT_OWNED", "This issuer has no rejected claim to audit.");
         await _completionGate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             if (_completed is not null) return _completed;
             var result = await record().ConfigureAwait(false);
-            if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, -2); }
+            if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, (int)kind - 1); }
             return result;
         }
         finally { _completionGate.Release(); }

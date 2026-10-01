@@ -1,5 +1,6 @@
 using NineToOne.Launcher;
 using Haven.Application;
+using HavenOS.Home.Core;
 using Haven.Application.Go;
 using Haven.Application.Automations;
 using Haven.Desktop.Services;
@@ -21,6 +22,8 @@ public static class AndroidServiceRegistration
         services.AddSingleton<ICanonicalResourceAccessResolver, LauncherLayoutResourceResolver>();
         services.AddSingleton<HomeLauncherLayoutStore>();
         services.AddSingleton<HomeLauncherSession>();
+        services.AddSingleton<LauncherSemanticFeatureProvider>();
+        services.AddSingleton<IHomeActionPolicySource, LauncherSemanticActionPolicies>();
         services.AddSingleton<IGoProvider>(provider => provider.GetRequiredService<AndroidInstalledApplicationsGoProvider>());
         services.AddSingleton<IGoProvider, LauncherNavigationGoProvider>();
         services.TryAddSingleton(provider => new GoService(provider.GetServices<IGoProvider>()));

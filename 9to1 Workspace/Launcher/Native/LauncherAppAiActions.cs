@@ -58,7 +58,7 @@ public sealed class LauncherAppAiActions(HomeLauncherSession sessions, LauncherS
     private AppAiActionRequest? _pendingAction;
     public AppAiActionRequest? PendingActionRequest => _pendingAction is { } value ? value with { Arguments = value.Arguments.Clone(), ApprovalToken = null } : null;
     public IReadOnlyList<AppAiActionDescriptor> Actions { get; } = [new("launcher.layout.edit", "Edit launcher layout",
-        "Prepare typed changes to canonical pages, app placements, folders, dock and visibility. Home reviews the complete exact owner plan before any write.",
+        "Prepare typed changes to canonical pages, app placements, folders, dock, visibility and global icon/label/spacing appearance. Home reviews the complete exact owner plan before any write.",
         AppAiActionRisk.ReversibleChange, RequiresReview: true,
         InputSchemaJson: CommandSchema(),
         // True review metadata is preserved. Production activation requires W1's explicit
@@ -74,15 +74,21 @@ public sealed class LauncherAppAiActions(HomeLauncherSession sessions, LauncherS
         static object Number(int min, int max) => new { type = "integer", minimum = min, maximum = max };
         var properties = new Dictionary<string, object>
         {
-            ["operation"] = new { type = "string", @enum = new[] { "createPage", "renamePage", "selectPage", "grid", "addApplication", "movePlacement", "moveToContainer", "createFolder", "dock", "hideApplication", "removePlacement" } },
+            ["operation"] = new { type = "string", @enum = new[] { "createPage", "removePage", "configureFolder", "presentation", "createPageWithApplications", "groupPlacements", "renamePage", "selectPage", "grid", "addApplication", "movePlacement", "moveToContainer", "createFolder", "dock", "hideApplication", "removePlacement" } },
             ["Name"] = new { type = "string", minLength = 1, maxLength = 4096 },
+            ["ApplicationIds"] = new { type = "array", minItems = 1, maxItems = 64, items = Id() },
+            ["PlacementIds"] = new { type = "array", minItems = 1, maxItems = 64, items = Id() },
+            ["FolderId"] = Id(),
+            ["IconSizeDp"] = Number(24, 96), ["LabelSizeSp"] = Number(10, 24),
+            ["HorizontalSpacingDp"] = Number(0, 24), ["VerticalSpacingDp"] = Number(0, 24),
+            ["ShowLabels"] = new { type = "boolean" }, ["ShowPackages"] = new { type = "boolean" },
             ["PageId"] = Id(), ["ApplicationId"] = Id(), ["PlacementId"] = Id(), ["ContainerId"] = Id(),
             ["Rows"] = Number(1, 8), ["Columns"] = Number(3, 7), ["Column"] = Number(0, 6), ["Row"] = Number(0, 1023),
             ["Hidden"] = new { type = "boolean" }
         };
         return JsonSerializer.Serialize(new { type = "object", properties = new { Commands = new { type = "array", minItems = 1, maxItems = 64,
             items = new { type = "object", properties, required = new[] { "operation" }, additionalProperties = false,
-                description = "Exact required fields: createPage(Name); renamePage(PageId,Name); selectPage(PageId); grid(Rows,Columns); addApplication(PageId,ApplicationId); movePlacement(PlacementId,ContainerId,Column,Row); moveToContainer(PlacementId,ContainerId); createFolder(PageId,Name); dock(Rows,Columns); hideApplication(ApplicationId,Hidden); removePlacement(PlacementId). No unrelated fields." }
+                description = "Exact required fields: createPage(Name); removePage(PageId) only for empty pages while retaining at least one; configureFolder(FolderId,Name,Columns); presentation(IconSizeDp,LabelSizeSp,HorizontalSpacingDp,VerticalSpacingDp,ShowLabels,ShowPackages) changes global launcher appearance; createPageWithApplications(Name,ApplicationIds); groupPlacements(PageId,Name,PlacementIds); renamePage(PageId,Name); selectPage(PageId); grid(Rows,Columns); addApplication(PageId,ApplicationId); movePlacement(PlacementId,ContainerId,Column,Row); moveToContainer(PlacementId,ContainerId); createFolder(PageId,Name); dock(Rows,Columns); hideApplication(ApplicationId,Hidden); removePlacement(PlacementId). No unrelated fields." }
         } }, required = new[] { "Commands" }, additionalProperties = false });
     }
 

@@ -128,6 +128,10 @@ public sealed class FileSiteWorkspaceStore
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 stream.Flush(flushToDisk: true);
             }
+            // Serialization and durable flush may outlive the authority checked under the lease.
+            // Revalidate the same captured binding at the actual publication boundary.
+            if (_beforeCommit is not null) await _beforeCommit(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporaryPath, _indexPath, overwrite: true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

@@ -14,10 +14,11 @@ public static class HomeNotesSharedObjects
     {
         NotesBlockKind.Paragraph => "text.paragraph", NotesBlockKind.Heading => "text.heading", NotesBlockKind.Code => "code.block",
         NotesBlockKind.List when block.List?.Kind == NotesListKind.Checklist => "text.checklist",
-        NotesBlockKind.List => "text.list", NotesBlockKind.Table => "table",
+        NotesBlockKind.List => "text.list", NotesBlockKind.Table => "table", NotesBlockKind.Equation => "math.equation",
         _ => throw new NotSupportedException("This Notes family does not yet have a shared semantic adapter.")
     };
     public static HomeProductivityObject Project(NotesBlock block) =>
+        block.Kind == NotesBlockKind.Equation ? HomeEquationObjectHandler.Project(block) :
         new HomeNotesObjectHandler(ObjectType(block)).Create(block.Id, JsonSerializer.SerializeToElement(block));
     public static NotesBlock Read(HomeProductivityObject value)
     {

@@ -110,9 +110,11 @@ public sealed class SqliteDatabase : IAppDatabase, ISqliteConnectionFactory, IRe
         return await ReadStoreIdentityAsync(connection, _createdFile, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async ValueTask<ResourceStoreIdentity> ReadStoreIdentityAsync(SqliteConnection connection, bool newlyCreated, CancellationToken cancellationToken)
+    internal static async ValueTask<ResourceStoreIdentity> ReadStoreIdentityAsync(SqliteConnection connection, bool newlyCreated,
+        CancellationToken cancellationToken, SqliteTransaction? transaction = null)
     {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = "SELECT schema_version,store_id,created_at FROM resource_store_identity WHERE singleton=1;";
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false) || reader.GetInt32(0) != 1 ||

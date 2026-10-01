@@ -9,6 +9,11 @@ namespace NineToOne.Launcher;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "operation")]
 [JsonDerivedType(typeof(LauncherCreatePageCommand), "createPage")]
+[JsonDerivedType(typeof(LauncherRemovePageCommand), "removePage")]
+[JsonDerivedType(typeof(LauncherConfigureFolderCommand), "configureFolder")]
+[JsonDerivedType(typeof(LauncherPresentationCommand), "presentation")]
+[JsonDerivedType(typeof(LauncherCreatePageWithApplicationsCommand), "createPageWithApplications")]
+[JsonDerivedType(typeof(LauncherGroupPlacementsCommand), "groupPlacements")]
 [JsonDerivedType(typeof(LauncherRenamePageCommand), "renamePage")]
 [JsonDerivedType(typeof(LauncherSelectPageCommand), "selectPage")]
 [JsonDerivedType(typeof(LauncherGridCommand), "grid")]
@@ -21,6 +26,12 @@ namespace NineToOne.Launcher;
 [JsonDerivedType(typeof(LauncherRemovePlacementCommand), "removePlacement")]
 public abstract record LauncherSemanticCommand;
 public sealed record LauncherCreatePageCommand(string Name) : LauncherSemanticCommand;
+public sealed record LauncherRemovePageCommand(Guid PageId) : LauncherSemanticCommand;
+public sealed record LauncherConfigureFolderCommand(Guid FolderId, string Name, int Columns) : LauncherSemanticCommand;
+public sealed record LauncherPresentationCommand(int IconSizeDp, int LabelSizeSp, int HorizontalSpacingDp,
+    int VerticalSpacingDp, bool ShowLabels, bool ShowPackages) : LauncherSemanticCommand;
+public sealed record LauncherCreatePageWithApplicationsCommand(string Name, IReadOnlyList<Guid> ApplicationIds) : LauncherSemanticCommand;
+public sealed record LauncherGroupPlacementsCommand(Guid PageId, string Name, IReadOnlyList<Guid> PlacementIds) : LauncherSemanticCommand;
 public sealed record LauncherRenamePageCommand(Guid PageId, string Name) : LauncherSemanticCommand;
 public sealed record LauncherSelectPageCommand(Guid PageId) : LauncherSemanticCommand;
 public sealed record LauncherGridCommand(int Rows, int Columns) : LauncherSemanticCommand;
@@ -56,7 +67,12 @@ public sealed class LauncherSemanticFeatureProvider(HomeLauncherSession sessions
     {
         ArgumentNullException.ThrowIfNull(commands);
         if (commands.Count is < 1 or > 64) throw new ArgumentException("A launcher edit must contain one to 64 typed commands.");
-        var frozen = commands.ToArray();
+        var frozen = commands.Select(command => command switch
+        {
+            LauncherCreatePageWithApplicationsCommand c => c with { ApplicationIds = FreezeIds(c.ApplicationIds) },
+            LauncherGroupPlacementsCommand c => c with { PlacementIds = FreezeIds(c.PlacementIds) },
+            _ => command
+        }).ToArray();
         var session = await sessions.ReadAsync(ct).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("Open the current Home launcher profile first.");
         if (session.Layout.AuthorityId != authorityId || session.Layout.Revision != expectedRevision)
@@ -65,6 +81,12 @@ public sealed class LauncherSemanticFeatureProvider(HomeLauncherSession sessions
         foreach (var command in frozen) candidate = command switch
         {
             LauncherCreatePageCommand c => LauncherLayoutEdits.AddPage(candidate, c.Name),
+            LauncherRemovePageCommand c => LauncherLayoutEdits.RemovePage(candidate, c.PageId),
+            LauncherConfigureFolderCommand c => LauncherLayoutEdits.ConfigureFolder(candidate, c.FolderId, c.Name, c.Columns),
+            LauncherPresentationCommand c => LauncherLayoutEdits.SetPresentation(candidate,
+                new(c.IconSizeDp, c.LabelSizeSp, c.HorizontalSpacingDp, c.VerticalSpacingDp, c.ShowLabels, c.ShowPackages)),
+            LauncherCreatePageWithApplicationsCommand c => LauncherLayoutEdits.AddPageWithApplications(candidate, c.Name, c.ApplicationIds),
+            LauncherGroupPlacementsCommand c => LauncherLayoutEdits.GroupPlacements(candidate, c.PageId, c.Name, c.PlacementIds),
             LauncherRenamePageCommand c => LauncherLayoutEdits.RenamePage(candidate, c.PageId, c.Name),
             LauncherSelectPageCommand c => LauncherLayoutEdits.SelectPage(candidate, c.PageId),
             LauncherGridCommand c => LauncherLayoutEdits.Reflow(candidate, c.Rows, c.Columns),
@@ -79,6 +101,15 @@ public sealed class LauncherSemanticFeatureProvider(HomeLauncherSession sessions
         };
         if (!await sessions.IsCurrentAsync(session, ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home changed while preparing the edit.");
         return new(authorityId, expectedRevision, LauncherLayoutEdits.Clone(candidate));
+    }
+
+    private static Guid[] FreezeIds(IReadOnlyList<Guid> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        if (ids.Count is < 1 or > 64) throw new ArgumentException("Choose one to 64 existing identities.");
+        var copy = ids.ToArray();
+        if (copy.Any(id => id == Guid.Empty) || copy.Distinct().Count() != copy.Length) throw new ArgumentException("Choose distinct existing identities.");
+        return copy;
     }
 
     public async Task<HomeCoreOperationResult<LauncherSemanticReceipt>> ApplyAsync(LauncherSemanticPlan plan,

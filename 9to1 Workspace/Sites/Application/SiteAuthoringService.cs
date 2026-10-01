@@ -49,7 +49,7 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
             {
                 if (c.ComponentId != componentID) return c;
                 var next = update(c);
-                if (next.ComponentId != c.ComponentId || !next.ChildIds.SequenceEqual(c.ChildIds))
+                if (next.ComponentId != c.ComponentId || !next.ChildIds.SequenceEqual(c.ChildIds) || !SameSlots(next.Slots, c.Slots))
                     throw Invalid("Use structural actions to change hierarchy.");
                 return next with { Revision = c.Revision + 1 };
             }).ToArray() };
@@ -62,8 +62,18 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
             if (parentID is { } destination && !Reachable(project,project.Pages.Single(p=>p.PageId==pageID).RootComponentIds).Contains(destination)) throw Invalid("Destination is not in page.");
             IReadOnlyList<Guid> Insert(IReadOnlyList<Guid> ids) { var list=ids.Where(id=>id!=componentID).ToList(); if(position<0||position>list.Count)throw Invalid("Invalid insertion position."); list.Insert(position,componentID);return list; }
             return project with {
-                Pages=project.Pages.Select(p=>p with { RootComponentIds = p.PageId==pageID && parentID is null ? Insert(p.RootComponentIds) : p.RootComponentIds.Where(id=>id!=componentID).ToArray(),Revision=p.Revision+1 }).ToArray(),
-                Components=project.Components.Select(c=>c with { ChildIds=c.ComponentId==parentID ? Insert(c.ChildIds) : c.ChildIds.Where(id=>id!=componentID).ToArray(), Revision=c.Revision+1 }).ToArray() };
+                Pages=project.Pages.Select(p=>
+                {
+                    var roots = p.PageId==pageID && parentID is null ? Insert(p.RootComponentIds) : p.RootComponentIds.Where(id=>id!=componentID).ToArray();
+                    return roots.SequenceEqual(p.RootComponentIds) ? p : p with { RootComponentIds=roots, Revision=p.Revision+1 };
+                }).ToArray(),
+                Components=project.Components.Select(c=>
+                {
+                    var children=c.ComponentId==parentID ? Insert(c.ChildIds) : c.ChildIds.Where(id=>id!=componentID).ToArray();
+                    var slots=c.Slots.ToDictionary(slot=>slot.Key,slot=>(IReadOnlyList<Guid>)slot.Value.Where(id=>id!=componentID).ToArray(),StringComparer.Ordinal);
+                    return children.SequenceEqual(c.ChildIds) && SameSlots(slots,c.Slots) ? c
+                        : c with { ChildIds=children, Slots=slots, Revision=c.Revision+1 };
+                }).ToArray() };
         },ct);
     public Task<SiteApiResult<SiteProject>> SetResponsiveOverrideAsync(Guid siteID,long revision,Guid componentID,string breakpoint,
         IReadOnlyDictionary<string,JsonElement>? patch,CancellationToken ct=default)
@@ -89,6 +99,8 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
         }
         return found;
     }
+    private static bool SameSlots(IReadOnlyDictionary<string,IReadOnlyList<Guid>>? left, IReadOnlyDictionary<string,IReadOnlyList<Guid>> right)
+        => left is not null && left.Count==right.Count && right.All(slot=>left.TryGetValue(slot.Key,out var values) && values is not null && values.SequenceEqual(slot.Value));
     private static IReadOnlyDictionary<string,JsonElement> SnapshotProperties(IReadOnlyDictionary<string,JsonElement>? input)
     {
         if(input is null)throw Invalid("Component properties are required.");

@@ -40,7 +40,7 @@ public class CanvasNativeViewport : UserControl, IDisposable
         {
             var before = await _readiness.CheckAsync(operation.Token);
             if (before.State != CuiSceneAvailabilityState.Ready) { Clear(before.Message); return false; }
-            var snapshot = _document.Snapshot;
+            var snapshot = _document.Identity;
             var output = await Task.Run(() =>
             {
                 var frame = _document.Render();
@@ -52,7 +52,7 @@ public class CanvasNativeViewport : UserControl, IDisposable
                 return (Frame: frame, Raster: CanvasSvgRasterizer.Render(frame.Svg, width, height));
             }, operation.Token);
             operation.Token.ThrowIfCancellationRequested();
-            var current = _document.Snapshot;
+            var current = _document.Identity;
             var after = await _readiness.CheckAsync(operation.Token);
             operation.Token.ThrowIfCancellationRequested();
             if (after.State != CuiSceneAvailabilityState.Ready) { Clear(after.Message); return false; }

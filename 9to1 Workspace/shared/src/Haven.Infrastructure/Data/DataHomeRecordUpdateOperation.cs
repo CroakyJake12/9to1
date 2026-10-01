@@ -35,7 +35,7 @@ public sealed record DataRecordMutationResult(bool Committed, string Code, DataS
 /// <summary>Claims the exact one-use Home approval, updates existing canonical cells and carries the
 /// claimed actor/root/receipt into durable Data admission. UI or Forms adapters cannot substitute a path.</summary>
 public sealed class DataHomeRecordUpdateOperation(IDataWorkbookRepository workbooks,
-    IDataWorkbookCommitAuthority authority, HomeResourceOperationBroker home)
+    IDataWorkbookCommitAuthority authority, HomeResourceOperationBroker home, IDataRecordMutationOriginAuthority? origins = null)
 {
     public async Task<DataRecordMutationResult> ExecuteAsync(DataRecordUpdateIntent intent,
         HomeResourceExecutionCapability capability, CancellationToken cancellationToken = default)
@@ -55,11 +55,18 @@ public sealed class DataHomeRecordUpdateOperation(IDataWorkbookRepository workbo
             var admission = await authority.CaptureAsync(intent.StoreID, intent.WorkbookID, intent.Version, intent.RevisionID,
                 DataRecordUpdateIntent.ActionId, actor, cancellationToken).ConfigureAwait(false)
                 ?? throw new UnauthorizedAccessException("Data owner admission was revoked.");
+            if (intent.Origin is not null)
+            {
+                if (origins is null) throw new NotSupportedException("DataOriginAuthorityUnavailable");
+                var source = await origins.CaptureAsync(intent, actor, cancellationToken).ConfigureAwait(false)
+                    ?? throw new UnauthorizedAccessException("The retained Forms source is unavailable or differs from the reviewed edit.");
+                admission = new CombinedAdmission(admission, source);
+            }
             if (DataRecordMutationReceipts.Read(workbook).Any(receipt => receipt.OperationID == intent.OperationID))
                 throw new InvalidOperationException("DataMutationOperationAlreadyRecorded");
             DataRecordEdits.UpdateRecord(workbook, intent.TableID, intent.RecordID, intent.Values);
             DataRecordMutationReceipts.Add(workbook, new(intent.OperationID, intent.PayloadSHA256, intent.TableID, intent.RecordID,
-                intent.Version, intent.RevisionID, DateTimeOffset.UtcNow, intent.Origin));
+                intent.Version, intent.RevisionID, DateTimeOffset.UtcNow, intent.Origin, intent.Origin is null ? 0 : 1));
             saved = await guarded.SaveAsync(workbook, "Home-approved canonical record update", admission, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException
@@ -67,6 +74,7 @@ public sealed class DataHomeRecordUpdateOperation(IDataWorkbookRepository workbo
         {
             var code = error switch
             {
+                NotSupportedException { Message: "DataOriginAuthorityUnavailable" } => "SourceAuthorityUnavailable",
                 OperationCanceledException => "Cancelled", UnauthorizedAccessException => "PermissionDenied",
                 DataWorkbookRevisionConflictException => "RevisionConflict",
                 InvalidOperationException { Message: "DataMutationOperationAlreadyRecorded" } => "DataMutationOperationAlreadyRecorded",
@@ -84,6 +92,13 @@ public sealed class DataHomeRecordUpdateOperation(IDataWorkbookRepository workbo
         var audit = await CompleteAsync(capability, new(HomePermissionRequestState.Succeeded, "DataRecordUpdated",
             $"Committed workbook revision {saved.Version}.", [new("data.record", intent.RecordID.ToString("D"))])).ConfigureAwait(false);
         return new(true, audit ? "DataRecordUpdated" : "DataCommittedAuditPending", saved, audit);
+    }
+
+    private sealed class CombinedAdmission(IDataWorkbookCommitAdmission target, IDataWorkbookCommitAdmission source) : IDataWorkbookCommitAdmission
+    {
+        public async ValueTask<bool> CheckAsync(DataWorkbookCommitContext context, CancellationToken cancellationToken) =>
+            await target.CheckAsync(context, cancellationToken).ConfigureAwait(false)
+            && await source.CheckAsync(context, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<bool> CompleteAsync(HomeResourceExecutionCapability capability, HomeExecutionOutcome outcome)

@@ -39,6 +39,9 @@ public sealed class CanvasRnoteDocument : IDisposable
 
     public CanvasImportCompatibilityReport CompatibilityReport { get; }
     public CanvasArtifact Snapshot { get { lock (_gate) { EnsureOpen(); return _session.GetArtifactSnapshot(); } } }
+    /// <summary>Exact current identity/revision without copying retained donor bytes. Not a resource grant.</summary>
+    public (Guid ArtifactId, Guid RevisionId) Identity
+    { get { lock (_gate) { EnsureOpen(); return (_session.ArtifactId, _session.CurrentRevisionId); } } }
 
     public static CanvasRnoteDocument Create(string? name = null)
     {
@@ -183,9 +186,10 @@ public sealed class CanvasRnoteDocument : IDisposable
         lock (_gate)
         {
             EnsureOpen();
-            var artifact = _session.GetArtifactSnapshot();
-            if (_renderedFrame is null || _renderedRevision != artifact.RevisionId)
+            var revision = _session.CurrentRevisionId;
+            if (_renderedFrame is null || _renderedRevision != revision)
             {
+                var artifact = _session.GetArtifactSnapshot();
                 // Render the committed donor representation. Rnote rounds its
                 // generated pen paths during serialization; showing the live
                 // higher-precision path would visibly change after reopen.

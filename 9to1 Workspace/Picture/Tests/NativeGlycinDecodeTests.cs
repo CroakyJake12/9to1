@@ -42,7 +42,41 @@ public sealed class NativeGlycinDecodeTests
         Assert.Equal(frame.BgraPremultipliedPixels, repeated.BgraPremultipliedPixels);
     }
 
-    private static byte[] TransparentTwoPixelPng()
+    [Fact]
+    public void Actual_sandboxed_native_metadata_copies_png_text_and_retains_it_after_session_close()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        PictureGlycinMetadata metadata;
+        using (var frames = new PictureGlycinDecoder().OpenFrames(TransparentTwoPixelPng("<Cui>literal title</Cui>"), false, ct))
+        {
+            metadata = frames.ReadMetadata();
+            Assert.Equal("image/png", metadata.MimeType);
+            Assert.Equal((ushort)1, metadata.SourceOrientation);
+            Assert.Equal("<Cui>literal title</Cui>", metadata.Fields["Title"]);
+            var frame = frames.NextFrame(ct);
+            Assert.Same(metadata, frame.Metadata);
+            Assert.Null(frame.MetadataNotice);
+            Array.Clear(frame.BgraPremultipliedPixels);
+            if (frame.IccProfile is not null) Array.Clear(frame.IccProfile);
+        }
+        Assert.Equal("<Cui>literal title</Cui>", metadata.Fields["Title"]);
+    }
+
+    [Fact]
+    public void Oversized_native_text_is_explicitly_unavailable_without_discarding_valid_native_pixels()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var frames = new PictureGlycinDecoder().OpenFrames(TransparentTwoPixelPng(new string('a', 70000)), false, ct);
+        Assert.Throws<NotSupportedException>(() => frames.ReadMetadata());
+        var frame = frames.NextFrame(ct);
+        Assert.Null(frame.Metadata);
+        Assert.Contains("bound", frame.MetadataNotice);
+        Assert.Equal(new byte[] { 0, 0, 128, 128, 255, 0, 0, 255 }, frame.BgraPremultipliedPixels.Take(8).ToArray());
+        Array.Clear(frame.BgraPremultipliedPixels);
+        if (frame.IccProfile is not null) Array.Clear(frame.IccProfile);
+    }
+
+    private static byte[] TransparentTwoPixelPng(string? title = null)
     {
         using var output = new MemoryStream();
         output.Write([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -51,6 +85,7 @@ public sealed class NativeGlycinDecodeTests
         BinaryPrimitives.WriteUInt32BigEndian(header.AsSpan(4), 1);
         header[8] = 8; header[9] = 6; // RGBA, 8 bits per channel
         WriteChunk(output, "IHDR", header);
+        if (title is not null) WriteChunk(output, "tEXt", Encoding.ASCII.GetBytes("Title\0" + title));
         using var compressed = new MemoryStream();
         using (var zlib = new ZLibStream(compressed, CompressionLevel.SmallestSize, leaveOpen: true))
             zlib.Write([0, 255, 0, 0, 128, 0, 0, 255, 255]);

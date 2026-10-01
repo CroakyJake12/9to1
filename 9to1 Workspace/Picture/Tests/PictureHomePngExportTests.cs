@@ -351,6 +351,41 @@ public sealed class PictureHomePngExportTests
         Assert.Equal(opened.CasRevisionId, (await fixture.Files.OpenAsync(fixture.FileId, ct)).CasRevisionId);
     }
 
+    [AvaloniaFact]
+    public async Task Prepared_image_batch_uses_existing_distinct_document_ids_and_rejects_unprepared_or_retired_members()
+    {
+        await using var fixture = await Fixture.Create();
+        var ct = TestContext.Current.CancellationToken;
+        var first = await fixture.Files.OpenAsync(fixture.FileId, ct);
+        var second = await fixture.Files.CreateAsync(new PictureDocument
+        {
+            DisplayName = "Second retained-source picture", CanvasWidth = 2, CanvasHeight = 1,
+            FileId = first.Artifact.Document.FileId, SourceRevision = first.Artifact.Document.SourceRevision
+        }, first.Artifact.SourceAsset, ct);
+        PictureSharedImageReference Reference(PictureFilesOpenResult value) => new(value.Artifact.BackingFileId,
+            value.Artifact.Document.DocumentId, value.Artifact.Document.Revision, value.Artifact.SourceAsset!);
+        using var a = await fixture.Projector.PrepareAsync(Reference(first), first.CasRevisionId, ct);
+        using var b = await fixture.Projector.PrepareAsync(Reference(second), second.CasRevisionId, ct);
+        var handler = new PictureSharedImageObjectHandler(new[] { a, b });
+        var engine = new HomeProductivityEngine(handlers: [handler]);
+        var one = engine.CreateObject("media.image", a.Reference.DocumentId, handler.ReferenceContentFor(a.Reference.DocumentId));
+        var two = engine.CreateObject("media.image", b.Reference.DocumentId, handler.ReferenceContentFor(b.Reference.DocumentId));
+        var firstFrame = Assert.Single(engine.RenderObject(one).RasterBindings);
+        var secondFrame = Assert.Single(engine.RenderObject(two).RasterBindings);
+        Assert.Equal(a.Reference.DocumentId, firstFrame.ObjectId); Assert.Equal(1, firstFrame.Frame.Width);
+        Assert.Equal(b.Reference.DocumentId, secondFrame.ObjectId); Assert.Equal(2, secondFrame.Frame.Width);
+        Assert.Equal(first.Artifact.SourceAsset!.AssetId.ToString("D"), Assert.Single(one.AssetReferences));
+        Assert.Equal(one.AssetReferences, two.AssetReferences);
+        Assert.Throws<InvalidDataException>(() => handler.ReferenceContentFor(Guid.NewGuid()));
+        Assert.Throws<ArgumentException>(() => new PictureSharedImageObjectHandler(new[] { a, a }));
+        Assert.Throws<InvalidOperationException>(() => handler.ReferenceContent);
+        a.Dispose();
+        Assert.Throws<ObjectDisposedException>(() => engine.RenderObject(one));
+        Assert.Equal(2, Assert.Single(engine.RenderObject(two).RasterBindings).Frame.Width);
+        Assert.Equal(first.CasRevisionId, (await fixture.Files.OpenAsync(fixture.FileId, ct)).CasRevisionId);
+        Assert.Equal(second.CasRevisionId, (await fixture.Files.OpenAsync(new(second.Artifact.BackingFileId), ct)).CasRevisionId);
+    }
+
     private sealed class Fixture : IAsyncDisposable, ICanonicalResourceAccessResolver, IAuthenticatedResourceActorSource
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "picture-export-" + Guid.NewGuid().ToString("N"));

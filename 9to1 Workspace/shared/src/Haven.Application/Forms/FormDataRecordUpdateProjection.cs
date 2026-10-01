@@ -15,12 +15,24 @@ public sealed record FormDataRecordUpdatePlan(Guid FormID, Guid FormVersionID, G
 public static class FormDataRecordUpdateProjection
 {
     public static FormDataRecordUpdatePlan Prepare(FormProject pinned, FormResponse response,
-        Guid storeID, DataWorkbook target, Guid tableID, Guid recordID, Guid? operationID = null)
+        Guid storeID, DataWorkbook target, Guid tableID, Guid recordID, Guid? operationID = null, Guid? sourceStoreID = null)
     {
         ArgumentNullException.ThrowIfNull(target);
+        var plan = CaptureIntent(pinned, response, storeID, target.Id, target.Version, target.RevisionId, tableID, recordID,
+            operationID ?? response.ResponseID, sourceStoreID);
+        var detached = JsonSerializer.Deserialize<DataWorkbook>(JsonSerializer.SerializeToUtf8Bytes(target))
+            ?? throw new InvalidDataException("Data workbook snapshot is unavailable.");
+        detached.Normalize();
+        DataRecordEdits.UpdateRecord(detached, tableID, recordID, plan.Intent.Values);
+        return plan;
+    }
+
+    internal static FormDataRecordUpdatePlan CaptureIntent(FormProject pinned, FormResponse response, Guid storeID,
+        Guid workbookID, int version, Guid revisionID, Guid tableID, Guid recordID, Guid operationID, Guid? sourceStoreID)
+    {
         var project = FormProjectCodec.Capture(pinned);
         var submission = FormResponseSubmissionProjection.Create(project, response);
-        var bindings = project.DataBindings.Where(binding => binding.WorkbookID == target.Id && binding.TableID == tableID
+        var bindings = project.DataBindings.Where(binding => binding.WorkbookID == workbookID && binding.TableID == tableID
             && binding.Kind != FormDataBindingKind.Lookup).ToArray();
         if (bindings.Length == 0) throw new InvalidOperationException("DataBindingNotFound");
         if (bindings.Any(binding => binding.Kind != FormDataBindingKind.UpdateRecord || binding.ParentBindingID is not null
@@ -43,13 +55,8 @@ public static class FormDataRecordUpdateProjection
             if (!values.TryAdd(binding.ColumnID, DataRecordEdits.Capture(new(kind, answer.Value))))
                 throw new InvalidDataException("DataBindingTargetCollision");
         }
-        var intent = DataRecordUpdateIntent.Capture(storeID, target.Id, target.Version, target.RevisionId, tableID, recordID, values, operationID ?? response.ResponseID,
-            new(project.FormID, response.FormVersionID, response.ResponseID, response.Revision));
-        // Exercise actual canonical IDs, formula protection and validation on a detached workbook only.
-        var detached = JsonSerializer.Deserialize<DataWorkbook>(JsonSerializer.SerializeToUtf8Bytes(target))
-            ?? throw new InvalidDataException("Data workbook snapshot is unavailable.");
-        detached.Normalize();
-        DataRecordEdits.UpdateRecord(detached, tableID, recordID, intent.Values);
+        var intent = DataRecordUpdateIntent.Capture(storeID, workbookID, version, revisionID, tableID, recordID, values, operationID,
+            new(project.FormID, response.FormVersionID, response.ResponseID, response.Revision, sourceStoreID));
         return new(project.FormID, response.FormVersionID, response.ResponseID, response.Revision,
             Array.AsReadOnly(bindings.Select(binding => binding.BindingID).ToArray()), intent);
     }

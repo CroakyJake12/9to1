@@ -158,6 +158,8 @@ public sealed class PictureNativeHostTests
                 await UntilAsync(() => Button(surface, "Play").IsEnabled, ct);
                 Button(surface, "Play").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await UntilAsync(() => Button(surface, "Pause").IsEnabled, ct);
+                Button(surface, "Information").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => Descendants(surface).OfType<TextBlock>().Any(item => item.Name == "picture-information-summary" && item.Text?.Contains("image/gif") == true), ct);
                 var now = DateTimeOffset.UtcNow;
                 Assert.True((await workspace.Provider.MutateAsync(new(new(Guid.NewGuid()), workspace.Actor.ActorId, rawId,
                     pictureFolder, null, "Delete", rawRevision, null, FilesOperationState.Pending, now, now, null, null), null, ct)).IsSuccess);
@@ -165,6 +167,11 @@ public sealed class PictureNativeHostTests
                 await UntilAsync(() => image.Source is null, ct);
                 await Assert.ThrowsAsync<UnauthorizedAccessException>(() => surface.ValidateAccessAsync(ct));
                 Assert.Null(image.Source);
+                Assert.Equal("Picture", Assert.Single(Descendants(surface).OfType<TextBlock>(), item => item.Name == "picture-title").Text);
+                Assert.Equal("", Assert.Single(Descendants(surface).OfType<TextBlock>(), item => item.Name == "picture-information-summary").Text);
+                Assert.False(Button(surface, "Information").IsEnabled);
+                Assert.Equal("", Assert.Single(Descendants(window).OfType<TextBox>(), item => item.Name == "picture-host-width").Text);
+                Assert.False(Assert.Single(Descendants(window).OfType<TextBox>(), item => item.Name == "picture-host-width").IsEnabled);
                 Assert.False(Button(surface, "Next frame").IsEnabled);
 
                 // Drive the actual owning picker/import form and native Home approval UI.

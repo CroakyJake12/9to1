@@ -16,7 +16,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents conversation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository
+public sealed partial class ConversationRepository(ISqliteConnectionFactory factory) : IConversationRepository
 {
     /// <summary>
     /// Retrieves recent async for the current operation.
@@ -194,7 +194,14 @@ public sealed class ConversationRepository(ISqliteConnectionFactory factory) : I
     public async Task UpsertConversationAsync(Conversation conversation, CancellationToken cancellationToken)
     {
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await UpsertCoreAsync(connection, null, conversation, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task UpsertCoreAsync(SqliteConnection connection, SqliteTransaction? transaction,
+        Conversation conversation, CancellationToken cancellationToken)
+    {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO conversations(id, mode, kind, title, container_id, lesson_id, is_pinned, is_temporary, created_at, updated_at,is_archived,parent_conversation_id,compacted_at,space_id)
             VALUES($id,$mode,$kind,$title,$containerId,$lessonId,$isPinned,$isTemporary,$createdAt,$updatedAt,$isArchived,$parentConversationId,$compactedAt,$spaceId)

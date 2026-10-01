@@ -9,6 +9,8 @@ namespace Haven.Android;
 public sealed partial class HavenLauncherActivity
 {
     private LauncherStoredLayout? _layout;
+    private AndroidLauncherLayoutSessions? _displayedLayouts;
+    private AndroidLauncherLayoutSessions DisplayedLayouts => _displayedLayouts ??= new(WidgetSessions);
     private readonly SemaphoreSlim _layoutEdits = new(1, 1);
     private Guid? _movingPlacementId;
     private Action? _refreshDrawer;
@@ -20,11 +22,16 @@ public sealed partial class HavenLauncherActivity
         expected ??= _layout;
         try
         {
+            if (expected is null) throw new InvalidOperationException("Load the current Home launcher layout first.");
+            var displayedSession = DisplayedLayouts.Require(expected);
             await _layoutEdits.WaitAsync(_launcherLifetime.Token);
             try
             {
-                if (expected is null) throw new InvalidOperationException("Load the current Home launcher layout first.");
-                _layout = await LayoutStore.EditAsync(expected, edit, _launcherLifetime.Token);
+                var saved = await WidgetSessions.EditAsync(displayedSession, edit, _launcherLifetime.Token);
+                var current = await WidgetSessions.ReadAsync(_launcherLifetime.Token);
+                if (current is null || current.Layout.AuthorityId != saved.AuthorityId || current.Layout.Revision != saved.Revision)
+                    throw new InvalidOperationException("Launcher changed after saving. Reload the current layout.");
+                _layout = DisplayedLayouts.Bind(current);
                 _page = _layout.Current.Pages.ToList().FindIndex(p => p.Id == _layout.Current.ActivePageId);
                 _movingPlacementId = null;
                 RunOnUiThread(() => { RenderPage(); _refreshDrawer?.Invoke(); });
@@ -56,8 +63,8 @@ public sealed partial class HavenLauncherActivity
                 case 5: ShowHiddenApplications(expected); break;
                 case 10: AskPageName("Add folder", "", name => EditLayoutAsync(layout => LauncherLayoutEdits.CreateFolder(layout, layout.ActivePageId, name), expected)); break;
                 case 9: ShowDockSettings(expected); break;
-                case 7: PickLayoutDocument(true); break;
-                case 8: PickLayoutDocument(false); break;
+                case 7: PickLayoutDocument(true, expected); break;
+                case 8: PickLayoutDocument(false, expected); break;
                 case 6:
                     if (expected.Previous is { } previous) _ = EditLayoutAsync(_ => LauncherLayoutEdits.Clone(previous), expected);
                     else Toast.MakeText(this, "No previous launcher layout is available.", ToastLength.Short)?.Show();

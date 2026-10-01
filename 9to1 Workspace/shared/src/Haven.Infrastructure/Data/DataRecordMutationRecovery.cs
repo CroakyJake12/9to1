@@ -6,14 +6,22 @@ namespace Haven.Infrastructure;
 /// <summary>Reads committed operation evidence through current actual Data/Home ownership. Returning
 /// a receipt proves the recorded mutation committed; it does not replay a write or complete Forms state.</summary>
 public sealed class DataRecordMutationRecovery(IDataWorkbookRepository workbooks,
-    IDataWorkbookCommitAuthority authority, IAuthenticatedResourceActorSource actors)
+    IDataWorkbookCommitAuthority authority, IAuthenticatedResourceActorSource actors) : IDataRecordMutationReceiptSource
 {
-    public async Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, CancellationToken cancellationToken = default)
+    public Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, CancellationToken cancellationToken = default) =>
+        ReadCoreAsync(intent, null, cancellationToken);
+
+    public Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor expectedActor,
+        CancellationToken cancellationToken) => ReadCoreAsync(intent, expectedActor ?? throw new ArgumentNullException(nameof(expectedActor)), cancellationToken);
+
+    private async Task<DataRecordMutationReceipt?> ReadCoreAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor? expectedActor,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(intent);
         if (workbooks is not IDataGuardedWorkbookRepository guarded) throw new UnauthorizedAccessException("Data guarded storage is unavailable.");
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("No authenticated Data actor.");
+        if (expectedActor is not null && actor != expectedActor) throw new UnauthorizedAccessException("Data receipt actor changed.");
         var workbook = await workbooks.LoadAsync(intent.WorkbookID, cancellationToken).ConfigureAwait(false)
             ?? throw new KeyNotFoundException("WorkbookNotFound");
         var admission = await authority.CaptureAsync(intent.StoreID, intent.WorkbookID, workbook.Version, workbook.RevisionId,
@@ -27,6 +35,8 @@ public sealed class DataRecordMutationRecovery(IDataWorkbookRepository workbooks
         if (receipt is not null && (receipt.PayloadSHA256 != intent.PayloadSHA256 || receipt.TableID != intent.TableID
             || receipt.RecordID != intent.RecordID || receipt.Origin != intent.Origin))
             throw new InvalidOperationException("DataMutationOperationConflict");
+        if (receipt is not null && intent.Origin is not null && receipt.SourceAdmissionVersion != 1)
+            throw new InvalidDataException("DataSourceProvenanceUnverified");
         return receipt;
     }
 }

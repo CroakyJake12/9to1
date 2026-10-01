@@ -43,6 +43,13 @@ public sealed class HomeProductivityCuiSurface : UserControl, IDisposable
             throw new InvalidDataException("Shared vector bindings require unique canonical identities.");
         var vectorById = vectors.ToDictionary(binding => binding.ControlId,
             binding => binding with { CanonicalShape = binding.CanonicalShape.Clone() }, StringComparer.Ordinal);
+        var equations = result.EquationBindings.ToArray();
+        if (equations.Any(binding => binding is null || binding.ObjectId == Guid.Empty || string.IsNullOrWhiteSpace(binding.ControlId)) ||
+            equations.Select(binding => binding.ControlId).Concat(vectorById.Keys).Concat(notesById.Keys).Concat(byId.Keys)
+                .Distinct(StringComparer.Ordinal).Count() != equations.Length + vectors.Length + notes.Length + bindings.Length)
+            throw new InvalidDataException("Shared equation bindings require unique canonical identities.");
+        var equationById = equations.ToDictionary(binding => binding.ControlId,
+            binding => binding with { CanonicalBlock = binding.CanonicalBlock.Clone() }, StringComparer.Ordinal);
         var consumed = new HashSet<string>(StringComparer.Ordinal);
         var registry = new CuiControlRegistry();
         registry.RegisterObjectRenderer("spe.raster", component =>
@@ -73,11 +80,17 @@ public sealed class HomeProductivityCuiSurface : UserControl, IDisposable
                 throw new InvalidDataException("The authored vector object has no unique canonical binding.");
             return HomeVectorObjectRenderer.Render(binding.CanonicalShape, binding.ObjectId);
         });
+        registry.RegisterObjectRenderer("spe.equation", component =>
+        {
+            if (component.Name is null || !equationById.TryGetValue(component.Name, out var binding) || !consumed.Add(component.Name))
+                throw new InvalidDataException("The authored equation has no unique canonical binding.");
+            return HomeEquationObjectRenderer.Render(binding.CanonicalBlock, binding.ObjectId, _bitmaps);
+        });
         _loader = new CuiControlLoader(registry);
         try
         {
             var loaded = _loader.TryLoad(new CuiRichParser().Parse(result.CuiSource));
-            if (loaded.Root is null || loaded.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error) || consumed.Count != bindings.Length + notes.Length + vectors.Length)
+            if (loaded.Root is null || loaded.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error) || consumed.Count != bindings.Length + notes.Length + vectors.Length + equations.Length)
                 throw new InvalidDataException("The productivity CUI did not render all declared frames.");
             Content = loaded.Root;
         }

@@ -4,7 +4,7 @@ using CakeOS.Cui.Language;
 
 namespace HavenOS.Images;
 
-public enum PictureWorkspaceCommandKind { Open, RotateClockwise, FlipHorizontal, Crop, Resize, Save, Export, NextFrame, PlayAnimation, PauseAnimation }
+public enum PictureWorkspaceCommandKind { Open, RotateClockwise, FlipHorizontal, Crop, Resize, Save, Export, NextFrame, PlayAnimation, PauseAnimation, ShowInformation }
 public sealed record PictureWorkspaceCommand(PictureWorkspaceCommandKind Kind, Guid? DocumentId, long? BaseRevision, string? FileId,
     Guid? BackingFileId = null)
 {
@@ -24,6 +24,8 @@ public sealed class PictureCuiWorkspace(
     private string _capability = "";
     private long? _frameDelayMicroseconds;
     private bool _playing;
+    private string _information = "";
+    private bool _informationVisible;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public static CuiDocument LoadDocument()
@@ -38,14 +40,14 @@ public sealed class PictureCuiWorkspace(
         return document;
     }
 
-    public void Refresh(PictureDocument? document, string persistenceStatus, string capabilityStatus, Guid? backingFileId = null, long? frameDelayMicroseconds = null, bool playing = false)
+    public void Refresh(PictureDocument? document, string persistenceStatus, string capabilityStatus, Guid? backingFileId = null, long? frameDelayMicroseconds = null, bool playing = false, string information = "", bool informationVisible = false)
     {
         _document = document;
         _backingFileId = backingFileId is { } id && id != Guid.Empty ? id : null;
         _persistence = persistenceStatus;
         _capability = capabilityStatus;
         _frameDelayMicroseconds = frameDelayMicroseconds;
-        _playing = playing;
+        _playing = playing; _information = information; _informationVisible = informationVisible;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
@@ -60,6 +62,9 @@ public sealed class PictureCuiWorkspace(
             "DocumentId" => _document?.DocumentId,
             "Revision" => _document?.Revision,
             "AnimationSummary" => _frameDelayMicroseconds is > 0 ? $"{(_playing ? "Playing" : "Paused")} · Frame delay: {_frameDelayMicroseconds.Value / 1000d:0.###} ms" : "",
+            "InformationSummary" => _information,
+            "InformationVisible" => _informationVisible,
+            "CanShowInformation" => IsActionAvailable("9to1.Picture.Information") == true,
             "CanOpen" => IsActionAvailable("9to1.Picture.Open") == true,
             "CanRotate" => IsActionAvailable("9to1.Picture.Rotate") == true,
             "CanFlip" => IsActionAvailable("9to1.Picture.FlipHorizontal") == true,
@@ -73,7 +78,7 @@ public sealed class PictureCuiWorkspace(
             _ => null
         };
         return path is "DisplayName" or "GeometrySummary" or "PersistenceStatus" or "CapabilityStatus" or "DocumentId" or "Revision" or "AnimationSummary"
-            or "CanOpen" or "CanRotate" or "CanFlip" or "CanCrop" or "CanResize" or "CanSave" or "CanExport" or "CanAdvanceFrames" or "CanPlay" or "CanPause";
+            or "CanOpen" or "CanRotate" or "CanFlip" or "CanCrop" or "CanResize" or "CanSave" or "CanExport" or "CanAdvanceFrames" or "CanPlay" or "CanPause" or "InformationSummary" or "InformationVisible" or "CanShowInformation";
     }
 
     public void RefreshAvailability() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
@@ -94,6 +99,7 @@ public sealed class PictureCuiWorkspace(
     {
         kind = command switch
         {
+            "9to1.Picture.Information" => PictureWorkspaceCommandKind.ShowInformation,
             "9to1.Picture.Open" => PictureWorkspaceCommandKind.Open,
             "9to1.Picture.Rotate" => PictureWorkspaceCommandKind.RotateClockwise,
             "9to1.Picture.FlipHorizontal" => PictureWorkspaceCommandKind.FlipHorizontal,

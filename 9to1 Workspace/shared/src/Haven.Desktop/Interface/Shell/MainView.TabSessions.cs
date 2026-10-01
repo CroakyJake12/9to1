@@ -484,24 +484,34 @@ public sealed partial class MainView
     internal IReadOnlyList<TabSessionSnapshot> CreateTabSnapshots() =>
         OpenTabs.Select(CreateTabSnapshot).ToArray();
 
-    private static string CreateTabStateJson(WorkspaceTabViewModel tab) => JsonSerializer.Serialize(new
+    private static string CreateTabStateJson(WorkspaceTabViewModel tab)
     {
-        tab.Key,
-        Surface = tab.Surface.ToString(),
-        ConversationId = tab.Page switch
+        if (tab.Page is UnavailableTerminalPage unavailable) return unavailable.SavedStateJson;
+        var terminal = tab.Page switch
         {
-            NewChatPage chat => chat.ConversationId,
-            ChatPage chat => chat.ConversationId,
-            _ => (Guid?)null
-        },
-        TerminalSessionId = tab.Page is TerminalPage terminal ? terminal.SessionMetadata.SessionId : (Guid?)null,
-        TerminalShellRuntime = tab.Page is TerminalPage terminalRuntime ? terminalRuntime.SessionMetadata.ShellRuntime : null,
-        TerminalDisplayName = tab.Page is TerminalPage terminalName ? terminalName.SessionMetadata.DisplayName : null,
-        TerminalInitialWorkingDirectory = tab.Page is TerminalPage terminalInitial ? terminalInitial.SessionMetadata.InitialWorkingDirectory : null,
-        TerminalCurrentWorkingDirectory = tab.Page is TerminalPage terminalCurrent ? terminalCurrent.SessionMetadata.CurrentWorkingDirectory : null,
-        TerminalGeneration = tab.Page is TerminalPage terminalGeneration ? terminalGeneration.SessionMetadata.Generation : (int?)null,
-        TerminalLifecycleState = tab.Page is TerminalPage terminalState ? terminalState.SessionMetadata.State.ToString() : null
-    });
+            HomeTerminalCuiPage current => current.SessionMetadata,
+            TerminalPage legacy => legacy.SessionMetadata,
+            _ => null
+        };
+        return JsonSerializer.Serialize(new
+        {
+            tab.Key,
+            Surface = tab.Surface.ToString(),
+            ConversationId = tab.Page switch
+            {
+                NewChatPage chat => chat.ConversationId,
+                ChatPage chat => chat.ConversationId,
+                _ => (Guid?)null
+            },
+            TerminalSessionId = terminal?.SessionId,
+            TerminalShellRuntime = terminal?.ShellRuntime,
+            TerminalDisplayName = terminal?.DisplayName,
+            TerminalInitialWorkingDirectory = terminal?.InitialWorkingDirectory,
+            TerminalCurrentWorkingDirectory = terminal?.CurrentWorkingDirectory,
+            TerminalGeneration = terminal?.Generation,
+            TerminalLifecycleState = terminal?.State.ToString()
+        });
+    }
 
     internal IReadOnlyList<TabGroupSnapshot> CreateGroupSnapshots() => OpenTabs.Where(tab => tab.GroupId is not null)
         .GroupBy(tab => tab.GroupId!.Value)
@@ -562,16 +572,28 @@ public sealed partial class MainView
                 }
                 else if (saved.AppKey.Equals("terminal", StringComparison.OrdinalIgnoreCase))
                 {
-                    var hub = App.Services?.GetService<TerminalCommandActivityHub>();
-                    var terminalFactory = App.Services?.GetService<ITerminalSessionFactory>();
-                    if (hub is not null && terminalFactory is not null)
+                    var terminalKey = state.Key ?? "terminal-" + Guid.NewGuid().ToString("N")[..8];
+                    object page;
+                    try
                     {
-                        var page = new TerminalPage(terminalFactory, _preferences, hub, state.TerminalWorkingDirectory, state.TerminalSessionId);
-                        var terminalKey = state.Key ?? "terminal-" + Guid.NewGuid().ToString("N")[..8];
-                        AddOrSelectTab(terminalKey, saved.Title, page, true, HavenSurface.Terminal, forceNewTab: true);
-                        if (terminalKey.Equals("terminal", StringComparison.OrdinalIgnoreCase)) _terminalPage = page;
-                        restored = SelectedTab;
+                        var services = App.Services ?? throw new InvalidOperationException("Home services are unavailable.");
+                        // Saved metadata is a navigation hint, never permission to reconnect to an old process.
+                        using var terminalRequest = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _terminalLifetime.Token);
+                        var current = await HomeTerminalPageFactory.OpenAsync(services, () => _preferences.CommandPermission,
+                            ReviewHomeRequestAsync, state.TerminalWorkingDirectory, terminalRequest.Token);
+                        if (IsDisposed || terminalRequest.IsCancellationRequested) { current.Dispose(); terminalRequest.Token.ThrowIfCancellationRequested(); return; }
+                        page = current;
+                        if (terminalKey.Equals("terminal", StringComparison.OrdinalIgnoreCase)) _terminalPage = current;
                     }
+                    catch (Exception error) when (error is UnauthorizedAccessException or IOException or InvalidOperationException or NotSupportedException)
+                    {
+                        var unavailable = new UnavailableTerminalPage(saved.StateJson);
+                        try { await unavailable.InitializeAsync(error.Message, cancellationToken); }
+                        catch { unavailable.Dispose(); throw; }
+                        page = unavailable;
+                    }
+                    AddOrSelectTab(terminalKey, saved.Title, page, true, HavenSurface.Terminal, forceNewTab: true);
+                    restored = SelectedTab;
                 }
                 else if (saved.AppKey is "chat" or "new" or "new-chat")
                 {
@@ -597,6 +619,7 @@ public sealed partial class MainView
                     }
                 }
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested || IsDisposed) { throw; }
             catch
             {
                 restored = null;

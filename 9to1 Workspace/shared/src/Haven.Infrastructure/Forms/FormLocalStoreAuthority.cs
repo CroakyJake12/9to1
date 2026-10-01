@@ -59,7 +59,7 @@ public sealed class FormLocalStoreAuthority(IVersionedSettingsStore settings, IR
     {
         if (storeID == Guid.Empty || formID == Guid.Empty || revision < 0 || actionID is not
             ("forms.create" or "forms.read" or "forms.edit" or "forms.publish" or "forms.close"
-            or "forms.response.create" or "forms.response.read" or "forms.response.answer" or "forms.response.advance" or "forms.response.submit")) return false;
+            or "forms.response.create" or "forms.response.read" or "forms.response.answer" or "forms.response.advance" or "forms.response.submit" or "forms.response.data.prepare" or "forms.response.data.reconcile")) return false;
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         if (actor is null || string.IsNullOrWhiteSpace(actor.ActorId) || string.IsNullOrWhiteSpace(actor.ProfileId)
             || string.IsNullOrWhiteSpace(actor.AuthenticationRevision)

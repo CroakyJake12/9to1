@@ -41,6 +41,19 @@ public sealed class DataRecordMutationReceiptTests
         Assert.NotEqual(first.PayloadSHA256, changed.PayloadSHA256);
     }
 
+    [Fact]
+    public void Source_admission_marker_requires_actual_source_store_and_preserves_legacy_unverified_history()
+    {
+        var workbook = DataWorkbook.Create(); var legacy = Receipt();
+        DataRecordMutationReceipts.Add(workbook, legacy);
+        Assert.Equal(0, Assert.Single(DataRecordMutationReceipts.Read(workbook)).SourceAdmissionVersion);
+        Assert.Throws<InvalidDataException>(() => DataRecordMutationReceipts.Add(DataWorkbook.Create(), legacy with { SourceAdmissionVersion = 1 }));
+        Assert.Throws<InvalidDataException>(() => DataRecordMutationReceipts.Add(DataWorkbook.Create(), legacy with { SourceAdmissionVersion = 2 }));
+        var verified = legacy with { SourceAdmissionVersion = 1, Origin = legacy.Origin! with { SourceStoreID = Guid.NewGuid() } };
+        var verifiedWorkbook = DataWorkbook.Create(); DataRecordMutationReceipts.Add(verifiedWorkbook, verified);
+        Assert.Equal(verified, Assert.Single(DataRecordMutationReceipts.Read(verifiedWorkbook)));
+    }
+
     private static DataRecordMutationReceipt Receipt() => new(Guid.NewGuid(), new('A', 64), Guid.NewGuid(), Guid.NewGuid(), 2,
         Guid.NewGuid(), DateTimeOffset.UtcNow, new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 2));
 }
