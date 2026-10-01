@@ -309,7 +309,7 @@ public sealed class ShellConfigurationTests
             ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("fixture-platform", "Fixture platform", false, true,
                 [new("desktop:fixture.desktop", "desktop:fixture.desktop", "Fixture app", "fixture-digest", true)])]);
     }
-    private sealed class PausedInstalledRegistry(IInstalledApplicationRegistry actual) : IInstalledApplicationOriginalActorRegistry
+    private sealed class PausedInstalledRegistry(IInstalledApplicationRegistry actual) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry
     {
         public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshForActorAsync(AuthenticatedResourceActor actor, CancellationToken ct)
             => (actual as IInstalledApplicationOriginalActorRegistry ?? throw new UnauthorizedAccessException()).RefreshForActorAsync(actor, ct);
