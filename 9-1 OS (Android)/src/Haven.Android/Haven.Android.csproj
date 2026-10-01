@@ -107,4 +107,7 @@
     <ProjectReference Include="../../../9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
     <Using Include="HavenOS.Files.NativeHost" />
   </ItemGroup>
+  <PropertyGroup Condition="'$(AstraAndroidCredentialProbe)' == 'true'">
+    <DefineConstants>$(DefineConstants);ASTRA_ANDROID_CREDENTIAL_PROBE</DefineConstants>
+  </PropertyGroup>
 </Project>
