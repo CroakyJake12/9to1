@@ -70,6 +70,23 @@ public sealed class GoService(IEnumerable<IGoProvider> providers, TimeSpan? prov
         // Scope/result fields are not grants. The owner must re-resolve identity/revision and authenticate/authorize now.
         return owner.InvokeAsync(result.Reference, actionId, ct);
     }
+    /// <summary>Original-session invocation. Actor metadata is not a grant; the owning provider must recheck it at final admission.</summary>
+    public Task InvokeForActorAsync(GoResult result, string actionId, AuthenticatedResourceActor expectedActor,
+        GoScope? scope = null, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        ArgumentNullException.ThrowIfNull(result);
+        scope = Snapshot(scope);
+        if (!Includes(scope?.ProviderIds, result.ProviderId) || !Includes(scope?.Owners, result.Reference.Owner) ||
+            !Includes(scope?.Kinds, result.Reference.Kind) || !Includes(scope?.ActionIds, actionId) || !result.Actions.Any(a => a.Id == actionId))
+            throw new UnauthorizedAccessException("The result or owner action is outside this Go scope.");
+        var provider = _providers.SingleOrDefault(p => p.ProviderId == result.ProviderId)
+            ?? throw new InvalidOperationException("The canonical provider is unavailable.");
+        ValidateResult(provider, result);
+        if (provider is not IGoOriginalActorInvocation owner)
+            throw new UnauthorizedAccessException("The owner cannot admit an original-session invocation.");
+        return owner.InvokeForActorAsync(result.Reference, actionId, expectedActor, ct);
+    }
     public async Task<GoResult?> ResolveAsync(string providerId, GoCanonicalLocator locator, GoScope? scope = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(locator);

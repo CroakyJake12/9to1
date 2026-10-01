@@ -3,11 +3,12 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
 using Haven.Application.Go;
+using Haven.Application;
 
 namespace NineToOne.Os.Shell;
 
 /// <summary>Live references into the current Home-owned shell record, never a second desktop index.</summary>
-public sealed class ShellNavigationGoProvider(ShellConfigurationService configuration) : IGoProvider
+public sealed class ShellNavigationGoProvider(ShellConfigurationService configuration) : IGoOriginalActorInvocation
 {
     public const string Id = "os.shell-navigation";
     public string ProviderId => Id;
@@ -49,6 +50,19 @@ public sealed class ShellNavigationGoProvider(ShellConfigurationService configur
         if (reference.Owner != "OS" || actionId != "Navigate" || !Guid.TryParse(reference.Id, out var id))
             throw new UnauthorizedAccessException("This shell navigation reference is invalid.");
         var snapshot = await configuration.GetAsync(ct);
+        if (reference.Revision != Stamp(snapshot.Stored)) throw new ShellConfigurationConflictException();
+        if (snapshot.Preview is not null) throw new InvalidOperationException("Keep or revert the current shell preview before switching through Go.");
+        var candidate = Navigate(snapshot.Stored.Current, reference.Kind, id);
+        await configuration.PreviewAsync(snapshot.Stored, candidate, TimeSpan.FromSeconds(30), ct);
+    }
+    public async Task InvokeForActorAsync(GoCanonicalReference reference, string actionId, AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (reference.Owner != "OS" || actionId != "Navigate" || !Guid.TryParse(reference.Id, out var id))
+            throw new UnauthorizedAccessException("This shell navigation reference is invalid.");
+        var snapshot = await configuration.GetAsync(ct);
+        if (snapshot.Stored.SessionActor != expectedActor || !await configuration.IsCurrentSessionAsync(snapshot.Stored, ct))
+            throw new UnauthorizedAccessException("The original Go actor changed before navigation.");
         if (reference.Revision != Stamp(snapshot.Stored)) throw new ShellConfigurationConflictException();
         if (snapshot.Preview is not null) throw new InvalidOperationException("Keep or revert the current shell preview before switching through Go.");
         var candidate = Navigate(snapshot.Stored.Current, reference.Kind, id);
