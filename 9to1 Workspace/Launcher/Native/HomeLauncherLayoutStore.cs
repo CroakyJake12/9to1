@@ -50,14 +50,23 @@ public sealed class HomeLauncherLayoutStore(IHomeCoreStateStore home, IAuthentic
         }
         throw new IOException("Launcher initialization conflicted with another session. Retry without resetting data.");
     }
-    public async Task<LauncherStoredLayout> EditAsync(LauncherStoredLayout expected, Func<LauncherLayout, LauncherLayout> edit, CancellationToken ct = default)
+    public Task<LauncherStoredLayout> EditAsync(LauncherStoredLayout expected, Func<LauncherLayout, LauncherLayout> edit, CancellationToken ct = default)
+        => EditCoreAsync(expected, edit, null, ct);
+    internal Task<LauncherStoredLayout> EditAsActorAsync(LauncherStoredLayout expected, AuthenticatedResourceActor actor,
+        Func<LauncherLayout, LauncherLayout> edit, CancellationToken ct)
+        => EditCoreAsync(expected, edit, actor, ct);
+    private async Task<LauncherStoredLayout> EditCoreAsync(LauncherStoredLayout expected, Func<LauncherLayout, LauncherLayout> edit,
+        AuthenticatedResourceActor? expectedActor, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(edit);
-        var current = await GetAsync(ct: ct);
+        var actor = expectedActor ?? await Actor(ct);
+        await SameActor(actor, ct);
+        var current = await ReadExistingAsync(ct) ?? throw new IOException("The current Home launcher layout is unavailable. Refresh before editing.");
+        await SameActor(actor, ct);
         if (current.AuthorityId != expected.AuthorityId || current.Revision != expected.Revision)
             throw new IOException("Launcher layout or profile changed. Refresh before editing.");
         var candidate = LauncherLayoutEdits.Clone(edit(LauncherLayoutEdits.Clone(current.Current))); candidate.Validate();
-        var actor = await Actor(ct);
+        await SameActor(actor, ct);
         if (current.AuthorityId != RecordId(actor.ProfileId)) throw new UnauthorizedAccessException("Launcher layout belongs to another profile.");
         var existingIds = LauncherLayoutEdits.Placements(current.Current).Where(i => i.FolderId is null).Select(i => i.ApplicationId).Concat(current.Current.HiddenApplications).Concat(current.Current.Drawer?.Categories.SelectMany(c => c.Applications) ?? []).ToHashSet();
         var newIds = LauncherLayoutEdits.Placements(candidate).Where(i => i.FolderId is null).Select(i => i.ApplicationId).Concat(candidate.HiddenApplications).Concat(candidate.Drawer?.Categories.SelectMany(c => c.Applications) ?? []).Where(id => !existingIds.Contains(id)).ToHashSet();

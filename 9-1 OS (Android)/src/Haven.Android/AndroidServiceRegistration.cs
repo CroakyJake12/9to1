@@ -20,6 +20,7 @@ public static class AndroidServiceRegistration
         services.AddSingleton<AndroidInstalledApplicationShortcuts>();
         services.AddSingleton<ICanonicalResourceAccessResolver, LauncherLayoutResourceResolver>();
         services.AddSingleton<HomeLauncherLayoutStore>();
+        services.AddSingleton<HomeLauncherSession>();
         services.AddSingleton<IGoProvider>(provider => provider.GetRequiredService<AndroidInstalledApplicationsGoProvider>());
         services.AddSingleton<IGoProvider, LauncherNavigationGoProvider>();
         services.TryAddSingleton(provider => new GoService(provider.GetServices<IGoProvider>()));

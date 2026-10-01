@@ -21,6 +21,10 @@ public sealed class AdminNativeSceneTests
             using var host=new CuiSceneHost();Assert.Equal(CuiSceneAvailabilityState.Ready,(await host.ShowAsync(AdminNativeScene.Create(model,model,new FixtureReady(true)))).State);
             Assert.DoesNotContain(host.Diagnostics,d=>d.Severity==CakeOS.Cui.Language.CuiDiagnosticSeverity.Error);
             Assert.Contains(host.GetLogicalDescendants().OfType<TextBlock>(),t=>t.Text=="9to1 Admin");
+            var organisationInput=Assert.Single(host.GetLogicalDescendants().OfType<TextBox>());
+            organisationInput.Text="selected-organisation";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
+            Assert.Equal("selected-organisation",model.Get("OrganisationID"));
             Assert.Contains(host.GetLogicalDescendants().OfType<Button>(),b=>Equals(b.Content,"Refresh organisations"));
             Assert.Contains(host.GetLogicalDescendants().OfType<Button>(),b=>Equals(b.Content,"Refresh billing and recovery status"));
             return true;

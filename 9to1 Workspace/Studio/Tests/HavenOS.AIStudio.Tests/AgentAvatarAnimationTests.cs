@@ -69,6 +69,22 @@ public sealed class AgentAvatarAnimationTests
         Assert.Null(preview.Frame);
     }
 
+    [Fact]
+    public async Task Cancelled_frame_retires_native_session_clears_presentation_and_can_reopen_authorized_asset()
+    {
+        await using var fixture = await Fixture.CreateAsync(true);
+        var preview = fixture.Editor.Preview!;
+        await fixture.Editor.DispatchAsync("PreviewAvatar", null);
+        AssertRed(preview);
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => preview.AdvanceAsync(cancelled.Token));
+        Assert.Null(preview.Frame); Assert.False(preview.IsAnimating);
+        await fixture.Editor.DispatchAsync("PreviewAvatar", null);
+        AssertRed(preview); Assert.True(preview.IsAnimating);
+        await Task.WhenAll(preview.DisposeAsync().AsTask(), preview.DisposeAsync().AsTask());
+        Assert.Null(preview.Frame); Assert.False(preview.IsAnimating);
+    }
+
     private static void AssertRed(AgentAvatarPreview preview) => AssertPixel(preview, [0, 0, 255, 255]);
     private static void AssertBlue(AgentAvatarPreview preview) => AssertPixel(preview, [255, 0, 0, 255]);
     private static void AssertPixel(AgentAvatarPreview preview, byte[] expected)

@@ -156,20 +156,36 @@ public sealed class TerminalAppSurface : IDisposable
 
     /// <summary>Routes actual viewport input through the same current command policy.
     /// A viewport must retain its attached session ID; it cannot retarget a replacement session.</summary>
-    public ValueTask SendInteractiveInputAsync(Guid expectedSessionId, ReadOnlyMemory<byte> input, CancellationToken cancellationToken = default)
+    public async ValueTask SendInteractiveInputAsync(Guid expectedSessionId, ReadOnlyMemory<byte> input, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
+        ITerminalSession captured;
+        long generation;
         lock (_resolutionGate)
         {
-            if (Mode != TerminalInputMode.Command || !TryGetExecutionHost(out var session, out var permission) ||
+            if (!TryGetExecutionHost(out captured, out _))
+                throw new UnauthorizedAccessException("The Terminal session is unavailable.");
+            generation = _resolutionGeneration;
+        }
+        await RequireSessionAdmissionAsync(captured, cancellationToken).ConfigureAwait(false);
+        ValueTask dispatched;
+        lock (_resolutionGate)
+        {
+            if (_disposed || generation != _resolutionGeneration || !ReferenceEquals(_session, captured) ||
+                Mode != TerminalInputMode.Command || !TryGetExecutionHost(out var session, out var permission) ||
                 session is not ITerminalInteractiveSession interactive || session.Metadata.SessionId != expectedSessionId ||
                 TerminalCommandPolicy.Evaluate(permission()).Decision != TerminalPermissionDecision.Allowed)
                 throw new UnauthorizedAccessException("Interactive input is unavailable for the current session, mode, or command permission.");
             _pendingCommand = null;
-            return interactive.SendInputAsync(input, cancellationToken);
+            dispatched = interactive.SendInputAsync(input, cancellationToken);
         }
+        await dispatched.ConfigureAwait(false);
     }
+
+    private ValueTask RequireSessionAdmissionAsync(ITerminalSession session, CancellationToken ct) =>
+        _host.SessionFactory is ITerminalSessionAdmission admission
+            ? admission.RequireSessionAsync(session.Metadata, ct) : ValueTask.CompletedTask;
 
     public async Task<TerminalAppCommandResult> SubmitAsync(string command, CancellationToken cancellationToken = default)
     {
@@ -267,7 +283,7 @@ public sealed class TerminalAppSurface : IDisposable
             var policy = TerminalCommandPolicy.Evaluate(permission(), approvedOnce: true);
             if (policy.Decision != TerminalPermissionDecision.Allowed)
                 return Task.FromResult(new TerminalAppCommandResult(TerminalAppCommandState.Denied, safeCommand, policy.Reason));
-            return ExecuteCoreAsync(session, command, safeCommand, cancellationToken);
+            return ExecuteCoreAsync(session, command, safeCommand, cancellationToken, approvedOnce: true);
         }
     }
 
@@ -296,8 +312,17 @@ public sealed class TerminalAppSurface : IDisposable
 
         try
         {
-            InvalidateResolution();
-            await _session.SetWorkingDirectoryAsync(Path.GetFullPath(path), cancellationToken).ConfigureAwait(false);
+            var session = _session;
+            var fullPath = Path.GetFullPath(path);
+            await RequireSessionAdmissionAsync(session, cancellationToken).ConfigureAwait(false);
+            Task dispatched;
+            lock (_resolutionGate)
+            {
+                if (_disposed || !ReferenceEquals(_session, session)) return false;
+                InvalidateResolution();
+                dispatched = session.SetWorkingDirectoryAsync(fullPath, cancellationToken);
+            }
+            await dispatched.ConfigureAwait(false);
             return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -331,16 +356,22 @@ public sealed class TerminalAppSurface : IDisposable
             return false;
         }
 
-        InvalidateResolution();
-        var previous = _session;
-        Detach(previous);
-        _session = replacement;
-        Attach(replacement);
-        previous?.Dispose();
-        _pendingCommand = null;
-        _history.Clear();
-        Availability = TerminalAppAvailability.Available;
-        UnavailableReason = null;
+        ITerminalSession? previous;
+        lock (_resolutionGate)
+        {
+            if (_disposed) { replacement.Dispose(); return false; }
+            InvalidateResolution();
+            previous = _session;
+            Detach(previous);
+            _session = replacement;
+            Attach(replacement);
+            _pendingCommand = null;
+            _history.Clear();
+            Availability = TerminalAppAvailability.Available;
+            UnavailableReason = null;
+        }
+        try { previous?.Dispose(); }
+        finally { MetadataChanged?.Invoke(this, replacement.Metadata); }
         return true;
     }
 
@@ -350,18 +381,42 @@ public sealed class TerminalAppSurface : IDisposable
         if (!IsAvailable || _session is null)
             return;
 
-        await _session.InterruptAsync(cancellationToken).ConfigureAwait(false);
+        var session = _session;
+        await RequireSessionAdmissionAsync(session, cancellationToken).ConfigureAwait(false);
+        Task dispatched;
+        lock (_resolutionGate)
+        {
+            if (_disposed || !ReferenceEquals(_session, session))
+                throw new UnauthorizedAccessException("The Terminal session changed before interruption.");
+            dispatched = session.InterruptAsync(cancellationToken);
+        }
+        await dispatched.ConfigureAwait(false);
     }
 
     private async Task<TerminalAppCommandResult> ExecuteCoreAsync(
         ITerminalSession session,
         string command,
         string safeCommand,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool approvedOnce = false)
     {
+        long generation;
+        TerminalSessionMetadata metadata;
+        lock (_resolutionGate) { generation = _resolutionGeneration; metadata = session.Metadata; }
         try
         {
-            var result = await session.ExecuteAsync(Guid.NewGuid(), command, cancellationToken).ConfigureAwait(false);
+            await RequireSessionAdmissionAsync(session, cancellationToken).ConfigureAwait(false);
+            Task<TerminalSessionCommandResult> dispatched;
+            lock (_resolutionGate)
+            {
+                if (_disposed || generation != _resolutionGeneration || !ReferenceEquals(_session, session) ||
+                    session.Metadata.Revision != metadata.Revision || Mode != TerminalInputMode.Command ||
+                    _host.CommandPermission is null ||
+                    TerminalCommandPolicy.Evaluate(_host.CommandPermission(), approvedOnce).Decision != TerminalPermissionDecision.Allowed)
+                    return new(TerminalAppCommandState.Denied, safeCommand, "The command authority or session context changed before dispatch.");
+                dispatched = session.ExecuteAsync(Guid.NewGuid(), command, cancellationToken);
+            }
+            var result = await dispatched.ConfigureAwait(false);
             var state = result.Cancelled
                 ? TerminalAppCommandState.Cancelled
                 : result.ExitCode == 0
@@ -376,6 +431,10 @@ public sealed class TerminalAppSurface : IDisposable
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return new(TerminalAppCommandState.Cancelled, safeCommand, "Command interrupted.");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return new(TerminalAppCommandState.Denied, safeCommand, SensitiveTextRedactor.Redact(ex.Message, 2_000));
         }
         catch (Exception ex)
         {
@@ -472,17 +531,20 @@ public sealed class TerminalAppSurface : IDisposable
 
     public void Dispose()
     {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-        InvalidateResolution();
-        if (_host.ActivityHub is not null)
-            _host.ActivityHub.ActivityPublished -= OnActivityPublished;
-        Detach(_session);
-        _session?.Dispose();
-        _session = null;
-        _pendingCommand = null;
-        Availability = TerminalAppAvailability.Disposed;
+        ITerminalSession? previous;
+        lock (_resolutionGate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            InvalidateResolution();
+            if (_host.ActivityHub is not null)
+                _host.ActivityHub.ActivityPublished -= OnActivityPublished;
+            previous = _session;
+            Detach(previous);
+            _session = null;
+            _pendingCommand = null;
+            Availability = TerminalAppAvailability.Disposed;
+        }
+        previous?.Dispose();
     }
 }

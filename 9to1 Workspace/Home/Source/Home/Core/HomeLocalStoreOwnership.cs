@@ -31,12 +31,26 @@ public sealed class HomeLocalStoreEvidenceRegistry(IEnumerable<IHomeLocalStoreEv
 public sealed record HomeLocalStoreBinding(string ResourceKind, string StoreId, string ProfileId,
     string ObservedStoreRevision, string? ImportApprovalId);
 
+/// <summary>The binding was acknowledged durable; only its exact audit outcome remains pending.
+/// Retrying the import operation is not permitted. RetryImportAuditAsync never writes a binding.</summary>
+public sealed class HomeStoreImportAuditPendingException(string requestId, HomeLocalStoreBinding binding, Exception cause)
+    : IOException("Store ownership was imported, but its Home audit needs recovery. Retry only the audit.", cause)
+{
+    public string RequestId { get; } = requestId;
+    public HomeLocalStoreBinding Binding { get; } = binding;
+}
+
 /// <summary>Explicit personal-store ownership registry. Store IDs come from durable owning repository metadata, never mutable paths.</summary>
 public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
     IHomeLocalStoreEvidenceSource evidence, HomePermissionTrustService permissions)
 {
     private sealed record Import(HomeLocalStoreEvidence Evidence, AuthenticatedResourceActor Actor);
     private readonly ConcurrentDictionary<string, Import> _imports = new();
+    private sealed record ImportCompletion(AuthenticatedResourceActor Actor, HomeLocalStoreBinding Binding, HomeExecutionOutcome Outcome)
+    {
+        public SemaphoreSlim Gate { get; } = new(1, 1);
+    }
+    private readonly ConcurrentDictionary<string, ImportCompletion> _importAudits = new();
 
     public async Task<HomeLocalStoreBinding?> GetVerifiedAsync(string kind, string storeId, CancellationToken ct = default)
     {
@@ -130,7 +144,7 @@ public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocal
         if (!Valid(observed, kind, storeId)) throw new UnauthorizedAccessException("Unknown or inaccessible local store cannot be imported.");
         if (actor != await profiles.GetCurrentAsync(ct).ConfigureAwait(false))
             throw new UnauthorizedAccessException("The Home setup profile changed during store observation.");
-        if (_imports.Count >= 256) throw new InvalidOperationException("Too many pending ownership imports.");
+        if (_imports.Count + _importAudits.Count >= 256) throw new InvalidOperationException("Too many pending ownership imports.");
         var reference = new HomeObjectReference("local-resource-store", kind + ":" + storeId);
         var authorization = await permissions.AuthorizeAsync(new(null,
             new(actor.ActorId, actor.ActorId, actor.ProfileId, actor.AuthenticationRevision, true), sessionId,
@@ -152,19 +166,53 @@ public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocal
         if (!(await permissions.GetAuthorizationAsync(requestId, ct).ConfigureAwait(false)).IsAllowed ||
             !_imports.TryRemove(requestId, out _) || !(await permissions.BeginExecutionAsync(requestId, ct).ConfigureAwait(false)).IsAllowed)
             throw new UnauthorizedAccessException("Explicit Home ownership import approval is required.");
-        try
-        {
-            var binding = await BindAsync(current!, actor!, requestId, ct).ConfigureAwait(false);
-            await permissions.RecordExecutionAsync(requestId, new(HomePermissionRequestState.Succeeded, "HOME_STORE_IMPORTED",
-                "Local store ownership import completed.", [new("local-resource-store", current!.ResourceKind + ":" + current.StoreId)]), CancellationToken.None).ConfigureAwait(false);
-            return binding;
-        }
+        HomeLocalStoreBinding binding;
+        try { binding = await BindAsync(current!, actor!, requestId, ct).ConfigureAwait(false); }
         catch
         {
-            await permissions.RecordExecutionAsync(requestId, new(HomePermissionRequestState.Failed, "HOME_STORE_IMPORT_FAILED",
-                "Local store ownership import failed; existing data was preserved.", []), CancellationToken.None).ConfigureAwait(false);
+            // An owning-store exception can occur after publication. Do not claim that no binding
+            // exists or turn an uncertain result into permission to repeat the operation.
+            try
+            {
+                await permissions.RecordExecutionAsync(requestId, new(HomePermissionRequestState.PartiallyCompleted,
+                    "HOME_STORE_IMPORT_UNCERTAIN", "Ownership import could not confirm its result; inspect the existing binding before recovery.",
+                    [new("local-resource-store", current!.ResourceKind + ":" + current.StoreId)]), CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception auditError) when (auditError is IOException or UnauthorizedAccessException or InvalidOperationException) { }
             throw;
         }
+        var completion = new ImportCompletion(actor!, binding, new(HomePermissionRequestState.Succeeded, "HOME_STORE_IMPORTED",
+            "Local store ownership import completed.", Array.AsReadOnly(new[] { new HomeObjectReference("local-resource-store", current!.ResourceKind + ":" + current.StoreId) })));
+        _importAudits[requestId] = completion;
+        return await FinishImportAuditAsync(requestId, completion, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    /// <summary>Retries only the retained audit for an acknowledged import in this host lifetime.
+    /// It cannot recreate, alter or regrant ownership, even when the binding or evidence changed later.</summary>
+    public async Task<HomeLocalStoreBinding> RetryImportAuditAsync(string requestId, CancellationToken ct = default)
+    {
+        if (!_importAudits.TryGetValue(requestId, out var completion) ||
+            await profiles.GetCurrentAsync(ct).ConfigureAwait(false) != completion.Actor)
+            throw new UnauthorizedAccessException("No pending import audit belongs to this authenticated host session.");
+        return await FinishImportAuditAsync(requestId, completion, ct).ConfigureAwait(false);
+    }
+
+    private async Task<HomeLocalStoreBinding> FinishImportAuditAsync(string requestId, ImportCompletion completion, CancellationToken ct)
+    {
+        await completion.Gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            try
+            {
+                var result = await permissions.RecordExecutionAsync(requestId, completion.Outcome, ct).ConfigureAwait(false);
+                if (!result.Succeeded) throw new InvalidOperationException(result.Code + ": " + result.Message);
+                _importAudits.TryRemove(requestId, out _);
+                return completion.Binding;
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
+            { throw new HomeStoreImportAuditPendingException(requestId, completion.Binding, error); }
+        }
+        finally { completion.Gate.Release(); }
     }
 
     private async Task<HomeLocalStoreBinding> BindAsync(HomeLocalStoreEvidence observed, AuthenticatedResourceActor actor, string? approval, CancellationToken ct)

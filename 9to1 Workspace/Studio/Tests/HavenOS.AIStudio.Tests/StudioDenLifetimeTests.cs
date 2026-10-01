@@ -49,6 +49,33 @@ public sealed class StudioDenLifetimeTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Lifetime.CompleteExistingImportAsync(review.RequestId, fixture.Ownership));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Acknowledged_import_audit_recovery_never_reimports_Den(bool afterCommit)
+    {
+        await using var fixture = new Fixture(afterCommit);
+        var existingRoot = Path.Combine(fixture.Root, "existing");
+        await using (var original = await DenStore.CreateAsync(existingRoot, [new("personal", "personal")])) { }
+        var id = await fixture.Lifetime.SelectAsync(existingRoot, false, fixture.Ownership);
+        var review = await fixture.Lifetime.RequestExistingImportAsync(fixture.Ownership);
+        Assert.True((await fixture.Permissions.DecideAsync(review.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        fixture.Home.FailAudit = true;
+        var pending = await Assert.ThrowsAsync<HomeStoreImportAuditPendingException>(() => fixture.Lifetime.CompleteExistingImportAsync(review.RequestId, fixture.Ownership));
+        Assert.Equal(id, pending.Binding.StoreId);
+        Assert.Equal(id, (await fixture.Lifetime.OpenBoundSessionAsync(fixture.Receipts)).DenId);
+        var before = (await fixture.Home.ReadAsync()).State!.Records.Single(record => record.RecordType == "home.local-store-ownership");
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Lifetime.CompleteExistingImportAsync(review.RequestId, fixture.Ownership));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Lifetime.RequestExistingImportAsync(fixture.Ownership));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Lifetime.RetryExistingImportAuditAsync("foreign-review", fixture.Ownership));
+        await fixture.Lifetime.RetryExistingImportAuditAsync(review.RequestId, fixture.Ownership);
+        Assert.Equal(1, fixture.Home.BindingWrites);
+        var after = (await fixture.Home.ReadAsync()).State!.Records.Single(record => record.RecordType == "home.local-store-ownership");
+        Assert.Equal(before.Revision, after.Revision); Assert.Equal(before.Payload.GetRawText(), after.Payload.GetRawText());
+        Assert.Equal(HomePermissionRequestState.Succeeded, (await fixture.Permissions.GetAuthorizationAsync(review.RequestId)).State);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Lifetime.RetryExistingImportAuditAsync(review.RequestId, fixture.Ownership));
+    }
+
     private sealed class Fixture : IAsyncDisposable
     {
         public string Root { get; } = Path.Combine(Path.GetTempPath(), "astra-studio-host-" + Guid.NewGuid().ToString("N"));
@@ -58,9 +85,10 @@ public sealed class StudioDenLifetimeTests
         public HomePermissionTrustService Permissions { get; }
         public Func<Task>? BeforeRetire { get; set; }
         public int Retired { get; private set; }
-        public Fixture()
+        public FaultStore Home { get; }
+        public Fixture(bool afterCommit = false)
         {
-            var home = new FileHomeCoreStateStore(Path.Combine(Root, "home.json"));
+            var home = Home = new FaultStore(new FileHomeCoreStateStore(Path.Combine(Root, "home.json")), afterCommit);
             var profiles = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
             Lifetime = new StudioDenLifetime(profiles, async ct =>
             {
@@ -81,4 +109,26 @@ public sealed class StudioDenLifetimeTests
             if (Directory.Exists(Root)) Directory.Delete(Root, true);
         }
     }
+    private sealed class FaultStore(IHomeCoreStateStore inner, bool afterCommit) : IHomeCoreStateStore
+    {
+        public bool FailAudit; public int BindingWrites;
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken ct = default)
+        {
+            if (FailAudit && record.RecordType == "home.permissions-trust" && record.Payload.GetRawText().Contains("HOME_STORE_IMPORTED", StringComparison.Ordinal))
+            {
+                FailAudit = false;
+                if (afterCommit) _ = await inner.WriteAsync(record, expected, ct);
+                throw new IOException("Injected audit storage failure.");
+            }
+            return await inner.WriteAsync(record, expected, ct);
+        }
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expected,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default)
+        {
+            if (record.RecordType == "home.local-store-ownership") BindingWrites++;
+            return inner.WriteGuardedAsync(record, expected, actor, guard, ct);
+        }
+    }
+
 }

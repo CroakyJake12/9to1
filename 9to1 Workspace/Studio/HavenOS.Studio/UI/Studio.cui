@@ -11,15 +11,15 @@
           <TextBlock text="{Binding Description}" text-wrapping="Wrap" />
         </StackPanel>
         <TextBlock text="Agent Builder — presentation" font-size="20" margin="0 20 0 8" />
-        <TextBox text="{Binding NamespaceID}" accessible-name="Canonical Den namespace" />
-        <TextBox text="{Binding AgentID}" accessible-name="Canonical Agent ID" />
+        <TextBox text="{Binding NamespaceID, mode=TwoWay, type=string}" accessible-name="Canonical Den namespace" />
+        <TextBox text="{Binding AgentID, mode=TwoWay, type=string}" accessible-name="Canonical Agent ID" />
         <Button action="OpenAvatar" content="Open Agent presentation" />
         <TextBlock text="{Binding AgentName}" font-weight="Bold" />
         <TextBlock text="{Binding Revision}" accessible-name="Saved definition revision" />
-        <TextBox text="{Binding StaticAsset}" accessible-name="Static fallback asset reference" />
-        <TextBox text="{Binding AccessibleName}" accessible-name="Accessible avatar name" />
-        <TextBox text="{Binding InitialState}" accessible-name="Initial state ID" />
-        <CheckBox checked="{Binding Animated}" content="Animate avatar" />
+        <TextBox text="{Binding StaticAsset, mode=TwoWay, type=string}" accessible-name="Static fallback asset reference" />
+        <TextBox text="{Binding AccessibleName, mode=TwoWay, type=string}" accessible-name="Accessible avatar name" />
+        <TextBox text="{Binding InitialState, mode=TwoWay, type=string}" accessible-name="Initial state ID" />
+        <CheckBox checked="{Binding Animated, mode=TwoWay, type=bool}" content="Animate avatar" />
         <Button action="SetAvatarIdentity" content="Apply avatar identity" />
         <TextBlock text="Animation states" font-size="18" />
         <StackPanel items="{Binding AvatarStates}" item-template="avatar-state-row" />
@@ -28,10 +28,10 @@
           <TextBlock text="{Binding Label}" />
           <TextBlock text="{Binding AssetReference}" />
         </StackPanel>
-        <TextBox text="{Binding StateID}" accessible-name="State ID" />
-        <TextBox text="{Binding StateLabel}" accessible-name="State label" />
-        <TextBox text="{Binding StateAsset}" accessible-name="Animation asset reference" />
-        <CheckBox checked="{Binding StateLoop}" content="Loop animation" />
+        <TextBox text="{Binding StateID, mode=TwoWay, type=string}" accessible-name="State ID" />
+        <TextBox text="{Binding StateLabel, mode=TwoWay, type=string}" accessible-name="State label" />
+        <TextBox text="{Binding StateAsset, mode=TwoWay, type=string}" accessible-name="Animation asset reference" />
+        <CheckBox checked="{Binding StateLoop, mode=TwoWay, type=bool}" content="Loop animation" />
         <Button action="AddAvatarState" content="Add state" />
         <Button action="ReplaceAvatarState" content="Update state" />
         <Button action="RemoveAvatarState" content="Remove state" />
@@ -40,9 +40,9 @@
         <StackPanel id="avatar-transition-row" definition="true">
           <TextBlock text="{Binding FromStateId}" /><TextBlock text="{Binding EventId}" /><TextBlock text="{Binding ToStateId}" />
         </StackPanel>
-        <TextBox text="{Binding FromState}" accessible-name="Transition from state" />
-        <TextBox text="{Binding ToState}" accessible-name="Transition to state" />
-        <TextBox text="{Binding TransitionEvent}" accessible-name="Transition event" />
+        <TextBox text="{Binding FromState, mode=TwoWay, type=string}" accessible-name="Transition from state" />
+        <TextBox text="{Binding ToState, mode=TwoWay, type=string}" accessible-name="Transition to state" />
+        <TextBox text="{Binding TransitionEvent, mode=TwoWay, type=string}" accessible-name="Transition event" />
         <Button action="SetAvatarTransition" content="Apply transition" />
         <Button action="RemoveAvatarTransition" content="Remove transition" />
         <TextBlock text="Conversational reactions" font-size="18" />
@@ -50,13 +50,13 @@
         <StackPanel id="avatar-reaction-row" definition="true">
           <TextBlock text="{Binding EventId}" /><TextBlock text="{Binding StateId}" />
         </StackPanel>
-        <TextBox text="{Binding ReactionEvent}" accessible-name="Reaction event" />
-        <TextBox text="{Binding ReactionState}" accessible-name="Reaction state" />
+        <TextBox text="{Binding ReactionEvent, mode=TwoWay, type=string}" accessible-name="Reaction event" />
+        <TextBox text="{Binding ReactionState, mode=TwoWay, type=string}" accessible-name="Reaction state" />
         <Button action="SetAvatarReaction" content="Apply reaction" />
         <Button action="RemoveAvatarReaction" content="Remove reaction" />
-        <TextBox text="{Binding PreviewEvent}" accessible-name="Simulated presentation event" />
-        <TextBox text="{Binding AvatarActivity}" accessible-name="Readable Agent activity" />
-        <CheckBox checked="{Binding ReducedMotion}" content="Preview reduced motion" />
+        <TextBox text="{Binding PreviewEvent, mode=TwoWay, type=string}" accessible-name="Simulated presentation event" />
+        <TextBox text="{Binding AvatarActivity, mode=TwoWay, type=string}" accessible-name="Readable Agent activity" />
+        <CheckBox checked="{Binding ReducedMotion, mode=TwoWay, type=bool}" content="Preview reduced motion" />
         <Button action="PreviewAvatar" content="Preview presentation" />
         <Object Type="studio.agent-avatar" id="studio-avatar-preview" />
         <TextBlock text="{Binding PreviewAsset}" accessible-name="Preview asset reference" />

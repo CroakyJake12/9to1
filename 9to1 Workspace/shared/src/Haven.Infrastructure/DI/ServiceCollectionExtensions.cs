@@ -31,6 +31,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddHavenInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton<IAppPaths, AppPaths>();
+        services.TryAddSingleton<LocalMotionPreferencesService>(_ => LocalMotionPreferencesService.Current);
+        services.TryAddSingleton<IMotionPreferenceSource>(provider => provider.GetRequiredService<LocalMotionPreferencesService>());
+        services.TryAddSingleton<IMotionPreferences>(provider => provider.GetRequiredService<LocalMotionPreferencesService>());
         services.AddSingleton<IHomeCoreStateStore>(_ => FileHomeCoreStateStore.CreateDefault());
         services.TryAddSingleton<ITrustedHostPrincipalSource, OperatingSystemPrincipalSource>();
         services.AddSingleton<HomeLocalProfileIdentity>();

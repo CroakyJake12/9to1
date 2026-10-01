@@ -48,6 +48,7 @@
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Spaces/HavenOS.Spaces.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Canvas/HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Canvas/NativeUI/HavenOS.Canvas.NativeUI.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Sites/HavenOS.Sites.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj" />
     <ProjectReference Include="../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />

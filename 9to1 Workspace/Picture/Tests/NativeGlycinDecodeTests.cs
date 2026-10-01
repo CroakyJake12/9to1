@@ -11,7 +11,7 @@ public sealed class NativeGlycinDecodeTests
     [Fact]
     public void Actual_sandboxed_png_loader_preserves_transparency_and_premultiplies_pixels()
     {
-        var decoded = new PictureGlycinDecoder().DecodeFirstFrame(TransparentTwoPixelPng());
+        var decoded = new PictureGlycinDecoder().DecodeFirstFrame(TransparentTwoPixelPng(), TestContext.Current.CancellationToken);
         Assert.Equal(2u, decoded.Width);
         Assert.Equal(1u, decoded.Height);
         Assert.Equal(new byte[] { 0, 0, 128, 128, 255, 0, 0, 255 }, decoded.BgraPremultipliedPixels.Take(8).ToArray());
@@ -29,7 +29,7 @@ public sealed class NativeGlycinDecodeTests
         BitConverter.GetBytes(40).CopyTo(bytes, 14); BitConverter.GetBytes(2).CopyTo(bytes, 18); BitConverter.GetBytes(1).CopyTo(bytes, 22);
         BitConverter.GetBytes((short)1).CopyTo(bytes, 26); BitConverter.GetBytes((short)24).CopyTo(bytes, 28); BitConverter.GetBytes(8).CopyTo(bytes, 34);
         bytes[56] = 255; bytes[57] = 255;
-        var frame = decoder.DecodeFirstFrame(bytes);
+        var frame = decoder.DecodeFirstFrame(bytes, TestContext.Current.CancellationToken);
         Assert.Equal(2u, frame.Width);
         Assert.Equal(1u, frame.Height);
         Assert.Equal(new byte[] { 0, 0, 255, 255, 255, 0, 0, 255 }, frame.BgraPremultipliedPixels.Take(8).ToArray());
@@ -37,8 +37,8 @@ public sealed class NativeGlycinDecodeTests
         Assert.InRange(frame.ColorMode, 1, 3);
         // Retaining a valid format signature reaches the real loader's error
         // path rather than only failing client format identification.
-        Assert.Throws<IOException>(() => decoder.DecodeFirstFrame(bytes.AsSpan(0, 20)));
-        var repeated = decoder.DecodeFirstFrame(bytes);
+        Assert.Throws<IOException>(() => decoder.DecodeFirstFrame(bytes.AsSpan(0, 20), TestContext.Current.CancellationToken));
+        var repeated = decoder.DecodeFirstFrame(bytes, TestContext.Current.CancellationToken);
         Assert.Equal(frame.BgraPremultipliedPixels, repeated.BgraPremultipliedPixels);
     }
 

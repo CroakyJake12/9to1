@@ -18,7 +18,10 @@ public class HomeResourceCuiReadiness(HomeCoreRuntime home, IAuthenticatedResour
             if (actor is null) return Unavailable("HomeProfileUnavailable", "Open Home to recover this profile.");
             var profile = await _profile.CheckAsync(cancellationToken).ConfigureAwait(false);
             if (profile.State != CuiSceneAvailabilityState.Ready) return profile;
-            var scopes = await currentScopes(cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<ResourceScope> scopes;
+            try { scopes = await currentScopes(cancellationToken).ConfigureAwait(false); }
+            catch (InvalidOperationException)
+            { return Unavailable("ResourceSnapshotUnavailable", "The owning resource changed. Reopen its current authorized view."); }
             if (string.IsNullOrWhiteSpace(actionId) || scopes.Count == 0 || scopes.Any(scope => scope.Access != ResourceAccess.Read))
                 return Unavailable("ResourceScopeUnavailable", "The owning app has no current canonical read scope.");
             if (await resources.AuthorizeAsync(actionId, scopes, cancellationToken).ConfigureAwait(false) != actor ||

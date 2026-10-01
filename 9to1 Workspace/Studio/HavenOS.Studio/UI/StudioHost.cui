@@ -1,0 +1,17 @@
+<Cui><ScrollViewer><StackPanel padding="20" spacing="8">
+<TextBlock text="AI Studio" font-size="28" />
+<TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Studio workspace status" />
+<Button content="Create a Den in an empty folder…" action="CreateDen" />
+<Button content="Open an existing Den…" action="OpenDen" />
+<Button content="Review existing Den ownership in Home" action="RequestImport" />
+<Button content="Complete approved Den import" action="CompleteImport" />
+<Button action="RetryImportAudit" content="Retry Den import audit" />
+<Object Type="studio.host-approvals" />
+<TextBox text="{Binding AgentName, mode=TwoWay, type=string}" accessible-name="New Agent name" />
+<Button content="Create Agent" action="CreateAgent" />
+<ComboBox ItemsSource="{Binding AgentNames}" SelectedIndex="{Binding SelectedAgentIndex, mode=TwoWay, type=int}" accessible-name="Choose Agent" />
+<Button content="Refresh Agents" action="RefreshAgents" />
+<Button content="Open selected Agent" action="OpenAgent" />
+<Button content="Import an avatar image into this Agent…" action="ImportAvatar" />
+<Object Type="studio.host-editor" />
+</StackPanel></ScrollViewer></Cui>

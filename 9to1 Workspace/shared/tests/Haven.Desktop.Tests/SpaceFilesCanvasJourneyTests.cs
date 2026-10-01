@@ -127,13 +127,14 @@ public sealed class SpaceFilesCanvasJourneyTests
             await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home), new HomePermissionsCoreService(permissions, profiles)]);
             using var surface = new SpaceCanvasCuiSurface(captured, router, artifactReader, runtime, profiles, resources);
             await surface.InitializeAsync(token);
-            var sceneHost = Assert.IsType<CuiSceneHost>(surface.Content);
+            var owner = Assert.IsType<CanvasNativeCuiSurface>(surface.Content);
+            var sceneHost = Assert.IsType<CuiSceneHost>(owner.Content);
             Assert.Equal(CuiSceneAvailabilityState.Ready, sceneHost.Availability!.State);
             var window = new Window { Content = surface, Width = 1000, Height = 760 };
             window.Show();
             try
             {
-                var viewport = Assert.Single(surface.GetVisualDescendants().OfType<CanvasSpatialViewport>());
+                var viewport = Assert.Single(surface.GetVisualDescendants().OfType<CanvasNativeViewport>());
                 Assert.True(await surface.RefreshAsync(token));
                 Assert.NotNull(Assert.Single(viewport.GetVisualDescendants().OfType<Image>()).Source);
                 Assert.False(Assert.Single(sceneHost.GetVisualDescendants().OfType<Button>(), button => Equals(button.Content, "Flush")).IsEnabled);

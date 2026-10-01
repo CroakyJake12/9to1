@@ -14,7 +14,7 @@ public sealed class NativeGlycinClientTests
         // and error-path lifetime only, not successful format decoding.
         for (var index = 0; index < 3; index++)
         {
-            var error = Assert.Throws<IOException>(() => decoder.DecodeFirstFrame([1, 2, 3]));
+            var error = Assert.Throws<IOException>(() => decoder.DecodeFirstFrame([1, 2, 3], TestContext.Current.CancellationToken));
             Assert.StartsWith("Sandboxed libglycin load failed:", error.Message);
         }
     }

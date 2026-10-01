@@ -48,8 +48,9 @@ public sealed class SubscriptionPurchaseService(AccountLedger ledger, Subscripti
             new Dictionary<string,string>(signatureHeaders,StringComparer.Ordinal));
         var receipt=await verifier.VerifyAsync(capturedEvent,capturedHeaders,cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("billing_event_not_verified");
+        cancellationToken.ThrowIfCancellationRequested();
         if(receipt.AccountID!=authenticatedAccountID)throw new UnauthorizedAccessException("billing_account_mismatch");
-        return ledger.ActivateVerifiedPurchase(authenticatedAccountID,receipt,monthlyPricePolicy);
+        return ledger.ActivateVerifiedPurchase(authenticatedAccountID,receipt,monthlyPricePolicy,cancellationToken);
     }
 }
 
@@ -77,11 +78,12 @@ public sealed partial class AccountLedger
         }
     }
 
-    internal SubscriptionPurchase ActivateVerifiedPurchase(Guid accountID, VerifiedBillingSettlement receipt, IEntitlementMonthlyPricePolicy policy)
+    internal SubscriptionPurchase ActivateVerifiedPurchase(Guid accountID, VerifiedBillingSettlement receipt, IEntitlementMonthlyPricePolicy policy, CancellationToken cancellationToken = default)
     {
         lock(gate)
         {
             using var lease=DurableState.Acquire(directory);
+            cancellationToken.ThrowIfCancellationRequested();
             var account=Read(accountID);var purchases=account.Purchases??[];
             var purchase=purchases.SingleOrDefault(p=>p.PurchaseID==receipt.PurchaseID)??throw new InvalidOperationException("purchase_not_found");
             if(receipt.AccountID!=accountID||string.IsNullOrWhiteSpace(receipt.SettlementID)||receipt.SettledAt<purchase.CreatedAt||receipt.Currency!=purchase.Quote.Currency||
@@ -101,6 +103,7 @@ public sealed partial class AccountLedger
             SubscriptionPolicy.Evaluate(next);
             var activated=purchase with{State=SubscriptionPurchaseState.Activated,SettlementID=receipt.SettlementID,SettledAt=receipt.SettledAt};
             // Purchase receipt and resource activation share one atomic account-file transaction. Usage and site allowances are preserved.
+            cancellationToken.ThrowIfCancellationRequested();
             Write(account with{Subscription=next,Purchases=purchases.Select(p=>p.PurchaseID==purchase.PurchaseID?activated:p).ToArray()});
             return activated;
         }

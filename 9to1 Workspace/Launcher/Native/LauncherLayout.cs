@@ -9,7 +9,8 @@ public sealed record LauncherDock(Guid Id, int Rows, int Columns, IReadOnlyList<
 public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Rows, int Columns,
     IReadOnlyList<LauncherPage> Pages, IReadOnlyList<Guid> HiddenApplications)
 {
-    public const int CurrentSchema = 6;
+    public const int CurrentSchema = 7;
+    public IReadOnlyList<LauncherWidgetPlacement> Widgets { get; init; } = [];
     public LauncherGestures? Gestures { get; init; }
     public LauncherPresentation? Presentation { get; init; }
     public LauncherDrawer? Drawer { get; init; }
@@ -26,6 +27,8 @@ public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Ro
         if (SchemaVersion != CurrentSchema || Rows is < 3 or > 8 || Columns is < 3 or > 7 || Pages is null || Pages.Count is < 1 or > 64 ||
             Folders is null || Folders.Any(f => f is null) || Folders.Count > 256 || HiddenApplications is null || HiddenApplications.Count > 10000 || HiddenApplications.Any(id => id == Guid.Empty) || HiddenApplications.Distinct().Count() != HiddenApplications.Count)
             throw new InvalidDataException("Launcher layout requires recovery; unsupported data was preserved.");
+        if (Widgets is null || Widgets.Count > 256 || Widgets.Any(widget => widget is null))
+            throw new InvalidDataException("Launcher widget placements require recovery.");
         Gestures?.Validate();
         Presentation?.Validate();
         var ids = new HashSet<Guid>();
@@ -37,7 +40,20 @@ public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Ro
             foreach (var item in page.Items)
                 if (item is null || item.Id == Guid.Empty || !ids.Add(item.Id) || !ValidTarget(item) || item.Column < 0 || item.Column >= Columns || item.Row < 0 || item.Row >= Rows || !cells.Add((item.Column, item.Row)))
                     throw new InvalidDataException("Launcher placement identity or grid position is invalid.");
+            foreach (var widget in Widgets.Where(widget => widget.PageId == page.Id))
+            {
+                if (widget.Id == Guid.Empty || !ids.Add(widget.Id) || !ValidWidget(widget) ||
+                    widget.Column < 0 || widget.Row < 0 || widget.ColumnSpan < 1 || widget.RowSpan < 1 ||
+                    widget.ColumnSpan > Columns || widget.RowSpan > Rows ||
+                    widget.Column > Columns - widget.ColumnSpan || widget.Row > Rows - widget.RowSpan)
+                    throw new InvalidDataException("Launcher widget identity, owner or geometry is invalid.");
+                foreach (var cell in LauncherLayoutEdits.WidgetCells(widget))
+                    if (!cells.Add(cell)) throw new InvalidDataException("Launcher widgets and shortcuts cannot overlap.");
+            }
         }
+        if (Widgets.Any(widget => !Pages.Any(page => page.Id == widget.PageId)) ||
+            Widgets.Sum(WidgetTextSize) > 262144)
+            throw new InvalidDataException("Launcher widget ownership or metadata bounds are invalid.");
         if (Dock is { } dock)
         {
             if (dock.Id == Guid.Empty || !ids.Add(dock.Id) || dock.Rows is < 1 or > 3 || dock.Columns is < 3 or > 7 || dock.Items is null || dock.Items.Count > dock.Rows * dock.Columns)
@@ -72,12 +88,23 @@ public sealed record LauncherLayout(int SchemaVersion, Guid ActivePageId, int Ro
             2 => layout.Folders is { Count: 0 } && layout.Presentation is null && layout.Drawer is null,
             3 => layout.Presentation is null && layout.Drawer is null,
             4 => layout.Drawer is null,
-            5 => true,
+            5 => layout.Gestures is null,
+            6 => true,
             _ => false
         };
-        if (knownOlder && layout.Gestures is null) layout = layout with { SchemaVersion = CurrentSchema };
+        if (knownOlder && (layout.SchemaVersion == 6 || layout.Gestures is null) && layout.Widgets is { Count: 0 }) layout = layout with { SchemaVersion = CurrentSchema };
         layout.Validate(); return layout;
     }
+    private static bool WidgetText(string? text) => !string.IsNullOrWhiteSpace(text) && text.Length <= 4096 && !text.Any(char.IsControl);
+    private static bool ValidWidget(LauncherWidgetPlacement widget) => WidgetText(widget.Label) &&
+        ((widget.Native is not null) != (widget.Android is not null)) &&
+        (widget.ConfigurationReference is null || widget.Native is not null && WidgetText(widget.ConfigurationReference)) &&
+        (widget.Native is not { } native || native.InstalledApplicationId != Guid.Empty && WidgetText(native.AppId) &&
+            WidgetText(native.InstallationRevision) && WidgetText(native.WidgetId) && WidgetText(native.DefinitionRevision)) &&
+        (widget.Android is not { } android || WidgetText(android.ProviderComponent) && WidgetText(android.PlatformProfileId));
+    private static long WidgetTextSize(LauncherWidgetPlacement widget) => widget.Label.Length + (widget.ConfigurationReference?.Length ?? 0) +
+        (widget.Native is { } native ? native.AppId.Length + native.InstallationRevision.Length + native.WidgetId.Length + native.DefinitionRevision.Length : 0) +
+        (widget.Android is { } android ? android.ProviderComponent.Length + android.PlatformProfileId.Length : 0);
     private static bool ValidTarget(LauncherPlacement item) => item.FolderId is { } folder ? folder != Guid.Empty && item.ApplicationId == Guid.Empty : item.ApplicationId != Guid.Empty;
     internal static bool ValidName(string value) => !string.IsNullOrWhiteSpace(value) && value.Length <= 256 && !value.Any(char.IsControl);
 }
@@ -105,14 +132,14 @@ public static partial class LauncherLayoutEdits
     public static LauncherLayout RemovePage(LauncherLayout layout, Guid id)
     {
         var page = RequirePage(layout, id);
-        if (layout.Pages.Count == 1 || page.Items.Count != 0) throw new InvalidOperationException("Keep at least one page. Move or remove this page's shortcuts before deleting it.");
+        if (layout.Pages.Count == 1 || page.Items.Count != 0 || layout.Widgets.Any(widget => widget.PageId == id)) throw new InvalidOperationException("Keep at least one page. Move or remove this page's shortcuts before deleting it.");
         var pages = layout.Pages.Where(p => p.Id != id).ToArray();
         return Checked(layout with { Pages = pages, ActivePageId = layout.ActivePageId == id ? pages[0].Id : layout.ActivePageId });
     }
     public static LauncherLayout AddApplication(LauncherLayout layout, Guid pageId, Guid applicationId)
     {
         var page = RequirePage(layout, pageId);
-        var occupied = page.Items.Select(i => (i.Column, i.Row)).ToHashSet();
+        var occupied = PageOccupied(layout, pageId);
         var cell = Enumerable.Range(0, layout.Rows).SelectMany(row => Enumerable.Range(0, layout.Columns).Select(column => (Column: column, Row: row)))
             .Where(c => !occupied.Contains(c)).Select(c => ((int Column, int Row)?)c).FirstOrDefault()
             ?? throw new InvalidOperationException("This page is full. Add a page or move a shortcut first.");
@@ -154,6 +181,7 @@ public static partial class LauncherLayoutEdits
     {
         if (rows is < 3 or > 8 || columns is < 3 or > 7) throw new ArgumentOutOfRangeException(nameof(rows));
         if (rows == layout.Rows && columns == layout.Columns) return Checked(layout);
+        if (layout.Widgets.Count != 0) return ReflowWithWidgets(layout, rows, columns);
         var items = layout.Pages.SelectMany(p => p.Items.OrderBy(i => i.Row).ThenBy(i => i.Column)).ToArray();
         var pages = layout.Pages.ToList(); var needed = Math.Max(1, (items.Length + rows * columns - 1) / (rows * columns));
         while (pages.Count < needed) pages.Add(new(Guid.NewGuid(), $"Page {pages.Count + 1}", []));
@@ -165,12 +193,12 @@ public static partial class LauncherLayoutEdits
     {
         foreach (var id in appIds.Distinct())
         {
-            if (layout.ActivePage.Items.Count == layout.Rows * layout.Columns) layout = AddPage(layout, $"Page {layout.Pages.Count + 1}");
+            if (PageOccupied(layout, layout.ActivePageId).Count == layout.Rows * layout.Columns) layout = AddPage(layout, $"Page {layout.Pages.Count + 1}");
             layout = AddApplication(layout, layout.ActivePageId, id);
         }
         return Checked(layout with { ActivePageId = layout.Pages[0].Id });
     }
-    public static LauncherLayout Clone(LauncherLayout layout) => layout with { Drawer = layout.Drawer?.Copy(), Pages = layout.Pages.Select(p => p with { Items = p.Items.ToArray() }).ToArray(), HiddenApplications = layout.HiddenApplications.ToArray(), Dock = layout.Dock is { } dock ? dock with { Items = dock.Items.ToArray() } : null, Folders = layout.Folders.Select(f => f with { Items = f.Items.ToArray() }).ToArray() };
+    public static LauncherLayout Clone(LauncherLayout layout) => layout with { Widgets = layout.Widgets.ToArray(), Drawer = layout.Drawer?.Copy(), Pages = layout.Pages.Select(p => p with { Items = p.Items.ToArray() }).ToArray(), HiddenApplications = layout.HiddenApplications.ToArray(), Dock = layout.Dock is { } dock ? dock with { Items = dock.Items.ToArray() } : null, Folders = layout.Folders.Select(f => f with { Items = f.Items.ToArray() }).ToArray() };
     private static LauncherPage RequirePage(LauncherLayout layout, Guid id) => layout.Pages.SingleOrDefault(p => p.Id == id) ?? throw new InvalidOperationException("This launcher page is no longer available.");
     private static LauncherLayout Checked(LauncherLayout layout) { layout.Validate(); return layout; }
 }

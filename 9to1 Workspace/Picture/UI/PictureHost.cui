@@ -15,12 +15,12 @@
         <Button content="Open selected" action="picture.host.open" is-enabled="{Binding CanOpen}" />
         <Button content="Next page" action="picture.host.page" is-enabled="{Binding CanPage}" />
       </StackPanel>
-      <StackPanel orientation="Horizontal" spacing="8">
-        <TextBox text="{Binding CropX, Mode=TwoWay}" accessible-name="Crop left coordinate" is-enabled="{Binding CanWrite}" />
-        <TextBox text="{Binding CropY, Mode=TwoWay}" accessible-name="Crop top coordinate" is-enabled="{Binding CanWrite}" />
-        <TextBox text="{Binding Width, Mode=TwoWay}" accessible-name="Crop or resize width" is-enabled="{Binding CanWrite}" />
-        <TextBox text="{Binding Height, Mode=TwoWay}" accessible-name="Crop or resize height" is-enabled="{Binding CanWrite}" />
-      </StackPanel>
+      <WrapPanel orientation="Horizontal">
+        <StackPanel spacing="4"><TextBlock text="Left (px)" /><TextBox text="{Binding CropX, Mode=TwoWay}" accessible-name="Crop left coordinate in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Top (px)" /><TextBox text="{Binding CropY, Mode=TwoWay}" accessible-name="Crop top coordinate in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Width (px)" /><TextBox text="{Binding Width, Mode=TwoWay}" accessible-name="Crop or resize width in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
+        <StackPanel spacing="4"><TextBlock text="Height (px)" /><TextBox text="{Binding Height, Mode=TwoWay}" accessible-name="Crop or resize height in pixels" is-enabled="{Binding CanWrite}" /></StackPanel>
+      </WrapPanel>
     </StackPanel>
     <PictureHostContent id="picture-native-content" grid-row="2" accessible-name="Picture document and requests" />
     <PictureHostApprovals id="picture-home-approvals" grid-row="2" grid-column="1" accessible-name="Home approvals" />

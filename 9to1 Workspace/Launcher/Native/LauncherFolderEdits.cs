@@ -6,7 +6,7 @@ public static partial class LauncherLayoutEdits
         ?? throw new InvalidOperationException("This shortcut is no longer available.");
     public static LauncherLayout CreateFolder(LauncherLayout layout, Guid pageId, string name)
     {
-        var page = RequirePage(layout, pageId); var cell = FreeCell(page.Items, layout.Rows, layout.Columns);
+        var page = RequirePage(layout, pageId); var cell = FreeCell(page.Items, layout.Rows, layout.Columns, layout.Widgets.Where(widget => widget.PageId == pageId).SelectMany(WidgetCells));
         var folder = new LauncherFolder(Guid.NewGuid(), name, 4, []);
         var placement = new LauncherPlacement(Guid.NewGuid(), Guid.Empty, cell.Column, cell.Row, folder.Id);
         return Checked(layout with { Folders = [.. layout.Folders, folder],

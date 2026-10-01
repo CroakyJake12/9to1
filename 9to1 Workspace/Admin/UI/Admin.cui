@@ -15,7 +15,7 @@
         </StackPanel>
         <StackPanel id="organisation-empty" definition="true"><TextBlock text="No organisations are available to your account." /></StackPanel>
         <TextBlock text="Organisation ID" margin="0 12 0 4" />
-        <TextBox text="{Binding OrganisationID}" accessible-name="Organisation ID from your organisations" />
+        <TextBox text="{Binding OrganisationID, mode=TwoWay, type=string}" accessible-name="Organisation ID from your organisations" />
         <Button action="OpenOrganisation" content="Open organisation" accessible-name="Open the selected organisation" />
         <TextBlock text="{Binding OrganisationName}" font-size="22" font-weight="Bold" margin="0 20 0 8" />
         <Button action="RefreshBilling" content="Refresh billing and recovery status" accessible-name="Load authorised billing even when Business is suspended" />

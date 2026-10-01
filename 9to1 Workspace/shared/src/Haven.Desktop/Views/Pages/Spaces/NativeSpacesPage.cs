@@ -15,6 +15,8 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposable
 {
     private readonly SpaceRegistry _registry;
+    private readonly bool _allowDelete;
+    private readonly Func<CancellationToken, Task>? _requireCurrentAccess;
     private readonly Func<SpaceDefinition, SpaceContextReference, Task>? _openCanonicalSource;
     private readonly IConversationRepository? _conversations;
     private readonly Func<Conversation, Task>? _openConversation;
@@ -49,8 +51,11 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         Func<SpaceDefinition, Task>? manageLayout = null,
         IConversationRepository? conversations = null,
         Func<Conversation, Task>? openConversation = null,
-        Func<SpaceDefinition, SpaceContextReference, Task>? openCanonicalSource = null)
+        Func<SpaceDefinition, SpaceContextReference, Task>? openCanonicalSource = null,
+        Func<CancellationToken, Task>? requireCurrentAccess = null, bool allowDelete = true)
     {
+        _allowDelete = allowDelete;
+        _requireCurrentAccess = requireCurrentAccess;
         _openCanonicalSource = openCanonicalSource;
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _conversations = conversations;
@@ -62,6 +67,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _manageLayout = manageLayout;
         _scene = new SpacesHavenScene { CanonicalSourceNavigationAvailable = _openCanonicalSource is not null };
         _scene.CanonicalSourceRequested += OnCanonicalSourceRequested;
+        _scene.SetDeleteAvailable(allowDelete);
         _scene.SetLaunchAvailable(_launchSpace is not null);
         _scene.SetLayoutEditorAvailable(_manageLayout is not null);
         _scene.SetEditWithHavenAvailable(_editPlanner is not null);
@@ -109,9 +115,14 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         var token = refresh.Token;
         try
         {
+            await RequireCurrentAccessAsync(token).ConfigureAwait(false);
             var spaces = await _registry.GetAllAsync(_scene.IncludeArchived, token).ConfigureAwait(false);
+            await RequireCurrentAccessAsync(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
-            await Dispatcher.UIThread.InvokeAsync(() => ApplySpaces(spaces));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!_disposed && !token.IsCancellationRequested && ReferenceEquals(_refreshCancellation, refresh)) ApplySpaces(spaces);
+            });
             await RefreshConversationsAsync(token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -119,7 +130,12 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }
         catch (Exception exception) when (IsExpected(exception))
         {
-            await Dispatcher.UIThread.InvokeAsync(() => _scene.SetStatus($"Spaces could not refresh: {exception.Message}"));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_disposed || token.IsCancellationRequested || !ReferenceEquals(_refreshCancellation, refresh)) return;
+                if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+                _scene.SetStatus($"Spaces could not refresh: {exception.Message}");
+            });
         }
         finally
         {
@@ -136,9 +152,14 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
             return;
         }
 
+        await RequireCurrentAccessAsync(cancellationToken).ConfigureAwait(false);
         var conversations = await _conversations.GetBySpaceAsync(spaceId, 500, cancellationToken).ConfigureAwait(false);
+        await RequireCurrentAccessAsync(cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
-        await Dispatcher.UIThread.InvokeAsync(() => _scene.SetConversations(conversations));
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (!_disposed && !cancellationToken.IsCancellationRequested && _selectedId == spaceId) _scene.SetConversations(conversations);
+        });
     }
     private void ApplySpaces(IReadOnlyList<SpaceDefinition> spaces)
     {
@@ -170,14 +191,23 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async void OnSpaceSelected(object? sender, Guid id)
     {
-        _selectedId = id;
-        _scene.SetSpaces(_spaces, id);
-        var current = CurrentSpace();
-        _scene.SetSpace(current);
-        RefreshGeneratedPreview(current);
-        _scene.SetStatus(null);
-        try { await RefreshConversationsAsync(); }
-        catch (Exception exception) when (IsExpected(exception)) { _scene.SetStatus($"Chats could not refresh: {exception.Message}"); }
+        try
+        {
+            await RequireCurrentAccessAsync(CancellationToken.None);
+            if (_disposed) return;
+            _selectedId = id;
+            _scene.SetSpaces(_spaces, id);
+            var current = CurrentSpace();
+            _scene.SetSpace(current);
+            RefreshGeneratedPreview(current);
+            _scene.SetStatus(null);
+            await RefreshConversationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Chats could not refresh: {exception.Message}");
+        }
     }
 
     private async void OnConversationSelected(object? sender, Guid id)
@@ -187,6 +217,7 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         {
             var conversation = await _conversations.GetAsync(id, CancellationToken.None);
             if (conversation is null) { await RefreshConversationsAsync(); return; }
+            await RequireCurrentAccessAsync(CancellationToken.None);
             await _openConversation(conversation);
         }, "open Space chat");
     }
@@ -265,11 +296,11 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }, current.IsArchived ? "restore Space" : "archive Space");
     }
 
-    private async void OnDeleteRequested(object? sender, Guid id)
-    {
-        await RunMutationAsync(async () =>
+    private async void OnDeleteRequested(object? sender, Guid id) => await DeleteSpaceAsync(id);
+
+    internal Task DeleteSpaceAsync(Guid id) => RunMutationAsync(async () =>
         {
-            if (_deleteSpace is not null) await _deleteSpace(id);
+            if (!_allowDelete) throw new NotSupportedException("Space deletion is not available in this view yet.");
             if (_deleteSpace is not null)
                 await _deleteSpace(id);
             else
@@ -280,7 +311,6 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
             if (_selectedId == id) _selectedId = null;
             await RefreshAsync();
         }, "delete Space");
-    }
 
     private async void OnAddFileRequested(object? sender, SpaceFilePermission permission)
     {
@@ -337,7 +367,9 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _scene.SetStatus("Planning safe Space changes…");
         try
         {
+            await RequireCurrentAccessAsync(CancellationToken.None);
             var result = await _editPlanner.PlanAsync(instruction, current, CancellationToken.None);
+            await RequireCurrentAccessAsync(CancellationToken.None);
             if (!result.Succeeded || result.Patch is null)
             {
                 _scene.SetStatus(result.Message);
@@ -348,6 +380,11 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         catch (OperationCanceledException)
         {
             _scene.SetStatus("Space edit cancelled.");
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Space edit unavailable: {exception.Message}");
         }
         finally
         {
@@ -400,15 +437,32 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private async Task RunMutationAsync(Func<Task> operation, string action)
     {
         _scene.SetBusy(true);
-        try { await operation(); }
-        catch (Exception exception) when (IsExpected(exception)) { _scene.SetStatus($"Could not {action}: {exception.Message}"); }
+        try { await RequireCurrentAccessAsync(CancellationToken.None); if (!_disposed) await operation(); }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Could not {action}: {exception.Message}");
+        }
         finally { _scene.SetBusy(false); }
     }
 
     private async Task RunActionAsync(Func<Task> operation, string action)
     {
-        try { await operation(); }
-        catch (Exception exception) when (IsExpected(exception)) { _scene.SetStatus($"Could not {action}: {exception.Message}"); }
+        try { await RequireCurrentAccessAsync(CancellationToken.None); if (!_disposed) await operation(); }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Could not {action}: {exception.Message}");
+        }
+    }
+
+    private Task RequireCurrentAccessAsync(CancellationToken token) => _requireCurrentAccess?.Invoke(token) ?? Task.CompletedTask;
+
+    private void ClearDeniedProjection()
+    {
+        _spaces = []; _selectedId = null;
+        _scene.SetSpaces([], null); _scene.SetSpace(null); _scene.SetConversations([]);
+        RefreshGeneratedPreview(null);
     }
 
     private static bool IsExpected(Exception exception) =>

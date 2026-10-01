@@ -23,7 +23,7 @@ public sealed class NativeGlycinRasterExportTests
         byte[] pixels = transparent ? [0, 0, 128, 128, 0, 0, 0, 0] : [0, 0, 255, 255, 255, 0, 0, 255];
         var source = new HomeProductivityRasterFrame(2, 1, 8, pixels);
         var encoded = new PictureGlycinRasterEncoder().EncodeFlattenedFrame(source, format, cancellationToken: TestContext.Current.CancellationToken);
-        var restored = new PictureGlycinDecoder().DecodeFirstFrame(encoded);
+        var restored = new PictureGlycinDecoder().DecodeFirstFrame(encoded, TestContext.Current.CancellationToken);
         Assert.Equal(2u, restored.Width);
         Assert.Equal(1u, restored.Height);
         Assert.Equal(pixels, restored.BgraPremultipliedPixels);
@@ -41,7 +41,7 @@ public sealed class NativeGlycinRasterExportTests
         var encoded = encoder.EncodeFlattenedFrame(new(8, 8, 32, pixels), PictureRasterExportFormat.Jpeg, quality: 95,
             cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(new byte[] { 255, 216, 255 }, encoded[..3]);
-        var restored = new PictureGlycinDecoder().DecodeFirstFrame(encoded);
+        var restored = new PictureGlycinDecoder().DecodeFirstFrame(encoded, TestContext.Current.CancellationToken);
         Assert.Equal(8u, restored.Width);
         Assert.Equal(8u, restored.Height);
         Assert.InRange(restored.BgraPremultipliedPixels[2], (byte)245, (byte)255);

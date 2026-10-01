@@ -13,8 +13,9 @@ internal sealed class SpacesStorageSetupSession(IResourceStoreIdentitySource ide
     private AuthenticatedResourceActor? _actor;
     private Guid? _storeId;
     private string? _requestId;
+    private string? _auditRequestId;
 
-    internal sealed record Snapshot(Guid StoreId, bool IsOwned, bool CanBindEmpty, string? PendingRequestId);
+    internal sealed record Snapshot(Guid StoreId, bool IsOwned, bool CanBindEmpty, string? PendingRequestId, string? PendingAuditRequestId);
 
     public async Task<Snapshot> InspectAsync(CancellationToken token)
     {
@@ -35,7 +36,7 @@ internal sealed class SpacesStorageSetupSession(IResourceStoreIdentitySource ide
             var observed = await evidence.ReadAsync(storeId, token).ConfigureAwait(false);
             await RequireCurrentAsync(token).ConfigureAwait(false);
             return new(identity.StoreId, binding is not null,
-                binding is null && observed is { NewlyCreated: true, IsEmpty: true }, _requestId);
+                binding is null && observed is { NewlyCreated: true, IsEmpty: true }, _requestId, _auditRequestId);
         }
         finally { _gate.Release(); }
     }
@@ -76,8 +77,30 @@ internal sealed class SpacesStorageSetupSession(IResourceStoreIdentitySource ide
         {
             await RequireCurrentAsync(token).ConfigureAwait(false);
             var requestId = _requestId ?? throw new InvalidOperationException("Request and review Spaces ownership in Home first.");
-            await ownership.CompleteImportAsync(requestId, token).ConfigureAwait(false);
-            _requestId = null;
+            try
+            {
+                await ownership.CompleteImportAsync(requestId, token).ConfigureAwait(false);
+                _requestId = null;
+            }
+            catch (HomeStoreImportAuditPendingException pending) when (pending.RequestId == requestId)
+            {
+                // Ownership was acknowledged. Retain only the audit retry, never repeat the import.
+                _requestId = null;
+                _auditRequestId = pending.RequestId;
+            }
+        }
+        finally { _gate.Release(); }
+    }
+
+    public async Task RetryAuditAsync(CancellationToken token)
+    {
+        await _gate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            await RequireCurrentAsync(token).ConfigureAwait(false);
+            var requestId = _auditRequestId ?? throw new InvalidOperationException("No Spaces import audit needs recovery.");
+            await ownership.RetryImportAuditAsync(requestId, token).ConfigureAwait(false);
+            _auditRequestId = null;
         }
         finally { _gate.Release(); }
     }

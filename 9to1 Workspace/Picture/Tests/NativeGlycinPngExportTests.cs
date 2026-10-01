@@ -14,7 +14,7 @@ public sealed class NativeGlycinPngExportTests
         foreach (byte compression in new byte[] { 0, 100 })
         {
             var png = encoder.EncodeFlattenedFrame(frame, compression, TestContext.Current.CancellationToken);
-            var restored = new PictureGlycinDecoder().DecodeFirstFrame(png);
+            var restored = new PictureGlycinDecoder().DecodeFirstFrame(png, TestContext.Current.CancellationToken);
             Assert.Equal(3u, restored.Width);
             Assert.Equal(1u, restored.Height);
             Assert.Equal(source[..12], restored.BgraPremultipliedPixels);

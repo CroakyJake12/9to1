@@ -89,18 +89,20 @@ public sealed partial class HavenLauncherActivity
         var dialog = new AlertDialog.Builder(this);
         dialog.SetTitle("Add widget");
         dialog.SetItems(
-            new[] { "Android widget", "Haven clock widget" },
+            new[] { "Android widget", "Haven clock widget", "Associate retained widget" },
             (_, args) =>
             {
                 if (args.Which == 0)
-                    PickAndroidWidget();
-                else
+                    _ = BeginWidgetPickAsync();
+                else if (args.Which == 1)
                     AddHavenWidget();
+                else
+                    _ = ShowRetainedWidgetsAsync();
             });
         dialog.Show();
     }
 
-    private void PickAndroidWidget()
+    private void PickAndroidWidgetCore()
     {
         if (_pendingWidgetId != AppWidgetManager.InvalidAppwidgetId)
         {
@@ -198,11 +200,13 @@ public sealed partial class HavenLauncherActivity
         _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
         if (keep)
         {
-            SaveWidgetId(widgetId);
-            RenderWidgets();
+            var session = _pendingWidgetSession; var authority = _pendingWidgetAuthority;
+            _pendingWidgetSession = null; _pendingWidgetAuthority = null;
+            _ = SaveConfiguredWidgetAsync(widgetId, session, authority);
             return;
         }
 
+        _pendingWidgetSession = null; _pendingWidgetAuthority = null;
         DeleteWidgetId(widgetId);
     }
 
@@ -255,87 +259,8 @@ public sealed partial class HavenLauncherActivity
             widgetStrip.AddView(clock);
         }
 
-        var widgetHost = _widgetHost;
-        var widgetManager = _widgetManager;
-        if (widgetHost is null || widgetManager is null)
-            return;
-
-        foreach (var widgetId in ReadWidgetIds().ToArray())
-        {
-            try
-            {
-                var info = widgetManager.GetAppWidgetInfo(widgetId);
-                if (info is null)
-                {
-                    widgetStrip.AddView(BuildUnavailableWidget(widgetId));
-                    continue;
-                }
-
-                var hostView = widgetHost.CreateView(this, widgetId, info);
-                if (hostView is null)
-                {
-                    widgetStrip.AddView(BuildUnavailableWidget(widgetId));
-                    continue;
-                }
-                hostView.SetAppWidget(widgetId, info);
-                hostView.LayoutParameters = new LinearLayout.LayoutParams(Dp(300), Dp(160))
-                {
-                    RightMargin = Dp(8)
-                };
-                hostView.LongClick += (_, args) =>
-                {
-                    var dialog = new AlertDialog.Builder(this);
-                    dialog.SetMessage("Remove this widget?");
-                    dialog.SetPositiveButton("Remove", (_, _) =>
-                    {
-                        DeleteWidgetId(widgetId);
-                        RenderWidgets();
-                    });
-                    dialog.SetNegativeButton("Cancel", (_, _) => { });
-                    dialog.Show();
-                    if (args is not null)
-                        args.Handled = true;
-                };
-                widgetStrip.AddView(hostView);
-            }
-            catch (Exception exception)
-            {
-                global::Android.Util.Log.Warn(
-                    "HavenLauncher",
-                    $"Widget {widgetId} could not be hosted: {exception.Message}");
-                widgetStrip.AddView(BuildUnavailableWidget(widgetId));
-            }
-        }
-    }
-
-    private View BuildUnavailableWidget(int widgetId)
-    {
-        // Provider packages and work profiles may return later. Rendering must not
-        // delete the retained platform binding or its provider configuration.
-        var button = new Button(this)
-        {
-            Text = "Widget unavailable · Retry or remove",
-            ContentDescription = "Unavailable Android widget. Retry loading or remove the saved widget.",
-            LayoutParameters = new LinearLayout.LayoutParams(Dp(300), Dp(160)) { RightMargin = Dp(8) }
-        };
-        button.Click += (_, _) =>
-        {
-            var dialog = new AlertDialog.Builder(this);
-            dialog.SetTitle("Widget unavailable");
-            dialog.SetMessage("Its saved configuration has been kept. Retry when its application or profile is available, or remove this widget.");
-            dialog.SetPositiveButton("Retry", (_, _) => RenderWidgets());
-            dialog.SetNeutralButton("Remove", (_, _) =>
-            {
-                var confirm = new AlertDialog.Builder(this);
-                confirm.SetMessage("Remove this widget and its saved configuration?");
-                confirm.SetPositiveButton("Remove", (_, _) => { DeleteWidgetId(widgetId); RenderWidgets(); });
-                confirm.SetNegativeButton("Cancel", (_, _) => { });
-                confirm.Show();
-            });
-            dialog.SetNegativeButton("Cancel", (_, _) => { });
-            dialog.Show();
-        };
-        return button;
+        // Android widget bodies are mounted from current Home placements in the page grid.
+        // Legacy unscoped IDs remain available only through explicit association.
     }
 
     private HashSet<int> ReadWidgetIds()

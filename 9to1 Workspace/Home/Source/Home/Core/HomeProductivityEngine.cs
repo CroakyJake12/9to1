@@ -100,6 +100,7 @@ public sealed class HomeProductivityEngine : IHomeProductivityEngine
         foreach (var style in styles ?? []) RegisterStyle(style);
         _artifactActions = (artifactActions ?? []).ToArray();
         RegisterObjectHandler(new HomeParagraphObjectHandler());
+        RegisterObjectHandler(new HomeVectorShapeObjectHandler());
         foreach (var type in new[] { "text.paragraph", "text.heading", "text.list", "text.checklist", "code.block", "table" })
             RegisterObjectHandler(new HomeNotesObjectHandler(type));
         foreach (var handler in handlers ?? []) RegisterObjectHandler(handler);

@@ -63,7 +63,11 @@ public sealed class PictureCuiWorkspaceTests
         Assert.True(workspace.TryGetValue("CanSave", out var canSave));
         Assert.Equal(false, canSave);
         Assert.True(workspace.TryGetValue("AnimationSummary", out var timing));
-        Assert.Equal("Frame delay: 80 ms", timing);
+        Assert.Equal("Paused · Frame delay: 80 ms", timing);
+        Assert.True(workspace.TryGetValue("CanPlay", out var canPlay));
+        Assert.Equal(false, canPlay);
+        Assert.True(workspace.TryGetValue("CanPause", out var canPause));
+        Assert.Equal(false, canPause);
         await workspace.DispatchAsync("9to1.Picture.Animation.NextFrame", null, TestContext.Current.CancellationToken);
         Assert.Equal(PictureWorkspaceCommandKind.NextFrame, dispatched!.Kind);
         Assert.Equal(document.DocumentId, dispatched.DocumentId);

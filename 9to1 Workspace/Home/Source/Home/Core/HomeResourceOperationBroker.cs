@@ -68,14 +68,35 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
         if (!_executions.TryGetValue(capability, out var binding) || binding.TargetAppId != targetAppId ||
             binding.ActionId != actionId || binding.Digest != Digest(arguments) || !binding.Scopes.SequenceEqual(scopeSnapshot)) return null;
         if (!_executions.TryRemove(capability, out var consumed) || consumed != binding) return null;
-        var current = await resources.AuthorizeAsync(binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
-        if (current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false) &&
-            capability.MarkClaimed(this)) return current;
-        // No owner received a claim, so there is no authorized target effect to report as success.
-        // A request already revoked/terminal stays terminal; the audit service rejects overwriting it.
-        await permissions.RecordExecutionAsync(capability.RequestId, new(HomePermissionRequestState.Failed,
-            "HOME_RESOURCE_CLAIM_REJECTED", "The resource authority changed before the owning operation could begin.", []), CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            var current = await resources.AuthorizeAsync(binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
+            if (current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false) &&
+                capability.MarkClaimed(this)) return current;
+        }
+        catch
+        {
+            capability.MarkRejected(this);
+            try { await RetryRejectedClaimAuditAsync(capability, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception auditFailure) when (auditFailure is IOException or UnauthorizedAccessException or InvalidOperationException) { }
+            // Preserve resolver/cancellation failure. No claim was issued and the consumed handle is
+            // never restored. If audit storage failed, the same handle can retry only rejection audit.
+            throw;
+        }
+        capability.MarkRejected(this);
+        await RetryRejectedClaimAuditAsync(capability, CancellationToken.None).ConfigureAwait(false);
         return null;
+    }
+
+    /// <summary>Audit-only recovery for this issuer's consumed, rejected claim. Cannot grant an owner
+    /// claim, change the outcome, or overwrite an already revoked/terminal permission decision.</summary>
+    public Task<HomePermissionOperationResult> RetryRejectedClaimAuditAsync(HomeResourceExecutionCapability capability,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        return capability.AuditRejectedAsync(this, () => permissions.RecordExecutionAsync(capability.RequestId,
+            new(HomePermissionRequestState.Failed, "HOME_RESOURCE_CLAIM_REJECTED",
+                "The resource authority could not confirm the owning operation; no owner claim was issued.", []), cancellationToken), cancellationToken);
     }
 
     /// <summary>Records the canonical owner's observed terminal outcome after a successful claim, once.
@@ -117,10 +138,27 @@ public sealed class HomeResourceExecutionCapability
     { _issuer = issuer; RequestId = requestId; TargetAppId = targetAppId; ActionId = actionId; Scopes = scopes; }
     internal bool MarkClaimed(HomeResourceOperationBroker issuer) =>
         ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, 1, 0) == 0;
+    internal bool MarkRejected(HomeResourceOperationBroker issuer) =>
+        ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, -1, 0) == 0;
+    internal async Task<HomePermissionOperationResult> AuditRejectedAsync(HomeResourceOperationBroker issuer,
+        Func<Task<HomePermissionOperationResult>> record, CancellationToken ct)
+    {
+        if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) is not (-1 or -2))
+            return new(false, "HOME_CLAIM_REJECTION_NOT_OWNED", "This issuer has no rejected claim to audit.");
+        await _completionGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_completed is not null) return _completed;
+            var result = await record().ConfigureAwait(false);
+            if (result.Succeeded) { _completed = result; Interlocked.Exchange(ref _claimState, -2); }
+            return result;
+        }
+        finally { _completionGate.Release(); }
+    }
     internal async Task<HomePermissionOperationResult> CompleteAsync(HomeResourceOperationBroker issuer, string outcomeDigest,
         Func<Task<HomePermissionOperationResult>> record, CancellationToken ct)
     {
-        if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) == 0)
+        if (!ReferenceEquals(_issuer, issuer) || Volatile.Read(ref _claimState) <= 0)
             return new(false, "HOME_EXECUTION_COMPLETION_NOT_OWNED", "The completion requires this issuer's successfully claimed capability.");
         await _completionGate.WaitAsync(ct).ConfigureAwait(false);
         try

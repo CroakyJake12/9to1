@@ -21,7 +21,7 @@ internal sealed class SpacesStorageSetupCuiSurface(SpacesStorageSetupSession set
         Dispatcher.UIThread.VerifyAccess();
         Content = _host;
         _model.Set("Status", "Checking local Spaces ownership…");
-        _model.Set("CanBind", false); _model.Set("CanRequest", false); _model.Set("CanReview", false);
+        _model.Set("CanBind", false); _model.Set("CanRequest", false); _model.Set("CanReview", false); _model.Set("CanRetryAudit", false);
         var state = await _host.ShowAsync(new("spaces.storage", "Spaces storage", "Spaces",
             new CuiRichParser().Parse(Document), _model, new Actions(this), readiness), token);
         if (state.State == CuiSceneAvailabilityState.Ready) await RefreshAsync(token);
@@ -36,7 +36,9 @@ internal sealed class SpacesStorageSetupCuiSurface(SpacesStorageSetupSession set
             _model.Set("CanBind", snapshot.CanBindEmpty);
             _model.Set("CanRequest", !snapshot.IsOwned && snapshot.PendingRequestId is null && !snapshot.CanBindEmpty);
             _model.Set("CanReview", !snapshot.IsOwned && snapshot.PendingRequestId is not null);
-            _model.Set("Status", snapshot.IsOwned ? "This local Spaces store belongs to your current Home profile."
+            _model.Set("CanRetryAudit", snapshot.PendingAuditRequestId is not null);
+            _model.Set("Status", snapshot.PendingAuditRequestId is not null ? "Spaces ownership was imported. Retry its Home audit to finish recording the result."
+                : snapshot.IsOwned ? "This local Spaces store belongs to your current Home profile."
                 : snapshot.CanBindEmpty ? "Set up this empty Spaces store for your current Home profile."
                 : "Existing Spaces are preserved. Review their ownership import in Home before editing.");
         });
@@ -62,6 +64,7 @@ internal sealed class SpacesStorageSetupCuiSurface(SpacesStorageSetupSession set
                     var requestId = current.PendingRequestId ?? throw new InvalidOperationException("Request an ownership import first.");
                     await Dispatcher.UIThread.InvokeAsync(() => reviewPermissions(requestId, linked.Token)); break;
                 case "Complete": await setup.CompleteImportAsync(linked.Token).ConfigureAwait(false); break;
+                case "RetryAudit": await setup.RetryAuditAsync(linked.Token).ConfigureAwait(false); break;
                 case "Refresh": break;
                 default: throw new InvalidOperationException("Unknown Spaces setup action.");
             }
@@ -82,7 +85,7 @@ internal sealed class SpacesStorageSetupCuiSurface(SpacesStorageSetupSession set
     private sealed class Actions(SpacesStorageSetupCuiSurface owner) : ICuiActionDispatcher, ICuiActionAvailability
     {
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken token = default) => owner.DispatchAsync(command, token);
-        public bool HasAction(string command) => command is "BindEmpty" or "RequestImport" or "Review" or "Complete" or "Refresh";
+        public bool HasAction(string command) => command is "BindEmpty" or "RequestImport" or "Review" or "Complete" or "RetryAudit" or "Refresh";
         public bool? IsActionAvailable(string command) => !owner._disposed && HasAction(command);
     }
     private const string Document = """
@@ -95,6 +98,7 @@ internal sealed class SpacesStorageSetupCuiSurface(SpacesStorageSetupSession set
             <Button action="Review" content="Review in Home" min-height="44" />
             <Button action="Complete" content="Finish approved import" min-height="44" />
           </StackPanel>
+          <Button action="RetryAudit" content="Retry Home audit" is-visible="{Binding CanRetryAudit}" min-height="44" />
           <Button action="Refresh" content="Refresh storage status" min-height="44" />
         </StackPanel></Cui>
         """;

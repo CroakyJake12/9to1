@@ -33,6 +33,7 @@ try
     }
 
     if(args.Contains("--owned-signal-only")){await OwnedSignalSpecs.RunAsync();return;}
+    await TerminalEnvironmentSpecs.RunAsync();
     await TerminalAppSurfaceSpecs.RunAsync();
     await PtyProcessSpecs.RunAsync();
     Console.WriteLine("Terminal specs passed.");

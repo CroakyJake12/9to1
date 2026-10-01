@@ -48,7 +48,7 @@ public sealed partial class HavenLauncherActivity : Activity
     private GridLayout? _grid;
     private TextView? _pageIndicator;
     private TextView? _launcherStatus;
-    private AppWidgetHost? _widgetHost;
+    private LauncherAppWidgetHost? _widgetHost;
     private AppWidgetManager? _widgetManager;
     private int _page;
     private int _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
@@ -70,7 +70,8 @@ public sealed partial class HavenLauncherActivity : Activity
             Window?.SetNavigationBarColor(Color.Rgb(24, 18, 38));
         }
 
-        _widgetHost = new AppWidgetHost(this, WidgetHostId);
+        _pendingWidgetAuthority = savedInstanceState?.GetString("pending_android_widget_authority");
+        _widgetHost = new LauncherAppWidgetHost(this, WidgetHostId);
         _widgetManager = AppWidgetManager.GetInstance(this);
 
         ShowHomeBootstrap("Preparing 9-1 Home…");
@@ -80,6 +81,7 @@ public sealed partial class HavenLauncherActivity : Activity
     protected override void OnSaveInstanceState(Bundle outState)
     {
         outState.PutInt("pending_android_widget_id", _pendingWidgetId);
+        outState.PutString("pending_android_widget_authority", _pendingWidgetAuthority);
         base.OnSaveInstanceState(outState);
     }
 
@@ -106,6 +108,9 @@ public sealed partial class HavenLauncherActivity : Activity
     protected override void OnStop()
     {
         _activityStarted = false;
+        ClearMountedWidgets();
+        CloseWidgetDialogs();
+        _grid?.RemoveAllViews();
         try
         {
             _widgetHost?.StopListening();
@@ -140,6 +145,8 @@ public sealed partial class HavenLauncherActivity : Activity
     {
         _root?.SetOnTouchListener(null);
         CloseGestureDialogs();
+        CloseWidgetDialogs();
+        ClearMountedWidgets();
         _folderDialog?.Dismiss();
         _launcherLifetime.Cancel();
         _launcherLifetime.Dispose();

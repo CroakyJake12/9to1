@@ -24,6 +24,7 @@ internal sealed class SpacesHavenScene : IDisposable
     private readonly List<SpaceExamplePair> _examples = [];
     private SpaceDefinition? _selected;
     private bool _editWithHavenAvailable;
+    private bool _deleteAvailable = true;
     public bool CanonicalSourceNavigationAvailable { get; set; }
     public event EventHandler<Guid>? CanonicalSourceRequested;
     private bool _disposed;
@@ -211,7 +212,7 @@ internal sealed class SpacesHavenScene : IDisposable
             card.SetValue(HavenProperties.Width, HavenLength.Percent(100));
             card.SetValue(HavenProperties.Padding, HavenThickness.Uniform(HavenLength.Px(8)));
             card.SetValue(HavenProperties.Gap, HavenLength.Px(3));
-            card.SetValue(HavenProperties.Background, selected ? "AccentSoft" : "SurfaceRaised");
+            card.SetValue(HavenProperties.Background, selected ? "AccentSubtle" : "SurfaceRaised");
             card.SetValue(HavenProperties.BorderColor, selected ? "AccentSecondary" : "Border");
             card.SetValue(HavenProperties.BorderWidth, HavenLength.Px(1));
             card.SetValue(HavenProperties.Radius, HavenCornerRadius.Uniform(HavenLength.Px(14)));
@@ -245,6 +246,12 @@ internal sealed class SpacesHavenScene : IDisposable
         _selected = space;
         if (space is null)
         {
+            SelectedName.Content = string.Empty; SelectedMeta.Content = string.Empty;
+            Name.Text = string.Empty; Description.Text = string.Empty; Model.Text = string.Empty;
+            Instructions.Text = string.Empty; EditInstruction.Text = string.Empty;
+            ExampleUser.Text = string.Empty; ExampleAssistant.Text = string.Empty;
+            SurfaceInputs.Text = "{}"; _examples.Clear(); RenderExamples(); RenderFiles([]);
+            Delete.SetValue(HavenProperties.Enabled, false);
             EmptyState.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
             Editor.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
             NewConversation.SetValue(HavenProperties.Enabled, false);
@@ -270,7 +277,7 @@ internal sealed class SpacesHavenScene : IDisposable
         RenderCanonicalSources(space);
         Launch.Content = space.Kind == SpaceKind.Study ? "Open Study" : "Open Space";
         Archive.Content = space.IsArchived ? "Restore" : "Archive";
-        Delete.SetValue(HavenProperties.Enabled, !space.IsBuiltIn);
+        Delete.SetValue(HavenProperties.Enabled, _deleteAvailable && !space.IsBuiltIn);
         Delete.Content = space.IsBuiltIn ? "Built-in Space" : "Delete";
         NewConversation.SetValue(HavenProperties.Enabled, !space.IsArchived);
         SetEditWithHavenAvailable(_editWithHavenAvailable);
@@ -292,6 +299,12 @@ internal sealed class SpacesHavenScene : IDisposable
 
         GeneratedPreviewState.Content = status ?? string.Empty;
         GeneratedPreviewState.SetValue(HavenProperties.Visibility, string.IsNullOrWhiteSpace(status) ? HavenVisibility.Collapsed : HavenVisibility.Visible);
+    }
+
+    public void SetDeleteAvailable(bool available)
+    {
+        _deleteAvailable = available;
+        Delete.SetValue(HavenProperties.Enabled, available && _selected is { IsBuiltIn: false });
     }
 
     public void SetLaunchAvailable(bool available)
@@ -339,7 +352,7 @@ internal sealed class SpacesHavenScene : IDisposable
         AddFile.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
         AddExample.SetValue(HavenProperties.Enabled, !busy && _selected is not null);
         ApplySuggestedEdit.SetValue(HavenProperties.Enabled, !busy && _editWithHavenAvailable && _selected is not null);
-        if (_selected is { IsBuiltIn: false }) Delete.SetValue(HavenProperties.Enabled, !busy);
+        if (_selected is { IsBuiltIn: false }) Delete.SetValue(HavenProperties.Enabled, _deleteAvailable && !busy);
     }
 
     public void SetStatus(string? value)
@@ -464,7 +477,7 @@ internal sealed class SpacesHavenScene : IDisposable
 
     internal void ShowDeleteConfirmation()
     {
-        if (_selected is null || _selected.IsBuiltIn) return;
+        if (!_deleteAvailable || _selected is null || _selected.IsBuiltIn) return;
         foreach (var existingPopup in Root.Children.OfType<PopupMenu>().ToArray()) existingPopup.Dismiss();
         var id = _selected.Id;
         var popup = new PopupMenu(Delete, Root,
@@ -475,7 +488,10 @@ internal sealed class SpacesHavenScene : IDisposable
         Root.Add(popup);
     }
 
-    internal void ConfirmDelete(Guid id) => DeleteRequested?.Invoke(this, id);
+    internal void ConfirmDelete(Guid id)
+    {
+        if (_deleteAvailable) DeleteRequested?.Invoke(this, id);
+    }
 
     private void OnAddExample(object? sender, EventArgs e) => AddExampleFromInputs();
 

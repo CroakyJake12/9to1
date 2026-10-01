@@ -13,10 +13,13 @@ public sealed class PictureGlycinSharedRasterDecoder
     public HomeProductivityRasterFrame DecodeFirstFrame(ReadOnlySpan<byte> encoded, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return ConvertOwnedFrame(new PictureGlycinDecoder().DecodeFirstFrame(encoded), cancellationToken);
+        return ConvertOwnedFrame(new PictureGlycinDecoder().DecodeFirstFrame(encoded, cancellationToken), cancellationToken);
     }
 
     public FrameSession OpenFrames(ReadOnlySpan<byte> encoded, bool loopAnimation = true) => new(new PictureGlycinDecoder().OpenFrames(encoded, loopAnimation));
+
+    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded, bool loopAnimation, CancellationToken cancellationToken) =>
+        new(new PictureGlycinDecoder().OpenFrames(encoded, loopAnimation, cancellationToken));
 
     /// <summary>Bounded donor animation, not an ongoing resource grant. The host revalidates access before decoding and before presentation.</summary>
     public sealed class FrameSession : IDisposable
@@ -41,7 +44,9 @@ public sealed class PictureGlycinSharedRasterDecoder
         }
         public void Dispose()
         {
-            lock (_gate) { if (_disposed) return; _disposed = true; _native.Dispose(); }
+            // Interrupt the donor before waiting for this adapter's frame conversion lock.
+            _native.Dispose();
+            lock (_gate) { _disposed = true; }
         }
     }
 

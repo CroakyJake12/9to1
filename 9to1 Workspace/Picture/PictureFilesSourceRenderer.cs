@@ -20,8 +20,8 @@ public sealed class PictureFilesSourceRenderer(
     /// Explicit controlled-donor pipeline. Decode the exact Files lease bytes
     /// under mandatory native BWRAP, then fresh-check authority before handing
     /// an owned pixel input to the native UI. Native failures never fall back.
-    /// Cancellation is observed before/after synchronous donor decoding; it
-    /// does not currently interrupt a running native decoder operation.
+    /// Cancellation reaches the donor GCancellable during load/frame work.
+    /// A cancelled native session is terminal and must reopen the retained source.
     /// </summary>
     public Task<PicturePinnedRasterSource> LoadWithGlycinAsync(PictureArtifactEnvelope artifact, Guid backingFilesRevision,
         PictureGlycinDecoder decoder, CancellationToken cancellationToken = default)
@@ -82,10 +82,10 @@ public sealed class PictureFilesSourceRenderer(
                     throw new UnauthorizedAccessException("Picture authority changed before native source decoding.");
                 if (animation)
                 {
-                    frames = await Task.Run(() => decoder.OpenFrames(bytes), cancellationToken).ConfigureAwait(false);
+                    frames = await Task.Run(() => decoder.OpenFrames(bytes, true, cancellationToken), cancellationToken).ConfigureAwait(false);
                     decoded = await Task.Run(() => frames.NextFrame(cancellationToken), cancellationToken).ConfigureAwait(false);
                 }
-                else decoded = await Task.Run(() => decoder.DecodeFirstFrame(bytes), cancellationToken).ConfigureAwait(false);
+                else decoded = await Task.Run(() => decoder.DecodeFirstFrame(bytes, cancellationToken), cancellationToken).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
                 // This raster surface is explicitly SDR/sRGB. Preserve linked
                 // source and reject CICP/HDR/unconverted ICC instead of silently

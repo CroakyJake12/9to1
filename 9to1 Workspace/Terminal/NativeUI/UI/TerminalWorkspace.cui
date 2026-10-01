@@ -11,7 +11,7 @@
         <TextBlock text="{Binding Mode}" accessible-name="Input mode" />
       </StackPanel>
       <Object Type="terminal.viewport" id="terminal-viewport" />
-      <TextBox text="{Binding InputText}" accessible-name="Command or AI request" />
+      <TextBox text="{Binding InputText, mode=TwoWay, type=string}" accessible-name="Command or AI request" />
       <Button content="Submit" action="TerminalSubmit" />
       <TextBlock text="{Binding PendingCommandPreview}" text-wrapping="Wrap" accessible-name="Command awaiting your confirmation" />
       <StackPanel orientation="Horizontal">

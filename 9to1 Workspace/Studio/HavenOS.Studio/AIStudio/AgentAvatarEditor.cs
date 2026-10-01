@@ -10,17 +10,24 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
 {
     private readonly AgentPresentationService _canonical;
     private readonly AgentAvatarBuilder _builder;
+    private readonly Func<CancellationToken, Task>? _authorityLost;
     private readonly SemaphoreSlim _operations = new(1, 1);
     private AgentDefinitionRecord? _agent;
     private AgentPresentationDefinition? _draft;
     public CuiViewModel Bindings { get; } = new();
     public AgentPresentationDefinition? Draft => _draft is null ? null : AgentAvatarPresentation.Snapshot(_draft);
 
+    public (string NamespaceID, string AgentID, long Revision)? CurrentAgentIdentity
+    {
+        get { var agent = _agent; return agent is null ? null : (agent.NamespaceId, agent.Id, agent.Revision); }
+    }
+
     public AgentAvatarPreview? Preview { get; }
 
-    public AgentAvatarEditor(AgentPresentationService canonical, DenAgentPresentationAssets? assets = null)
+    public AgentAvatarEditor(AgentPresentationService canonical, DenAgentPresentationAssets? assets = null, Func<CancellationToken, Task>? authorityLost = null)
     {
         _canonical = canonical;
+        _authorityLost = authorityLost;
         Preview = assets is null ? null : new(assets);
         _builder = new(canonical);
         foreach (var field in new[] { "Status", "NamespaceID", "AgentID", "AgentName", "Revision", "StaticAsset", "AccessibleName", "InitialState", "StateID", "StateLabel", "StateAsset", "FromState", "ToState", "TransitionEvent", "ReactionEvent", "ReactionState", "PreviewEvent", "AvatarActivity", "PreviewAsset" })
@@ -81,7 +88,12 @@ public sealed class AgentAvatarEditor : ICuiActionDispatcher
             Preview?.Clear();
             PublishDraft(); Bindings.Set("Status", "Unsaved presentation changes.");
         }
-        catch (DenException error) { Preview?.Clear(); Bindings.Set("Status", $"{error.Code}: {error.Message}"); throw; }
+        catch (DenException error)
+        {
+            Preview?.Clear(); Bindings.Set("Status", $"{error.Code}: {error.Message}");
+            if (error.Code == DenErrorCode.Forbidden && _authorityLost is not null) await _authorityLost(CancellationToken.None);
+            throw;
+        }
         finally { _operations.Release(); }
     }
 

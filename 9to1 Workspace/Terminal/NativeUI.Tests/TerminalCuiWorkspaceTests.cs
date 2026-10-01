@@ -60,7 +60,10 @@ public sealed class TerminalCuiWorkspaceTests
                 await workspace.DispatchAsync("TerminalCommandMode", null);
                 permission = PermissionMode.Ask;
                 await Assert.ThrowsAsync<UnauthorizedAccessException>(() => firstInput(new byte[] { 65 }, default).AsTask());
-                workspace.Bindings.Set("InputText", "printf displayed-review");
+                var commandInput = Assert.Single(host.GetLogicalDescendants().OfType<TextBox>());
+                commandInput.Text = "printf displayed-review";
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
+                Assert.Equal("printf displayed-review", workspace.Bindings.Get("InputText"));
                 await workspace.DispatchAsync("TerminalSubmit", null);
                 var displayed = surface.PendingCommandId;
                 Assert.NotNull(displayed);

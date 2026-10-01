@@ -28,7 +28,7 @@ public sealed class PictureNativeHostTests
         Directory.CreateDirectory(root);
         try
         {
-            var home = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
+            var home = new FailFirstPictureCompletionStore(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
             var profiles = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
             var files = new NativeFilesWorkspaceService(home, profiles);
             var permissions = new HomePermissionTrustService(home, new PictureNativeActionPolicies().TryGet);
@@ -52,6 +52,9 @@ public sealed class PictureNativeHostTests
             await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home), new HomePermissionsCoreService(permissions, profiles)]);
             var media = new NativeFilesMediaAssetSourceResolver(authority, profiles, resources);
             var services = new ServiceCollection();
+            var motionPath = Path.Combine(root, "ui-preferences.json");
+            var motion = new Haven.Infrastructure.LocalMotionPreferencesService(motionPath);
+            services.AddSingleton<Haven.Application.IMotionPreferenceSource>(motion);
             services.AddSingleton(runtime); services.AddSingleton(profiles); services.AddSingleton<IAuthenticatedResourceActorSource>(profiles);
             services.AddSingleton(files); services.AddSingleton(authority); services.AddSingleton(resources); services.AddSingleton(broker);
             services.AddSingleton(permissions); services.AddSingleton(ownership); services.AddSingleton(media);
@@ -83,7 +86,38 @@ public sealed class PictureNativeHostTests
                 await UntilAsync(() => Descendants(window).OfType<PictureNativeCuiSurface>().Any(), ct);
                 var surface = Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
                 var image = Assert.Single(Descendants(surface).OfType<Image>());
+                var exportButton = Button(surface, "Export");
+                var exportPosition = exportButton.TranslatePoint(default, surface);
+                Assert.NotNull(exportPosition);
+                Assert.InRange(exportPosition.Value.X + exportButton.Bounds.Width, 0, surface.Bounds.Width + 1);
                 AssertRed(Assert.IsAssignableFrom<Bitmap>(image.Source));
+                // Playback uses the same current source, real donor timing and per-frame authority checks.
+                Button(surface, "Play").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source)).SequenceEqual(new byte[] { 255, 0, 0, 255 }), ct);
+                Assert.False(Button(surface, "Next frame").IsEnabled);
+                Button(surface, "Pause").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await surface.ValidateAccessAsync(ct); // Wait for a frame already submitted when Pause was clicked.
+                var paused = Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source));
+                await Task.Delay(250, ct);
+                Assert.Equal(paused, Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source)));
+                Assert.True(Button(surface, "Play").IsEnabled);
+                Assert.False(Button(surface, "Pause").IsEnabled);
+                Assert.Equal(original.CasRevisionId, (await bridge.OpenAsync(new(original.Artifact.BackingFileId), ct)).CasRevisionId);
+                motion.SetReduceAnimations(true);
+                await UntilAsync(() => !Button(surface, "Play").IsEnabled, ct);
+                Assert.True(Button(surface, "Next frame").IsEnabled);
+                motion.SetReduceAnimations(false);
+                await UntilAsync(() => Button(surface, "Play").IsEnabled, ct);
+                Button(surface, "Play").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => Button(surface, "Pause").IsEnabled, ct);
+                // Simulate the actual shared preference being changed by another process, without a notification.
+                await File.WriteAllTextAsync(motionPath, "{\"reduceAnimations\":true}", ct);
+                await UntilAsync(() => !Button(surface, "Pause").IsEnabled && !Button(surface, "Play").IsEnabled, ct);
+                await surface.ValidateAccessAsync(ct);
+                var motionPaused = Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source));
+                await Task.Delay(250, ct);
+                Assert.Equal(motionPaused, Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source)));
+                Assert.True(Button(surface, "Next frame").IsEnabled);
                 var rotate = Button(surface, "Rotate clockwise"); Assert.True(rotate.IsEnabled);
                 rotate.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1, ct);
@@ -102,9 +136,33 @@ public sealed class PictureNativeHostTests
                 surface = Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
                 image = Assert.Single(Descendants(surface).OfType<Image>());
                 Assert.NotNull(image.Source);
+                Assert.Equal(1, home.CompletionFailures);
+                Assert.True(HasEnabledButton(window, "Finish approved request"));
+                var committedBeforeAuditRetry = edited.CasRevisionId;
+                Button(window, "Finish approved request").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => !HasEnabledButton(window, "Finish approved request") && HasEnabledButton(window, "Import image"), ct);
+                Assert.Equal(committedBeforeAuditRetry, (await bridge.OpenAsync(new(edited.Artifact.BackingFileId), ct)).CasRevisionId);
+                Assert.Contains((await permissions.GetSnapshotAsync(cancellationToken: ct)).RecentAuditEvents,
+                    item => item.Kind == HomePermissionAuditKind.ExecutionCompleted && item.RequestState == HomePermissionRequestState.Succeeded &&
+                        item.AffectedObjects.Any(affected => affected.ObjectType == "files.item" && affected.ObjectId == edited.Artifact.BackingFileId.ToString("N")));
+                // A real Home decline must release only the local pending operation and preserve the committed document.
+                Button(surface, "Flip horizontally").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1, ct);
+                await UntilAsync(() => HasEnabledButton(window, "Finish approved request") && HasEnabledButton(window, "Decline"), ct);
+                Button(window, "Decline").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 0, ct);
+                Button(window, "Finish approved request").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => !HasEnabledButton(window, "Finish approved request") && HasEnabledButton(window, "Import image"), ct);
+                Assert.Equal(edited.CasRevisionId, (await bridge.OpenAsync(new(edited.Artifact.BackingFileId), ct)).CasRevisionId);
+                motion.SetReduceAnimations(false);
+                await UntilAsync(() => Button(surface, "Play").IsEnabled, ct);
+                Button(surface, "Play").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => Button(surface, "Pause").IsEnabled, ct);
                 var now = DateTimeOffset.UtcNow;
                 Assert.True((await workspace.Provider.MutateAsync(new(new(Guid.NewGuid()), workspace.Actor.ActorId, rawId,
                     pictureFolder, null, "Delete", rawRevision, null, FilesOperationState.Pending, now, now, null, null), null, ct)).IsSuccess);
+                // Automatic playback itself must discover raw-source revocation and remove its pixels.
+                await UntilAsync(() => image.Source is null, ct);
                 await Assert.ThrowsAsync<UnauthorizedAccessException>(() => surface.ValidateAccessAsync(ct));
                 Assert.Null(image.Source);
                 Assert.False(Button(surface, "Next frame").IsEnabled);
@@ -162,6 +220,26 @@ public sealed class PictureNativeHostTests
         finally { Directory.Delete(root, recursive: true); }
     }
 
+    // A failure of the actual Home durable completion write must never cause the owning Files mutation to run twice.
+    private sealed class FailFirstPictureCompletionStore(FileHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        public int CompletionFailures { get; private set; }
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRevision, CancellationToken ct = default)
+        {
+            if (CompletionFailures == 0 && record.RecordType == "home.permissions-trust" &&
+                record.Payload.GetRawText().Contains("PICTURE_COMMITTED", StringComparison.Ordinal))
+            {
+                CompletionFailures++;
+                throw new IOException("Injected first actual Picture completion persistence failure.");
+            }
+            return inner.WriteAsync(record, expectedRevision, ct);
+        }
+        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRevision,
+            AuthenticatedResourceActor actor, IHomeStateCommitActorGuard guard, CancellationToken ct = default) =>
+            inner.WriteGuardedAsync(record, expectedRevision, actor, guard, ct);
+    }
+
     private static async Task ApprovePendingAsync(MainWindow window, HomePermissionTrustService permissions, CancellationToken ct)
     {
         await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1, ct);
@@ -189,14 +267,15 @@ public sealed class PictureNativeHostTests
         for (var attempt = 0; attempt < 300; attempt++) { if (await predicate()) return; await Task.Delay(10, ct); }
         Assert.True(await predicate(), "The actual native CUI operation did not complete." + diagnostics?.Invoke());
     }
-    private static void AssertRed(Bitmap bitmap)
+    private static void AssertRed(Bitmap bitmap) => Assert.Equal(new byte[] { 0, 0, 255, 255 }, Pixel(bitmap));
+    private static byte[] Pixel(Bitmap bitmap)
     {
         var buffer = Marshal.AllocHGlobal(4);
         try
         {
             bitmap.CopyPixels(new PixelRect(0, 0, 1, 1), buffer, 4, 4);
             var pixel = new byte[4]; Marshal.Copy(buffer, pixel, 0, 4);
-            Assert.Equal(new byte[] { 0, 0, 255, 255 }, pixel);
+            return pixel;
         }
         finally { Marshal.FreeHGlobal(buffer); }
     }

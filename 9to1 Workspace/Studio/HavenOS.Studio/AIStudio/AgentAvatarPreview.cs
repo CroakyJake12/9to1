@@ -45,7 +45,7 @@ public sealed class AgentAvatarPreview(DenAgentPresentationAssets assets) : IAsy
         try
         {
             await assets.ValidateAsync(namespaceId, presentation.AgentId, presentation.DefinitionRevision, acquired, cancellationToken).ConfigureAwait(false);
-            var decoder = await Task.Run(() => new PictureGlycinSharedRasterDecoder().OpenFrames(acquired.Content, loopAnimation), cancellationToken).ConfigureAwait(false);
+            var decoder = await Task.Run(() => new PictureGlycinSharedRasterDecoder().OpenFrames(acquired.Content, loopAnimation, cancellationToken), cancellationToken).ConfigureAwait(false);
             owned = new(namespaceId, presentation, acquired, decoder);
             var decoded = await ReadFrameAsync(owned, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("The avatar asset contains no frame.");
@@ -139,18 +139,29 @@ public sealed class AgentAvatarPreview(DenAgentPresentationAssets assets) : IAsy
         public AgentPresentationAssetBytes Bytes { get; } = bytes;
         public PictureGlycinSharedRasterDecoder.FrameSession Decoder { get; } = decoder;
         public SemaphoreSlim Gate { get; } = new(1, 1);
-        public bool Retired { get; private set; }
-        public async ValueTask DisposeAsync()
+        private readonly object _disposalSync = new();
+        private Task? _disposal;
+        private int _retired;
+        public bool Retired => Volatile.Read(ref _retired) != 0;
+        public ValueTask DisposeAsync()
         {
-            await Gate.WaitAsync().ConfigureAwait(false);
-            try
+            lock (_disposalSync)
             {
-                if (Retired) return;
-                Retired = true;
-                try { await Task.Run(Decoder.Dispose).ConfigureAwait(false); }
-                finally { Array.Clear(Bytes.Content); }
+                Volatile.Write(ref _retired, 1);
+                return new(_disposal ??= DisposeCoreAsync());
             }
-            finally { Gate.Release(); }
+        }
+        private async Task DisposeCoreAsync()
+        {
+            // Interrupt the genuine donor before waiting for an outstanding frame's
+            // owner gate. Waiting for that gate first would prevent native cancellation.
+            try { await Task.Run(Decoder.Dispose).ConfigureAwait(false); }
+            finally
+            {
+                await Gate.WaitAsync().ConfigureAwait(false);
+                try { Array.Clear(Bytes.Content); }
+                finally { Gate.Release(); }
+            }
         }
     }
 }

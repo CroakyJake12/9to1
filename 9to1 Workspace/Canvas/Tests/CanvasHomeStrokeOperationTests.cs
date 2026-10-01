@@ -9,6 +9,48 @@ namespace HavenOS.Apps.Canvas.Tests;
 public sealed class CanvasHomeStrokeOperationTests
 {
     [Fact]
+    public async Task Home_approved_new_Canvas_keeps_captured_native_identity_and_rejects_replay()
+    {
+        await using var fixture = await Fixture.Create();
+        using var native = CanvasRnoteDocument.Create("Approved blank");
+        var snapshot = native.Snapshot;
+        var intent = CanvasCreateIntent.Capture(snapshot, await fixture.CreationTarget());
+        var capability = await fixture.Approve(intent);
+        snapshot.DisplayName = "Changed after approval capture";
+        var operation = new CanvasHomeCreateOperation(fixture.Files, fixture.Home, fixture.Actors);
+        var committed = await operation.ExecuteAsync(intent, capability);
+        Assert.NotEqual(fixture.FileId, committed.FileId);
+        Assert.Equal(intent.ArtifactId, committed.Artifact.ArtifactId);
+        Assert.Equal("Approved blank", committed.Artifact.DisplayName);
+        var reopened = await fixture.Files.OpenAsync(committed.FileId);
+        Assert.Equal(committed.FilesRevision.Id, reopened.CasRevisionId);
+        Assert.Equal(intent.ArtifactId, reopened.Artifact.ArtifactId);
+        using var rendered = CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(reopened.Artifact));
+        Assert.Contains("<svg", System.Text.Encoding.UTF8.GetString(rendered.Render().Svg));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
+    }
+
+    [Fact]
+    public async Task Home_creation_actor_change_after_claim_registers_no_artifact()
+    {
+        await using var fixture = await Fixture.Create();
+        using var native = CanvasRnoteDocument.Create("Actor-bound blank");
+        var intent = CanvasCreateIntent.Capture(native.Snapshot, await fixture.CreationTarget());
+        var capability = await fixture.Approve(intent);
+        var actor = (await fixture.Actors.GetCurrentAsync(default))!;
+        var store = new VersionedJsonStateStore<DurableDriveProvider.State>(fixture.StatePath, 1, () => new([], [], []));
+        var before = await store.ReadAsync(default);
+        fixture.OnWriteAdmission = () => fixture.ActorOverride = actor with { AuthenticationRevision = actor.AuthenticationRevision + ":changed-after-create-claim" };
+        var operation = new CanvasHomeCreateOperation(fixture.Files, fixture.Home, fixture.Actors);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
+        var after = await store.ReadAsync(default);
+        Assert.Equal(before.Items.Count, after.Items.Count);
+        Assert.Equal(before.Artifacts.Count, after.Artifacts.Count);
+        Assert.Equal(before.Revisions.Count, after.Revisions.Count);
+        Assert.Equal(before.Events.Count, after.Events.Count);
+    }
+
+    [Fact]
     public async Task Initial_Canvas_creation_rejects_actor_change_without_registering_an_empty_artifact()
     {
         var ct = CancellationToken.None;
@@ -218,6 +260,8 @@ public sealed class CanvasHomeStrokeOperationTests
         public HomePermissionTrustService Permissions { get; private set; } = null!;
         public ResourceAuthorizationService Resources { get; private set; } = null!;
         public HostedItemId FileId { get; private set; }
+        private HostedItemId _folderId;
+        public async Task<CanvasCreationTarget> CreationTarget() => new(_folderId, (await _provider.GetAsync(_folderId, default)).Value!.CurrentRevisionId);
         public bool WritesAllowed { get; set; } = true;
         public string ResourceKind => "files.item";
 
@@ -237,18 +281,27 @@ public sealed class CanvasHomeStrokeOperationTests
             var directories = new FilesWorkspaceDirectoryResolver(Path.Combine(fixture._root, "bindings.json"), _ => null,
                 id => id == profile ? fixture._provider : null);
             Assert.True((await directories.RegisterProfileAsync(profile, folder.ItemId, "canvas", fixture._root)).IsSuccess);
+            fixture._folderId = folder.ItemId;
             fixture.Resources = new(fixture.Actors, [fixture]);
             fixture.Files = new(fixture.Actors, current => current.ActorId == actor.ActorId && current.ProfileId == actor.ProfileId ? fixture.ResolveProvider() : null,
                 directories, fixture.Resources, () => {
                     var admission = fixture.OnWriteAdmission; fixture.OnWriteAdmission = null; admission?.Invoke();
                     return fixture.WritesAllowed;
                 });
-            fixture.Permissions = new(store, (app, action) => app == "canvas" && action == "canvas.file.save"
-                ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, true, false, true) : null);
+            fixture.Permissions = new(store, new CanvasNativeActionPolicies().TryGet);
             fixture.Home = new(fixture.Resources, fixture.Permissions);
             using var document = CanvasRnoteDocument.Create();
             fixture.FileId = (await fixture.Files.CreateAsync(document.Snapshot)).FileId;
             return fixture;
+        }
+
+        public async Task<HomeResourceExecutionCapability> Approve(CanvasCreateIntent intent)
+        {
+            var pending = await Home.AuthorizeAsync(CanvasCreateIntent.TargetAppId, CanvasCreateIntent.ActionId, intent.Scopes,
+                intent.Arguments, "Create the exact captured native Canvas in the configured folder", null, "native-owner-test-session");
+            Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
+            Assert.True((await Permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+            return Assert.IsType<HomeResourceExecutionCapability>(await Home.BeginExecutionCapabilityAsync(pending.RequestId, intent.Arguments));
         }
 
         public async Task<HomeResourceExecutionCapability> Approve(CanvasStrokeWriteIntent intent)

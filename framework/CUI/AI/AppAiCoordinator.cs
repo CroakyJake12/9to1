@@ -73,6 +73,11 @@ public sealed class AppAiCoordinator(
         if (!descriptor.IsMutation)
             return AppAiActionResult.Rejected("Read-only app actions are not dispatched through the mutation endpoint.", "action-not-mutable");
 
+        var ownerApproval = descriptor.ApprovalFlow == AppAiApprovalFlow.OwningResourceBroker;
+        if (!Enum.IsDefined(descriptor.ApprovalFlow) || ownerApproval &&
+            (actions is not IAppAiResourceBrokerActions || !descriptor.RequiresPermission || !descriptor.RequiresReview))
+            return AppAiActionResult.Rejected("Owning resource approval requires the explicit broker adapter and truthful review metadata.", "owner-approval-unavailable");
+
         var inputValidation = ValidateInput(descriptor, request.Arguments);
         if (inputValidation is not null)
             return AppAiActionResult.Rejected(inputValidation, "invalid-action-arguments");
@@ -101,7 +106,7 @@ public sealed class AppAiCoordinator(
         await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
             AppAiActionGraphStatus.Started, "AI requested a typed app action", cancellationToken).ConfigureAwait(false);
 
-        if (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval)
+        if (!ownerApproval && (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval))
         {
             if (approvalRequester is null)
                 return AppAiActionResult.Rejected("Home approval is unavailable; the action was not run.", "approval-unavailable", canRetry: true);
@@ -152,26 +157,40 @@ public sealed class AppAiCoordinator(
                 return AppAiActionResult.Rejected("The approval is invalid or expired.", "approval-invalid");
         }
 
+        if (ownerApproval)
+        {
+            var current = await context.CaptureAsync(cancellationToken).ConfigureAwait(false);
+            ValidateSnapshot(current);
+            if (!SameTarget(snapshot, current) || !HasSameActionScope(descriptor))
+                return AppAiActionResult.Rejected("The owning action context changed before preparation. Read the current context and retry.", "stale-context", true);
+        }
         var executionRequest = request with
         {
-            ApprovalToken = descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval
-                ? verifiedApprovalToken
-                : null
+            ApprovalToken = !ownerApproval && (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval)
+                ? verifiedApprovalToken : null
         };
+        ValueTask CompleteApprovalAsync(AppAiActionRequest action, AppAiActionResult outcome, CancellationToken ct) =>
+            ownerApproval ? ValueTask.CompletedTask : approvals.CompleteAsync(action, outcome, ct);
         AppAiActionResult result;
-        try { result = await actions.ExecuteAsync(executionRequest, cancellationToken).ConfigureAwait(false); }
+        try
+        {
+            result = ownerApproval
+                ? await ((IAppAiResourceBrokerActions)actions).ExecuteWithOwnedApprovalAsync(executionRequest, cancellationToken).ConfigureAwait(false)
+                : await actions.ExecuteAsync(executionRequest, cancellationToken).ConfigureAwait(false);
+        }
         catch (Exception exception)
         {
-            await approvals.CompleteAsync(executionRequest, AppAiActionResult.Rejected(
+            await CompleteApprovalAsync(executionRequest, AppAiActionResult.Rejected(
                 exception is OperationCanceledException ? "App action cancelled." : "App action failed.",
                 exception is OperationCanceledException ? "action-cancelled" : "action-execution-failed"), CancellationToken.None).ConfigureAwait(false);
             throw;
         }
         if (!result.Succeeded)
         {
-            await approvals.CompleteAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
+            await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
             await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
-                AppAiActionGraphStatus.Failed, "App action failed", cancellationToken).ConfigureAwait(false);
+                ownerApproval && result.ErrorCode == "approval-pending" ? AppAiActionGraphStatus.WaitingForApproval : AppAiActionGraphStatus.Failed,
+                ownerApproval && result.ErrorCode == "approval-pending" ? "Waiting for the owning Home resource review" : "App action failed", cancellationToken).ConfigureAwait(false);
             return result;
         }
 
@@ -185,12 +204,12 @@ public sealed class AppAiCoordinator(
                 var unverified = AppAiActionResult.Rejected(
                     "The database action ran, but its result could not be verified. The recovery backup is retained.",
                     "database-result-unverified");
-                await approvals.CompleteAsync(executionRequest, unverified, CancellationToken.None).ConfigureAwait(false);
+                await CompleteApprovalAsync(executionRequest, unverified, CancellationToken.None).ConfigureAwait(false);
                 return unverified;
             }
         }
 
-        await approvals.CompleteAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
+        await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
 
         await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
             AppAiActionGraphStatus.Completed, "App action completed", cancellationToken).ConfigureAwait(false);
@@ -318,6 +337,7 @@ public sealed class AppAiCoordinator(
             && string.Equals(candidate.Description, approved.Description, StringComparison.Ordinal)
             && candidate.Risk == approved.Risk
             && candidate.RequiresReview == approved.RequiresReview
+            && candidate.ApprovalFlow == approved.ApprovalFlow
             && string.Equals(candidate.InputSchemaJson, approved.InputSchemaJson, StringComparison.Ordinal)
             && candidate.RequiresPermission == approved.RequiresPermission
             && candidate.IsMutation == approved.IsMutation

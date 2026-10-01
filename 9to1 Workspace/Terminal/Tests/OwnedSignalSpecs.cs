@@ -88,6 +88,9 @@ internal static class OwnedSignalSpecs
             if ((await broker.ExecuteAsync(preview, "unbound-token")).Executed) throw new Exception("Unbound approval reference accepted.");
             if (!(await permissions.DecideAsync(review.ResultText, HomeApprovalChoice.Accept)).Succeeded) throw new Exception("Broker Home review failed.");
             if (!(await broker.ExecuteAsync(preview, review.ResultText)).Executed) throw new Exception("Exact approved broker retry did not dispatch.");
+            var completed = await permissions.GetAuthorizationAsync(review.ResultText);
+            if (completed.State != HomePermissionRequestState.Succeeded || completed.Code != "TerminalSignalSent")
+                throw new Exception("Actual broker signal did not record its canonical completed outcome.");
             deadline = DateTimeOffset.UtcNow.AddSeconds(5);
             while ((second.ProcessId is not null || !HasExited(secondSnapshot.ProcessID)) && DateTimeOffset.UtcNow < deadline) await Task.Delay(20);
             if (second.ProcessId is not null || !HasExited(secondSnapshot.ProcessID) || (await broker.ExecuteAsync(preview, review.ResultText)).Executed)

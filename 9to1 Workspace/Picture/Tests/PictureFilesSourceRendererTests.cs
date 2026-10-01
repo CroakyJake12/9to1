@@ -233,6 +233,37 @@ public sealed class PictureFilesSourceRendererTests
         finally { Directory.Delete(root, true); }
     }
 
+    [AvaloniaFact]
+    public async Task Actual_static_donor_frame_disables_stepping_and_rejected_step_preserves_preview()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = Path.Combine(Path.GetTempPath(), "picture-static-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var bytes = TwoPixelBmp();
+            var path = Path.Combine(root, "static.bmp");
+            await File.WriteAllBytesAsync(path, bytes, ct);
+            var source = new PictureSourceAssetReference(Guid.NewGuid(), Guid.NewGuid(), Convert.ToHexString(SHA256.HashData(bytes)), bytes.Length, Guid.NewGuid());
+            var artifact = new PictureArtifactEnvelope { BackingFileId = Guid.NewGuid(), SourceAsset = source,
+                Document = PictureDocument.Create(2, 1, source.FileId.ToString(), source.RevisionId.ToString()) };
+            var authority = new Authority(artifact.BackingFileId);
+            var renderer = new PictureFilesSourceRenderer((_, _) => Task.FromResult(
+                MediaEngineResult<MediaAssetReadLease>.Success(new(new(new(source.AssetId), source.FileId,
+                    new Uri(path), source.RevisionId.ToString()), () => ValueTask.CompletedTask))), authority.Service);
+            using var pinned = await renderer.LoadAnimationWithGlycinAsync(artifact, authority.Revision, new PictureGlycinDecoder(), ct);
+            Assert.Equal(0, pinned.FrameDelayMicroseconds);
+            Assert.False(pinned.CanAdvanceFrames);
+            using var before = pinned.Render();
+            await Assert.ThrowsAsync<NotSupportedException>(() => pinned.AdvanceFrameAsync(ct));
+            await pinned.ValidateAccessAsync(ct);
+            using var after = pinned.Render();
+            Assert.Equal(FirstPixel(before), FirstPixel(after));
+            Assert.Equal(new byte[] { 0, 0, 255, 255 }, FirstPixel(after));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     private static byte[] FirstPixel(Avalonia.Media.Imaging.Bitmap bitmap)
     {
         var bytes = new byte[4];

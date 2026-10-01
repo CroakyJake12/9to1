@@ -49,7 +49,7 @@ public sealed class PicturePickedImage : IDisposable
                 bytes = captured.ToArray();
                 var decoded = await Task.Run(() =>
                 {
-                    using var session = decoder.OpenFrames(bytes);
+                    using var session = decoder.OpenFrames(bytes, true, cancellationToken);
                     var mimeType = session.MimeType;
                     return (Frame: session.NextFrame(cancellationToken), MimeType: mimeType);
                 }, cancellationToken).ConfigureAwait(false);

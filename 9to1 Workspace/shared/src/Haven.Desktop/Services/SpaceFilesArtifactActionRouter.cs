@@ -22,7 +22,7 @@ public sealed class SpaceFilesArtifactActionRouter(SpaceRegistry spaces, NativeF
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) ?? throw new UnauthorizedAccessException();
         var workspace = await files.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         if (workspace?.Actor != actor) throw new UnauthorizedAccessException("Current Home ownership does not permit this Files workspace.");
-        var space = await spaces.GetAsync(action.SpaceId, cancellationToken).ConfigureAwait(false);
+        var space = await spaces.ReadExistingAsync(action.SpaceId, cancellationToken).ConfigureAwait(false);
         if (space is null || space.IsArchived) throw new InvalidOperationException("The Space is unavailable.");
         if (space.Revision != action.ExpectedSpaceRevision)
             throw new SpaceRevisionConflictException(space.Id, action.ExpectedSpaceRevision, space.Revision);
@@ -62,7 +62,7 @@ public sealed class SpaceFilesArtifactActionRouter(SpaceRegistry spaces, NativeF
             new("files.item", fileId.ToString(), action.ExpectedFilesRevision.ToString(), access)];
         if (await resources.AuthorizeAsync(actionId, scopes, cancellationToken).ConfigureAwait(false) != actor)
             throw new UnauthorizedAccessException("Current Space and Files resource permissions do not permit this action.");
-        if ((await spaces.GetAsync(space.Id, cancellationToken).ConfigureAwait(false))?.Revision != space.Revision ||
+        if ((await spaces.ReadExistingAsync(space.Id, cancellationToken).ConfigureAwait(false))?.Revision != space.Revision ||
             (await workspace.Provider.GetAsync(fileId, cancellationToken).ConfigureAwait(false)).Value?.CurrentRevisionId != action.ExpectedFilesRevision ||
             actor != await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false))
             throw new UnauthorizedAccessException("Space or Files access changed before the action could open its target.");

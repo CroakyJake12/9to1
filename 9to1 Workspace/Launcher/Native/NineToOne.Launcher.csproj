@@ -3,5 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
   </ItemGroup>
 </Project>

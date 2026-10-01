@@ -24,17 +24,31 @@ public sealed class CanvasFilesArtifactBridge(
     private const string OwnerAppId = "canvas";
     private const long MaximumArtifactBytes = 512L * 1024 * 1024;
 
-    public async Task<(HostedItemId FileId, FilesRevision Revision)> CreateAsync(CanvasArtifact artifact,
-        CancellationToken cancellationToken = default)
+    public Task<(HostedItemId FileId, FilesRevision Revision)> CreateAsync(CanvasArtifact artifact,
+        CancellationToken cancellationToken = default) => CreateCoreAsync(artifact, null, null, cancellationToken);
+
+    public Task<(HostedItemId FileId, FilesRevision Revision)> CreateAsync(CanvasArtifact artifact,
+        CanvasCreationTarget target, AuthenticatedResourceActor claimedActor, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target); ArgumentNullException.ThrowIfNull(claimedActor);
+        return CreateCoreAsync(artifact, target, claimedActor, cancellationToken);
+    }
+
+    private async Task<(HostedItemId FileId, FilesRevision Revision)> CreateCoreAsync(CanvasArtifact artifact,
+        CanvasCreationTarget? target, AuthenticatedResourceActor? claimedActor, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         artifact = CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(artifact));
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("The current Canvas host is read-only.");
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) ?? throw new UnauthorizedAccessException("No verified Home actor is active.");
+        if (claimedActor is not null && actor != claimedActor)
+            throw new UnauthorizedAccessException("The Canvas creation actor differs from the claimed Home actor.");
         var provider = providers(actor) ?? throw new UnauthorizedAccessException("No authorised canonical Files provider is available.");
         var binding = await BindingAsync(actor, cancellationToken).ConfigureAwait(false);
         var folder = await provider.GetAsync(binding.FolderId, cancellationToken).ConfigureAwait(false);
         if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
+        if (target is not null && (binding.FolderId != target.FolderId || folder.Value!.CurrentRevisionId != target.ExpectedFolderRevision))
+            throw new InvalidOperationException("The configured Canvas destination differs from the approved folder revision.");
         var scope = new ResourceScope("files.item", binding.FolderId.ToString(), folder.Value!.CurrentRevisionId?.ToString() ?? "uncommitted", ResourceAccess.Write);
         await RecheckAsync(actor, scope, "canvas.file.create", cancellationToken).ConfigureAwait(false);
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("Canvas became read-only before creation.");

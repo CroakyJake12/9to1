@@ -229,6 +229,15 @@ try
     billingVerifier.Receipt=new(purchase.PurchaseID,purchaseAccount,"fictional-settlement-1",purchaseQuote.Currency,purchaseQuote.Breakdown.FinalMonthlyCharge+0.01m,DateTimeOffset.UtcNow);
     try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("incorrect final charge accepted");}catch(InvalidOperationException){}
     billingVerifier.Receipt=billingVerifier.Receipt with{ChargedAmount=purchaseQuote.Breakdown.FinalMonthlyCharge};
+    using(var cancelledSettlement=new CancellationTokenSource())
+    {
+        var delayedVerifier=new DelayedVerifiedBillingVerifier(billingVerifier.Receipt!);
+        var cancelledService=new SubscriptionPurchaseService(ledger,purchaseQuotes,purchaseAccount,null,delayedVerifier,monthlyPolicy);
+        var delayedActivation=cancelledService.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>(),cancelledSettlement.Token).AsTask();
+        await delayedVerifier.Entered.Task;cancelledSettlement.Cancel();delayedVerifier.Release.SetResult();
+        try{await delayedActivation;throw new Exception("cancelled verified settlement activated");}catch(OperationCanceledException){}
+        Assert(ledger.Get(purchaseAccount).Subscription.Resources.AIDustAllocated==0&&ledger.Get(purchaseAccount).Purchases!.Single(p=>p.PurchaseID==purchase.PurchaseID).State==SubscriptionPurchaseState.AwaitingSettlement,"cancellation after provider await preserves pending order and resource allocation for genuine provider retry");
+    }
     var activated=await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());
     var activatedAccount=ledger.Get(purchaseAccount);
     Assert(activated.State==SubscriptionPurchaseState.Activated&&activatedAccount.Subscription.Resources.AIDustAllocated==purchaseQuote.ActualMonthlyDust&&activatedAccount.Subscription.Resources.StorageAllocatedBytes==purchaseQuote.Selection.StorageBytes,"verified full purchased resources activate atomically");
@@ -285,4 +294,12 @@ sealed class FixtureBusinessBillingVerifier:ITrustedBusinessBillingVerifier
 {
     public VerifiedBusinessBillingTransition? Event {get;set;}
     public ValueTask<VerifiedBusinessBillingTransition?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)=>ValueTask.FromResult(Event);
+}
+
+sealed class DelayedVerifiedBillingVerifier(VerifiedBillingSettlement receipt):ITrustedBillingSettlementVerifier
+{
+    public TaskCompletionSource Entered {get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Release {get;}=new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public async ValueTask<VerifiedBillingSettlement?> VerifyAsync(ReadOnlyMemory<byte> data,IReadOnlyDictionary<string,string> headers,CancellationToken ct)
+    {Entered.SetResult();await Release.Task;return receipt;}
 }

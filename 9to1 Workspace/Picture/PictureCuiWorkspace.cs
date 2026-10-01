@@ -4,7 +4,7 @@ using CakeOS.Cui.Language;
 
 namespace HavenOS.Images;
 
-public enum PictureWorkspaceCommandKind { Open, RotateClockwise, FlipHorizontal, Crop, Resize, Save, Export, NextFrame }
+public enum PictureWorkspaceCommandKind { Open, RotateClockwise, FlipHorizontal, Crop, Resize, Save, Export, NextFrame, PlayAnimation, PauseAnimation }
 public sealed record PictureWorkspaceCommand(PictureWorkspaceCommandKind Kind, Guid? DocumentId, long? BaseRevision, string? FileId,
     Guid? BackingFileId = null)
 {
@@ -23,6 +23,7 @@ public sealed class PictureCuiWorkspace(
     private string _persistence = "No Picture document is open";
     private string _capability = "";
     private long? _frameDelayMicroseconds;
+    private bool _playing;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public static CuiDocument LoadDocument()
@@ -37,13 +38,14 @@ public sealed class PictureCuiWorkspace(
         return document;
     }
 
-    public void Refresh(PictureDocument? document, string persistenceStatus, string capabilityStatus, Guid? backingFileId = null, long? frameDelayMicroseconds = null)
+    public void Refresh(PictureDocument? document, string persistenceStatus, string capabilityStatus, Guid? backingFileId = null, long? frameDelayMicroseconds = null, bool playing = false)
     {
         _document = document;
         _backingFileId = backingFileId is { } id && id != Guid.Empty ? id : null;
         _persistence = persistenceStatus;
         _capability = capabilityStatus;
         _frameDelayMicroseconds = frameDelayMicroseconds;
+        _playing = playing;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
@@ -57,7 +59,7 @@ public sealed class PictureCuiWorkspace(
             "CapabilityStatus" => _capability,
             "DocumentId" => _document?.DocumentId,
             "Revision" => _document?.Revision,
-            "AnimationSummary" => _frameDelayMicroseconds is > 0 ? $"Frame delay: {_frameDelayMicroseconds.Value / 1000d:0.###} ms" : "",
+            "AnimationSummary" => _frameDelayMicroseconds is > 0 ? $"{(_playing ? "Playing" : "Paused")} · Frame delay: {_frameDelayMicroseconds.Value / 1000d:0.###} ms" : "",
             "CanOpen" => IsActionAvailable("9to1.Picture.Open") == true,
             "CanRotate" => IsActionAvailable("9to1.Picture.Rotate") == true,
             "CanFlip" => IsActionAvailable("9to1.Picture.FlipHorizontal") == true,
@@ -65,11 +67,13 @@ public sealed class PictureCuiWorkspace(
             "CanResize" => IsActionAvailable("9to1.Picture.Resize") == true,
             "CanSave" => IsActionAvailable("9to1.Picture.Save") == true,
             "CanExport" => IsActionAvailable("9to1.Picture.Export") == true,
+            "CanPlay" => IsActionAvailable("9to1.Picture.Animation.Play") == true,
+            "CanPause" => IsActionAvailable("9to1.Picture.Animation.Pause") == true,
             "CanAdvanceFrames" => IsActionAvailable("9to1.Picture.Animation.NextFrame") == true,
             _ => null
         };
         return path is "DisplayName" or "GeometrySummary" or "PersistenceStatus" or "CapabilityStatus" or "DocumentId" or "Revision" or "AnimationSummary"
-            or "CanOpen" or "CanRotate" or "CanFlip" or "CanCrop" or "CanResize" or "CanSave" or "CanExport" or "CanAdvanceFrames";
+            or "CanOpen" or "CanRotate" or "CanFlip" or "CanCrop" or "CanResize" or "CanSave" or "CanExport" or "CanAdvanceFrames" or "CanPlay" or "CanPause";
     }
 
     public void RefreshAvailability() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
@@ -97,6 +101,8 @@ public sealed class PictureCuiWorkspace(
             "9to1.Picture.Resize" => PictureWorkspaceCommandKind.Resize,
             "9to1.Picture.Save" => PictureWorkspaceCommandKind.Save,
             "9to1.Picture.Export" => PictureWorkspaceCommandKind.Export,
+            "9to1.Picture.Animation.Play" => PictureWorkspaceCommandKind.PlayAnimation,
+            "9to1.Picture.Animation.Pause" => PictureWorkspaceCommandKind.PauseAnimation,
             "9to1.Picture.Animation.NextFrame" => PictureWorkspaceCommandKind.NextFrame,
             _ => (PictureWorkspaceCommandKind)(-1)
         };

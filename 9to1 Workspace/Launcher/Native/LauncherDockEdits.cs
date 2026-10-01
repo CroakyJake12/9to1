@@ -33,12 +33,13 @@ public static partial class LauncherLayoutEdits
         var folder = layout.Folders.SingleOrDefault(f => f.Id == targetId);
         if (folder?.Items.Count >= 1024) throw new InvalidOperationException("This folder is full.");
         var cell = FreeCell(target.Items, folder is not null ? (1024 + folder.Columns - 1) / folder.Columns : dock?.Id == targetId ? dock.Rows : layout.Rows,
-            folder?.Columns ?? (dock?.Id == targetId ? dock.Columns : layout.Columns));
+            folder?.Columns ?? (dock?.Id == targetId ? dock.Columns : layout.Columns),
+            layout.Widgets.Where(widget => widget.PageId == targetId).SelectMany(WidgetCells));
         return MovePlacement(layout, itemId, targetId, cell.Column, cell.Row);
     }
-    private static (int Column, int Row) FreeCell(IReadOnlyList<LauncherPlacement> items, int rows, int columns)
+    private static (int Column, int Row) FreeCell(IReadOnlyList<LauncherPlacement> items, int rows, int columns, IEnumerable<(int Column, int Row)>? additional = null)
     {
-        var occupied = items.Select(i => (i.Column, i.Row)).ToHashSet();
+        var occupied = items.Select(i => (i.Column, i.Row)).Concat(additional ?? []).ToHashSet();
         return Enumerable.Range(0, rows).SelectMany(row => Enumerable.Range(0, columns).Select(column => (Column: column, Row: row)))
             .Where(c => !occupied.Contains(c)).Select(c => ((int Column, int Row)?)c).FirstOrDefault()
             ?? throw new InvalidOperationException("The target is full. Move a shortcut or increase its grid size first.");

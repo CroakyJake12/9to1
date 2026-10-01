@@ -15,6 +15,7 @@ public sealed class StudioDenLifetime(
     private HomeDenStoreEvidenceProvider? _provider;
     private bool _disposed;
     private string? _pendingImport;
+    private string? _pendingImportAudit;
     public string ResourceKind => "den";
 
     public async Task<string> SelectAsync(string nativeSelectedRoot, bool createNew, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
@@ -37,7 +38,7 @@ public sealed class StudioDenLifetime(
                 {
                     var previous = _provider;
                     _provider = candidate;
-                    _pendingImport = null;
+                    _pendingImport = null; _pendingImportAudit = null;
                     candidate = null!;
                     if (previous is not null) await previous.DisposeAsync();
                 }
@@ -59,6 +60,7 @@ public sealed class StudioDenLifetime(
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             var selected = _provider ?? throw new InvalidOperationException("Select a Den first.");
+            if (_pendingImportAudit is not null) throw new InvalidOperationException("Recover the acknowledged import audit; do not import again.");
             var actor = await actors.GetCurrentAsync(ct) ?? throw new UnauthorizedAccessException("A current Home profile is required.");
             var review = await ownership.RequestImportAsync(ResourceKind, selected.Store.Manifest.DenId, actor.AuthenticationRevision, ct);
             _pendingImport = review.RequestId;
@@ -76,10 +78,36 @@ public sealed class StudioDenLifetime(
             var selected = _provider ?? throw new InvalidOperationException("Select a Den first.");
             if (_pendingImport is null || displayedRequestId != _pendingImport)
                 throw new UnauthorizedAccessException("This is not the displayed Den import review.");
-            var binding = await ownership.CompleteImportAsync(_pendingImport, ct);
+            HomeLocalStoreBinding binding;
+            try { binding = await ownership.CompleteImportAsync(_pendingImport, ct); }
+            catch (HomeStoreImportAuditPendingException pending)
+            {
+                if (pending.RequestId != _pendingImport || pending.Binding.ResourceKind != ResourceKind || pending.Binding.StoreId != selected.Store.Manifest.DenId)
+                    throw new UnauthorizedAccessException("The pending audit belongs to a different Den import.");
+                _pendingImport = null;
+                _pendingImportAudit = pending.RequestId;
+                throw;
+            }
             if (binding.ResourceKind != ResourceKind || binding.StoreId != selected.Store.Manifest.DenId)
                 throw new UnauthorizedAccessException("The approved import belongs to a different Den.");
             _pendingImport = null;
+        }
+        finally { _changes.Release(); }
+    }
+
+    public async Task RetryExistingImportAuditAsync(string displayedRequestId, HomeLocalStoreOwnership ownership, CancellationToken ct = default)
+    {
+        await _changes.WaitAsync(ct);
+        try
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            var selected = _provider ?? throw new InvalidOperationException("Select a Den first.");
+            if (_pendingImportAudit is null || displayedRequestId != _pendingImportAudit)
+                throw new UnauthorizedAccessException("This is not the displayed Den import audit recovery.");
+            var binding = await ownership.RetryImportAuditAsync(displayedRequestId, ct);
+            if (binding.ResourceKind != ResourceKind || binding.StoreId != selected.Store.Manifest.DenId)
+                throw new UnauthorizedAccessException("The recovered audit belongs to a different Den.");
+            _pendingImportAudit = null;
         }
         finally { _changes.Release(); }
     }

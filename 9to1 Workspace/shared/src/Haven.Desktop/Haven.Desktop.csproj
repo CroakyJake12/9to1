@@ -33,6 +33,7 @@
     <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
     <ProjectReference Include="../../../Picture/Core/HavenOS.Images.Core.csproj" />
     <ProjectReference Include="../../../Canvas/HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../../Canvas/NativeUI/HavenOS.Canvas.NativeUI.csproj" />
     <EmbeddedResource Include="Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />

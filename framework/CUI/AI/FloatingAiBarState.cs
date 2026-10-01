@@ -268,6 +268,51 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         }
     }
 
+    /// <summary>Executes or retries the host's retained exact typed request through the same coordinator.
+    /// This does not ask a model to regenerate a plan and never treats a copied token as an owner grant.</summary>
+    public async ValueTask<AppAiActionResult> ExecuteActionAsync(AppAiActionRequest request, CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this); ArgumentNullException.ThrowIfNull(request);
+        if (AccessMode != AppAiAccessMode.Write)
+            return AppAiActionResult.Rejected("Read-only mode does not allow app actions.", "read-only-mode");
+        var captured = request with { Arguments = request.Arguments.Clone(), ApprovalToken = null, AccessMode = AccessMode };
+        Cancel();
+        var version = Interlocked.Increment(ref _requestVersion);
+        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _requestCancellation = cancellation;
+        RequestState = AppAiRequestState.ExecutingAction; Error = null; SetMode(FloatingAiBarMode.Review);
+        try
+        {
+            var result = await coordinator.ExecuteAsync(captured, cancellation.Token).ConfigureAwait(false);
+            if (version != Volatile.Read(ref _requestVersion)) return result;
+            Response = result.Summary;
+            if (result.ErrorCode == "approval-pending")
+            { RequestState = AppAiRequestState.WaitingForApproval; SetMode(FloatingAiBarMode.Review); }
+            else if (result.Succeeded)
+            { RequestState = AppAiRequestState.Completed; SetMode(FloatingAiBarMode.Ready); }
+            else
+            { Error = result.Summary; RequestState = AppAiRequestState.Failed; SetMode(FloatingAiBarMode.Error); }
+            return result;
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            if (version == Volatile.Read(ref _requestVersion))
+            { RequestState = AppAiRequestState.Cancelled; SetMode(FloatingAiBarMode.Ready); }
+            throw;
+        }
+        catch
+        {
+            if (version == Volatile.Read(ref _requestVersion))
+            { Error = "The app action could not be completed. Inspect its current result before retrying."; RequestState = AppAiRequestState.Failed; SetMode(FloatingAiBarMode.Error); }
+            throw;
+        }
+        finally
+        {
+            Interlocked.CompareExchange(ref _requestCancellation, null, cancellation);
+            cancellation.Dispose();
+        }
+    }
+
     public void Cancel()
     {
         Interlocked.Increment(ref _requestVersion);

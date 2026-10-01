@@ -189,6 +189,17 @@ public sealed class NativeFilesWorkspaceServiceTests
                 "media.asset.read", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>(
                     [new("files.item", sourceId.ToString(), sourceRevision.ToString(), ResourceAccess.Read)]));
             Assert.Equal(CuiSceneAvailabilityState.Ready, (await viewReadiness.CheckAsync(token)).State);
+            var beforeStaleScope = await File.ReadAllBytesAsync(Path.Combine(root, "home.json"), token);
+            var staleReadiness = new HomeResourceCuiReadiness(runtime, reopenedProfiles, resourceAuthorization,
+                "media.asset.read", _ => throw new SpaceRevisionConflictException(Guid.NewGuid(), 1, 2));
+            var staleResult = await staleReadiness.CheckAsync(token);
+            Assert.Equal(CuiSceneAvailabilityState.Unavailable, staleResult.State);
+            Assert.Equal("ResourceSnapshotUnavailable", staleResult.Code);
+            Assert.Equal(beforeStaleScope, await File.ReadAllBytesAsync(Path.Combine(root, "home.json"), token));
+            var canceledReadiness = new HomeResourceCuiReadiness(runtime, reopenedProfiles, resourceAuthorization,
+                "media.asset.read", _ => throw new OperationCanceledException(token));
+            await Assert.ThrowsAsync<OperationCanceledException>(() => canceledReadiness.CheckAsync(token).AsTask());
+
             var assetId = MediaAssetId.New();
             var leased = await media.ResolveAsync(sourceId.ToString(), assetId, sourceRevision.ToString(), token);
             Assert.True(leased.IsSuccess, leased.Error?.Message);

@@ -12,6 +12,7 @@ using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
 using HavenOS.Home.NativeUI;
 using Microsoft.Extensions.DependencyInjection;
+using HavenOS.Home.PermissionsTrustNotifications;
 using HomePermissionTrustService = HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService;
 
 namespace HavenOS.Images;
@@ -40,8 +41,11 @@ public sealed partial class MainWindow : Window
     private IDisposable? _view;
     private string? _pendingRequest;
     private JsonElement _pendingArguments;
-    private Func<HomeResourceExecutionCapability, CancellationToken, Task<PictureFilesOpenResult?>>? _pendingExecute;
+    private Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>>? _pendingExecute;
     private IDisposable? _pendingDisposable;
+    private sealed record OwnerCommit(PictureFilesOpenResult? Opened, HostedItemId FileId);
+    private sealed record PendingAudit(HomeResourceExecutionCapability Capability, HomeExecutionOutcome Outcome);
+    private PendingAudit? _pendingAudit;
     private bool _busy, _ready, _closed;
     public Task Initialization { get; private set; } = Task.CompletedTask;
 
@@ -136,7 +140,7 @@ public sealed partial class MainWindow : Window
     private void RefreshBindings()
     {
         var idle = !_busy && !_closed && !_requestUncertain;
-        var noPending = _pendingRequest is null && _pendingOwnership is null;
+        var noPending = _pendingRequest is null && _pendingOwnership is null && _pendingAudit is null;
         _model.Set("CanNavigate", idle && noPending);
         _model.Set("CanSetup", idle && _ready && _configuration is null && noPending);
         _model.Set("CanWrite", idle && WriteAvailable() && noPending);
@@ -162,8 +166,9 @@ public sealed partial class MainWindow : Window
             if (current.CasRevisionId != captured.CasRevisionId) throw new InvalidOperationException("This Picture changed. Refresh and reopen it.");
             return current;
         }, _renderer!, new(), readiness, DispatchDocumentAsync,
-            kind => !_busy && _pendingRequest is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
-                PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export);
+            kind => !_busy && _pendingRequest is null && _pendingAudit is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
+                PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export,
+            motionPreferences: Get<Haven.Application.IMotionPreferenceSource>());
         try { await surface.InitializeAsync(ct); }
         catch { surface.Dispose(); throw; }
         _opened = opened; _model.Set("Width", opened.Artifact.Document.CanvasWidth.ToString(CultureInfo.InvariantCulture));
@@ -178,9 +183,9 @@ public sealed partial class MainWindow : Window
         ShowView(scene, new OwnedView(scene, owner));
     }
     private async Task<string> RequestAsync(string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview,
-        Func<HomeResourceExecutionCapability, CancellationToken, Task<PictureFilesOpenResult?>> execute, IDisposable? owned, CancellationToken ct)
+        Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>> execute, IDisposable? owned, CancellationToken ct)
     {
-        if (_pendingRequest is not null || _pendingOwnership is not null || _requestUncertain) { owned?.Dispose(); throw new InvalidOperationException("Finish the existing Home request first."); }
+        if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _requestUncertain) { owned?.Dispose(); throw new InvalidOperationException("Finish the existing Home request first."); }
         _pendingDisposable = owned; _requestUncertain = true; RefreshBindings();
         var pending = await Get<HomeResourceOperationBroker>().AuthorizeAsync("picture", action, scopes, arguments, preview, null, "picture-native-host", ct);
         _requestUncertain = false; _pendingRequest = pending.RequestId; _pendingArguments = arguments.Clone(); _pendingExecute = execute;
@@ -192,7 +197,7 @@ public sealed partial class MainWindow : Window
     private async ValueTask DispatchDocumentAsync(PictureWorkspaceCommand command, CancellationToken ct)
     {
         if (_busy || _requestUncertain || _opened is not { } opened || command.DocumentId != opened.Artifact.Document.DocumentId || command.BaseRevision != opened.Artifact.Document.Revision ||
-            command.BackingFileId != opened.Artifact.BackingFileId || !WriteAvailable() || _pendingRequest is not null)
+            command.BackingFileId != opened.Artifact.BackingFileId || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null)
             throw new UnauthorizedAccessException("This Picture action is no longer available.");
         _busy = true; RefreshBindings();
         try
@@ -203,7 +208,7 @@ public sealed partial class MainWindow : Window
             var request = new PicturePngExportCuiRequest(owner, new(opened.Artifact.BackingFileId), opened.CasRevisionId,
                 opened.Artifact.Document.DocumentId, opened.Artifact.Document.Revision, WriteAvailable,
                 (intent, token) => RequestAsync(PicturePngExportIntent.ActionId, intent.Scopes, intent.Arguments, "Create a new flattened first-frame PNG without source metadata",
-                    async (cap, cancel) => { await owner.ExecuteAsync(intent, cap, cancel); return null; }, null, token));
+                    async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(null, result.FileId); }, null, token));
             await ShowRequestAsync(PicturePngExportCuiRequest.LoadDocument(), request, request, null, ct); return;
         }
         PictureOperation operation = command.Kind switch
@@ -216,9 +221,64 @@ public sealed partial class MainWindow : Window
         };
         var edit = PictureEditIntent.Capture(opened, operation); var edits = _edits!;
         SetStatus(await RequestAsync(PictureEditIntent.ActionId, edit.Scopes, edit.Arguments, "Apply " + operation + " non-destructively",
-            async (cap, cancel) => await edits.ExecuteAsync(edit, cap, cancel), null, ct));
+            async (cap, cancel) => { var result = await edits.ExecuteAsync(edit, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, null, ct));
         }
         finally { _busy = false; RefreshBindings(); }
+    }
+
+    private async Task FinishAuditAsync(CancellationToken ct)
+    {
+        var pending = _pendingAudit ?? throw new InvalidOperationException("There is no execution receipt to record.");
+        try
+        {
+            var result = await Get<HomeResourceOperationBroker>().CompleteExecutionAsync(pending.Capability, pending.Outcome, ct);
+            if (!result.Succeeded)
+            {
+                if (result.Code == "HOME_EXECUTION_COMPLETION_NOT_OWNED")
+                {
+                    var state = await Get<HomePermissionTrustService>().GetAuthorizationAsync(pending.Capability.RequestId, ct);
+                    if (state.State is HomePermissionRequestState.Denied or HomePermissionRequestState.Blocked or
+                        HomePermissionRequestState.Cancelled or HomePermissionRequestState.Failed)
+                    {
+                        // This issuer never successfully claimed the capability. Read Home's actual terminal decision;
+                        // do not rewrite it as an owning commit or repeat the denied operation.
+                        _pendingAudit = null;
+                        SetStatus("Home ended this request before a successful execution claim. " + state.Message);
+                        return;
+                    }
+                }
+                SetStatus("The operation will not run again. Home could not record its outcome: " + result.Message + " Choose Finish to retry recording only.");
+                return;
+            }
+            _pendingAudit = null;
+            SetStatus(pending.Outcome.State == HomePermissionRequestState.Succeeded
+                ? "The approved Picture operation was committed and recorded in Home."
+                : pending.Outcome.Message);
+        }
+        catch (Exception error)
+        {
+            SetStatus("The operation will not run again. Home outcome recording needs recovery: " + error.Message + " Choose Finish to retry recording only.");
+        }
+    }
+
+    private async Task<bool> ReleaseTerminalRequestAsync(string requestId, bool ownershipRequest, CancellationToken ct)
+    {
+        var decision = await Get<HomePermissionTrustService>().GetAuthorizationAsync(requestId, ct);
+        if (decision.State is not (HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Denied or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Blocked or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Cancelled or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Failed or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Succeeded or
+            HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.PartiallyCompleted)) return false;
+        if (ownershipRequest) _pendingOwnership = null;
+        else
+        {
+            _pendingRequest = null; _pendingExecute = null; _pendingArguments = default;
+            _pendingDisposable?.Dispose(); _pendingDisposable = null;
+        }
+        // Reads a terminal Home decision; never converts a denial into permission or claims a commit.
+        SetStatus("Home ended this request. Refresh Pictures to inspect current state. " + decision.Message);
+        return true;
     }
 
     private async ValueTask DispatchAsync(string action, object? parameter, CancellationToken ct)
@@ -227,21 +287,43 @@ public sealed partial class MainWindow : Window
         _busy = true; RefreshBindings();
         try
         {
-            if (action == "picture.host.finish" && _pendingOwnership is { } ownershipRequest)
+            if (action == "picture.host.finish" && _pendingAudit is not null)
             {
+                await FinishAuditAsync(ct);
+            }
+            else if (action == "picture.host.finish" && _pendingOwnership is { } ownershipRequest)
+            {
+                if (await ReleaseTerminalRequestAsync(ownershipRequest, true, ct)) return;
                 await Get<HomeLocalStoreOwnership>().CompleteImportAsync(ownershipRequest, ct);
                 _pendingOwnership = null; await RefreshAsync(null, ct);
             }
             else if (action == "picture.host.finish")
             {
                 if (_pendingRequest is null || _pendingExecute is null) throw new InvalidOperationException("There is no captured request to finish.");
+                if (await ReleaseTerminalRequestAsync(_pendingRequest, false, ct)) return;
                 var cap = await Get<HomeResourceOperationBroker>().BeginExecutionCapabilityAsync(_pendingRequest, _pendingArguments, ct);
                 if (cap is null) { SetStatus("Home has not approved this exact request. Review it in Home."); return; }
                 var execute = _pendingExecute; _pendingExecute = null; _pendingRequest = null;
-                try { var committed = await execute(cap, ct); if (committed is not null) await OpenAsync(committed, ct); SetStatus("The approved Picture operation was committed."); }
+                OwnerCommit? committed = null;
+                try
+                {
+                    committed = await execute(cap, ct);
+                    _pendingAudit = new(cap, new(HomePermissionRequestState.Succeeded, "PICTURE_COMMITTED",
+                        "The owning Picture operation returned its durable Files commit.", [new("files.item", committed.FileId.ToString())]));
+                }
+                catch (Exception error)
+                {
+                    // A thrown operation may have published before a later read failed. Never repeat its mutation.
+                    _pendingAudit = new(cap, new(HomePermissionRequestState.PartiallyCompleted, "PICTURE_RESULT_UNCERTAIN",
+                        "The operation did not return a complete receipt. Inspect Files and Home before attempting another change.", []));
+                    await FinishAuditAsync(CancellationToken.None);
+                    throw new InvalidOperationException("Picture did not return a complete commit receipt. The operation will not run again. Inspect Files and Home. " + error.Message, error);
+                }
                 finally { _pendingDisposable?.Dispose(); _pendingDisposable = null; }
+                await FinishAuditAsync(CancellationToken.None);
+                if (committed.Opened is not null) await OpenAsync(committed.Opened, ct);
             }
-            else if (_pendingRequest is not null || _pendingOwnership is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
+            else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
             else if (action == "picture.host.refresh") await RefreshAsync(null, ct);
             else if (action == "picture.host.page") await RefreshAsync(_nextPage, ct);
             else if (action == "picture.host.previous" && _selected > 0) _selected--;
@@ -252,7 +334,7 @@ public sealed partial class MainWindow : Window
                 var owner = _import!;
                 var request = new PictureImportCuiRequest(owner, NativePicker, new(), WriteAvailable,
                     (intent, token) => RequestAsync(PictureImportIntent.ActionId, intent.Scopes, intent.Arguments, "Import original image bytes and a separate editable Picture document",
-                        async (cap, cancel) => await owner.ExecuteAsync(intent, cap, cancel), intent, token));
+                        async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, intent, token));
                 await ShowRequestAsync(PictureImportCuiRequest.LoadDocument(), request, request, request, ct);
             }
             else if (action == "picture.host.reviewOwnership" && _workspace is null && _configuration is { } configuration)

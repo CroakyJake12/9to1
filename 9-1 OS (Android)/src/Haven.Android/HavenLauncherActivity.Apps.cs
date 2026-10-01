@@ -18,6 +18,7 @@ public sealed partial class HavenLauncherActivity
 
     private async void LoadAppsAsync(bool showLoading = false)
     {
+        ClearMountedWidgets();
         var generation = Interlocked.Increment(ref _appLoadGeneration);
         if (showLoading && _launcherStatus is not null)
             _launcherStatus.Text = "Loading apps…";
@@ -102,7 +103,7 @@ public sealed partial class HavenLauncherActivity
         if (_layout is null) return;
         var layout = _layout.Current; var rows = layout.Rows; var columns = layout.Columns;
         var page = layout.ActivePage;
-        _grid.RemoveAllViews(); _grid.RowCount = rows; _grid.ColumnCount = columns;
+        ClearMountedWidgets(); _grid.RemoveAllViews(); _grid.RowCount = rows; _grid.ColumnCount = columns;
 
         var metrics = Resources?.DisplayMetrics;
         var gridWidth = _grid.Width > 0
@@ -116,6 +117,12 @@ public sealed partial class HavenLauncherActivity
 
         for (var row = 0; row < rows; row++) for (var column = 0; column < columns; column++)
         {
+            var widget = layout.Widgets.SingleOrDefault(item => item.PageId == page.Id && column >= item.Column && column < item.Column + item.ColumnSpan && row >= item.Row && row < item.Row + item.RowSpan);
+            if (widget is not null)
+            {
+                if (widget.Column == column && widget.Row == row) _grid.AddView(BuildWidgetCell(widget, cellWidth, cellHeight, _layout));
+                continue;
+            }
             var placement = page.Items.SingleOrDefault(item => item.Column == column && item.Row == row);
             if (placement?.FolderId is not null) _grid.AddView(BuildFolderTile(placement, cellWidth, cellHeight));
             else if (placement is not null)
@@ -133,6 +140,8 @@ public sealed partial class HavenLauncherActivity
                 empty.Click += (_, _) => { if (_movingPlacementId is { } moving) _ = EditLayoutAsync(current => LauncherLayoutEdits.MovePlacement(current, moving, page.Id, targetColumn, targetRow)); };
                 _grid.AddView(empty);
             }
+            var cell = _grid.GetChildAt(_grid.ChildCount - 1);
+            if (cell is not null) cell.LayoutParameters = new GridLayout.LayoutParams(GridLayout.InvokeSpec(row), GridLayout.InvokeSpec(column)) { Width = cellWidth, Height = cellHeight };
         }
         _pageIndicator.Text = $"{page.Name} · {_page + 1} / {layout.Pages.Count} · Manage pages";
         AndroidTypography.ApplyTree(_grid);

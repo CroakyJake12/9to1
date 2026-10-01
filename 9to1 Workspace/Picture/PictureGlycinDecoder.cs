@@ -18,9 +18,11 @@ public sealed class PictureGlycinDecoder
     public const int MaximumBufferBytes = 256 * 1024 * 1024;
 
     public PictureGlycinFrame DecodeFirstFrame(ReadOnlySpan<byte> encoded)
+        => DecodeFirstFrame(encoded, CancellationToken.None);
+    public PictureGlycinFrame DecodeFirstFrame(ReadOnlySpan<byte> encoded, CancellationToken cancellationToken)
     {
-        using var session = OpenFrames(encoded);
-        return session.NextFrame();
+        using var session = OpenFrames(encoded, true, cancellationToken);
+        return session.NextFrame(cancellationToken);
     }
 
     /// <summary>
@@ -29,7 +31,9 @@ public sealed class PictureGlycinDecoder
     /// returned pixel copy. This session never accumulates previous decoded frames.
     /// </summary>
     public FrameSession OpenFrames(ReadOnlySpan<byte> encoded) => OpenFrames(encoded, loopAnimation: true);
-    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded, bool loopAnimation) => FrameSession.Create(encoded, loopAnimation);
+    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded, bool loopAnimation) => FrameSession.Create(encoded, loopAnimation, CancellationToken.None);
+    public FrameSession OpenFrames(ReadOnlySpan<byte> encoded, bool loopAnimation, CancellationToken cancellationToken) =>
+        FrameSession.Create(encoded, loopAnimation, cancellationToken);
 
     public sealed class FrameSession : IDisposable
     {
@@ -37,12 +41,16 @@ public sealed class PictureGlycinDecoder
         private readonly GBytesHandle _bytes;
         private readonly GObjectHandle _loader;
         private readonly GObjectHandle _image;
+        private readonly GObjectHandle _cancellable;
+        private int _nativeOperationActive;
         private bool _disposed;
         private bool _ended;
         private const int NoMoreFramesError = 2; // GlyLoaderError from the pinned public C header.
         private readonly bool _loopAnimation;
-        private FrameSession(GBytesHandle bytes, GObjectHandle loader, GObjectHandle image, bool loopAnimation)
-        { _bytes = bytes; _loader = loader; _image = image; _loopAnimation = loopAnimation; }
+        private FrameSession(GBytesHandle bytes, GObjectHandle loader, GObjectHandle image, GObjectHandle cancellable, bool loopAnimation)
+        { _bytes = bytes; _loader = loader; _image = image; _cancellable = cancellable; _loopAnimation = loopAnimation; }
+        /// <summary>Reports native frame-call activity for owning job/progress surfaces; this is not a resource grant.</summary>
+        public bool IsNativeOperationActive => Volatile.Read(ref _nativeOperationActive) != 0;
 
         public string MimeType
         {
@@ -59,8 +67,9 @@ public sealed class PictureGlycinDecoder
             }
         }
 
-        internal static FrameSession Create(ReadOnlySpan<byte> encoded, bool loopAnimation)
+        internal static FrameSession Create(ReadOnlySpan<byte> encoded, bool loopAnimation, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!OperatingSystem.IsLinux()) throw new PlatformNotSupportedException("This libglycin package has not been built and verified for this platform.");
             if (encoded.IsEmpty || encoded.Length > MaximumBufferBytes)
                 throw new ArgumentException("Picture encoded image is empty or exceeds the native materialization limit.", nameof(encoded));
@@ -69,20 +78,26 @@ public sealed class PictureGlycinDecoder
             try { bytes = new GBytesHandle(Native.g_bytes_new(captured, (nuint)captured.Length)); }
             finally { Array.Clear(captured); }
             GObjectHandle? loader = null;
+            GObjectHandle? cancellable = null;
             try
             {
                 loader = new GObjectHandle(Native.gly_loader_new_for_bytes(bytes));
+                cancellable = new GObjectHandle(Native.g_cancellable_new());
+                BindCancellation(loader, cancellable);
                 // Mandatory real Linux sandbox; namespace/loader failures never downgrade.
                 Native.gly_loader_set_sandbox_selector(loader, 1);
                 Native.gly_loader_set_accepted_memory_formats(loader, 1u); // premultiplied BGRA
                 Native.gly_loader_set_color_convert_icc_srgb(loader, 1);
-                var image = new GObjectHandle(RequireSuccess(Native.gly_loader_load(loader, out var error), error, "load"));
-                return new(bytes, loader, image, loopAnimation);
+                using var registration = cancellationToken.Register(static state => Native.g_cancellable_cancel((GObjectHandle)state!), cancellable);
+                var pointer = Native.gly_loader_load(loader, out var error);
+                ThrowIfNativeCancelled(pointer, error, cancellable, cancellationToken);
+                var image = new GObjectHandle(RequireSuccess(pointer, error, "load"));
+                return new(bytes, loader, image, cancellable, loopAnimation);
             }
-            catch { loader?.Dispose(); bytes.Dispose(); throw; }
+            catch { loader?.Dispose(); cancellable?.Dispose(); bytes.Dispose(); throw; }
         }
 
-        /// <summary>Cancellation is checked before/after decoding; it cannot interrupt an in-flight native call.</summary>
+        /// <summary>Cancellation reaches the donor's GCancellable. A session cancelled during native work must be reopened.</summary>
         public PictureGlycinFrame NextFrame(CancellationToken cancellationToken = default) =>
             TryNextFrame(cancellationToken) ?? throw new EndOfStreamException("The non-looping image has no more frames.");
 
@@ -92,10 +107,17 @@ public sealed class PictureGlycinDecoder
             {
                 ObjectDisposedException.ThrowIf(_disposed, this);
                 cancellationToken.ThrowIfCancellationRequested();
+                if (Native.g_cancellable_is_cancelled(_cancellable) != 0)
+                    throw new OperationCanceledException("The native decoder session was cancelled; reopen its retained source.", cancellationToken);
                 if (_ended) return null;
                 using var request = new GObjectHandle(Native.gly_frame_request_new());
                 Native.gly_frame_request_set_loop_animation(request, _loopAnimation ? 1 : 0);
-                var pointer = Native.gly_image_get_specific_frame(_image, request, out var error);
+                using var registration = cancellationToken.Register(static state => Native.g_cancellable_cancel((GObjectHandle)state!), _cancellable);
+                IntPtr pointer, error;
+                Interlocked.Exchange(ref _nativeOperationActive, 1);
+                try { pointer = Native.gly_image_get_specific_frame(_image, request, out error); }
+                finally { Interlocked.Exchange(ref _nativeOperationActive, 0); }
+                ThrowIfNativeCancelled(pointer, error, _cancellable, cancellationToken);
                 if (!_loopAnimation && pointer == IntPtr.Zero && error != IntPtr.Zero)
                 {
                     var detail = Marshal.PtrToStructure<GError>(error);
@@ -109,10 +131,10 @@ public sealed class PictureGlycinDecoder
                 }
                 using var frame = new GObjectHandle(RequireSuccess(pointer, error, "next frame"));
                 var result = ReadFrame(frame);
-                if (cancellationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested || Native.g_cancellable_is_cancelled(_cancellable) != 0)
                 {
                     PictureFilesSourceRenderer.ClearFrame(result);
-                    cancellationToken.ThrowIfCancellationRequested();
+                    throw new OperationCanceledException("The native decoder session was cancelled; reopen its retained source.", cancellationToken);
                 }
                 return result;
             }
@@ -120,13 +142,41 @@ public sealed class PictureGlycinDecoder
 
         public void Dispose()
         {
+            // GCancellable cancellation is thread-safe and intentionally happens before waiting for the frame lock.
+            // It interrupts an in-flight donor request so closing a surface need not wait for a full decode.
+            try { Native.g_cancellable_cancel(_cancellable); }
+            catch (ObjectDisposedException) { }
             lock (_gate)
             {
                 if (_disposed) return;
                 _disposed = true;
-                _image.Dispose(); _loader.Dispose(); _bytes.Dispose();
+                _image.Dispose(); _loader.Dispose(); _cancellable.Dispose(); _bytes.Dispose();
             }
         }
+    }
+
+    private static void BindCancellation(GObjectHandle loader, GObjectHandle cancellable)
+    {
+        var value = new GValue();
+        Native.g_value_init(ref value, Native.g_cancellable_get_type());
+        try
+        {
+            Native.g_value_set_object(ref value, cancellable.DangerousGetHandle());
+            Native.g_object_set_property(loader, "cancellable", ref value);
+            Native.g_value_set_object(ref value, IntPtr.Zero);
+            Native.g_object_get_property(loader, "cancellable", ref value);
+            if (Native.g_value_get_object(ref value) != cancellable.DangerousGetHandle())
+                throw new InvalidOperationException("The native loader did not retain the required cancellation object.");
+        }
+        finally { Native.g_value_unset(ref value); }
+    }
+
+    private static void ThrowIfNativeCancelled(IntPtr result, IntPtr error, GObjectHandle cancellable, CancellationToken token)
+    {
+        if (!token.IsCancellationRequested && Native.g_cancellable_is_cancelled(cancellable) == 0) return;
+        if (result != IntPtr.Zero) Native.g_object_unref(result);
+        if (error != IntPtr.Zero) Native.g_error_free(error);
+        throw new OperationCanceledException("The sandboxed native decoder operation was cancelled.", token);
     }
 
     private static PictureGlycinFrame ReadFrame(GObjectHandle frame)
@@ -205,6 +255,7 @@ public sealed class PictureGlycinDecoder
 
     [StructLayout(LayoutKind.Sequential)]
     private struct GError { public uint Domain; public int Code; public IntPtr Message; }
+    [StructLayout(LayoutKind.Sequential)] private struct GValue { public nuint Type; public ulong Data0; public ulong Data1; }
     private sealed class GObjectHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public GObjectHandle(IntPtr pointer) : base(true)
@@ -222,6 +273,18 @@ public sealed class PictureGlycinDecoder
     {
         private const string Glycin = "libglycin.so";
         private const string Glib = "libglib-2.0.so.0";
+        private const string Gobject = "libgobject-2.0.so.0";
+        private const string Gio = "libgio-2.0.so.0";
+        [DllImport(Gio, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_cancellable_new();
+        [DllImport(Gio, CallingConvention = CallingConvention.Cdecl)] internal static extern nuint g_cancellable_get_type();
+        [DllImport(Gio, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_cancellable_cancel(GObjectHandle cancellable);
+        [DllImport(Gio, CallingConvention = CallingConvention.Cdecl)] internal static extern int g_cancellable_is_cancelled(GObjectHandle cancellable);
+        [DllImport(Gobject, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_value_init(ref GValue value, nuint type);
+        [DllImport(Gobject, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_value_set_object(ref GValue value, IntPtr item);
+        [DllImport(Gobject, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_value_get_object(ref GValue value);
+        [DllImport(Gobject, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_value_unset(ref GValue value);
+        [DllImport(Gobject, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_object_set_property(GObjectHandle value, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, ref GValue property);
+        [DllImport(Gobject, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_object_get_property(GObjectHandle value, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, ref GValue property);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_bytes_new(byte[] bytes, nuint length);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr g_bytes_get_data(IntPtr bytes, out nuint length);
         [DllImport(Glib, CallingConvention = CallingConvention.Cdecl)] internal static extern void g_bytes_unref(IntPtr bytes);

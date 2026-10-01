@@ -1,14 +1,64 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using Haven.Application;
 using Haven.Core;
 
 namespace Haven.Infrastructure;
 
-public sealed class DataWorkbookRepository : IDataWorkbookRepository
+public sealed class DataWorkbookRepository : IDataGuardedWorkbookRepository
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private readonly string _root;
-    public DataWorkbookRepository(IAppPaths paths) { ArgumentNullException.ThrowIfNull(paths); _root = Path.Combine(paths.DataDirectory, "Data", "Workbooks"); }
+    private readonly VersionedAtomicSettingsStore _identities;
+    private readonly string _dataDirectory;
+    public DataWorkbookRepository(IAppPaths paths)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        var captured = new CapturedPaths(Path.GetFullPath(paths.DataDirectory), paths.DatabasePath, paths.BrowserProfileDirectory,
+            paths.AttachmentsDirectory, paths.LogsDirectory, paths.LegacyStatePath);
+        _dataDirectory = captured.DataDirectory; _root = Path.Combine(_dataDirectory, "Data", "Workbooks");
+        _identities = new VersionedAtomicSettingsStore(captured);
+    }
+
+    public ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken cancellationToken)
+    {
+        // A linked subdirectory could substitute a different workbook root while retaining the
+        // settings UUID. Do not use it as evidence of this root's Data ownership.
+        foreach (var path in new[] { _dataDirectory, Path.Combine(_dataDirectory, "Data"), _root, Path.Combine(_root, ".locks") })
+            if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                throw new UnauthorizedAccessException("Data workbook root cannot be independently redirected.");
+        return _identities.GetStoreIdentityAsync(cancellationToken);
+    }
+
+    public async ValueTask<DataWorkbookStoreEvidence?> ReadStoreEvidenceAsync(CancellationToken cancellationToken)
+    {
+        var identity = await GetStoreIdentityAsync(cancellationToken).ConfigureAwait(false);
+        using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var count = 0;
+        if (Directory.Exists(_root))
+        {
+            if (Directory.EnumerateFiles(_root).Any()) return null; // Unknown legacy payload is not an empty new store.
+            foreach (var directory in Directory.EnumerateDirectories(_root).Order(StringComparer.Ordinal))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (Path.GetFileName(directory) == ".locks") continue;
+                if (++count > 10000 || (File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0
+                    || !Guid.TryParseExact(Path.GetFileName(directory), "D", out var id) || id == Guid.Empty) return null;
+                var workbook = await LoadAsync(id, cancellationToken).ConfigureAwait(false);
+                if (workbook is null) return null; // Never bootstrap unreadable nonempty data as empty.
+                var recovered = workbook.Recovery.RecoveredFromBackup;
+                workbook.Recovery = new(); // Exclude the wall-clock observation time, not the recovered state.
+                hash.AppendData(JsonSerializer.SerializeToUtf8Bytes(new { Workbook = workbook, Recovered = recovered }, JsonOptions));
+            }
+        }
+        var current = await GetStoreIdentityAsync(cancellationToken).ConfigureAwait(false);
+        if (current.SchemaVersion != identity.SchemaVersion || current.StoreId != identity.StoreId) return null;
+        return new(identity, Convert.ToHexString(hash.GetHashAndReset()), count == 0);
+    }
+
+    private sealed record CapturedPaths(string DataDirectory, string DatabasePath, string BrowserProfileDirectory,
+        string AttachmentsDirectory, string LogsDirectory, string LegacyStatePath) : IAppPaths;
+
 
     public async Task<IReadOnlyList<DataWorkbookSummary>> ListAsync(CancellationToken cancellationToken)
     {
@@ -22,7 +72,18 @@ public sealed class DataWorkbookRepository : IDataWorkbookRepository
         cancellationToken.ThrowIfCancellationRequested(); var (current, backup) = Paths(workbookId); var workbook = await TryLoadAsync(current, workbookId, cancellationToken).ConfigureAwait(false); if (workbook is not null) return workbook; workbook = await TryLoadAsync(backup, workbookId, cancellationToken).ConfigureAwait(false); if (workbook is null) return null; workbook.Recovery.RecoveredFromBackup = true; workbook.Recovery.RecoveredAt = DateTimeOffset.UtcNow; workbook.Recovery.Message = "Recovered the previous valid workbook after the current file could not be read."; return workbook;
     }
 
-    public async Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, CancellationToken cancellationToken)
+    public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, CancellationToken cancellationToken) =>
+        SaveCoreAsync(workbook, reason, null, cancellationToken);
+
+    public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, IDataWorkbookCommitAdmission admission,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(admission);
+        return SaveCoreAsync(workbook, reason, admission, cancellationToken);
+    }
+
+    private async Task<DataSaveResult> SaveCoreAsync(DataWorkbook workbook, string reason, IDataWorkbookCommitAdmission? admission,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(workbook);
         cancellationToken.ThrowIfCancellationRequested();
@@ -33,10 +94,24 @@ public sealed class DataWorkbookRepository : IDataWorkbookRepository
         var captured = JsonSerializer.Deserialize<DataWorkbook>(JsonSerializer.Serialize(workbook, JsonOptions), JsonOptions)
             ?? throw new InvalidDataException("The workbook snapshot is missing.");
         captured.Normalize();
-        var expected = captured.Version;
+        var expected = captured.Version; var expectedRevision = captured.RevisionId;
         if (expected < 0) throw new InvalidDataException("Workbook revision must be nonnegative.");
         var directory = WorkbookDirectory(captured.Id);
         await using var lease = await AcquireWriteLeaseAsync(captured.Id, cancellationToken).ConfigureAwait(false);
+        async ValueTask AdmitAsync(DataWorkbookCommitPhase phase)
+        {
+            if (admission is null) return;
+            ResourceStoreIdentity identity;
+            try { identity = await GetStoreIdentityAsync(cancellationToken).ConfigureAwait(false); }
+            catch (InvalidOperationException error) { throw new UnauthorizedAccessException("The Data root identity must be revalidated before committing.", error); }
+            foreach (var path in new[] { directory, Path.Combine(directory, "current.json"), Path.Combine(directory, "previous.json") })
+                if ((Directory.Exists(path) || File.Exists(path)) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                    throw new UnauthorizedAccessException("Data workbook storage cannot be independently redirected.");
+            if (identity.SchemaVersion != 1 || identity.StoreId == Guid.Empty
+                || !await admission.CheckAsync(new(identity.StoreId, captured.Id, expected, expectedRevision, phase), cancellationToken).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("Data workbook commit admission was revoked.");
+        }
+        await AdmitAsync(DataWorkbookCommitPhase.Admission).ConfigureAwait(false);
         var (current, backup) = Paths(captured.Id);
         var existing = await LoadAsync(captured.Id, cancellationToken).ConfigureAwait(false);
         if (existing is null && (File.Exists(current) || File.Exists(backup)))
@@ -51,6 +126,7 @@ public sealed class DataWorkbookRepository : IDataWorkbookRepository
         captured.Metadata["lastSaveReason"] = reason ?? string.Empty;
         captured.Recovery.RecoveredFromBackup = false; captured.Recovery.RecoveredAt = null; captured.Recovery.Message = string.Empty;
         var temporary = Path.Combine(directory, $"current-{Guid.NewGuid():N}.tmp");
+        var stagedPrevious = Path.Combine(directory, $"previous-{Guid.NewGuid():N}.tmp");
         try
         {
             await using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
@@ -63,12 +139,15 @@ public sealed class DataWorkbookRepository : IDataWorkbookRepository
             _ = await TryLoadAsync(temporary, captured.Id, cancellationToken).ConfigureAwait(false)
                 ?? throw new InvalidDataException("The workbook did not pass its persistence verification read.");
             cancellationToken.ThrowIfCancellationRequested();
-            if (File.Exists(current))
-            {
-                if (existing?.Recovery.RecoveredFromBackup == true)
-                    File.Move(current, Path.Combine(directory, $"unreadable-current-{Guid.NewGuid():N}.json"), overwrite: false);
-                else File.Copy(current, backup, overwrite: true);
-            }
+            var hasPrevious = File.Exists(current);
+            if (hasPrevious) File.Copy(current, stagedPrevious, overwrite: false);
+            // All potentially long snapshot/backup preparation precedes the final observation.
+            // These adjacent renames are not a multi-file or cross-Home atomic transaction.
+            await AdmitAsync(DataWorkbookCommitPhase.Publication).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (hasPrevious)
+                File.Move(stagedPrevious, existing?.Recovery.RecoveredFromBackup == true
+                    ? Path.Combine(directory, $"unreadable-current-{Guid.NewGuid():N}.json") : backup, overwrite: true);
             File.Move(temporary, current, overwrite: true);
             // Publish only persistence metadata. Edits made by the caller during the wait remain
             // in its buffer for a subsequent revision rather than silently being discarded.
@@ -77,7 +156,7 @@ public sealed class DataWorkbookRepository : IDataWorkbookRepository
             workbook.Recovery.RecoveredFromBackup = false; workbook.Recovery.RecoveredAt = null; workbook.Recovery.Message = string.Empty;
             return new(captured.Id, captured.Version, captured.UpdatedAt, current, backup);
         }
-        finally { TryDelete(temporary); }
+        finally { TryDelete(temporary); TryDelete(stagedPrevious); }
     }
 
     private async Task<FileStream> AcquireWriteLeaseAsync(Guid workbookId, CancellationToken token)

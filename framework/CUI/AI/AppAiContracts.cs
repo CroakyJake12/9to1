@@ -73,6 +73,8 @@ public sealed record AppAiContextSnapshot(
     string? HostState = null,
     bool IsLiveDatabase = false);
 
+public enum AppAiApprovalFlow { Coordinator, OwningResourceBroker }
+
 public sealed record AppAiActionDescriptor(
     string Id,
     string DisplayName,
@@ -86,7 +88,11 @@ public sealed record AppAiActionDescriptor(
     bool HasExternalSideEffects = false,
     IReadOnlyList<string>? AffectedObjectIds = null,
     bool ImpactUnknown = true,
-    string? ImpactSummary = null);
+    string? ImpactSummary = null)
+{
+    /// <summary>Owner delegation preserves review metadata; it does not carry any grant or token.</summary>
+    public AppAiApprovalFlow ApprovalFlow { get; init; } = AppAiApprovalFlow.Coordinator;
+}
 
 public sealed record AppAiActionRequest(
     string AppId,
@@ -123,6 +129,14 @@ public interface IAppAiActions
     ValueTask<AppAiActionResult> ExecuteAsync(
         AppAiActionRequest request,
         CancellationToken cancellationToken);
+}
+
+/// <summary>Trusted owning adapter with an actual Home resource-broker intent/claim/commit path.
+/// The implementation retains exact prepared intents across pending review and records the actual owner
+/// result. Generic coordinator tokens are never accepted as resource execution capabilities.</summary>
+public interface IAppAiResourceBrokerActions : IAppAiActions
+{
+    ValueTask<AppAiActionResult> ExecuteWithOwnedApprovalAsync(AppAiActionRequest request, CancellationToken cancellationToken);
 }
 
 public interface IAppAiApprovalVerifier

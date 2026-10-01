@@ -149,7 +149,7 @@ public sealed class LauncherLayoutTests
         Assert.Equal(initial.Current.Pages[0].Items.Select(i => i.Id), restored.Current.Pages[0].Items.Select(i => i.Id));
         Assert.Equal("Work", restored.Previous!.ActivePage.Name);
         Assert.Throws<UnauthorizedAccessException>(() => LauncherLayoutExchange.Import(backup, "foreign-profile"));
-        Assert.Throws<InvalidDataException>(() => LauncherLayoutExchange.Import(backup.Replace("\"Version\": 6", "\"Version\": 99"), restored.AuthorityId));
+        Assert.Throws<InvalidDataException>(() => LauncherLayoutExchange.Import(backup.Replace("\"Version\": 7", "\"Version\": 99"), restored.AuthorityId));
         await Assert.ThrowsAsync<IOException>(() => f.Store.EditAsync(moved, _ => LauncherLayoutExchange.Import(backup, moved.AuthorityId)));
         var invented = initial with { Current = LauncherLayoutEdits.AddApplication(initial.Current, initial.Current.ActivePageId, Guid.NewGuid()) };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Store.EditAsync(restored, _ => LauncherLayoutExchange.Import(LauncherLayoutExchange.Export(invented), restored.AuthorityId)));
@@ -380,6 +380,115 @@ public sealed class LauncherLayoutTests
         var reopened = await f.Store.GetAsync();
         Assert.Equal(arranged.Revision, reopened.Revision); Assert.Equal(before, LauncherLayoutExchange.Export(reopened));
         Assert.Equal(placement.Id, reopened.Current.Folders.Single().Items.Single().Id);
+    }
+
+    [Fact]
+    public async Task WidgetGeometryPersistsReflowsAndRejectsCollisionsWithoutLosingIdentities()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var android = new LauncherAndroidWidgetReference("com.example/.Widget", "42");
+        var added = await f.Store.EditAsync(initial, layout => LauncherLayoutEdits.AddWidget(layout, layout.ActivePageId, "Calendar", 2, 2, android: android));
+        var widget = Assert.Single(added.Current.Widgets);
+        var app = added.Current.ActivePage.Items[0];
+        await Assert.ThrowsAsync<InvalidDataException>(() => f.Store.EditAsync(added,
+            layout => LauncherLayoutEdits.MoveWidget(layout, widget.Id, widget.PageId, app.Column, app.Row, 2, 2)));
+        Assert.Equal(added.Revision, (await f.Store.GetAsync()).Revision);
+        var second = await f.Store.EditAsync(added, layout => LauncherLayoutEdits.AddPage(layout, "Widgets"));
+        var moved = await f.Store.EditAsync(second, layout => LauncherLayoutEdits.MoveWidget(layout, widget.Id, layout.ActivePageId, 0, 0, 3, 2));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => f.Store.EditAsync(moved, layout => LauncherLayoutEdits.RemovePage(layout, layout.ActivePageId)));
+        var reflowed = await f.Store.EditAsync(moved, layout => LauncherLayoutEdits.Reflow(layout, 3, 3));
+        var reopened = await f.Store.GetAsync(); reopened.Current.Validate();
+        Assert.Equal(widget.Id, Assert.Single(reopened.Current.Widgets).Id);
+        Assert.Equal(android, reopened.Current.Widgets[0].Android);
+        Assert.Equal(initial.Current.ActivePage.Items.Select(item => item.Id).Order(), LauncherLayoutEdits.Placements(reopened.Current).Select(item => item.Id).Order());
+        Assert.Equal(reopened.Current.Widgets, LauncherLayoutExchange.Import(LauncherLayoutExchange.Export(reopened), reopened.AuthorityId).Widgets);
+        var clone = LauncherLayoutEdits.Clone(reopened.Current);
+        ((LauncherWidgetPlacement[])clone.Widgets)[0] = clone.Widgets[0] with { Label = "Changed copy" };
+        Assert.Equal("Calendar", reopened.Current.Widgets[0].Label);
+        await Assert.ThrowsAsync<IOException>(() => f.Store.EditAsync(moved, layout => LauncherLayoutEdits.RemoveWidget(layout, widget.Id)));
+        var removed = await f.Store.EditAsync(reflowed, layout => LauncherLayoutEdits.RemoveWidget(layout, widget.Id));
+        Assert.Empty(removed.Current.Widgets); Assert.Single(removed.Previous!.Widgets);
+    }
+
+    [Fact]
+    public async Task SchemaSixWidgetUpgradeReadsWithoutWritingAndRetainsGestureBindings()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var configured = await f.Store.EditAsync(initial, layout => LauncherLayoutEdits.SetGestures(layout, new(DoubleTap: LauncherCommand.OpenSettings)));
+        var record = (await f.Home.ReadAsync()).State!.Records.Single(r => r.RecordType == HomeLauncherLayoutStore.RecordType);
+        var payload = System.Text.Json.Nodes.JsonNode.Parse(record.Payload.GetRawText())!;
+        payload["Current"]!["SchemaVersion"] = 6; payload["Current"]!.AsObject().Remove("Widgets");
+        var old = record with { Revision = record.Revision + 1, Payload = System.Text.Json.JsonSerializer.SerializeToElement(payload) };
+        Assert.True((await f.Home.WriteAsync(old, record.Revision)).IsSuccess);
+        var read = await f.Store.GetAsync(); Assert.Empty(read.Current.Widgets);
+        Assert.Equal(configured.Current.Gestures, read.Current.Gestures);
+        Assert.Equal(old.Payload.GetRawText(), (await f.Home.ReadAsync()).State!.Records.Single(r => r.RecordId == record.RecordId).Payload.GetRawText());
+    }
+
+    [Fact]
+    public async Task WidgetSessionUsesCurrentStoredPlacementAndNeverTurnsLocatorIntoAuthority()
+    {
+        using var f = new Fixture();
+        var verifier = new WidgetTestPeer();
+        var registry = new HomeNativeWidgetRegistry(verifier, f.Actors, new ResourceAuthorizationService(f.Actors, []));
+        var session = new HomeLauncherSession(f.Store, f.Actors, registry);
+        Assert.Null(await session.ReadAsync());
+        var initial = await f.Store.GetAsync();
+        var reference = new HomeNativeWidgetReference(verifier.Owner.AppId, verifier.Owner.InstalledApplicationId,
+            verifier.Owner.InstallationRevision, "clock", "1");
+        var placed = await f.Store.EditAsync(initial, layout => LauncherLayoutEdits.AddWidget(layout, layout.ActivePageId, "Clock", 2, 1, native: reference));
+        var widget = Assert.Single(placed.Current.Widgets);
+        var snapshot = (await session.ReadAsync())!;
+        Assert.Null((await session.ReadWidgetAsync(snapshot, widget.Id))!.NativeDefinition);
+        using var registration = await registry.RegisterAsync(new(42, "test-os-principal"),
+            [new("clock", "1", "Clock", new(1, 1), new(2, 1), new(4, 2), "config.clock", "surface.clock", HomeNativeWidgetUpdateMode.Event, null, [], [])]);
+        Assert.NotNull(registration);
+        Assert.NotNull((await session.ReadWidgetAsync(snapshot, widget.Id))!.NativeDefinition);
+        ((LauncherWidgetPlacement[])snapshot.Layout.Current.Widgets)[0] = widget with { Native = reference with { WidgetId = "forged" } };
+        Assert.Equal(reference, (await session.ReadWidgetAsync(snapshot, widget.Id))!.Placement.Native);
+        verifier.Available = false;
+        Assert.Null((await session.ReadWidgetAsync(snapshot, widget.Id))!.NativeDefinition);
+        Assert.Single((await f.Store.GetAsync()).Current.Widgets);
+        f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "new-session" };
+        Assert.False(await session.IsCurrentAsync(snapshot)); Assert.Null(await session.ReadWidgetAsync(snapshot, widget.Id));
+        var current = (await session.ReadAsync())!;
+        await f.Store.EditAsync(current.Layout, layout => LauncherLayoutEdits.RenamePage(layout, layout.ActivePageId, "Updated"));
+        Assert.False(await session.IsCurrentAsync(current));
+        var next = (await session.ReadAsync())!;
+        f.Actors.Current = f.Actors.Current with { ProfileId = "foreign-profile" };
+        Assert.Null(await session.ReadWidgetAsync(next, widget.Id));
+        Assert.Single((await f.Home.ReadAsync()).State!.Records, record => record.RecordType == HomeLauncherLayoutStore.RecordType);
+    }
+
+    [Fact]
+    public async Task SessionEditKeepsOriginalActorAcrossDraftAndRejectsReauthenticatedCaller()
+    {
+        using var f = new Fixture(); var initial = await f.Store.GetAsync();
+        var owner = new HomeLauncherSession(f.Store, f.Actors, new HomeNativeWidgetRegistry(new WidgetTestPeer(), f.Actors,
+            new ResourceAuthorizationService(f.Actors, [])));
+        var snapshot = (await owner.ReadAsync())!;
+        var original = await File.ReadAllTextAsync(f.StatePath);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.EditAsync(snapshot, layout =>
+        {
+            f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "changed-during-draft" };
+            return LauncherLayoutEdits.RenamePage(layout, layout.ActivePageId, "Must not write");
+        }));
+        Assert.Equal(original, await File.ReadAllTextAsync(f.StatePath));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.EditAsync(snapshot,
+            layout => LauncherLayoutEdits.AddPage(layout, "Old session")));
+        Assert.Equal(original, await File.ReadAllTextAsync(f.StatePath));
+        var fresh = (await owner.ReadAsync())!;
+        Assert.Equal(initial.Revision + 1, (await owner.EditAsync(fresh,
+            layout => LauncherLayoutEdits.RenamePage(layout, layout.ActivePageId, "Current session"))).Revision);
+    }
+
+    private sealed class WidgetTestPeer : IHomeNativeInstalledPeerVerifier
+    {
+        public bool Available = true;
+        public HomeNativeInstalledPeer Owner { get; } = new("test.widget.owner", Guid.NewGuid(), "install-1", "test-executable",
+            new HashSet<string>(StringComparer.Ordinal) { HomeNativeWidgetRegistry.ServiceId });
+        public ValueTask<HomeNativeInstalledPeer?> VerifyAsync(HomeNativeObservedPeer observedPeer, CancellationToken ct)
+            => ValueTask.FromResult<HomeNativeInstalledPeer?>(Available ? Owner : null);
     }
 
     private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
