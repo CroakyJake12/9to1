@@ -96,7 +96,7 @@ public sealed class HomeModelPickerOriginalSessionTests
             await bindings.OpenAsync();
             Assert.True(bindings.TryGetValue("CanFinishAudit", out var finish)); Assert.Equal(true, finish);
             principal.Value = "replacement-fixture-host-principal";
-            Assert.NotEqual(original, await profiles.GetCurrentAsync(default));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await profiles.GetCurrentAsync(default));
             Assert.False(await bindings.RevalidateAsync());
             await bindings.DispatchAsync("Save", null);
             Assert.Equal(1, fault.RouteWrites);
@@ -138,7 +138,7 @@ public sealed class HomeModelPickerOriginalSessionTests
     private sealed class RouteAuditFaultStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
     {
         public bool FailNextCompletion;
-        public bool AfterPublication;
+        public bool AfterPublication = false;
         public int RouteWrites;
         public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
         public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expected,

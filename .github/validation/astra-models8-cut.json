@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d0e25169b82d7bc8ab0ec7914603a77f64c012e3",
-  "programTree": "af8186cfc0c0d300375b4fe66a777f55859d4fc7",
+  "baselineCommit": "684c493ed36be0dd7c0e1e0d8edb39bb230c1b51",
+  "programTree": "1ff1da36f0786ef4ad02bb63d312607f291dfff5",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-models8-test-classes.json",
       "mode": "100644",
-      "object": "36b5018ea41e19844c9c20518e946ec29ea1b333",
-      "bytes": 5874,
-      "sha256": "d2ee374849f12c18b2b5992d458e7a1d0bf8cd3686b6124063c67027f83e1300"
+      "object": "715656b8ad709f70c0cbbd6438ac05a622e37d9c",
+      "bytes": 5967,
+      "sha256": "acc6773efba1f07a53d0aa1d8bb60694204c3197a6b2130a600758963704d6ff"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -37962,9 +37962,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeModelPickerOriginalSessionTests.cs",
       "mode": "100644",
-      "object": "d9c8a5acb521e7e339842e60142e0b94d903dfe9",
-      "bytes": 12697,
-      "sha256": "25d2e384d149dc585b81c28834cd5bca47bc535f64a9bc587a8a300a73cabe4f"
+      "object": "3592f866c1a6c0cc99ab0b93a9f48292421bd961",
+      "bytes": 12745,
+      "sha256": "ad9910a1d890e00df1d4fc533ac4751402c1358c0722d268e0e84fa0a66b9932"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomePluginSidebarAuthorityTests.cs",
@@ -63677,14 +63677,13 @@
   "limits": "Controlledmanagedscope only; no realbackend/direct700HTTP/currentrevocation/Homegrant/nativeinstalledtransport. Correctiveprogram retainsold896base explicitly, currentnormal977/indexpreserved.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker4-models8-hosted-validation-plan-sol4/manifest.json",
-      "sha256": "40daaf7734490211649ab9f84e5f424fc35e5572b6a84f1c4ec6faab5327a329"
+      "path": "/workspace/astra-source/worker4-models8-hosted-validation-plan-sol5/manifest.json",
+      "sha256": "971ab8d505166dd294970a56c5601aa415a4fb5030b7469a56b860b27c4d399c"
     },
     {
-      "path": "/workspace/astra-source/worker1-model-original-session-joined08-home-fixture04/manifest.json",
-      "sha256": "cc00d85c52f717e47587286a66c902c3283ff4a9d7e2c7281285afc7182d2224"
+      "path": "/workspace/astra-source/worker1-model-original-session-joined08-desktop-fixture05/manifest.json",
+      "sha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6"
     }
   ],
-  "sharedCakeIdContractReference": null,
-  "productActivation": "Corrective isolated cohort only"
+  "sharedCakeIdContract": null
 }

@@ -58,7 +58,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeModelPickerOriginalSessionTests.cs",
       "class": "HomeModelPickerOriginalSessionTests",
       "namespace": "Haven.Desktop.Tests",
-      "sha256": "25d2e384d149dc585b81c28834cd5bca47bc535f64a9bc587a8a300a73cabe4f"
+      "sha256": "ad9910a1d890e00df1d4fc533ac4751402c1358c0722d268e0e84fa0a66b9932"
     }
   ],
   "dependencyPins": [
@@ -134,5 +134,6 @@
       "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerRouteEditor.cs",
       "sha256": "923cda7fc1443b2fc58b333c5e972946806e2b97cc35b2bcc8fdc43c129f6e1f"
     }
-  ]
+  ],
+  "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6"
 }
