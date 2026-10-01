@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "ef55be017af1ae3960d123dc96422a369294b58f",
+  "programTree": "29be4a3b406d2918a199e867579b530d5adc6ad9",
   "files": [
     {
       "path": ".editorconfig",
@@ -21840,9 +21840,9 @@
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
       "mode": "100644",
-      "object": "7f6106164825592a0ffdacaa2f5da5c311033d8d",
-      "sha256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
-      "bytes": 19500
+      "object": "25c3e4e26a6f9fd48bebd32cf6ddd7fb55c4fa95",
+      "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36",
+      "bytes": 19536
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs",
@@ -21854,9 +21854,9 @@
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
       "mode": "100644",
-      "object": "4ff3984c1f075b6321d7313a7d8ae58027c71796",
-      "sha256": "e0cf5d711b65501445372ffa66ae0fa2a85f29f0c930d5f71583768f28ced0d3",
-      "bytes": 15485
+      "object": "6f7e9df63dd2b84464e884bfec58c6a62db8b6c4",
+      "sha256": "3115d29f06cea487aca5b677ea0cc76c2e80968d95bea86c9345c7ee440c4d83",
+      "bytes": 15503
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
@@ -63644,16 +63644,16 @@
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
       "mode": "100644",
-      "object": "f26f4f6b6d0367bdf5d3466f9b71ae984d6cd72c",
-      "sha256": "529b5fae26a162ec84e7cc85827f6239babb03f5855c6f2ad524025ab0989e55",
-      "bytes": 5284
+      "object": "1e8d8eef5951da56a4029c16fdccbcde3b80adf6",
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139",
+      "bytes": 6023
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
       "mode": "100644",
-      "object": "d3403000f110da9cf53ab1cc646107478fc25ce6",
-      "sha256": "cd139a29c2fe1ed5db08d069da7e5a3508a0a9c2c2839287a814d1b5210f473b",
-      "bytes": 8094
+      "object": "162749a3a768aba53364f78ba35469c0ef157d63",
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580",
+      "bytes": 8635
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormHostSession.cs",
@@ -63700,9 +63700,9 @@
     {
       "path": ".github/validation/astra-files16-test-classes.json",
       "mode": "100644",
-      "object": "b8bfcd8fc20ae86b3eb60e3fadd0fe093f7f2fbe",
-      "sha256": "efc918eb7ab9e488e5e0ab3e0174dc1c7d729a4a86b689123dbfb8770f99d65c",
-      "bytes": 14350
+      "object": "bf5825cd6af96f2b97180cd524c1764b594793ec",
+      "sha256": "510e7d0480e4f613020f322d3b61580cc55d10f3d98ae7d1b1c3d395c073d95e",
+      "bytes": 25722
     }
   ],
   "gitlinks": [
@@ -63964,13 +63964,23 @@
   ],
   "rootIndexSha256Before": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
   "rootIndexSha256After": "ecec266c7604f15b3a0d43b3b96d95ba6028ff83330e54ad18a7dfdd39d31749",
-  "limits": "Exact Data22/Files16/Forms25 source63 over Root896 plus isolated workflow/runner/provenance and externally SHA-pinned selfmanifest. Full Files domain console and owning Core/Infrastructure/FormsCUI/Desktop/OS package suites; rendered click, native windows, transport/login/provider/package/device acceptance remain separate.",
+  "limits": "Exact Data22/Files16/Forms26 source64 over Root896 plus isolated workflow/runner/provenance and externally SHA-pinned selfmanifest. Full Files domain console and owning Core/Infrastructure/FormsCUI/Desktop/OS package suites. Async Home fixture completion corrected; source-only rendered Respond additive excluded. Native windows, transport/login/provider/package/device acceptance remain separate.",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-files16-data22-forms25-managed-20261001-1830",
   "files16ManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
   "data22ManifestSha256": "79ca75b41c9df7de7c41a0038df621d55309d6a32ede10b26e0ed519a0b189a7",
-  "forms25ManifestSha256": "b8dd32393d98f04ad364d99fa178d2540a642b18956a0691cc56ddb8151b6591",
-  "sourceSelections63": [
+  "metadataManifestSha256": "db7fd7d2a1cfb24e4b6a9a6f729e8f33b75de6c6772fac4e3b569488a9109f6d",
+  "validationOnlyPaths": [
+    ".github/scripts/astra-files16-hosted-managed.py",
+    ".github/validation/astra-files16-test-classes.json",
+    ".github/workflows/haven-chat-model-ci.yml"
+  ],
+  "selfManifestPath": ".github/validation/astra-files16-cut.json",
+  "predecessorValidationCommit": "1fdbbe0b94e874269a5790d180b16ade56cf9dd8",
+  "preservedPredecessorManifestSha256": "f5d0c380e77907e22c7fc853cae12a5d183411e3615174d37bdc957485d2efb1",
+  "successorQualification": "Correct four existing Forms fixtures only: explicit awaited typed Headless callbacks, genuinely join Home action and preserve exact physical settings bytes; compare all durable export fields excluding observation-time ExportedAt. Preview/Response already returned bool and had awaited callbacks; explicit generic removes ambiguity. Production guards/assertions unchanged; failed predecessors retained. New source64/full unfiltered suites must pass.",
+  "forms26ManifestSha256": "ac5b4aa1b44d4781d09360bf5336ef6929cbf004803540214c31096b431744d7",
+  "sourceSelections64": [
     {
       "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Import.cs",
       "cohort": "Files16",
@@ -64201,163 +64211,159 @@
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "2cff1f4665082ea77555214b57b1a990343d0d55c452c32f1507d8ba3be05d2c",
       "sha256": "2ebf75539a820f00197ec80891a114eda5e868174986c59f505e3b8037f31438"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
-      "sha256": "5e6d107b16d587ed2015e276ca9f0b07020037973a624540ca6a5022b7d40b86"
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "5593e48f4bd171baeb404f2137a2ade823262bc6640861f90f1d52212566cdc8",
       "sha256": "e926b6c3e26dc93155f32066b7c9730694510b54ac380491e674ecf284d5efdf"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "d8aa664848bde41d2807f1058a044449fad80f92b96fadd3b546cca5807e3c54",
       "sha256": "6ad0808410c7b8c15394bc90da8a0b0fed95ef937ab4e0b6b6d1601e669a483e"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "986a418eda078e75c9fe3a23b4cf5715666c443713c0c97007c6e3c4cc834582",
       "sha256": "efec344e536f3cbcb98633e9726df8364da703310071aa680c3ad3eb5f9f4c72"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "2809a8d5e3edb80938540f19f015f8bd7b40a85867ce3253db8be90e5d5decc9",
       "sha256": "a9ab42186095b5cdf65644dc20962da0013eafce9d0c0b58009dbce5b6b8d7da"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "2696e13f498e05e7c6c9344c940d76dc6b1d892c05f1e3eb4c3630542bbf76d6",
       "sha256": "deb0abb8824be3a78a8e3fe2b88c2f89843b34c69d4be6dd97ce071b88a1ddc8"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "7e32eed3aa978f26c4f96b8b5166cad3c07027a2968c201f332cb9212ddb685d",
       "sha256": "dcf0bf4ec33978f7f21b00fe551142e1609cf1bf5cb47e1e83bae4986fcd75f9"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "da30f7d47779e89dd90d8366470db1d0dd052a85f6d0e86e48b289a438f0145f",
       "sha256": "2d86ab1d7dbc5626f0b346d839775c8a828e490434f7453ded17883fcaa8477a"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "1fe6768e4dc3fb2cb33eae1429ec0d88cc9a2f9413860bcb09fdff54e546fd5e",
-      "sha256": "e0cf5d711b65501445372ffa66ae0fa2a85f29f0c930d5f71583768f28ced0d3"
+      "sha256": "3115d29f06cea487aca5b677ea0cc76c2e80968d95bea86c9345c7ee440c4d83"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "b78a1f14a6435829038a06829cd7ddccab15d3cca28a40cdacbac50eeff692e9",
       "sha256": "bd31e5f85d504eb0518ef63dbe61139092708816bd81cf3c6e4e044b83caede2"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381",
       "sha256": "cf9ab455ad0f1a14fd06bbf6efa09566d7ce4679b84b2ccaad96e7f8add7c2b8"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749",
       "sha256": "1eac413aa482a06099a6cf20b683ccfc946e7f99e22f4df82e1f538a45259703"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
-      "sha256": "529b5fae26a162ec84e7cc85827f6239babb03f5855c6f2ad524025ab0989e55"
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
-      "sha256": "cd139a29c2fe1ed5db08d069da7e5a3508a0a9c2c2839287a814d1b5210f473b"
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormHostSession.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
       "sha256": "0865b32c1275e3f1227f42875d7ea98930b33cd03564549a33221212c31d54b6"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/FormPublicationServiceCollectionExtensions.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
       "sha256": "7d8d37345354d9af1181473b3917463db47cec1cb75b3ef43f338b781d807d90"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
       "sha256": "4737ee8b8fc4c1d91a34250e98606ef812469bb1d050362880a7ebd3418d06d8"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "07023b77e901d035a787878ed50335e52f942618bbda11d731873b14da4a0aa5",
       "sha256": "70e64e5f4fae4994ac934d2d3ebd0a9a1d12e87a4f6cae10943640c5b3dd38e5"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Forms.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "279749fa7613019998899bc59a7db49d99486cdad3cccc15f2524c5283de23ae",
       "sha256": "bd1eeb4bb1ee79ebd5ea8143cdd2cef9e47de438604114f72d992b6e6c91f090"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Forms/FormsNativeWorkspaceHost.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
       "sha256": "1e8c8d84c957149bfe9e112f56bdc0ed09f8e3cd53ec29762089548bd7b0d87a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": null,
       "sha256": "393e3742f5eb0c1d4603c3ea1e3f9957961bd7014d09d398034b624115961edf"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "340549aa066e889dd6bd3bf124a18e575c2ae935602e896a0b9985ea0df9107a",
       "sha256": "41dbfd35a57ca4be65f18cab872af621512e1285073480cb04fd3766ea01824c"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798",
       "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
-      "cohort": "Forms25",
+      "cohort": "Forms26",
       "beforeSha256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
       "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "cohort": "Forms26",
+      "beforeSha256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
+      "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36"
     }
-  ],
-  "metadataManifestSha256": "62c59a554cffd84c41436e62f809b74b66748f409006e310027e030c5fb825c5",
-  "validationOnlyPaths": [
-    ".github/scripts/astra-files16-hosted-managed.py",
-    ".github/validation/astra-files16-test-classes.json",
-    ".github/workflows/haven-chat-model-ci.yml"
-  ],
-  "selfManifestPath": ".github/validation/astra-files16-cut.json",
-  "predecessorValidationCommit": "4c6230a8a05498b5d3dff03edd33e12fefcf5a47",
-  "preservedPredecessorManifestSha256": "4ac8c7a7b569eba60e8a856f3727dd75ecfb5aaf4c473a3178451ce6b479f354",
-  "successorQualification": "Only HeldStore test fixture adds exact inherited compare-exchange passthroughs; production/forms guards and other62sources unchanged. Actual prior full Files console/Core40 accepted, Infra compile failed; fresh coherent proof required."
+  ]
 }

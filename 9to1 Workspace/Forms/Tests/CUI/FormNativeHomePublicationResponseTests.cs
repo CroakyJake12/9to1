@@ -18,7 +18,7 @@ public sealed class FormNativeHomePublicationResponseTests
     public async Task Actual_Home_owned_native_publication_recovers_failed_mount_and_original_session_denies_revocation_or_root_replacement(bool replaceRoot)
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             var root = Path.Combine(Path.GetTempPath(), "astra-forms-home-native-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(root);
@@ -88,19 +88,28 @@ public sealed class FormNativeHomePublicationResponseTests
                     await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await workspace.DispatchAsync("9to1.Forms.Respond", null));
                     Assert.Equal(2, mounted.Count);
                     Assert.Equal(beforeReplacement, await File.ReadAllBytesAsync(file));
-                    return;
+                    return true;
                 }
                 var bindingRecord = Assert.Single((await home.ReadAsync()).State!.Records, item => item.RecordType == "home.local-store-ownership");
                 var binding = bindingRecord.Payload.Deserialize<HomeLocalStoreBinding>()!;
                 Assert.True((await home.WriteAsync(bindingRecord with { Revision = bindingRecord.Revision + 1,
                     Payload = JsonSerializer.SerializeToElement(binding with { ProfileId = "foreign-profile" }) }, bindingRecord.Revision)).IsSuccess);
-                var before = JsonSerializer.Serialize(await settings.ExportAsync(default));
+                var before = DurableExport(await settings.ExportAsync(default));
+                var settingsFile = Path.Combine(root, "settings.json");
+                var beforeBytes = await File.ReadAllBytesAsync(settingsFile);
                 Assert.Equal("PermissionDenied", (await reopenedSessions.ResumeAsync(project.FormID, mounted[0])).Code);
-                Assert.Equal(before, JsonSerializer.Serialize(await settings.ExportAsync(default)));
+                Assert.Equal(before, DurableExport(await settings.ExportAsync(default)));
+                Assert.Equal(beforeBytes, await File.ReadAllBytesAsync(settingsFile));
             }
             finally { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); if (Directory.Exists(root)) Directory.Delete(root, true); }
+            return true;
         }, default);
     }
+    private static string DurableExport(SettingsExportManifest manifest) => JsonSerializer.Serialize(new
+    {
+        manifest.SchemaVersion, manifest.Version, manifest.StoreIdentity,
+        Settings = manifest.Settings.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToArray()
+    });
     private sealed class Paths(string root) : IAppPaths
     {
         public string DataDirectory => root;

@@ -17,7 +17,7 @@ public sealed class FormNativeResponseSurfaceTests
     public async Task Published_workspace_retry_opens_same_durable_response_and_real_native_answers_save()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             using var fixture = new Fixture(); var (project, _) = await fixture.Create(maximumAttempts: 2);
             var IDs = new List<Guid>(); var failMount = true;
@@ -61,7 +61,7 @@ public sealed class FormNativeResponseSurfaceTests
     public async Task Native_answers_save_through_durable_owner_and_invalid_visible_draft_blocks_submission_after_partial_save()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             using var fixture = new Fixture();
             var (project, response) = await fixture.Create();
@@ -106,7 +106,7 @@ public sealed class FormNativeResponseSurfaceTests
     public async Task Native_conflict_retains_draft_until_explicit_reload_and_authentication_change_clears_surface_without_write()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
-        await native.Dispatch(async () =>
+        await native.Dispatch<bool>(async () =>
         {
             using var fixture = new Fixture();
             var (project, response) = await fixture.Create();

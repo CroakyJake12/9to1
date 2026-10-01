@@ -36,13 +36,24 @@ public sealed class FormNativePageOrderOwnerTests
         Assert.Equal(project.Pages[0].Children.Select(child => child.ID), Decode(current.Draft).Pages[0].Children.Select(child => child.ID));
         // A concurrent actual edit makes the retained surface revision stale.
         await authoring.UpdateFieldAsync(project.FormID, current.Revision, Decode(current.Draft).Fields[0] with { Label = "Concurrent" });
-        var before = JsonSerializer.Serialize(await settings.ExportAsync(default));
+        var before = DurableExport(await settings.ExportAsync(default));
+        var settingsFile = Path.Combine(paths.DataDirectory, "settings.json");
+        var beforeBytes = await File.ReadAllBytesAsync(settingsFile);
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await surface.DispatchAsync("9to1.Forms.MoveLater", null));
-        Assert.Equal(before, JsonSerializer.Serialize(await settings.ExportAsync(default)));
+        Assert.Equal(before, DurableExport(await settings.ExportAsync(default)));
+        Assert.Equal(beforeBytes, await File.ReadAllBytesAsync(settingsFile));
         await surface.DispatchAsync("9to1.Forms.Open", null); authority.Allowed = false;
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await surface.DispatchAsync("9to1.Forms.MoveLater", null));
-        Assert.Equal(before, JsonSerializer.Serialize(await settings.ExportAsync(default)));
+        Assert.Equal(before, DurableExport(await settings.ExportAsync(default)));
+        Assert.Equal(beforeBytes, await File.ReadAllBytesAsync(settingsFile));
     }
+    // ExportedAt describes each observation, not a persisted mutation. Compare every durable
+    // envelope field plus exact physical bytes (including the stored envelope timestamp).
+    private static string DurableExport(SettingsExportManifest export) => JsonSerializer.Serialize(new
+    {
+        export.SchemaVersion, export.Version, export.StoreIdentity,
+        Settings = export.Settings.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToArray()
+    });
     private static FormProject Decode(JsonElement value) => FormProjectCodec.Decode(Encoding.UTF8.GetBytes(value.GetRawText()));
     private sealed class Actor : IAuthenticatedResourceActorSource
     {
