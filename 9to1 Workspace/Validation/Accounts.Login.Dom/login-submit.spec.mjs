@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {bindLoginSubmit} from './login-submit.mjs';
+const flush = () => new Promise(resolve => setImmediate(resolve));
+const form = new EventTarget(), button={disabled:false};
+let calls=0, resolve, reject, signal; const reports=[],nonces=[];
+const transport={submit(input,s){calls++; nonces.push(input.nonce); signal=s; return new Promise((a,b)=>{resolve=a;reject=b;});}};
+const binding=bindLoginSubmit(form,button,()=>({identifier:'fictional@example.invalid',password:'fictional'}),transport,r=>reports.push(r));
+const fire=()=>form.dispatchEvent(new Event('submit',{cancelable:true}));
+for(let i=0;i<700;i++) fire();
+assert.equal(button.disabled,true); await flush(); assert.equal(calls,1);
+resolve({kind:'limited'}); await flush();assert.equal(button.disabled,false);assert.equal(reports[0].kind,'limited');
+fire();await flush();assert.equal(calls,2);assert.notEqual(nonces[0],nonces[1]);
+reject(new Error('controlled transport failure'));await flush();assert.equal(button.disabled,false);assert.equal(reports.at(-1).kind,'unknown');assert.equal(calls,2);
+fire();await flush();binding.cancel();assert.equal(signal.aborted,true);
+for(let i=0;i<700;i++)fire();assert.equal(calls,3);assert.equal(button.disabled,true);
+reject(new Error('controlled cancellation'));await flush();assert.equal(button.disabled,false);assert.equal(calls,3);
+fire();await flush();assert.equal(calls,4);const before=reports.length;binding.dispose();assert.equal(signal.aborted,true);resolve({kind:'accepted'});await flush();fire();await flush();assert.equal(reports.length,before);assert.equal(calls,4);
+console.log(JSON.stringify({passed:4,failed:0,scope:'Actual EventTarget submit handler + controlled transport promises; no browser/backend/credential/login acceptance',repeatedSubmits:1400,transportCalls:4}));
