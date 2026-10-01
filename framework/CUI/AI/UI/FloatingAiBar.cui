@@ -15,6 +15,7 @@
         <StackPanel orientation="Horizontal" spacing="8">
           <Button id="SendAi" content="Send" action="Submit" />
           <Button id="StopAi" content="Stop" action="Cancel" IsVisible="{Binding IsStreaming}" />
+          <Button id="FinishActionAudit" content="Finish audit" action="FinishActionAudit" IsVisible="{Binding HasPendingActionAudit}" accessible-name="Retry only the retained Home completion audit" />
           <Button id="CloseAi" content="Close" action="Collapse" />
         </StackPanel>
         <TextBlock id="AiResponse" text="{Binding Response}" text-wrapping="Wrap" />

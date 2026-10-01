@@ -161,6 +161,32 @@ public sealed class HomeResourceOperationBrokerTests : IDisposable
         Assert.Equal(state, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
     }
 
+    [Fact]
+    public async Task Original_actor_admission_denies_switched_actor_before_creating_any_Home_request()
+    {
+        var original = _actors.Current!;
+        _actors.Current = original with { ActorId = "other-verified-user", AuthenticationRevision = "other-session" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _broker.AuthorizeForActorAsync(original,
+            "planner", "planner.attachJourney", Scopes, Arguments, "Original owner preview", null, "original-session"));
+        var snapshot = await _permissions.GetSnapshotAsync();
+        Assert.Empty(snapshot.PendingRequests);
+        Assert.Empty(snapshot.RecentAuditEvents);
+    }
+
+    [Fact]
+    public async Task Original_actor_admission_preserves_same_actor_review_and_existing_one_use_claim()
+    {
+        var original = _actors.Current!;
+        var pending = await _broker.AuthorizeForActorAsync(original, "planner", "planner.attachJourney", Scopes,
+            Arguments, "Original owner preview", null, "original-session");
+        Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments);
+        Assert.NotNull(capability);
+        Assert.Equal(original, await _broker.ClaimExecutionAsync(capability!, "planner", "planner.attachJourney", Scopes, Arguments));
+        Assert.Null(await _broker.ClaimExecutionAsync(capability!, "planner", "planner.attachJourney", Scopes, Arguments));
+    }
+
     private sealed class ActorSource : IAuthenticatedResourceActorSource
     {
         public static AuthenticatedResourceActor Initial { get; } = new("verified-user", "profile-1", Guid.NewGuid(), null, "session-1");

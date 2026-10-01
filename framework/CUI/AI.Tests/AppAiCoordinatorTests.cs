@@ -26,6 +26,143 @@ public sealed class AppAiCoordinatorTests
         Assert.Equal(0, picker.PersistentWrites);
     }
 
+    [Fact]
+    public async Task Confirmed_owner_result_retains_audit_only_finish_without_reexecuting()
+    {
+        var actions = new FakeActions();
+        var approvals = new PendingAuditApprovals();
+        var coordinator = new AppAiCoordinator(new FakeContext(), actions, approvals, new FakeDulche(),
+            new FakeApprovalRequester(), actionGraph: new FakeActionGraph());
+        using var bar = new FloatingAiBarState(coordinator);
+        bar.SetWriteMode();
+        var result = await bar.ExecuteActionAsync(new("write", "insert-paragraph", Json("{}"), null, "audit-case", AppAiAccessMode.Write));
+        Assert.True(result.Succeeded); Assert.NotNull(result.AuditRecovery); Assert.True(bar.HasPendingActionAudit);
+        Assert.DoesNotContain("AuditRecovery", JsonSerializer.Serialize(result), StringComparison.OrdinalIgnoreCase);
+        bar.SetReadOnly();
+        Assert.True((await bar.FinishActionAuditAsync()).AuditRecorded);
+        Assert.False(bar.HasPendingActionAudit); Assert.Equal(1, actions.ExecutionCount);
+        Assert.Equal(1, approvals.Verifications); Assert.Equal(1, approvals.Finishes);
+    }
+    [Fact]
+    public async Task Model_requested_action_retains_only_coordinator_issued_audit_observation()
+    {
+        var actions = new FakeActions(); var approvals = new PendingAuditApprovals();
+        var model = new FakeDulche { Chunks = [new AppAiResponseChunk("", RequestedAction: new("insert-paragraph", Json("{}")))] };
+        using var bar = new FloatingAiBarState(new AppAiCoordinator(new FakeContext(), actions, approvals, model,
+            new FakeApprovalRequester(), actionGraph: new FakeActionGraph()));
+        bar.SetWriteMode(); bar.Prompt = "Controlled model protocol action";
+        await bar.SubmitAsync();
+        Assert.True(bar.HasPendingActionAudit);
+        Assert.True((await bar.FinishActionAuditAsync()).AuditRecorded);
+        Assert.Equal(1, actions.ExecutionCount); Assert.Equal(1, approvals.Verifications);
+    }
+
+    [Fact]
+    public async Task Legacy_audit_transport_failure_preserves_owner_success_without_inventing_handle()
+    {
+        var actions = new FakeActions();
+        using var bar = new FloatingAiBarState(new AppAiCoordinator(new FakeContext(), actions,
+            new ThrowingCompletionApprovals(), new FakeDulche(), new FakeApprovalRequester(), actionGraph: new FakeActionGraph()));
+        bar.SetWriteMode();
+        var result = await bar.ExecuteActionAsync(new("write", "insert-paragraph", Json("{}"), null, "legacy-audit", AppAiAccessMode.Write));
+        Assert.True(result.Succeeded); Assert.True(result.CompletionAuditPending); Assert.Null(result.AuditRecovery);
+        Assert.True(bar.HasUnconfirmedActionAudit); Assert.False(bar.HasPendingActionAudit);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await bar.FinishActionAuditAsync());
+        Assert.Equal(1, actions.ExecutionCount);
+    }
+    [Fact]
+    public async Task Post_owner_graph_failure_preserves_observed_success_and_audit_handle()
+    {
+        var actions = new FakeActions(); var approvals = new PendingAuditApprovals();
+        var coordinator = new AppAiCoordinator(new FakeContext(), actions, approvals, new FakeDulche(),
+            new FakeApprovalRequester(), actionGraph: new FakeActionGraph { FailCompleted = true });
+        var result = await coordinator.ExecuteAsync(new("write", "insert-paragraph", Json("{}"), null, "graph-audit", AppAiAccessMode.Write));
+        Assert.True(result.Succeeded); Assert.True(result.ActionGraphPending); Assert.True(result.CompletionAuditPending);
+        Assert.NotNull(result.AuditRecovery); Assert.True((await result.AuditRecovery!.FinishAsync()).AuditRecorded);
+        Assert.Equal(1, actions.ExecutionCount); Assert.Equal(1, approvals.Verifications);
+    }
+    [Fact]
+    public async Task Boolean_only_legacy_verifier_never_claims_durable_completion()
+    {
+        var actions = new FakeActions();
+        using var bar = new FloatingAiBarState(new AppAiCoordinator(new FakeContext(), actions,
+            new FakeApprovals(), new FakeDulche(), new FakeApprovalRequester(), actionGraph: new FakeActionGraph()));
+        bar.SetWriteMode();
+        var result = await bar.ExecuteActionAsync(new("write", "insert-paragraph", Json("{}"), null, "boolean-audit", AppAiAccessMode.Write));
+        Assert.True(result.Succeeded); Assert.True(result.CompletionAuditPending); Assert.Null(result.AuditRecovery);
+        Assert.True(bar.HasUnconfirmedActionAudit); Assert.False(bar.HasPendingActionAudit);
+        IAppAiApprovalVerifier legacy = new FakeApprovals();
+        Assert.False((await legacy.CompleteRejectedVerificationAsync(
+            new("write", "insert-paragraph", Json("{}"), "approved", "boolean-rejected", AppAiAccessMode.Write), default)).AuditRecorded);
+        Assert.Equal(1, actions.ExecutionCount);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Delayed_finish_acknowledges_audit_without_overwriting_newer_or_disposed_view(bool dispose)
+    {
+        var actions = new FakeActions(); var approvals = new DelayedAuditApprovals();
+        using var bar = new FloatingAiBarState(new AppAiCoordinator(new FakeContext(), actions, approvals,
+            new FakeDulche(), new FakeApprovalRequester(), actionGraph: new FakeActionGraph()));
+        bar.SetWriteMode();
+        await bar.ExecuteActionAsync(new("write", "insert-paragraph", Json("{}"), null, "delayed-audit", AppAiAccessMode.Write));
+        var finish = bar.FinishActionAuditAsync().AsTask();
+        await approvals.Entered.Task;
+        if (dispose) bar.Dispose();
+        else { bar.SetReadOnly(); bar.Prompt = "A newer controlled request"; await bar.SubmitAsync(); }
+        var response = bar.Response; var error = bar.Error; var requestState = bar.RequestState;
+        var changed = 0; bar.Changed += (_, _) => changed++;
+        approvals.Completion.SetResult(new AppAiCompletionObservation(true));
+        Assert.True((await finish).AuditRecorded); Assert.False(bar.HasPendingActionAudit);
+        Assert.Equal(response, bar.Response); Assert.Equal(error, bar.Error); Assert.Equal(requestState, bar.RequestState);
+        Assert.Equal(0, changed); Assert.Equal(1, actions.ExecutionCount);
+    }
+
+    [Fact]
+    public async Task Finish_of_older_audit_never_replaces_an_already_newer_response()
+    {
+        var actions = new FakeActions(); var approvals = new PendingAuditApprovals();
+        using var bar = new FloatingAiBarState(new AppAiCoordinator(new FakeContext(), actions, approvals,
+            new FakeDulche(), new FakeApprovalRequester(), actionGraph: new FakeActionGraph()));
+        bar.SetWriteMode();
+        await bar.ExecuteActionAsync(new("write", "insert-paragraph", Json("{}"), null, "older-audit", AppAiAccessMode.Write));
+        bar.SetReadOnly(); bar.Prompt = "A newer controlled request"; await bar.SubmitAsync();
+        var response = bar.Response; var error = bar.Error;
+        Assert.True((await bar.FinishActionAuditAsync()).AuditRecorded);
+        Assert.Equal(response, bar.Response); Assert.Equal(error, bar.Error);
+        Assert.False(bar.HasPendingActionAudit); Assert.Equal(1, actions.ExecutionCount);
+    }
+
+    private sealed class DelayedAuditApprovals : IAppAiApprovalVerifier, IAppAiAuditRecovery
+    {
+        public TaskCompletionSource<bool> Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<AppAiCompletionObservation> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public ValueTask<bool> VerifyAsync(string appId, string actionId, string approvalToken, CancellationToken ct) => ValueTask.FromResult(true);
+        public ValueTask<AppAiCompletionObservation> CompleteWithRecoveryAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken ct)
+            => ValueTask.FromResult(new AppAiCompletionObservation(false, this));
+        public async ValueTask<AppAiCompletionObservation> FinishAsync(CancellationToken ct = default)
+        { Entered.TrySetResult(true); return await Completion.Task.WaitAsync(ct); }
+    }
+
+    private sealed class ThrowingCompletionApprovals : IAppAiApprovalVerifier
+    {
+        public ValueTask<bool> VerifyAsync(string appId, string actionId, string approvalToken, CancellationToken ct) => ValueTask.FromResult(true);
+        public ValueTask CompleteAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken ct) =>
+            ValueTask.FromException(new IOException("Controlled legacy audit transport failure"));
+    }
+
+    private sealed class PendingAuditApprovals : IAppAiApprovalVerifier, IAppAiAuditRecovery
+    {
+        public int Verifications; public int Finishes;
+        public ValueTask<bool> VerifyAsync(string appId, string actionId, string approvalToken, CancellationToken ct)
+        { Verifications++; return ValueTask.FromResult(true); }
+        public ValueTask<AppAiCompletionObservation> CompleteWithRecoveryAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken ct)
+            => ValueTask.FromResult(new AppAiCompletionObservation(false, this));
+        public ValueTask<AppAiCompletionObservation> FinishAsync(CancellationToken ct = default)
+        { Finishes++; return ValueTask.FromResult(new AppAiCompletionObservation(true)); }
+    }
+
     private sealed class SelectionPicker : IAppAiModelPicker
     {
         public bool Available = true;
@@ -199,12 +336,21 @@ public sealed class AppAiCoordinatorTests
         Assert.Equal("Use current model", state.SelectedModelLabel);
     }
 
+    private static string SharedBarAuthoredSourcePath(
+        [CallerFilePath] string sourceFile = "")
+    {
+        var projectDirectory = Path.GetDirectoryName(sourceFile)
+            ?? throw new InvalidOperationException("The actual test source directory is unavailable.");
+        if (!File.Exists(Path.Combine(projectDirectory, "NineToOne.Cui.AI.Tests.csproj")))
+            throw new InvalidOperationException("The actual owning AI test project is unavailable.");
+        return Path.GetFullPath(Path.Combine(projectDirectory,
+            "..", "AI", "UI", "FloatingAiBar.cui"));
+    }
+
     [Fact]
     public void SharedBarKeepsPersistentModeControlAndSemanticModelPickerInCui()
     {
-        var path = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..", "..", "..", "..", "AI", "UI", "FloatingAiBar.cui"));
+        var path = SharedBarAuthoredSourcePath();
         var document = new CuiRichParser().ParseFile(path);
         var component = Assert.Single(document.Components);
         var source = File.ReadAllText(path);
@@ -304,9 +450,11 @@ public sealed class AppAiCoordinatorTests
 
     private sealed class FakeActionGraph : IAppAiActionGraph
     {
+        public bool FailCompleted;
         public List<AppAiActionGraphEvent> Events { get; } = [];
         public ValueTask PublishAsync(AppAiActionGraphEvent value, CancellationToken cancellationToken)
         {
+            if (FailCompleted && value.Status == AppAiActionGraphStatus.Completed) throw new IOException("Controlled graph acknowledgment failure");
             Events.Add(value);
             return ValueTask.CompletedTask;
         }

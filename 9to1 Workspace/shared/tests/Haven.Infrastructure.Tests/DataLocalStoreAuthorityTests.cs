@@ -9,6 +9,87 @@ namespace Haven.Infrastructure.Tests;
 
 public sealed class DataLocalStoreAuthorityTests
 {
+    [Fact]
+    public async Task Actual_junction_owner_creates_one_canonical_association_table_without_copying_source_records()
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync(CancellationToken.None);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "ID"); sheet.SetCell(1, 0, "1");
+        var table = new DataTableDefinition { Name = "People", SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        var key = new DataKeyDefinition(Guid.NewGuid(), "Person ID", DataKeyKind.Primary, [table.Fields[0].FieldID]);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "ID", DataFieldType.Integer, false)], [key]).Workbook!;
+        await fixture.Repository.SaveAsync(workbook, "Typed people", (await fixture.CaptureAsync(CancellationToken.None))!, CancellationToken.None);
+        var beforeTable = JsonSerializer.Serialize(workbook.Tables.Single(item => item.Id == table.Id));
+        var beforeSheet = JsonSerializer.Serialize(workbook.Sheets.Single(item => item.Id == sheet.Id));
+        var endpoint = new DataJunctionEndpoint(table.Id, key.KeyID);
+        var definition = DataJunctionTableDesign.CreateDefinition(workbook, "Connections", endpoint, endpoint);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var designer = new DataHomeJunctionTableDesigner(fixture.Repository, fixture.Authority!, fixture.Actor!, broker);
+        var review = await designer.ReviewAsync(workbook.Id, workbook.Version, workbook.RevisionId, definition);
+        Assert.Equal(0, review.Intent.Arguments.GetProperty("sourceRecordsCopied").GetInt32());
+        Assert.Equal(0, review.Intent.Arguments.GetProperty("recordsChanged").GetInt32());
+        Assert.False((await designer.CommitAsync(review)).Committed);
+        Assert.True((await fixture.Permissions!.DecideAsync(review.RequestID, HomeApprovalChoice.Accept)).Succeeded);
+        var result = await designer.CommitAsync(review); Assert.True(result.Committed); Assert.True(result.AuditRecorded);
+        var actual = (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!;
+        Assert.Equal(3, actual.Version); Assert.Equal(2, actual.Tables.Count); Assert.Equal(2, actual.Sheets.Count);
+        Assert.Equal(beforeTable, JsonSerializer.Serialize(actual.Tables.Single(item => item.Id == table.Id)));
+        Assert.Equal(beforeSheet, JsonSerializer.Serialize(actual.Sheets.Single(item => item.Id == sheet.Id)));
+        Assert.Empty(actual.Tables.Single(item => item.Id == definition.TableID).Records);
+        Assert.Equal(2, actual.Relationships.Count); Assert.Empty(DataRelationalSchema.Inspect(actual));
+        var recovered = await new DataJunctionTableMutationRecovery(fixture.Repository, fixture.Authority!, fixture.Actor!).ReadAsync(review.Intent);
+        Assert.NotNull(recovered); Assert.Equal(definition.TableID, recovered!.TableID);
+        Assert.Equal("DataJunctionTableAlreadyCommitted", (await designer.CommitAsync(review)).Code);
+        Assert.Equal(3, (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!.Version);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Junction_commit_rechecks_actual_actor_or_binding_inside_canonical_workbook_lease(bool revokeBinding)
+    {
+        using var fixture = new Fixture(); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+        var token = timeout.Token; await fixture.InitializeAsync(token);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "ID"); sheet.SetCell(1, 0, "1");
+        var table = new DataTableDefinition { Name = "People", SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        var key = new DataKeyDefinition(Guid.NewGuid(), "ID", DataKeyKind.Primary, [table.Fields[0].FieldID]);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "ID", DataFieldType.Integer, false)], [key]).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed people", (await fixture.CaptureAsync(token))!, token);
+        var endpoint = new DataJunctionEndpoint(table.Id, key.KeyID);
+        var definition = DataJunctionTableDesign.CreateDefinition(workbook, "Connections", endpoint, endpoint);
+        var intent = DataJunctionTableUpdateIntent.Capture(fixture.StoreID, workbook, definition);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var request = await broker.AuthorizeAsync("data", DataJunctionTableUpdateIntent.ActionID, intent.Scopes, intent.Arguments,
+            "Create association table", null, "actual-junction-lease", token);
+        Assert.True((await fixture.Permissions!.DecideAsync(request.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var capability = (await broker.BeginExecutionCapabilityAsync(request.RequestId, intent.Arguments, token))!;
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath, token);
+        var lockPath = Path.Combine(fixture.Paths.DataDirectory, "Data", "Workbooks", ".locks", workbook.Id.ToString("D") + ".lock");
+        using var lease = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        var barrier = new SchemaCaptureBarrier(fixture.Authority!);
+        var pending = new DataHomeJunctionTableUpdateOperation(fixture.Repository, barrier, broker).ExecuteAsync(intent, capability, token);
+        await barrier.Captured.Task.WaitAsync(token);
+        Assert.False(pending.IsCompleted);
+        if (!revokeBinding) fixture.Actor!.Current = fixture.Actor.Current with { AuthenticationRevision = "revoked-junction-session" };
+        else
+        {
+            var record = Assert.Single((await fixture.Home.ReadAsync(token)).State!.Records, item => item.RecordType == "home.local-store-ownership");
+            var binding = record.Payload.Deserialize<HomeLocalStoreBinding>()!;
+            Assert.True((await fixture.Home.WriteAsync(record with { Revision = record.Revision + 1,
+                Payload = JsonSerializer.SerializeToElement(binding with { ProfileId = "revoked" }) }, record.Revision, token)).IsSuccess);
+        }
+        lease.Dispose(); var result = await pending;
+        Assert.False(result.Committed); Assert.Equal("PermissionDenied", result.Code); Assert.True(result.AuditRecorded);
+        Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath, token));
+        Assert.Single((await fixture.Repository.LoadAsync(workbook.Id, token))!.Tables);
+        Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(saved.CurrentPath)!, "*.tmp", SearchOption.AllDirectories));
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]

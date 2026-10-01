@@ -27,6 +27,8 @@ public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessReso
         var pictureImport = actionId == "picture.file.import";
         var sitesWrite = actionId is "sites.project.create" or "sites.project.save";
         var mediaRead = actionId == "media.asset.read" && scope.Access == ResourceAccess.Read;
+        var folderRead = actionId == "files.folder.native-root.read" && scope.Access == ResourceAccess.Read;
+        var browserRead = actionId == "files.browser.read" && scope.Access == ResourceAccess.Read;
         var packageRead = actionId == "os.compatibility.package.read" && scope.Access == ResourceAccess.Read;
         var ownerApp = actionId switch
         {
@@ -38,7 +40,7 @@ public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessReso
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
         if (pictureExport && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !sitesWrite && !mediaRead && !packageRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if (!pictureExport && !sitesWrite && !mediaRead && !packageRead && !folderRead && !browserRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -59,6 +61,9 @@ public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessReso
                 return Deny("FilesAppFolderDenied");
             return new(true, "Allowed", actor.ActorId, revision, null);
         }
+        if (folderRead) return item.Kind == HostedItemKind.Folder
+            ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesNativeFolderInvalid");
+        if (browserRead) return new(true, "Allowed", actor.ActorId, revision, null);
         if (mediaRead || packageRead) return item.Kind == HostedItemKind.File
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesMediaSourceInvalid");
         var creating = actionId.EndsWith(".create", StringComparison.Ordinal);

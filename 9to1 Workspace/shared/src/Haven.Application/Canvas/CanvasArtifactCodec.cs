@@ -43,6 +43,8 @@ public sealed record CanvasArtifactFile
     [JsonRequired]
     public CanvasArtifact? Artifact { get; init; }
 
+    public ProductivitySnapshotHistory? SemanticHistory { get; init; }
+
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? ExtensionData { get; init; }
 }
@@ -56,14 +58,20 @@ public static class CanvasArtifactCodec
 {
     private static readonly JsonSerializerOptions Options = CreateOptions();
 
-    public static byte[] Serialize(CanvasArtifact artifact)
+    public static byte[] Serialize(CanvasArtifact artifact) => SerializeCore(artifact, includeHistory: true);
+
+    internal static byte[] SerializeSnapshot(CanvasArtifact artifact) => SerializeCore(artifact, includeHistory: false);
+
+    private static byte[] SerializeCore(CanvasArtifact artifact, bool includeHistory)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         EnsureValid(artifact);
+        if (includeHistory && artifact.SemanticHistory is not null) ValidateHistory(artifact);
         var file = new CanvasArtifactFile
         {
             SchemaVersion = CanvasArtifact.CurrentSchemaVersion,
             Artifact = artifact,
+            SemanticHistory = includeHistory ? artifact.SemanticHistory : null,
             ExtensionData = artifact.EnvelopeExtensionData
         };
         return JsonSerializer.SerializeToUtf8Bytes(file, Options);
@@ -102,8 +110,32 @@ public static class CanvasArtifactCodec
             throw UnsupportedVersion("artifact", file.Artifact.SchemaVersion);
 
         file.Artifact.EnvelopeExtensionData = file.ExtensionData;
+        file.Artifact.SemanticHistory = file.SemanticHistory;
         EnsureValid(file.Artifact);
+        if (file.Artifact.SemanticHistory is not null) ValidateHistory(file.Artifact);
         return file.Artifact;
+    }
+
+    private static void ValidateHistory(CanvasArtifact artifact)
+    {
+        try
+        {
+            artifact.SemanticHistory!.Validate(CanvasArtifactFile.CanonicalFormat, artifact.ArtifactId,
+                artifact.RevisionId.ToString("D"), SerializeSnapshot(artifact), bytes =>
+                {
+                    // Reject recursively embedded histories before invoking the owner codec.
+                    using var document = JsonDocument.Parse(bytes);
+                    if (document.RootElement.TryGetProperty("semanticHistory", out var nested) && nested.ValueKind != JsonValueKind.Null)
+                        throw new InvalidDataException("History snapshots cannot contain nested histories.");
+                    var snapshot = Deserialize(bytes.Span);
+                    return (snapshot.ArtifactId, snapshot.RevisionId.ToString("D"));
+                });
+        }
+        catch (Exception exception) when (exception is InvalidDataException or JsonException)
+        {
+            throw new CanvasArtifactFormatException(CanvasArtifactFormatErrorCode.InvalidDocument,
+                "Canvas semantic history is invalid; original data must be preserved for recovery.", innerException: exception);
+        }
     }
 
     public static IReadOnlyList<CanvasArtifactValidationIssue> Validate(CanvasArtifact artifact)

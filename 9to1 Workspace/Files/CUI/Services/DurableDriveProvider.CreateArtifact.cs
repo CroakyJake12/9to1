@@ -3,9 +3,26 @@ namespace HavenOS.Files;
 public sealed partial class DurableDriveProvider
 {
     /// <summary>Atomically publishes a new owning artifact and its first immutable content revision.</summary>
-    public async Task<FilesResult<FilesRevision>> CommitCreatedArtifactAsync(FilesArtifactReference artifact,
+    public Task<FilesResult<FilesRevision>> CommitCreatedArtifactAsync(FilesArtifactReference artifact,
         FilesOwningAppRevisionCommit commit, IReadOnlyList<FilesItemRevisionPrecondition> preconditions,
-        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
+        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken) =>
+        CommitCreatedArtifactCoreAsync(artifact, commit, preconditions, null, authority, cancellationToken);
+
+    /// <summary>Retains the original creation-target store through the final persistent mutation.</summary>
+    public Task<FilesResult<FilesRevision>> CommitCreatedArtifactAsync(FilesArtifactReference artifact,
+        FilesOwningAppRevisionCommit commit, IReadOnlyList<FilesItemRevisionPrecondition> preconditions,
+        Guid expectedStoreId, FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(artifact);
+        if (expectedStoreId == Guid.Empty)
+            return Task.FromResult(Fail<FilesRevision>(FilesErrorCode.InvalidState,
+                "Creation requires the original Files store identity.", "CreateArtifact", artifact.FileId));
+        return CommitCreatedArtifactCoreAsync(artifact, commit, preconditions, expectedStoreId, authority, cancellationToken);
+    }
+
+    private async Task<FilesResult<FilesRevision>> CommitCreatedArtifactCoreAsync(FilesArtifactReference artifact,
+        FilesOwningAppRevisionCommit commit, IReadOnlyList<FilesItemRevisionPrecondition> preconditions,
+        Guid? expectedStoreId, FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(artifact); ArgumentNullException.ThrowIfNull(commit);
         ArgumentNullException.ThrowIfNull(preconditions); ArgumentNullException.ThrowIfNull(authority);
@@ -36,6 +53,8 @@ public sealed partial class DurableDriveProvider
         {
             await _store.UpdateAsync(state =>
             {
+                if (expectedStoreId is { } originalStore && state.StoreId != originalStore)
+                { throw new OriginalFilesStoreChangedException(); }
                 foreach (var guard in guards)
                 {
                     var item = state.Items.SingleOrDefault(e => e.Metadata.Id == guard.ItemId);
@@ -69,6 +88,8 @@ public sealed partial class DurableDriveProvider
                 };
             }, authority.ValidateAsync, cancellationToken).ConfigureAwait(false);
         }
+        catch (OriginalFilesStoreChangedException)
+        { return Error(FilesErrorCode.RevisionConflict, "The original Files creation target store changed."); }
         catch (FilesCommitAuthorityChangedException)
         { return Error(FilesErrorCode.PermissionDenied, "Commit authority changed before publication."); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);

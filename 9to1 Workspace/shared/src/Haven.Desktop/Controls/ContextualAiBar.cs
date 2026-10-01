@@ -16,6 +16,8 @@ public sealed class ContextualAiBar : UserControl, IDisposable
     private readonly HavenComboBox _access = new() { ItemsSource = new[] { "Read-only", "Write mode" }, SelectedIndex = 0, MinWidth = 125 };
     private readonly HavenButton _send = new() { Content = "Send" };
     private readonly HavenButton _stop = new() { Content = "Stop", IsVisible = false };
+    private readonly HavenButton _finishAudit = new() { Content = "Finish audit", IsVisible = false };
+    private bool _auditFinishing;
     private readonly HavenButton _model = new() { Content = "Model" };
     private readonly TextBlock _context = new() { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
     private readonly TextBlock _response = new() { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
@@ -37,16 +39,31 @@ public sealed class ContextualAiBar : UserControl, IDisposable
         commands.Children.Add(_model);
         commands.Children.Add(_send);
         commands.Children.Add(_stop);
+        commands.Children.Add(_finishAudit);
+        AutomationProperties.SetName(_finishAudit, "Finish the recorded action audit");
         Content = new StackPanel { Spacing = 6, Children = { _context, _chips, _prompt, _invocations, commands, _response } };
         _prompt.TextChanged += OnPromptChanged;
         _access.SelectionChanged += (_, _) => { if (!_refreshing) _state.SetAccessMode(_access.SelectedIndex == 1 ? AppAiAccessMode.Write : AppAiAccessMode.ReadOnly); };
         _send.Click += async (_, _) => await _state.SubmitAsync();
         _stop.Click += (_, _) => _state.Cancel();
+        _finishAudit.Click += async (_, _) => await FinishAuditAsync();
         _model.Click += async (_, _) => await _state.SelectNextModelAsync();
         _state.Changed += OnStateChanged;
         DetachedFromVisualTree += (_, _) => Dispose();
         _state.Expand();
         Refresh();
+    }
+
+    private async Task FinishAuditAsync()
+    {
+        if (_disposed || _auditFinishing || !_state.HasPendingActionAudit) return;
+        _auditFinishing = true; Refresh();
+        try { await _state.FinishActionAuditAsync(); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
+        {
+            // Keep the issued owner result and its pending audit visible; never resubmit the action.
+        }
+        finally { _auditFinishing = false; if (!_disposed) Refresh(); }
     }
 
     private async void OnPromptChanged(object? sender, TextChangedEventArgs args)
@@ -79,6 +96,8 @@ public sealed class ContextualAiBar : UserControl, IDisposable
             _context.Text = string.Join(" · ", new[] { _state.ContextLabel, _state.AccessModeLabel, _state.RequestStateLabel }.Where(value => !string.IsNullOrWhiteSpace(value)));
             _response.Text = _state.Error ?? _state.Response;
             _send.IsEnabled = _state.Mode != FloatingAiBarMode.Streaming;
+            _finishAudit.IsVisible = _state.HasPendingActionAudit;
+            _finishAudit.IsEnabled = !_auditFinishing;
             _stop.IsVisible = _state.Mode == FloatingAiBarMode.Streaming;
             _model.Content = _state.ModelPickerLabel;
             _model.IsEnabled = _state.ModelPickerAvailable;

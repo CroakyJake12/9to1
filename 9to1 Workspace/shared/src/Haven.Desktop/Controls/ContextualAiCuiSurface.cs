@@ -121,6 +121,7 @@ public sealed class ContextualAiCuiSurface : UserControl, IDisposable
             _model.Set("IsCollapsed", _state.Mode == FloatingAiBarMode.Collapsed);
             _model.Set("IsExpanded", _state.Mode != FloatingAiBarMode.Collapsed);
             _model.Set("IsStreaming", _state.Mode == FloatingAiBarMode.Streaming);
+            _model.Set("HasPendingActionAudit", _state.HasPendingActionAudit);
             _model.Set("HasError", !string.IsNullOrWhiteSpace(_state.Error));
             _model.Set("ContextLabel", _state.ContextLabel ?? string.Empty);
             _model.Set("RequestStateLabel", _state.RequestStateLabel);
@@ -145,6 +146,12 @@ public sealed class ContextualAiCuiSurface : UserControl, IDisposable
                 case "Collapse": owner._state.Collapse(); break;
                 case "Cancel": owner._state.Cancel(); break;
                 case "SelectNextModel": await owner._state.SelectNextModelAsync(cancellationToken); break;
+                case "FinishActionAudit":
+                    if (parameter is not null) throw new ArgumentException("Audit finish uses the retained owner outcome.", nameof(parameter));
+                    if (owner._state.HasPendingActionAudit)
+                        await owner._state.FinishActionAuditAsync(cancellationToken);
+                    owner.Refresh();
+                    break;
                 case "Submit":
                     if (!await owner.RequireCurrentReadinessAsync(cancellationToken)) break;
                     if (owner._editor is not null) owner._state.Prompt = owner._editor.Text ?? string.Empty;

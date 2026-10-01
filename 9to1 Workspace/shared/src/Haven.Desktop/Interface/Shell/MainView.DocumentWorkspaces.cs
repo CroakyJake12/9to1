@@ -2,6 +2,7 @@
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
+using Haven.Desktop.Events;
 using Haven.Desktop.Views.Pages.Boards;
 using Haven.Desktop.Views.Pages.Canvas;
 using Haven.Desktop.Views.Pages.Data;
@@ -38,14 +39,18 @@ public sealed partial class MainView
                 services.GetRequiredService<INotesImportExportService>(), services.GetRequiredService<UserPreferencesService>()),
             "present" => new PresentPage(_bus, services.GetRequiredService<IPresentRepository>(),
                 services.GetRequiredService<IPresentExportService>(), services.GetRequiredService<IPresentImportService>()),
-            "data" or "data-database" or "data-spreadsheet" => new DataPage(_bus, services.GetRequiredService<IDataWorkbookRepository>(),
-                services.GetRequiredService<IDataWorkbookFormatService>(), services.GetRequiredService<IDataWorkbookQueryService>(),
-                services.GetRequiredService<GenUiLiveActivityTracker>(), services.GetRequiredService<GenUiInstanceStore>()),
+            "data" or "data-database" or "data-spreadsheet" => CreateDataDocumentWorkspace(_bus, services),
             "boards" => new BoardsPage(_bus, services.GetRequiredService<IBoardsWorkspaceService>(),
                 services.GetService<INotesAttachmentStore>()),
             _ => throw new InvalidOperationException($"{key} is not a direct document workspace.")
         };
     }
+
+    internal static DataPage CreateDataDocumentWorkspace(HavenEventBus bus, IServiceProvider services) =>
+        new(bus, services.GetRequiredService<IDataWorkbookRepository>(),
+            services.GetRequiredService<IDataWorkbookFormatService>(), services.GetRequiredService<IDataWorkbookQueryService>(),
+            services.GetRequiredService<GenUiLiveActivityTracker>(), services.GetRequiredService<GenUiInstanceStore>(),
+            schemaDesigner: services.GetService<IDataTableSchemaDesigner>());
 
     private void OpenDocumentWorkspace(ModeDefinition mode, HavenSurface surface, bool forceNewTab)
     {

@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../../../Files/NativeUI/HavenOS.Files.NativeUI.csproj" />
     <Using Include="HavenOS.Files.NativeHost" />
   </ItemGroup>
 </Project>

@@ -154,7 +154,12 @@ public sealed class AppAiCoordinator(
                 request with { ApprovalToken = verifiedApprovalToken },
                 cancellationToken).ConfigureAwait(false);
             if (!approved)
-                return AppAiActionResult.Rejected("The approval is invalid or expired.", "approval-invalid");
+            {
+                var rejected = await approvals.CompleteRejectedVerificationAsync(
+                    request with { ApprovalToken = verifiedApprovalToken }, CancellationToken.None).ConfigureAwait(false);
+                return AppAiActionResult.Rejected("The approval did not admit execution; the action was not dispatched.", "approval-invalid")
+                    with { CompletionAuditPending = !rejected.AuditRecorded, AuditRecovery = rejected.AuditRecorded ? null : rejected.Recovery };
+            }
         }
 
         if (ownerApproval)
@@ -169,8 +174,35 @@ public sealed class AppAiCoordinator(
             ApprovalToken = !ownerApproval && (descriptor.RequiresPermission || descriptor.RequiresReview || forcePerActionApproval)
                 ? verifiedApprovalToken : null
         };
-        ValueTask CompleteApprovalAsync(AppAiActionRequest action, AppAiActionResult outcome, CancellationToken ct) =>
-            ownerApproval ? ValueTask.CompletedTask : approvals.CompleteAsync(action, outcome, ct);
+        async ValueTask<AppAiActionResult> CompleteApprovalAsync(AppAiActionRequest action, AppAiActionResult outcome, CancellationToken ct)
+        {
+            if (ownerApproval) return outcome;
+            try
+            {
+                var observed = await approvals.CompleteWithRecoveryAsync(action, outcome, ct).ConfigureAwait(false);
+                return outcome with { CompletionAuditPending = !observed.AuditRecorded,
+                    AuditRecovery = observed.AuditRecorded ? null : observed.Recovery };
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            {
+                // Legacy verifier transports may not support recovery. Preserve the observed owner result without inventing a handle.
+                return outcome with { CompletionAuditPending = true, AuditRecovery = null };
+            }
+        }
+        async ValueTask<AppAiActionResult> PublishObservedAsync(AppAiActionResult observed, AppAiActionGraphStatus status, string message)
+        {
+            try
+            {
+                await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
+                    status, message, CancellationToken.None).ConfigureAwait(false);
+                return observed;
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            {
+                // Secondary graph transport cannot turn an already observed owner result into a new action attempt.
+                return observed with { ActionGraphPending = true };
+            }
+        }
         AppAiActionResult result;
         try
         {
@@ -178,42 +210,45 @@ public sealed class AppAiCoordinator(
                 ? await ((IAppAiResourceBrokerActions)actions).ExecuteWithOwnedApprovalAsync(executionRequest, cancellationToken).ConfigureAwait(false)
                 : await actions.ExecuteAsync(executionRequest, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            await CompleteApprovalAsync(executionRequest, AppAiActionResult.Rejected(
-                exception is OperationCanceledException ? "App action cancelled." : "App action failed.",
-                exception is OperationCanceledException ? "action-cancelled" : "action-execution-failed"), CancellationToken.None).ConfigureAwait(false);
-            throw;
+            // A thrown transport does not prove the owner made no change. Retain a conservative terminal observation.
+            return await CompleteApprovalAsync(executionRequest, AppAiActionResult.Rejected(
+                "The action outcome could not be confirmed. Inspect the owner result before any new action.",
+                "action-outcome-unconfirmed"), CancellationToken.None).ConfigureAwait(false);
         }
         if (!result.Succeeded)
         {
-            await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
-            await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
+            result = await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
+            return await PublishObservedAsync(result,
                 ownerApproval && result.ErrorCode == "approval-pending" ? AppAiActionGraphStatus.WaitingForApproval : AppAiActionGraphStatus.Failed,
-                ownerApproval && result.ErrorCode == "approval-pending" ? "Waiting for the owning Home resource review" : "App action failed", cancellationToken).ConfigureAwait(false);
-            return result;
+                ownerApproval && result.ErrorCode == "approval-pending" ? "Waiting for the owning Home resource review" : "App action failed").ConfigureAwait(false);
         }
 
         if (dataMutation && snapshot.IsLiveDatabase)
         {
-            var verified = databasePreparation?.BackupId is { Length: > 0 } backupId &&
-                databaseGuard is not null && await databaseGuard.VerifyAsync(
-                    snapshot, descriptor, request.Arguments, result, backupId, cancellationToken).ConfigureAwait(false);
+            bool verified;
+            try
+            {
+                verified = databasePreparation?.BackupId is { Length: > 0 } backupId &&
+                    databaseGuard is not null && await databaseGuard.VerifyAsync(
+                        snapshot, descriptor, request.Arguments, result, backupId, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception error) when (error is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException or OperationCanceledException)
+            { verified = false; }
             if (!verified)
             {
                 var unverified = AppAiActionResult.Rejected(
                     "The database action ran, but its result could not be verified. The recovery backup is retained.",
                     "database-result-unverified");
-                await CompleteApprovalAsync(executionRequest, unverified, CancellationToken.None).ConfigureAwait(false);
+                unverified = await CompleteApprovalAsync(executionRequest, unverified, CancellationToken.None).ConfigureAwait(false);
                 return unverified;
             }
         }
 
-        await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
+        result = await CompleteApprovalAsync(executionRequest, result, CancellationToken.None).ConfigureAwait(false);
 
-        await PublishGraphEventAsync(snapshot, descriptor.Id, request.CorrelationId,
-            AppAiActionGraphStatus.Completed, "App action completed", cancellationToken).ConfigureAwait(false);
-        return result;
+        return await PublishObservedAsync(result, AppAiActionGraphStatus.Completed, "App action completed").ConfigureAwait(false);
     }
 
     public async IAsyncEnumerable<AppAiResponseChunk> StreamAsync(
@@ -274,11 +309,12 @@ public sealed class AppAiCoordinator(
                         snapshot.Revision), cancellationToken).ConfigureAwait(false);
                     var visible = result.Succeeded
                         ? $"Action completed: {result.Summary}"
-                        : $"Action not run: {result.Summary}";
-                    yield return new AppAiResponseChunk(visible);
+                        : result.ErrorCode == "read-only-mode" ? $"Action not run: {result.Summary}"
+                        : $"Action outcome: {result.Summary}";
+                    yield return new AppAiResponseChunk(visible) { ActionObservation = result };
                     continue;
                 }
-                yield return chunk;
+                yield return chunk with { ActionObservation = null };
             }
             completed = true;
         }
