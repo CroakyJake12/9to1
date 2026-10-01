@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "8177abe712129b3d575e989ed1ac618c4cb2cd3e",
+  "programTree": "11bd77295fd0d41c12ad9a45ab71ff2c44a9e74c",
   "files": [
     {
       "path": ".editorconfig",
@@ -2191,9 +2191,9 @@
     {
       "path": "9to1 OS/apps/9to1-shell/UI/Shell.cui",
       "mode": "100644",
-      "object": "69cbbfd36701ca52f1bcecd7546b00065c5cf361",
-      "sha256": "43f215687f62a7ba1cf139734016419ca1874246c3ef97a77580ba58539f802c",
-      "bytes": 13325
+      "object": "689a7d6d97f3411aae6aab0425b3ac09c2a301fb",
+      "sha256": "9a7287278b8401eabf03f91a7b250664c24309e5aa73f00d2f855ece742db9a7",
+      "bytes": 13717
     },
     {
       "path": "9to1 OS/apps/9to1-shell/UI/ShellAiReview.cui",
@@ -63672,8 +63672,8 @@
     {
       "path": ".github/validation/astra-go28-test-classes.json",
       "mode": "100644",
-      "object": "beb8d821215f7725cae8d1736e174f32c7e0aa77",
-      "sha256": "af3c0f9bc4eac1a3346781894c814fb7fcce792e9b8ddae447772c9d1945aa24",
+      "object": "6440ff2ae6dd3342fbca9922f73c46d59bd71c88",
+      "sha256": "9acb2fe9ece8bc7d7cb16b16e4c48e214e02ebee84fa4a4feeb39c34cafc253d",
       "bytes": 12126
     }
   ],
@@ -63939,16 +63939,16 @@
   "limits": "Exact coherent Go29 existing sources over Root896 including twelve explicitly awaited native callbacks in five fixture classes. Full owning Core Go classes and unfiltered OS package suites; real external Files mounting, registry authority, device and hardware-pointer acceptance remain separate.",
   "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
   "validationBranch": "validation/astra-go28-managed-20261001-1810",
-  "metadataManifestSha256": "8cbe960a780b353e91f13533c631d1198bc45106cac77373a06518d1d2632d2b",
+  "metadataManifestSha256": "aa96c79686c4311d1986fe5087573e8f1ef5f47de401f486f067bb570ad625b9",
   "validationOnlyPaths": [
     ".github/scripts/astra-go28-hosted-managed.py",
     ".github/validation/astra-go28-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
   "selfManifestPath": ".github/validation/astra-go28-cut.json",
-  "predecessorValidationCommit": "d94768968bdb29d4a544cdadc207031fee8f537e",
-  "preservedPredecessorManifestSha256": "efcde647a1dea50fd1526c074a859e86838d588f2b4a76f3b67a4dded3c40cd3",
+  "predecessorValidationCommit": "c0eacb5201048ae177c7d52d9ff071e5e8651b7d",
+  "preservedPredecessorManifestSha256": "2671dda759278f84fb60251b5a9332ff1da34388573bc781560a552f15938649",
   "asyncFixtureSuccessor": "Only Task-returning fixture assertions/signatures corrected; all production source and test assertions retained. Fresh run required.",
-  "successorQualification": "Narrow fixture corrections only: qualify Button.ClickEvent, explicitly initialize existing false pause flag, and actually await12 Headless async callbacks in five selected existing fixture classes. New selected-existing ModelPickerTests covers three baseline hazards included by full OS suite. All assertions and production behavior unchanged; full unfiltered OS proof pending.",
-  "go29ManifestSha256": "9600c781a4fc756af5b35151bd52b7c7d42351385ee269040b60ce6883028470"
+  "successorQualification": "Production CUI029 duplicate stable-identity failure corrected by distinct authored IDs in duplicated linear/grouped result templates only. Every binding/action/Key/value unchanged; other28 sources exact previous29. No compiler/test Null-assertion weakening; full unfiltered OS rerun must pass.",
+  "go29ManifestSha256": "e2ec7021f7e235ae239a2b0790d45aa93116d5bb40e8619dc046d8911c9bfd70"
 }

@@ -211,5 +211,5 @@
     }
   ],
   "scope": "Actual Core optional original-actor invocation controlled provider boundaries + whole OS regression, NOT installed transport/device/boot readiness",
-  "go29ManifestSha256": "9600c781a4fc756af5b35151bd52b7c7d42351385ee269040b60ce6883028470"
+  "go29ManifestSha256": "e2ec7021f7e235ae239a2b0790d45aa93116d5bb40e8619dc046d8911c9bfd70"
 }
