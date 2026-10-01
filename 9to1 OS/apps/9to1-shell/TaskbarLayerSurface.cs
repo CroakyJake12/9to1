@@ -18,6 +18,7 @@ public sealed class TaskbarLayerSurface(ICuiActionDispatcher actions) : Border
     {
         var registry = new CuiControlRegistry();
         registry.RegisterControlType("TaskbarLayer", _ => new TaskbarLayerSurface(actions));
+        registry.RegisterControlType("GoSearchInput", _ => new GoSearchInput(actions));
         return registry;
     }
 

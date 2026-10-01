@@ -18,19 +18,27 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     private readonly CancellationToken _lifetimeToken;
     private readonly SemaphoreSlim _actions = new(1, 1);
     private readonly DispatcherTimer _timer;
+    public Func<Haven.Application.AuthenticatedResourceActor, CancellationToken, CancellationToken, Task>? OpenFiles { get; set; }
     public Func<CancellationToken, Task>? OpenModels { get; set; }
     public Func<CancellationToken, CancellationToken, Task>? OpenDulche { get; set; }
     private ShellConfigurationService? _configuration;
     private GoService? _go;
+    private ShellGoSearchOwner? _goSearchOwner;
+    private readonly Dictionary<GoResult, ShellGoSearchRequest> _displayedGo = new(ReferenceEqualityComparer.Instance);
     private LinuxApplicationLauncher? _launcher;
     private ShellConfigurationSnapshot? _snapshot;
     private CancellationTokenSource? _query;
-    private long _queryGeneration;
     private string? _goCategory;
+    private string _goHomeView = "Pinned";
+    private GoHomeConfiguration? _displayedGoHome;
+    private readonly List<(GoHomeSectionKind Section, GoResult Result)> _goSectionResults = [];
     private Guid? _selectedPageItem;
     public ShellViewModel()
     {
         _lifetimeToken = _lifetime.Token;
+        _bindings.Set("GoGroup", ""); _bindings.Set("ShowGroupedGoResults", false); _bindings.Set("ShowLinearGoResults", true);
+        _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups");
+        _bindings.GetOrCreateList<GoResult>("LinearGoResults");
         _bindings.Set("PageColumns", "*,*,*,*,*,*,*,*"); _bindings.Set("PageRows", "72,72,72,72,72,72");
         _bindings.Set("PageTitle", "Desktop Page"); _bindings.Set("PagePosition", "Page 1 of 1"); _bindings.Set("PageScope", "Global desktop pages");
         _bindings.GetOrCreateList<DesktopPageItem>("PageItems");
@@ -39,6 +47,9 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         _bindings.Set("PageGridColumns", "8"); _bindings.Set("PageGridRows", "6");
         _bindings.Set("SelectedColumn", "1"); _bindings.Set("SelectedRow", "1");
         _bindings.Set("SelectedWidth", "1"); _bindings.Set("SelectedHeight", "1");
+        _bindings.Set("GoHomeView", "Pinned");
+        _bindings.Set("GoHomeAvailability", "Pins from your current taskbar and desktop page.");
+        _bindings.Set("HasRecentOwner", false); _bindings.Set("HasSuggestedOwner", false);
         _bindings.Set("GoCategory", "All");
         _bindings.Set("Status", "Checking Home…"); _bindings.Set("Name", ""); _bindings.Set("Query", "");
         _bindings.Set("Thickness", "56"); _bindings.Set("Spacing", "8"); _bindings.Set("Padding", "8"); _bindings.Set("Radius", "12"); _bindings.Set("Opacity", "1");
@@ -51,7 +62,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     public async Task StartAsync(ShellConfigurationService configuration, GoService go, LinuxApplicationLauncher launcher, CancellationToken ct)
     {
         var snapshot = await configuration.GetAsync(ct);
-        await Dispatcher.UIThread.InvokeAsync(() => { _configuration = configuration; _go = go; _launcher = launcher; Populate(snapshot); _timer.Start(); });
+        await Dispatcher.UIThread.InvokeAsync(() => { if (!ReferenceEquals(_configuration, configuration)) { _goSearchOwner?.Invalidate(); _goSearchOwner = new(configuration); } _configuration = configuration; _go = go; _launcher = launcher; Populate(snapshot); _timer.Start(); });
         _ = SearchSafelyAsync(_lifetimeToken);
     }
     public async Task RefreshAsync(CancellationToken ct)
@@ -77,6 +88,11 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     {
         if (_snapshot is { } shown && shown.Stored.AuthorityId == snapshot.Stored.AuthorityId && shown.Stored.SessionActor == snapshot.Stored.SessionActor &&
             (shown.Stored.Revision > snapshot.Stored.Revision || shown.Stored.Revision == snapshot.Stored.Revision && shown.IntentGeneration > snapshot.IntentGeneration)) return;
+        if (_snapshot is { } original && (original.Stored.AuthorityId != snapshot.Stored.AuthorityId || original.Stored.SessionActor != snapshot.Stored.SessionActor))
+        {
+            _goSearchOwner?.Invalidate(); _query?.Cancel();
+            _bindings.GetOrCreateList<GoResult>("Results").Clear(); _displayedGo.Clear();
+        }
         _snapshot = snapshot; var config = snapshot.Effective; var space = config.ActiveSpace; var bar = space.Taskbar;
         _bindings.Set("HasPreview", snapshot.Preview is not null);
         var surface = DesktopPageEdits.Effective(config);
@@ -94,16 +110,45 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         _bindings.Set("LayerPosition", $"Layer {bar.Layers.ToList().FindIndex(l => l.Id == layer.Id) + 1} of {bar.Layers.Count}");
         _bindings.Set("LayerHeight", p.Thickness); _bindings.Set("LayerPadding", p.Padding); _bindings.Set("LayerRadius", p.CornerRadius); _bindings.Set("LayerOpacity", p.Opacity); _bindings.Set("ItemSpacing", p.Spacing);
         _bindings.Set("Thickness", p.Thickness.ToString()); _bindings.Set("Spacing", p.Spacing.ToString()); _bindings.Set("Padding", p.Padding.ToString()); _bindings.Set("Radius", p.CornerRadius.ToString()); _bindings.Set("Opacity", p.Opacity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        PopulateGoPresentation(snapshot.Effective.EffectiveGoHome);
         var items = _bindings.GetOrCreateList<TaskbarItem>("Items"); items.Clear(); foreach (var item in layer.Items) items.Add(item);
         _bindings.Set("Status", snapshot.Preview is { } preview ? $"Preview — keep or revert within {Math.Max(0, (int)(preview.ExpiresAt - DateTimeOffset.UtcNow).TotalSeconds)} seconds." : $"Saved Home configuration · revision {snapshot.Stored.Revision}");
     }
+    private void PopulateGoPresentation(GoHomeConfiguration home)
+    {
+        _displayedGoHome = home;
+        _bindings.Set("GoLayout", home.Layout.ToString());
+        _bindings.Set("GoHomeWidth", home.Layout switch { GoHomeLayout.CompactSearch => 160, GoHomeLayout.StartMenu => 210, _ => 280 });
+        var all = _bindings.GetOrCreateList<GoHomeSection>("GoHomeSettings"); all.Clear();
+        var visible = _bindings.GetOrCreateList<GoHomeSection>("GoVisibleSections"); visible.Clear();
+        foreach (var section in home.Sections) { all.Add(section); if (section.Visible) visible.Add(section); }
+    }
+    private static string GoSectionLabel(GoHomeSectionKind kind) => kind == GoHomeSectionKind.AllApps ? "All Apps" : kind.ToString();
     public bool TryGetValue(string path, out object? value) => _bindings.TryGetValue(path, out value);
     public bool TrySetValue(string path, object? value) => _bindings.TrySetValue(path, value);
     public bool TryGetItemValue(object item, string path, out object? value)
     {
         value = (item, path) switch
         {
+            (GoHomeResultGroup group, "Id") => group.Id,
+            (GoHomeResultGroup group, "Title") => group.Title,
+            (GoHomeResultGroup group, "Availability") => group.Availability,
+            (GoHomeResultGroup group, "FontSize") => group.FontSize,
+            (GoHomeResultGroup group, "Results") => group.Results,
+            (GoHomeResultGroup group, "Column") => group.Column,
+            (GoHomeResultGroup group, "Row") => group.Row,
+            (GoHomeSection section, "Id") => section.Kind.ToString(),
+            (GoHomeSection section, "Label") => GoSectionLabel(section.Kind),
+            (GoHomeSection section, "Group") => section.Group ?? "",
+            (GoHomeSection section, "CanOpen") => section.Kind is GoHomeSectionKind.Pinned or GoHomeSectionKind.AllApps,
+            (GoHomeSection section, "FontSize") => section.Size switch { GoHomeSectionSize.Compact => 12, GoHomeSectionSize.Standard => 16, _ => 22 },
+            (GoHomeSection section, "EarlierLabel") => "Move " + GoSectionLabel(section.Kind) + " earlier",
+            (GoHomeSection section, "LaterLabel") => "Move " + GoSectionLabel(section.Kind) + " later",
+            (GoHomeSection section, "VisibilityLabel") => (section.Visible ? "Hide " : "Show ") + GoSectionLabel(section.Kind),
+            (GoHomeSection section, "SizeLabel") => "Resize " + GoSectionLabel(section.Kind) + " (" + section.Size + ")",
+            (GoHomeSection section, "GroupLabel") => "Group " + GoSectionLabel(section.Kind),
             (GoResult result, "Reference.Id") => result.Reference.Id,
+            (GoResult result, "CanonicalDisplayKey") => ShellGoDisplayKey.Create(result),
             (GoResult result, "Label") => result.Label,
             (GoResult result, "Category") => result.Category,
             (GoResult result, "OtherActions") => result.Actions.Where(a => a.Id != "Open").Select(a => new ShellGoAction(result, a)).ToArray(),
@@ -146,12 +191,22 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     {
         if (_configuration is null || _snapshot is null || _go is null) return;
         var expected = _snapshot;
+        var originalConfiguration = _configuration;
         var selectedItemId = SelectedItem()?.Id;
+        var requestedGoGroup = _bindings.Get("GoGroup")?.ToString() ?? "";
         using var request = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetimeToken);
+        if (command.StartsWith("GoHome.", StringComparison.Ordinal))
+        {
+            var view = command[7..];
+            if (view is not ("Pinned" or "All Apps" or "Recent" or "Suggested")) return;
+            _goHomeView = view; _bindings.Set("Query", "");
+            await SearchSafelyAsync(request.Token); return;
+        }
         if (command.StartsWith("GoFilter.", StringComparison.Ordinal))
         {
             var category = command[9..];
             if (category is not ("All" or "Apps" or "Desktop Spaces" or "Desktop Pages" or "Taskbar Layers")) return;
+            _goHomeView = "Search";
             _goCategory = category == "All" ? null : category;
             _bindings.Set("GoCategory", category); await SearchSafelyAsync(request.Token); return;
         }
@@ -159,14 +214,64 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         await _actions.WaitAsync(request.Token);
         try
         {
+            if (command == "OpenGoHomeSection" && parameter is GoHomeSection opening)
+            {
+                if (!ReferenceEquals(expected, _snapshot) || _displayedGoHome is null || !_displayedGoHome.Sections.Any(s => ReferenceEquals(s, opening)) || !opening.Visible)
+                    throw new UnauthorizedAccessException("Go home changed; choose the current section.");
+                if (opening.Kind is not (GoHomeSectionKind.Pinned or GoHomeSectionKind.AllApps))
+                    throw new InvalidOperationException("This Go section owner is unavailable.");
+                if (!await _configuration.IsCurrentSessionAsync(expected.Stored, request.Token) || !ReferenceEquals(expected, _snapshot))
+                    throw new UnauthorizedAccessException("The original Go home session or displayed surface changed.");
+                _goHomeView = GoSectionLabel(opening.Kind); _bindings.Set("Query", "");
+                await SearchSafelyAsync(request.Token); return;
+            }
+            if (command is "GoSectionEarlier" or "GoSectionLater" or "GoSectionVisibility" or "GoSectionSize" or "GoSectionGroup")
+            {
+                if (parameter is not GoHomeSection section || !ReferenceEquals(expected, _snapshot) ||
+                    _displayedGoHome is null || !_displayedGoHome.Sections.Any(s => ReferenceEquals(s, section)))
+                    throw new UnauthorizedAccessException("Choose an original displayed Go section.");
+                var home = _displayedGoHome!;
+                var position = home.Sections.ToList().FindIndex(s => ReferenceEquals(s, section));
+                var sectionCandidate = command switch
+                {
+                    "GoSectionEarlier" => GoHomeEdits.Move(expected.Effective, section.Kind, Math.Max(0, position - 1)),
+                    "GoSectionLater" => GoHomeEdits.Move(expected.Effective, section.Kind, Math.Min(3, position + 1)),
+                    "GoSectionVisibility" => GoHomeEdits.Present(expected.Effective, section.Kind, !section.Visible, section.Size, section.Group),
+                    "GoSectionSize" => GoHomeEdits.Present(expected.Effective, section.Kind, section.Visible,
+                        section.Size switch { GoHomeSectionSize.Compact => GoHomeSectionSize.Standard, GoHomeSectionSize.Standard => GoHomeSectionSize.Large, _ => GoHomeSectionSize.Compact }, section.Group),
+                    _ => GoHomeEdits.Present(expected.Effective, section.Kind, section.Visible, section.Size,
+                        string.IsNullOrWhiteSpace(requestedGoGroup) ? null : requestedGoGroup)
+                };
+                Populate(await _configuration.PreviewAsync(expected.Stored, sectionCandidate, TimeSpan.FromSeconds(30), request.Token));
+                await SearchSafelyAsync(request.Token); return;
+            }
+            if (command.StartsWith("GoLayout.", StringComparison.Ordinal))
+            {
+                if (!ReferenceEquals(expected, _snapshot)) throw new UnauthorizedAccessException("The displayed Go home changed; choose the current layout.");
+                var layout = command[9..] switch { "CompactSearch" => GoHomeLayout.CompactSearch, "StartMenu" => GoHomeLayout.StartMenu, "Dashboard" => GoHomeLayout.Dashboard,
+                    _ => throw new InvalidOperationException("This Go layout is unavailable.") };
+                var layoutCandidate = GoHomeEdits.Configure(expected.Effective, expected.Effective.EffectiveGoHome with { Layout = layout });
+                Populate(await _configuration.PreviewAsync(expected.Stored, layoutCandidate, TimeSpan.FromSeconds(30), request.Token));
+                await SearchSafelyAsync(request.Token); return;
+            }
             if (command == "InvokeGoAction" && parameter is ShellGoAction ownerAction)
             {
-                await _go.InvokeAsync(ownerAction.Result, ownerAction.Action.Id, GoScope(), request.Token);
+                await InvokeDisplayedGoAsync(ownerAction.Result, ownerAction.Action.Id, request.Token);
                 Populate(await _configuration.GetAsync(request.Token)); return;
             }
             if (command == "Dulche" && OpenDulche is { } openDulche) { await openDulche(request.Token, _lifetimeToken); return; }
             if (command == "Models" && OpenModels is { } openModels) { await openModels(request.Token); return; }
-            if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", GoScope(), request.Token); return; }
+            if (command == "Files" && OpenFiles is { } openFiles)
+            {
+                var originalActor = expected.Stored.SessionActor ?? throw new UnauthorizedAccessException("The current Home shell session is unavailable.");
+                if (!await _configuration.IsCurrentSessionAsync(expected.Stored, request.Token))
+                    throw new UnauthorizedAccessException("Home changed; refresh the shell before opening Files.");
+                await openFiles(originalActor, request.Token, _lifetimeToken);
+                if (!await _configuration.IsCurrentSessionAsync(expected.Stored, request.Token))
+                    throw new UnauthorizedAccessException("The original Home session changed while opening Files.");
+                return;
+            }
+            if (command == "Open" && parameter is GoResult result) { await InvokeDisplayedGoAsync(result, "Open", request.Token); return; }
             if (command == "SelectPageItem" && parameter is DesktopPageItem selected)
             {
                 if (!DesktopPageEdits.Effective(expected.Effective).ActivePage.Items.Any(i => i.Id == selected.Id))
@@ -175,16 +280,30 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
             }
             if (command == "OpenPageItem" && parameter is DesktopPageItem pageItem)
             {
-                if (pageItem.Kind != DesktopPageItemKind.Application || pageItem.Target is not { Owner: "Home", Kind: "os.installed-application" } target || !Guid.TryParse(target.Id, out var id) || _launcher is null)
-                    throw new InvalidOperationException("This desktop item canonical owner action is unavailable.");
-                await _launcher.LaunchCurrentAsync(id, request.Token); return;
+                if (!ReferenceEquals(expected, _snapshot) || !DesktopPageEdits.Effective(expected.Effective).ActivePage.Items.Any(i => ReferenceEquals(i, pageItem)))
+                    throw new UnauthorizedAccessException("Choose an original displayed desktop shortcut.");
+                if (pageItem.Kind != DesktopPageItemKind.Application || pageItem.Target is not { Owner: "Home", Kind: "os.installed-application" } target ||
+                    !Guid.TryParse(target.Id, out var id) || _launcher is null || expected.Stored.SessionActor is not { } originalActor)
+                    throw new InvalidOperationException("This desktop item's canonical owner action is unavailable.");
+                await _launcher.LaunchCurrentForActorAsync(id, originalActor,
+                    token => IsOriginalShortcutCurrentAsync(originalConfiguration, expected, token), request.Token); return;
             }
             if (command == "OpenItem" && parameter is TaskbarItem item)
             {
-                if (item.Kind == TaskbarItemKind.Go) { await SearchSafelyAsync(request.Token); return; }
-                if (item.Kind != TaskbarItemKind.Application || item.Target is not { Owner: "Home", Kind: "os.installed-application" } target || !Guid.TryParse(target.Id, out var id) || _launcher is null)
+                var layer = expected.Effective.ActiveSpace.Taskbar.Layers.Single(l => l.Id == expected.Effective.ActiveSpace.Taskbar.ActiveLayerId);
+                if (!ReferenceEquals(expected, _snapshot) || !layer.Items.Any(i => ReferenceEquals(i, item)))
+                    throw new UnauthorizedAccessException("Choose an original displayed taskbar item.");
+                if (item.Kind == TaskbarItemKind.Go)
+                {
+                    if (!await IsOriginalShortcutCurrentAsync(originalConfiguration, expected, request.Token))
+                        throw new UnauthorizedAccessException("The original taskbar session changed.");
+                    await SearchSafelyAsync(request.Token); return;
+                }
+                if (item.Kind != TaskbarItemKind.Application || item.Target is not { Owner: "Home", Kind: "os.installed-application" } target ||
+                    !Guid.TryParse(target.Id, out var id) || _launcher is null || expected.Stored.SessionActor is not { } originalActor)
                     throw new InvalidOperationException("This taskbar item's canonical owner action is unavailable.");
-                await _launcher.LaunchCurrentAsync(id, request.Token); return;
+                await _launcher.LaunchCurrentForActorAsync(id, originalActor,
+                    token => IsOriginalShortcutCurrentAsync(originalConfiguration, expected, token), request.Token); return;
             }
             if (command == "Keep") { Populate(await _configuration.KeepAsync(expected.Preview?.Id ?? Guid.Empty, request.Token)); return; }
             if (command == "Revert") { Populate(await _configuration.RevertAsync(expected.Preview?.Id ?? Guid.Empty, request.Token)); return; }
@@ -244,23 +363,111 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         { _bindings.Set("Status", ex.Message); }
         finally { _actions.Release(); }
     }
+    private async ValueTask<bool> IsOriginalShortcutCurrentAsync(ShellConfigurationService configuration,
+        ShellConfigurationSnapshot expected, CancellationToken ct)
+    {
+        if (!ReferenceEquals(_configuration, configuration) || !ReferenceEquals(_snapshot, expected)) return false;
+        if (!await configuration.IsCurrentSessionAsync(expected.Stored, ct)) return false;
+        var current = await configuration.GetAsync(ct);
+        if (!ReferenceEquals(_configuration, configuration) || !ReferenceEquals(_snapshot, expected) ||
+            current.Stored.SessionActor != expected.Stored.SessionActor || current.Stored.AuthorityId != expected.Stored.AuthorityId ||
+            current.Stored.Revision != expected.Stored.Revision || current.IntentGeneration != expected.IntentGeneration ||
+            current.Preview?.Id != expected.Preview?.Id) return false;
+        return await configuration.IsCurrentSessionAsync(expected.Stored, ct) && ReferenceEquals(_snapshot, expected) && ReferenceEquals(_configuration, configuration);
+    }
     private int Integer(string name) => int.Parse(_bindings.Get(name)?.ToString() ?? "", System.Globalization.CultureInfo.InvariantCulture);
     private double Number(string name) => double.Parse(_bindings.Get(name)?.ToString() ?? "", System.Globalization.CultureInfo.InvariantCulture);
+    private async Task InvokeDisplayedGoAsync(GoResult result, string actionId, CancellationToken ct)
+    {
+        var owner = _goSearchOwner;
+        if (owner is null || _go is null || !_displayedGo.TryGetValue(result, out var displayed) ||
+            displayed.Original.SessionActor is not { } originalActor || !await owner.IsCurrentAsync(displayed, ct) ||
+            !_displayedGo.TryGetValue(result, out var retained) || !ReferenceEquals(retained, displayed) || !owner.IsDisplayed(displayed))
+            throw new UnauthorizedAccessException("This result is no longer in the original displayed Go search. Search again.");
+        // Optional owning port defaults denied; never fall back to a provider's current-only invocation.
+        await _go.InvokeForActorAsync(result, actionId, originalActor, displayed.Query.Scope, ct);
+    }
+
     private async Task SearchAsync(CancellationToken ct)
     {
-        if (_go is null) return;
+        if (_go is null || _goSearchOwner is null || _snapshot is null) return;
+        // Capture the displayed original session and every query input before the first await.
+        var owner = _goSearchOwner;
+        var text = _bindings.Get("Query")?.ToString() ?? "";
+        var presentation = _snapshot.Effective.EffectiveGoHome.Detached();
+        var homeView = !string.IsNullOrWhiteSpace(text) ? "Search" : presentation.Layout == GoHomeLayout.Dashboard ? "Dashboard" : _goHomeView;
+        if (homeView != "Search" && homeView != "Dashboard" && !presentation.Sections.Any(s => s.Visible && GoSectionLabel(s.Kind) == homeView))
+            homeView = presentation.Sections.Where(s => s.Visible && s.Kind is GoHomeSectionKind.Pinned or GoHomeSectionKind.AllApps).Select(s => GoSectionLabel(s.Kind)).FirstOrDefault() ?? "NoSections";
+        var scope = homeView is "Pinned" or "All Apps" or "Dashboard" or "NoSections" ? new GoScope(new HashSet<string>(StringComparer.Ordinal) { "os.installed-applications" }) : GoScope();
+        var request = owner.Begin(_snapshot.Stored, new GoQuery(text, homeView == "Search" ? _goCategory : "Apps", Scope: scope));
         _query?.Cancel();
         using var queryLifetime = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetimeToken);
-        _query = queryLifetime; var generation = Interlocked.Increment(ref _queryGeneration);
+        _query = queryLifetime;
         var results = _bindings.GetOrCreateList<GoResult>("Results");
-        await Dispatcher.UIThread.InvokeAsync(results.Clear);
-        var query = new GoQuery(_bindings.Get("Query")?.ToString() ?? "", _goCategory, Scope: GoScope());
         try
         {
-            await foreach (var update in _go.QueryAsync(query, queryLifetime.Token))
-                await Dispatcher.UIThread.InvokeAsync(() => { if (generation != Interlocked.Read(ref _queryGeneration)) return; if (update.Result is { } result) results.Add(result); if (update.Failure is { } failure) _bindings.Set("Status", update.ProviderId + ": " + failure); });
+            if (!await owner.IsCurrentAsync(request, queryLifetime.Token))
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
+                return;
+            }
+            await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request) && !queryLifetime.IsCancellationRequested)
+            {
+                results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("GoHomeView", homeView);
+                var grouped = homeView != "Search" && presentation.Layout != GoHomeLayout.CompactSearch;
+                _bindings.Set("GoResultColumns", presentation.Layout == GoHomeLayout.Dashboard ? "*,*" : "*");
+                _bindings.Set("ShowGroupedGoResults", grouped); _bindings.Set("ShowLinearGoResults", !grouped);
+                PublishGoResultGroups(presentation, homeView);
+                _bindings.Set("GoHomeAvailability", homeView switch {
+                    "Pinned" => "Pins from your current taskbar and desktop page.",
+                    "Recent" => "Recent items aren't available yet.",
+                    "Suggested" => "Suggested items aren't available yet.",
+                    "All Apps" => "Installed applications available to your current profile.",
+                    _ => "" });
+            } });
+            await foreach (var sectionUpdate in ReadGoHomeUpdatesAsync(request, homeView, presentation, queryLifetime.Token))
+            {
+                if (!await owner.IsCurrentAsync(request, queryLifetime.Token))
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
+                    return;
+                }
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (!owner.IsDisplayed(request) || queryLifetime.IsCancellationRequested) return;
+                    var update = sectionUpdate.Update;
+                    if (update.Result is { } result) { results.Add(result); _displayedGo[result] = request;
+                        if (homeView == "Search" || presentation.Layout == GoHomeLayout.CompactSearch) _bindings.GetOrCreateList<GoResult>("LinearGoResults").Add(result);
+                        if (sectionUpdate.Section is { } section) _goSectionResults.Add((section, result)); PublishGoResultGroups(presentation, homeView); }
+                    if (update.Failure is { } failure) _bindings.Set("Status", update.ProviderId + ": " + failure);
+                });
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request) && !queryLifetime.IsCancellationRequested) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", ex.Message); } });
         }
         finally { if (ReferenceEquals(_query, queryLifetime)) _query = null; }
+    }
+    private void PublishGoResultGroups(GoHomeConfiguration presentation, string view)
+    {
+        var groups = _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups"); groups.Clear();
+        foreach (var group in GoHomeResultPresentation.Create(presentation, _goSectionResults, view)) groups.Add(group);
+    }
+    private sealed record GoSectionUpdate(GoHomeSectionKind? Section, GoUpdate Update);
+    private async IAsyncEnumerable<GoSectionUpdate> ReadGoHomeUpdatesAsync(ShellGoSearchRequest request, string homeView, GoHomeConfiguration presentation,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    {
+        if (_configuration is null || _go is null || homeView is "Recent" or "Suggested" or "NoSections") yield break;
+        if (homeView == "Search")
+        { await foreach (var update in _go.QueryForActorAsync(request.Query, request.Original.SessionActor ?? throw new UnauthorizedAccessException("The displayed Go actor is unavailable."), ct)) yield return new(null, update); yield break; }
+        foreach (var section in presentation.Sections.Where(s => s.Visible && (homeView == "Dashboard" || GoSectionLabel(s.Kind) == homeView)))
+        {
+            if (section.Kind == GoHomeSectionKind.Pinned)
+            { foreach (var result in await new ShellGoPinnedHome(_configuration, _go).ReadAsync(request.Original, ct)) yield return new(section.Kind, new(result.ProviderId, result, false, null)); }
+            else if (section.Kind == GoHomeSectionKind.AllApps)
+            { await foreach (var update in new ShellGoAllAppsHome(_configuration, _go).ReadAsync(request.Original, ct)) yield return new(section.Kind, update); }
+        }
     }
     private GoScope? GoScope() => _goCategory switch
     {
@@ -272,8 +479,6 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     {
         try { await SearchAsync(ct); }
         catch (OperationCanceledException) { }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
-        { await Dispatcher.UIThread.InvokeAsync(() => _bindings.Set("Status", ex.Message)); }
     }
-    public void Dispose() { _timer.Stop(); _lifetime.Cancel(); _query?.Cancel(); _lifetime.Dispose(); }
+    public void Dispose() { _goSearchOwner?.Invalidate(); _timer.Stop(); _lifetime.Cancel(); _query?.Cancel(); _lifetime.Dispose(); }
 }

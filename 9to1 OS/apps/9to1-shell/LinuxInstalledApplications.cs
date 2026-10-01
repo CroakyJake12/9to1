@@ -94,12 +94,13 @@ public sealed class InstalledApplicationResourceResolver(IInstalledApplicationRe
     {
         var denied = new ResourceAccessDecision(false, "ApplicationUnavailable", actor.ActorId, scope.Revision, actor.OrganisationId);
         if (!((actionId == "os.application.launch" && scope.Access == ResourceAccess.Execute) || (actionId == "os.application.read" && scope.Access == ResourceAccess.Read)) || !Guid.TryParse(scope.Id, out var id) || !long.TryParse(scope.Revision, out var revision)) return denied;
-        var app = await registry.ResolveLaunchAsync(id, revision, ct);
+        if (registry is not IInstalledApplicationOriginalActorRegistry originalRegistry) return denied;
+        var app = await originalRegistry.ResolveLaunchForActorAsync(id, revision, actor, ct);
         return denied with { Allowed = app is not null && app.HomeProfileId == actor.ProfileId && app.ProviderId == "linux.xdg-desktop" && actor.OrganisationId is null, Code = "CurrentInstalledApplication" };
     }
 }
 
-public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry registry, ResourceAuthorizationService resources)
+public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry registry, ResourceAuthorizationService resources, IAuthenticatedResourceActorSource? actors = null)
 {
     public async Task<InstalledApplicationReference> ResolveForReadAsync(Guid id, long revision, CancellationToken ct)
     {
@@ -112,22 +113,91 @@ public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry regis
             throw new UnauthorizedAccessException("The installed application or profile changed during discovery.");
         return app;
     }
+    internal ValueTask RequireOriginalReadActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
+        => RequireOriginalAsync(expectedActor, null, ct);
+    public async Task<InstalledApplicationReference> ResolveForReadForActorAsync(Guid id, long revision,
+        AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (registry is not IInstalledApplicationOriginalActorRegistry originalRegistry)
+            throw new UnauthorizedAccessException("The installed owner cannot retain the original read session.");
+        await RequireOriginalAsync(expectedActor, null, ct);
+        var scope = new ResourceScope("os.installed-application", id.ToString("D"), revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Read);
+        if (await resources.AuthorizeForActorAsync(expectedActor, "os.application.read", [scope], ct) != expectedActor)
+            throw new UnauthorizedAccessException("The original installed application read is unavailable.");
+        await RequireOriginalAsync(expectedActor, null, ct);
+        var app = await originalRegistry.ResolveLaunchForActorAsync(id, revision, expectedActor, ct);
+        await RequireOriginalAsync(expectedActor, null, ct);
+        if (app is null || app.HomeProfileId != expectedActor.ProfileId || app.ProviderId != "linux.xdg-desktop" ||
+            await resources.AuthorizeForActorAsync(expectedActor, "os.application.read", [scope], ct) != expectedActor)
+            throw new UnauthorizedAccessException("The original installed application changed during discovery.");
+        await RequireOriginalAsync(expectedActor, null, ct);
+        return app;
+    }
     public async Task LaunchCurrentAsync(Guid id, CancellationToken ct)
     {
         var app = (await registry.RefreshAsync(ct)).SingleOrDefault(a => a.ApplicationId == id && a.Enabled && a.ProfileAccessible && a.ProviderId == "linux.xdg-desktop")
             ?? throw new IOException("This pinned application is unavailable for the current Home profile.");
         await LaunchAsync(app.ApplicationId, app.Revision, ct);
     }
-    public async Task LaunchAsync(Guid id, long revision, CancellationToken ct)
+    public async Task LaunchCurrentForActorAsync(Guid id, AuthenticatedResourceActor expectedActor,
+        Func<CancellationToken, ValueTask<bool>> originalSelectionIsCurrent, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(expectedActor); ArgumentNullException.ThrowIfNull(originalSelectionIsCurrent);
+        if (registry is not IInstalledApplicationOriginalActorRegistry originalRegistry)
+            throw new UnauthorizedAccessException("The installed owner cannot retain the original shell session.");
+        await RequireOriginalAsync(expectedActor, originalSelectionIsCurrent, ct);
+        var observed = await originalRegistry.RefreshForActorAsync(expectedActor, ct);
+        await RequireOriginalAsync(expectedActor, originalSelectionIsCurrent, ct);
+        var app = observed.SingleOrDefault(a => a.ApplicationId == id && a.Enabled && a.ProfileAccessible &&
+            a.ProviderId == "linux.xdg-desktop" && a.HomeProfileId == expectedActor.ProfileId)
+            ?? throw new IOException("This pinned application is unavailable for the original Home profile.");
+        await LaunchCoreAsync(app.ApplicationId, app.Revision, expectedActor, ct, originalSelectionIsCurrent);
+    }
+    private async ValueTask RequireOriginalAsync(AuthenticatedResourceActor expectedActor,
+        Func<CancellationToken, ValueTask<bool>>? originalSelectionIsCurrent, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        if (actors is null || await actors.GetCurrentAsync(ct) != expectedActor)
+            throw new UnauthorizedAccessException("The original shell actor is no longer current.");
+        if (originalSelectionIsCurrent is not null && !await originalSelectionIsCurrent(ct))
+            throw new UnauthorizedAccessException("The original displayed shortcut changed.");
+        if (await actors.GetCurrentAsync(ct) != expectedActor)
+            throw new UnauthorizedAccessException("The original shell actor changed during shortcut admission.");
+    }
+    public Task LaunchAsync(Guid id, long revision, CancellationToken ct) => LaunchCoreAsync(id, revision, null, ct);
+    public Task LaunchForActorAsync(Guid id, long revision, AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return LaunchCoreAsync(id, revision, expectedActor, ct);
+    }
+    private async Task LaunchCoreAsync(Guid id, long revision, AuthenticatedResourceActor? expectedActor, CancellationToken ct,
+        Func<CancellationToken, ValueTask<bool>>? originalSelectionIsCurrent = null)
+    {
+        IInstalledApplicationOriginalActorRegistry? originalRegistry = null;
+        if (expectedActor is not null)
+        {
+            originalRegistry = registry as IInstalledApplicationOriginalActorRegistry
+                ?? throw new UnauthorizedAccessException("The installed owner cannot retain the original launch session.");
+            await RequireOriginalAsync(expectedActor, originalSelectionIsCurrent, ct);
+        }
         var scope = new ResourceScope("os.installed-application", id.ToString("D"), revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Execute);
-        var actor = await resources.AuthorizeAsync("os.application.launch", [scope], ct);
-        if (actor is null) throw new UnauthorizedAccessException("The installed application is no longer authorized for this profile.");
-        var app = await registry.ResolveLaunchAsync(id, revision, ct);
+        var actor = expectedActor is null ? await resources.AuthorizeAsync("os.application.launch", [scope], ct)
+            : await resources.AuthorizeForActorAsync(expectedActor, "os.application.launch", [scope], ct);
+        if (actor is null || expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The installed application is not authorized for the original Go actor.");
+        var app = expectedActor is null ? await registry.ResolveLaunchAsync(id, revision, ct)
+            : await originalRegistry!.ResolveLaunchForActorAsync(id, revision, expectedActor, ct);
+        if (expectedActor is not null) await RequireOriginalAsync(expectedActor, originalSelectionIsCurrent, ct);
         if (app is null || app.HomeProfileId != actor.ProfileId || app.ProviderId != "linux.xdg-desktop") throw new IOException("Application changed; refresh Go before launching.");
-        var desktop = (await Task.Run(() => LinuxInstalledApplications.ReadInventory(ct), ct)).SingleOrDefault(a => "desktop:" + a.DesktopId == app.Entrypoint && a.Digest == app.Version && a.Enabled);
+        var inventory = await Task.Run(() => LinuxInstalledApplications.ReadInventory(ct), ct);
+        if (expectedActor is not null) await RequireOriginalAsync(expectedActor, originalSelectionIsCurrent, ct);
+        var desktop = inventory.SingleOrDefault(a => "desktop:" + a.DesktopId == app.Entrypoint && a.Digest == app.Version && a.Enabled);
         if (desktop is null) throw new IOException("Installed entrypoint changed; refresh Go before launching.");
-        if (await resources.AuthorizeAsync("os.application.launch", [scope], ct) != actor) throw new UnauthorizedAccessException("Profile or installed application authority changed before launch.");
+        var finalActor = expectedActor is null ? await resources.AuthorizeAsync("os.application.launch", [scope], ct)
+            : await resources.AuthorizeForActorAsync(expectedActor, "os.application.launch", [scope], ct);
+        if (finalActor != actor) throw new UnauthorizedAccessException("Profile or installed application authority changed before launch.");
+        if (expectedActor is not null) await RequireOriginalAsync(expectedActor, originalSelectionIsCurrent, ct);
         ct.ThrowIfCancellationRequested();
         // gio retains upstream desktop-entry argument expansion/DBus activation. Never interpret Exec through a shell.
         var start = new ProcessStartInfo("/usr/bin/gio") { UseShellExecute = false };

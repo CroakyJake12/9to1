@@ -17,6 +17,8 @@ public sealed record DesktopSpace(Guid Id, string Name, TaskbarConfiguration Tas
 public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, IReadOnlyList<DesktopSpace> Spaces)
 {
     public const int CurrentSchema = 2;
+    public GoHomeConfiguration? GoHome { get; init; }
+    [JsonIgnore] public GoHomeConfiguration EffectiveGoHome => GoHome ?? GoHomeConfiguration.Default();
     public DesktopSurfaceConfiguration? GlobalDesktopSurface { get; init; }
     [JsonIgnore] public DesktopSpace ActiveSpace => Spaces.Single(s => s.Id == ActiveSpaceId);
     public static ShellConfiguration Default()
@@ -24,11 +26,12 @@ public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, I
         var layer = new TaskbarLayer(Guid.NewGuid(), "Main", new(56, 32, 8, 8, 12, 1, TaskbarAlignment.Start, true, false),
             [new(Guid.NewGuid(), TaskbarItemKind.Go, "Go", null)]);
         var space = new DesktopSpace(Guid.NewGuid(), "Standard", new(Guid.NewGuid(), TaskbarEdge.Bottom, layer.Id, [layer]));
-        return new(CurrentSchema, space.Id, [space]) { GlobalDesktopSurface = DesktopSurfaceConfiguration.Default() };
+        return new(CurrentSchema, space.Id, [space]) { GlobalDesktopSurface = DesktopSurfaceConfiguration.Default(), GoHome = GoHomeConfiguration.Default() };
     }
 
     public void Validate()
     {
+        GoHome?.Validate();
         if (SchemaVersion != CurrentSchema) throw new InvalidDataException("Unsupported shell configuration. Preserve it for recovery.");
         if (Spaces is null || Spaces.Count is < 1 or > 64 || Spaces.Any(s => s is null)) throw new InvalidDataException("One to 64 Desktop Spaces are required.");
         var identities = new HashSet<Guid>();
@@ -103,6 +106,11 @@ public interface IShellConfigurationStore
     Task<bool> TryWriteAsync(long expectedRevision, ShellStoredConfiguration next, CancellationToken cancellationToken);
     Task<bool> IsCurrentSessionAsync(string authorityId, AuthenticatedResourceActor actor, CancellationToken cancellationToken) => Task.FromResult(false);
 }
+/// <summary>Optional original-session read; unavailable owners never adopt the ambient session.</summary>
+public interface IShellOriginalActorReadStore : IShellConfigurationStore
+{
+    Task<ShellStoredConfiguration> ReadForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct);
+}
 public sealed record ShellPreview(Guid Id, long BaseRevision, ShellConfiguration Candidate, DateTimeOffset ExpiresAt, string AuthorityId)
 {
     internal AuthenticatedResourceActor? SessionActor { get; init; }
@@ -128,6 +136,30 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     {
         await _gate.WaitAsync(ct);
         try { return Snapshot(await ReadAsync(ct)); } finally { _gate.Release(); }
+    }
+    internal async Task<ShellConfigurationSnapshot> GetForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (store is not IShellOriginalActorReadStore originalStore)
+            throw new UnauthorizedAccessException("The shell owner cannot retain the original query session.");
+        await _gate.WaitAsync(ct);
+        try
+        {
+            var stored = await originalStore.ReadForActorAsync(expectedActor, ct);
+            if (stored.SessionActor != expectedActor || !await store.IsCurrentSessionAsync(stored.AuthorityId, expectedActor, ct))
+                throw new UnauthorizedAccessException("The original shell read session changed.");
+            stored.Current.Validate(); stored.Previous?.Validate();
+            return Snapshot(stored);
+        }
+        finally { _gate.Release(); }
+    }
+    internal async Task<ShellConfigurationSnapshot> GetForOriginalAsync(ShellStoredConfiguration original, CancellationToken ct)
+    {
+        var actor = original.SessionActor ?? throw new UnauthorizedAccessException("Reopen the original shell session.");
+        var current = await GetForActorAsync(actor, ct);
+        if (current.Stored.AuthorityId != original.AuthorityId || current.Stored.Revision != original.Revision)
+            throw new UnauthorizedAccessException("The original displayed shell configuration changed.");
+        return current;
     }
     public Task<ShellConfigurationSnapshot> PreviewAsync(ShellStoredConfiguration expected, ShellConfiguration candidate, TimeSpan duration, CancellationToken ct = default)
     {
@@ -197,6 +229,6 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     }
     private void ClearPreview()
     { if (_preview is not null) { _preview = null; _intentGeneration = checked(_intentGeneration + 1); } }
-    private static ShellConfiguration Clone(ShellConfiguration source) => source with { GlobalDesktopSurface = source.GlobalDesktopSurface is null ? null : DesktopPageEdits.Clone(source.GlobalDesktopSurface), Spaces = source.Spaces.Select(s => s with { DesktopSurface = s.DesktopSurface is null ? null : DesktopPageEdits.Clone(s.DesktopSurface), Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
+    private static ShellConfiguration Clone(ShellConfiguration source) => source with { GoHome = source.GoHome?.Detached(), GlobalDesktopSurface = source.GlobalDesktopSurface is null ? null : DesktopPageEdits.Clone(source.GlobalDesktopSurface), Spaces = source.Spaces.Select(s => s with { DesktopSurface = s.DesktopSurface is null ? null : DesktopPageEdits.Clone(s.DesktopSurface), Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
 }
 public sealed class ShellConfigurationConflictException() : IOException("Shell configuration changed concurrently. Reload before editing; existing configuration was preserved.");
