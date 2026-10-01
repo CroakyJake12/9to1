@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "programTree": "42f5b6ef35d5c19b058ad9e858e87b9b71e760b8",
+  "baselineCommit": "ae9589c6f5285dd8f220092ee60fa17bd4d12ba9",
+  "programTree": "8b629ffb85660d561d5bb314eb2c82cb5010bdb9",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-automation28-test-classes.json",
       "mode": "100644",
-      "object": "a0debf6ca0ae26dd17056f88af92eb943163ab6a",
+      "object": "c6d66ab4e9a9a2f84d03a9aa42f660d97f89f138",
       "bytes": 2581,
-      "sha256": "baaf9e355523a07150aaf22375b63608826928b917a3a61124255a1dc62d04b4"
+      "sha256": "08ddb83b2eac5a14e3e9f4602c3f3005675ab2ccf8fe00a456f6fb3818014ff4"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -34847,9 +34847,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationDefinitionActionPolicies.cs",
       "mode": "100644",
-      "object": "ce8a0b288248b59e576e996091aee39700b1ce5a",
-      "bytes": 899,
-      "sha256": "92c2ef5e2cf2d4b7ac19165d39d399578e8165c4f011cb08212ee6ef74b1b0c4"
+      "object": "22599f9c5d10c7313c665d500c9281d22ea2f342",
+      "bytes": 942,
+      "sha256": "bd6cf11881c89161aeef689da790c760bf88d177233d5d58c165df9b5860ab46"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationDefinitionResourceAccessResolver.cs",
@@ -34861,16 +34861,16 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationDefinitionReviewCaller.cs",
       "mode": "100644",
-      "object": "417ae70faa2366ce776d4da25f04b1ed593f9ab6",
-      "bytes": 11087,
-      "sha256": "c112bb92c2efb4d81d9b5c44bde7d85041d9462a6d8153412b5a6e1caa2301a5"
+      "object": "ccd29df2955958e9f2a7aa835f1f99804bee267b",
+      "bytes": 11088,
+      "sha256": "a314975202701c557a92bb99094d034def5cef480b4ccbd7a73b1fb2d6cee094"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationHomeDefinitionOperation.cs",
       "mode": "100644",
-      "object": "b823ff4d77a87725796fea60574e20b57825fd7e",
-      "bytes": 18498,
-      "sha256": "258b44a3623598511c5674e47fb9d5597d0e55e19bac341dbe97324b44d4c7f9"
+      "object": "bc34a074fd1aa87a508841535e233dfa3f9a03a8",
+      "bytes": 18339,
+      "sha256": "e02ac7d0d1d3fea09bc7e49c9bb78e4163601cb671fe64d2c6fdfe01befee1f1"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationLocalStoreAuthority.cs",
@@ -64073,15 +64073,15 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-automation28-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
+  "limits": "Preserve actual failed firstcut and fullowningcoverage; exact4/3source compilecorrector only; no execution claims.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker4-automation28-hosted-plan-sol2/manifest.json",
-      "sha256": "22c82c542c056eef535dd994f03f30b6e960c6e7c3b96581e56001969f6db422"
+      "path": "/workspace/astra-source/worker2-automation-owner-native-root13-joined28-compilefix01/manifest.json",
+      "sha256": "002301be5f8e9c36706bf619b0d09f0350c8fbd4cb25664380c6ac28b1b5bd5a"
     },
     {
-      "path": "/workspace/astra-source/worker2-automation-owner-native-root13-joined28/manifest.json",
-      "sha256": "625c6a54468fd9c1c4b2ac74da4c74f573940e09943525cfcb9b98c4836d828c"
+      "path": "/workspace/astra-source/worker4-automation28-hosted-plan-sol3/manifest.json",
+      "sha256": "f791ccb0d46da5ad972139d6098e5738c3e1a69a78645e8dfcc1dcd2bf7facc0"
     }
   ],
   "sharedCakeIdContract": null

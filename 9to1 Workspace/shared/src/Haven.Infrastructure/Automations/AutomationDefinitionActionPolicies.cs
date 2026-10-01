@@ -12,6 +12,6 @@ public sealed class AutomationDefinitionActionPolicies : IHomeActionPolicySource
         appId == AutomationDefinitionChange.TargetAppID && actionId is
             "automations.create" or "automations.update" or "automations.disable" or
             "automations.delete" or "automations.restore" or "automations.recover"
-            ? new(HomePermissionRisk.High, IsReversible: true, HasExternalSideEffects: false,
+            ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, IsReversible: true, HasExternalSideEffects: false,
                 RequiresPerActionApproval: true) : null;
 }

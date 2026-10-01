@@ -84,7 +84,7 @@ public sealed class AutomationDefinitionReviewCaller(IAutomationOwnerRepository 
         if (change.ChangeKind == AutomationDefinitionChangeKind.PublishGraph || change.Automation is { IsEnabled: true } ||
             change.ReusableTask is { IsEnabled: true }) throw new InvalidOperationException("Automation publication and run authority are unavailable.");
         await RequireAsync(original, token).ConfigureAwait(false);
-        var request = await broker.AuthorizeForActorAsync(original.Actor, AutomationDefinitionChange.TargetAppID,
+        var request = await _broker.AuthorizeForActorAsync(original.Actor, AutomationDefinitionChange.TargetAppID,
             change.ActionID, change.Scopes, change.Arguments, "Review this exact automation library change", null,
             "automation-definition-caller", token).ConfigureAwait(false);
         // Retain exact issued intent/request even if the session changes during durable review delivery.

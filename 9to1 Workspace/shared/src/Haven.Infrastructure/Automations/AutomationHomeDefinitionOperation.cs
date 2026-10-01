@@ -98,8 +98,7 @@ public sealed class AutomationDefinitionCommitObservationRecovery
             try
             {
                 if (await audit.FinishAsync(cancellationToken).ConfigureAwait(false))
-                    _confirmed = _confirmed with { Committed = pending.IsUnclaimedAbort ? false : _confirmed.Committed,
-                                Code = _confirmed.Committed == true ? "DefinitionCommitted" : "DefinitionNotCommitted", AuditRecovery = null };
+                    _confirmed = _confirmed with { Code = "DefinitionCommitted", AuditRecovery = null };
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or JsonException) { }
             return _confirmed;
