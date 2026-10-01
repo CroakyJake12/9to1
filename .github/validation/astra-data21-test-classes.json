@@ -1,0 +1,63 @@
+{
+  "status": "Exactjoined21 +frozenRoot12 baseline owningclass sources verified, NOTexecuted",
+  "classes": [
+    {
+      "class": "DataRecordCreationTests",
+      "fullClass": "Haven.Core.Tests.DataRecordCreationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationTests.cs",
+      "sha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1",
+      "joinedSource": "/workspace/astra-source/worker3-data-record-keys-final/source/DataRecordCreationTests.cs",
+      "joinedSourceSha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1"
+    },
+    {
+      "class": "DataRecordCreationProjectionTests",
+      "fullClass": "Haven.Core.Tests.DataRecordCreationProjectionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationProjectionTests.cs",
+      "sha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0",
+      "joinedSource": "/workspace/astra-source/worker3-data-record-keys-final/source/DataRecordCreationProjectionTests.cs",
+      "joinedSourceSha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0"
+    },
+    {
+      "class": "DataLocalStoreAuthorityTests",
+      "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "sha256": "07264a7d981657cc2b7b86be3a04ebf71d5750e182bc2366f64c4b5c092f51bb",
+      "joinedSource": "/workspace/astra-source/worker3-data-display-selection-successor/source/DataLocalStoreAuthorityTests.cs",
+      "joinedSourceSha256": "07264a7d981657cc2b7b86be3a04ebf71d5750e182bc2366f64c4b5c092f51bb"
+    },
+    {
+      "class": "HomeDataConversationRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "joinedSource": "/workspace/astra-source/worker1-data-record-di-draft03/HomeDataConversationRegistrationTests.cs",
+      "joinedSourceSha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13"
+    },
+    {
+      "class": "DataPageTests",
+      "fullClass": "Haven.Desktop.Tests.DataPageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataPageTests.cs",
+      "sha256": "4e6711e6a5abe4294324b4dde58a21a8f2ce7c4ed0d33e4f5718e2680cac9ef1",
+      "joinedSource": "/workspace/astra-source/worker3-data-display-selection-successor/source/DataPageTests.cs",
+      "joinedSourceSha256": "4e6711e6a5abe4294324b4dde58a21a8f2ce7c4ed0d33e4f5718e2680cac9ef1"
+    },
+    {
+      "class": "DataRecordDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataRecordDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
+      "sha256": "e7e8b9bf38eac2df9403783ec97a6a0367207f9ec0c9fed9bb12d8bc11c6f0b0",
+      "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-07/DataRecordDocumentWorkspaceHostTests.cs",
+      "joinedSourceSha256": "e7e8b9bf38eac2df9403783ec97a6a0367207f9ec0c9fed9bb12d8bc11c6f0b0"
+    },
+    {
+      "class": "DataRelationshipDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataRelationshipDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "sha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382",
+      "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-07/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "joinedSourceSha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382"
+    }
+  ],
+  "joined21Manifest": "/workspace/astra-source/worker3-data-display-selection-successor/joined-source21.json",
+  "joined21Sha256": "8e32f2b36d53ce700443f47bebb2bf186641cc4d735010b0c9cc4fd50bf8714a"
+}

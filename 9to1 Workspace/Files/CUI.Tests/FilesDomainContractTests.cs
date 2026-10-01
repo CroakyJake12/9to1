@@ -26,7 +26,131 @@ internal static class FilesDomainContractTests
         await GuardedUploadsRejectChangedOrMissingDependenciesWithoutPublishing();
         await ImportedArtifactsPublishBothIdentitiesAtomically();
         await CreatedArtifactsPublishIdentityAndContentAtomically();
+        await DurableRevisionChecksRawSourcePreconditionsBeforePublication();
+        await ExistingStoreEvidenceDoesNotCreateAdoptOrRewriteState();
 	}
+
+
+    private static async Task ExistingStoreEvidenceDoesNotCreateAdoptOrRewriteState()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var path = Path.Combine(directory, "existing.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            await Check.ThrowsAsync<FileNotFoundException>(() => provider.GetStoreEvidenceAsync(Guid.NewGuid()));
+            Check.False(File.Exists(path)); Check.False(File.Exists(path + ".lock"));
+            var initial = await provider.GetStoreEvidenceAsync(); // trusted fixture setup is the only identity creation path
+            var envelope = System.Text.Json.Nodes.JsonNode.Parse(await File.ReadAllBytesAsync(path))!.AsObject();
+            var state = envelope["state"]!.AsObject();
+            envelope["retainedEnvelopeData"] = System.Text.Json.Nodes.JsonNode.Parse("{\"opaque\":true}");
+            state["retainedFutureData"] = System.Text.Json.Nodes.JsonNode.Parse("{\"payload\":null}");
+            await File.WriteAllTextAsync(path, envelope.ToJsonString());
+            var unchanged = await File.ReadAllBytesAsync(path);
+            var observed = await provider.GetStoreEvidenceAsync(initial.StoreId);
+            Check.Equal(initial.StoreId, observed.StoreId); Check.Equal("owner", observed.OwnerPrincipalId);
+            Check.Equal(location, observed.LocationId);
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            await Check.ThrowsAsync<UnauthorizedAccessException>(() => provider.GetStoreEvidenceAsync(Guid.NewGuid()));
+            await Check.ThrowsAsync<ArgumentException>(() => provider.GetStoreEvidenceAsync(Guid.Empty));
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            state["storeId"] = Guid.NewGuid();
+            await File.WriteAllTextAsync(path, envelope.ToJsonString());
+            unchanged = await File.ReadAllBytesAsync(path);
+            await Check.ThrowsAsync<UnauthorizedAccessException>(() => provider.GetStoreEvidenceAsync(initial.StoreId));
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            state["storeId"] = initial.StoreId;
+            state.Remove("storeOwnerPrincipalId"); // strict reads never silently attach an owner to a legacy row
+            await File.WriteAllTextAsync(path, envelope.ToJsonString());
+            unchanged = await File.ReadAllBytesAsync(path);
+            await Check.ThrowsAsync<UnauthorizedAccessException>(() => provider.GetStoreEvidenceAsync(initial.StoreId));
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+            state["storeOwnerPrincipalId"] = "owner"; state.Remove("storeId");
+            await File.WriteAllTextAsync(path, envelope.ToJsonString());
+            unchanged = await File.ReadAllBytesAsync(path);
+            await Check.ThrowsAsync<UnauthorizedAccessException>(() => provider.GetStoreEvidenceAsync(initial.StoreId));
+            Check.True(Enumerable.SequenceEqual(unchanged, await File.ReadAllBytesAsync(path)));
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    private static async Task DurableRevisionChecksRawSourcePreconditionsBeforePublication()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var path = Path.Combine(directory, "drive.json");
+            var location = new FilesLocationId(Guid.NewGuid());
+            var provider = new DurableDriveProvider(path, location, "owner");
+            var now = DateTimeOffset.UtcNow; var folder = HostedItemId.New();
+            Check.True((await provider.MutateAsync(new FilesOperation(new(Guid.NewGuid()), "owner", folder,
+                null, null, "CreateFolder", null, null, FilesOperationState.Pending, now, now, null, null), "Picture", default)).IsSuccess);
+            var authority = new FilesCommitAuthorityGuard("owner", _ => ValueTask.FromResult(true));
+            var source = HostedItemId.New(); var content = new FilesRevisionId(Guid.NewGuid());
+            byte[] raw = [137, 80, 78, 71, 1];
+            await File.WriteAllBytesAsync(Path.Combine(directory, "source.png"), raw);
+            var parent = (await provider.GetAsync(folder, default)).Value!;
+            Check.True((await provider.CommitUploadedContentAsync(new(source, folder, "source.png", "image/png", content,
+                null, "owner", now, raw.Length, Convert.ToHexString(SHA256.HashData(raw)), "source.png"),
+                [new(folder, parent.CurrentRevisionId)], authority, default)).IsSuccess);
+            var selected = (await provider.GetAsync(source, default)).Value!;
+            var artifact = new FilesArtifactReference("picture", Guid.NewGuid().ToString("N"), HostedItemId.New(), folder,
+                "Picture", "image.9to1p");
+            Check.True((await provider.RegisterArtifactAsync(artifact, "owner", default)).IsSuccess);
+            var initial = await provider.CommitDurableRevisionAsync(new(artifact.FileId, "picture", "1", "owner", now,
+                4, new string('b', 64), "immutable/image-1.9to1p", null), authority, default);
+            Check.True(initial.IsSuccess);
+            var proposed = new FilesOwningAppRevisionCommit(artifact.FileId, "picture", "2", "owner", now,
+                8, new string('c', 64), "immutable/image-2.9to1p", initial.Value!.Id);
+            var stale = new[] { new FilesItemRevisionPrecondition(source, selected.CurrentRevisionId) };
+            // A separate actual provider changes the raw source after the owning app captured its read ACL/revision.
+            var other = new DurableDriveProvider(path, location, "owner");
+            Check.True((await other.MutateAsync(new(new(Guid.NewGuid()), "owner", source, folder, folder,
+                "Rename", selected.CurrentRevisionId, null, FilesOperationState.Pending, now, now, null, null), "renamed.png", default)).IsSuccess);
+            var before = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitDurableRevisionAsync(proposed, stale, authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+            var current = (await provider.GetAsync(source, default)).Value!;
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitDurableRevisionAsync(proposed,
+                [new(source, current.CurrentRevisionId), new(source, current.CurrentRevisionId)], authority, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.ItemNotFound, (await provider.CommitDurableRevisionAsync(proposed,
+                [new(HostedItemId.New(), current.CurrentRevisionId)], authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+            var storeId = (await provider.GetStoreEvidenceAsync(default)).StoreId;
+            before = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitDurableRevisionAsync(proposed,
+                [new(source, current.CurrentRevisionId)], Guid.NewGuid(), authority, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitDurableRevisionAsync(proposed,
+                [], Guid.Empty, authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+            var accepted = await provider.CommitDurableRevisionAsync(proposed, [new(source, current.CurrentRevisionId)], storeId, authority, default);
+            Check.True(accepted.IsSuccess);
+            Check.Equal(accepted.Value!.Id, (await provider.GetAsync(artifact.FileId, default)).Value!.CurrentRevisionId!.Value);
+            // Simulate a replaced persistent store preserving every artifact/source identity and revision.
+            var originalStoreBytes = await File.ReadAllBytesAsync(path);
+            var substitutedEnvelope = System.Text.Json.Nodes.JsonNode.Parse(originalStoreBytes)!.AsObject();
+            var substitutedStore = substitutedEnvelope["state"]!.AsObject();
+            var storeProperty = substitutedStore.Select(property => property.Key)
+                .Single(key => string.Equals(key, "StoreId", StringComparison.OrdinalIgnoreCase));
+            substitutedStore[storeProperty] = Guid.NewGuid();
+            await File.WriteAllTextAsync(path, substitutedEnvelope.ToJsonString());
+            var substitutedBytes = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitDurableRevisionAsync(proposed with {
+                OwningAppRevisionId = "3", ExpectedBaseRevisionId = accepted.Value.Id },
+                [], storeId, authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(substitutedBytes, await File.ReadAllBytesAsync(path)));
+            await File.WriteAllBytesAsync(path, originalStoreBytes);
+            Check.True((await other.MutateAsync(new(new(Guid.NewGuid()), "owner", source, folder, null,
+                "Delete", current.CurrentRevisionId, null, FilesOperationState.Pending, now, now, null, null), null, default)).IsSuccess);
+            before = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.ItemNotFound, (await provider.CommitDurableRevisionAsync(proposed with {
+                OwningAppRevisionId = "3", ExpectedBaseRevisionId = accepted.Value.Id },
+                [new(source, current.CurrentRevisionId)], authority, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+        }
+        finally { Directory.Delete(directory, true); }
+    }
 
     private static async Task CreatedArtifactsPublishIdentityAndContentAtomically()
     {
@@ -56,7 +180,25 @@ internal static class FilesDomainContractTests
                 [new(folder, new FilesRevisionId(Guid.NewGuid()))], allowed, default);
             Check.Equal(FilesErrorCode.RevisionConflict, stale.Error!.Code);
             Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
-            var created = await provider.CommitCreatedArtifactAsync(artifact, commit, guards, allowed, default);
+            var originalStoreId = (await provider.GetStoreEvidenceAsync(default)).StoreId;
+            before = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitCreatedArtifactAsync(artifact, commit,
+                guards, Guid.NewGuid(), allowed, default)).Error!.Code);
+            Check.Equal(FilesErrorCode.InvalidState, (await provider.CommitCreatedArtifactAsync(artifact, commit,
+                guards, Guid.Empty, allowed, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(before, await File.ReadAllBytesAsync(path)));
+            var replacementEnvelope = System.Text.Json.Nodes.JsonNode.Parse(before)!.AsObject();
+            var replacementState = replacementEnvelope["state"]!.AsObject();
+            var identityProperty = replacementState.Select(property => property.Key)
+                .Single(key => string.Equals(key, "StoreId", StringComparison.OrdinalIgnoreCase));
+            replacementState[identityProperty] = Guid.NewGuid();
+            await File.WriteAllTextAsync(path, replacementEnvelope.ToJsonString());
+            var replacementBytes = await File.ReadAllBytesAsync(path);
+            Check.Equal(FilesErrorCode.RevisionConflict, (await provider.CommitCreatedArtifactAsync(artifact, commit,
+                guards, originalStoreId, allowed, default)).Error!.Code);
+            Check.True(Enumerable.SequenceEqual(replacementBytes, await File.ReadAllBytesAsync(path)));
+            await File.WriteAllBytesAsync(path, before);
+            var created = await provider.CommitCreatedArtifactAsync(artifact, commit, guards, originalStoreId, allowed, default);
             Check.True(created.IsSuccess);
             var reopened = new DurableDriveProvider(path, location, "owner");
             Check.Equal(artifact, (await reopened.GetArtifactAsync(artifact.FileId)).Value);

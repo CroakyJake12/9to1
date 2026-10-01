@@ -20,6 +20,8 @@ public static class FilesNativeHostComposition
         services.TryAddSingleton<NativeFilesWorkspaceAuthority>();
         services.TryAddSingleton<NativeFilesMediaAssetSourceResolver>();
         services.TryAddSingleton<NativeFilesArtifactContentReader>();
+        services.TryAddSingleton<FilesNativeFolderReadSource>();
+        services.TryAddSingleton<FilesNativeBrowserService>();
         services.TryAddSingleton<FilesCompatibilityPackageContentSource>();
         services.TryAddSingleton<ICompatibilityPackageContentSource>(provider => provider.GetRequiredService<FilesCompatibilityPackageContentSource>());
         services.AddSingleton<IMediaAssetSourceResolver>(provider => provider.GetRequiredService<NativeFilesMediaAssetSourceResolver>());

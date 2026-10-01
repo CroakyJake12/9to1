@@ -60,17 +60,50 @@ public sealed partial class DurableDriveProvider
     }
 
     public Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit, CancellationToken cancellationToken) =>
-        CommitDurableRevisionCoreAsync(commit, null, cancellationToken);
+        CommitDurableRevisionCoreAsync(commit, [], null, null, cancellationToken);
 
     public Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit,
         FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(authority);
-        return CommitDurableRevisionCoreAsync(commit, authority, cancellationToken);
+        return CommitDurableRevisionCoreAsync(commit, [], null, authority, cancellationToken);
+    }
+
+    /// <summary>Checks captured canonical source revisions in the same metadata mutation as publication.
+    /// The authority callback must never recursively read Files while this store lease is held.</summary>
+    public Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, FilesCommitAuthorityGuard authority,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(commit); ArgumentNullException.ThrowIfNull(preconditions);
+        ArgumentNullException.ThrowIfNull(authority);
+        var guards = preconditions.ToArray();
+        if (guards.Length is < 1 or > 256 || guards.Any(guard => guard is null || guard.ItemId.Value == Guid.Empty) ||
+            guards.Select(guard => guard.ItemId).Distinct().Count() != guards.Length)
+            return Task.FromResult(Fail<FilesRevision>(FilesErrorCode.InvalidState,
+                "Source publication requires bounded unique canonical revision preconditions.", "CommitOwningAppRevision", commit.FileId));
+        return CommitDurableRevisionCoreAsync(commit, guards, null, authority, cancellationToken);
+    }
+
+    /// <summary>Retains the original store identity and source revisions through the final persistent mutation.
+    /// Empty source guards support source-less artifacts; the store identity is always mandatory.</summary>
+    public Task<FilesResult<FilesRevision>> CommitDurableRevisionAsync(FilesOwningAppRevisionCommit commit,
+        IReadOnlyList<FilesItemRevisionPrecondition> preconditions, Guid expectedStoreId,
+        FilesCommitAuthorityGuard authority, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(commit); ArgumentNullException.ThrowIfNull(preconditions);
+        ArgumentNullException.ThrowIfNull(authority);
+        var guards = preconditions.ToArray();
+        if (expectedStoreId == Guid.Empty || guards.Length > 256 ||
+            guards.Any(guard => guard is null || guard.ItemId.Value == Guid.Empty) ||
+            guards.Select(guard => guard.ItemId).Distinct().Count() != guards.Length)
+            return Task.FromResult(Fail<FilesRevision>(FilesErrorCode.InvalidState,
+                "Publication requires the original store identity and bounded unique source revisions.", "CommitOwningAppRevision", commit.FileId));
+        return CommitDurableRevisionCoreAsync(commit, guards, expectedStoreId, authority, cancellationToken);
     }
 
     private async Task<FilesResult<FilesRevision>> CommitDurableRevisionCoreAsync(FilesOwningAppRevisionCommit commit,
-        FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
+        IReadOnlyList<FilesItemRevisionPrecondition> guards, Guid? expectedStoreId, FilesCommitAuthorityGuard? authority, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(commit);
         if (authority is not null && authority.ActorId != _owner)
@@ -80,10 +113,20 @@ public sealed partial class DurableDriveProvider
         {
         await _store.UpdateAsync(state =>
         {
+            if (expectedStoreId is { } originalStore && state.StoreId != originalStore)
+            { throw new OriginalFilesStoreChangedException(); }
             var entry = state.Items.SingleOrDefault(item => item.Metadata.Id == commit.FileId);
             var reference = state.Artifacts.SingleOrDefault(item => item.FileId == commit.FileId);
             if (commit.ActorId != _owner || reference?.OwnerAppId != commit.OwningAppId)
             { result = Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Only the authorised owning app may commit this artifact revision.", "CommitOwningAppRevision", commit.FileId); return state; }
+            foreach (var guard in guards)
+            {
+                var guarded = state.Items.SingleOrDefault(item => item.Metadata.Id == guard.ItemId);
+                if (guarded is null || !IsVisible(state, guarded))
+                { result = Fail<FilesRevision>(FilesErrorCode.ItemNotFound, "A canonical source is unavailable.", "CommitOwningAppRevision", commit.FileId); return state; }
+                if (guarded.Metadata.CurrentRevisionId != guard.ExpectedRevision)
+                { result = Fail<FilesRevision>(FilesErrorCode.RevisionConflict, "A canonical source changed before publication.", "CommitOwningAppRevision", commit.FileId); return state; }
+            }
             if (entry is null || !IsVisible(state, entry))
             { result = Fail<FilesRevision>(FilesErrorCode.ItemNotFound, "Artifact is unavailable.", "CommitOwningAppRevision", commit.FileId); return state; }
             if (string.IsNullOrWhiteSpace(commit.OwningAppRevisionId) || commit.SizeBytes is < 0)
@@ -111,9 +154,14 @@ public sealed partial class DurableDriveProvider
                 Events = [.. state.Events, change] };
         }, authority is null ? null : authority.ValidateAsync, cancellationToken);
         }
+        catch (OriginalFilesStoreChangedException)
+        { return Fail<FilesRevision>(FilesErrorCode.RevisionConflict, "The original Files store changed before publication.", "CommitOwningAppRevision", commit.FileId); }
         catch (FilesCommitAuthorityChangedException)
         { return Fail<FilesRevision>(FilesErrorCode.PermissionDenied, "Commit authority changed before publication.", "CommitOwningAppRevision", commit.FileId); }
         if (result!.IsSuccess) foreach (var subscriber in _subscribers.Values) subscriber.Writer.TryWrite(true);
         return result;
     }
+    // Refusal inside UpdateAsync aborts before its serializer can rewrite a substituted store.
+    private sealed class OriginalFilesStoreChangedException : Exception { }
+
 }

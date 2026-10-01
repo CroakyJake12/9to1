@@ -1,3 +1,5 @@
+using Haven.Application;
+using Haven.Core;
 using System.Text;
 using System.Text.Json;
 
@@ -5,6 +7,12 @@ namespace HavenOS.AIStudio;
 
 public interface IStudioRuntimeAdapter
 {
+    // The originating authorized adapter must privately bind its exact issued Studio run to
+    // the owning Agent run and freshly read the sealed receipt. ActivityJson is never a binding.
+    // This observation conveys no access permission or proof of underlying owner mutation.
+    Task<RecordedAgentInvocationEvidence?> GetRecordedInvocationEvidenceAsync(StudioRun originatingRun,
+        CancellationToken cancellationToken) => Task.FromResult<RecordedAgentInvocationEvidence?>(null);
+
     Task<StudioResult<StudioRun>> RunHarnessAsync(StudioProject project, string input, string? runProfileId, CancellationToken cancellationToken);
     Task<StudioResult<StudioRun>> RunPlaygroundAsync(PlaygroundConfiguration configuration, string input, CancellationToken cancellationToken);
     Task<StudioResult<InstallReceipt>> InstallToolAsync(StudioProject project, CancellationToken cancellationToken);
@@ -593,7 +601,14 @@ public sealed class AIStudioApi(IStudioProjectStore store, IStudioRuntimeAdapter
                     JsonSerializer.Serialize(new { testCase, run.Error.Code, run.Error.Message }, StudioJson.Options)));
                 continue;
             }
-            var assertions = testCase.Assertions.Select(assertion => EvaluateAssertion(assertion, run.Value!)).ToArray();
+            RecordedAgentInvocationEvidence? invocationEvidence = null;
+            if (testCase.Assertions.Any(assertion => assertion.Type is "registeredToolInvoked" or "registeredToolNotInvoked"))
+            {
+                try { invocationEvidence = await runtime.GetRecordedInvocationEvidenceAsync(run.Value!, cancellationToken).ConfigureAwait(false); }
+                catch (IOException) { /* A failed source read cannot establish presence or absence. */ }
+                catch (InvalidOperationException) { /* An unavailable originating binding remains unknown. */ }
+            }
+            var assertions = testCase.Assertions.Select(assertion => EvaluateAssertion(assertion, run.Value!, invocationEvidence)).ToArray();
             var status = assertions.All(assertion => assertion.Passed) ? "Passed" : "Failed";
             results.Add(new StudioTestCaseResult(testCase.CaseId, status, assertions, run.Value!.RunId, null,
                 status == "Failed" ? JsonSerializer.Serialize(new { testCase, run.Value.EffectiveModel, run.Value.RunProfileId, run.Value.ActionGraphJson }, StudioJson.Options) : null));
@@ -764,8 +779,11 @@ public sealed class AIStudioApi(IStudioProjectStore store, IStudioRuntimeAdapter
         return true;
     }
 
-    private static TestAssertionResult EvaluateAssertion(TestAssertion assertion, StudioRun run)
+    private static TestAssertionResult EvaluateAssertion(TestAssertion assertion, StudioRun run,
+        RecordedAgentInvocationEvidence? invocationEvidence)
     {
+        if (assertion.Type is "registeredToolInvoked" or "registeredToolNotInvoked")
+            return EvaluateRegisteredToolAssertion(assertion, invocationEvidence);
         var passed = assertion.Type switch
         {
             "outputEquals" => NormalizeJson(run.Output) == NormalizeJson(assertion.ExpectedJson),
@@ -784,6 +802,37 @@ public sealed class AIStudioApi(IStudioProjectStore store, IStudioRuntimeAdapter
             assertion.Type is "actionCalled" or "actionNotCalled"
                 ? "ActionEvidenceUnavailable: canonical authenticated invocation evidence is unavailable; activity prose is not proof of presence or absence."
                 : passed ? "Assertion passed." : $"Assertion '{assertion.Type}' failed or is unsupported.", actual);
+    }
+
+    private static TestAssertionResult EvaluateRegisteredToolAssertion(TestAssertion assertion,
+        RecordedAgentInvocationEvidence? evidence)
+    {
+        if (evidence is null)
+            return new(assertion.AssertionId, false,
+                "InvocationEvidenceUnavailable: the originating authorized runtime has no fresh complete owning receipt.", null);
+        string? toolName = null;
+        try
+        {
+            using var expected = JsonDocument.Parse(assertion.ExpectedJson);
+            var root = expected.RootElement;
+            if (root.ValueKind == JsonValueKind.Object && root.EnumerateObject().Count() == 2 &&
+                root.TryGetProperty("namespace", out var identityNamespace) && identityNamespace.ValueKind == JsonValueKind.String &&
+                identityNamespace.GetString() == evidence.ToolIdentityNamespace &&
+                identityNamespace.GetString() == AgentActivityObservation.ToolIdentityNamespace &&
+                root.TryGetProperty("toolName", out var name) && name.ValueKind == JsonValueKind.String)
+                toolName = name.GetString();
+        }
+        catch (JsonException) { }
+        if (string.IsNullOrWhiteSpace(toolName) || toolName.Length > 512)
+            return new(assertion.AssertionId, false,
+                "InvalidInvocationAssertion: an exact registered-local-tool namespace and toolName are required.", null);
+        var invoked = evidence.Invocations.Any(item => item.ToolName == toolName &&
+            item.Status == ToolInvocationObservationStatus.RuntimeReturned);
+        var passed = assertion.Type == "registeredToolInvoked" ? invoked : !invoked;
+        return new(assertion.AssertionId, passed,
+            passed ? "Registered dispatcher invocation assertion passed; this does not establish owner mutation."
+                : "Registered dispatcher invocation assertion failed.",
+            JsonSerializer.Serialize(new { evidence.AgentRunId, evidence.ToolIdentityNamespace, toolName, invoked }));
     }
 
     private static StudioResult<StudioResource> ValidateResource(StudioResource resource)

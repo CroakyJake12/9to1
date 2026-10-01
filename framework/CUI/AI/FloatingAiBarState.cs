@@ -17,6 +17,22 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
     private long _requestVersion;
     private long _searchVersion;
     private bool _disposed;
+    private readonly object _auditSync = new();
+    private readonly List<AppAiActionResult> _pendingAudits = [];
+    private bool _hasUnconfirmedActionAudit;
+    public bool HasUnconfirmedActionAudit { get { lock (_auditSync) return _hasUnconfirmedActionAudit; } }
+    private bool _unsupportedAudit;
+    public bool HasPendingActionAudit { get { lock (_auditSync) return _pendingAudits.Count > 0; } }
+    private void RetainAudit(AppAiActionResult result)
+    {
+        lock (_auditSync)
+        {
+            if (result.CompletionAuditPending) _hasUnconfirmedActionAudit = true;
+            if (result.AuditRecovery is null)
+            { if (result.CompletionAuditPending) _unsupportedAudit = true; return; }
+            if (!_pendingAudits.Any(item => ReferenceEquals(item.AuditRecovery, result.AuditRecovery))) _pendingAudits.Add(result);
+        }
+    }
 
     public FloatingAiBarMode Mode { get; private set; } = FloatingAiBarMode.Collapsed;
     public AppAiAccessMode AccessMode { get; private set; } = AppAiAccessMode.ReadOnly;
@@ -29,7 +45,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         AppAiRequestState.Generating => "Thinking…",
         AppAiRequestState.WaitingForApproval => "Waiting for approval…",
         AppAiRequestState.ExecutingAction => "Applying an approved app action…",
-        AppAiRequestState.Completed => "Ready",
+        AppAiRequestState.Completed => HasUnconfirmedActionAudit ? "Owner outcome retained; Home audit pending" : "Ready",
         AppAiRequestState.Cancelled => "Stopped",
         AppAiRequestState.Failed => "Could not complete the request",
         _ => string.Empty
@@ -235,6 +251,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
                 token,
                 invocations).ConfigureAwait(false))
             {
+                if (chunk.ActionObservation is { } observed) RetainAudit(observed);
                 if (version != Volatile.Read(ref _requestVersion))
                     return;
 
@@ -284,6 +301,7 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
         try
         {
             var result = await coordinator.ExecuteAsync(captured, cancellation.Token).ConfigureAwait(false);
+            RetainAudit(result); // retain even if this view was replaced while the owner finished
             if (version != Volatile.Read(ref _requestVersion)) return result;
             Response = result.Summary;
             if (result.ErrorCode == "approval-pending")
@@ -311,6 +329,30 @@ public sealed class FloatingAiBarState(AppAiCoordinator coordinator) : IDisposab
             Interlocked.CompareExchange(ref _requestCancellation, null, cancellation);
             cancellation.Dispose();
         }
+    }
+
+    /// <summary>Retries only an already-issued completion audit. Never executes, verifies, or begins an action.</summary>
+    public async ValueTask<AppAiCompletionObservation> FinishActionAuditAsync(CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        var version = Volatile.Read(ref _requestVersion);
+        AppAiActionResult observed;
+        lock (_auditSync) observed = _pendingAudits.FirstOrDefault()
+            ?? throw new InvalidOperationException("This bar has no retained completion audit recovery.");
+        var recovery = observed.AuditRecovery!;
+        var completion = await recovery.FinishAsync(cancellationToken).ConfigureAwait(false);
+        if (completion.AuditRecorded) lock (_auditSync)
+        {
+            _pendingAudits.Remove(observed);
+            // Unsupported legacy audit transports have no owned handle and remain explicitly unconfirmed.
+            _hasUnconfirmedActionAudit = _pendingAudits.Count > 0 || _unsupportedAudit;
+        }
+        // Always acknowledge actual durable recovery, but never overwrite a newer or disposed view.
+        if (_disposed || version != Volatile.Read(ref _requestVersion)) return completion;
+        // Audit recovery updates audit availability only. The retained outcome must not replace
+        // any response/error belonging to another request, even one started before Finish.
+        Changed?.Invoke(this, EventArgs.Empty);
+        return completion;
     }
 
     public void Cancel()

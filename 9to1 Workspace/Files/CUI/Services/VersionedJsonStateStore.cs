@@ -50,6 +50,19 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
 		}
 	}
 
+    /// <summary>Reads only an already persisted state under the same process lease; never invokes the creation factory.</summary>
+    public async Task<TState> ReadExistingAsync(CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(_path)) throw new FileNotFoundException("The existing Files state is unavailable.", _path);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await using var processLease = await AcquireProcessLeaseAsync(cancellationToken).ConfigureAwait(false);
+            return await ReadCoreAsync(cancellationToken, requireExisting: true).ConfigureAwait(false);
+        }
+        finally { _gate.Release(); }
+    }
+
 	public Task<TState> UpdateAsync(Func<TState, TState> update, CancellationToken cancellationToken = default) =>
         UpdateAsync(update, null, cancellationToken);
 
@@ -102,10 +115,13 @@ public sealed class VersionedJsonStateStore<TState> where TState : class
         }
     }
 
-	private async Task<TState> ReadCoreAsync(CancellationToken cancellationToken)
+	private async Task<TState> ReadCoreAsync(CancellationToken cancellationToken, bool requireExisting = false)
 	{
 		if (!File.Exists(_path))
+        {
+            if (requireExisting) throw new FileNotFoundException("The existing Files state is unavailable.", _path);
 			return _createInitialState();
+        }
 
 		await using FileStream stream = new(_path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
 		using JsonDocument document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);

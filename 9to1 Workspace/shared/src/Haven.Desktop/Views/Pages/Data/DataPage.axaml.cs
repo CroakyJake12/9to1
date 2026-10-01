@@ -35,7 +35,11 @@ public sealed partial class DataPage : UserControl, IDisposable
     private bool _dirty;
     private bool _disposed;
 
-    public DataPage(HavenEventBus bus, IDataWorkbookRepository repository, IDataWorkbookFormatService formats, IDataWorkbookQueryService queries, GenUiLiveActivityTracker? activities = null, GenUiInstanceStore? genUiInstances = null, IDataTableSchemaDesigner? schemaDesigner = null, IDataRelationshipDesigner? relationshipDesigner = null)
+    private readonly IDataRecordCreator? _recordCreator;
+    private IDataRecordDisplaySelection? _recordDisplaySelection;
+    private int _recordDisplayLoadGeneration;
+
+    public DataPage(HavenEventBus bus, IDataWorkbookRepository repository, IDataWorkbookFormatService formats, IDataWorkbookQueryService queries, GenUiLiveActivityTracker? activities = null, GenUiInstanceStore? genUiInstances = null, IDataTableSchemaDesigner? schemaDesigner = null, IDataRelationshipDesigner? relationshipDesigner = null, IDataRecordCreator? recordCreator = null)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -44,7 +48,8 @@ public sealed partial class DataPage : UserControl, IDisposable
         _activities = activities ?? new GenUiLiveActivityTracker();
         _genUiInstances = genUiInstances ?? new GenUiInstanceStore();
         InitializeComponent();
-        _route = new DataHavenScene(); Scene.Root = _route.Root; _ = VisualQueryGraph; _ = SpreadsheetChrome; InitializeSpreadsheetEditingTools(); InitializeRecoveredDataUi(); InitializeTableDesign(schemaDesigner); InitializeRelationships(relationshipDesigner);
+        _recordCreator = recordCreator;
+        _route = new DataHavenScene(); Scene.Root = _route.Root; _ = VisualQueryGraph; _ = SpreadsheetChrome; InitializeSpreadsheetEditingTools(); InitializeRecoveredDataUi(); InitializeTableDesign(schemaDesigner); InitializeRelationships(relationshipDesigner); InitializeRecordCreation(recordCreator);
         _route.PreviousWorkbookRequested += OnPreviousWorkbookRequested; _route.NextWorkbookRequested += OnNextWorkbookRequested; _route.NewWorkbookRequested += OnNewWorkbookRequested; _route.SaveRequested += OnSaveRequested; _route.ImportRequested += OnImportRequested; _route.ExportRequested += OnExportRequested;
         _route.AddSheetRequested += OnAddSheetRequested; _route.DeleteSheetRequested += OnDeleteSheetRequested; _route.AddQueryRequested += OnAddQueryRequested; _route.DeleteQueryRequested += OnDeleteQueryRequested; _route.BuildSqlRequested += OnBuildSqlRequested; _route.RunQueryRequested += OnRunQueryRequested;
         _route.AddShapeRequested += OnAddShapeRequested; _route.PreviousDrawingRequested += OnPreviousDrawingRequested; _route.NextDrawingRequested += OnNextDrawingRequested; _route.RotateDrawingRequested += OnRotateDrawingRequested; _route.DeleteDrawingRequested += OnDeleteDrawingRequested;
@@ -220,7 +225,17 @@ public sealed partial class DataPage : UserControl, IDisposable
     }
     private async Task OpenWorkbookAtAsync(int index, CancellationToken cancellationToken, bool saveBeforeSwitch)
     {
-        if (_workbooks.Count == 0) return; if (saveBeforeSwitch && Workbook is not null && _dirty && !await SaveAsync("Autosave before switching workbook", cancellationToken)) return; index = Math.Clamp(index, 0, _workbooks.Count - 1); var loaded = await _repository.LoadAsync(_workbooks[index].Id, cancellationToken); if (loaded is null) { await RefreshWorkbooksAsync(cancellationToken); _route.SetStatus("That local workbook no longer exists."); return; } loaded.Normalize(); Workbook = loaded; _workbookIndex = index; ResetViewState(); RecalculateWorkbook(); _dirty = _formulaReport.ChangedCells > 0; RenderCurrent(); _route.SetStatus(loaded.Recovery.RecoveredFromBackup ? loaded.Recovery.Message : _dirty ? $"Recalculated {_formulaReport.ChangedCells} cached formula value(s) · autosave pending" : "Saved locally · autosave is on"); _bus.Fire("Data.Workbook.Opened");
+        if (_workbooks.Count == 0) return; if (saveBeforeSwitch && Workbook is not null && _dirty && !await SaveAsync("Autosave before switching workbook", cancellationToken)) return; index = Math.Clamp(index, 0, _workbooks.Count - 1); var loadGeneration = ++_recordDisplayLoadGeneration;
+        _recordDisplaySelection = null;
+        DataWorkbook? loaded;
+        if (_recordCreator is not null)
+        {
+            var displayed = await _recordCreator.LoadForDisplayAsync(_workbooks[index].Id, cancellationToken);
+            if (_disposed || loadGeneration != _recordDisplayLoadGeneration) return;
+            loaded = displayed.Workbook; _recordDisplaySelection = displayed.Selection;
+        }
+        else loaded = await _repository.LoadAsync(_workbooks[index].Id, cancellationToken);
+        if (_disposed || loadGeneration != _recordDisplayLoadGeneration) return; if (loaded is null) { await RefreshWorkbooksAsync(cancellationToken); _route.SetStatus("That local workbook no longer exists."); return; } loaded.Normalize(); Workbook = loaded; _workbookIndex = index; ResetViewState(); RecalculateWorkbook(); _dirty = _formulaReport.ChangedCells > 0; RenderCurrent(); _route.SetStatus(loaded.Recovery.RecoveredFromBackup ? loaded.Recovery.Message : _dirty ? $"Recalculated {_formulaReport.ChangedCells} cached formula value(s) · autosave pending" : "Saved locally · autosave is on"); _bus.Fire("Data.Workbook.Opened");
     }
 
     private async Task PickImportAsync()
@@ -250,7 +265,7 @@ public sealed partial class DataPage : UserControl, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return; _disposed = true; _tableDesign?.Dispose(); _relationships?.Dispose(); _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
+        if (_disposed) return; _disposed = true; _tableDesign?.Dispose(); _relationships?.Dispose(); _recordCreation?.Dispose(); _autosaveTimer.Stop(); _autosaveTimer.Tick -= OnAutosaveTick; Loaded -= OnLoaded; DetachedFromVisualTree -= OnDetachedFromVisualTree;
         _route.PreviousWorkbookRequested -= OnPreviousWorkbookRequested; _route.NextWorkbookRequested -= OnNextWorkbookRequested; _route.NewWorkbookRequested -= OnNewWorkbookRequested; _route.SaveRequested -= OnSaveRequested; _route.ImportRequested -= OnImportRequested; _route.ExportRequested -= OnExportRequested;
         _route.AddSheetRequested -= OnAddSheetRequested; _route.DeleteSheetRequested -= OnDeleteSheetRequested; _route.AddQueryRequested -= OnAddQueryRequested; _route.DeleteQueryRequested -= OnDeleteQueryRequested; _route.BuildSqlRequested -= OnBuildSqlRequested; _route.RunQueryRequested -= OnRunQueryRequested;
         _route.AddShapeRequested -= OnAddShapeRequested; _route.PreviousDrawingRequested -= OnPreviousDrawingRequested; _route.NextDrawingRequested -= OnNextDrawingRequested; _route.RotateDrawingRequested -= OnRotateDrawingRequested; _route.DeleteDrawingRequested -= OnDeleteDrawingRequested;

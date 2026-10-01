@@ -50,6 +50,94 @@ public sealed class HomeNativeActionPolicyTests
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task Exact_original_completion_recovers_audit_without_execution_replay(bool afterPublication, bool rejectAdmission)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "astra-cui-completion-" + Guid.NewGuid().ToString("N"));
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        try
+        {
+            var fault = new CompletionFaultStore(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
+            var service = new HomeAppAiServices(new ModelProviderRegistry([]), fault,
+                new("profile", "Native profile", "os", "session", true), new Graph(), new Invocations(), [new Policy()]);
+            var arguments = System.Text.Json.JsonSerializer.SerializeToElement(new { exact = "payload" });
+            var context = new AppAiContextSnapshot("files", "test", "file-1", "Controlled owner", null,
+                new Dictionary<string, System.Text.Json.JsonElement>(), AppAiDataSensitivity.UserContent, DateTimeOffset.UtcNow);
+            var descriptor = new AppAiActionDescriptor("files.save", "Save", "Controlled save", AppAiActionRisk.ReversibleChange,
+                true, "{\"type\":\"object\"}", AffectedObjectIds: ["file-1"]);
+            var approval = service.RequestAsync(new("profile", context, descriptor, true, true, "Save", null, "case", arguments), lifetime.Token).AsTask();
+            string? requestId = null;
+            for (var attempt = 0; attempt < 200 && requestId is null; attempt++)
+            {
+                requestId = (await service.Permissions.GetSnapshotAsync(cancellationToken: lifetime.Token)).PendingRequests.SingleOrDefault()?.RequestId;
+                if (requestId is null) await Task.Delay(10, lifetime.Token);
+            }
+            Assert.NotNull(requestId);
+            Assert.True((await service.Permissions.DecideAsync(requestId!, HomeApprovalChoice.Accept, cancellationToken: lifetime.Token)).Succeeded);
+            var decision = await approval;
+            var request = new AppAiActionRequest("files", "files.save", arguments, decision.ApprovalToken, "case", AppAiAccessMode.Write);
+            var unknown = await service.CompleteRejectedVerificationAsync(request with { ApprovalToken = "not-issued" }, lifetime.Token);
+            Assert.False(unknown.AuditRecorded); Assert.Null(unknown.Recovery);
+            var unissued = await service.CompleteWithRecoveryAsync(request with { ApprovalToken = null },
+                AppAiActionResult.Success("Caller prose is not an issued owner result"), lifetime.Token);
+            Assert.False(unissued.AuditRecorded); Assert.Null(unissued.Recovery);
+            // A wrong target must not consume the retained original approval.
+            Assert.False(await service.VerifyAsync("wrong", "files.save", decision.ApprovalToken!, lifetime.Token));
+            if (rejectAdmission)
+            {
+                fault.Fail = true; fault.AfterPublication = afterPublication; fault.Marker = "HOME_EXECUTION_STARTED";
+                Assert.False(await service.VerifyRequestAsync(request, lifetime.Token));
+                fault.Fail = true; fault.Marker = "HOME_ACTION_ADMISSION_REJECTED";
+                var rejected = await service.CompleteRejectedVerificationAsync(request, lifetime.Token);
+                Assert.False(rejected.AuditRecorded); Assert.NotNull(rejected.Recovery);
+                Assert.False(await service.VerifyRequestAsync(request, lifetime.Token));
+                Assert.True((await rejected.Recovery!.FinishAsync(lifetime.Token)).AuditRecorded);
+                Assert.True((await rejected.Recovery.FinishAsync(lifetime.Token)).AuditRecorded);
+                Assert.Equal(HomePermissionRequestState.Failed, (await service.Permissions.GetAuthorizationAsync(requestId!)).State);
+                Assert.Single((await service.Permissions.GetSnapshotAsync(cancellationToken: lifetime.Token)).RecentAuditEvents,
+                    entry => entry.ResultCode == "HOME_ACTION_ADMISSION_REJECTED");
+                return;
+            }
+            Assert.True(await service.VerifyRequestAsync(request, lifetime.Token));
+            fault.Fail = true; fault.AfterPublication = afterPublication;
+            var observed = await service.CompleteWithRecoveryAsync(request, AppAiActionResult.Success("Owner already committed"), lifetime.Token);
+            Assert.False(observed.AuditRecorded); Assert.NotNull(observed.Recovery);
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await service.CompleteWithRecoveryAsync(request, AppAiActionResult.Rejected("Forged later failure", "different-outcome"), lifetime.Token));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await service.CompleteWithRecoveryAsync(request with { Arguments = System.Text.Json.JsonSerializer.SerializeToElement(new { exact = "changed" }) },
+                    AppAiActionResult.Success("Owner already committed"), lifetime.Token));
+            Assert.False(await service.VerifyRequestAsync(request, lifetime.Token));
+            Assert.True((await observed.Recovery!.FinishAsync(lifetime.Token)).AuditRecorded);
+            Assert.True((await observed.Recovery.FinishAsync(lifetime.Token)).AuditRecorded);
+            Assert.Equal(HomePermissionRequestState.Succeeded, (await service.Permissions.GetAuthorizationAsync(requestId!)).State);
+            var audit = (await service.Permissions.GetSnapshotAsync(cancellationToken: lifetime.Token)).RecentAuditEvents;
+            Assert.Single(audit, entry => entry.ResultCode == "HOME_ACTION_SUCCEEDED");
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    private sealed class CompletionFaultStore(IHomeCoreStateStore inner) : IHomeCoreStateStore
+    {
+        public bool Fail; public bool AfterPublication;
+        public string Marker = "HOME_ACTION_SUCCEEDED";
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken ct = default) => inner.ReadAsync(ct);
+        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expected, CancellationToken ct = default)
+        {
+            if (Fail && record.Payload.GetRawText().Contains(Marker, StringComparison.Ordinal))
+            {
+                Fail = false;
+                if (AfterPublication) Assert.True((await inner.WriteAsync(record, expected, ct)).IsSuccess);
+                throw new UnauthorizedAccessException("Controlled Home completion acknowledgment failure.");
+            }
+            return await inner.WriteAsync(record, expected, ct);
+        }
+    }
+
     private sealed class RemoteProvider : IModelProvider
     {
         public int CatalogueCalls;

@@ -52,7 +52,10 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
         };
     }
 
-    internal async Task<NativeFilesWorkspace?> GetConfiguredAsync(CancellationToken cancellationToken)
+    internal Task<NativeFilesWorkspace?> GetConfiguredAsync(CancellationToken cancellationToken) =>
+        GetConfiguredAsync(null, cancellationToken);
+
+    internal async Task<NativeFilesWorkspace?> GetConfiguredAsync(Guid? expectedStoreId, CancellationToken cancellationToken)
     {
         var actor = await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         if (actor is null || actor.AccountId is not null || actor.OrganisationId is not null) return null;
@@ -71,13 +74,15 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
             configuration.RootDirectory.Contains('\0') || !Path.IsPathFullyQualified(configuration.RootDirectory) ||
             configuration.AppFolders is null || configuration.AppFolders.Any(entry => string.IsNullOrWhiteSpace(entry.Key) || entry.Value.Value == Guid.Empty))
             throw new UnauthorizedAccessException("Files workspace identity does not match the current verified profile.");
+        if (expectedStoreId is { } originalStore && (originalStore == Guid.Empty || configuration.StoreId != originalStore))
+            throw new UnauthorizedAccessException("The configured Files store differs from the original selection.");
         RequireDirectDirectory(configuration.RootDirectory);
         RequireDirectDirectory(MetadataDirectory(configuration.RootDirectory));
         var statePath = Path.Combine(MetadataDirectory(configuration.RootDirectory), "drive.json");
         if (!File.Exists(statePath) || (File.GetAttributes(statePath) & FileAttributes.ReparsePoint) != 0)
             throw new InvalidDataException("The configured Files state is unavailable or redirected.");
         var workspace = _cache.GetOrAdd((actor.ProfileId, record.Revision), _ => Create(actor, configuration));
-        var evidence = await workspace.Provider.GetStoreEvidenceAsync(cancellationToken).ConfigureAwait(false);
+        var evidence = await workspace.Provider.GetStoreEvidenceAsync(configuration.StoreId, cancellationToken).ConfigureAwait(false);
         if (evidence.StoreId != configuration.StoreId || await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != actor)
             throw new UnauthorizedAccessException("Files workspace or profile identity changed.");
         return workspace with { Actor = actor };
@@ -87,9 +92,11 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
     {
         if (!Guid.TryParse(storeId, out var id)) return null;
         var actor = await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
-        var workspace = _creating.TryGetValue(id, out var pending) ? pending : await GetConfiguredAsync(cancellationToken).ConfigureAwait(false);
+        NativeFilesWorkspace? workspace;
+        try { workspace = _creating.TryGetValue(id, out var pending) ? pending : await GetConfiguredAsync(id, cancellationToken).ConfigureAwait(false); }
+        catch (UnauthorizedAccessException) { return null; }
         if (actor is null || workspace is null || workspace.Actor != actor) return null;
-        var evidence = await workspace.Provider.GetStoreEvidenceAsync(cancellationToken).ConfigureAwait(false);
+        var evidence = await workspace.Provider.GetStoreEvidenceAsync(id, cancellationToken).ConfigureAwait(false);
         return evidence.StoreId == id ? new(ResourceKind, evidence.StoreId.ToString("D"), evidence.Revision,
             evidence.NewlyCreated, evidence.IsEmpty, true) : null;
     }
@@ -209,10 +216,19 @@ public sealed class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService wo
             await configurationCurrent(token).ConfigureAwait(false) && await receipts.IsCurrentAsync(captured, expectedActor, token).ConfigureAwait(false));
     }
 
-    public async Task<NativeFilesWorkspace?> GetCurrentAsync(CancellationToken cancellationToken = default)
+    public Task<NativeFilesWorkspace?> GetCurrentAsync(CancellationToken cancellationToken = default) =>
+        GetCurrentCoreAsync(null, cancellationToken);
+
+    public Task<NativeFilesWorkspace?> GetCurrentAsync(Guid expectedStoreId, CancellationToken cancellationToken = default)
+    {
+        if (expectedStoreId == Guid.Empty) throw new ArgumentException("Select the original Files store identity.", nameof(expectedStoreId));
+        return GetCurrentCoreAsync(expectedStoreId, cancellationToken);
+    }
+
+    private async Task<NativeFilesWorkspace?> GetCurrentCoreAsync(Guid? expectedStoreId, CancellationToken cancellationToken)
     {
         var actor = await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
-        var workspace = await workspaces.GetConfiguredAsync(cancellationToken).ConfigureAwait(false);
+        var workspace = await workspaces.GetConfiguredAsync(expectedStoreId, cancellationToken).ConfigureAwait(false);
         if (actor is null || workspace is null || workspace.Actor != actor) return null;
         var binding = await ownership.GetVerifiedAsync("files", workspace.Configuration.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false);
         return binding?.ProfileId == actor.ProfileId && binding.ResourceKind == "files" &&

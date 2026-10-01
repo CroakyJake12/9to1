@@ -96,7 +96,6 @@ public sealed class CanvasArtifactSession
 {
     public const string CanonicalApiNamespace = "9to1.Canvas";
     public const int MaximumPageSize = 500;
-    private const int MaximumHistoryEntries = 128;
     private const int MaximumIdempotencyEntries = 512;
     private const int MaximumEventEntries = 2048;
 
@@ -109,12 +108,20 @@ public sealed class CanvasArtifactSession
     private readonly List<CanvasChangeEvent> _events = [];
     private CanvasArtifact _artifact;
     private long _eventCursor;
+    private long _discardedEarlierHistoryEntries;
 
     public CanvasArtifactSession(CanvasArtifact artifact)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         var bytes = CanvasArtifactCodec.Serialize(artifact);
         _artifact = CanvasArtifactCodec.Deserialize(bytes);
+        if (_artifact.SemanticHistory is { } history)
+        {
+            _undoHistory.AddRange(history.Undo.Select(frame => Convert.FromBase64String(frame.PayloadBase64)));
+            _redoHistory.AddRange(history.Redo.Select(frame => Convert.FromBase64String(frame.PayloadBase64)));
+            _discardedEarlierHistoryEntries = history.DiscardedEarlierEntries;
+            _artifact.SemanticHistory = null;
+        }
     }
 
     public Guid ArtifactId
@@ -129,7 +136,44 @@ public sealed class CanvasArtifactSession
 
     public CanvasArtifact GetArtifactSnapshot()
     {
-        lock (_gate) return Clone(_artifact);
+        lock (_gate)
+        {
+            var snapshot = Clone(_artifact);
+            snapshot.SemanticHistory = CaptureHistory();
+            return snapshot;
+        }
+    }
+
+    private ProductivitySnapshotHistory CaptureHistory()
+    {
+        ProductivityHistorySnapshot Frame(byte[] bytes)
+        {
+            var snapshot = CanvasArtifactCodec.Deserialize(bytes);
+            return ProductivitySnapshotHistory.Capture(bytes, snapshot.RevisionId.ToString("D"));
+        }
+        return new ProductivitySnapshotHistory
+        {
+            OwnerFormat = CanvasArtifactFile.CanonicalFormat,
+            ArtifactId = _artifact.ArtifactId,
+            CurrentRevision = _artifact.RevisionId.ToString("D"),
+            CurrentSnapshotHash = Convert.ToHexString(SHA256.HashData(CanvasArtifactCodec.SerializeSnapshot(_artifact))),
+            Undo = Array.AsReadOnly(_undoHistory.Select(Frame).ToArray()),
+            Redo = Array.AsReadOnly(_redoHistory.Select(Frame).ToArray()),
+            DiscardedEarlierEntries = _discardedEarlierHistoryEntries
+        };
+    }
+
+    private void TrimHistory()
+    {
+        long bytes = _undoHistory.Sum(frame => (long)frame.Length) + _redoHistory.Sum(frame => (long)frame.Length);
+        while (_undoHistory.Count + _redoHistory.Count > ProductivitySnapshotHistory.MaximumEntries ||
+            bytes > ProductivitySnapshotHistory.MaximumPayloadBytes)
+        {
+            var source = _undoHistory.Count > 0 ? _undoHistory : _redoHistory;
+            bytes -= source[0].Length;
+            source.RemoveAt(0);
+            if (_discardedEarlierHistoryEntries < long.MaxValue) _discardedEarlierHistoryEntries++;
+        }
     }
 
     public CanvasApiResult<CanvasPageListResult> ListPages(int offset = 0, int pageSize = 100)
@@ -510,11 +554,13 @@ public sealed class CanvasArtifactSession
             return MutationChanged(artifact.ArtifactId);
         });
 
-    public CanvasApiResult<CanvasMutationResult> Undo(CanvasMutationRequest request) =>
-        MutateHistory(request, "History.Undo", undo: true);
+    /// <summary>Optional owning donor preparation runs against a detached proposed restored snapshot,
+    /// before canonical state/history changes. It conveys no permission and never runs on replay.</summary>
+    public CanvasApiResult<CanvasMutationResult> Undo(CanvasMutationRequest request, Action<CanvasArtifact>? prepareRestoredSnapshot = null) =>
+        MutateHistory(request, "History.Undo", undo: true, prepareRestoredSnapshot);
 
-    public CanvasApiResult<CanvasMutationResult> Redo(CanvasMutationRequest request) =>
-        MutateHistory(request, "History.Redo", undo: false);
+    public CanvasApiResult<CanvasMutationResult> Redo(CanvasMutationRequest request, Action<CanvasArtifact>? prepareRestoredSnapshot = null) =>
+        MutateHistory(request, "History.Redo", undo: false, prepareRestoredSnapshot);
 
     public CanvasApiResult<CanvasModeConversionPreview> PreviewModeConversion(
         CanvasDocumentMode targetMode,
@@ -630,7 +676,7 @@ public sealed class CanvasArtifactSession
             if (request.BaseRevisionId != _artifact.RevisionId)
                 return Failure<CanvasMutationResult>(CanvasApiErrorCode.RevisionConflict, action, "Canvas revision changed before the mutation was applied.", targetId, canRetry: true);
 
-            var before = CanvasArtifactCodec.Serialize(_artifact);
+            var before = CanvasArtifactCodec.SerializeSnapshot(_artifact);
             var plan = apply(_artifact);
             if (plan.Error is not null)
             {
@@ -658,8 +704,8 @@ public sealed class CanvasArtifactSession
             }
 
             _undoHistory.Add(before);
-            if (_undoHistory.Count > MaximumHistoryEntries) _undoHistory.RemoveAt(0);
             _redoHistory.Clear();
+            TrimHistory();
             var mutation = new CanvasMutationResult(_artifact.RevisionId, plan.ChangedIds.Distinct().ToArray(), plan.Warnings);
             CacheOperation(request.OperationId, fingerprint, mutation);
             change = AddEvent(request, action, mutation);
@@ -668,7 +714,7 @@ public sealed class CanvasArtifactSession
         return result;
     }
 
-    private CanvasApiResult<CanvasMutationResult> MutateHistory(CanvasMutationRequest request, string action, bool undo)
+    private CanvasApiResult<CanvasMutationResult> MutateHistory(CanvasMutationRequest request, string action, bool undo, Action<CanvasArtifact>? prepareRestoredSnapshot)
     {
         CanvasApiResult<CanvasMutationResult> result;
         lock (_gate)
@@ -690,11 +736,13 @@ public sealed class CanvasArtifactSession
             if (source.Count == 0)
                 return Failure<CanvasMutationResult>(CanvasApiErrorCode.HistoryUnavailable, action, undo ? "No Canvas change can be undone." : "No Canvas change can be redone.", _artifact.ArtifactId);
 
-            destination.Add(CanvasArtifactCodec.Serialize(_artifact));
-            var restoredBytes = source[^1];
+            var restored = CanvasArtifactCodec.Deserialize(source[^1]);
+            restored.RevisionId = Guid.NewGuid();
+            prepareRestoredSnapshot?.Invoke(Clone(restored));
+            destination.Add(CanvasArtifactCodec.SerializeSnapshot(_artifact));
             source.RemoveAt(source.Count - 1);
-            _artifact = CanvasArtifactCodec.Deserialize(restoredBytes);
-            _artifact.RevisionId = Guid.NewGuid();
+            TrimHistory();
+            _artifact = restored;
             var changedIds = EnumerateEntityIds(_artifact).Distinct().ToArray();
             var mutation = new CanvasMutationResult(_artifact.RevisionId, changedIds, []);
             CacheOperation(request.OperationId, fingerprint, mutation);
