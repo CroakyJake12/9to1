@@ -236,8 +236,9 @@
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
       "class": "FormPublicationOriginatingActorTests",
       "namespace": "Haven.Infrastructure.Tests",
-      "sha256": "5e6d107b16d587ed2015e276ca9f0b07020037973a624540ca6a5022b7d40b86",
-      "origin": "exact Forms25 overlay"
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01",
+      "origin": "exact Forms25 overlay",
+      "source": "/workspace/astra-source/worker3-forms-final-join25-03/FormPublicationOriginatingActorTests.cs"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
@@ -275,6 +276,6 @@
   },
   "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
   "data22ManifestSha256": "79ca75b41c9df7de7c41a0038df621d55309d6a32ede10b26e0ed519a0b189a7",
-  "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-02/joined-source25.json",
-  "forms25ManifestSha256": "cadfbead0eeb51af24b7754fd6aa6c8657f5c6811ec5e6dbec1a2ff1cabd87cb"
+  "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-03/joined-source25.json",
+  "forms25ManifestSha256": "b8dd32393d98f04ad364d99fa178d2540a642b18956a0691cc56ddb8151b6591"
 }

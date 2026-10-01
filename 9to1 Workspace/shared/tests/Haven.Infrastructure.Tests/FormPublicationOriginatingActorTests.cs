@@ -242,6 +242,11 @@ public sealed class FormPublicationOriginatingActorTests
         public Task SetAsync<T>(string key, T value, CancellationToken token) where T : class => inner.SetAsync(key, value, token);
         public Task RemoveAsync(string key, CancellationToken token) => inner.RemoveAsync(key, token);
         public Task<SettingsImportResult> ImportAsync(SettingsExportManifest manifest, CancellationToken token) => inner.ImportAsync(manifest, token);
+        public Task<SettingsCompareExchangeResult> CompareExchangeAsync(string key, string? expected, string? replacement,
+            CancellationToken token) => inner.CompareExchangeAsync(key, expected, replacement, token);
+        public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expected, string? replacement,
+            IReadOnlyDictionary<string, string?> guards, CancellationToken token) =>
+            inner.CompareExchangeGuardedAsync(key, expected, replacement, guards, token);
         public Task<SettingsGuardedCompareExchangeResult> CompareExchangeGuardedAsync(string key, string? expected, string? replacement,
             IReadOnlyDictionary<string, string?> guards, ISettingsCommitAdmission admission, CancellationToken token) =>
             inner.CompareExchangeGuardedAsync(key, expected, replacement, guards, admission, token);

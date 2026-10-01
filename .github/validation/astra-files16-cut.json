@@ -2,7 +2,7 @@
   "status": "FROZEN_COMPLETE_SOURCE_FRESH_HOSTED_PROOF_PENDING",
   "createdAt": "2026-10-01T16:48:06.426128+00:00",
   "baseCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
-  "programTree": "db6dea48ac7059b7fecf053ca6254440ffeab909",
+  "programTree": "ef55be017af1ae3960d123dc96422a369294b58f",
   "files": [
     {
       "path": ".editorconfig",
@@ -63637,9 +63637,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
       "mode": "100644",
-      "object": "f8b83f2bb8f3e9c0b08eee1e7b04417b19a334af",
-      "sha256": "5e6d107b16d587ed2015e276ca9f0b07020037973a624540ca6a5022b7d40b86",
-      "bytes": 17803
+      "object": "aa58c84c4bf38dfe199d1d430890a4b4aefceb3d",
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01",
+      "bytes": 18341
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
@@ -63700,9 +63700,9 @@
     {
       "path": ".github/validation/astra-files16-test-classes.json",
       "mode": "100644",
-      "object": "946d0c775e93a0798c438f432a708cb0284f42e8",
-      "sha256": "498a282b265bab6af18c18b0604d5775a722b1dd7ddc8592c3f0a0866e07aea4",
-      "bytes": 14237
+      "object": "b8bfcd8fc20ae86b3eb60e3fadd0fe093f7f2fbe",
+      "sha256": "efc918eb7ab9e488e5e0ab3e0174dc1c7d729a4a86b689123dbfb8770f99d65c",
+      "bytes": 14350
     }
   ],
   "gitlinks": [
@@ -63969,7 +63969,7 @@
   "validationBranch": "validation/astra-files16-data22-forms25-managed-20261001-1830",
   "files16ManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
   "data22ManifestSha256": "79ca75b41c9df7de7c41a0038df621d55309d6a32ede10b26e0ed519a0b189a7",
-  "forms25ManifestSha256": "cadfbead0eeb51af24b7754fd6aa6c8657f5c6811ec5e6dbec1a2ff1cabd87cb",
+  "forms25ManifestSha256": "b8dd32393d98f04ad364d99fa178d2540a642b18956a0691cc56ddb8151b6591",
   "sourceSelections63": [
     {
       "path": "9to1 Workspace/Files/CUI/Services/DurableDriveProvider.Import.cs",
@@ -64350,11 +64350,14 @@
       "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064"
     }
   ],
-  "metadataManifestSha256": "f195db74d088a9a085f16423141014fd594815122a7d3bef1e36a1015c6872c7",
+  "metadataManifestSha256": "62c59a554cffd84c41436e62f809b74b66748f409006e310027e030c5fb825c5",
   "validationOnlyPaths": [
     ".github/scripts/astra-files16-hosted-managed.py",
     ".github/validation/astra-files16-test-classes.json",
     ".github/workflows/haven-chat-model-ci.yml"
   ],
-  "selfManifestPath": ".github/validation/astra-files16-cut.json"
+  "selfManifestPath": ".github/validation/astra-files16-cut.json",
+  "predecessorValidationCommit": "4c6230a8a05498b5d3dff03edd33e12fefcf5a47",
+  "preservedPredecessorManifestSha256": "4ac8c7a7b569eba60e8a856f3727dd75ecfb5aaf4c473a3178451ce6b479f354",
+  "successorQualification": "Only HeldStore test fixture adds exact inherited compare-exchange passthroughs; production/forms guards and other62sources unchanged. Actual prior full Files console/Core40 accepted, Infra compile failed; fresh coherent proof required."
 }
