@@ -1,0 +1,393 @@
+{
+  "baselineCommit": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19",
+  "files": [
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android.Cui/AndroidCuiSurfaceLoader.cs",
+      "sha256": "1608dd06eb4091c6a9e7c41755b855570c348bfc306544cfb537ea621d045bc5"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android.Cui/Haven.Android.Cui.csproj",
+      "sha256": "ed7bb73340ce6fc57fedeaaacdbf3148b435c9603e2186d1492eb40f633a7f34"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android.Hui/AndroidHuiCommandAdapter.cs",
+      "sha256": "5f6031507b5e06f31d6a0c234ae359bcc5fbe9e3e641f618b7ac0258eff35f14"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android.Hui/Haven.Android.Hui.csproj",
+      "sha256": "6f519f69a6d934334ff48cc35e4fe599801bdd5de7ac71fe5622759d5d96a09a"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidApp.cs",
+      "sha256": "e56936b4e3d8e217c64fb85e25493fa1ff72a23df0691a99742687986ab3b4f7"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidAssistantOverlayCoordinator.cs",
+      "sha256": "cfef3e432ed8858a5a4a1810014f4efafaaa5150c6dc2382391931b0c97d756f"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidBootstrapActivity.cs",
+      "sha256": "d89fc4a733f660d04959294f73a0d9717904c08ed31e18b44f70b40d1a6119b7"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidComputerToolService.cs",
+      "sha256": "f8f90ec182cd1eec65b6d3083f0ff097799703797988088ef9d3373c7f9b9bd8"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidHavenBootstrap.cs",
+      "sha256": "106cce2520c02e0dc4cc7228a40d73dca0a9d211bff1d8455823e1413eb61575"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidHavenFloatingContent.cs",
+      "sha256": "6bf41601489de63eddcf30620a3ced7d3c6bd52d3b7eeb482e4b700504dda89f"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidHomeServiceHost.cs",
+      "sha256": "cb08fa26369236691f5e531349f77a31fe4ef79331f1a0b2ce1d84cfd7aba326"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidInstalledAppCatalog.cs",
+      "sha256": "76e58484e72e3093c20563194999f71f9bb6c63d9adeb2c4a6a898e30f186c72"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidInstalledApplicationShortcuts.cs",
+      "sha256": "606b0f5286aa0b81a09238e5ecf8461179c20eb0f6094459f0a98691a36894e9"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidInstalledApplicationsGoProvider.cs",
+      "sha256": "e41874940ea4906f86717f81ee5ffce4151689aa1e5fce1e4dde8bfef4ae831f"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidLauncherLayoutSessions.cs",
+      "sha256": "86175272439485e049f8c4b16dad684640469dddc291085a1d8f8f35d3a64164"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidLauncherPlatformCatalog.cs",
+      "sha256": "0c2c7fd0cbc1ea58e764840aeb5f1a2a60511c58598595b145e4b93944506a0b"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidLauncherWidgetBindings.cs",
+      "sha256": "ee536ddaa8226c4d1009598b350f5b5f32c4c38dd1b2e454fb69e6900abf0bc5"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidLauncherWidgetPlatform.cs",
+      "sha256": "e5252594361beef5ad5af7e36900a6e6c46601316b5af8b4ac6a242432a1203c"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidManifest.xml",
+      "sha256": "d5c469fda3c4a2ddda283818d42be301a7d4e2468049ae9c4022a49187fc38b6"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidNotificationBridge.cs",
+      "sha256": "64461f06a4777d7a04617a7f5d5b72e36f4520e65e847541c0f0152efa071b65"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidOAuthPlatformServices.cs",
+      "sha256": "aa6c97f6228b540e7a3102b32ad76e2ad656dc571e5cc9cc6851ac08bcaa5fea"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidRuntimeDiagnostics.cs",
+      "sha256": "6818407eb9272e6cd8979d0126ddd6687b5829e1ceec412d23dc4c8d6d64dcb5"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidRuntimePermissions.cs",
+      "sha256": "e3c4d92e50893ae7dbedf7b488535b45a895dcca23d2b3c6076d26770a982987"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidSecureCredentialStores.cs",
+      "sha256": "85ea6b247a30c81b757e329a0701cb6989238e10b4a512d4bb2391cffb6ad346"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidServiceRegistration.cs",
+      "sha256": "c767777f093da2eda8f23d7b498a7b0d087f5d1fc65caa4ede78c5385b8ba212"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidSpeechInputService.cs",
+      "sha256": "a2d0d900b8d3415b703e520977572707f00cf0866f80d8a1d73fe6bef81e21ce"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/AndroidTypography.cs",
+      "sha256": "85fa2a9543b3268fac71a52a969cbec877d1f998d9500fb10361f4b9ef64cff2"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Compatibility/AndroidFloatingActivityHost.cs",
+      "sha256": "e7102382c7f93cd50f444caef9c7f5402bb6882d1150406e86c3b12289bc5d38"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Compatibility/ComputerUseOverlayCoordinator.cs",
+      "sha256": "a3c641692df9e579d60fe7363c6ad0ff7ceaadd240de5a24261a4ea6e1cc37e8"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/DesktopCompatibilityStubs.cs",
+      "sha256": "979a89c8d49f6eb4850ebcd46cda66bf5bfe9bb6e86dfe293758a244381a0337"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
+      "sha256": "5e05dbdca516227febdc2218ba7e9d42e18f5cfbe0123d47f8cfff06aabd4e11"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenImeService.cs",
+      "sha256": "b874c7dec66500723734c4892831bf0e68bb1277985112322d18d0c591adc83c"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenKeyboardAiController.cs",
+      "sha256": "4eb084386ae94ee569945fa847ca4e875b99a4bd4c4190fd56dab9004cd0251a"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenKeyboardSettings.cs",
+      "sha256": "f9af51b71a39d16932daeaad9cef590b739c14a4de68f5fc3168d76661a47103"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenKeyboardSettingsActivity.cs",
+      "sha256": "b7162fe38400534a8960d865db8357b3f1e0181e5188826c130b1208d67abbfe"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenKeyboardStrip.cs",
+      "sha256": "94f47758eb5f23053fde49d331b6e5b56e4a66cb8f12109c4ae5dd38b0ec776a"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenKeyboardView.cs",
+      "sha256": "4ac26906a5f2993a0b1cc52230c17c5267b5f8e632c9d089b9867ef3ef7efc6c"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Apps.cs",
+      "sha256": "80229d29eca7b7cace5ee49f0476c5fc3b129108001348cba2346649b2133bd4"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.AssistantWidget.cs",
+      "sha256": "81bd3b15b0e0f97a1d4161e8e7032c092bd5501c27792b24528078d9232f0c6c"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Backup.cs",
+      "sha256": "700ad187b6644fc305e04764e66890914cb15028f1e7b12b2e70ec5af41edad2"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dock.cs",
+      "sha256": "e67c9473fbe8febc2282606c8be68ed3178d1312568429ab31e04a815a614f8d"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Drawer.cs",
+      "sha256": "a88f144e39efcbfa380f30593f034bfe12e351d276bd5e89c3efa2b3b8728225"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
+      "sha256": "6b2d6f8d44ae0991399d3622f500ba76cfb7f270a1305eb926820242d3595a1a"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Folders.cs",
+      "sha256": "dbe1e31dde044ad0c24d95890791152518692985912ea9e9f437f0c745dab68b"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Gestures.cs",
+      "sha256": "3c14e2ed7677f99a47e0775aa35a7292db243256bae2997e680ad7c75e216f09"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Helpers.cs",
+      "sha256": "ec17c7fe6c7728a42b95b0dc4075560130d696179ed347d83c246a0bbede1d01"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Keyboard.cs",
+      "sha256": "52072645c1e2a125ac7558e2f6296c026ee3a3bd058638288d1ed7c1447db19e"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Pages.cs",
+      "sha256": "e900bd32e96183f169771cef23a3f463572515d363ff47f9fbd7d52288ec3af8"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Settings.cs",
+      "sha256": "4e7d6d4bd9a2c76e7b30e2b283392331351c794a0c2ab57226146e95a8776793"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Shortcuts.cs",
+      "sha256": "4101ac5a6525e34cf4ec0157d04adcf3bb5ad2b907d70efe764146099763e606"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Widgets.cs",
+      "sha256": "a41bdcdfac4d9ab448a556029a6d50a16e73138a696f0605461e10a79c38530d"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.cs",
+      "sha256": "e6c9c305c09ef710016886b785022e845d1c26e6b4638d2416e455348c1f92fc"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenNativeUi.cs",
+      "sha256": "fe73402c5e81b97e43ee4a4af4d5fb40a8f101e48696187a04748cbf03f351f3"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/HavenShareActivity.cs",
+      "sha256": "dad8a6b432f0a2e26a594fd8e6bb38b42d526d8bb7200abb394e2f861b290664"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Hui/AndroidHuiCanvasRenderer.cs",
+      "sha256": "2e4f98768f8900022ccf4fd0446504e550a44a0743e50db744318d7586d899d8"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/KeyboardTheme.cs",
+      "sha256": "062de72780296727241f01b9093c186be146b867b341ef3b9df69c68e2070127"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainActivity.cs",
+      "sha256": "6f6de9383cc70b5f76e3a36f79941e29632c15bdb82878362cd0dcd616ed7012"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Android.cs",
+      "sha256": "070fb6659d821f78fa7b8336bdb954276648e45f705d2a7a64321096f1ef503b"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Drawers.cs",
+      "sha256": "33c9e63cd3c168f4f51285619d8b0b2782f8fc10869ddc60375fe4619a0ac547"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Interactions.cs",
+      "sha256": "c88cd5bdfcd701111ec4ef49b03315ce389709e53ef7ac5c2d57fc9c43325dc4"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Layout.cs",
+      "sha256": "9bb7c9a8545a1e19edb9bd0b4c645c2eaf64cfc4c92bafbfcbcf8bf1015b2ad9"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Models.cs",
+      "sha256": "a6a66de10f9ccb5df39a450cdae1a8d2dcaceb2352f86eff3cfd155224cc016c"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MainView.Mobile.Projector.cs",
+      "sha256": "e90c3d0d6074f140cc7fb5fb769a6d8d3911cc5e60abe39d03a1a839498ed27b"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/MobileRepairValidation.cs",
+      "sha256": "167aafebe86e0197aa1b7606a8b28b4f0fc5821e6b98092ca3dfab24f2b0c2da"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/ModelImportActivity.cs",
+      "sha256": "53bc328c0d759e6fd297d004a0f51d4e1062208e1c21ee3f20dc91a96b96b6d9"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/ModelRecommendationsActivity.cs",
+      "sha256": "0984e859bfac39b22a6027b5007f8337a43345725f13dfe095e4958713dc3363"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/AndroidProjectorApplicationService.cs",
+      "sha256": "92f1a9cb85a6c66b05725671e829e24479e99ea7ac65543c63d960afdf39dec7"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/AndroidProjectorControllerActionDispatcher.cs",
+      "sha256": "7d2964aa3744f3d4fee0bead11686299c608238383fd8e5df6821053626e31a8"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/AndroidProjectorDisplayService.cs",
+      "sha256": "be8e49fd9e7f3ac8af23f6b260b5849ceec5822333193ede75a5e870efb03d63"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/AndroidProjectorPresentationHostService.cs",
+      "sha256": "ce16c93b100b93149e24d853d405226fec91bdd9d550aa6702d07e71cc79281c"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/AndroidProjectorRemoteExperienceService.cs",
+      "sha256": "19470aa353185abaf23b0a64ec526a941566a6f95a61fbb4ca329eb0486197b1"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/ProjectorDesktopScene.cs",
+      "sha256": "3781d9f4077b8fe45c811d8f3aafc28b8186e7228555d3d7d478f7b6c847c67f"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Projector/ProjectorGalleryScene.cs",
+      "sha256": "3af60e927683786b86b704bcad1a3363133f73da9f4cbdb3f0528ee41551361a"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Resources/drawable/haven_icon.xml",
+      "sha256": "cefefeedaebcea3741a61748b2b52a41ed010a245475ea18ee68b3f50882dbde"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Resources/drawable/ic_apps.xml",
+      "sha256": "70f373af48916561f0cd8b061ffc384e084c3a788456a40502873f7268ea11bd"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Resources/drawable/ic_haven_go.xml",
+      "sha256": "31806b822d00c10d20f30967962b75cb35817ad14f8fb2621466b350f2fa9b3d"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/Resources/xml/method.xml",
+      "sha256": "6a1c50791e049518fdcb956ee0a10d9b3e9a5d711201a91ebfea476879f8eb61"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/RoutedKeyboardAiExecutor.cs",
+      "sha256": "478750c870c45970ed372612e1fb44adea00a93aa55f7509cdcb4f2310b5d2a4"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/WindowsGraphicsCaptureService.Android.cs",
+      "sha256": "ea250bee152d7cc3474cca0a9813565cde55756e0ac661e62eda6d474a67d985"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/WindowsNaturalSpeechOutputService.Android.cs",
+      "sha256": "fcfdce7f164dd6d9dcd98105d00f02fc532285df32538f3d0998b74fa4e6a99d"
+    },
+    {
+      "path": "9-1 OS (Android)/src/Haven.Android/WordList.cs",
+      "sha256": "ec294c0ee2fb432d835a3545b99809fce64411ad2b9958aa149d169e28f2c7f7"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidGoProviderTests.cs",
+      "sha256": "27d3979bd4ac1b4e06f2c1baeb3e8d9c611c4977ec38333df69dbc461df23709"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherAiContextTests.cs",
+      "sha256": "08c8b436db47aa01f51010d9dd3f228849cbaeba00a87327517242a1c937a6a1"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherLayoutSessionTests.cs",
+      "sha256": "5ace258e7932f1abd32f89d782a69f06300f330bf383bec837c9774f15a74cf2"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherWidgetTests.cs",
+      "sha256": "0f324b9b12e2d744072d60f220ff98cfcd10f33de0c5886a99ce864fa98bfe73"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "sha256": "0f6b7386f1ef12eee4be9479a4884644bf7a55f5e5a68ad8e1ef1c50f149fde6"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/RoutedKeyboardAiExecutorTests.cs",
+      "sha256": "76c9555fa0835308883a91a960880c3a522591305a4f6ccb55310bfadad782e8"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Cui.Tests/AndroidCuiSurfaceLoaderTests.cs",
+      "sha256": "a7be7b8be07177148636680704a57a2aa9a78b8b47b03e57b0e9773a7d99977b"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Cui.Tests/Haven.Android.Cui.Tests.csproj",
+      "sha256": "ede453c875384d0bb55dd9086e5ae7f7280413b1749a46aa735d5a29bd538c4c"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Hui.Tests/AndroidHuiCommandAdapterTests.cs",
+      "sha256": "4d2a8ffe1b8b1351898d6fc5fef904a15e7939ddcd037bb704df3d570dd945b0"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Hui.Tests/Haven.Android.Hui.Tests.csproj",
+      "sha256": "748d2e68cf84f1568e322a800f69aa68dcf9f11c5a8ea526f2d80e56c4ef2e30"
+    }
+  ],
+  "gitlinks": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "tree": "160000 commit 009d4815470cf4bf71d1adbb633a5d81dcb2bb52\tframework/CUI/vendor/Avalonia/external/XamlX"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "tree": "160000 commit 864a05282841bf04006890f04d11d60d1a046aa9\tframework/CUI/vendor/Avalonia/external/Avalonia.DBus"
+    },
+    {
+      "path": "9to1 Workspace/Terminal/Source/libvterm",
+      "tree": "160000 commit 934bc2fbf21800ac3458a499df8820ca5fb45fd3\t9to1 Workspace/Terminal/Source/libvterm"
+    }
+  ],
+  "allowedChanges": [
+    "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Dulche.cs",
+    ".github/workflows/build-haven-android.yml",
+    ".github/scripts/astra-android29-verify.py",
+    ".github/validation/astra-android29-frozen91.json"
+  ],
+  "package": "com.cakemods.haven",
+  "versionCode": 20001,
+  "versionName": "0.2.1-mobile-preview",
+  "acceptance": "Existing API36 x86_64 MAIN/LAUNCHER startup only; no HOME/Launcher/widget/inference/device/production-authority proof"
+}
