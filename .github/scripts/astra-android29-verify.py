@@ -40,8 +40,18 @@ elif mode in ('apk','download'):
  badging=run(str(tool/'aapt'),'dump','badging',str(apk))
  package=re.search(r"package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'",badging)
  assert package and package.groups()==('com.cakemods.haven','20001','0.2.1-mobile-preview'),badging[:500]
- cert=run(str(tool/'apksigner'),'verify','--verbose','--print-certs',str(apk))
- digest=re.search(r'Signer #1 certificate SHA-256 digest: ([0-9a-fA-F]+)',cert).group(1).lower()
+ evidence=Path('artifacts/logs' if mode=='apk' else 'artifacts/smoke');evidence.mkdir(parents=True,exist_ok=True)
+ (evidence/'apk-badging.txt').write_text(badging+'\n')
+ verification=subprocess.run([str(tool/'apksigner'),'verify','--verbose','--print-certs',str(apk)],text=True,capture_output=True)
+ (evidence/'apksigner-stdout.txt').write_text(verification.stdout)
+ (evidence/'apksigner-stderr.txt').write_text(verification.stderr)
+ verification.check_returncode()
+ cert=verification.stdout
+ # Retain actual output before parsing. Accept one exact digest from anchored certificate fields;
+ # signer display prefixes vary by Android build-tools, and never establish a digest by themselves.
+ digests={value.lower() for value in re.findall(r'(?m)^.*\bcertificate SHA-256 digest: +([0-9a-fA-F]{64})\s*$',cert)}
+ assert len(digests)==1,'Missing or ambiguous exact certificate SHA-256 digest; inspect retained apksigner output'
+ digest=next(iter(digests))
  receipt=dict(commit=commit,manifestSha256=mh,runId=os.environ['GITHUB_RUN_ID'],apkSha256=sha(apk),apkBytes=apk.stat().st_size,abis=abis,package=package.group(1),versionCode=20001,versionName=package.group(3),certificateSha256=digest,signing='ephemeral-debug-only',buildTools=tool.name)
  if mode=='apk':
   assert digest==sha(Path(os.environ['RUNNER_TEMP'])/'android29-cert.der')
