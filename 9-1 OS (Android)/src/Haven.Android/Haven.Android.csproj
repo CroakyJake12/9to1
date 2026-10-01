@@ -29,6 +29,7 @@
     <HavenMicrosoftCalendarClientId Condition="'$(HavenMicrosoftCalendarClientId)' == ''">$(HAVEN_MICROSOFT_CALENDAR_CLIENT_ID)</HavenMicrosoftCalendarClientId>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Picture/Core/HavenOS.Images.Core.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Launcher/Native/NineToOne.Launcher.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/Games/CUI/HavenOS.Games.csproj" />

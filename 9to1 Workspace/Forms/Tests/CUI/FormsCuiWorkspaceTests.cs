@@ -13,7 +13,7 @@ public sealed class FormsCuiWorkspaceTests
     public async Task Row_limit_inspector_retains_invalid_and_conflicted_text_until_saved_or_discarded()
     {
         using var paths = new Paths(); var settings = new VersionedAtomicSettingsStore(paths);
-        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator());
+        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator(), actors: new PublicationActor());
         var authoring = new FormAuthoringService(publications);
         var surface = new FormsCuiWorkspace(publications, authoring, () => null, _ => true);
         await surface.DispatchAsync("9to1.Forms.Create", null);
@@ -50,7 +50,7 @@ public sealed class FormsCuiWorkspaceTests
     public async Task Fixed_row_authoring_keeps_stable_ids_and_published_rows_when_draft_changes()
     {
         using var paths = new Paths(); var settings = new VersionedAtomicSettingsStore(paths);
-        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator());
+        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator(), actors: new PublicationActor());
         var allowed = true;
         var surface = new FormsCuiWorkspace(publications, new FormAuthoringService(publications), () => null, _ => allowed);
         await surface.DispatchAsync("9to1.Forms.Create", null);
@@ -83,7 +83,7 @@ public sealed class FormsCuiWorkspaceTests
         Assert.NotNull(FormsCuiWorkspace.LoadDocument());
         using var paths = new Paths();
         var settings = new VersionedAtomicSettingsStore(paths);
-        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator());
+        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator(), actors: new PublicationActor());
         var authoring = new FormAuthoringService(publications);
         var allowed = true;
         var surface = new FormsCuiWorkspace(publications, authoring, () => null, _ => allowed);
@@ -138,7 +138,7 @@ public sealed class FormsCuiWorkspaceTests
         using var paths = new Paths();
         var settings = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var publications = new FormPublicationService(settings, settings, authority, new FormNativePublicationValidator());
+        var publications = new FormPublicationService(settings, settings, authority, new FormNativePublicationValidator(), actors: new PublicationActor());
         var authoring = new FormAuthoringService(publications);
         var allowed = true;
         var surface = new FormsCuiWorkspace(publications, authoring, () => null, _ => allowed);
@@ -205,7 +205,7 @@ public sealed class FormsCuiWorkspaceTests
         using var paths = new Paths();
         var settings = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var publications = new FormPublicationService(settings, settings, authority, new FormNativePublicationValidator());
+        var publications = new FormPublicationService(settings, settings, authority, new FormNativePublicationValidator(), actors: new PublicationActor());
         var project = FormProjectEditor.Create("Publication capabilities", FormModeKind.Form, DateTimeOffset.UtcNow);
         var created = await publications.CreateAsync(project.FormID, FormProjectEditor.Project(project));
         Assert.True(created.Success);
@@ -232,7 +232,7 @@ public sealed class FormsCuiWorkspaceTests
         using var paths = new Paths();
         var store = new VersionedAtomicSettingsStore(paths);
         var authority = new Authority();
-        var publications = new FormPublicationService(store, store, authority, new FormNativePublicationValidator());
+        var publications = new FormPublicationService(store, store, authority, new FormNativePublicationValidator(), actors: new PublicationActor());
         var authoring = new FormAuthoringService(publications);
         Guid? selected = null;
         var allowed = true;
@@ -266,7 +266,7 @@ public sealed class FormsCuiWorkspaceTests
         Assert.Equal(field.FieldID, Assert.Single(project.Fields).FieldID);
         var version = Assert.Single(published.Versions);
         var reopenedStore = new VersionedAtomicSettingsStore(paths);
-        var reopenedPublications = new FormPublicationService(reopenedStore, reopenedStore, authority, new FormNativePublicationValidator());
+        var reopenedPublications = new FormPublicationService(reopenedStore, reopenedStore, authority, new FormNativePublicationValidator(), actors: new PublicationActor());
         var reopened = new FormsCuiWorkspace(reopenedPublications, new(reopenedPublications), () => selected, _ => true);
         await reopened.DispatchAsync("9to1.Forms.Open", null);
         Assert.True(reopened.TrySetValue("Label", "New draft label"));
@@ -314,4 +314,10 @@ public sealed class FormsCuiWorkspaceTests
         public ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken cancellationToken) => ValueTask.FromResult(allowed());
     }
 
+
+    private sealed class PublicationActor : IAuthenticatedResourceActorSource
+    {
+        private readonly AuthenticatedResourceActor _actor = new("forms-author", "forms-profile", null, null, "forms-login");
+        public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token) => ValueTask.FromResult<AuthenticatedResourceActor?>(_actor);
+    }
 }

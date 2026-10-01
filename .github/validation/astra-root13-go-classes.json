@@ -1,0 +1,218 @@
+{
+  "ownerManifestSha256": "a5b51cb35f555b892a611f938edb46de6fbd283088b087f4cfc3076e1b0ecc44",
+  "baselineCommit": "896cd047cfd6fa420582c51efea11598d27844ad",
+  "classes": [
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
+      "class": "CompatibilityPackageFormatTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "6ae36418075cda03999a00e48389fd0d4a0c09f839da9ad9d2af8007b1f4bc03",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "class": "CompatibilityPackageInspectorTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker2-files-owner-merged16-root12/source/9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs",
+      "class": "CompatibilityRoutingTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/DesktopPagesTests.cs",
+      "class": "DesktopPagesTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "8ea1801dfebe1060af9c589fa4306876dab416c7634a49e6646883bfb7dd7492",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/DesktopPagesTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs",
+      "class": "GoAndCuiTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "ad57556e8b0f5331c30879538ea20f17e2f5e18c13fb4f05123bfc117f9ae12d",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs",
+      "class": "GoDisplayKeyTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "df61234ede087f13e9dc2fa84d83d7ad1ef1b79f75fad55b4c73374d2b0c6380",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs",
+      "class": "GoDisplayNativeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "86bffc7aeb8445f03d0b54a4e858ffbde612ad4a6b1601293cdbb0e84c3f7374",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
+      "class": "GoHomeCustomizationNativeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "cc0a0665c0e31edc4a38cff974e7f17743f48a4cec51d39ccb01bad422ec3d95",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs",
+      "class": "GoHomeCustomizationTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "5628b8cdee6bdd1da9839c90260faed1afbe0278135316cf2c88a6158ccf1291",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs",
+      "class": "GoHomeLayoutNativeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "56876159a19469e4be5532a59cfb2142658606fddb7839cc58428ae3b7718ffe",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs",
+      "class": "GoHomeNativeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "08c78dc44572d4d0b1a6b2285a13d7c1736fe405d2eb2689f4b7118e238afea9",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs",
+      "class": "GoKeyboardTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "2b098b0fbe61e73cf23721296f4ee7ee31db623c510834710b0e35ec6174d8df",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs",
+      "class": "GoNativeSessionTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "218d729299943f7fbe3fe637e27940fc05317467fa7e7a3ceba50e32f2917e04",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs",
+      "class": "GoScopeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "087e088349b86c601d2c45221e62fdd2631a3221d984bd08cbddb0bb9bc8e373",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptInteropTests.cs",
+      "class": "InstallationReceiptInteropTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "e35e644a9b6a1229053f2559f33c8a16b62c711a69066560e22de7ae7e046f4b",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptInteropTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptTests.cs",
+      "class": "InstallationReceiptTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "f87b9bf5b6f858a7c13060f2a967e75a9dbb46834405f16c384331b5b9929697",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchTests.cs",
+      "class": "LinuxControlledLaunchTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "81f9ccde208088c0342ecf38cf6a58951770d70f2174982c7554a5208546c48f",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxDiscoveryServerTests.cs",
+      "class": "LinuxDiscoveryServerTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "6373c6991b9119afa7b1a223946c590b55003bf78fd627958f65962a2b368719",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxDiscoveryServerTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxRuntimeEvidenceTests.cs",
+      "class": "LinuxRuntimeEvidenceTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "8078a14532971bb602337a787925d3482dbc029dd3652e87b3464c0e8ef90501",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxRuntimeEvidenceTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs",
+      "class": "ModelPickerTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "3dc14fd3317fd555961ec5aa007e510f195fb7a0a33d3207b106fe9db0458e4c",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs",
+      "class": "ShellConfigurationTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "4da0a697817ea4086f3e0ba59efe1edb65d0af2a2ea1f8054d0483e560699617",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs",
+      "class": "ShellGoAllAppsHomeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "2aaa4e616c200c37a60cee5d60aee86f81810973557062f57ee22231d345ce9d",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs",
+      "class": "ShellGoPinnedHomeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "faddab5d5784079b571fe06b78b18f1b9cf58853fb6aa2f764af8c50c080beb5",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellNavigationGoTests.cs",
+      "class": "ShellNavigationGoTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "bda839a535376a2ca1075f4f16807c324469072919f8517986da324c46b3901a",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellNavigationGoTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellSemanticTests.cs",
+      "class": "ShellSemanticTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "8e85745e6acba3453e012476d6e9b64914ec42926d3d860b385f0aaf589610de",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellSemanticTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs",
+      "class": "GoOriginalActorInvocationTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "a153ed11fbe6ae389583636e755fdcf80621e3f91afa9a65a874632dfce1ef49",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker5-go-coherent-root896-presentation-fixtures-source30/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs"
+    }
+  ],
+  "scope": "Actual Core optional original-actor invocation controlled provider boundaries + whole OS regression, NOT installed transport/device/boot readiness",
+  "go29ManifestSha256": "e2ec7021f7e235ae239a2b0790d45aa93116d5bb40e8619dc046d8911c9bfd70",
+  "go30ManifestSha256": "100973714f7a35adee6c9eaf85ead6c5cfba0983bf324b6090f0646d883f7035",
+  "joined95": "joined-source95.json"
+}

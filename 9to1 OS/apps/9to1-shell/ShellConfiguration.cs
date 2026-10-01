@@ -17,6 +17,8 @@ public sealed record DesktopSpace(Guid Id, string Name, TaskbarConfiguration Tas
 public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, IReadOnlyList<DesktopSpace> Spaces)
 {
     public const int CurrentSchema = 2;
+    public GoHomeConfiguration? GoHome { get; init; }
+    [JsonIgnore] public GoHomeConfiguration EffectiveGoHome => GoHome ?? GoHomeConfiguration.Default();
     public DesktopSurfaceConfiguration? GlobalDesktopSurface { get; init; }
     [JsonIgnore] public DesktopSpace ActiveSpace => Spaces.Single(s => s.Id == ActiveSpaceId);
     public static ShellConfiguration Default()
@@ -24,11 +26,12 @@ public sealed record ShellConfiguration(int SchemaVersion, Guid ActiveSpaceId, I
         var layer = new TaskbarLayer(Guid.NewGuid(), "Main", new(56, 32, 8, 8, 12, 1, TaskbarAlignment.Start, true, false),
             [new(Guid.NewGuid(), TaskbarItemKind.Go, "Go", null)]);
         var space = new DesktopSpace(Guid.NewGuid(), "Standard", new(Guid.NewGuid(), TaskbarEdge.Bottom, layer.Id, [layer]));
-        return new(CurrentSchema, space.Id, [space]) { GlobalDesktopSurface = DesktopSurfaceConfiguration.Default() };
+        return new(CurrentSchema, space.Id, [space]) { GlobalDesktopSurface = DesktopSurfaceConfiguration.Default(), GoHome = GoHomeConfiguration.Default() };
     }
 
     public void Validate()
     {
+        GoHome?.Validate();
         if (SchemaVersion != CurrentSchema) throw new InvalidDataException("Unsupported shell configuration. Preserve it for recovery.");
         if (Spaces is null || Spaces.Count is < 1 or > 64 || Spaces.Any(s => s is null)) throw new InvalidDataException("One to 64 Desktop Spaces are required.");
         var identities = new HashSet<Guid>();
@@ -197,6 +200,6 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     }
     private void ClearPreview()
     { if (_preview is not null) { _preview = null; _intentGeneration = checked(_intentGeneration + 1); } }
-    private static ShellConfiguration Clone(ShellConfiguration source) => source with { GlobalDesktopSurface = source.GlobalDesktopSurface is null ? null : DesktopPageEdits.Clone(source.GlobalDesktopSurface), Spaces = source.Spaces.Select(s => s with { DesktopSurface = s.DesktopSurface is null ? null : DesktopPageEdits.Clone(s.DesktopSurface), Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
+    private static ShellConfiguration Clone(ShellConfiguration source) => source with { GoHome = source.GoHome?.Detached(), GlobalDesktopSurface = source.GlobalDesktopSurface is null ? null : DesktopPageEdits.Clone(source.GlobalDesktopSurface), Spaces = source.Spaces.Select(s => s with { DesktopSurface = s.DesktopSurface is null ? null : DesktopPageEdits.Clone(s.DesktopSurface), Taskbar = s.Taskbar with { Layers = s.Taskbar.Layers.Select(l => l with { Items = l.Items.ToArray() }).ToArray() } }).ToArray() };
 }
 public sealed class ShellConfigurationConflictException() : IOException("Shell configuration changed concurrently. Reload before editing; existing configuration was preserved.");

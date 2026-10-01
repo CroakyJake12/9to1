@@ -17,7 +17,7 @@ public sealed class ModelPickerTests
     public async Task ApprovalFrontdoorOnlyNavigatesAndRetriesExactBoundEdit()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             var provider = new Provider(); string? shown = null;
             using var model = new HomeModelPickerBindings(provider, (id, _) => { shown = id; return Task.CompletedTask; });
@@ -37,14 +37,15 @@ public sealed class ModelPickerTests
             Assert.Equal(JsonSerializer.Serialize(provider.Edits[0].Route), JsonSerializer.Serialize(provider.Edits[1].Route));
             Assert.Null(provider.Edits[1].Route.Candidates.Single().ArtifactRevision);
             Assert.True(model.TryGetValue("CanSave", out var unsaved)); Assert.Equal(true, unsaved); // close is never approval
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
 
     [Fact]
     public async Task MissingFrontdoorCannotDecideApprovalOrDiscardDraft()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             var provider = new Provider(); using var model = new HomeModelPickerBindings(provider);
             await model.OpenAsync(); await model.DispatchAsync("Add", provider.Model); await model.DispatchAsync("Save", null);
@@ -52,13 +53,14 @@ public sealed class ModelPickerTests
             await model.DispatchAsync("HomePermissions", null); Assert.Single(provider.Edits);
             await model.DispatchAsync("Discard", null); Assert.Equal(2, provider.Reads);
             Assert.True(model.TryGetValue("CanSave", out var dirty)); Assert.Equal(false, dirty);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     [Fact]
     public async Task AuthoredCatalogueActionKeepsOriginalCanonicalModelAndTwoWayQuery()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(GoAndCuiTests.TestApplication));
-        await session.Dispatch(async () =>
+        Assert.True(await session.Dispatch<bool>(async () =>
         {
             var provider = new Provider(); using var model = new HomeModelPickerBindings(provider); await model.OpenAsync();
             using var stream = typeof(HomeModelPickerBindings).Assembly.GetManifestResourceStream("HavenOS.Home.NativeUI.Resources.Cui.Models.cui");
@@ -75,7 +77,8 @@ public sealed class ModelPickerTests
             query.Text = "local text"; Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             Assert.True(model.TryGetValue("Query", out var value)); Assert.Equal("local text", value);
             Assert.False(Controls(root!).OfType<Button>().Single(b => Equals(b.Content, "Preview eligible selection")).IsEnabled);
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
     private static IEnumerable<Control> Controls(Control root)
     {

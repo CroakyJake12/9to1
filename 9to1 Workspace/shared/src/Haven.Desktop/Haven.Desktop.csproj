@@ -28,6 +28,7 @@
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../Forms/CUI/HavenOS.Forms.csproj" />
     <ProjectReference Include="../../../Games/CUI/HavenOS.Games.csproj" />
     <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
     <ProjectReference Include="../../../Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />

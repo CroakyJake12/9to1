@@ -16,7 +16,7 @@ public sealed class FormNativePreviewTests
     public async Task Native_ranking_preserves_option_identity_order_and_blocks_empty_required_draft()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(PreviewApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Ranking", FormModeKind.Form, now);
@@ -75,7 +75,7 @@ public sealed class FormNativePreviewTests
     public async Task Invalid_visible_numeric_text_cannot_submit_last_valid_value(FormFieldKind kind)
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(PreviewApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Numeric draft", FormModeKind.Form, now);
@@ -106,7 +106,7 @@ public sealed class FormNativePreviewTests
     public async Task Native_table_edits_typed_cells_preserves_row_ids_and_blocks_stale_valid_submission()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(PreviewApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Expenses", FormModeKind.Form, now);
@@ -181,7 +181,7 @@ public sealed class FormNativePreviewTests
     public async Task Actual_native_set_choices_validate_required_answers_and_mark_stable_ids(FormFieldKind kind)
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(PreviewApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Choice assessment", FormModeKind.Test, now);
@@ -225,7 +225,7 @@ public sealed class FormNativePreviewTests
     public async Task Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission(FormFieldKind kind, string valid)
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(PreviewApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Optional input", FormModeKind.Form, now);
@@ -253,7 +253,7 @@ public sealed class FormNativePreviewTests
     public async Task Actual_native_quiz_fields_keep_option_identity_question_release_and_detached_control_isolation()
     {
         await using var session = HeadlessUnitTestSession.StartNew(typeof(PreviewApplication));
-        await session.Dispatch(async () =>
+        await session.Dispatch<bool>(async () =>
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Native quiz", FormModeKind.Quiz, now);

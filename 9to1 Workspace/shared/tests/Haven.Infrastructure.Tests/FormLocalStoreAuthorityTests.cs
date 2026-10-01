@@ -9,6 +9,84 @@ namespace Haven.Infrastructure.Tests;
 public sealed class FormLocalStoreAuthorityTests
 {
     [Theory]
+    [InlineData("start")]
+    [InlineData("presentation")]
+    [InlineData("answer")]
+    [InlineData("submit")]
+    public async Task Actual_Home_owned_response_operation_keeps_originating_authentication_across_publication_read(string operation)
+    {
+        using var paths = new Paths(); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25)); var token = timeout.Token;
+        var home = new FileHomeCoreStateStore(Path.Combine(paths.DataDirectory, "home.json"));
+        var profiles = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+        var actor = new MutableActor((await profiles.GetCurrentAsync(token))!);
+        var settings = new VersionedAtomicSettingsStore(paths);
+        var evidence = new FormLocalStoreEvidenceProvider(settings, settings);
+        var ownership = new HomeLocalStoreOwnership(home, profiles, new HomeLocalStoreEvidenceRegistry([evidence]),
+            new HomePermissionTrustService(home, (_, _) => null));
+        var actual = new FormLocalStoreAuthority(settings, settings, actor, new HomeResourceStoreOwnershipAuthority(ownership, actor));
+        var authority = new PublicationReadBarrier(actual);
+        var publications = new FormPublicationService(settings, settings, authority, new Validator(), actors: actor);
+        var identity = await settings.GetStoreIdentityAsync(token); await ownership.BindNewEmptyAsync("forms", identity.StoreId.ToString("D"));
+        var project = FormProjectEditor.Create("Original responder", FormModeKind.Form, DateTimeOffset.UtcNow);
+        var field = new FormField(Guid.NewGuid(), FormFieldKind.ShortText, "Private answer", null, JsonSerializer.SerializeToElement(new { }), false, new());
+        project = FormProjectEditor.AddField(project, project.Revision, project.Pages[0].PageID, field, DateTimeOffset.UtcNow);
+        var created = await publications.CreateAsync(project.FormID, FormProjectEditor.Project(project), token); Assert.True(created.Success);
+        var published = (await publications.PublishAsync(project.FormID, created.Publication!.Revision, token)).Publication!;
+        var sessions = new FormResponseSessionService(publications, settings, settings, authority, actor); FormResponse? response = null;
+        if (operation != "start")
+        {
+            var started = await sessions.StartAsync(project.FormID, published.Revision, token); Assert.True(started.Success);
+            var answered = await sessions.AnswerAsync(project.FormID, started.Response!.ResponseID, started.Response.Revision,
+                field.FieldID, JsonSerializer.SerializeToElement("retained private answer"), token); Assert.True(answered.Success); response = answered.Response!;
+        }
+        var before = await File.ReadAllBytesAsync(Path.Combine(paths.DataDirectory, "settings.json"), token);
+        authority.Armed = true; var pending = InvokeAsync(); await authority.Entered.Task.WaitAsync(token);
+        actor.Current = actor.Current with { AuthenticationRevision = "new-originating-login" }; authority.Release.TrySetResult();
+        var denied = await pending; Assert.False(denied.Success); Assert.Equal("PermissionDenied", denied.Code); Assert.False(denied.Disclosed);
+        Assert.Equal(before, await File.ReadAllBytesAsync(Path.Combine(paths.DataDirectory, "settings.json"), token));
+        // A fresh operation may use this valid new authentication; only the crossed operation is denied.
+        if (operation == "start") Assert.True((await sessions.StartAsync(project.FormID, published.Revision, token)).Success);
+        else
+        {
+            var retained = await sessions.ReadSessionAsync(project.FormID, response!.ResponseID, token);
+            Assert.True(retained.Success); Assert.Equal(actor.Current, retained.Scope!.Actor); Assert.Equal(response.Revision, retained.Response!.Revision);
+            Assert.Equal("retained private answer", Assert.Single(retained.Response.Answers).Value.GetString());
+        }
+        async Task<(bool Success, string? Code, bool Disclosed)> InvokeAsync()
+        {
+            if (operation == "presentation")
+            {
+                var result = await sessions.ReadSessionAsync(project.FormID, response!.ResponseID, token);
+                return (result.Success, result.Code, result.Response is not null || result.Presentation is not null || result.Scope is not null);
+            }
+            var resultSession = operation switch
+            {
+                "start" => await sessions.StartAsync(project.FormID, published.Revision, token),
+                "answer" => await sessions.AnswerAsync(project.FormID, response!.ResponseID, response!.Revision, field.FieldID, JsonSerializer.SerializeToElement("must not save"), token),
+                "submit" => await sessions.SubmitAsync(project.FormID, response!.ResponseID, response!.Revision, token),
+                _ => throw new InvalidOperationException("Unknown test operation")
+            };
+            return (resultSession.Success, resultSession.Code, resultSession.Response is not null);
+        }
+    }
+
+    private sealed class PublicationReadBarrier(IFormStoreCommitAuthority inner) : IFormStoreCommitAuthority
+    {
+        public bool Armed { get; set; }
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<bool> AuthorizeAsync(Guid storeID, Guid formID, long revision, string actionID, CancellationToken token)
+        {
+            var allowed = await inner.AuthorizeAsync(storeID, formID, revision, actionID, token);
+            if (Armed && actionID == "forms.read") { Armed = false; Entered.TrySetResult(); await Release.Task.WaitAsync(token); }
+            return allowed;
+        }
+        public ValueTask<ISettingsCommitAdmission?> CaptureCommitAdmissionAsync(Guid storeID, Guid formID, long revision,
+            string actionID, AuthenticatedResourceActor? expectedActor, CancellationToken token) =>
+            inner.CaptureCommitAdmissionAsync(storeID, formID, revision, actionID, expectedActor, token);
+    }
+
+    [Theory]
     [InlineData(false, 0)]
     [InlineData(false, 1)]
     [InlineData(false, 2)]
@@ -29,7 +107,7 @@ public sealed class FormLocalStoreAuthorityTests
         var ownership = new HomeLocalStoreOwnership(home, profiles, new HomeLocalStoreEvidenceRegistry([evidence]),
             new HomePermissionTrustService(home, (_, _) => null));
         var authority = new FormLocalStoreAuthority(settings, actual, actor, new HomeResourceStoreOwnershipAuthority(ownership, actor));
-        var publications = new FormPublicationService(settings, actual, authority, new Validator());
+        var publications = new FormPublicationService(settings, actual, authority, new Validator(), actors: actor);
         var identity = await actual.GetStoreIdentityAsync(token);
         await ownership.BindNewEmptyAsync("forms", identity.StoreId.ToString("D"));
         var project = FormProjectEditor.Create("Lease race", FormModeKind.Form, DateTimeOffset.UtcNow);
@@ -114,7 +192,7 @@ public sealed class FormLocalStoreAuthorityTests
         var ownership = new HomeLocalStoreOwnership(home, profiles, new HomeLocalStoreEvidenceRegistry([evidence]),
             new HomePermissionTrustService(home, (_, _) => null));
         var authority = new FormLocalStoreAuthority(settings, settings, profiles, new HomeResourceStoreOwnershipAuthority(ownership, profiles));
-        var publications = new FormPublicationService(settings, settings, authority, new Validator());
+        var publications = new FormPublicationService(settings, settings, authority, new Validator(), actors: profiles);
         var project = FormProjectEditor.Create("Owned Forms", FormModeKind.Form, DateTimeOffset.UtcNow);
         Assert.Equal("PermissionDenied", (await publications.CreateAsync(project.FormID, FormProjectEditor.Project(project))).Code);
         var identity = await settings.GetStoreIdentityAsync(CancellationToken.None);
@@ -141,7 +219,7 @@ public sealed class FormLocalStoreAuthorityTests
             new HomePermissionTrustService(home, (_, _) => null));
         var reopenedAuthority = new FormLocalStoreAuthority(reopenedSettings, reopenedSettings, reopenedProfiles,
             new HomeResourceStoreOwnershipAuthority(reopenedOwnership, reopenedProfiles));
-        var reopenedPublications = new FormPublicationService(reopenedSettings, reopenedSettings, reopenedAuthority, new Validator());
+        var reopenedPublications = new FormPublicationService(reopenedSettings, reopenedSettings, reopenedAuthority, new Validator(), actors: reopenedProfiles);
         var resumed = new FormResponseSessionService(reopenedPublications, reopenedSettings, reopenedSettings, reopenedAuthority, reopenedProfiles);
         Assert.Equal(started.Response!.ResponseID, (await resumed.ResumeAsync(project.FormID, started.Response.ResponseID)).Response!.ResponseID);
         Assert.False(await reopenedAuthority.AuthorizeAsync(Guid.NewGuid(), project.FormID, published.Publication.Revision, "forms.read", CancellationToken.None));

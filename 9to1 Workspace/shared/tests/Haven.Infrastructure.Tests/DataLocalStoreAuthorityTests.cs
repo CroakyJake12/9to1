@@ -9,6 +9,258 @@ namespace Haven.Infrastructure.Tests;
 
 public sealed class DataLocalStoreAuthorityTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Lying_scalar_collection_is_bounded_before_actual_display_review_without_pending_or_writes(bool duplicate)
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync(CancellationToken.None);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets.Single(); sheet.SetCell(0, 0, "Amount");
+        var table = new DataTableDefinition { Name = "Amounts", SheetId = sheet.Id, Range = new() { EndRow = 0 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "Amount", DataFieldType.Integer, false)], []).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed amounts", (await fixture.CaptureAsync(CancellationToken.None))!, CancellationToken.None);
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var creator = new DataHomeRecordCreator(fixture.Repository, fixture.Authority!, fixture.Actor!, broker);
+        var display = await creator.LoadForDisplayAsync(workbook.Id);
+        var values = new LyingRecordValues(table.Fields[0].FieldID, duplicate);
+        await Assert.ThrowsAnyAsync<ArgumentException>(() => creator.ReviewAsync(display.Selection, workbook.Id, table.Id,
+            Guid.NewGuid(), workbook.Version, workbook.RevisionId, values));
+        Assert.Equal(duplicate ? 2 : 257, values.Consumed);
+        var intentValues = new LyingRecordValues(table.Fields[0].FieldID, duplicate);
+        Assert.ThrowsAny<ArgumentException>(() => DataRecordCreateIntent.Capture(fixture.StoreID, workbook, table.Id, Guid.NewGuid(), intentValues));
+        Assert.Equal(duplicate ? 2 : 257, intentValues.Consumed);
+        var coreValues = new LyingRecordValues(table.Fields[0].FieldID, duplicate);
+        if (duplicate)
+            Assert.ThrowsAny<ArgumentException>(() => DataRecordCreation.Prepare(workbook, table.Id, Guid.NewGuid(), workbook.Version, workbook.RevisionId, coreValues));
+        else Assert.False(DataRecordCreation.Prepare(workbook, table.Id, Guid.NewGuid(), workbook.Version, workbook.RevisionId, coreValues).Success);
+        Assert.Equal(duplicate ? 2 : 257, coreValues.Consumed);
+        Assert.Empty((await fixture.Permissions!.GetSnapshotAsync()).PendingRequests);
+        Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath));
+    }
+
+    private sealed class LyingRecordValues(Guid originalField, bool duplicate) : IReadOnlyDictionary<Guid, DataScalarRecordValue>
+    {
+        public int Consumed { get; private set; }
+        public int Count => 1;
+        public IEnumerable<Guid> Keys => throw new InvalidOperationException("Caller metadata must not be enumerated.");
+        public IEnumerable<DataScalarRecordValue> Values => throw new InvalidOperationException("Caller metadata must not be enumerated.");
+        public DataScalarRecordValue this[Guid key] => throw new NotSupportedException();
+        public bool ContainsKey(Guid key) => throw new NotSupportedException();
+        public bool TryGetValue(Guid key, out DataScalarRecordValue value) { value = null!; throw new NotSupportedException(); }
+        public IEnumerator<KeyValuePair<Guid, DataScalarRecordValue>> GetEnumerator()
+        {
+            for (var index = 0; index < 1_000_000; index++)
+            {
+                Consumed++;
+                yield return new(duplicate || index == 0 ? originalField : Guid.NewGuid(),
+                    new(DataCellKind.Number, JsonSerializer.SerializeToElement(7)));
+            }
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Originally_displayed_selection_denies_replacement_before_review_even_with_colliding_workbook_identity(bool replaceStore)
+    {
+        using var fixture = new Fixture(); using var foreign = new Fixture(); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25)); var token = timeout.Token;
+        await fixture.InitializeAsync(token); await foreign.InitializeAsync(token);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets.Single(); sheet.SetCell(0, 0, "Amount");
+        var table = new DataTableDefinition { Name = "Amounts", SheetId = sheet.Id, Range = new() { EndRow = 0 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "Amount", DataFieldType.Integer, false)], []).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed amounts", (await fixture.CaptureAsync(token))!, token);
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath, token);
+        // Collision is deliberate setup in a distinct, genuinely owned filesystem root.
+        var foreignPath = Path.Combine(foreign.Paths.DataDirectory, "Data", "Workbooks", workbook.Id.ToString("D"), "current.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(foreignPath)!); await File.WriteAllBytesAsync(foreignPath, before, token);
+        var repositories = new SwitchableDisplayRepository(fixture.Repository);
+        var authorities = new SwitchableDisplayAuthority(fixture.Authority!);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(repositories, authorities)]), fixture.Permissions!);
+        var creator = new DataHomeRecordCreator(repositories, authorities, fixture.Actor!, broker);
+        var display = await creator.LoadForDisplayAsync(workbook.Id, token);
+        Assert.Equal(workbook.Version, display.Workbook.Version); Assert.Equal(workbook.RevisionId, display.Workbook.RevisionId);
+        if (replaceStore)
+        {
+            repositories.Current = foreign.Repository; authorities.Current = foreign.Authority!;
+            fixture.Actor!.Current = foreign.Actor!.Current;
+            Assert.NotNull(await authorities.CaptureAsync(foreign.StoreID, workbook.Id, workbook.Version, workbook.RevisionId,
+                DataRecordCreateIntent.ActionID, fixture.Actor.Current, token));
+        }
+        else fixture.Actor!.Current = fixture.Actor.Current with { AuthenticationRevision = "replacement-before-review" };
+        var values = new Dictionary<Guid, DataScalarRecordValue> { [table.Fields[0].FieldID] = new(DataCellKind.Number, JsonSerializer.SerializeToElement(7)) };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => creator.ReviewAsync(display.Selection, workbook.Id, table.Id,
+            Guid.NewGuid(), workbook.Version, workbook.RevisionId, values, token));
+        // Neither caller-controlled IDs nor the legacy fresh-identity overload can bypass the origin.
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => creator.ReviewAsync(workbook.Id, table.Id,
+            Guid.NewGuid(), workbook.Version, workbook.RevisionId, values, token));
+        Assert.Empty((await fixture.Permissions!.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+        Assert.Empty((await foreign.Permissions!.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
+        Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath, token));
+        Assert.Equal(before, await File.ReadAllBytesAsync(foreignPath, token));
+    }
+
+    private sealed class SwitchableDisplayAuthority(IDataWorkbookCommitAuthority original) : IDataWorkbookCommitAuthority
+    {
+        public IDataWorkbookCommitAuthority Current { get; set; } = original;
+        public ValueTask<IDataWorkbookCommitAdmission?> CaptureAsync(Guid storeID, Guid workbookID, int version, Guid revision,
+            string action, AuthenticatedResourceActor? actor = null, CancellationToken token = default)
+            => Current.CaptureAsync(storeID, workbookID, version, revision, action,
+                actor ?? throw new InvalidOperationException("The actual display fixture requires a bound actor."), token);
+    }
+    private sealed class SwitchableDisplayRepository(IDataGuardedWorkbookRepository original) : IDataGuardedWorkbookRepository
+    {
+        public IDataGuardedWorkbookRepository Current { get; set; } = original;
+        public Task<DataWorkbook?> LoadAsync(Guid id, CancellationToken token) => Current.LoadAsync(id, token);
+        public Task<IReadOnlyList<DataWorkbookSummary>> ListAsync(CancellationToken token) => Current.ListAsync(token);
+        public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, CancellationToken token) => Current.SaveAsync(workbook, reason, token);
+        public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, IDataWorkbookCommitAdmission admission, CancellationToken token) => Current.SaveAsync(workbook, reason, admission, token);
+        public Task DeleteAsync(Guid id, CancellationToken token) => Current.DeleteAsync(id, token);
+        public ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken token) => Current.GetStoreIdentityAsync(token);
+        public ValueTask<DataWorkbookStoreEvidence?> ReadStoreEvidenceAsync(CancellationToken token) => Current.ReadStoreEvidenceAsync(token);
+    }
+
+    [Fact]
+    public async Task Actual_record_review_captures_caller_scalars_before_held_physical_load_and_approval()
+    {
+        using var fixture = new Fixture(); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25)); var token = timeout.Token;
+        await fixture.InitializeAsync(token);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets.Single(); sheet.SetCell(0, 0, "Amount");
+        var table = new DataTableDefinition { Name = "Amounts", SheetId = sheet.Id, Range = new() { EndRow = 0 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "Amount", DataFieldType.Integer, false)], []).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed amounts", (await fixture.CaptureAsync(token))!, token);
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath, token);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var held = new RecordLoadBarrierRepository(fixture.Repository);
+        var creator = new DataHomeRecordCreator(held, fixture.Authority!, fixture.Actor!, broker);
+        var display = await creator.LoadForDisplayAsync(workbook.Id, token); held.Arm();
+        using var scalar = JsonDocument.Parse("7");
+        var values = new Dictionary<Guid, DataScalarRecordValue> { [table.Fields[0].FieldID] = new(DataCellKind.Number, scalar.RootElement) };
+        var recordID = Guid.NewGuid();
+        var pending = creator.ReviewAsync(display.Selection, workbook.Id, table.Id, recordID, workbook.Version, workbook.RevisionId, values, token);
+        await held.Entered.Task.WaitAsync(token);
+        scalar.Dispose(); values[table.Fields[0].FieldID] = new(DataCellKind.Number, JsonSerializer.SerializeToElement(9)); held.Release.TrySetResult();
+        var review = await pending; Assert.Equal(7, review.Intent.Values[table.Fields[0].FieldID].Value.GetInt32());
+        Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath, token));
+        Assert.True((await fixture.Permissions!.DecideAsync(review.RequestID, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        Assert.True((await creator.CommitAsync(review, token)).Committed);
+        var actual = (await fixture.Repository.LoadAsync(workbook.Id, token))!;
+        Assert.Equal("7", DataTableIdentity.ReadCell(actual, table.Id, recordID, table.Fields[0].FieldID)!.Value);
+        Assert.Equal(3, actual.Version);
+    }
+
+    private sealed class RecordLoadBarrierRepository(IDataGuardedWorkbookRepository inner) : IDataGuardedWorkbookRepository
+    {
+        private bool _armed;
+        public void Arm() => _armed = true;
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async Task<DataWorkbook?> LoadAsync(Guid workbookID, CancellationToken token)
+        {
+            var workbook = await inner.LoadAsync(workbookID, token);
+            if (_armed) { _armed = false; Entered.TrySetResult(); await Release.Task.WaitAsync(token); }
+            return workbook;
+        }
+        public Task<IReadOnlyList<DataWorkbookSummary>> ListAsync(CancellationToken token) => inner.ListAsync(token);
+        public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, CancellationToken token) => inner.SaveAsync(workbook, reason, token);
+        public Task<DataSaveResult> SaveAsync(DataWorkbook workbook, string reason, IDataWorkbookCommitAdmission admission, CancellationToken token) => inner.SaveAsync(workbook, reason, admission, token);
+        public Task DeleteAsync(Guid workbookID, CancellationToken token) => inner.DeleteAsync(workbookID, token);
+        public ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken token) => inner.GetStoreIdentityAsync(token);
+        public ValueTask<DataWorkbookStoreEvidence?> ReadStoreEvidenceAsync(CancellationToken token) => inner.ReadStoreEvidenceAsync(token);
+    }
+
+    [Fact]
+    public async Task Actual_record_creator_reviews_defaults_and_dependent_calculation_before_atomic_persistence()
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync(CancellationToken.None);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets.Single(); sheet.SetCell(0, 0, "ID"); sheet.SetCell(0, 1, "Code");
+        sheet.SetCell(0, 3, "old cache", "=A2+NOW()", DataCellKind.Formula);
+        var table = new DataTableDefinition { Name = "People", SheetId = sheet.Id, Range = new() { EndRow = 0, EndColumn = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        var key = new DataKeyDefinition(Guid.NewGuid(), "ID", DataKeyKind.Primary, [table.Fields[0].FieldID]);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "ID", DataFieldType.Integer, false), new(table.Fields[1].FieldID, "Code", DataFieldType.Text, false, "007")], [key]).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed people", (await fixture.CaptureAsync(CancellationToken.None))!, CancellationToken.None);
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath);
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var creator = new DataHomeRecordCreator(fixture.Repository, fixture.Authority!, fixture.Actor!, broker);
+        var display = await creator.LoadForDisplayAsync(workbook.Id);
+        var recordID = Guid.NewGuid(); var review = await creator.ReviewAsync(display.Selection, workbook.Id, table.Id, recordID, workbook.Version, workbook.RevisionId,
+            new Dictionary<Guid, DataScalarRecordValue> { [table.Fields[0].FieldID] = new(DataCellKind.Number, JsonSerializer.SerializeToElement(1)) });
+        Assert.Equal(1, review.Intent.Arguments.GetProperty("recordsCreated").GetInt32());
+        var effect = Assert.Single(review.Intent.Arguments.GetProperty("formulaEffects").EnumerateArray());
+        Assert.Equal("old cache", effect.GetProperty("before").GetProperty("Value").GetString());
+        Assert.False((await creator.CommitAsync(review)).Committed); Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath));
+        Assert.True((await fixture.Permissions!.DecideAsync(review.RequestID, HomeApprovalChoice.Accept)).Succeeded);
+        var result = await creator.CommitAsync(review); Assert.True(result.Committed); Assert.True(result.AuditRecorded);
+        var actual = (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!; Assert.Equal(3, actual.Version);
+        Assert.Equal(recordID, Assert.Single(actual.Tables.Single().Records).RecordID);
+        var actualDefault = DataTableIdentity.ReadCell(actual, table.Id, recordID, table.Fields[1].FieldID)!;
+        Assert.Equal("007", actualDefault.Value); Assert.Equal(DataCellKind.Text, actualDefault.Kind);
+        Assert.Equal(effect.GetProperty("after").GetProperty("Value").GetString(), actual.Sheets.Single().GetCell(0, 3)!.Value);
+        Assert.NotNull(await new DataRecordCreateRecovery(fixture.Repository, fixture.Authority!, fixture.Actor!).ReadAsync(review.Intent));
+        Assert.Equal("DataRecordAlreadyCreated", (await creator.CommitAsync(review)).Code);
+        Assert.Equal(3, (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!.Version);
+        await Assert.ThrowsAsync<InvalidDataException>(() => creator.ReviewAsync(display.Selection, actual.Id, table.Id, Guid.NewGuid(), actual.Version, actual.RevisionId,
+            new Dictionary<Guid, DataScalarRecordValue> { [table.Fields[0].FieldID] = new(DataCellKind.Number, JsonSerializer.SerializeToElement(1)) }));
+        Assert.Equal(3, (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!.Version);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Record_create_commit_rechecks_actual_actor_or_binding_inside_canonical_workbook_lease(bool revokeBinding)
+    {
+        using var fixture = new Fixture(); using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+        var token = timeout.Token; await fixture.InitializeAsync(token);
+        var workbook = fixture.Workbook; var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "ID"); sheet.SetCell(1, 0, "1");
+        var table = new DataTableDefinition { Name = "People", SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        var key = new DataKeyDefinition(Guid.NewGuid(), "ID", DataKeyKind.Primary, [table.Fields[0].FieldID]);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(table.Fields[0].FieldID, "ID", DataFieldType.Integer, false)], [key]).Workbook!;
+        var saved = await fixture.Repository.SaveAsync(workbook, "Typed people", (await fixture.CaptureAsync(token))!, token);
+        var intent = DataRecordCreateIntent.Capture(fixture.StoreID, workbook, table.Id, Guid.NewGuid(),
+            new Dictionary<Guid, DataScalarRecordValue> { [table.Fields[0].FieldID] = new(DataCellKind.Number, JsonSerializer.SerializeToElement(2)) });
+        var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(fixture.Actor!,
+            [new DataWorkbookMutationAccessResolver(fixture.Repository, fixture.Authority!)]), fixture.Permissions!);
+        var request = await broker.AuthorizeAsync("data", DataRecordCreateIntent.ActionID, intent.Scopes, intent.Arguments,
+            "Create record", null, "actual-record-create-lease", token);
+        Assert.True((await fixture.Permissions!.DecideAsync(request.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
+        var capability = (await broker.BeginExecutionCapabilityAsync(request.RequestId, intent.Arguments, token))!;
+        var before = await File.ReadAllBytesAsync(saved.CurrentPath, token);
+        var lockPath = Path.Combine(fixture.Paths.DataDirectory, "Data", "Workbooks", ".locks", workbook.Id.ToString("D") + ".lock");
+        using var lease = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        var barrier = new SchemaCaptureBarrier(fixture.Authority!);
+        var pending = new DataHomeRecordCreateOperation(fixture.Repository, barrier, broker).ExecuteAsync(intent, capability, token);
+        await barrier.Captured.Task.WaitAsync(token);
+        Assert.False(pending.IsCompleted);
+        if (!revokeBinding) fixture.Actor!.Current = fixture.Actor.Current with { AuthenticationRevision = "revoked-record-create-session" };
+        else
+        {
+            var record = Assert.Single((await fixture.Home.ReadAsync(token)).State!.Records, item => item.RecordType == "home.local-store-ownership");
+            var binding = record.Payload.Deserialize<HomeLocalStoreBinding>()!;
+            Assert.True((await fixture.Home.WriteAsync(record with { Revision = record.Revision + 1,
+                Payload = JsonSerializer.SerializeToElement(binding with { ProfileId = "revoked" }) }, record.Revision, token)).IsSuccess);
+        }
+        lease.Dispose(); var result = await pending;
+        Assert.False(result.Committed); Assert.Equal("PermissionDenied", result.Code); Assert.True(result.AuditRecorded);
+        Assert.Equal(before, await File.ReadAllBytesAsync(saved.CurrentPath, token));
+        Assert.Single((await fixture.Repository.LoadAsync(workbook.Id, token))!.Tables.Single().Records);
+        Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(saved.CurrentPath)!, "*.tmp", SearchOption.AllDirectories));
+    }
+
     [Fact]
     public async Task Actual_junction_owner_creates_one_canonical_association_table_without_copying_source_records()
     {

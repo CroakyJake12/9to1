@@ -50,7 +50,9 @@ public sealed partial class MainView
         new(bus, services.GetRequiredService<IDataWorkbookRepository>(),
             services.GetRequiredService<IDataWorkbookFormatService>(), services.GetRequiredService<IDataWorkbookQueryService>(),
             services.GetRequiredService<GenUiLiveActivityTracker>(), services.GetRequiredService<GenUiInstanceStore>(),
-            schemaDesigner: services.GetService<IDataTableSchemaDesigner>());
+            schemaDesigner: services.GetService<IDataTableSchemaDesigner>(),
+            relationshipDesigner: services.GetService<IDataRelationshipDesigner>(),
+            recordCreator: services.GetService<IDataRecordCreator>());
 
     private void OpenDocumentWorkspace(ModeDefinition mode, HavenSurface surface, bool forceNewTab)
     {
