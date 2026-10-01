@@ -49,7 +49,7 @@ public sealed class ShellNavigationGoTests
     {
         using var fixture = new Fixture(); var initial = await fixture.Configuration.GetAsync();
         var target = Assert.Single(await fixture.Query(new("", "Desktop Spaces")));
-        var preview = await fixture.Configuration.PreviewAsync(initial.Stored.Revision, ShellEdits.RenameSpace(initial.Effective, "Unsaved"), TimeSpan.FromMinutes(1));
+        var preview = await fixture.Configuration.PreviewAsync(initial.Stored, ShellEdits.RenameSpace(initial.Effective, "Unsaved"), TimeSpan.FromMinutes(1));
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Provider.InvokeAsync(target.Reference, "Navigate", default));
         Assert.Equal(preview.Preview!.Id, (await fixture.Configuration.GetAsync()).Preview!.Id);
         await fixture.Configuration.RevertAsync(preview.Preview.Id);
@@ -76,6 +76,21 @@ public sealed class ShellNavigationGoTests
         var preview = await fixture.Configuration.GetAsync();
         Assert.Equal(expected, preview.Effective.ActiveSpace.Taskbar.ActiveLayerId);
         Assert.Equal(2, preview.Effective.ActiveSpace.Taskbar.Layers.Count);
+    }
+    [Fact]
+    public async Task RetainedNavigationResultCannotCrossSameProfileSessionChange()
+    {
+        using var fixture = new Fixture();
+        var old = Assert.Single(await fixture.Query(new("", "Desktop Spaces")));
+        var before = await fixture.Configuration.GetAsync();
+        fixture.Actors.Current = fixture.Actors.Current with { AuthenticationRevision = "new-session" };
+        await Assert.ThrowsAsync<ShellConfigurationConflictException>(() => fixture.Provider.InvokeAsync(old.Reference, "Navigate", default));
+        var after = await fixture.Configuration.GetAsync();
+        Assert.Null(after.Preview); Assert.Equal(before.Stored.Revision, after.Stored.Revision);
+        var fresh = Assert.Single(await fixture.Query(new("", "Desktop Spaces")));
+        Assert.NotEqual(old.Reference.Revision, fresh.Reference.Revision);
+        await fixture.Provider.InvokeAsync(fresh.Reference, "Navigate", default);
+        Assert.NotNull((await fixture.Configuration.GetAsync()).Preview);
     }
     private sealed class ForbiddenStore : IShellConfigurationStore
     {
@@ -105,7 +120,7 @@ public sealed class ShellNavigationGoTests
         public async Task Save(ShellConfiguration candidate)
         {
             var current = await Configuration.GetAsync();
-            var preview = await Configuration.PreviewAsync(current.Stored.Revision, candidate, TimeSpan.FromMinutes(1));
+            var preview = await Configuration.PreviewAsync(current.Stored, candidate, TimeSpan.FromMinutes(1));
             await Configuration.KeepAsync(preview.Preview!.Id);
         }
         public async Task<List<GoResult>> Query(GoQuery query)

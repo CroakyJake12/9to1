@@ -29,6 +29,9 @@ public sealed class SiteAuthoringSnapshotTests
             var original=project;
             var denied=await edits.UpdateComponentAsync(project.SiteId,project.Revision,first,c=>c with{Slots=new Dictionary<string,IReadOnlyList<Guid>>()});
             Assert.NotNull(denied.Error);
+            var renamedSlot=await edits.UpdateComponentAsync(project.SiteId,project.Revision,first,c=>c with
+            {Slots=new Dictionary<string,IReadOnlyList<Guid>>(StringComparer.OrdinalIgnoreCase){{"CONTENT",new[]{child}}}});
+            Assert.NotNull(renamedSlot.Error);
             Assert.Equal(original.Revision,(await projects.GetProjectAsync(project.SiteId)).Value!.Revision);
             var moved=await edits.MoveComponentAsync(project.SiteId,project.Revision,child,page,destination,0);
             Assert.Null(moved.Error);project=moved.Value!;

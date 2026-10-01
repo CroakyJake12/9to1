@@ -26,7 +26,7 @@ public sealed class HomeDataConversationRegistrationTests
             Assert.Single(graph.GetServices<IHomeLocalStoreEvidenceProvider>(), provider => provider is ConversationLocalStoreEvidenceProvider);
             Assert.Single(graph.GetServices<ICanonicalResourceAccessResolver>(), resolver => resolver is DataWorkbookMutationAccessResolver);
             Assert.NotNull(graph.GetRequiredService<DataHomeRecordUpdateOperation>());
-            Assert.NotNull(graph.GetRequiredService<DataRecordMutationRecovery>());
+            Assert.Same(graph.GetRequiredService<DataRecordMutationRecovery>(), graph.GetRequiredService<IDataRecordMutationReceiptSource>());
             Assert.NotNull(graph.GetRequiredService<ConversationLocalStoreAuthority>());
             Assert.Null(await graph.GetRequiredService<HomePersonalModelRoutes>().GetAsync(Dulche.Runtime.ModelCapabilityCategory.Chat));
             var actual = Assert.IsAssignableFrom<IDataWorkbookStoreIdentitySource>(graph.GetRequiredService<IDataWorkbookRepository>());

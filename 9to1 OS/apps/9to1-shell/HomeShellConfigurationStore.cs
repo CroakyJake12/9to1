@@ -21,14 +21,14 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
             var read = await home.ReadAsync(ct);
             if (!read.IsSuccess) throw new InvalidDataException("Home shell state requires recovery.");
             var record = read.State!.Records.SingleOrDefault(r => r.RecordId == RecordId(actor.ProfileId));
-            if (record is not null) { var result = Decode(record, actor.ProfileId); await AuthorizeReadAsync(actor, result.Revision, ct); await SameActorAsync(actor, ct); return result; }
+            if (record is not null) { var result = Decode(record, actor.ProfileId); await AuthorizeReadAsync(actor, result.Revision, ct); await SameActorAsync(actor, ct); return result with { SessionActor = actor }; }
             // Persist the initial stable identities atomically so reopening cannot silently replace them.
             var initial = new Payload(actor.ProfileId, ShellConfiguration.Default(), null);
             await SameActorAsync(actor, ct);
             var write = await home.WriteGuardedAsync(new(RecordId(actor.ProfileId), RecordType, 1, HomeDataScope.DeviceLocal,
                 HomeRecordAuthority.LocalCanonical, 1, JsonSerializer.SerializeToElement(initial)), 0, actor, CommitGuard(), ct);
             await SameActorAsync(actor, ct);
-            if (write.IsSuccess) { await AuthorizeReadAsync(actor, 1, ct); return new(1, initial.Current, null, RecordId(actor.ProfileId)); }
+            if (write.IsSuccess) { await AuthorizeReadAsync(actor, 1, ct); return new(1, initial.Current, null, RecordId(actor.ProfileId)) { SessionActor = actor }; }
             if (write.Failure?.Code != HomeCoreErrorCode.HomeStateConflict) throw new IOException("Home could not initialize shell state safely.");
         }
         throw new ShellConfigurationConflictException();
@@ -37,7 +37,8 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
     {
         next.Current.Validate(); next.Previous?.Validate();
         if (expectedRevision < 1 || next.Revision != checked(expectedRevision + 1)) throw new InvalidDataException("Invalid shell transaction revision.");
-        var actor = await ActorAsync(ct);
+        var actor = next.SessionActor ?? throw new UnauthorizedAccessException("Read the current Home shell before editing it.");
+        await SameActorAsync(actor, ct);
         if (next.AuthorityId != RecordId(actor.ProfileId)) throw new UnauthorizedAccessException("The shell transaction belongs to another Home profile.");
         var authorized = await authorization.AuthorizeAsync("os.shell.configuration.keep",
             [new(RecordType, RecordId(actor.ProfileId), expectedRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Write)], ct);

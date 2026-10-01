@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Haven.Application;
+using Haven.Application.Go;
 using Haven.Application.Shelf;
 using Haven.Core.Shelf;
 
@@ -81,6 +82,81 @@ public sealed class ShelfLibraryServiceTests
         var saved = Assert.Single((await new ShelfLibraryService(store).ReadAsync()).Library.Items);
         Assert.Equal("reviewed", Assert.Single(saved.Tags!));
         Assert.Equal("reviewed-argument", Assert.Single(saved.Target.Arguments!));
+    }
+
+    [Theory]
+    [InlineData("os.installed-applications")]
+    [InlineData("android.installed-applications")]
+    public async Task Installed_app_activation_preserves_owner_result_and_rechecks_current_owner(string providerID)
+    {
+        var library = new ShelfLibraryService(new MemorySettings());
+        var provider = new InstalledProvider(providerID);
+        var adapter = new ShelfInstalledApplicationActivation(library, new GoService([provider]), providerID);
+        var discovered = new List<GoResult>();
+        await foreach (var update in adapter.DiscoverAsync("Editor")) if (update.Result is { } item) discovered.Add(item);
+        var original = Assert.Single(discovered);
+        var itemToSave = adapter.CreateItem(original);
+        Assert.True((await library.AddItemAsync(0, itemToSave)).Success);
+        Assert.Equal("RevisionConflict", (await adapter.ActivateAsync(itemToSave.Id, 0, original)).Code);
+        Assert.Equal(0, provider.Activations);
+        var activated = await adapter.ActivateAsync(itemToSave.Id, 1, original);
+        Assert.True(activated.Requested); Assert.Equal("ActivationRequested", activated.Code);
+        Assert.Equal(original.Reference, provider.LastReference); Assert.Equal(1, provider.Activations);
+        provider.Allowed = false;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.ActivateAsync(itemToSave.Id, 1, original));
+        provider.Allowed = true; provider.Revision = "2";
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => adapter.ActivateAsync(itemToSave.Id, 1, original));
+        Assert.Equal(1, provider.Activations);
+    }
+
+    [Theory]
+    [InlineData("arguments", "ActivationCapabilityUnavailable")]
+    [InlineData("working", "ActivationCapabilityUnavailable")]
+    [InlineData("openwith", "ActivationCapabilityUnavailable")]
+    [InlineData("archive", "ItemUnavailable")]
+    [InlineData("different", "TargetMismatch")]
+    public async Task Installed_activation_rejects_unavailable_Shelf_target_options(string change, string code)
+    {
+        var library = new ShelfLibraryService(new MemorySettings()); var provider = new InstalledProvider("os.installed-applications");
+        var adapter = new ShelfInstalledApplicationActivation(library, new GoService([provider]), provider.ProviderId);
+        var original = provider.Result(); var item = adapter.CreateItem(original);
+        item = change switch
+        {
+            "arguments" => item with { Target = item.Target with { Arguments = ["unreviewed"] } },
+            "working" => item with { Target = item.Target with { WorkingDirectory = "/tmp" } },
+            "openwith" => item with { Behaviour = ShelfLaunchBehaviour.OpenWith },
+            "different" => item with { Target = item.Target with { CanonicalId = Guid.NewGuid().ToString("D") } },
+            _ => item
+        };
+        Assert.True((await library.AddItemAsync(0, item)).Success);
+        long revision = 1;
+        if (change == "archive") { Assert.True((await library.SetItemArchivedAsync(1, item.Id, true)).Success); revision = 2; }
+        var result = await adapter.ActivateAsync(item.Id, revision, original);
+        Assert.False(result.Requested); Assert.Equal(code, result.Code); Assert.Equal(0, provider.Activations);
+        Assert.Throws<ArgumentException>(() => adapter.CreateItem(original with { ProviderId = "untrusted" }));
+    }
+
+    private sealed class InstalledProvider(string providerID) : IGoProvider
+    {
+        public string ProviderId => providerID;
+        public Guid ID { get; } = Guid.NewGuid();
+        public string Revision { get; set; } = "1";
+        public bool Allowed { get; set; } = true;
+        public int Activations { get; private set; }
+        public GoCanonicalReference? LastReference { get; private set; }
+        public GoResult Result() => new(ProviderId, new("Home", "os.installed-application", ID.ToString("D"), Revision), "Editor", "Apps", [new("Open", "Open")]);
+        public async IAsyncEnumerable<GoResult> QueryAsync(GoQuery query, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+        {
+            await Task.Yield(); token.ThrowIfCancellationRequested();
+            Assert.Equal("Apps", query.Category); Assert.Contains(ProviderId, query.Scope!.ProviderIds!);
+            if (Allowed) yield return Result();
+        }
+        public Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if (!Allowed || reference != Result().Reference || actionId != "Open") throw new UnauthorizedAccessException();
+            LastReference = reference; Activations++; return Task.CompletedTask;
+        }
     }
 
     private sealed class MemorySettings : IVersionedSettingsStore, IVersionedSettingsCompareExchange

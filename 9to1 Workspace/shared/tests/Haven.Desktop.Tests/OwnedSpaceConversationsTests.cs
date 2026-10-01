@@ -62,6 +62,27 @@ public sealed class OwnedSpaceConversationsTests
         Assert.Equal(original, await fixture.Repository.GetAsync(original.Id, token));
     }
 
+    [Fact]
+    public async Task New_chat_requires_separate_explicit_SQL_binding_and_preserves_canonical_identity_on_replay()
+    {
+        var token = TestContext.Current.CancellationToken;
+        using var fixture = new Fixture(); await fixture.InitializeAsync(token, bindConversations: false);
+        var destination = await fixture.Spaces.CreateAsync("New chat destination", cancellationToken: token);
+        var now = DateTimeOffset.UtcNow;
+        var proposed = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Actual new chat",
+            null, null, false, false, now, now, SpaceId: destination.Id);
+        var owner = fixture.Owner(fixture.Repository);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.CreateChatAsync(proposed, Snapshot(destination), token));
+        Assert.Null(await fixture.Repository.GetAsync(proposed.Id, token));
+        var sql = await fixture.Database.GetStoreIdentityAsync(token);
+        await fixture.Ownership.BindNewEmptyAsync(fixture.Actor, "conversation", sql.StoreId.ToString("D"), token);
+        Assert.Equal(ConversationSpaceCommitStatus.Committed, (await owner.CreateChatAsync(proposed, Snapshot(destination), token)).Status);
+        Assert.Equal(proposed, await fixture.Repository.GetAsync(proposed.Id, token));
+        Assert.Equal(ConversationSpaceCommitStatus.RevisionConflict, (await owner.CreateChatAsync(proposed, Snapshot(destination), token)).Status);
+        Assert.Equal(proposed, await fixture.Repository.GetAsync(proposed.Id, token));
+        Assert.Single(await fixture.Repository.GetBySpaceAsync(destination.Id, 10, token));
+    }
+
     private static OwnedSpaceConversations.SpaceSnapshot Snapshot(SpaceDefinition space) => new(space.Id, space.Revision);
     private sealed class SignallingFactory(ISqliteConnectionFactory inner) : ISqliteConnectionFactory
     {
@@ -84,14 +105,14 @@ public sealed class OwnedSpaceConversationsTests
             var authority = new SpaceLocalStoreAuthority(Settings, Actors, Receipts, () => true);
             Spaces = new(Settings, token => authority.CaptureWriteAdmissionForActorAsync(Actor, token));
         }
-        public async Task InitializeAsync(CancellationToken token)
+        public async Task InitializeAsync(CancellationToken token, bool bindConversations = true)
         {
             await new ConversationProductionDatabase(Database).InitializeAsync(token);
             Actor = (await Actors.GetCurrentAsync(token))!;
             var settings = await Settings.GetStoreIdentityAsync(token);
             var sql = await Database.GetStoreIdentityAsync(token);
             await Ownership.BindNewEmptyAsync(Actor, "spaces", settings.StoreId.ToString("D"), token);
-            await Ownership.BindNewEmptyAsync(Actor, "conversation", sql.StoreId.ToString("D"), token);
+            if (bindConversations) await Ownership.BindNewEmptyAsync(Actor, "conversation", sql.StoreId.ToString("D"), token);
         }
         public OwnedSpaceConversations Owner(IConversationSpaceCommitStore repository) =>
             new(Actor, Settings, Database, Receipts, new(Actors, Receipts), repository, () => true);

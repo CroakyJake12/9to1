@@ -4,7 +4,7 @@ using Haven.Application.Go;
 
 namespace NineToOne.Os.Shell;
 
-public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistry registry, LinuxApplicationLauncher launcher) : IGoProvider
+public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistry registry, LinuxApplicationLauncher launcher) : IGoCanonicalResolver
 {
     public string ProviderId => "os.installed-applications";
     public async IAsyncEnumerable<GoResult> QueryAsync(GoQuery query, [EnumeratorCancellation] CancellationToken ct)
@@ -19,6 +19,17 @@ public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistr
             catch (UnauthorizedAccessException) { continue; }
             yield return new(ProviderId, new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture)), visible.Label, "Apps", [new("Open", "Open")]);
         }
+    }
+    public async Task<GoResult?> ResolveAsync(GoCanonicalLocator locator, CancellationToken ct)
+    {
+        if (locator is not { Owner: "Home", Kind: "os.installed-application" } || !Guid.TryParse(locator.Id, out var id) || id == Guid.Empty) return null;
+        var app = (await registry.RefreshAsync(ct)).SingleOrDefault(a => a.ApplicationId == id && a.Enabled && a.ProfileAccessible && a.ProviderId == "linux.xdg-desktop");
+        if (app is null) return null;
+        InstalledApplicationReference visible;
+        try { visible = await launcher.ResolveForReadAsync(app.ApplicationId, app.Revision, ct); }
+        catch (UnauthorizedAccessException) { return null; }
+        return new(ProviderId, new("Home", "os.installed-application", visible.ApplicationId.ToString("D"), visible.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            visible.Label, "Apps", [new("Open", "Open")]);
     }
     public Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken ct)
     {

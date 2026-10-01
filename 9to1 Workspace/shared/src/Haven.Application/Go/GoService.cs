@@ -35,12 +35,7 @@ public sealed class GoService(IEnumerable<IGoProvider> providers, TimeSpan? prov
             await foreach (var result in provider.QueryAsync(query, request.Token).WithCancellation(request.Token))
             {
                 request.Token.ThrowIfCancellationRequested();
-                if (result is null || result.ProviderId != provider.ProviderId || result.Reference is null ||
-                    string.IsNullOrWhiteSpace(result.Reference.Owner) || string.IsNullOrWhiteSpace(result.Reference.Kind) || string.IsNullOrWhiteSpace(result.Reference.Id) ||
-                    string.IsNullOrWhiteSpace(result.Reference.Revision) || result.Reference.Owner.Length > 4096 || result.Reference.Kind.Length > 256 || result.Reference.Id.Length > 4096 || result.Reference.Revision.Length > 4096 ||
-                    string.IsNullOrWhiteSpace(result.Label) || result.Label.Length > 4096 || string.IsNullOrWhiteSpace(result.Category) || result.Category.Length > 128 || result.Actions is null || result.Actions.Count > 64 ||
-                    result.Actions.Any(a => a is null || string.IsNullOrWhiteSpace(a.Id) || a.Id.Length > 256 || string.IsNullOrWhiteSpace(a.Label) || a.Label.Length > 256) || result.Actions.Select(a => a.Id).Distinct(StringComparer.Ordinal).Count() != result.Actions.Count)
-                    throw new InvalidDataException("Provider returned an invalid canonical result.");
+                ValidateResult(provider, result);
                 if (!seen.Add(result.Reference)) continue;
                 if (!Includes(query.Scope?.Owners, result.Reference.Owner) || !Includes(query.Scope?.Kinds, result.Reference.Kind) ||
                     query.Category is { } category && result.Category != category) continue;
@@ -74,6 +69,47 @@ public sealed class GoService(IEnumerable<IGoProvider> providers, TimeSpan? prov
         var owner = _providers.SingleOrDefault(p => p.ProviderId == result.ProviderId) ?? throw new InvalidOperationException("The canonical provider is unavailable.");
         // Scope/result fields are not grants. The owner must re-resolve identity/revision and authenticate/authorize now.
         return owner.InvokeAsync(result.Reference, actionId, ct);
+    }
+    public async Task<GoResult?> ResolveAsync(string providerId, GoCanonicalLocator locator, GoScope? scope = null, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(locator);
+        scope = Snapshot(scope);
+        if (string.IsNullOrWhiteSpace(providerId) || providerId.Length > 4096 ||
+            string.IsNullOrWhiteSpace(locator.Owner) || locator.Owner.Length > 4096 ||
+            string.IsNullOrWhiteSpace(locator.Kind) || locator.Kind.Length > 256 ||
+            string.IsNullOrWhiteSpace(locator.Id) || locator.Id.Length > 4096)
+            throw new ArgumentException("A bounded canonical owner locator is required.");
+        if (!Includes(scope?.ProviderIds, providerId) || !Includes(scope?.Owners, locator.Owner) || !Includes(scope?.Kinds, locator.Kind))
+            throw new UnauthorizedAccessException("This retained identity is outside the current Go scope.");
+        if (_providers.Any(p => string.IsNullOrWhiteSpace(p.ProviderId)) || _providers.Select(p => p.ProviderId).Distinct(StringComparer.Ordinal).Count() != _providers.Length)
+            throw new InvalidOperationException("Canonical providers must be uniquely registered.");
+        if (_providers.SingleOrDefault(p => p.ProviderId == providerId) is not IGoCanonicalResolver owner) return null;
+        if (_deadline <= TimeSpan.Zero || _deadline > TimeSpan.FromMinutes(1)) throw new ArgumentOutOfRangeException(nameof(providerDeadline));
+        using var request = CancellationTokenSource.CreateLinkedTokenSource(ct); request.CancelAfter(_deadline);
+        var pending = Task.Run(() => owner.ResolveAsync(locator, request.Token), request.Token);
+        try
+        {
+            var result = await pending.WaitAsync(request.Token);
+            if (result is null) return null;
+            ValidateResult(owner, result);
+            if (result.Reference.Owner != locator.Owner || result.Reference.Kind != locator.Kind || result.Reference.Id != locator.Id)
+                throw new InvalidDataException("The owner returned a different canonical identity.");
+            return result with { Actions = result.Actions.Where(action => Includes(scope?.ActionIds, action.Id)).ToArray() };
+        }
+        finally
+        {
+            request.Cancel();
+            _ = pending.ContinueWith(task => _ = task.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+        }
+    }
+    private static void ValidateResult(IGoProvider provider, GoResult result)
+    {
+                if (result is null || result.ProviderId != provider.ProviderId || result.Reference is null ||
+                    string.IsNullOrWhiteSpace(result.Reference.Owner) || string.IsNullOrWhiteSpace(result.Reference.Kind) || string.IsNullOrWhiteSpace(result.Reference.Id) ||
+                    string.IsNullOrWhiteSpace(result.Reference.Revision) || result.Reference.Owner.Length > 4096 || result.Reference.Kind.Length > 256 || result.Reference.Id.Length > 4096 || result.Reference.Revision.Length > 4096 ||
+                    string.IsNullOrWhiteSpace(result.Label) || result.Label.Length > 4096 || string.IsNullOrWhiteSpace(result.Category) || result.Category.Length > 128 || result.Actions is null || result.Actions.Count > 64 ||
+                    result.Actions.Any(a => a is null || string.IsNullOrWhiteSpace(a.Id) || a.Id.Length > 256 || string.IsNullOrWhiteSpace(a.Label) || a.Label.Length > 256) || result.Actions.Select(a => a.Id).Distinct(StringComparer.Ordinal).Count() != result.Actions.Count)
+                    throw new InvalidDataException("Provider returned an invalid canonical result.");
     }
     private static bool Includes(IReadOnlySet<string>? allowed, string value) => allowed is null || allowed.Contains(value);
     private static GoScope? Snapshot(GoScope? scope)

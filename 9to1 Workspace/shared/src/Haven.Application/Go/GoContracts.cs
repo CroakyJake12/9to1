@@ -16,3 +16,11 @@ public interface IGoProvider
     IAsyncEnumerable<GoResult> QueryAsync(GoQuery query, CancellationToken cancellationToken);
     Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken cancellationToken);
 }
+
+/// <summary>Stable owner locator only, never an authority or cached revision.</summary>
+public sealed record GoCanonicalLocator(string Owner, string Kind, string Id);
+/// <summary>Optional owner port for resolving retained identities without text-search guesses.</summary>
+public interface IGoCanonicalResolver : IGoProvider
+{
+    Task<GoResult?> ResolveAsync(GoCanonicalLocator locator, CancellationToken cancellationToken);
+}

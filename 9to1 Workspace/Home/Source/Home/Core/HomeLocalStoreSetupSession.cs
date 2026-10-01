@@ -46,7 +46,9 @@ public class HomeLocalStoreSetupSession(string resourceKind, IResourceStoreIdent
             var observed = await evidence.ReadAsync(storeId, token).ConfigureAwait(false);
             await RequireCurrentAsync(token).ConfigureAwait(false);
             return new(identity.StoreId, binding is not null,
-                binding is null && observed is { NewlyCreated: true, IsEmpty: true }, _requestId, _auditRequestId);
+                binding is null && observed is { NewlyCreated: true, IsEmpty: true, AccessibleToCurrentOsPrincipal: true } &&
+                observed.ResourceKind == ResourceKind && observed.StoreId == storeId &&
+                !string.IsNullOrWhiteSpace(observed.Revision), _requestId, _auditRequestId);
         }
         finally { _gate.Release(); }
     }

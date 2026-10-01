@@ -131,7 +131,7 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
         if (authority is not IFormStoreCommitAuthority commitAuthority) return new(false, "PermissionDenied", null);
         var admission = await commitAuthority.CaptureCommitAdmissionAsync(rootID, publication.FormID, publication.Revision, action, actor, token).ConfigureAwait(false);
         if (admission is null) return new(false, "PermissionDenied", null);
-        state = state with { SchemaVersion = 2, Responses = state.Responses.Select(entry =>
+        state = state with { SchemaVersion = 3, Responses = state.Responses.Select(entry =>
             entry with { DataWrites = entry.DataWrites ?? [] }).ToArray() };
         var json = JsonSerializer.Serialize(state);
         if (System.Text.Encoding.UTF8.GetByteCount(json) > FormProjectCodec.MaximumBytes) return new(false, "ResponseCapacityReached", null);
@@ -173,7 +173,7 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
             throw new InvalidDataException("Response store exceeds its configured byte bound.");
         var state = json is null ? new State(1, formID, []) : JsonSerializer.Deserialize<State>(json)
             ?? throw new InvalidDataException("Response store is missing.");
-        if (state.SchemaVersion is not (1 or 2) || state.FormID != formID || state.Responses is null || state.Responses.Count > 10000
+        if (state.SchemaVersion is not (1 or 2 or 3) || state.FormID != formID || state.Responses is null || state.Responses.Count > 10000
             || state.Responses.Any(entry => entry is null || entry.Owner is null || entry.Checkpoint is null
                 || entry.Checkpoint.FormID != formID || entry.Checkpoint.ResponseID == Guid.Empty)
             || state.Responses.Select(entry => entry.Checkpoint.ResponseID).Distinct().Count() != state.Responses.Count)
@@ -182,12 +182,14 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
             throw new InvalidDataException("Response store identity is unavailable.");
         foreach (var entry in state.Responses)
         {
-            if (state.SchemaVersion == 2 && entry.DataWrites is null || state.SchemaVersion == 1 && entry.DataWrites is { Count: > 0 }
+            if (state.SchemaVersion >= 2 && entry.DataWrites is null || state.SchemaVersion == 1 && entry.DataWrites is { Count: > 0 }
                 || entry.DataWrites is { Count: > 256 } || entry.Checkpoint.SubmittedAt is null && entry.DataWrites is { Count: > 0 })
                 throw new InvalidDataException("Invalid response Data journal schema.");
             var operations = new HashSet<Guid>();
             foreach (var attempt in entry.DataWrites ?? [])
             {
+                if (state.SchemaVersion < 3 && (attempt.ObservedTarget is not null || attempt.Status == FormsDataWriteStatus.Conflict))
+                    throw new InvalidDataException("Data conflict evidence requires response schema three.");
                 var captured = FormDataWriteAttemptValidation.Capture(attempt, formID, entry.Checkpoint.ResponseID,
                     entry.Checkpoint.FormVersionID, entry.Checkpoint.Revision, identity.StoreId);
                 if (!operations.Add(captured.Operation.OperationID)) throw new InvalidDataException("Duplicate response Data operation.");

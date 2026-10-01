@@ -16,6 +16,7 @@ public sealed class FormDataPreparationTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
+    [InlineData(4)]
     public async Task Actual_bound_stores_prepare_retained_response_then_require_exact_Home_approval_and_preserve_receipt(int sourceChange)
     {
         using var paths = new Paths(); var token = CancellationToken.None;
@@ -89,7 +90,7 @@ public sealed class FormDataPreparationTests
         var repeated = await journal.PrepareAsync(form.FormID, responseID, workbook.Id, table.Id, table.Records[0].RecordID, operationID);
         Assert.True(repeated.Success); Assert.Equal(1, repeated.Attempt!.Revision);
         var migrated = JsonNode.Parse((await settings.ExportAsync(token)).Settings[responseKey]!)!;
-        Assert.Equal(2, migrated["SchemaVersion"]!.GetValue<int>());
+        Assert.Equal(3, migrated["SchemaVersion"]!.GetValue<int>());
         Assert.Equal(legacy["Responses"]![0]!["Checkpoint"]!.ToJsonString(), migrated["Responses"]![0]!["Checkpoint"]!.ToJsonString());
         Assert.Equal("DataWritePending", (await journal.ReconcileAsync(form.FormID, responseID, operationID)).Code);
         if (sourceChange == 2) intent = DataRecordUpdateIntent.Capture(intent.StoreID, intent.WorkbookID, intent.Version,
@@ -113,7 +114,16 @@ public sealed class FormDataPreparationTests
                 Payload = JsonSerializer.SerializeToElement(binding with { ProfileId = "revoked" }) }, bindingRecord.Revision)).IsSuccess);
         }
         if (sourceChange == 1) await RevokeSourceAsync();
-        DataRecordMutationResult result;
+        if (sourceChange == 4)
+        {
+            var changed = (await workbooks.LoadAsync(workbook.Id, token))!;
+            var updateAdmission = await dataAuthority.CaptureAsync(storeID, changed.Id, changed.Version, changed.RevisionId,
+                DataRecordUpdateIntent.ActionId, actors.Current, token);
+            DataRecordEdits.UpdateRecord(changed, table.Id, table.Records[0].RecordID,
+                new Dictionary<Guid, DataScalarRecordValue> { [table.Fields[0].FieldID] = new(DataCellKind.Number, JsonSerializer.SerializeToElement(99)) });
+            await workbooks.SaveAsync(changed, "Independent competing update", updateAdmission!, token);
+        }
+        DataRecordMutationResult? result = null;
         if (sourceChange == 3)
         {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
@@ -126,9 +136,22 @@ public sealed class FormDataPreparationTests
             await RevokeSourceAsync(); held.Dispose();
             result = await running;
         }
+        else if (sourceChange == 4) await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            new FormDataHomeWriteOperation(operation, journal).ExecuteAsync(intent, capability));
+        else if (sourceChange == 0)
+        {
+            var unavailableAcknowledgement = new FormDataResponseWriteService(preparation, responses, new UnavailableReceiptSource());
+            var combined = await new FormDataHomeWriteOperation(operation, unavailableAcknowledgement).ExecuteAsync(intent, capability);
+            Assert.True(combined.Data.Committed); Assert.True(combined.Data.AuditRecorded);
+            Assert.Null(combined.Journal); Assert.Equal("FormAcknowledgementPending", combined.ReconciliationCode);
+            result = combined.Data;
+        }
         else result = await operation.ExecuteAsync(intent, capability);
-        Assert.Equal(sourceChange == 0, result.Committed); Assert.True(result.AuditRecorded);
-        if (sourceChange != 0) Assert.Equal("PermissionDenied", result.Code);
+        if (sourceChange != 4)
+        {
+            Assert.NotNull(result); Assert.Equal(sourceChange == 0, result.Committed); Assert.True(result.AuditRecorded);
+            if (sourceChange != 0) Assert.Equal("PermissionDenied", result.Code);
+        }
         var recovery = new DataRecordMutationRecovery(new DataWorkbookRepository(paths), dataAuthority, actors);
         var receipt = await recovery.ReadAsync(intent);
         if (sourceChange == 0)
@@ -159,12 +182,40 @@ public sealed class FormDataPreparationTests
                 Assert.True(pending.Success); Assert.Equal(FormsDataWriteStatus.Pending, Assert.Single(pending.Attempts).Status);
                 Assert.Equal("DataWritePending", (await journal.ReconcileAsync(form.FormID, responseID, operationID)).Code);
             }
+            else if (sourceChange == 4)
+            {
+                Assert.True(pending.Success); Assert.Equal(FormsDataWriteStatus.Pending, Assert.Single(pending.Attempts).Status);
+                var conflicted = await journal.ReconcileAsync(form.FormID, responseID, operationID);
+                Assert.True(conflicted.Success, conflicted.Code); Assert.Equal("DataRevisionConflict", conflicted.Code);
+                Assert.Equal(FormsDataWriteStatus.Conflict, conflicted.Attempt!.Status);
+                Assert.Equal(2, conflicted.Attempt.ObservedTarget!.Version); Assert.Null(conflicted.Attempt.Receipt);
+                Assert.Equal(intent.PayloadSHA256, conflicted.Attempt.Operation.PayloadSHA256);
+                Assert.Equal(2, (await journal.ReconcileAsync(form.FormID, responseID, operationID)).Attempt!.Revision);
+                Assert.Equal("DataOperationConflict", (await journal.PrepareAsync(form.FormID, responseID, workbook.Id,
+                    table.Id, table.Records[0].RecordID, operationID)).Code);
+                var nextID = Guid.NewGuid();
+                var next = await journal.PrepareAsync(form.FormID, responseID, workbook.Id, table.Id, table.Records[0].RecordID, nextID);
+                Assert.True(next.Success, next.Code); Assert.Equal(FormsDataWriteStatus.Pending, next.Attempt!.Status);
+                Assert.Equal(2, next.Attempt.Operation.Restore().Version);
+                var attempts = (await journal.ReadAsync(form.FormID, responseID)).Attempts; Assert.Equal(2, attempts.Count);
+                Assert.Equal(FormsDataWriteStatus.Conflict, Assert.Single(attempts, item => item.Operation.OperationID == operationID).Status);
+                Assert.Equal("99", DataTableIdentity.ReadCell((await workbooks.LoadAsync(workbook.Id, token))!, table.Id,
+                    table.Records[0].RecordID, table.Fields[0].FieldID)!.Value);
+            }
             else Assert.False(pending.Success);
         }
         var owner = actors.Current; actors.Current = owner with { ActorId = "other", ProfileId = "other" };
         Assert.False((await preparation.PrepareAsync(form.FormID, responseID, workbook.Id, table.Id, table.Records[0].RecordID, operationID)).Success);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => recovery.ReadAsync(intent));
-        Assert.Equal(sourceChange == 0 ? 2 : 1, (await workbooks.LoadAsync(workbook.Id, token))!.Version);
+        Assert.Equal(sourceChange is 0 or 4 ? 2 : 1, (await workbooks.LoadAsync(workbook.Id, token))!.Version);
+    }
+
+    private sealed class UnavailableReceiptSource : IDataRecordMutationReceiptSource
+    {
+        public Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor expectedActor,
+            CancellationToken token) => throw new IOException("Injected receipt read outage after target commit.");
+        public Task<DataRecordMutationObservation> ObserveAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor expectedActor,
+            CancellationToken token) => throw new IOException("Injected receipt read outage after target commit.");
     }
 
     private sealed class SignallingSource(IDataRecordMutationOriginAuthority inner) : IDataRecordMutationOriginAuthority

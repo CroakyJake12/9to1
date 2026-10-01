@@ -27,6 +27,28 @@ internal sealed class AndroidLauncherPlatformCatalog
 public sealed class AndroidGoProviderTests
 {
     [Fact]
+    public async Task StableOwnerResolutionSurvivesRenameAndReturnsOnlyCurrentAuthorizedRevision()
+    {
+        using var f = new Fixture(true); var original = Assert.Single(await Results(f.Go));
+        var engine = new GoService([f.Go]); var locator = new GoCanonicalLocator("Home", "os.installed-application", original.Reference.Id);
+        f.Observations.Label = "Renamed without matching stored label"; f.Observations.Version = "2";
+        var resolved = await engine.ResolveAsync(AndroidInstalledApplicationsGoProvider.Id, locator);
+        Assert.NotNull(resolved); Assert.Equal(original.Reference.Id, resolved.Reference.Id); Assert.Equal(f.Observations.Label, resolved.Label);
+        Assert.NotEqual(original.Reference.Revision, resolved.Reference.Revision);
+        await engine.InvokeAsync(resolved, "Open"); Assert.Single(f.Platform.Calls);
+        f.Observations.Accessible = false;
+        Assert.Null(await engine.ResolveAsync(AndroidInstalledApplicationsGoProvider.Id, locator));
+        Assert.Single(f.Platform.Calls);
+    }
+    [Fact]
+    public async Task StableOwnerResolutionWithoutReadAuthorityExposesNoResult()
+    {
+        using var f = new Fixture(false); var app = Assert.Single(await f.Registry.RefreshAsync(default));
+        Assert.Null(await new GoService([f.Go]).ResolveAsync(AndroidInstalledApplicationsGoProvider.Id,
+            new("Home", "os.installed-application", app.ApplicationId.ToString("D"))));
+        Assert.Empty(f.Platform.Calls);
+    }
+    [Fact]
     public async Task DiscoveryRequiresCurrentOwnerReadAuthorization()
     {
         using var f = new Fixture(false);
@@ -120,9 +142,9 @@ public sealed class AndroidGoProviderTests
     private sealed class Observations : IInstalledApplicationObservationProvider
     {
         public string ProviderId => AndroidLauncherPlatformCatalog.ProviderId;
-        public string Version = "1"; public bool Accessible = true;
+        public string Version = "1"; public string Label = "App"; public bool Accessible = true;
         public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct) => ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>(
-            [new("personal", "Personal", false, Accessible, [new("app", "app/main", "App", Version, true)])]);
+            [new("personal", "Personal", false, Accessible, [new("app", "app/main", Label, Version, true)])]);
     }
     private sealed class Fixture : IDisposable
     {

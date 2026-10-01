@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -6,7 +5,6 @@ using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using Haven.Application;
-using Haven.Core.Media;
 using HavenOS.Files;
 using HavenOS.Files.NativeHost;
 using HavenOS.Home.Core;
@@ -15,9 +13,9 @@ using Microsoft.Extensions.DependencyInjection;
 using HavenOS.Home.PermissionsTrustNotifications;
 using HomePermissionTrustService = HavenOS.Home.PermissionsTrustNotifications.HomePermissionTrustService;
 
-namespace HavenOS.Images;
+namespace HavenOS.Apps.Canvas;
 
-public sealed partial class MainWindow : Window
+public sealed partial class CanvasHostWindow : Window
 {
     private readonly IServiceProvider _services;
     private readonly CancellationTokenSource _lifetime = new();
@@ -32,33 +30,32 @@ public sealed partial class MainWindow : Window
     private HostedItemMetadata[] _documents = [];
     private int _selected;
     private string? _nextPage;
-    private PictureFilesArtifactBridge? _files;
-    private PictureFilesSourceRenderer? _renderer;
-    private PictureHomeImportOperation? _import;
-    private PictureHomePngExportOperation? _export;
-    private PictureHomeEditOperation? _edits;
-    private PictureFilesOpenResult? _opened;
+    private CanvasFilesArtifactBridge? _files;
+    private CanvasHomeCreateOperation? _create;
+    private CanvasHomeStrokeOperation? _stroke;
+    private CanvasFilesOpenResult? _opened;
+    private HostedItemId? _openedFile;
     private IDisposable? _view;
     private string? _pendingRequest;
     private JsonElement _pendingArguments;
     private Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>>? _pendingExecute;
     private IDisposable? _pendingDisposable;
-    private sealed record OwnerCommit(PictureFilesOpenResult? Opened, HostedItemId FileId);
+    private sealed record OwnerCommit(CanvasFilesOpenResult Opened, HostedItemId FileId);
     private sealed record PendingAudit(HomeResourceExecutionCapability Capability, HomeExecutionOutcome Outcome);
     private PendingAudit? _pendingAudit;
     private bool _busy, _ready, _closed;
     public Task Initialization { get; private set; } = Task.CompletedTask;
 
-    public MainWindow(IServiceProvider services)
+    public CanvasHostWindow(IServiceProvider services)
     {
         _services = services;
-        Title = "Picture"; Width = 1200; Height = 800; MinWidth = 800; MinHeight = 560;
+        Title = "Canvas"; Width = 1200; Height = 800; MinWidth = 800; MinHeight = 560;
         _approvals = new(Get<HomeCoreRuntime>(), Get<HomeLocalProfileIdentity>(), Get<HomePermissionTrustService>());
         var controls = new CuiControlRegistry();
-        controls.RegisterControlType("PictureHostContent", _ => _content);
-        controls.RegisterControlType("PictureHostApprovals", _ => _approvals);
+        controls.RegisterControlType("CanvasHostContent", _ => _content);
+        controls.RegisterControlType("CanvasHostApprovals", _ => _approvals);
         _shell = new(controls);
-        _model.Set("CropX", "0"); _model.Set("CropY", "0"); _model.Set("Width", "1"); _model.Set("Height", "1");
+        _model.Set("NewName", "Untitled canvas");
         Content = _shell;
         Opened += async (_, _) =>
         {
@@ -67,8 +64,8 @@ public sealed partial class MainWindow : Window
         };
         Activated += async (_, _) =>
         {
-            if (_view is not PictureNativeCuiSurface surface) return;
-            try { await surface.ValidateAccessAsync(_lifetime.Token); }
+            if (_view is not CanvasNativeCuiSurface surface) return;
+            try { if (!await surface.RefreshAsync(_lifetime.Token)) { _opened = null; _openedFile = null; } }
             catch (Exception error) { _ready = false; SetStatus(error.Message); RefreshBindings(); }
         };
         Closed += (_, _) =>
@@ -83,12 +80,12 @@ public sealed partial class MainWindow : Window
     private bool WriteAvailable() => !_closed && _ready && _workspace is not null;
     private async Task InitializeAsync(CancellationToken ct)
     {
-        using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream("HavenOS.Images.UI.PictureHost.cui")
-            ?? throw new InvalidDataException("The Picture host CUI source is missing.");
+        using var stream = typeof(CanvasHostWindow).Assembly.GetManifestResourceStream("HavenOS.Apps.Canvas.UI.CanvasHost.cui")
+            ?? throw new InvalidDataException("The Canvas host CUI source is missing.");
         using var reader = new StreamReader(stream);
         var parser = new CuiRichParser(); var document = parser.Parse(await reader.ReadToEndAsync(ct));
-        if (parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error)) throw new InvalidDataException("Picture host CUI is invalid.");
-        await _shell.ShowAsync(new("picture", "Picture", "Picture", document, _model, new Actions(this), new HostReadiness(this)), ct);
+        if (parser.Diagnostics.Diagnostics.Any(d => d.Severity == CuiDiagnosticSeverity.Error)) throw new InvalidDataException("Canvas host CUI is invalid.");
+        await _shell.ShowAsync(new("canvas", "Canvas", "Canvas", document, _model, new Actions(this), new HostReadiness(this)), ct);
         await _approvals.InitializeAsync(ct);
         await RefreshAsync(null, ct);
     }
@@ -103,7 +100,7 @@ public sealed partial class MainWindow : Window
                 service.ContractVersion.Major == HomeCoreServiceCatalog.CurrentContractVersion.Major &&
                 service.ContractVersion.Minor >= HomeCoreServiceCatalog.CurrentContractVersion.Minor));
         return new(_ready ? CuiSceneAvailabilityState.Ready : CuiSceneAvailabilityState.Unavailable,
-            _ready ? "PictureHomeReady" : "PictureHomeUnavailable", _ready ? "Picture is ready." : "Open Home to recover this profile and its services.");
+            _ready ? "CanvasHomeReady" : "CanvasHomeUnavailable", _ready ? "Canvas is ready." : "Open Home to recover this profile and its services.");
     }
     private async Task RefreshAsync(string? page, CancellationToken ct)
     {
@@ -112,29 +109,26 @@ public sealed partial class MainWindow : Window
         _workspace = await authority.GetCurrentAsync(ct);
         _configuration = await Get<NativeFilesWorkspaceService>().GetConfigurationAsync(ct);
         _documents = []; _selected = 0; _nextPage = null;
-        if (_workspace is not { } workspace) { SetStatus("Configure Pictures in Files or review its ownership in Home."); RefreshBindings(); return; }
+        if (_workspace is not { } workspace) { SetStatus("Configure Canvases in Files or review its ownership in Home."); RefreshBindings(); return; }
         var actors = Get<IAuthenticatedResourceActorSource>(); var resources = Get<ResourceAuthorizationService>();
         DurableDriveProvider? Provider(AuthenticatedResourceActor actor) => actor == workspace.Actor ? workspace.Provider : null;
         ValueTask<FilesCommitAuthorityGuard> Guard(AuthenticatedResourceActor actor, DurableDriveProvider provider, CancellationToken token) =>
             authority.CaptureCommitAuthorityAsync(actor, provider, WriteAvailable, token);
         _files = new(actors, Provider, workspace.Directories, resources, WriteAvailable, Guard);
-        var media = Get<NativeFilesMediaAssetSourceResolver>();
-        _renderer = new((source, token) => media.ResolveRetainedAsync(source.FileId.ToString(), new MediaAssetId(source.AssetId), source.RevisionId.ToString(), token), resources);
-        _import = new(Get<HomeResourceOperationBroker>(), actors, Provider, workspace.Directories, resources, WriteAvailable, Guard);
-        _export = new(_files, _renderer, new(), new(), Get<HomeResourceOperationBroker>(), actors, Provider, workspace.Directories, resources, WriteAvailable, Guard);
-        _edits = new(_files, Get<HomeResourceOperationBroker>(), actors);
-        if (!workspace.Configuration.AppFolders.TryGetValue("picture", out var folder)) throw new InvalidDataException("The Files workspace has no Pictures folder.");
+        _create = new(_files, Get<HomeResourceOperationBroker>(), actors);
+        _stroke = new(_files, Get<HomeResourceOperationBroker>(), actors);
+        if (!workspace.Configuration.AppFolders.TryGetValue("canvas", out var folder)) throw new InvalidDataException("The Files workspace has no Canvases folder.");
         var listed = await workspace.Provider.ListAsync(folder, new("", Limit: 100), page, ct);
         var documents = new List<HostedItemMetadata>();
         foreach (var item in listed.Items.Where(item => item.Kind == HostedItemKind.Artifact))
         {
             var reference = await workspace.Provider.GetArtifactAsync(item.Id, ct);
-            if (reference.IsSuccess && reference.Value!.OwnerAppId == "picture") documents.Add(item);
+            if (reference.IsSuccess && reference.Value!.OwnerAppId == "canvas") documents.Add(item);
         }
         if (await authority.GetCurrentAsync(ct) is not { } current || current.Actor != workspace.Actor || !ReferenceEquals(current.Provider, workspace.Provider))
-            throw new UnauthorizedAccessException("The Files workspace changed while listing Pictures.");
+            throw new UnauthorizedAccessException("The Files workspace changed while listing Canvases.");
         _documents = documents.ToArray(); _nextPage = listed.NextPageToken;
-        SetStatus(_documents.Length == 0 ? "No Picture documents on this page. Import an image to begin." : "Choose a Picture document to open.");
+        SetStatus(_documents.Length == 0 ? "No Canvas documents on this page. Create a canvas to begin." : "Choose a Canvas document to open.");
         RefreshBindings();
     }
     private void RefreshBindings()
@@ -144,10 +138,8 @@ public sealed partial class MainWindow : Window
         _model.Set("CanNavigate", idle && noPending);
         _model.Set("CanSetup", idle && _ready && _configuration is null && noPending);
         _model.Set("CanWrite", idle && WriteAvailable() && noPending);
-        _model.Set("CanEditGeometry", idle && WriteAvailable() && noPending && _opened is not null);
         _model.Set("CanFinish", idle && !noPending);
         _model.Set("CanReviewWorkspace", idle && _ready && _workspace is null && _configuration is not null && noPending);
-        if (_view is PictureNativeCuiSurface surface) surface.RefreshActionAvailability();
         _model.Set("CanPrevious", idle && _selected > 0); _model.Set("CanNext", idle && _selected + 1 < _documents.Length);
         _model.Set("CanOpen", idle && _documents.Length > 0 && noPending);
         _model.Set("CanPage", idle && _nextPage is not null && noPending);
@@ -156,84 +148,53 @@ public sealed partial class MainWindow : Window
     private void SetStatus(string message) => _model.Set("Status", message);
     private void ShowView(Control control, IDisposable? owner)
     { _view?.Dispose(); _view = owner; _content.Content = control; }
-    private async Task OpenAsync(PictureFilesOpenResult opened, CancellationToken ct)
+    private async Task OpenAsync(HostedItemId fileId, CanvasFilesOpenResult opened, CancellationToken ct)
     {
         var files = _files!; var captured = opened;
         var readiness = new HomeResourceCuiReadiness(Get<HomeCoreRuntime>(), Get<IAuthenticatedResourceActorSource>(), Get<ResourceAuthorizationService>(),
-            "picture.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", captured.Artifact.BackingFileId.ToString("D"), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
-        var surface = new PictureNativeCuiSurface(async token =>
+            "canvas.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", fileId.ToString(), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
+        var strokeOwner = _stroke!;
+        var surface = new CanvasNativeCuiSurface(async token =>
         {
-            var current = await files.OpenAsync(new(captured.Artifact.BackingFileId), token);
-            if (current.CasRevisionId != captured.CasRevisionId) throw new InvalidOperationException("This Picture changed. Refresh and reopen it.");
-            return current;
-        }, _renderer!, new(), readiness, DispatchDocumentAsync,
-            kind => !_busy && _pendingRequest is null && _pendingAudit is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
-                PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export,
-            motionPreferences: Get<Haven.Application.IMotionPreferenceSource>());
-        surface.SourceUnavailable += (_, _) =>
-        {
-            if (!ReferenceEquals(_view, surface)) return;
-            _opened = null;
-            _model.Set("CropX", ""); _model.Set("CropY", ""); _model.Set("Width", ""); _model.Set("Height", "");
-            RefreshBindings();
-        };
+            var current = await files.OpenAsync(fileId, token);
+            if (current.CasRevisionId != captured.CasRevisionId || current.Artifact.ArtifactId != captured.Artifact.ArtifactId ||
+                current.Artifact.RevisionId != captured.Artifact.RevisionId) throw new InvalidOperationException("This Canvas changed. Refresh and reopen it.");
+            return CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(current.Artifact));
+        }, readiness, new(fileId, opened.CasRevisionId, opened.Artifact.ArtifactId, opened.Artifact.RevisionId,
+            () => WriteAvailable() && _pendingRequest is null && _pendingAudit is null && !_requestUncertain,
+            async (intent, token) =>
+            {
+                if (_busy || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _requestUncertain)
+                    throw new UnauthorizedAccessException("Finish the current Home request before drawing.");
+                _busy = true; RefreshBindings();
+                try
+                {
+                    SetStatus(await RequestAsync(CanvasStrokeWriteIntent.ActionId, intent.Scopes, intent.Arguments,
+                        "Add this exact captured stroke to the displayed Canvas revision", async (cap, cancel) =>
+                        {
+                            var committed = await strokeOwner.ExecuteAsync(intent, cap, cancel);
+                            var current = await files.OpenAsync(committed.FileId, cancel);
+                            if (current.Artifact.ArtifactId != committed.Artifact.ArtifactId || current.Artifact.RevisionId != committed.Artifact.RevisionId)
+                                throw new InvalidOperationException("The Canvas changed after the stroke commit. Reopen its current revision.");
+                            return new(current, committed.FileId);
+                        }, null, token));
+                }
+                finally { _busy = false; RefreshBindings(); }
+            }));
         try { await surface.InitializeAsync(ct); }
         catch { surface.Dispose(); throw; }
-        _opened = opened; _model.Set("Width", opened.Artifact.Document.CanvasWidth.ToString(CultureInfo.InvariantCulture));
-        _model.Set("Height", opened.Artifact.Document.CanvasHeight.ToString(CultureInfo.InvariantCulture));
-        ShowView(surface, surface);
-    }
-    private async Task ShowRequestAsync(CuiDocument document, ICuiBindingContext bindings, ICuiActionDispatcher actions, IDisposable? owner, CancellationToken ct)
-    {
-        var scene = new CuiSceneHost();
-        try { await scene.ShowAsync(new("picture", "Picture", "Picture request", document, bindings, actions, new HostReadiness(this)), ct); }
-        catch { scene.Dispose(); owner?.Dispose(); throw; }
-        ShowView(scene, new OwnedView(scene, owner));
+        _opened = opened; _openedFile = fileId; ShowView(surface, surface);
     }
     private async Task<string> RequestAsync(string action, IReadOnlyList<ResourceScope> scopes, JsonElement arguments, string preview,
         Func<HomeResourceExecutionCapability, CancellationToken, Task<OwnerCommit>> execute, IDisposable? owned, CancellationToken ct)
     {
         if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _requestUncertain) { owned?.Dispose(); throw new InvalidOperationException("Finish the existing Home request first."); }
         _pendingDisposable = owned; _requestUncertain = true; RefreshBindings();
-        var pending = await Get<HomeResourceOperationBroker>().AuthorizeAsync("picture", action, scopes, arguments, preview, null, "picture-native-host", ct);
+        var pending = await Get<HomeResourceOperationBroker>().AuthorizeAsync("canvas", action, scopes, arguments, preview, null, "canvas-native-host", ct);
         _requestUncertain = false; _pendingRequest = pending.RequestId; _pendingArguments = arguments.Clone(); _pendingExecute = execute;
         await _approvals.FocusRequestAsync(pending.RequestId, ct);
         RefreshBindings(); return "Review this request in Home, then choose Finish approved request.";
     }
-    private int Number(string key) => _model.TryGetValue(key, out var value) && int.TryParse(value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var result)
-        ? result : throw new ArgumentException("Enter a whole number for " + key + ".");
-    private async ValueTask DispatchDocumentAsync(PictureWorkspaceCommand command, CancellationToken ct)
-    {
-        if (_busy || _requestUncertain || _opened is not { } opened || command.DocumentId != opened.Artifact.Document.DocumentId || command.BaseRevision != opened.Artifact.Document.Revision ||
-            command.BackingFileId != opened.Artifact.BackingFileId || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null)
-            throw new UnauthorizedAccessException("This Picture action is no longer available.");
-        _busy = true; RefreshBindings();
-        try
-        {
-        if (command.Kind == PictureWorkspaceCommandKind.Export)
-        {
-            var owner = _export!;
-            var request = new PicturePngExportCuiRequest(owner, new(opened.Artifact.BackingFileId), opened.CasRevisionId,
-                opened.Artifact.Document.DocumentId, opened.Artifact.Document.Revision, WriteAvailable,
-                (intent, token) => RequestAsync(PicturePngExportIntent.ActionId, intent.Scopes, intent.Arguments, "Create a new flattened first-frame PNG without source metadata",
-                    async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(null, result.FileId); }, null, token));
-            await ShowRequestAsync(PicturePngExportCuiRequest.LoadDocument(), request, request, null, ct); return;
-        }
-        PictureOperation operation = command.Kind switch
-        {
-            PictureWorkspaceCommandKind.RotateClockwise => new RotateOperation(1),
-            PictureWorkspaceCommandKind.FlipHorizontal => new FlipOperation(true),
-            PictureWorkspaceCommandKind.Crop => new CropOperation(Number("CropX"), Number("CropY"), Number("Width"), Number("Height")),
-            PictureWorkspaceCommandKind.Resize => new ResizeOperation(Number("Width"), Number("Height")),
-            _ => throw new NotSupportedException("This Picture action has no owning implementation.")
-        };
-        var edit = PictureEditIntent.Capture(opened, operation); var edits = _edits!;
-        SetStatus(await RequestAsync(PictureEditIntent.ActionId, edit.Scopes, edit.Arguments, "Apply " + operation + " non-destructively",
-            async (cap, cancel) => { var result = await edits.ExecuteAsync(edit, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, null, ct));
-        }
-        finally { _busy = false; RefreshBindings(); }
-    }
-
     private async Task<bool> FinishAuditAsync(CancellationToken ct)
     {
         var pending = _pendingAudit ?? throw new InvalidOperationException("There is no execution receipt to record.");
@@ -272,7 +233,7 @@ public sealed partial class MainWindow : Window
             }
             _pendingAudit = null;
             SetStatus(pending.Outcome.State == HomePermissionRequestState.Succeeded
-                ? "The approved Picture operation was committed and recorded in Home."
+                ? "The approved Canvas operation was committed and recorded in Home."
                 : pending.Outcome.Message);
         }
         catch (Exception error)
@@ -298,27 +259,27 @@ public sealed partial class MainWindow : Window
             _pendingDisposable?.Dispose(); _pendingDisposable = null;
         }
         // Reads a terminal Home decision; never converts a denial into permission or claims a commit.
-        SetStatus("Home ended this request. Refresh Pictures to inspect current state. " + decision.Message);
+        SetStatus("Home ended this request. Refresh Canvases to inspect current state. " + decision.Message);
         return true;
     }
 
     private async ValueTask DispatchAsync(string action, object? parameter, CancellationToken ct)
     {
-        if (parameter is not null || _busy || _closed) throw new InvalidOperationException("This Picture action is unavailable.");
+        if (parameter is not null || _busy || _closed) throw new InvalidOperationException("This Canvas action is unavailable.");
         _busy = true; RefreshBindings();
         try
         {
-            if (action == "picture.host.finish" && _pendingAudit is not null)
+            if (action == "canvas.host.finish" && _pendingAudit is not null)
             {
                 await FinishAuditAsync(ct);
             }
-            else if (action == "picture.host.finish" && _pendingOwnership is { } ownershipRequest)
+            else if (action == "canvas.host.finish" && _pendingOwnership is { } ownershipRequest)
             {
                 if (await ReleaseTerminalRequestAsync(ownershipRequest, true, ct)) return;
                 await Get<HomeLocalStoreOwnership>().CompleteImportAsync(ownershipRequest, ct);
                 _pendingOwnership = null; await RefreshAsync(null, ct);
             }
-            else if (action == "picture.host.finish")
+            else if (action == "canvas.host.finish")
             {
                 if (_pendingRequest is null || _pendingExecute is null) throw new InvalidOperationException("There is no captured request to finish.");
                 if (await ReleaseTerminalRequestAsync(_pendingRequest, false, ct)) return;
@@ -329,45 +290,59 @@ public sealed partial class MainWindow : Window
                 try
                 {
                     committed = await execute(cap, ct);
-                    _pendingAudit = new(cap, new(HomePermissionRequestState.Succeeded, "PICTURE_COMMITTED",
-                        "The owning Picture operation returned its durable Files commit.", [new("files.item", committed.FileId.ToString())]));
+                    _pendingAudit = new(cap, new(HomePermissionRequestState.Succeeded, "CANVAS_COMMITTED",
+                        "The owning Canvas operation returned its durable Files commit.", [new("files.item", committed.FileId.ToString())]));
                 }
                 catch (Exception error)
                 {
                     // A thrown operation may have published before a later read failed. Never repeat its mutation.
-                    _pendingAudit = new(cap, new(HomePermissionRequestState.PartiallyCompleted, "PICTURE_RESULT_UNCERTAIN",
+                    _pendingAudit = new(cap, new(HomePermissionRequestState.PartiallyCompleted, "CANVAS_RESULT_UNCERTAIN",
                         "The operation did not return a complete receipt. Inspect Files and Home before attempting another change.", []));
                     var abortedBeforeClaim = await FinishAuditAsync(CancellationToken.None);
                     throw new InvalidOperationException((abortedBeforeClaim
                         ? "Home ended this request before an execution claim. Refresh the document before another change. "
-                        : "Picture did not return a complete commit receipt. The operation will not run again. Inspect Files and Home. ") + error.Message, error);
+                        : "Canvas did not return a complete commit receipt. The operation will not run again. Inspect Files and Home. ") + error.Message, error);
                 }
                 finally { _pendingDisposable?.Dispose(); _pendingDisposable = null; }
                 await FinishAuditAsync(CancellationToken.None);
-                if (committed.Opened is not null) await OpenAsync(committed.Opened, ct);
+                await OpenAsync(committed.FileId, committed.Opened, ct);
             }
             else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
-            else if (action == "picture.host.refresh") await RefreshAsync(null, ct);
-            else if (action == "picture.host.page") await RefreshAsync(_nextPage, ct);
-            else if (action == "picture.host.previous" && _selected > 0) _selected--;
-            else if (action == "picture.host.next" && _selected + 1 < _documents.Length) _selected++;
-            else if (action == "picture.host.open" && _documents.Length > 0) await OpenAsync(await _files!.OpenAsync(_documents[_selected].Id, ct), ct);
-            else if (action == "picture.host.import" && WriteAvailable())
+            else if (action == "canvas.host.refresh") await RefreshAsync(null, ct);
+            else if (action == "canvas.host.page") await RefreshAsync(_nextPage, ct);
+            else if (action == "canvas.host.previous" && _selected > 0) _selected--;
+            else if (action == "canvas.host.next" && _selected + 1 < _documents.Length) _selected++;
+            else if (action == "canvas.host.open" && _documents.Length > 0) await OpenAsync(_documents[_selected].Id, await _files!.OpenAsync(_documents[_selected].Id, ct), ct);
+            else if (action == "canvas.host.create" && WriteAvailable())
             {
-                var owner = _import!;
-                var request = new PictureImportCuiRequest(owner, NativePicker, new(), WriteAvailable,
-                    (intent, token) => RequestAsync(PictureImportIntent.ActionId, intent.Scopes, intent.Arguments, "Import original image bytes and a separate editable Picture document",
-                        async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, intent, token));
-                await ShowRequestAsync(PictureImportCuiRequest.LoadDocument(), request, request, request, ct);
+                if (!_model.TryGetValue("NewName", out var value) || string.IsNullOrWhiteSpace(value?.ToString()))
+                    throw new ArgumentException("Enter a name for the new canvas.");
+                var name = value.ToString()!.Trim();
+                if (name.Length > 256) throw new ArgumentException("Canvas names must be at most 256 characters.");
+                var workspace = _workspace!; var folderId = workspace.Configuration.AppFolders["canvas"];
+                var folder = await workspace.Provider.GetAsync(folderId, ct);
+                if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
+                using var blank = CanvasRnoteDocument.Create(name);
+                var intent = CanvasCreateIntent.Capture(blank.Snapshot, new(folderId, folder.Value!.CurrentRevisionId));
+                var create = _create!; var files = _files!;
+                SetStatus(await RequestAsync(CanvasCreateIntent.ActionId, intent.Scopes, intent.Arguments,
+                    "Create this new editable Canvas in the configured Files folder", async (cap, cancel) =>
+                    {
+                        var committed = await create.ExecuteAsync(intent, cap, cancel);
+                        var opened = await files.OpenAsync(committed.FileId, cancel);
+                        if (opened.Artifact.ArtifactId != committed.Artifact.ArtifactId || opened.Artifact.RevisionId != committed.Artifact.RevisionId)
+                            throw new InvalidOperationException("The new Canvas changed after its commit. Reopen its current revision.");
+                        return new(opened, committed.FileId);
+                    }, null, ct));
             }
-            else if (action == "picture.host.reviewOwnership" && _workspace is null && _configuration is { } configuration)
+            else if (action == "canvas.host.reviewOwnership" && _workspace is null && _configuration is { } configuration)
             {
-                var pending = await Get<HomeLocalStoreOwnership>().RequestImportAsync("files", configuration.StoreId.ToString("D"), "picture-native-host", ct);
+                var pending = await Get<HomeLocalStoreOwnership>().RequestImportAsync("files", configuration.StoreId.ToString("D"), "canvas-native-host", ct);
                 _pendingOwnership = pending.RequestId;
                 await _approvals.FocusRequestAsync(pending.RequestId, ct);
                 SetStatus("Review the existing Files workspace in Home, then finish the approved request.");
             }
-            else if (action == "picture.host.setup" && _configuration is null)
+            else if (action == "canvas.host.setup" && _configuration is null)
             {
                 var selected = await NativePicker.OpenFolderPickerAsync(new() { Title = "Choose an empty Files workspace folder", AllowMultiple = false });
                 if (selected.Count == 0) return;
@@ -376,15 +351,13 @@ public sealed partial class MainWindow : Window
                 await Get<NativeFilesWorkspaceService>().ConfigureNewAsync(path, Get<HomeLocalStoreOwnership>(), ct);
                 await RefreshAsync(null, ct);
             }
-            else throw new InvalidOperationException("This Picture action is unavailable.");
+            else throw new InvalidOperationException("This Canvas action is unavailable.");
         }
         catch (Exception error) { SetStatus(error.Message); throw; }
         finally { _busy = false; RefreshBindings(); }
     }
-    private sealed class Actions(MainWindow owner) : ICuiActionDispatcher
+    private sealed class Actions(CanvasHostWindow owner) : ICuiActionDispatcher
     { public ValueTask DispatchAsync(string action, object? parameter, CancellationToken cancellationToken = default) => owner.DispatchAsync(action, parameter, cancellationToken); }
-    private sealed class HostReadiness(MainWindow owner) : ICuiSceneReadiness
+    private sealed class HostReadiness(CanvasHostWindow owner) : ICuiSceneReadiness
     { public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken) => owner.CheckHostAsync(cancellationToken); }
-    private sealed class OwnedView(IDisposable scene, IDisposable? bindings) : IDisposable
-    { public void Dispose() { scene.Dispose(); bindings?.Dispose(); } }
 }

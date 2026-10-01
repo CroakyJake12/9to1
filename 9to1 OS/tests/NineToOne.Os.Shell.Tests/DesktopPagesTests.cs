@@ -75,7 +75,7 @@ public sealed class DesktopPagesTests
             Assert.Equal(2, firstRead.Current.SchemaVersion); Assert.Equal(firstRead.Current.GlobalDesktopSurface!.Id, secondRead.Current.GlobalDesktopSurface!.Id);
             Assert.Equal(1, (await home.ReadAsync()).State!.Records.Single().Payload.GetProperty("Current").GetProperty("SchemaVersion").GetInt32());
             var editor = new ShellConfigurationService(store); var snapshot = await editor.GetAsync();
-            var preview = await editor.PreviewAsync(snapshot.Stored.Revision, DesktopPageEdits.AddPage(snapshot.Effective, "Second"), TimeSpan.FromSeconds(30));
+            var preview = await editor.PreviewAsync(snapshot.Stored, DesktopPageEdits.AddPage(snapshot.Effective, "Second"), TimeSpan.FromSeconds(30));
             Assert.Equal(2, (await home.ReadAsync()).State!.Records.Single().Revision);
             await editor.KeepAsync(preview.Preview!.Id);
             var reopened = await new ShellConfigurationService(store).GetAsync();
@@ -84,7 +84,7 @@ public sealed class DesktopPagesTests
             var pinned = DesktopPageEdits.PinApplication(reopened.Effective, Guid.NewGuid(), "Movable");
             var pinnedItem = Assert.Single(DesktopPageEdits.Effective(pinned).ActivePage.Items);
             var arranged = DesktopPageEdits.ArrangeItem(pinned, pinnedItem.Id, 2, 1, 2, 2);
-            var placementPreview = await editor.PreviewAsync(reopened.Stored.Revision, arranged, TimeSpan.FromSeconds(30));
+            var placementPreview = await editor.PreviewAsync(reopened.Stored, arranged, TimeSpan.FromSeconds(30));
             Assert.Empty(DesktopPageEdits.Effective((await store.ReadAsync(default)).Current).ActivePage.Items);
             await editor.KeepAsync(placementPreview.Preview!.Id);
             var durableItem = Assert.Single(DesktopPageEdits.Effective((await new ShellConfigurationService(store).GetAsync()).Effective).ActivePage.Items);

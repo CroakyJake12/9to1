@@ -6,6 +6,27 @@ namespace Haven.Infrastructure;
 
 public sealed partial class ConversationRepository : IConversationSpaceCommitStore
 {
+    public async Task<ConversationSpaceMembershipPage> ReadSpaceMembershipAsync(Guid expectedStoreId, Guid spaceId,
+        Guid? afterId = null, int limit = 1000, CancellationToken cancellationToken = default)
+    {
+        if (expectedStoreId == Guid.Empty || spaceId == Guid.Empty || afterId == Guid.Empty || limit is < 1 or > 1000)
+            throw new ArgumentException("Membership reads require canonical store/Space IDs and a bounded page.");
+        await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
+        // Identity and rows come from the same deferred SQL read snapshot; no writer lease or mutation.
+        await using var transaction = connection.BeginTransaction(deferred: true);
+        var identity = await SqliteDatabase.ReadStoreIdentityAsync(connection, false, cancellationToken, transaction).ConfigureAwait(false);
+        if (identity.StoreId != expectedStoreId)
+            return new(ConversationSpaceReadStatus.StoreMismatch, identity, spaceId, Array.Empty<Conversation>(), false);
+        await using var command = connection.CreateCommand(); command.Transaction = transaction;
+        command.CommandText = "SELECT * FROM conversations WHERE space_id=$space AND ($after IS NULL OR id COLLATE BINARY > $after) ORDER BY id COLLATE BINARY LIMIT $limit;";
+        command.Parameters.AddWithValue("$space", spaceId.ToString("D"));
+        command.Parameters.AddWithValue("$after", (object?)afterId?.ToString("D") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$limit", limit + 1);
+        var rows = await ReadConversationsAsync(command, cancellationToken).ConfigureAwait(false);
+        return new(ConversationSpaceReadStatus.Available, identity, spaceId,
+            Array.AsReadOnly(rows.Take(limit).ToArray()), rows.Count > limit);
+    }
+
     /// <summary>One actual SQLite writer transaction: exact row compare, current authority at admission
     /// and immediately before commit. This does not make another settings/Home store atomic with SQL.</summary>
     public async Task<ConversationSpaceCommitResult> CompareExchangeSpaceAsync(Guid expectedStoreId,

@@ -13,7 +13,8 @@ namespace Haven.Desktop.Controls;
 /// <summary>Space authority adapter over the owning native Picture surface and retained Files source lease.</summary>
 public sealed class SpacePictureCuiSurface(SpaceFilesArtifactAction action, SpaceFilesArtifactActionRouter router,
     NativeFilesArtifactContentReader content, NativeFilesMediaAssetSourceResolver media, HomeCoreRuntime home,
-    IAuthenticatedResourceActorSource actors, ResourceAuthorizationService resources) : UserControl, IActivatablePage, IDisposable
+    IAuthenticatedResourceActorSource actors, ResourceAuthorizationService resources,
+    IMotionPreferenceSource? motionPreferences = null) : UserControl, IActivatablePage, IDisposable
 {
     private readonly CancellationTokenSource _lifetime = new();
     private PictureNativeCuiSurface? _surface;
@@ -36,7 +37,7 @@ public sealed class SpacePictureCuiSurface(SpaceFilesArtifactAction action, Spac
                 async token => (await router.ResolveAsync(action, token)).Scopes);
             var renderer = new PictureFilesSourceRenderer((source, token) => media.ResolveRetainedAsync(source.FileId.ToString(),
                 new MediaAssetId(source.AssetId), source.RevisionId.ToString(), token), resources);
-            _surface = new PictureNativeCuiSurface(OpenCapturedAsync, renderer, new PictureGlycinDecoder(), readiness);
+            _surface = new PictureNativeCuiSurface(OpenCapturedAsync, renderer, new PictureGlycinDecoder(), readiness, motionPreferences: motionPreferences);
             await _surface.InitializeAsync(linked.Token);
             linked.Token.ThrowIfCancellationRequested();
             ObjectDisposedException.ThrowIf(_disposed, this);

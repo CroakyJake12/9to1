@@ -46,15 +46,22 @@ public sealed partial class FormResponseSessionService
         if (attempt is null) return new(false, "DataOperationNotFound", null);
         if (attempt.Status == FormsDataWriteStatus.Succeeded) return new(true, null, CaptureAttempt(attempt, context.Response, context.RootID));
         var intent = attempt.Operation.Restore();
-        var receipt = await receipts.ReadAsync(intent, context.Actor, token).ConfigureAwait(false);
-        if (receipt is null) return new(true, "DataWritePending", CaptureAttempt(attempt, context.Response, context.RootID));
-        var completed = CaptureAttempt(attempt with { Status = FormsDataWriteStatus.Succeeded, Receipt = receipt,
+        var observed = await receipts.ObserveAsync(intent, context.Actor, token).ConfigureAwait(false);
+        if (observed.Target.StoreID != intent.StoreID || observed.Target.WorkbookID != intent.WorkbookID)
+            throw new InvalidDataException("Data owner returned a different target.");
+        var status = observed.Receipt is not null ? FormsDataWriteStatus.Succeeded
+            : observed.Target.Version == intent.Version && observed.Target.RevisionID == intent.RevisionID
+                ? FormsDataWriteStatus.Pending : FormsDataWriteStatus.Conflict;
+        var resultCode = status == FormsDataWriteStatus.Pending ? "DataWritePending" : status == FormsDataWriteStatus.Conflict ? "DataRevisionConflict" : null;
+        if (attempt.Status == status && (status == FormsDataWriteStatus.Pending || attempt.ObservedTarget == observed.Target))
+            return new(true, resultCode, CaptureAttempt(attempt, context.Response, context.RootID));
+        var completed = CaptureAttempt(attempt with { Status = status, Receipt = observed.Receipt, ObservedTarget = observed.Target,
             Revision = checked(attempt.Revision + 1) }, context.Response, context.RootID);
         var entry = context.Entry with { DataWrites = context.Entry.DataWrites!.Select(item => item == attempt ? completed : item).ToArray() };
         var state = context.State with { Responses = context.State.Responses.Select(item => item == context.Entry ? entry : item).ToArray() };
         var committed = await CommitAsync(context.Publication, "forms.response.data.reconcile", context.Actor, context.RootID,
             context.Json, state, context.Response, token).ConfigureAwait(false);
-        return committed.Success ? new(true, null, completed) : new(false, committed.Code, null);
+        return committed.Success ? new(true, resultCode, completed) : new(false, committed.Code, null);
     }
 
     private static FormDataWriteAttempt CaptureAttempt(FormDataWriteAttempt item, FormResponse response, Guid sourceStoreID) =>

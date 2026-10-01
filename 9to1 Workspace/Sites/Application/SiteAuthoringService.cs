@@ -100,7 +100,7 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
         return found;
     }
     private static bool SameSlots(IReadOnlyDictionary<string,IReadOnlyList<Guid>>? left, IReadOnlyDictionary<string,IReadOnlyList<Guid>> right)
-        => left is not null && left.Count==right.Count && right.All(slot=>left.TryGetValue(slot.Key,out var values) && values is not null && values.SequenceEqual(slot.Value));
+        => left is not null && left.Count==right.Count && left.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(right.Keys) && right.All(slot=>left.TryGetValue(slot.Key,out var values) && values is not null && values.SequenceEqual(slot.Value));
     private static IReadOnlyDictionary<string,JsonElement> SnapshotProperties(IReadOnlyDictionary<string,JsonElement>? input)
     {
         if(input is null)throw Invalid("Component properties are required.");

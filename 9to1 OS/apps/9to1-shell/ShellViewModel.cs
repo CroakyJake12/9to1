@@ -135,6 +135,8 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     public async ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         if (_configuration is null || _snapshot is null || _go is null) return;
+        var expected = _snapshot;
+        var selectedItemId = SelectedItem()?.Id;
         using var request = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetimeToken);
         if (command.StartsWith("GoFilter.", StringComparison.Ordinal))
         {
@@ -156,9 +158,9 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
             if (command == "Open" && parameter is GoResult result) { await _go.InvokeAsync(result, "Open", GoScope(), request.Token); return; }
             if (command == "SelectPageItem" && parameter is DesktopPageItem selected)
             {
-                if (!DesktopPageEdits.Effective(_snapshot.Effective).ActivePage.Items.Any(i => i.Id == selected.Id))
+                if (!DesktopPageEdits.Effective(expected.Effective).ActivePage.Items.Any(i => i.Id == selected.Id))
                     throw new InvalidOperationException("This shortcut is no longer on the current desktop page.");
-                _selectedPageItem = selected.Id; PopulateSelection(DesktopPageEdits.Effective(_snapshot.Effective)); return;
+                _selectedPageItem = selected.Id; PopulateSelection(DesktopPageEdits.Effective(expected.Effective)); return;
             }
             if (command == "OpenPageItem" && parameter is DesktopPageItem pageItem)
             {
@@ -173,9 +175,9 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                     throw new InvalidOperationException("This taskbar item's canonical owner action is unavailable.");
                 await _launcher.LaunchCurrentAsync(id, request.Token); return;
             }
-            if (command == "Keep") { Populate(await _configuration.KeepAsync(_snapshot.Preview?.Id ?? Guid.Empty, request.Token)); return; }
-            if (command == "Revert") { Populate(await _configuration.RevertAsync(_snapshot.Preview?.Id ?? Guid.Empty, request.Token)); return; }
-            var config = _snapshot.Effective; var name = _bindings.Get("Name")?.ToString() ?? "";
+            if (command == "Keep") { Populate(await _configuration.KeepAsync(expected.Preview?.Id ?? Guid.Empty, request.Token)); return; }
+            if (command == "Revert") { Populate(await _configuration.RevertAsync(expected.Preview?.Id ?? Guid.Empty, request.Token)); return; }
+            var config = expected.Effective; var name = _bindings.Get("Name")?.ToString() ?? "";
             if (command == "CopySpace")
             {
                 var clipboard = (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Clipboard
@@ -188,7 +190,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                 var clipboard = (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Clipboard
                     ?? throw new InvalidOperationException("The platform clipboard is unavailable.");
                 var text = await clipboard.TryGetTextAsync().WaitAsync(request.Token);
-                Populate(await _configuration.PreviewAsync(_snapshot.Stored.Revision, DesktopSpaceExchange.Import(config, text ?? ""), TimeSpan.FromSeconds(30), request.Token)); return;
+                Populate(await _configuration.PreviewAsync(expected.Stored, DesktopSpaceExchange.Import(config, text ?? ""), TimeSpan.FromSeconds(30), request.Token)); return;
             }
             if (command is "Pin" or "PinPage" && parameter is GoResult pinSource)
             {
@@ -207,9 +209,9 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                 "SpaceSpecificPages" => DesktopPageEdits.SetSpaceSpecific(config, true), "GlobalPages" => DesktopPageEdits.SetSpaceSpecific(config, false),
                 "ResetDesktop" => DesktopPageEdits.ResetSurface(config),
                 "PageGridSize" => DesktopPageEdits.GridSize(config, Integer("PageGridColumns"), Integer("PageGridRows")),
-                "PlaceDesktopItem" => DesktopPageEdits.ArrangeItem(config, SelectedItem()?.Id ?? throw new InvalidOperationException("Select a desktop shortcut first."),
+                "PlaceDesktopItem" => DesktopPageEdits.ArrangeItem(config, selectedItemId ?? throw new InvalidOperationException("Select a desktop shortcut first."),
                     checked(Integer("SelectedColumn") - 1), checked(Integer("SelectedRow") - 1), Integer("SelectedWidth"), Integer("SelectedHeight")),
-                "RemoveSelectedDesktopItem" => DesktopPageEdits.RemoveItem(config, SelectedItem()?.Id ?? throw new InvalidOperationException("Select a desktop shortcut first.")),
+                "RemoveSelectedDesktopItem" => DesktopPageEdits.RemoveItem(config, selectedItemId ?? throw new InvalidOperationException("Select a desktop shortcut first.")),
                 "PinPage" when parameter is GoResult pagePin && pagePin.Reference is { Owner: "Home", Kind: "os.installed-application" } && Guid.TryParse(pagePin.Reference.Id, out var pageAppId) => DesktopPageEdits.PinApplication(config, pageAppId, pagePin.Label),
                 "RemovePageItem" when parameter is DesktopPageItem removePageItem => DesktopPageEdits.RemoveItem(config, removePageItem.Id),
                 "PreviousLayer" => ShellEdits.StepLayer(config, -1), "NextLayer" => ShellEdits.StepLayer(config, 1),
@@ -220,11 +222,11 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                 "MoveSpaceEarlier" => ShellEdits.ReorderSpace(config, -1), "MoveSpaceLater" => ShellEdits.ReorderSpace(config, 1),
                 "Pin" when parameter is GoResult pin && pin.Reference is { Owner: "Home", Kind: "os.installed-application" } && Guid.TryParse(pin.Reference.Id, out var appId) => ShellEdits.PinApplication(config, appId, pin.Label),
                 "Unpin" when parameter is TaskbarItem unpin => ShellEdits.UnpinItem(config, unpin.Id),
-                "ResetTaskbar" => ShellEdits.ResetTaskbar(config), "RestorePrevious" => _snapshot.Stored.Previous ?? throw new InvalidOperationException("No previous configuration is available."),
+                "ResetTaskbar" => ShellEdits.ResetTaskbar(config), "RestorePrevious" => expected.Stored.Previous ?? throw new InvalidOperationException("No previous configuration is available."),
                 "SafeDefaults" => ShellConfiguration.Default(), "Presentation" => ShellEdits.Presentation(config, Integer("Thickness"), Integer("Spacing"), Integer("Padding"), Integer("Radius"), Number("Opacity")),
                 _ => throw new InvalidOperationException("This shell action is unavailable.")
             };
-            Populate(await _configuration.PreviewAsync(_snapshot.Stored.Revision, candidate, TimeSpan.FromSeconds(30), request.Token));
+            Populate(await _configuration.PreviewAsync(expected.Stored, candidate, TimeSpan.FromSeconds(30), request.Token));
         }
         catch (OperationCanceledException) when (request.IsCancellationRequested) { }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or FormatException or OverflowException or Win32Exception)

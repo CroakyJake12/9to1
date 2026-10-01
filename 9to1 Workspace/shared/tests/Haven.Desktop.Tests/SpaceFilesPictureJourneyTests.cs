@@ -102,7 +102,9 @@ public sealed class SpaceFilesPictureJourneyTests
                 var reader = new NativeFilesArtifactContentReader(filesAuthority, profiles, resources);
                 var media = new NativeFilesMediaAssetSourceResolver(filesAuthority, profiles, resources);
                 await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home), new HomePermissionsCoreService(permissions, profiles)]);
-                using var surface = new SpacePictureCuiSurface(action, router, reader, media, runtime, profiles, resources);
+                var motion = new LocalMotionPreferencesService(Path.Combine(root, "ui-preferences.json"));
+                motion.SetReduceAnimations(true);
+                using var surface = new SpacePictureCuiSurface(action, router, reader, media, runtime, profiles, resources, motion);
                 await surface.InitializeAsync(token);
                 var window = new Window { Content = surface, Width = 900, Height = 640 };
                 window.Show();
@@ -113,12 +115,26 @@ public sealed class SpaceFilesPictureJourneyTests
                     var buttons = surface.GetVisualDescendants().OfType<Button>().ToArray();
                     Assert.False(Assert.Single(buttons, button => Equals(button.Content, "Save")).IsEnabled);
                     Assert.False(Assert.Single(buttons, button => Equals(button.Content, "Export")).IsEnabled);
+                    var play = Assert.Single(buttons, button => Equals(button.Content, "Play"));
+                    var pause = Assert.Single(buttons, button => Equals(button.Content, "Pause"));
+                    Assert.False(play.IsEnabled); // Actual shared reduced-motion preference, not a host-local flag.
                     var next = Assert.Single(buttons, button => Equals(button.Content, "Next frame"));
                     Assert.True(next.IsEnabled);
                     next.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     for (var attempt = 0; attempt < 250 && image.Source is Bitmap frame && Pixel(frame)[0] != 255; attempt++)
                         await Task.Delay(20, token);
                     Assert.Equal(new byte[] { 255, 0, 0, 255 }, Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source)));
+                    motion.SetReduceAnimations(false);
+                    await surface.ActivateAsync(token);
+                    Assert.True(play.IsEnabled);
+                    play.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    for (var attempt = 0; attempt < 250 && !pause.IsEnabled; attempt++) await Task.Delay(20, token);
+                    Assert.True(pause.IsEnabled);
+                    for (var attempt = 0; attempt < 250 && image.Source is Bitmap playing && Pixel(playing)[2] != 255; attempt++) await Task.Delay(20, token);
+                    Assert.Equal(new byte[] { 0, 0, 255, 255 }, Pixel(Assert.IsAssignableFrom<Bitmap>(image.Source)));
+                    motion.SetReduceAnimations(true);
+                    for (var attempt = 0; attempt < 250 && pause.IsEnabled; attempt++) await Task.Delay(20, token);
+                    Assert.False(pause.IsEnabled); Assert.False(play.IsEnabled);
                     Assert.Equal(action.ExpectedFilesRevision, (await workspace.Provider.GetAsync(fileId, token)).Value!.CurrentRevisionId);
                     Assert.Equal(created.Revision.Id, (await bridge.OpenAsync(fileId, token)).Revision.Id);
                     if (sourceApp == "media")

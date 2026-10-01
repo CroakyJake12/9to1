@@ -12,7 +12,8 @@ public sealed partial class HavenLauncherActivity
     {
         if (_dockHost is null) return;
         _dockHost.RemoveAllViews();
-        if (_layout?.Current.Dock is not { } dock) { _dockHost.Visibility = ViewStates.Gone; return; }
+        var expected = _layout;
+        if (expected?.Current.Dock is not { } dock) { _dockHost.Visibility = ViewStates.Gone; return; }
         _dockHost.Visibility = ViewStates.Visible;
         var grid = new GridLayout(this) { RowCount = dock.Rows, ColumnCount = dock.Columns, ContentDescription = "Launcher dock" };
         var width = Math.Max(MinimumTileWidth, ((Resources?.DisplayMetrics?.WidthPixels ?? Dp(360)) - Dp(24)) / dock.Columns);
@@ -31,7 +32,7 @@ public sealed partial class HavenLauncherActivity
                 var targetColumn = column; var targetRow = row;
                 var slot = new Button(this) { Text = _movingPlacementId is null ? "" : "+", Enabled = _movingPlacementId is not null,
                     ContentDescription = $"Empty dock slot, row {row + 1}, column {column + 1}", LayoutParameters = new ViewGroup.LayoutParams(width, TileHeight) };
-                slot.Click += (_, _) => { if (_movingPlacementId is { } id) _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, id, dock.Id, targetColumn, targetRow)); };
+                slot.Click += (_, _) => { if (_movingPlacementId is { } id) _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, id, dock.Id, targetColumn, targetRow), expected); };
                 grid.AddView(slot);
             }
         }

@@ -250,7 +250,7 @@ public sealed partial class HavenLauncherActivity : Activity
         };
         _pageIndicator.SetTextColor(Color.White);
         _pageIndicator.Click += (_, _) => ShowPagesMenu();
-        _pageIndicator.ContentDescription = "Manage launcher pages";
+        _pageIndicator.ContentDescription = "Manage launcher pages. Control plus Page Up or Page Down changes page; Control plus Space opens the app drawer.";
         var pageNavigation = new LinearLayout(this) { Orientation = Orientation.Horizontal };
         var previousPage = new Button(this) { Text = "‹", ContentDescription = "Previous launcher page", LayoutParameters = new LinearLayout.LayoutParams(Dp(48), Dp(48)) };
         var nextPage = new Button(this) { Text = "›", ContentDescription = "Next launcher page", LayoutParameters = new LinearLayout.LayoutParams(Dp(48), Dp(48)) };

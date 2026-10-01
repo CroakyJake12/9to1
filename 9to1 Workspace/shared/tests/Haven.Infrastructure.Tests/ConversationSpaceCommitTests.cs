@@ -11,6 +11,30 @@ namespace Haven.Infrastructure.Tests;
 public sealed class ConversationSpaceCommitTests
 {
     [Fact]
+    public async Task Membership_pages_include_archived_and_temporary_rows_pin_actual_root_and_never_mutate()
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync();
+        var space = Guid.NewGuid();
+        var first = NewConversation() with { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), SpaceId = space, IsArchived = true };
+        var second = NewConversation() with { Id = Guid.Parse("00000000-0000-0000-0000-000000000002"), SpaceId = space, IsTemporary = true };
+        var other = NewConversation() with { SpaceId = Guid.NewGuid() };
+        foreach (var row in new[] { first, second, other }) await fixture.Repository.UpsertConversationAsync(row, default);
+        Assert.Empty(await fixture.Repository.GetBySpaceAsync(space, 100, default));
+        var page = await fixture.Repository.ReadSpaceMembershipAsync(fixture.Identity.StoreId, space, limit: 1);
+        Assert.Equal(ConversationSpaceReadStatus.Available, page.Status);
+        Assert.Equal(fixture.Identity.StoreId, page.StoreIdentity.StoreId);
+        Assert.Equal(first, Assert.Single(page.Rows)); Assert.True(page.HasMore);
+        var next = await fixture.Repository.ReadSpaceMembershipAsync(fixture.Identity.StoreId, space, first.Id, 1);
+        Assert.Equal(second, Assert.Single(next.Rows)); Assert.False(next.HasMore);
+        var empty = await fixture.Repository.ReadSpaceMembershipAsync(fixture.Identity.StoreId, space, second.Id);
+        Assert.Empty(empty.Rows); Assert.False(empty.HasMore);
+        var foreign = await fixture.Repository.ReadSpaceMembershipAsync(Guid.NewGuid(), space);
+        Assert.Equal(ConversationSpaceReadStatus.StoreMismatch, foreign.Status); Assert.Empty(foreign.Rows);
+        await Assert.ThrowsAsync<ArgumentException>(() => fixture.Repository.ReadSpaceMembershipAsync(fixture.Identity.StoreId, space, limit: 1001));
+        foreach (var row in new[] { first, second, other }) Assert.Equal(row, await fixture.Repository.GetAsync(row.Id, default));
+    }
+
+    [Fact]
     public async Task Actual_home_binding_and_exact_sql_rows_preserve_content_and_reject_stale_duplicate_or_foreign_root()
     {
         using var fixture = new Fixture(); await fixture.InitializeAsync();

@@ -28,13 +28,27 @@ internal sealed class OwnedSpaceConversations(
             source is { Revision: < 1 } || destination is { Revision: < 1 } ||
             source?.Id == destination?.Id)
             throw new InvalidOperationException("Select a current chat and a different Space assignment.");
-        if (!hostAllowsWrites() || actor.AccountId is not null || actor.OrganisationId is not null)
-            throw new UnauthorizedAccessException("The displayed local profile cannot change this chat assignment.");
-
-        // Conversation and SpaceSnapshot are immutable records. No caller-owned collection crosses an await.
         var now = DateTimeOffset.UtcNow;
         var proposed = expected with { SpaceId = destination?.Id, UpdatedAt = expected.UpdatedAt > now ? expected.UpdatedAt : now };
-        IReadOnlyList<ConversationSpaceChange> changes = Array.AsReadOnly(new[] { new ConversationSpaceChange(expected, proposed) });
+        return await CommitAsync(new(expected, proposed), source, destination, token).ConfigureAwait(false);
+    }
+
+    public Task<ConversationSpaceCommitResult> CreateChatAsync(Conversation proposed, SpaceSnapshot destination, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(proposed); ArgumentNullException.ThrowIfNull(destination);
+        if (proposed.Id == Guid.Empty || proposed.Kind != ConversationKind.Chat || proposed.IsArchived || proposed.IsTemporary ||
+            destination.Id == Guid.Empty || destination.Revision < 1 || proposed.SpaceId != destination.Id)
+            throw new InvalidOperationException("Create a canonical persistent chat in the selected current Space.");
+        return CommitAsync(new(null, proposed), null, destination, token);
+    }
+
+    private async Task<ConversationSpaceCommitResult> CommitAsync(ConversationSpaceChange change,
+        SpaceSnapshot? source, SpaceSnapshot? destination, CancellationToken token)
+    {
+        if (!hostAllowsWrites() || actor.AccountId is not null || actor.OrganisationId is not null)
+            throw new UnauthorizedAccessException("The displayed local profile cannot change this chat assignment.");
+        // Exact immutable conversation and Space snapshots survive all admission waits.
+        IReadOnlyList<ConversationSpaceChange> changes = Array.AsReadOnly(new[] { change });
         var spaceIdentity = await settings.GetStoreIdentityAsync(token).ConfigureAwait(false);
         var sqlIdentity = await conversationIdentities.GetStoreIdentityAsync(token).ConfigureAwait(false);
         if (spaceIdentity.SchemaVersion != 1 || sqlIdentity.SchemaVersion != 1 ||

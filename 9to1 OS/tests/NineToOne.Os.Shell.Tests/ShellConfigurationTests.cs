@@ -32,7 +32,7 @@ public sealed class ShellConfigurationTests
         var owner = new HomeShellConfigurationStore(blocked, f.Actors,
             new ResourceAuthorizationService(f.Actors, [new ShellConfigurationResourceResolver(f.Home)]));
         Task pending = initialize ? owner.ReadAsync(default) : owner.TryWriteAsync(before!.Revision,
-            new(before.Revision + 1, ShellEdits.AddLayer(before.Current, "Must not persist"), before.Current, before.AuthorityId), default);
+            before with { Revision = before.Revision + 1, Current = ShellEdits.AddLayer(before.Current, "Must not persist"), Previous = before.Current }, default);
         await blocked.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         f.Actors.Current = changeProfile ? f.Actors.Current with { ProfileId = "other-profile" }
             : f.Actors.Current with { AuthenticationRevision = "revoked-session" };
@@ -47,7 +47,7 @@ public sealed class ShellConfigurationTests
     {
         using var fixture = new Fixture(); var clock = new Clock(); var service = new ShellConfigurationService(fixture.Store, clock);
         var before = await service.GetAsync(); var candidate = ShellEdits.AddLayer(before.Effective, "Development");
-        var preview = await service.PreviewAsync(before.Stored.Revision, candidate, TimeSpan.FromSeconds(30));
+        var preview = await service.PreviewAsync(before.Stored, candidate, TimeSpan.FromSeconds(30));
         Assert.Equal(2, preview.Effective.ActiveSpace.Taskbar.Layers.Count);
         Assert.Single((await new ShellConfigurationService(fixture.Store).GetAsync()).Effective.ActiveSpace.Taskbar.Layers);
         clock.Utc += TimeSpan.FromSeconds(31);
@@ -60,16 +60,16 @@ public sealed class ShellConfigurationTests
     {
         using var fixture = new Fixture(); var service = new ShellConfigurationService(fixture.Store);
         var original = await service.GetAsync(); var candidate = ShellEdits.AddLayer(original.Effective, "Work");
-        var preview = await service.PreviewAsync(original.Stored.Revision, candidate, TimeSpan.FromSeconds(30));
+        var preview = await service.PreviewAsync(original.Stored, candidate, TimeSpan.FromSeconds(30));
         var saved = await service.KeepAsync(preview.Preview!.Id);
         Assert.Equal(original.Stored.Revision + 1, saved.Stored.Revision);
         var reopened = await new ShellConfigurationService(fixture.Store).GetAsync();
         Assert.Equal(candidate.ActiveSpace.Taskbar.ActiveLayerId, reopened.Effective.ActiveSpace.Taskbar.ActiveLayerId);
         Assert.Equal(original.Effective.ActiveSpace.Taskbar.ActiveLayerId, reopened.Stored.Previous!.ActiveSpace.Taskbar.ActiveLayerId);
-        var recovery = await service.PreviewAsync(saved.Stored.Revision, saved.Stored.Previous!, TimeSpan.FromSeconds(30));
+        var recovery = await service.PreviewAsync(saved.Stored, saved.Stored.Previous!, TimeSpan.FromSeconds(30));
         await service.RevertAsync(recovery.Preview!.Id);
         Assert.Equal(candidate.ActiveSpace.Taskbar.ActiveLayerId, (await service.GetAsync()).Effective.ActiveSpace.Taskbar.ActiveLayerId);
-        recovery = await service.PreviewAsync(saved.Stored.Revision, saved.Stored.Previous!, TimeSpan.FromSeconds(30));
+        recovery = await service.PreviewAsync(saved.Stored, saved.Stored.Previous!, TimeSpan.FromSeconds(30));
         var restored = await service.KeepAsync(recovery.Preview!.Id);
         Assert.Single(restored.Effective.ActiveSpace.Taskbar.Layers);
     }
@@ -79,8 +79,8 @@ public sealed class ShellConfigurationTests
         using var fixture = new Fixture(); var first = new ShellConfigurationService(fixture.Store); var second = new ShellConfigurationService(fixture.Store);
         var baseline = await first.GetAsync();
         await second.GetAsync();
-        var a = await first.PreviewAsync(baseline.Stored.Revision, ShellEdits.RenameSpace(baseline.Effective, "First"), TimeSpan.FromSeconds(30));
-        var b = await second.PreviewAsync(baseline.Stored.Revision, ShellEdits.RenameSpace(baseline.Effective, "Second"), TimeSpan.FromSeconds(30));
+        var a = await first.PreviewAsync(baseline.Stored, ShellEdits.RenameSpace(baseline.Effective, "First"), TimeSpan.FromSeconds(30));
+        var b = await second.PreviewAsync(baseline.Stored, ShellEdits.RenameSpace(baseline.Effective, "Second"), TimeSpan.FromSeconds(30));
         await first.KeepAsync(a.Preview!.Id);
         await Assert.ThrowsAnyAsync<IOException>(() => second.KeepAsync(b.Preview!.Id));
         Assert.Equal("First", (await fixture.Store.ReadAsync(default)).Current.ActiveSpace.Name);
@@ -90,11 +90,41 @@ public sealed class ShellConfigurationTests
     {
         using var fixture = new Fixture(); var service = new ShellConfigurationService(fixture.Store);
         var before = await service.GetAsync();
-        var preview = await service.PreviewAsync(before.Stored.Revision, ShellEdits.RenameSpace(before.Effective, "Private"), TimeSpan.FromSeconds(30));
+        var preview = await service.PreviewAsync(before.Stored, ShellEdits.RenameSpace(before.Effective, "Private"), TimeSpan.FromSeconds(30));
         fixture.Actors.Current = fixture.Actors.Current with { ProfileId = "other-profile" };
         // A different profile has a different canonical record, not a claim to the old one.
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.KeepAsync(preview.Preview!.Id));
     }
+    [Fact]
+    public async Task SameProfileSessionChangeInvalidatesPreviewAndCannotRebindAnOldRead()
+    {
+        using var fixture = new Fixture(); var service = new ShellConfigurationService(fixture.Store);
+        var original = await service.GetAsync();
+        var pending = await service.PreviewAsync(original.Stored, ShellEdits.AddLayer(original.Effective, "Old session"), TimeSpan.FromSeconds(30));
+        var bytes = await File.ReadAllBytesAsync(fixture.StatePath);
+        fixture.Actors.Current = fixture.Actors.Current with { AuthenticationRevision = "new-session" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.KeepAsync(pending.Preview!.Id));
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(fixture.StatePath));
+        var fresh = await service.GetAsync(); Assert.Null(fresh.Preview);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.PreviewAsync(original.Stored,
+            ShellEdits.RenameSpace(original.Effective, "Old read after refresh"), TimeSpan.FromSeconds(30)));
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(fixture.StatePath));
+        var next = await service.PreviewAsync(fresh.Stored, ShellEdits.AddLayer(fresh.Effective, "Current session"), TimeSpan.FromSeconds(30));
+        Assert.Equal(fresh.Stored.Revision + 1, (await service.KeepAsync(next.Preview!.Id)).Stored.Revision);
+    }
+    [Fact]
+    public async Task ReconstructedShellRecordCannotClaimReadSessionAndStaleRecordCannotWrite()
+    {
+        using var fixture = new Fixture(); var before = await fixture.Store.ReadAsync(default);
+        var bytes = await File.ReadAllBytesAsync(fixture.StatePath);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.TryWriteAsync(before.Revision,
+            new(before.Revision + 1, ShellEdits.AddLayer(before.Current, "Copied data"), before.Current, before.AuthorityId), default));
+        fixture.Actors.Current = fixture.Actors.Current with { AuthenticationRevision = "new-session" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Store.TryWriteAsync(before.Revision,
+            before with { Revision = before.Revision + 1, Current = ShellEdits.AddLayer(before.Current, "Stale binding"), Previous = before.Current }, default));
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(fixture.StatePath));
+    }
+
     [Fact]
     public void LayersAreDiscreteBoundedAndDuplicationRetainsOwnerReferences()
     {
@@ -124,7 +154,7 @@ public sealed class ShellConfigurationTests
     {
         using var fixture = new Fixture(); var service = new ShellConfigurationService(fixture.Store);
         var before = await service.GetAsync();
-        var preview = await service.PreviewAsync(before.Stored.Revision, ShellEdits.AddLayer(before.Effective, "Kept"), TimeSpan.FromSeconds(30));
+        var preview = await service.PreviewAsync(before.Stored, ShellEdits.AddLayer(before.Effective, "Kept"), TimeSpan.FromSeconds(30));
         var exposed = (DesktopSpace[])preview.Preview!.Candidate.Spaces;
         exposed[0] = exposed[0] with { Name = "Tampered" };
         Assert.Equal("Standard", (await service.KeepAsync(preview.Preview.Id)).Effective.ActiveSpace.Name);

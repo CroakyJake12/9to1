@@ -11,16 +11,17 @@ public sealed partial class HavenLauncherActivity
     private Guid? _openFolderId;
     private View BuildFolderTile(LauncherPlacement icon, int width, int height)
     {
-        var folder = _layout?.Current.Folders.SingleOrDefault(f => f.Id == icon.FolderId);
+        var expected = _layout;
+        var folder = expected?.Current.Folders.SingleOrDefault(f => f.Id == icon.FolderId);
         var button = new Button(this) { Text = folder is null ? "Unavailable folder" : $"{folder.Name}\n{folder.Items.Count} apps",
             ContentDescription = "Launcher folder " + folder?.Name, LayoutParameters = new ViewGroup.LayoutParams(width, height) };
         button.Click += (_, _) =>
         {
-            if (folder is null) return;
-            if (_movingPlacementId is { } item) _ = EditLayoutAsync(layout => LauncherLayoutEdits.MoveToContainer(layout, item, folder.Id));
+            if (folder is null || expected is null) return;
+            if (_movingPlacementId is { } item) _ = EditLayoutAsync(layout => LauncherLayoutEdits.MoveToContainer(layout, item, folder.Id), expected);
             else ShowFolder(folder.Id);
         };
-        button.LongClick += (_, e) => { if (folder is not null) ShowFolderMenu(folder, icon); e.Handled = true; };
+        button.LongClick += (_, e) => { if (folder is not null) ShowFolderMenu(folder, icon, expected); e.Handled = true; };
         return button;
     }
     private void ShowFolder(Guid id)
@@ -34,8 +35,9 @@ public sealed partial class HavenLauncherActivity
     private void RefreshOpenFolder()
     {
         if (_folderDialog is not { } dialog || _openFolderId is not { } id) return;
-        var folder = _layout?.Current.Folders.SingleOrDefault(f => f.Id == id);
-        if (folder is null) { dialog.Dismiss(); return; }
+        var expected = _layout;
+        var folder = expected?.Current.Folders.SingleOrDefault(f => f.Id == id);
+        if (expected is null || folder is null) { dialog.Dismiss(); return; }
         var panel = new LinearLayout(this) { Orientation = Orientation.Vertical }; panel.SetPadding(Dp(12), Dp(12), Dp(12), Dp(12));
         panel.Background = HavenNativeSurface.Page();
         var header = new Button(this) { Text = folder.Name + " · Close", ContentDescription = "Close folder " + folder.Name };
@@ -68,7 +70,7 @@ public sealed partial class HavenLauncherActivity
                 slot.Click += (_, _) =>
                 {
                     if (_movingPlacementId is { } moving)
-                        _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, moving, folder.Id, targetColumn, targetRow));
+                        _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, moving, folder.Id, targetColumn, targetRow), expected);
                 };
                 grid.AddView(slot);
             }
@@ -82,9 +84,9 @@ public sealed partial class HavenLauncherActivity
         var horizontal = new HorizontalScrollView(this); horizontal.AddView(vertical); panel.AddView(horizontal);
         dialog.SetContentView(panel); AndroidTypography.ApplyTree(panel);
     }
-    private void ShowFolderMenu(LauncherFolder folder, LauncherPlacement icon)
+    private void ShowFolderMenu(LauncherFolder folder, LauncherPlacement icon, LauncherStoredLayout? expected)
     {
-        var expected = _layout; if (expected is null) return;
+        if (expected is null) return;
         var currentFolder = expected.Current.Folders.SingleOrDefault(f => f.Id == folder.Id);
         var currentIcon = LauncherLayoutEdits.Placements(expected.Current).SingleOrDefault(i => i.Id == icon.Id);
         if (currentFolder is null || currentIcon is null || currentIcon.FolderId != folder.Id) return;

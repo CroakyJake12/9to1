@@ -18,6 +18,7 @@ using Xunit;
 
 namespace HavenOS.Apps.Canvas.NativeUI.Tests;
 
+[Collection("Canvas native UI")]
 public sealed class CanvasNativeInputTests
 {
     [Theory]
@@ -75,6 +76,11 @@ public sealed class CanvasNativeInputTests
                         fixture.FileId, fixture.FolderId, null, "Rename", fixture.Opened.CasRevisionId, null,
                         FilesOperationState.Pending, now, now, null, null), "Changed while approval was pending.9to1c", ct)).IsSuccess);
                     await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Owner.ExecuteAsync(captured, capability, ct));
+                    var aborted = await fixture.Broker.AbortUnclaimedExecutionAsync(capability, ct);
+                    Assert.True(aborted.Succeeded);
+                    Assert.Equal(HomePermissionRequestState.Failed, (await fixture.Permissions.GetAuthorizationAsync(pending.RequestId, ct)).State);
+                    Assert.Null(await fixture.Broker.ClaimExecutionAsync(capability, CanvasStrokeWriteIntent.TargetAppId,
+                        CanvasStrokeWriteIntent.ActionId, captured.Scopes, captured.Arguments, ct));
                     Assert.Empty((await fixture.Bridge.OpenAsync(fixture.FileId, ct)).Artifact.Pages[0].Strokes);
                     Assert.False(await surface.RefreshAsync(ct));
                 }

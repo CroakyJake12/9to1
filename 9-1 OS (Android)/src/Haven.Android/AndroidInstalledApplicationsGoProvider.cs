@@ -8,7 +8,7 @@ namespace Haven.Android;
 /// <summary>Same canonical Go contracts as OS search; Android owns the observed profile/component activation.</summary>
 internal sealed class AndroidInstalledApplicationsGoProvider(IInstalledApplicationRegistry registry,
     IAuthenticatedResourceActorSource actors, ResourceAuthorizationService resources,
-    AndroidLauncherPlatformCatalog platform) : IGoProvider
+    AndroidLauncherPlatformCatalog platform) : IGoCanonicalResolver
 {
     public const string Id = "android.installed-applications";
     public string ProviderId => Id;
@@ -33,6 +33,21 @@ internal sealed class AndroidInstalledApplicationsGoProvider(IInstalledApplicati
             yield return new(Id, new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(CultureInfo.InvariantCulture)),
                 app.Label, "Apps", [new("Open", "Open")]);
         }
+    }
+    public async Task<GoResult?> ResolveAsync(GoCanonicalLocator locator, CancellationToken ct)
+    {
+        if (locator is not { Owner: "Home", Kind: "os.installed-application" } || !Guid.TryParse(locator.Id, out var id) || id == Guid.Empty) return null;
+        var actor = await actors.GetCurrentAsync(ct);
+        if (actor is null) return null;
+        var app = (await registry.RefreshAsync(ct)).SingleOrDefault(a => a.ApplicationId == id && a.Enabled && a.ProfileAccessible &&
+            a.HomeProfileId == actor.ProfileId && a.ProviderId == AndroidLauncherPlatformCatalog.ProviderId);
+        if (app is null) return null;
+        var scope = new ResourceScope("os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(CultureInfo.InvariantCulture), ResourceAccess.Read);
+        try { if (actor != await resources.AuthorizeAsync("os.application.read", [scope], ct)) return null; }
+        catch (UnauthorizedAccessException) { return null; }
+        if (actor != await actors.GetCurrentAsync(ct)) throw new UnauthorizedAccessException("The Home profile changed during application resolution.");
+        return new(Id, new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(CultureInfo.InvariantCulture)),
+            app.Label, "Apps", [new("Open", "Open")]);
     }
     public async Task InvokeAsync(GoCanonicalReference reference, string actionId, CancellationToken ct)
     {

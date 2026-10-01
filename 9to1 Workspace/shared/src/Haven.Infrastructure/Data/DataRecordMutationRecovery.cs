@@ -8,13 +8,16 @@ namespace Haven.Infrastructure;
 public sealed class DataRecordMutationRecovery(IDataWorkbookRepository workbooks,
     IDataWorkbookCommitAuthority authority, IAuthenticatedResourceActorSource actors) : IDataRecordMutationReceiptSource
 {
-    public Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, CancellationToken cancellationToken = default) =>
-        ReadCoreAsync(intent, null, cancellationToken);
+    public async Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, CancellationToken cancellationToken = default) =>
+        (await ReadCoreAsync(intent, null, cancellationToken).ConfigureAwait(false)).Receipt;
 
-    public Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor expectedActor,
+    public async Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor expectedActor,
+        CancellationToken cancellationToken) => (await ObserveAsync(intent, expectedActor, cancellationToken).ConfigureAwait(false)).Receipt;
+
+    public Task<DataRecordMutationObservation> ObserveAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor expectedActor,
         CancellationToken cancellationToken) => ReadCoreAsync(intent, expectedActor ?? throw new ArgumentNullException(nameof(expectedActor)), cancellationToken);
 
-    private async Task<DataRecordMutationReceipt?> ReadCoreAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor? expectedActor,
+    private async Task<DataRecordMutationObservation> ReadCoreAsync(DataRecordUpdateIntent intent, AuthenticatedResourceActor? expectedActor,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(intent);
@@ -37,6 +40,6 @@ public sealed class DataRecordMutationRecovery(IDataWorkbookRepository workbooks
             throw new InvalidOperationException("DataMutationOperationConflict");
         if (receipt is not null && intent.Origin is not null && receipt.SourceAdmissionVersion != 1)
             throw new InvalidDataException("DataSourceProvenanceUnverified");
-        return receipt;
+        return new(receipt, new(identity.StoreId, workbook.Id, workbook.Version, workbook.RevisionId));
     }
 }

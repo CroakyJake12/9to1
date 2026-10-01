@@ -16,8 +16,16 @@ public interface IConversationSpaceCommitAdmission
 {
     ValueTask<bool> CheckAsync(ConversationSpaceCommitContext context, CancellationToken cancellationToken);
 }
+public enum ConversationSpaceReadStatus { Available, StoreMismatch }
+/// <summary>One SQL read snapshot, including archived and temporary rows. This is not a grant or
+/// proof of atomic completion with another store; callers must apply their current owning authority.</summary>
+public sealed record ConversationSpaceMembershipPage(ConversationSpaceReadStatus Status,
+    ResourceStoreIdentity StoreIdentity, Guid SpaceId, IReadOnlyList<Conversation> Rows, bool HasMore);
 public interface IConversationSpaceCommitStore
 {
+    Task<ConversationSpaceMembershipPage> ReadSpaceMembershipAsync(Guid expectedStoreId, Guid spaceId,
+        Guid? afterId = null, int limit = 1000, CancellationToken cancellationToken = default);
+
     Task<ConversationSpaceCommitResult> CompareExchangeSpaceAsync(Guid expectedStoreId,
         IReadOnlyList<ConversationSpaceChange> changes, IConversationSpaceCommitAdmission admission,
         CancellationToken cancellationToken = default);

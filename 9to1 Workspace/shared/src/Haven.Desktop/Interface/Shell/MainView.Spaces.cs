@@ -71,7 +71,8 @@ public sealed partial class MainView
         else if (source.Kind == SpaceContextReferenceKind.PictureArtifact)
         {
             var picture = new SpacePictureCuiSurface(route, router, reader,
-                services.GetRequiredService<NativeFilesMediaAssetSourceResolver>(), home, actors, resources);
+                services.GetRequiredService<NativeFilesMediaAssetSourceResolver>(), home, actors, resources,
+                services.GetRequiredService<IMotionPreferenceSource>());
             surface = picture;
             initialize = () => picture.InitializeAsync();
         }

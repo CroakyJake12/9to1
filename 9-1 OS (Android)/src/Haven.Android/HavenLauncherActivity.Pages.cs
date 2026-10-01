@@ -23,11 +23,11 @@ public sealed partial class HavenLauncherActivity
         try
         {
             if (expected is null) throw new InvalidOperationException("Load the current Home launcher layout first.");
-            var displayedSession = DisplayedLayouts.Require(expected);
+            _ = DisplayedLayouts.Require(expected);
             await _layoutEdits.WaitAsync(_launcherLifetime.Token);
             try
             {
-                var saved = await WidgetSessions.EditAsync(displayedSession, edit, _launcherLifetime.Token);
+                var saved = await DisplayedLayouts.EditAsync(expected, edit, _launcherLifetime.Token);
                 var current = await WidgetSessions.ReadAsync(_launcherLifetime.Token);
                 if (current is null || current.Layout.AuthorityId != saved.AuthorityId || current.Layout.Revision != saved.Revision)
                     throw new InvalidOperationException("Launcher changed after saving. Reload the current layout.");
@@ -80,9 +80,9 @@ public sealed partial class HavenLauncherActivity
         dialog.SetPositiveButton("Save", (_, _) => _ = apply(input.Text?.Trim() ?? ""));
         dialog.SetNegativeButton("Cancel", (_, _) => { }); dialog.Show();
     }
-    private void ShowPlacementMenu(LauncherApp app, LauncherPlacement? placement)
+    private void ShowPlacementMenu(LauncherApp app, LauncherPlacement? placement, LauncherStoredLayout? expected)
     {
-        var expected = _layout; if (expected is null) return;
+        if (expected is null) return;
         if (placement is not null)
         {
             var placementId = placement.Id;

@@ -42,7 +42,7 @@ public sealed partial class HavenLauncherActivity
                 if (session is null || session.Layout.AuthorityId != layout.AuthorityId || session.Layout.Revision != layout.Revision ||
                     await actors.GetCurrentAsync(_launcherLifetime.Token) != actor) throw new UnauthorizedAccessException("Home changed while reading the launcher layout.");
                 if (generation != Volatile.Read(ref _appLoadGeneration) || !_activityStarted) return;
-                _apps.Clear(); _apps.AddRange(apps); _layout = DisplayedLayouts.Bind(session);
+                _apps.Clear(); _apps.AddRange(apps); _layout = DisplayedLayouts.Bind(session); _movingPlacementId = null;
                 _page = layout.Current.Pages.ToList().FindIndex(p => p.Id == layout.Current.ActivePageId);
             }
             finally { _layoutEdits.Release(); }
@@ -60,7 +60,7 @@ public sealed partial class HavenLauncherActivity
             if (generation != Volatile.Read(ref _appLoadGeneration))
                 return;
 
-            _apps.Clear(); _layout = null; _grid?.RemoveAllViews(); _dockHost?.RemoveAllViews();
+            _apps.Clear(); _layout = null; _movingPlacementId = null; _grid?.RemoveAllViews(); _dockHost?.RemoveAllViews();
             _folderDialog?.Dismiss(); _refreshDrawer?.Invoke();
             if (_launcherStatus is not null)
                 _launcherStatus.Text = "Could not load apps: " + ex.Message;
@@ -110,8 +110,8 @@ public sealed partial class HavenLauncherActivity
         if (_grid is null || _pageIndicator is null)
             return;
 
-        if (_layout is null) return;
-        var layout = _layout.Current; var rows = layout.Rows; var columns = layout.Columns;
+        var expected = _layout; if (expected is null) return;
+        var layout = expected.Current; var rows = layout.Rows; var columns = layout.Columns;
         var page = layout.ActivePage;
         ClearMountedWidgets(); _grid.RemoveAllViews(); _grid.RowCount = rows; _grid.ColumnCount = columns;
 
@@ -130,7 +130,7 @@ public sealed partial class HavenLauncherActivity
             var widget = layout.Widgets.SingleOrDefault(item => item.PageId == page.Id && column >= item.Column && column < item.Column + item.ColumnSpan && row >= item.Row && row < item.Row + item.RowSpan);
             if (widget is not null)
             {
-                if (widget.Column == column && widget.Row == row) _grid.AddView(BuildWidgetCell(widget, cellWidth, cellHeight, _layout));
+                if (widget.Column == column && widget.Row == row) _grid.AddView(BuildWidgetCell(widget, cellWidth, cellHeight, expected));
                 continue;
             }
             var placement = page.Items.SingleOrDefault(item => item.Column == column && item.Row == row);
@@ -147,7 +147,7 @@ public sealed partial class HavenLauncherActivity
                 var empty = new Button(this) { Text = _movingPlacementId is null ? "" : "+", Enabled = _movingPlacementId is not null,
                     ContentDescription = $"Empty slot, row {row + 1}, column {column + 1}", LayoutParameters = new ViewGroup.LayoutParams(cellWidth, cellHeight) };
                 empty.SetBackgroundColor(Color.Transparent);
-                empty.Click += (_, _) => { if (_movingPlacementId is { } moving) _ = EditLayoutAsync(current => LauncherLayoutEdits.MovePlacement(current, moving, page.Id, targetColumn, targetRow)); };
+                empty.Click += (_, _) => { if (_movingPlacementId is { } moving) _ = EditLayoutAsync(current => LauncherLayoutEdits.MovePlacement(current, moving, page.Id, targetColumn, targetRow), expected); };
                 _grid.AddView(empty);
             }
             var cell = _grid.GetChildAt(_grid.ChildCount - 1);
@@ -161,6 +161,7 @@ public sealed partial class HavenLauncherActivity
 
     private View BuildAppTile(LauncherApp app, int width, int height, LauncherPlacement? placement = null)
     {
+        var expected = _layout;
         var appearance = CurrentPresentation;
         height = Math.Max(height, TileHeight);
         var tile = new LinearLayout(this)
@@ -218,11 +219,11 @@ public sealed partial class HavenLauncherActivity
             tile.AddView(profile);
         }
 
-        tile.LongClick += (_, args) => { ShowPlacementMenu(app, placement); args.Handled = true; };
+        tile.LongClick += (_, args) => { ShowPlacementMenu(app, placement, expected); args.Handled = true; };
         tile.Click += (_, _) =>
         {
-            if (_movingPlacementId is { } moving && placement is not null && _layout is not null)
-            { _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, moving, LauncherLayoutEdits.ContainerForPlacement(layout, placement.Id), placement.Column, placement.Row)); return; }
+            if (_movingPlacementId is { } moving && placement is not null && expected is not null)
+            { _ = EditLayoutAsync(layout => LauncherLayoutEdits.MovePlacement(layout, moving, LauncherLayoutEdits.ContainerForPlacement(layout, placement.Id), placement.Column, placement.Row), expected); return; }
             if (app.Available) LaunchApp(app);
             else Toast.MakeText(this, "This application's owning profile or package is currently unavailable. Its shortcut was preserved.", ToastLength.Long)?.Show();
         };
