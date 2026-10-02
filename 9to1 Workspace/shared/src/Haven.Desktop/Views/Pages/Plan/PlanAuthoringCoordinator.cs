@@ -46,6 +46,14 @@ internal sealed class PlanAuthoringCoordinator : IDisposable
     private bool _deleteArmed;
     private bool _busy;
     private bool _disposed;
+    private long _editorGeneration;
+    internal Task PendingAction { get; private set; } = Task.CompletedTask;
+    private sealed record EditorDraft(EditorKind Kind, Guid Destination, DateTimeOffset StartsAt,
+        string Title, string Notes, string Location, int DurationMinutes, string? Recurrence,
+        PlannerPriority Priority, bool AllDay);
+    private EditorDraft CaptureDraft() => new(_kind, _destinationId, _localStart,
+        _title.Text.Trim(), _notes.Text.Trim(), _location.Text.Trim(), _durationMinutes,
+        _recurrenceRule, _taskPriority, _allDayValue);
 
     public PlanAuthoringCoordinator(PlanHavenScene scene, IPlannerRepository planner, Func<CancellationToken, Task> refresh)
     {
@@ -72,13 +80,13 @@ internal sealed class PlanAuthoringCoordinator : IDisposable
         _recurrenceButton.Invoked += (_, _) => { CycleRecurrence(); UpdateLabels(); };
         _priorityButton.Invoked += (_, _) => { CyclePriority(); UpdateLabels(); };
         _destinationButton.Invoked += (_, _) => { CycleDestination(); UpdateLabels(); };
-        _save.Invoked += async (_, _) => await SaveAsync();
+        _save.Invoked += (_, _) => PendingAction = SaveAsync();
         _delete.Invoked += async (_, _) => await DeleteAsync();
         FindButton("PlanEditorCancel").Invoked += (_, _) => Hide();
     }
 
-    private async void OnNewTask(object? sender, EventArgs e) => await OpenNewAsync(EditorKind.Task);
-    private async void OnNewEvent(object? sender, EventArgs e) => await OpenNewAsync(EditorKind.Event);
+    private void OnNewTask(object? sender, EventArgs e) => PendingAction = OpenNewAsync(EditorKind.Task);
+    private void OnNewEvent(object? sender, EventArgs e) => PendingAction = OpenNewAsync(EditorKind.Event);
     private async void OnEditItem(object? sender, PlanItemEditRequest request) => await OpenItemAsync(request);
 
     internal async Task OpenItemAsync(PlanItemEditRequest request)
@@ -168,39 +176,70 @@ internal sealed class PlanAuthoringCoordinator : IDisposable
     }
     private async Task SaveAsync()
     {
-        if (_busy) return;
-        var title = _title.Text.Trim();
-        if (string.IsNullOrWhiteSpace(title)) { SetStatus("Add a title before saving."); return; }
+        if (_busy || _disposed) return;
+        var draft = CaptureDraft();
+        var generation = _editorGeneration;
+        if (string.IsNullOrWhiteSpace(draft.Title)) { SetStatus("Add a title before saving."); return; }
         if (_event?.IsReadOnly == true) { SetStatus("This calendar event is read-only."); return; }
-        SetBusy(true);
+        // Capture the complete candidate before the first await. Cancel/new editor actions can
+        // change the live kind, entity and fields while canonical default loading is pending.
+        var now = DateTimeOffset.UtcNow;
+        PlannerTask? task = null; PlannerEvent? item = null;
         try
         {
-            await _planner.EnsureDefaultsAsync(CancellationToken.None);
-            var now = DateTimeOffset.UtcNow;
-            if (_kind == EditorKind.Task)
+            if (draft.Kind == EditorKind.Task)
             {
-                var collectionId = _collections.Any(x => x.Id == _destinationId) ? _destinationId : PlannerDefaults.PersonalCollectionId;
-                var task = _task is null
-                    ? new PlannerTask(Guid.NewGuid(), collectionId, null, title, _notes.Text.Trim(), _taskPriority, PlannerTaskStatus.Planned, "[]", _durationMinutes, null, _localStart, _recurrenceRule, null, null, 0, now, now, TimeZoneInfo.Local.Id)
-                    : _task with { CollectionId = collectionId, Title = title, Notes = _notes.Text.Trim(), Priority = _taskPriority, EstimatedMinutes = _durationMinutes, DueAt = _localStart, RecurrenceRule = _recurrenceRule, UpdatedAt = now, TimeZoneId = TimeZoneInfo.Local.Id };
-                await _planner.UpsertTaskAsync(task, CancellationToken.None);
+                var collectionId = _collections.Any(x => x.Id == draft.Destination) ? draft.Destination : PlannerDefaults.PersonalCollectionId;
+                task = _task is null
+                    ? new PlannerTask(Guid.NewGuid(), collectionId, null, draft.Title, draft.Notes, draft.Priority, PlannerTaskStatus.Planned, "[]", draft.DurationMinutes, null, draft.StartsAt, draft.Recurrence, null, null, 0, now, now, TimeZoneInfo.Local.Id)
+                    : _task with { CollectionId = collectionId, Title = draft.Title, Notes = draft.Notes, Priority = draft.Priority, EstimatedMinutes = draft.DurationMinutes, DueAt = draft.StartsAt, RecurrenceRule = draft.Recurrence, UpdatedAt = now, TimeZoneId = TimeZoneInfo.Local.Id };
             }
             else
             {
-                var start = _allDayValue ? AtLocal(_localStart.Date, TimeSpan.Zero) : _localStart;
-                var end = _allDayValue ? AtLocal(_localStart.Date.AddDays(1), TimeSpan.Zero) : start.AddMinutes(_durationMinutes);
-                var writable = WritableCalendars();
-                var calendarId = writable.Any(x => x.Id == _destinationId) ? _destinationId : PlannerDefaults.LocalCalendarId;
-                var item = _event is null
-                    ? new PlannerEvent(Guid.NewGuid(), calendarId, title, _notes.Text.Trim(), _location.Text.Trim(), start, end, _allDayValue, _recurrenceRule, null, false, null, null, now, now, null, TimeZoneInfo.Local.Id)
-                    : _event with { Title = title, Notes = _notes.Text.Trim(), Location = _location.Text.Trim(), StartsAt = start, EndsAt = end, IsAllDay = _allDayValue, RecurrenceRule = _recurrenceRule, UpdatedAt = now, TimeZoneId = TimeZoneInfo.Local.Id };
-                await _planner.UpsertEventAsync(item, CancellationToken.None);
+                var start = draft.AllDay ? AtLocal(draft.StartsAt.Date, TimeSpan.Zero) : draft.StartsAt;
+                var end = draft.AllDay ? AtLocal(draft.StartsAt.Date.AddDays(1), TimeSpan.Zero) : start.AddMinutes(draft.DurationMinutes);
+                var calendarId = WritableCalendars().Any(x => x.Id == draft.Destination) ? draft.Destination : PlannerDefaults.LocalCalendarId;
+                item = _event is null
+                    ? new PlannerEvent(Guid.NewGuid(), calendarId, draft.Title, draft.Notes, draft.Location, start, end, draft.AllDay, draft.Recurrence, null, false, null, null, now, now, null, TimeZoneInfo.Local.Id)
+                    : _event with { Title = draft.Title, Notes = draft.Notes, Location = draft.Location, StartsAt = start, EndsAt = end, IsAllDay = draft.AllDay, RecurrenceRule = draft.Recurrence, UpdatedAt = now, TimeZoneId = TimeZoneInfo.Local.Id };
+            }
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Could not save: {ex.Message}");
+            return;
+        }
+        SetBusy(true);
+        var committed = false;
+        bool SameEditor() => !_disposed && generation == _editorGeneration;
+        try
+        {
+            await _planner.EnsureDefaultsAsync(CancellationToken.None);
+            if (task is not null) await _planner.UpsertTaskAsync(task, CancellationToken.None);
+            else await _planner.UpsertEventAsync(item!, CancellationToken.None);
+            committed = true;
+            if (SameEditor())
+            {
+                // A refresh failure cannot turn an acknowledged new item into another new draft.
+                // Keep its canonical ID so a later correction updates the same owning entity.
+                _task = task; _event = item;
+                _heading.Content = task is not null ? "Task details" : "Event details";
+                _delete.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
             }
             await _refresh(CancellationToken.None);
-            Hide();
+            if (SameEditor())
+            {
+                if (CaptureDraft() == draft) Hide();
+                else SetStatus("Saved the captured item. Later changes remain open.");
+            }
         }
-        catch (Exception ex) { SetStatus($"Could not save: {ex.Message}"); }
-        finally { SetBusy(false); }
+        catch (Exception ex)
+        {
+            if (SameEditor()) SetStatus(committed
+                ? "Saved locally. The calendar could not refresh; your changes remain open."
+                : $"Could not save: {ex.Message}");
+        }
+        finally { if (SameEditor()) SetBusy(false); }
     }
 
     private async Task DeleteAsync()
@@ -226,6 +265,7 @@ internal sealed class PlanAuthoringCoordinator : IDisposable
     }
     private void Show()
     {
+        _editorGeneration++;
         _root.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         _heading.Content = _kind == EditorKind.Task ? (_task is null ? "New task" : "Task details") : (_event is null ? "New event" : "Event details");
         var eventMode = _kind == EditorKind.Event;
@@ -241,6 +281,7 @@ internal sealed class PlanAuthoringCoordinator : IDisposable
 
     private void Hide()
     {
+        _editorGeneration++;
         _root.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed); _task = null; _event = null; _busy = false; ResetDeleteConfirmation(); SetStatus(null);
     }
 

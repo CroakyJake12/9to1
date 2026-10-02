@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -30,6 +31,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     private IReadOnlyList<NotesDocumentSummary> _documents = [];
     private int _documentIndex;
     private int _saveRunning;
+    private long _editGeneration;
     private bool _initialized;
     private bool _busy;
     private bool _dirty;
@@ -155,6 +157,8 @@ public sealed partial class WritePage : UserControl, IDisposable
         if (Interlocked.Exchange(ref _saveRunning, 1) != 0)
             return false;
 
+        var snapshotCommitted = false;
+        string? committedWarning = null;
         try
         {
             if (string.IsNullOrWhiteSpace(Document.Title))
@@ -163,26 +167,53 @@ public sealed partial class WritePage : UserControl, IDisposable
                 _route.SetTitleFromModel(Document.Title);
             }
 
-            var result = await _repository.SaveAsync(Document, reason, cancellationToken);
-            Document.Version = result.Version;
-            Document.Recovery.HasUnsavedRecovery = false;
-            _dirty = false;
+            var original = Document;
+            var editGeneration = Interlocked.Read(ref _editGeneration);
+            // Same structured document/IDs and serializer used by Write editor history.
+            // Repository mutations and awaited serialization cannot alter the live editing object.
+            var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+            var snapshot = JsonSerializer.Deserialize<NotesDocument>(JsonSerializer.Serialize(original, jsonOptions), jsonOptions)
+                ?? throw new InvalidDataException("The document save snapshot is unavailable.");
+            var result = await _repository.SaveAsync(snapshot, reason, cancellationToken);
+            snapshotCommitted = true;
+            committedWarning = result.PostCommitWarning;
+            if (_disposed || Document is not { } current || current.Id != original.Id)
+                return true; // This exact snapshot saved; a closed/different display gets no late presentation.
+            current.Version = result.Version;
+            var changedDuringSave = !ReferenceEquals(current, original) || Interlocked.Read(ref _editGeneration) != editGeneration;
+            current.Recovery.HasUnsavedRecovery = changedDuringSave;
+            _dirty = changedDuringSave;
 
             await RefreshDocumentsAsync(cancellationToken);
-            _documentIndex = IndexOfDocument(Document.Id);
+            if (_disposed || !ReferenceEquals(Document, current)) return true;
+            // Library refresh is another await at which a new edit may arrive.
+            changedDuringSave |= Interlocked.Read(ref _editGeneration) != editGeneration;
+            _dirty = changedDuringSave;
+            current.Recovery.HasUnsavedRecovery = changedDuringSave;
+            _documentIndex = IndexOfDocument(current.Id);
             UpdatePosition();
-            _route.SetStatus($"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}");
+            _route.SetStatus(changedDuringSave ? "Saved the captured revision; newer edits remain unsaved." :
+                $"Saved locally at {result.SavedAt.LocalDateTime:t} Â· v{result.Version}");
+            if (result.PostCommitWarning is { } warning)
+                _route.SetStatus(warning + (changedDuringSave ? " Newer edits remain unsaved." : string.Empty));
             _bus.Fire("Write.Saved");
             return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            if (snapshotCommitted)
+            {
+                if (!_disposed) _route.SetStatus(committedWarning ?? "Saved the captured revision; library refresh was cancelled.");
+                return true; // A later cancellation cannot erase the acknowledged current publication.
+            }
             throw;
         }
         catch (Exception ex)
         {
-            _route.SetStatus("Couldn't save this document: " + ex.Message);
-            return false;
+            if (!_disposed) _route.SetStatus(snapshotCommitted
+                ? "Saved the captured revision; library refresh is unavailable: " + ex.Message
+                : "Couldn't save this document: " + ex.Message);
+            return snapshotCommitted;
         }
         finally
         {
@@ -417,7 +448,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         if (Document is not null && _dirty
-            && !await SaveAsync("Autosave before import", cancellationToken))
+            && (!await SaveAsync("Autosave before import", cancellationToken) || _dirty))
         {
             return false;
         }
@@ -445,6 +476,10 @@ public sealed partial class WritePage : UserControl, IDisposable
                     return false;
                 }
                 imported = package.Value ?? throw new InvalidDataException("The native package service returned no document.");
+                // Import creates a new local document just like the existing format import service.
+                // Package revision metadata cannot replace an independently edited canonical document.
+                imported.Id = Guid.NewGuid(); imported.Version = 0;
+                imported.CreatedAt = DateTimeOffset.UtcNow; imported.UpdatedAt = imported.CreatedAt;
             }
             else
             {
@@ -483,7 +518,7 @@ public sealed partial class WritePage : UserControl, IDisposable
         if (Document is null)
             return false;
 
-        if (_dirty && !await SaveAsync("Save before export", cancellationToken))
+        if (_dirty && (!await SaveAsync("Save before export", cancellationToken) || _dirty))
             return false;
 
         try
@@ -846,6 +881,7 @@ public sealed partial class WritePage : UserControl, IDisposable
             return;
 
         Document.UpdatedAt = DateTimeOffset.UtcNow;
+        Interlocked.Increment(ref _editGeneration);
         _dirty = true;
         _route.SetStatus("Unsaved changes Â· autosave is on");
     }
@@ -863,7 +899,7 @@ public sealed partial class WritePage : UserControl, IDisposable
     private async Task ShowLibraryAsync(bool saveBeforeSwitch, CancellationToken cancellationToken)
     {
         await StopReadAloudForContextChangeAsync();
-        if (saveBeforeSwitch && Document is not null && _dirty && !await SaveAsync("Autosave before opening document library", cancellationToken)) return;
+        if (saveBeforeSwitch && Document is not null && _dirty && (!await SaveAsync("Autosave before opening document library", cancellationToken) || _dirty)) return;
         await RefreshDocumentsAsync(cancellationToken);
         ShowLibrary();
     }
@@ -908,11 +944,11 @@ public sealed partial class WritePage : UserControl, IDisposable
         return Document?.Id == documentId;
     }
 
-    private async Task CreateDocumentAsync(CancellationToken cancellationToken)
+    internal async Task CreateDocumentAsync(CancellationToken cancellationToken)
     {
         await StopReadAloudForContextChangeAsync();
         if (Document is not null && _dirty
-            && !await SaveAsync("Autosave before creating document", cancellationToken))
+            && (!await SaveAsync("Autosave before creating document", cancellationToken) || _dirty))
         {
             return;
         }
@@ -942,7 +978,7 @@ public sealed partial class WritePage : UserControl, IDisposable
         if (saveBeforeSwitch
             && Document is not null
             && _dirty
-            && !await SaveAsync("Autosave before switching document", cancellationToken))
+            && (!await SaveAsync("Autosave before switching document", cancellationToken) || _dirty))
         {
             return;
         }

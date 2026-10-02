@@ -42,7 +42,14 @@ public sealed partial class BoardsPage
                     () => SelectHierarchyPageAsync(local, localPage));
                 pageButton.HorizontalContentAlignment = HorizontalAlignment.Left;
                 pageButton.Margin = new Avalonia.Thickness(16, 0, 0, 0);
-                _sections.Children.Add(pageButton);
+                var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+                row.Children.Add(pageButton);
+                var movement = new Avalonia.Controls.Button { Content = "⋯", Width = 28 };
+                Avalonia.Automation.AutomationProperties.SetName(movement, "Move page: " + page.Title);
+                movement.Click += (_, _) => CreatePageMovementMenu(document, localPage.Id).ShowAt(movement);
+                Grid.SetColumn(movement, 1);
+                row.Children.Add(movement);
+                _sections.Children.Add(row);
             }
         }
 
