@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d2681b7ef663545dc33aba5be83368feefcc5b56",
-  "programTree": "fc148c1d5cdff175220f6f42aa4fa65e72317250",
+  "baselineCommit": "88e0e58de77568a7c7e6eecb781345a0d619c228",
+  "programTree": "97aacf3fcaa9cda106355207ede6d8762b17638c",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
   "files": [
@@ -41651,9 +41651,9 @@
     {
       "path": "cloud/cake-id-auth/src/auth.ts",
       "mode": "100644",
-      "object": "81c78229233068fe1e28a13681b640c92bca9954",
-      "bytes": 5261,
-      "sha256": "5908cef85574bfe9b9c9875d2e6875cfada4faa47f0746a828a2c47bfe1c406b"
+      "object": "49b51d23c61a8030ccb0f8c25756b537d707143a",
+      "bytes": 5801,
+      "sha256": "2118a3b87112f2c3d871086cb4a62258c21a7cbdf2978437a6c2083bb0fb3b15"
     },
     {
       "path": "cloud/cake-id-auth/src/browser.ts",
@@ -41693,9 +41693,9 @@
     {
       "path": "cloud/cake-id-auth/src/local.ts",
       "mode": "100644",
-      "object": "4f0ba2c2356f39c82a24435181bbb22a56194167",
-      "bytes": 5612,
-      "sha256": "d6192cb5c61a9006e6aa358b023c97f996338b972cd67a95f535159ee808c00a"
+      "object": "eec49644e0740492ceafab56dc3414c2a489d996",
+      "bytes": 6349,
+      "sha256": "7b72a24f89e3082cfe4c70be4ce673d1d2fe013d3c34f254289a7bb874f08b44"
     },
     {
       "path": "cloud/cake-id-auth/src/pages.ts",
@@ -41721,9 +41721,9 @@
     {
       "path": "cloud/cake-id-auth/tests/integration.mjs",
       "mode": "100644",
-      "object": "9e008efb2d46f4d9a002559e44cefaf7d1fcb451",
-      "bytes": 28835,
-      "sha256": "1a51cb92d8e444f518fbb1cd7b44432cd5b865a02e577e647dab096f57017290"
+      "object": "d0a8e4cd17c0755d165185c32e6c927fe50f0b46",
+      "bytes": 30437,
+      "sha256": "6d6bc7a5688ab63e892768aef5bb16ab58ff0a8e6d6779581255f510b41a082c"
     },
     {
       "path": "cloud/cake-id-auth/tests/password-hash-worker.ts",
@@ -65466,7 +65466,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-cake-id-local-runtime-cut.json",
-  "limits": "Exact owner29 source only, isolated native Ubuntu x64 local Wrangler/D1 tests. No deployment, cloud credentials, billable services, DNS, user migration or Home authority. All command exits required zero. Raw potentially private logs and ephemeral vars/database never archived. Source before/after permits only maintained public/auth-ui.txt generated output. Cleanup proof is bounded sampled original-session proof, not universal unobserved descendant scheduling. Bounded sanitized first/last actual stdout/stderr plus final JSON markers retained; secrets observed from ephemeral local vars and auth/password/cookie/JWT/email/opaque values redacted before archival. Raw logs never uploaded. Original validate Windows job excludes only this isolated validation family; exactly one local-runtime job runs. Gitlink entries remain pinned in immutable Git cut, but runner does not claim physical submodule materialization or unrelated .NET/native tests. Head/tail edge lines truncated by byte bounds are omitted BEFORE redaction; no partial secret/JWT/token fragments from truncation are retained. Actual owner final public success JSON for integration and password runtime uniquely required and whitelist-retained; integration local issuer/endpoints/no deployment and password local runtime/default scrypt/no database/external service are checked. This remains owner-local protocol evidence, not .NET client integration or deployed CPU limit parity. Local endpoint origin checked by parsed URL; actual maintained issuer base can legitimately have an empty path, no inferred trailing slash required. For logs <=512KiB, overlapping head/tail reconstructed without duplication before sanitizing/marker parsing; above512KiB complete bounded edge lines only. Fixed public integration marker strings exactly source-checked. Exact actual dispatch422 correction only: optional string workflow inputs keep normal Windows invocation available; isolated local job requires exact HEAD/cut SHA before any source capture. Owner29/helpers/commands/sanitizer/markers unchanged; root must seed unique corrective ref from failed ed5c. Exact actual failed2364 fixture-only proposal: owner branch and original29 input bytes untouched; solely integration fixture GETs emailed reset validation URL and reads the token from verified302 callback. Unchanged backend28, helper, policies, six full commands and all later assertions inherited. This validation is separate from unchanged-owner failure and makes no .NET integration/deployment claims. Root must seed new unique corrective ref at exact failed parent. Supersedes10 solely correcting the explicit ownerBindings path-key SHA repin; actual proposal bytes unchanged. Stage10 is unselected and preserved. Exact actual failed26b8 managed-client404 correction: HTTP create uses maintained sessionMiddleware/admin-role clientPrivileges /oauth2/create-client, never SERVER_ONLY admin HTTP exposure. Public PKCE defaults true, DCR remains disabled. Reset correction and every later original registration assertion retained; backend28/helpers/policies/sixcommands unchanged. Exact actual d268 authenticated401 diagnostic only: explicit supported customFetchImpl and actual cookie/get-session200/sessionID/canonicalUserID/private-role exclusion guards precede unchanged privileged registration. Import order alone does not establish transport failure; filtered private role remains a source-backed candidate. Backend28, owner branch, six commands and every later assertion unchanged. A positive session followed by same401 remains a genuine diagnostic failure, not acceptance.",
+  "limits": "Exact owner29 source only, isolated native Ubuntu x64 local Wrangler/D1 tests. No deployment, cloud credentials, billable services, DNS, user migration or Home authority. All command exits required zero. Raw potentially private logs and ephemeral vars/database never archived. Source before/after permits only maintained public/auth-ui.txt generated output. Cleanup proof is bounded sampled original-session proof, not universal unobserved descendant scheduling. Bounded sanitized first/last actual stdout/stderr plus final JSON markers retained; secrets observed from ephemeral local vars and auth/password/cookie/JWT/email/opaque values redacted before archival. Raw logs never uploaded. Original validate Windows job excludes only this isolated validation family; exactly one local-runtime job runs. Gitlink entries remain pinned in immutable Git cut, but runner does not claim physical submodule materialization or unrelated .NET/native tests. Head/tail edge lines truncated by byte bounds are omitted BEFORE redaction; no partial secret/JWT/token fragments from truncation are retained. Actual owner final public success JSON for integration and password runtime uniquely required and whitelist-retained; integration local issuer/endpoints/no deployment and password local runtime/default scrypt/no database/external service are checked. This remains owner-local protocol evidence, not .NET client integration or deployed CPU limit parity. Local endpoint origin checked by parsed URL; actual maintained issuer base can legitimately have an empty path, no inferred trailing slash required. For logs <=512KiB, overlapping head/tail reconstructed without duplication before sanitizing/marker parsing; above512KiB complete bounded edge lines only. Fixed public integration marker strings exactly source-checked. Exact actual dispatch422 correction only: optional string workflow inputs keep normal Windows invocation available; isolated local job requires exact HEAD/cut SHA before any source capture. Owner29/helpers/commands/sanitizer/markers unchanged; root must seed unique corrective ref from failed ed5c. Exact actual failed2364 fixture-only proposal: owner branch and original29 input bytes untouched; solely integration fixture GETs emailed reset validation URL and reads the token from verified302 callback. Unchanged backend28, helper, policies, six full commands and all later assertions inherited. This validation is separate from unchanged-owner failure and makes no .NET integration/deployment claims. Root must seed new unique corrective ref at exact failed parent. Supersedes10 solely correcting the explicit ownerBindings path-key SHA repin; actual proposal bytes unchanged. Stage10 is unselected and preserved. Exact actual failed26b8 managed-client404 correction: HTTP create uses maintained sessionMiddleware/admin-role clientPrivileges /oauth2/create-client, never SERVER_ONLY admin HTTP exposure. Public PKCE defaults true, DCR remains disabled. Reset correction and every later original registration assertion retained; backend28/helpers/policies/sixcommands unchanged. Exact actual d268 authenticated401 diagnostic only: explicit supported customFetchImpl and actual cookie/get-session200/sessionID/canonicalUserID/private-role exclusion guards precede unchanged privileged registration. Import order alone does not establish transport failure; filtered private role remains a source-backed candidate. Backend28, owner branch, six commands and every later assertion unchanged. A positive session followed by same401 remains a genuine diagnostic failure, not acceptance. Exact actual positive-session401 failed88e0 OWNER PROPOSAL only:3explicit auth/local/integration replacements, backend26 unchanged from actual diagnostic. Fresh private DB role lookup by authenticated canonical session ID for BOTH privilege hooks, private role never public; real ordinary client/resource401 +actual promoted admin server API/resource200/client201. Existing APP_MODE/loopback/ephemeralkey guarded local transport invokes real maintained server-only resource API, no fakeuser or production HTTP endpoint. Owner branch/input29 untouched; full six local commands/helper/policies/sanitizer/source guards inherited byteexact. No deployment/publication or owner approval inferred.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/root-cake-id-auth-owner-input109/immutable-owner-source-map-verified111.json",
@@ -65539,6 +65539,14 @@
     {
       "path": "/workspace/astra-source/worker4-cake-id-real-session-cookie-diagnostic-proposal04/manifest.json",
       "sha256": "e968220bafd55fd7c27257dc124af17cf6ca73a673433a9c9b770aaf49b3f082"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-id-local-runtime-session-diagnostic-gate13/manifest.json",
+      "sha256": "d2f77ed0ad553d42c8cc8a20921a7afe63c0746d807871bac3f2e7a1fb61cfb9"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-private-role-canonical-db-owner-proposal02-real-resource-api/manifest.json",
+      "sha256": "bf927af812a3fc45bbeb0219b8850320927d3810ae74153e20a1a064c551e961"
     }
   ],
   "sharedCakeIdContract": null

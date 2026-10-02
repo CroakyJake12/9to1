@@ -1,6 +1,6 @@
 import { getMigrations } from "better-auth/db/migration";
 import worker, { fetchRequest } from "./index";
-import { createAuthOptions } from "./auth";
+import { createAuth, createAuthOptions } from "./auth";
 import type { Env } from "./env";
 import { json } from "./pages";
 
@@ -70,6 +70,16 @@ async function testEndpoint(request: Request, env: Env): Promise<Response | null
   if (env.APP_MODE !== "local-test-only" || !isLoopback(request)) return json({ error: "not_found" }, 404);
   if (!sameSecret(request.headers.get("x-local-test-key"), env.LOCAL_TEST_KEY)) return json({ error: "not_found" }, 404);
 
+  // Test transport only: existing mode/loopback/ephemeral-key guards above remain mandatory.
+  // Invoke the maintained server-only API with actual cookie headers; no user object is supplied.
+  if (request.method === "GET" && url.pathname === "/__test/resource-privilege") {
+    const api = createAuth(env).api as unknown as {
+      adminListOAuthResources(input: { headers: Headers; asResponse: true }): Promise<Response>;
+    };
+    const result = await api.adminListOAuthResources({ headers: request.headers, asResponse: true });
+    if (!(result instanceof Response)) throw new Error("Maintained resource server API did not return a Response");
+    return json({ authorized: result.status === 200 }, result.status);
+  }
   if (request.method === "GET" && url.pathname === "/__test/health") return json({ ready: true, mode: "local-test-only" });
   if (request.method === "GET" && url.pathname === "/__test/schema") {
     const sql = generatedSql;

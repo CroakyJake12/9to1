@@ -42,6 +42,13 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
   assertSafeServiceUrl(apiResource, "API_RESOURCE", localOnly);
   const db = env.DB;
 
+  // The authenticated session supplies the canonical ID; private role is never public output.
+  async function hasCanonicalAdminRole(user: { id?: unknown } | null | undefined): Promise<boolean> {
+    if (!user || typeof user.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(user.id)) return false;
+    const canonical = await db.prepare("SELECT role FROM user WHERE id = ? LIMIT 1").bind(user.id).first<{ role: string | null }>();
+    return canonical?.role === "admin";
+  }
+
   return {
     appName: "CAKE ID",
     baseURL,
@@ -123,8 +130,8 @@ export function createAuthOptions(env: Env): BetterAuthOptions {
         idTokenExpiresIn: ACCESS_TOKEN_SECONDS,
         loginPage: "/sign-in",
         consentPage: "/consent",
-        clientPrivileges: ({ user }) => user?.role === "admin",
-        resourcePrivileges: ({ user }) => user?.role === "admin",
+        clientPrivileges: ({ user }) => hasCanonicalAdminRole(user),
+        resourcePrivileges: ({ user }) => hasCanonicalAdminRole(user),
       }),
     ],
   };

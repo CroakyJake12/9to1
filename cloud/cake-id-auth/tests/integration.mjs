@@ -273,6 +273,24 @@ try {
   });
   assert.ok(reserved.error, "reserved croakyjake username cannot be claimed");
 
+  const ordinaryLogin = await authClient.signIn.email({ email: testAccount.email, password: testAccount.password });
+  assert.equal(ordinaryLogin.error, null, "verified ordinary synthetic account has a genuine session");
+  const ordinarySessionResponse = await response(`${authPath}/get-session`);
+  assert.equal(ordinarySessionResponse.status, 200);
+  const ordinarySession = await ordinarySessionResponse.json();
+  assert.equal(ordinarySession.user.id, testAccount.id);
+  assert.equal(Object.hasOwn(ordinarySession.user, "role"), false, "ordinary private role is not exposed");
+  const ordinaryClient = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
+    client_name: "denied ordinary synthetic client",
+    redirect_uris: ["http://127.0.0.1:5096/callback"],
+    token_endpoint_auth_method: "none", application_type: "web",
+    grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], scope: "openid profile email",
+  });
+  assert.equal(ordinaryClient.status, 401, "genuine ordinary session cannot provision OAuth clients");
+  const ordinaryResource = await response("/__test/resource-privilege", { headers: { "x-local-test-key": testKey } });
+  assert.equal(ordinaryResource.status, 401, "real ordinary session is denied by maintained resource privilege API");
+
+
   const promoted = await jsonRequest("/__test/promote-admin", "POST", { userId: testAccount.id, email: testAccount.email }, { "x-local-test-key": testKey });
   assert.equal(promoted.status, 200);
   assert.equal((await promoted.json()).promoted, true, "only verified synthetic local identity was promoted for test client provisioning");
@@ -312,6 +330,10 @@ try {
   assert.ok(currentSession?.session?.id, "real current session exists before privileged client registration");
   assert.equal(currentSession.user.id, testAccount.id, "real session belongs to the verified synthetic account");
   assert.equal(Object.hasOwn(currentSession.user, "role"), false, "private role remains excluded from public session output");
+
+  const adminResource = await response("/__test/resource-privilege", { headers: { "x-local-test-key": testKey } });
+  assert.equal(adminResource.status, 200, "real promoted session is admitted by maintained resource privilege API");
+  assert.equal((await adminResource.json()).authorized, true);
 
   const clientResponse = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
     client_name: "9to1 local integration test",
