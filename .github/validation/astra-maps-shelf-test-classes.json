@@ -1,0 +1,255 @@
+{
+  "classes": [
+    {
+      "class": "CanvasDurableHistoryTests",
+      "fullClass": "Haven.Core.Tests.CanvasDurableHistoryTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",
+      "sha256": "6b85cdbb5e3d8694221ac884152c1daee3b1bf67548db3e0705c298d6811b0a9",
+      "capturedSha256": "6b85cdbb5e3d8694221ac884152c1daee3b1bf67548db3e0705c298d6811b0a9",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-durable-history5/9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",
+      "namespace": "Haven.Core.Tests"
+    },
+    {
+      "class": "DataJunctionTableDesignTests",
+      "fullClass": "Haven.Core.Tests.DataJunctionTableDesignTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs",
+      "sha256": "99d1d550af52d513f3d6d0f6f117af9efc3252da357897749adc28044b49bef0",
+      "capturedSha256": "99d1d550af52d513f3d6d0f6f117af9efc3252da357897749adc28044b49bef0",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-junction-owner10/9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs",
+      "namespace": "Haven.Core.Tests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/GraphPublicationIntentTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "GraphPublicationIntentTests",
+      "sha256": "81bca4b293258d3cf3a9b9e314c5a6839e79b78dbb3bb8955baab3ae922a267d"
+    },
+    {
+      "class": "ArtifactAiContextTests",
+      "fullClass": "Haven.Desktop.Tests.ArtifactAiContextTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ArtifactAiContextTests.cs",
+      "sha256": "4b455118fda5f17365007f31a440cffc9890bcbf66e684a584d6d41af4c5b45c",
+      "qualification": "unchanged baseline test dependency, must pin exacthash in Root12 cut manifest (not claimed selected captured successor)",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ArtifactAiContextTests.cs",
+      "namespace": "Haven.Desktop.Tests"
+    },
+    {
+      "class": "ContextualAiCuiSurfaceTests",
+      "fullClass": "Haven.Desktop.Tests.ContextualAiCuiSurfaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
+      "sha256": "567147d1f29ca59bc75281c88aa1721afb9f0d692cefa93c6b6812e312f21141",
+      "capturedSha256": "567147d1f29ca59bc75281c88aa1721afb9f0d692cefa93c6b6812e312f21141",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-home-cui-coherent12/9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
+      "namespace": "Haven.Desktop.Tests"
+    },
+    {
+      "class": "DataDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs",
+      "sha256": "a66c2c9c0540f1862b9e813aaf65e545aaa06f196d2631e201402e3b3d8f9996",
+      "capturedSha256": "a66c2c9c0540f1862b9e813aaf65e545aaa06f196d2631e201402e3b3d8f9996",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-host-mount2/9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs",
+      "namespace": "Haven.Desktop.Tests"
+    },
+    {
+      "class": "FilesExistingStoreHostAuthorityTests",
+      "fullClass": "Haven.Desktop.Tests.FilesExistingStoreHostAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "sha256": "f543be9db16d9c4ce51da890896380bac4db5c30193b203e94917754bbf206d6",
+      "capturedSha256": "f543be9db16d9c4ce51da890896380bac4db5c30193b203e94917754bbf206d6",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-files-strict-native11/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "namespace": "Haven.Desktop.Tests"
+    },
+    {
+      "class": "FilesNativeBrowserAuthorityTests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "sha256": "48d095641a6328aee39b053417ec527428bacb7760108280fdb742f4a68c69e4",
+      "capturedSha256": "48d095641a6328aee39b053417ec527428bacb7760108280fdb742f4a68c69e4",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-files-browser-owner5/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "namespace": "Haven.Desktop.Tests"
+    },
+    {
+      "class": "FilesNativeBrowserSurfaceTests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "sha256": "7a419351e0fca150127511f870c842705e99c7903df30617936919492e89afb6",
+      "capturedSha256": "0cb33b5176ee4dbf0368f60a25fa094b11ecfc84beeb64b75ddd617752209925",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-files-strict-native11/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "namespace": "Haven.Desktop.Tests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "MapsJourneyLibraryPanelTests",
+      "sha256": "1813cfded28e61c33b7a671ac1481ee3133bce544666c3db81ea719c474ebcc9"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsNativeJourneyHostTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "MapsNativeJourneyHostTests",
+      "sha256": "7985262cd4b9b2169dc96c1d65ba1b57e307cabcbc9ee9ecdaee72f1c92cba1c"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "ShelfNativeWorkspaceTests",
+      "sha256": "d83ee97ca3357f051fc2fd8b19de21b840b2f37263b669b6b1f8e3cb9f3c8c94"
+    },
+    {
+      "class": "DataLocalStoreAuthorityTests",
+      "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "sha256": "41bdd502610227cc0bee81225d2f185be8e876a236eb0e10da5df0808515b563",
+      "capturedSha256": "58a081e83f7d5f107dd62d56961d3a3bbca2aca15e3651f53310137cdd8b19f9",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-junction-owner10/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker3-data-bounded-values-successor-02/DataLocalStoreAuthorityTests.cs",
+      "namespace": "Haven.Infrastructure.Tests"
+    },
+    {
+      "class": "HomeDataConversationRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "capturedSha256": "30e112eb00f4d07559cb90c13e1a2b44984b3dc9febe4724143d3852fbe168ce",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-relationship-di2/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "origin": "joined95 selectedowner",
+      "source": "/workspace/astra-source/worker1-data-record-di-draft03/HomeDataConversationRegistrationTests.cs",
+      "namespace": "Haven.Infrastructure.Tests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfLibraryWorkspaceTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "ShelfLibraryWorkspaceTests",
+      "sha256": "4eb48651aa8b40da242bd673e40c8028d9115ad2431f4f9af33e00b1a6c252bf"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "ShelfMapsFinalClaimFenceTests",
+      "sha256": "c7d1b160e6cfbce7cc8f838a7260fd0000869a1173c3f3e34ffc5f904d5d2102"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "ShelfMapsOwnedLibraryTests",
+      "sha256": "04012055dcbf783f59f945e7a9fec652dadd9b133ec2ce2e8edcb49e3f2d4e8d"
+    },
+    {
+      "class": "StudioRegisteredToolEvidenceTests",
+      "fullClass": "HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests",
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
+      "sha256": "a2dbc881dafd126e9d019ee43ae60f005e29821a33701ce98469b3dd6133e3f9",
+      "capturedSha256": "a2dbc881dafd126e9d019ee43ae60f005e29821a33701ce98469b3dd6133e3f9",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-studio-registered2/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
+      "namespace": "HavenOS.AIStudio.Tests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeActualPersistedWriteObserverTests",
+      "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeAutomationDefinitionCommitFenceTests",
+      "sha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeClaimedResourceAttestationTests",
+      "sha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeClaimedResourceCommitFenceTests",
+      "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeLocalOperationLeaseTests",
+      "sha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeObservedRejectedClaimAuditTests",
+      "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomePreparedResourceReviewTests",
+      "sha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeResourceOperationBrokerTests",
+      "sha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeSettingsClaimedResourceCommitFenceTests",
+      "sha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeWebMcpBrowserLeaseTests",
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeWebMcpOriginalActorApprovalTests",
+      "sha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6"
+    },
+    {
+      "class": "AppAiCoordinatorTests",
+      "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+      "path": "framework/CUI/AI.Tests/AppAiCoordinatorTests.cs",
+      "sha256": "8a73ca723f53bc94b63c362f20858be3d64ec43ed327d4ce33f3afc2b88be9b3",
+      "capturedSha256": "8a73ca723f53bc94b63c362f20858be3d64ec43ed327d4ce33f3afc2b88be9b3",
+      "matchesCurrentCapture": true,
+      "captureSource": "/workspace/astra-source/ready-20261001-1050/following-home-cui-coherent12/framework/CUI/AI.Tests/AppAiCoordinatorTests.cs",
+      "origin": "normal896 immutableGitblob",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:framework/CUI/AI.Tests/AppAiCoordinatorTests.cs",
+      "namespace": "NineToOne.Cui.AI.Tests"
+    }
+  ],
+  "limits": "Source classes only; mandatory actual strict zero-failure zero-skip TRX required."
+}

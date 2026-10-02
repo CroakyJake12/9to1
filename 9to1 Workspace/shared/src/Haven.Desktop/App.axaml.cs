@@ -59,6 +59,12 @@ public sealed partial class App : Avalonia.Application
         #endif
     }
 
+    internal static void AddOwnedShelfMapsLibraries(IServiceCollection collection)
+    {
+        collection.AddHavenShelfMapsLibraryOwnership();
+        collection.AddHomeOwnedLibraryCommitFences();
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
         var collection = new ServiceCollection();
@@ -88,9 +94,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
             new SpacesLocalStoreEvidenceProvider(provider.GetRequiredService<IVersionedSettingsStore>(),
                 (IResourceStoreIdentitySource)provider.GetRequiredService<IVersionedSettingsStore>()));
-        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
-            new MapsLocalStoreEvidenceProvider(provider.GetRequiredService<IVersionedSettingsStore>(),
-                (IResourceStoreIdentitySource)provider.GetRequiredService<IVersionedSettingsStore>()));
+        AddOwnedShelfMapsLibraries(collection);
 #if ANDROID
         global::Haven.Android.AndroidServiceRegistration.AddHavenAndroidPlatformServices(collection);
 #endif
