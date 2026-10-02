@@ -14,7 +14,11 @@ public sealed record WaveProject(
     long Revision,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
-    List<WaveTrack> Tracks);
+    List<WaveTrack> Tracks)
+{
+    public List<WaveMarker> Markers { get; init; } = [];
+    public List<WaveRegion> Regions { get; init; } = [];
+}
 
 public sealed record WaveTrack(Guid TrackId, string Name, List<WaveClip> Clips,
     double Gain = 1, double Pan = 0, bool Mute = false, bool Solo = false, bool RecordArm = false);
@@ -39,7 +43,7 @@ public sealed record WaveAudioDerivation(string DecodedSha256, string DecodeProf
 
 public static class WaveProjectStore
 {
-    private const int CurrentSchemaVersion = 5;
+    private const int CurrentSchemaVersion = 6;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -125,7 +129,7 @@ public static class WaveProjectStore
                 ?? throw new InvalidDataException("Project file is empty or invalid.");
             // v2 stored clip ranges without mixer/fade fields. Constructor defaults preserve
             // its exact audible output while migration adds editable structured processing.
-            if (project.SchemaVersion is 2 or 3 or 4) project = project with { SchemaVersion = CurrentSchemaVersion };
+            if (project.SchemaVersion is 2 or 3 or 4 or 5) project = project with { SchemaVersion = CurrentSchemaVersion };
             Validate(project);
             return project;
         }
@@ -137,6 +141,8 @@ public static class WaveProjectStore
 
     public static void Validate(WaveProject project)
     {
+        ArgumentNullException.ThrowIfNull(project);
+        WaveTimelineAnnotations.Validate(project);
         if (project.SchemaVersion != CurrentSchemaVersion)
             throw new InvalidDataException($"Unsupported Wave project schema version {project.SchemaVersion}.");
         if (project.ProjectId == Guid.Empty || project.SampleRate <= 0 || project.Channels is < 1 or > 32 || project.Revision < 0
@@ -175,14 +181,25 @@ public static class WaveProjectExporter
 {
     private const int FramesPerBlock = 4096;
 
-    public static long ExportPcm16(WaveProject project, string outputPath, CancellationToken cancellationToken = default)
+    public static long ExportPcm16(WaveProject project, string outputPath, CancellationToken cancellationToken = default) =>
+        ExportPcm16Core(project, outputPath, null, cancellationToken);
+
+    public static long ExportRegionPcm16(WaveProject project, Guid regionId, string outputPath, CancellationToken cancellationToken = default) =>
+        ExportPcm16Core(project, outputPath, WaveTimelineAnnotations.RegionRange(project, regionId), cancellationToken);
+
+    private static long ExportPcm16Core(WaveProject project, string outputPath, MediaTimeRange? selectedRange, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(project);
         cancellationToken.ThrowIfCancellationRequested();
+        WaveProjectStore.Validate(project);
+        var rangeStart = selectedRange?.Start.Ticks ?? 0;
+        var rangeEnd = selectedRange?.End.Ticks ?? long.MaxValue;
         var anySolo = project.Tracks.Any(track => track.Solo && !track.Mute);
         var timelineClips = project.Tracks.SelectMany(track => track.Clips).ToList();
-        var clips = project.Tracks.Where(track => !track.Mute && (!anySolo || track.Solo)).SelectMany(track => track.Clips).ToList();
-        if (timelineClips.Count == 0)
+        var clips = project.Tracks.Where(track => !track.Mute && (!anySolo || track.Solo)).SelectMany(track => track.Clips)
+            .Where(clip => selectedRange is null || clip.TimelineStartFrame < rangeEnd
+                && checked(clip.TimelineStartFrame + clip.FrameCount) > rangeStart).ToList();
+        if (timelineClips.Count == 0 && selectedRange is null)
             throw new InvalidDataException("The project has no clips to export.");
 
         var sources = new List<(WaveClip Clip, WaveformPreview Preview)>();
@@ -204,7 +221,7 @@ public static class WaveProjectExporter
             sources.Add((clip, preview));
         }
 
-        var outputFrames = timelineClips.Max(clip => checked(clip.TimelineStartFrame + clip.FrameCount));
+        var outputFrames = selectedRange?.Duration.Ticks ?? timelineClips.Max(clip => checked(clip.TimelineStartFrame + clip.FrameCount));
         var blockAlign = checked((ushort)(project.Channels * sizeof(short)));
         var dataBytes = checked((ulong)outputFrames * blockAlign);
         if (dataBytes == 0 || dataBytes > uint.MaxValue - 36)
@@ -239,20 +256,21 @@ public static class WaveProjectExporter
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var blockFrames = (int)Math.Min(FramesPerBlock, outputFrames - blockStart);
+                var timelineBlockStart = checked(rangeStart + blockStart);
                 Array.Clear(mixed);
                 foreach (var item in sources)
                 {
                     var clip = item.Clip;
                     var track = project.Tracks.Single(track => track.Clips.Any(candidate => candidate.ClipId == clip.ClipId));
-                    var overlapStart = Math.Max(blockStart, clip.TimelineStartFrame);
-                    var overlapEnd = Math.Min(blockStart + blockFrames, checked(clip.TimelineStartFrame + clip.FrameCount));
+                    var overlapStart = Math.Max(timelineBlockStart, clip.TimelineStartFrame);
+                    var overlapEnd = Math.Min(timelineBlockStart + blockFrames, checked(clip.TimelineStartFrame + clip.FrameCount));
                     if (overlapStart >= overlapEnd) continue;
                     using var source = File.OpenRead(clip.SourcePath);
                     source.Position = checked(item.Preview.DataOffset + (clip.SourceStartFrame + overlapStart - clip.TimelineStartFrame) * item.Preview.BlockAlign);
                     using var reader = new BinaryReader(source, Encoding.UTF8, leaveOpen: true);
                     for (var frame = overlapStart; frame < overlapEnd; frame++)
                     {
-                        var destinationFrame = checked((int)(frame - blockStart));
+                        var destinationFrame = checked((int)(frame - timelineBlockStart));
                         var clipOffset = frame - clip.TimelineStartFrame;
                         var fadeIn = clip.FadeInFrames == 0 ? 1 : Math.Min(1d, clipOffset / (double)clip.FadeInFrames);
                         var fadeOut = clip.FadeOutFrames == 0 ? 1 : Math.Min(1d, (clip.FrameCount - 1 - clipOffset) / (double)clip.FadeOutFrames);

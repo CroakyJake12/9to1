@@ -113,6 +113,56 @@ public sealed class MotionProjectStore
         throw new KeyNotFoundException("ElementNotFound");
     }
 
+    // Values are integral frames in the ORIGINAL sequence timebase, never pixels or seconds.
+    // Source references and bytes remain canonical; these edits only alter timeline metadata.
+    public MotionProject Move(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long timelineStart)
+        => EditElement(project, expectedRevision, sequenceId, elementId, original =>
+        {
+            if (timelineStart < 0 || timelineStart > long.MaxValue - original.Duration)
+                throw new ArgumentOutOfRangeException(nameof(timelineStart));
+            return original with { TimelineStart = timelineStart };
+        });
+
+    public MotionProject Slip(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long sourceIn)
+        => EditElement(project, expectedRevision, sequenceId, elementId, original =>
+        {
+            if (sourceIn < 0 || sourceIn > long.MaxValue - original.Duration)
+                throw new ArgumentOutOfRangeException(nameof(sourceIn));
+            return original with { SourceIn = sourceIn, SourceOut = sourceIn + original.Duration };
+        });
+
+    // Non-ripple trim narrows the original source range and preserves its timeline mapping.
+    // Extending beyond the original range needs source-duration evidence and is deliberately rejected.
+    public MotionProject Trim(MotionProject project, long expectedRevision, Guid sequenceId, Guid elementId, long sourceIn, long sourceOut)
+        => EditElement(project, expectedRevision, sequenceId, elementId, original =>
+        {
+            if (sourceIn < original.SourceIn || sourceOut > original.SourceOut || sourceOut <= sourceIn)
+                throw new ArgumentOutOfRangeException(nameof(sourceIn));
+            return original with { TimelineStart = checked(original.TimelineStart + (sourceIn - original.SourceIn)),
+                SourceIn = sourceIn, SourceOut = sourceOut, Duration = sourceOut - sourceIn };
+        });
+
+    private static MotionProject EditElement(MotionProject project, long expectedRevision, Guid sequenceId,
+        Guid elementId, Func<MotionElement, MotionElement> edit)
+    {
+        Validate(project); EnsureRevision(project, expectedRevision);
+        var sequenceIndex = IndexOf(project.Sequences, sequenceId, item => item.SequenceId, "SequenceNotFound");
+        var sequence = project.Sequences[sequenceIndex];
+        for (var i = 0; i < sequence.VideoTracks.Count; i++)
+        {
+            var track = sequence.VideoTracks[i];
+            var index = IndexOfOrDefault(track.Elements, elementId, item => item.ElementId);
+            if (index < 0) continue;
+            var elements = track.Elements.ToArray(); elements[index] = edit(elements[index]);
+            var tracks = sequence.VideoTracks.ToArray();
+            tracks[i] = track with { Elements = elements.OrderBy(item => item.TimelineStart).ThenBy(item => item.ElementId).ToArray() };
+            var sequences = project.Sequences.ToArray(); sequences[sequenceIndex] = sequence with { VideoTracks = tracks };
+            var result = project with { Sequences = sequences, Revision = checked(project.Revision + 1), ModifiedAt = DateTimeOffset.UtcNow };
+            Validate(result); return result;
+        }
+        throw new KeyNotFoundException("ElementNotFound");
+    }
+
     public void Save(string path, MotionProject project, long expectedStoredRevision)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);

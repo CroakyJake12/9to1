@@ -60,6 +60,29 @@ public static class WaveProjectEdits
             ? track with { Gain = gain, Pan = pan, Mute = mute, Solo = solo } : track).ToList());
     }
 
+    // Compose compatible adjacent spans without rendering or changing canonical source bytes.
+    public static WaveProject Join(WaveProject project, long expectedRevision, Guid leftClipId, Guid rightClipId)
+    {
+        EnsureRevision(project, expectedRevision); WaveProjectStore.Validate(project);
+        if (leftClipId == rightClipId) throw new ArgumentException("Join requires two distinct clips.");
+        var leftTrack = project.Tracks.SingleOrDefault(track => track.Clips.Any(clip => clip.ClipId == leftClipId))
+            ?? throw new KeyNotFoundException("ClipNotFound");
+        var left = leftTrack.Clips.Single(clip => clip.ClipId == leftClipId);
+        var right = leftTrack.Clips.SingleOrDefault(clip => clip.ClipId == rightClipId)
+            ?? throw new NotSupportedException("Join requires clips on the same track.");
+        if (left.SourceReferenceId != right.SourceReferenceId || left.SourcePath != right.SourcePath
+            || left.SourceSha256 != right.SourceSha256 || left.SourceFileID != right.SourceFileID
+            || left.SourceRevisionID != right.SourceRevisionID || left.AudioDerivation != right.AudioDerivation
+            || checked(left.SourceStartFrame + left.FrameCount) != right.SourceStartFrame
+            || checked(left.TimelineStartFrame + left.FrameCount) != right.TimelineStartFrame
+            || left.Gain != right.Gain || left.FadeOutFrames != 0 || right.FadeInFrames != 0)
+            throw new NotSupportedException("Join requires contiguous identical-source clips with compatible processing and no inner fades.");
+        var joined = left with { FrameCount = checked(left.FrameCount + right.FrameCount), FadeOutFrames = right.FadeOutFrames };
+        var tracks = project.Tracks.Select(track => track with { Clips = track.Clips.Where(clip => clip.ClipId != rightClipId)
+            .Select(clip => clip.ClipId == leftClipId ? joined : clip).ToList() }).ToList();
+        var result = Commit(project, tracks); WaveProjectStore.Validate(result); return result;
+    }
+
     public static WaveProject Delete(WaveProject project, long expectedRevision, Guid clipId, bool ripple) =>
         Edit(project, expectedRevision, clipId, _ => [], ripple);
 
