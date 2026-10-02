@@ -290,7 +290,7 @@ public sealed class ShelfMapsOwnedLibraryTests
         public Task<HomeStateReadResult> ReadAsync(CancellationToken token = default) => Actual.ReadAsync(token);
         public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRevision, CancellationToken token = default)
             => Actual.WriteAsync(record, expectedRevision, token);
-        public async ValueTask OnPersistedWriteAsync(string recordId, long actualRecordRevision, CancellationToken token)
+        public async Task OnPersistedWriteAsync(string recordId, long actualRecordRevision, CancellationToken token)
         {
             if (recordId != "home.permissions-trust") return;
             var state = (await Actual.ReadAsync(token)).State!;
