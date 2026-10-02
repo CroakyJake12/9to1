@@ -1,218 +1,373 @@
-name: Build CakeAI Android APK
-
+name: Astra Root13 fresh Android validation
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/build-haven-android.yml"
-      - ".github/scripts/haven-android-smoke.sh"
-      - "global.json"
-      - "NuGet.Config"
-      - "9to1 Workspace/Directory.Build.props"
-      - "9to1 Workspace/Directory.Build.targets"
-      - "9to1 Workspace/Directory.Packages.props"
-      - "9-1 OS (Android)/src/Haven.Android/**"
-      - "9to1 Workspace/shared/src/Haven.Application/**"
-      - "9to1 Workspace/shared/src/Haven.Browser/**"
-      - "9to1 Workspace/shared/src/Haven.Core/**"
-      - "9to1 Workspace/shared/src/Haven.Desktop/**"
-      - "9to1 Workspace/shared/src/Haven.Infrastructure/**"
-      - "9to1 Workspace/shared/src/Haven.UI/**"
-
+    inputs:
+      expected_commit:
+        description: Exact reviewed validation commit (40 hex)
+        required: true
+        type: string
+      expected_manifest_sha256:
+        description: Exact complete Root13 Android validation manifest SHA256
+        required: true
+        type: string
 permissions:
   contents: read
-
 concurrency:
-  group: cakeai-android-${{ github.ref }}
-  cancel-in-progress: true
-
+  group: astra-android29-validation-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+  MSBUILDDISABLENODEREUSE: '1'
+  AVALONIA_TELEMETRY_OPTOUT: '1'
+  ASTRA_ANDROID_METADATA_ROOT: ${{ github.workspace }}
+  EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+  EXPECTED_MANIFEST_SHA256: ${{ inputs.expected_manifest_sha256 }}
 jobs:
   android:
-    name: Compile and package APK
+    if: startsWith(github.ref, 'refs/heads/validation/astra-root14-android-')
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env:
-      AVALONIA_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "1"
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      HAVEN_ANDROID_KEYSTORE_B64: ${{ secrets.HAVEN_ANDROID_KEYSTORE_B64 }}
-      HAVEN_ANDROID_KEY_ALIAS: ${{ secrets.HAVEN_ANDROID_KEY_ALIAS }}
-      HAVEN_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.HAVEN_ANDROID_KEYSTORE_PASSWORD }}
-      HAVEN_ANDROID_KEY_PASSWORD: ${{ secrets.HAVEN_ANDROID_KEY_PASSWORD }}
-
     steps:
-      - name: Check out CakeAI
-        uses: actions/checkout@v6
-
-      - name: Materialize pinned UI source dependencies
-        shell: bash
-        run: bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
-
-      - name: Install .NET from global.json
-        uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact source cut before preparation
+        run: python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-root13-android-source.py"
+      - name: Prepare existing pinned CUI source
+        run: |
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
-
-      - name: Install Android workload
-        run: dotnet workload install android
-
-      - name: Calculate Android version and signing mode
+      - name: Resolve hosted Android workload and retain toolchain evidence
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p artifacts/android
-          app_version=$((300000 + GITHUB_RUN_NUMBER))
-          display_version="0.3.${GITHUB_RUN_NUMBER}-mobile-preview"
-          signing_mode="ephemeral-debug"
-          signing_args="-p:AndroidKeyStore=false"
-
-          if [ -n "${HAVEN_ANDROID_KEYSTORE_B64:-}" ] \
-             && [ -n "${HAVEN_ANDROID_KEY_ALIAS:-}" ] \
-             && [ -n "${HAVEN_ANDROID_KEYSTORE_PASSWORD:-}" ] \
-             && [ -n "${HAVEN_ANDROID_KEY_PASSWORD:-}" ]; then
-            printf '%s' "$HAVEN_ANDROID_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/haven-mobile.keystore"
-            chmod 600 "$RUNNER_TEMP/haven-mobile.keystore"
-            signing_mode="persistent-secret-keystore"
-            signing_args="-p:AndroidKeyStore=true -p:AndroidSigningKeyStore=$RUNNER_TEMP/haven-mobile.keystore -p:AndroidSigningKeyAlias=$HAVEN_ANDROID_KEY_ALIAS -p:AndroidSigningStorePass=env:HAVEN_ANDROID_KEYSTORE_PASSWORD -p:AndroidSigningKeyPass=env:HAVEN_ANDROID_KEY_PASSWORD"
-          fi
-
-          {
-            echo "APP_VERSION=$app_version"
-            echo "DISPLAY_VERSION=$display_version"
-            echo "SIGNING_MODE=$signing_mode"
-            echo "SIGNING_ARGS=$signing_args"
-          } >> "$GITHUB_ENV"
-
-          {
-            echo "workflow_run=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "commit=${{ github.sha }}"
-            echo "application_version=$app_version"
-            echo "display_version=$display_version"
-            echo "signing_mode=$signing_mode"
-          } > artifacts/android/build-metadata.txt
-
-      - name: Restore Android head
-        shell: bash
-        run: |
-          set -o pipefail
-          dotnet restore "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" 2>&1 | tee artifacts/android/restore.log
-
-      - name: Compile Android head
-        shell: bash
-        run: |
-          set +e
-          dotnet build "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" \
-            -c Debug \
-            --no-restore \
-            -p:ApplicationVersion="$APP_VERSION" \
-            -p:ApplicationDisplayVersion="$DISPLAY_VERSION" \
-            2>&1 | tee artifacts/android/build.log
-          result=${PIPESTATUS[0]}
-          if [ "$result" -ne 0 ]; then
-            grep -E -m 40 '(^|[ :])error (CS|MSB|NETSDK|NU|XA|APT)[0-9]+' artifacts/android/build.log |
-              while IFS= read -r line; do
-                safe=${line//'%'/'%25'}
-                safe=${safe//$'\r'/'%0D'}
-                safe=${safe//$'\n'/'%0A'}
-                echo "::error title=Android compiler::$safe"
-              done
-          fi
-          exit "$result"
-
-      - name: Package APK
+          mkdir -p artifacts/logs
+          dotnet --info | tee artifacts/logs/dotnet-info-before.txt
+          dotnet workload install android --skip-manifest-update --disable-parallel 2>&1 | tee artifacts/logs/workload-install.txt
+          dotnet --info > artifacts/logs/dotnet-info-after.txt
+          dotnet workload list > artifacts/logs/workloads.txt
+          java -version 2> artifacts/logs/java.txt
+          sdkmanager_path="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$sdkmanager_path" || { echo "Missing exact hosted SDK manager: $sdkmanager_path" >&2; exit 127; }
+          printf '%s\n' "$sdkmanager_path" > artifacts/logs/android-sdkmanager-path.txt
+          "$sdkmanager_path" --list_installed > artifacts/logs/android-sdk.txt
+          git submodule status > artifacts/logs/submodules.txt
+      - name: Ephemeral debug certificate only
         shell: bash
         run: |
           set -euo pipefail
-          read -r -a signing_args <<< "$SIGNING_ARGS"
-          dotnet publish "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj" \
-            -c Debug \
-            -f net10.0-android \
-            --no-restore \
-            -p:AndroidPackageFormat=apk \
-            -p:ApplicationVersion="$APP_VERSION" \
-            -p:ApplicationDisplayVersion="$DISPLAY_VERSION" \
-            "${signing_args[@]}" 2>&1 | tee artifacts/android/publish.log
-
-      - name: Collect and verify APK
+          umask 077
+          keytool -genkeypair -keystore "$RUNNER_TEMP/android29-debug.keystore" -storepass android -keypass android -alias androiddebugkey -dname 'CN=Android Debug,O=Android,C=US' -keyalg RSA -keysize 2048 -validity 7
+          keytool -exportcert -keystore "$RUNNER_TEMP/android29-debug.keystore" -storepass android -alias androiddebugkey -file "$RUNNER_TEMP/android29-cert.der"
+      - name: Build physically isolated exact-source normal and probe variants
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t apks < <(find "9-1 OS (Android)/src/Haven.Android/bin/Debug/net10.0-android" -type f -name '*.apk' | sort)
-          test "${#apks[@]}" -gt 0
-          for apk in "${apks[@]}"; do
-            cp "$apk" "artifacts/android/$(basename "$apk")"
+          original="$GITHUB_WORKSPACE"
+          project='9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj'
+          common=(--disable-build-servers -m:1 -nr:false -p:UseSharedCompilation=false -p:Configuration=Release)
+          sign=(-p:AndroidKeyStore=true "-p:AndroidSigningKeyStore=$RUNNER_TEMP/android29-debug.keystore" -p:AndroidSigningKeyAlias=androiddebugkey -p:AndroidSigningKeyPass=android -p:AndroidSigningStorePass=android)
+          properties=BaseIntermediateOutputPath,MSBuildProjectExtensionsPath,IntermediateOutputPath,BaseOutputPath,OutputPath,DefineConstants,RuntimeIdentifiers,RuntimeIdentifier,TargetFramework,AndroidEnableMarshalMethods,AndroidUseMarshalMethods,AndroidEnableLLVM,AndroidPackageFormat
+          for variant in normal probe; do
+            checkout="$RUNNER_TEMP/${variant}35-source"
+            test ! -e "$checkout"
+            git clone --shared --no-checkout "$original" "$checkout"
+            source_head="$GITHUB_SHA"
+            if test "$variant" = normal; then source_head=$(python3 -c 'import json;print(json.load(open(".github/validation/astra-root14-android-cut.json"))["normalSourceCommit"])'); fi
+            git -C "$checkout" checkout --detach "$source_head"
+            (
+              cd "$checkout"
+              export ASTRA_ANDROID_VARIANT="$variant" GITHUB_SHA="$source_head"
+              mkdir -p artifacts/logs
+              python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-root13-android-source.py"
+              ASTRA_ANDROID_SOURCE_PHASE=before-preparation python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-root13-android-source.py"
+              git submodule update --init --recursive -- 'framework/CUI/vendor/Avalonia/external/XamlX' 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus' '9to1 Workspace/Terminal/Source/libvterm'
+              bash '9to1 Workspace/shared/eng/prepare-cui-source.sh' --check
+              export ASTRA_ANDROID_PREPARED=1
+              ASTRA_ANDROID_SOURCE_PHASE=before-build python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-root13-android-source.py"
+              flags=()
+              if test "$variant" = probe; then flags=(-p:AstraAndroidCredentialProbe=true); fi
+              dotnet msbuild "$project" -nologo -m:1 -nr:false -p:Configuration=Release -p:TargetFramework=net10.0-android "${flags[@]}" "-getProperty:$properties" > artifacts/logs/evaluated-app-properties.json
+              dotnet msbuild '9to1 Workspace/Sites/HavenOS.Sites.csproj' -nologo -m:1 -nr:false -p:Configuration=Release "${flags[@]}" "-getProperty:$properties" > artifacts/logs/evaluated-sites-properties.json
+              dotnet restore "$project" "${common[@]}" "${flags[@]}" 2>&1 | tee artifacts/logs/restore.txt
+              if test "$variant" = normal; then
+                dotnet build "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${sign[@]}" 2>&1 | tee artifacts/logs/build.txt
+                python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-android33-manifest.py" normal --apk-root '9-1 OS (Android)/src/Haven.Android/bin/Release'
+                ASTRA_ANDROID_APK_OUTPUT_ROOT='9-1 OS (Android)/src/Haven.Android/bin/Release' python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-android29-verify.py" apk
+              else
+                dotnet publish "$project" -c Release -f net10.0-android --no-restore "${common[@]}" "${flags[@]}" "${sign[@]}" -p:AndroidPackageFormat=apk 2>&1 | tee artifacts/logs/publish.txt
+                ASTRA_ANDROID_APK_OUTPUT_ROOT='9-1 OS (Android)/src/Haven.Android/bin/Release' python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-android29-verify.py" apk
+                python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-android33-manifest.py" validation
+              fi
+              python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-android35-jni-receipts.py" "$variant"
+              python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-root13-android-source.py"
+              bash '9to1 Workspace/shared/eng/prepare-cui-source.sh' --check
+              ASTRA_ANDROID_SOURCE_PHASE=after-build python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-root13-android-source.py"
+            )
           done
-
-          sha256sum artifacts/android/*.apk | tee artifacts/android/SHA256SUMS.txt
-
-          aapt="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          test -x "$aapt"
-          primary_apk="$(find artifacts/android -maxdepth 1 -type f -name '*-Signed.apk' -print -quit)"
-          if [ -z "$primary_apk" ]; then
-            primary_apk="$(find artifacts/android -maxdepth 1 -type f -name '*.apk' | sort | head -n 1)"
-          fi
-          "$aapt" dump badging "$primary_apk" | head -n 1 | tee artifacts/android/APK-METADATA.txt
-          grep -F "versionCode='$APP_VERSION'" artifacts/android/APK-METADATA.txt
-          grep -F "versionName='$DISPLAY_VERSION'" artifacts/android/APK-METADATA.txt
-
-          apksigner="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
-          test -x "$apksigner"
-          "$apksigner" verify --print-certs "$primary_apk" > artifacts/android/APK-CERTIFICATE.txt
-          grep -E 'Signer #1 certificate SHA-256 digest:' artifacts/android/APK-CERTIFICATE.txt
-
-      - name: Upload build logs
+          cp -a "$RUNNER_TEMP/probe35-source/artifacts/apk" "$original/artifacts/apk"
+          cp -a "$RUNNER_TEMP/normal35-source/artifacts/apk" "$original/artifacts/normal-apk"
+      - name: Preserve both checkout receipts even on failure
         if: always()
-        uses: actions/upload-artifact@v7
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/artifacts/logs/variants"
+          for variant in normal probe; do
+            checkout="$RUNNER_TEMP/${variant}35-source"
+            if test -d "$checkout/artifacts/logs"; then
+              (cd "$checkout"; python3 "$ASTRA_ANDROID_METADATA_ROOT/.github/scripts/astra-android35-jni-receipts.py" "$variant") || {
+                printf '%s\n' 'JNI receipt collection failed; preserve original build logs and do not infer registration acceptance.' > "$checkout/artifacts/logs/jni-collection-failed.txt"
+              }
+              mkdir -p "$GITHUB_WORKSPACE/artifacts/logs/variants/$variant"
+              cp -a "$checkout/artifacts/logs/." "$GITHUB_WORKSPACE/artifacts/logs/variants/$variant/"
+            fi
+          done
+      - name: Independently retain bounded probe APK evidence parts
+        id: probe_parts
+        shell: bash
+        run: python3 .github/scripts/astra-android-artifact-parts.py --input artifacts/apk --output artifacts/probe-parts
+      - uses: actions/upload-artifact@v7
         with:
-          name: CakeAI-Android-Build-Logs
-          path: |
-            artifacts/android/*.log
-            artifacts/android/build-metadata.txt
-            artifacts/android/APK-METADATA.txt
-            artifacts/android/APK-CERTIFICATE.txt
-          if-no-files-found: ignore
-          retention-days: 30
-
-      - name: Upload installable APK
-        uses: actions/upload-artifact@v7
-        with:
-          name: CakeAI-Android-APK
-          path: |
-            artifacts/android/*.apk
-            artifacts/android/SHA256SUMS.txt
-            artifacts/android/build-metadata.txt
-            artifacts/android/APK-METADATA.txt
-            artifacts/android/APK-CERTIFICATE.txt
+          name: Astra-Root13-probe-part-manifest-${{ github.sha }}
+          path: artifacts/probe-parts/manifest.json
           if-no-files-found: error
-          retention-days: 30
-
+      - name: Retain probe APK independent bundle 00
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-00-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 01
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-01-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 02
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-02-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 03
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-03-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 04
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-04-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 05
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-05-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 06
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-06-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 07
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-07-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 08
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-08-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 09
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-09-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 10
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-10-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain probe APK independent bundle 11
+        if: ${{ steps.probe_parts.outputs.count != '' && fromJSON(steps.probe_parts.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-probe-bundle-11-${{ github.sha }}
+          path: artifacts/probe-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Independently retain bounded normal APK evidence parts
+        id: normal_parts
+        shell: bash
+        run: python3 .github/scripts/astra-android-artifact-parts.py --input artifacts/normal-apk --output artifacts/normal-parts
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-part-manifest-${{ github.sha }}
+          path: artifacts/normal-parts/manifest.json
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 00
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-00-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 01
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-01-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 02
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-02-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 03
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-03-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 04
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-04-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 05
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-05-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 06
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-06-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 07
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-07-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 08
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-08-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 09
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-09-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 10
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-10-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+      - name: Retain normal APK independent bundle 11
+        if: ${{ steps.normal_parts.outputs.count != '' && fromJSON(steps.normal_parts.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Root13-normal-bundle-11-${{ github.sha }}
+          path: artifacts/normal-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Astra-Android29-APK-${{ github.sha }}
+          path: artifacts/apk/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Astra-Android29-build-evidence-${{ github.sha }}
+          path: artifacts/logs/
   android-smoke:
-    name: Install and launch APK on hosted API 36 emulator
     needs: android
     runs-on: ubuntu-latest
     timeout-minutes: 50
-
     steps:
-      - name: Check out CakeAI
-        uses: actions/checkout@v6
-
-      - name: Download APK artifact
-        uses: actions/download-artifact@v8
+      - uses: actions/checkout@v6
         with:
-          name: CakeAI-Android-APK
-          path: artifacts/android
-
-      - name: Enable KVM
-        shell: bash
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: Astra-Android29-APK-${{ github.sha }}
+          path: artifacts/apk/
+      - name: Enable hosted KVM
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' |
-            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-
-      - name: Install and launch CakeAI
+      - name: Verify downloaded receipt before install and run existing LAUNCHER startup smoke
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
         with:
           api-level: 36
@@ -220,21 +375,20 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-options: >-
-            -no-window
-            -gpu swiftshader_indirect
-            -noaudio
-            -no-boot-anim
-            -camera-back none
-            -camera-front none
-            -no-snapshot-save
-          script: sh ".github/scripts/haven-android-smoke.sh"
-
-      - name: Upload emulator smoke evidence
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save
+          script: python3 .github/scripts/astra-android32-two-launch.py
+      - name: Record limited acceptance and private log collection status
         if: always()
-        uses: actions/upload-artifact@v7
+        shell: bash
+        run: |
+          mkdir -p artifacts/smoke
+          printf '%s\n' 'LAUNCHER startup only: AndroidBootstrapActivity -> MainActivity; not HOME/Launcher readiness, widgets, inference, physical device or production authority acceptance.' > artifacts/smoke/acceptance-limits.txt
+          test -f artifacts/smoke/run-as-availability.txt || echo see-distinct-launch-evidence-for-status > artifacts/smoke/run-as-availability.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
-          name: CakeAI-Android-Smoke-Evidence
-          path: artifacts/smoke
-          if-no-files-found: error
-          retention-days: 30
+          name: Astra-Android29-startup-evidence-${{ github.sha }}
+          path: |
+            artifacts/smoke/
+            artifacts/android-launches/
+            !artifacts/android-launches/**/artifacts/android/*.apk
