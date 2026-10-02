@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "fd98cc8127ceefcdbfca02d2e3b0f8321ce6ea3c",
-  "programTree": "ef68151657e61a9fac10194a62057568696347f9",
+  "baselineCommit": "354c34f43ee0b3950efbe2d6ebd855060953a3d3",
+  "programTree": "c9ebb98da9b1cab9884ea4bc8cb3a5e93091b8a0",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-picture19-test-classes.json",
       "mode": "100644",
-      "object": "3536c6d8d8c96127287598fc5f415800c9bb8653",
+      "object": "10b4723880ae68d77fa0c0c17893f4ea61cb608b",
       "bytes": 4572,
-      "sha256": "0a6f48167145e2915858cdde42adb29994910f105f5e3de71f26c8bee0bda1a5"
+      "sha256": "5008b57b1330fc49a1166899b02f8f3ecad9b7dfcbb1f490082cad8a856c6cb0"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -24186,9 +24186,9 @@
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomePngExportTests.cs",
       "mode": "100644",
-      "object": "dfc6c7dbedacf273ec8de26e6ad5f5c4c8f96453",
-      "bytes": 40903,
-      "sha256": "eedb47e3d262c468d6eb5e98b3b6217e5633a448cfe687db97556c1f153a2bbe"
+      "object": "1c760dfd00b9c87c87972d2df989b55bb3e78685",
+      "bytes": 40961,
+      "sha256": "f57ae24f7995ca8f987d4dd42f564d18ed932798980a2708c71fa5a991b2f6a9"
     },
     {
       "path": "9to1 Workspace/Picture/Tests/PictureNativeHostTests.cs",
@@ -63996,7 +63996,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Exact minimal owner source correction; all existing fullsuite/classes/filter/count/nativeABI/mandatorysandbox/source22+3+additionalnativegitlinks/7producers/hosttasks/restorepayload/compiledclosure/partartifacts preserved. Picture additionally records genuine sandbox preconditions only, never policychanges/relaxation. Actual failed root capture retained; no runtime acceptance. Glycin supported RUST_LOG debug env inherited by actual loader through donor clearenv/setenv, stderr diagnostic only; mandatory sandbox unchanged.",
+  "limits": "Actual owning fixture private Home broker property fix only; source class pin updated with exact same classnames/count/fields. Full101 test checks and mandatory native/BWRAP sandbox plus genuine bwrap diagnostic and donor debug RUST_LOG preserved unchanged. Actual precondition failure not relaxed; no compilation or native success claim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
@@ -64013,6 +64013,14 @@
     {
       "path": "/workspace/astra-source/worker4-native-actual-correctors02/manifest.json",
       "sha256": "72ae1d65eabd732cd037af524a5921f0f1c8751bbeb7a36e4c89b73b6dc82f0e"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes03/manifest.json",
+      "sha256": "a25cfa5d38cda128aee174e03fc89c23e8150b177b600418b74ed20a66afeb39"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-picture-actual-corrective02/actual-failed03/root-capture.json",
+      "sha256": "ec9aa386e90efd647600d7a088f2e4ff5aec608789412d81bd7e7737c6a571a6"
     }
   ],
   "sharedCakeIdContract": null,

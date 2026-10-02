@@ -440,6 +440,7 @@ public sealed class PictureHomePngExportTests
         public PictureHomeEditOperation Edits { get; private set; } = null!;
         public PictureSharedImageProjector Projector { get; private set; } = null!;
         private HomeResourceOperationBroker _home = null!;
+        public HomeResourceOperationBroker Home => _home;
         private HomePermissionTrustService _permissions = null!;
         private HomeLocalProfileIdentity _actors = null!;
         private int _ownerProviderResolutions;
