@@ -11,15 +11,15 @@ public sealed class ShellGoAllAppsHome(ShellConfigurationService configuration, 
     {
         async Task RequireOriginalAsync()
         {
-            if (original.SessionActor is null || !await configuration.IsCurrentSessionAsync(original, ct))
-                throw new UnauthorizedAccessException("Reopen All Apps in the original Home session.");
+            if (original.SessionActor is null) throw new UnauthorizedAccessException("Reopen All Apps in the original Home session.");
+            await configuration.GetForOriginalAsync(original, ct);
         }
         await RequireOriginalAsync();
         var query = new GoQuery("", "Apps", 1000,
             new GoScope(ProviderIds: new HashSet<string>(StringComparer.Ordinal) { "os.installed-applications" },
                 Owners: new HashSet<string>(StringComparer.Ordinal) { "Home" },
                 Kinds: new HashSet<string>(StringComparer.Ordinal) { "os.installed-application" }));
-        await foreach (var update in go.QueryAsync(query, ct))
+        await foreach (var update in go.QueryForActorAsync(query, original.SessionActor!, ct))
         {
             await RequireOriginalAsync();
             yield return update;

@@ -95,6 +95,9 @@ public sealed class BrowseWebMcpBinding
 
     public async Task<JsonElement> InvokeAsync(string toolName, JsonElement arguments, CancellationToken ct = default)
     {
+        // Preserve the exact caller proposal across approval/storage waits, even if its JsonDocument
+        // is disposed. Approval and browser dispatch consume this same detached snapshot.
+        var capturedArguments = arguments.Clone();
         WebMcpDocument document;
         WebMcpTool tool;
         long generation;
@@ -106,7 +109,10 @@ public sealed class BrowseWebMcpBinding
             generation = Interlocked.Read(ref _generation);
         }
         finally { _gate.Release(); }
-        if (!await _broker.ApproveAsync(new(document, tool, arguments.Clone()), ct).ConfigureAwait(false))
+        var proposal = new WebMcpInvocationRequest(document.Origin, document.DocumentID, document.BrowserVersion,
+            document.Capability, document.Supported, tool.Name, tool.InputSchema, capturedArguments);
+        if (!proposal.IsValid()) throw new InvalidDataException("WebMCPInvocationProposalInvalid");
+        if (!await _broker.ApproveAsync(new(document, tool, capturedArguments), ct).ConfigureAwait(false))
             throw new UnauthorizedAccessException("WebMCP invocation denied by Home.");
         await _gate.WaitAsync(ct).ConfigureAwait(false);
         try
@@ -115,7 +121,7 @@ public sealed class BrowseWebMcpBinding
                 throw new InvalidOperationException("DocumentChangedOrRevoked");
             ct.ThrowIfCancellationRequested();
             var invocationID = Guid.NewGuid().ToString("N");
-            var request = JsonSerializer.Serialize(new { document.Origin, document.DocumentID, Name = tool.Name, Schema = tool.InputSchema, Arguments = arguments, InvocationID = invocationID });
+            var request = JsonSerializer.Serialize(new { document.Origin, document.DocumentID, Name = tool.Name, Schema = tool.InputSchema, Arguments = capturedArguments, InvocationID = invocationID });
             // Many embedded hosts cannot await a JavaScript Promise. Dispatch in the document, then
             // observe a correlated result through synchronous evaluations; never dispatch a retry.
             var started = await _execute($$"""

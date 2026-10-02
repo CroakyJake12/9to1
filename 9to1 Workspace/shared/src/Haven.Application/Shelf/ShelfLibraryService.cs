@@ -6,6 +6,7 @@ namespace Haven.Application.Shelf;
 public sealed record ShelfSnapshot(ShelfLibrary Library, IReadOnlyList<Guid> ArchivedItemIds,
     IReadOnlyList<Guid> ArchivedCollectionIds)
 {
+    public ShelfOwnedMutationReceipt? LastOwnedMutation { get; init; }
     public static ShelfSnapshot Empty { get; } = new(ShelfLibrary.Empty, [], []);
 }
 
@@ -16,11 +17,21 @@ public sealed record ShelfOperationResult(bool Success, string? ErrorCode, strin
 /// target opening remains the responsibility of the owning application/platform service.
 /// Register one instance per user profile so all surfaces share its revision gate.
 /// </summary>
-public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
+public sealed class ShelfLibraryService(IVersionedSettingsStore settings) : IResourceStoreIdentitySource
 {
     private const string Key = "shelf.library.v1";
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly IVersionedSettingsStore _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+
+    public ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken token) =>
+        _settings is IResourceStoreIdentitySource identities ? identities.GetStoreIdentityAsync(token)
+        : ValueTask.FromException<ResourceStoreIdentity>(new UnauthorizedAccessException("Actual Shelf settings identity unavailable."));
+
+    public Task<ShelfOperationResult> AddItemAsync(long revision, ShelfLaunchItem item, ISettingsCommitAdmission admission, ShelfOwnedMutationReceipt receipt, CancellationToken token)
+    {
+        var captured = Capture(item);
+        return MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.AddOrRefreshTarget(state.Library, captured) }, token, admission, receipt);
+    }
 
     public async Task<ShelfSnapshot> ReadAsync(CancellationToken cancellationToken = default)
     {
@@ -50,6 +61,41 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
             EnsureActive(state, itemId, collectionId);
             return state with { Library = ShelfLibraryPolicy.AddMembership(state.Library, new(collectionId, itemId, order)) };
         }, token);
+
+    /// <summary>Reorders visible members only, retaining archived entries in their previous slots.
+    /// Captures the proposed order before waiting; storage compare-exchange rejects concurrent edits.</summary>
+    public Task<ShelfOperationResult> ReorderCollectionAsync(long revision, Guid collectionId,
+        IReadOnlyList<Guid> orderedActiveItemIds, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(orderedActiveItemIds);
+        var captured = CaptureOrder(orderedActiveItemIds);
+        return MutateAsync(revision, state =>
+        {
+            if (state.ArchivedCollectionIds.Contains(collectionId))
+                throw new InvalidOperationException("Restore the archived collection before reordering it.");
+            var current = ShelfLibraryPolicy.ResolveCollection(state.Library, collectionId);
+            var active = current.Where(item => !state.ArchivedItemIds.Contains(item.Id)).Select(item => item.Id).ToHashSet();
+            if (captured.Length != active.Count || captured.Distinct().Count() != captured.Length || !active.SetEquals(captured))
+                throw new ArgumentException("Supply each current visible collection member exactly once; refresh before reordering.");
+            var next = 0;
+            var completeOrder = current.Select(item => state.ArchivedItemIds.Contains(item.Id) ? item.Id : captured[next++]).ToArray();
+            return state with { Library = ShelfLibraryPolicy.ReorderCollection(state.Library, collectionId, completeOrder) };
+        }, token);
+    }
+
+    private static Guid[] CaptureOrder(IReadOnlyList<Guid> supplied)
+    {
+        var expected = supplied.Count;
+        if (expected < 0) throw new ArgumentException("Invalid collection order count.", nameof(supplied));
+        var captured = new List<Guid>();
+        foreach (var id in supplied)
+        {
+            if (captured.Count == expected) throw new ArgumentException("Collection order enumeration exceeds its declared count.", nameof(supplied));
+            captured.Add(id);
+        }
+        if (captured.Count != expected) throw new ArgumentException("Collection order enumeration differs from its declared count.", nameof(supplied));
+        return captured.ToArray();
+    }
 
     public Task<ShelfOperationResult> RemoveMembershipAsync(long revision, Guid collectionId, Guid itemId, CancellationToken token = default) =>
         MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.RemoveMembership(state.Library, collectionId, itemId) }, token);
@@ -99,14 +145,13 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
     public static IReadOnlyList<ShelfLaunchItem> Search(ShelfSnapshot state, string query, Guid? collectionId = null)
     {
         Validate(state);
-        var visible = ShelfLibraryPolicy.Search(state.Library, query).Where(item => !state.ArchivedItemIds.Contains(item.Id));
-        if (collectionId is { } id)
-        {
-            if (state.ArchivedCollectionIds.Contains(id)) return [];
-            var members = ShelfLibraryPolicy.ResolveCollection(state.Library, id).Select(item => item.Id).ToHashSet();
-            visible = visible.Where(item => members.Contains(item.Id));
-        }
-        return visible.ToArray();
+        var matches = ShelfLibraryPolicy.Search(state.Library, query);
+        if (collectionId is not { } id)
+            return matches.Where(item => !state.ArchivedItemIds.Contains(item.Id)).ToArray();
+        if (state.ArchivedCollectionIds.Contains(id)) return [];
+        var matchingIds = matches.Select(item => item.Id).ToHashSet();
+        return ShelfLibraryPolicy.ResolveCollection(state.Library, id)
+            .Where(item => matchingIds.Contains(item.Id) && !state.ArchivedItemIds.Contains(item.Id)).ToArray();
     }
 
     public Task<ShelfOperationResult> ImportAsync(long revision, ShelfSnapshot imported, CancellationToken token = default)
@@ -115,9 +160,10 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
         return MutateAsync(revision, _ => { Validate(snapshot); return snapshot; }, token);
     }
 
-    private async Task<ShelfOperationResult> MutateAsync(long revision, Func<ShelfSnapshot, ShelfSnapshot> mutation, CancellationToken token)
+    private async Task<ShelfOperationResult> MutateAsync(long revision, Func<ShelfSnapshot, ShelfSnapshot> mutation, CancellationToken token, ISettingsCommitAdmission? admission = null, ShelfOwnedMutationReceipt? receipt = null)
     {
         await _gate.WaitAsync(token).ConfigureAwait(false);
+        var writeStarted = false;
         try
         {
             if (_settings is not IVersionedSettingsCompareExchange atomic)
@@ -131,11 +177,28 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings)
                 return new(false, "RevisionConflict", "Shelf changed; refresh and review before retrying.", state);
             var updated = mutation(state);
             updated = updated with { Library = updated.Library with { Revision = checked(revision + 1) } };
+            if (receipt is not null)
+            {
+                if (receipt.SchemaVersion != 1 || receipt.OperationID == Guid.Empty || receipt.StoreID != stored.StoreIdentity?.StoreId
+                    || receipt.ExpectedLibraryRevision != revision || receipt.PayloadSHA256.Length != 64)
+                    throw new ArgumentException("Exact actual Shelf mutation receipt required.");
+                updated = updated with { LastOwnedMutation = receipt };
+            }
             Validate(updated);
-            if (!(await atomic.CompareExchangeAsync(Key, expectedJson, JsonSerializer.Serialize(updated), token).ConfigureAwait(false)).Exchanged)
+            if (admission is not null)
+            {
+                if (_settings is not IVersionedSettingsGuardedCompareExchange guarded) return new(false, "GuardedStoreUnavailable", "Shelf requires final owner admission.", null);
+                writeStarted = true;
+                var committed = await guarded.CompareExchangeGuardedAsync(Key, expectedJson, JsonSerializer.Serialize(updated),
+                    new Dictionary<string, string?>(), admission, token).ConfigureAwait(false);
+                if (!committed.Exchanged) return new(false, "CommitDenied", "Shelf changed or owner admission was revoked.", null);
+            }
+            else if (!(await atomic.CompareExchangeAsync(Key, expectedJson, JsonSerializer.Serialize(updated), token).ConfigureAwait(false)).Exchanged)
                 return new(false, "RevisionConflict", "Shelf changed; refresh before retrying.", null);
             return new(true, null, null, updated);
         }
+        catch (Exception) when (writeStarted && receipt is not null)
+        { return new(false, "CompletionUnknown", "Actual Shelf write completion is unknown; observe its exact durable receipt without replay.", null); }
         catch (KeyNotFoundException exception) { return new(false, "NotFound", exception.Message, null); }
         catch (ArgumentException exception) { return new(false, "InvalidArgument", exception.Message, null); }
         catch (InvalidOperationException exception) { return new(false, "InvalidOperation", exception.Message, null); }

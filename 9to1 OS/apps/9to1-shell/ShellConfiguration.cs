@@ -106,6 +106,11 @@ public interface IShellConfigurationStore
     Task<bool> TryWriteAsync(long expectedRevision, ShellStoredConfiguration next, CancellationToken cancellationToken);
     Task<bool> IsCurrentSessionAsync(string authorityId, AuthenticatedResourceActor actor, CancellationToken cancellationToken) => Task.FromResult(false);
 }
+/// <summary>Optional original-session read; unavailable owners never adopt the ambient session.</summary>
+public interface IShellOriginalActorReadStore : IShellConfigurationStore
+{
+    Task<ShellStoredConfiguration> ReadForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct);
+}
 public sealed record ShellPreview(Guid Id, long BaseRevision, ShellConfiguration Candidate, DateTimeOffset ExpiresAt, string AuthorityId)
 {
     internal AuthenticatedResourceActor? SessionActor { get; init; }
@@ -131,6 +136,30 @@ public sealed class ShellConfigurationService(IShellConfigurationStore store, Ti
     {
         await _gate.WaitAsync(ct);
         try { return Snapshot(await ReadAsync(ct)); } finally { _gate.Release(); }
+    }
+    internal async Task<ShellConfigurationSnapshot> GetForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (store is not IShellOriginalActorReadStore originalStore)
+            throw new UnauthorizedAccessException("The shell owner cannot retain the original query session.");
+        await _gate.WaitAsync(ct);
+        try
+        {
+            var stored = await originalStore.ReadForActorAsync(expectedActor, ct);
+            if (stored.SessionActor != expectedActor || !await store.IsCurrentSessionAsync(stored.AuthorityId, expectedActor, ct))
+                throw new UnauthorizedAccessException("The original shell read session changed.");
+            stored.Current.Validate(); stored.Previous?.Validate();
+            return Snapshot(stored);
+        }
+        finally { _gate.Release(); }
+    }
+    internal async Task<ShellConfigurationSnapshot> GetForOriginalAsync(ShellStoredConfiguration original, CancellationToken ct)
+    {
+        var actor = original.SessionActor ?? throw new UnauthorizedAccessException("Reopen the original shell session.");
+        var current = await GetForActorAsync(actor, ct);
+        if (current.Stored.AuthorityId != original.AuthorityId || current.Stored.Revision != original.Revision)
+            throw new UnauthorizedAccessException("The original displayed shell configuration changed.");
+        return current;
     }
     public Task<ShellConfigurationSnapshot> PreviewAsync(ShellStoredConfiguration expected, ShellConfiguration candidate, TimeSpan duration, CancellationToken ct = default)
     {

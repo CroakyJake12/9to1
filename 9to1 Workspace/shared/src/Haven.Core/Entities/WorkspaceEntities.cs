@@ -12,7 +12,19 @@ public sealed record ReusableTaskDefinition(
     bool IsEnabled,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    string? GraphJson = null);
+    string? GraphJson = null)
+{
+    // These persisted descriptors are evidence to revalidate, never an execution grant.
+    public long Revision { get; init; }
+    public AutomationOwnerBinding? OwnerBinding { get; init; }
+    public AutomationDefinitionGraphBinding? GraphBinding { get; init; }
+    public AutomationDefinitionMetadata? Metadata { get; init; }
+    public AutomationOperationalState OperationalState { get; init; } = AutomationOperationalState.NeedsAttention;
+    public DateTimeOffset? ArchivedAt { get; init; }
+    public AutomationGraphPublicationJournal? PublicationJournal { get; init; }
+    public AutomationOwnerCommitReceipt? LastOwnerCommit { get; init; }
+}
+
 
 /// <summary>
 /// Represents a workspace version.
