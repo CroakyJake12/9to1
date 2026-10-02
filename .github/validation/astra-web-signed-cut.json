@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "86cfa702bf6837013ae83f1f0b9cd8834d3a64a1",
-  "programTree": "d498d521212a330b96ce860d2a4ddc3e14f4bde9",
+  "baselineCommit": "f6f7c33a9b71993b5bcdc3e6e64005059dd9451e",
+  "programTree": "082ea86324c437d82e677c30021c47586b2921da",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -25600,9 +25600,9 @@
     {
       "path": "9to1 Workspace/Web/Tests/Oidc/RemoteWebOidcHostSpecs.cs",
       "mode": "100644",
-      "object": "36b44b7a3b81f5fe8ae74c7ed6143288283edfff",
-      "bytes": 16107,
-      "sha256": "562f512b4ff7031cd905e3bdf299f9b04cdda2770446493dea5a33ba73508bdf"
+      "object": "2d70ccc34ae1e97e701fe0639306920360ba3636",
+      "bytes": 16115,
+      "sha256": "90b103523e2df1e000bfbf14e2dd66ca305a4beec721237e2836da2ea72fb795"
     },
     {
       "path": "9to1 Workspace/Web/Tests/Oidc/Web.Oidc.Specs.csproj",
@@ -64479,7 +64479,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-web-signed-cut.json",
-  "limits": "Actual ASP0016 correction only: explicitly typed Func<HttpContext,Task<IResult>> selects ASP.NET Delegate route handler overload so real IResult executes. All five async IResult methods corrected together. No analyzer suppression or route/security behavior change; all full prior owning suites and source/restore/compiled/class/artifact guards unchanged. Uncompiled/unrun.",
+  "limits": "Actual fixture CS1061 correction only: ContentHttpResult.ResponseContent actual net10 property, no assertion removal or fake result. Actual full Web production build passed predecessor; complete owning Accountslegacy/FundedOrg/PublicClient/Remote/Node/signedWeb/authenticatedWeb/Chromium suites and all full source/restore/compiled/artifact guards preserved; uncompiled/unrun.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-web-oidc-production-coherent36-plan02/joined-source36.json",
@@ -64520,6 +64520,10 @@
     {
       "path": "/workspace/astra-source/worker4-data-web-actual-correctors01/manifest.json",
       "sha256": "0860f9c1e7796f3f92cd52832005475d02c06706607450d8ad3e8d362225f5ae"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-web-actual-corrective02/actualfailed-11215898559/root-capture.json",
+      "sha256": "2ca1daf079c737a22fef7dc8a3b1b82832e4acd8384acfda56b7c00f8d7c3894"
     }
   ],
   "sharedCakeIdContract": null

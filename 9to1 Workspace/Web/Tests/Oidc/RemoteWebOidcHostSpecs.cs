@@ -40,7 +40,7 @@ public static class RemoteWebOidcHostSpecs
  private static DefaultHttpContext Context(string? cookie=null)
  {var c=new DefaultHttpContext();c.Request.Scheme="https";c.Request.Host=new HostString("web.invalid");if(cookie is not null)c.Request.Headers.Cookie=cookie;return c;}
  private static (string Cookie,string Csrf) Issued(DefaultHttpContext c,IResult result)
- {var html=((ContentHttpResult)result).Content!;var csrf=Regex.Match(html,"\"csrf\":\"([a-f0-9]{64})\"").Groups[1].Value;Assert(csrf.Length==64,"actual server issued CSRF missing");return(c.Response.Headers.SetCookie.ToString().Split(';')[0],csrf);}
+ {var html=((ContentHttpResult)result).ResponseContent!;var csrf=Regex.Match(html,"\"csrf\":\"([a-f0-9]{64})\"").Groups[1].Value;Assert(csrf.Length==64,"actual server issued CSRF missing");return(c.Response.Headers.SetCookie.ToString().Split(';')[0],csrf);}
  private static DefaultHttpContext Begin(string cookie,string csrf,Stream? body=null)
  {var c=Context(cookie);c.Request.Headers.Origin="https://web.invalid";c.Request.Headers["X-CSRF-Token"]=csrf;c.Request.ContentType="application/json";c.Request.Body=body??new MemoryStream(Encoding.UTF8.GetBytes("{\"requestNonce\":\"fictional-request-nonce-01\"}"));return c;}
  private static IdentityModelIssuerReader Reader()=>new(new DeniedKeys(),new("sub","sid","auth_revision","scope","nonce","azp"),TimeProvider.System);
