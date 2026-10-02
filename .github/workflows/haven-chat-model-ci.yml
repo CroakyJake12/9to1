@@ -87,3 +87,32 @@ jobs:
           name: cake-id-local-runtime-evidence
           path: artifacts/cake-id-local-runtime
           if-no-files-found: error
+
+  independent-auth-traffic-browser:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-cake-id-local-runtime25-independent-auth')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Execute first four bootstrap commands and independent genuine verification
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+        run: python3 .github/scripts/astra-cake-auth-independent-run.py
+      - name: Retain bounded sanitized independent evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-cake-auth-independent-${{ github.sha }}
+          path: artifacts/cake-auth-independent/
+          if-no-files-found: error
+          retention-days: 14

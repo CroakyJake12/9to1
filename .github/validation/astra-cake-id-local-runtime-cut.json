@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "84927a8ad791826a3b3f2927efa007a5d98d288a",
-  "programTree": "fb2fc2c5db3781d31719cf2a441d0ed037e2cb8d",
-  "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
+  "baselineCommit": "7a50ce232460405e7201e09af85095458ed9ea3c",
+  "programTree": "3f987c131561d7453a096c87248abfa401eb0cca",
+  "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
     {
@@ -18,6 +18,20 @@
       "object": "672fcc6f2b4fcce0f80eae27c883bc5c19239279",
       "bytes": 35,
       "sha256": "3a1d1dcb4ed7c98614dd922a04be1e3690f6388f899c3801348e88b3ba4f1d75"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-independent-run.py",
+      "mode": "100644",
+      "object": "6ceecad6973c9eaf404a06a6a26f01e6e035b8ad",
+      "bytes": 8546,
+      "sha256": "6074b87b036322a10807874cdcd1f8c7a3ddbdd7ff0a48a71b6326ad76154b21"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-independent-state.py",
+      "mode": "100644",
+      "object": "7351de1cbb921610c6258b72ac9a5d8b92f37dd0",
+      "bytes": 5574,
+      "sha256": "6cff06f04078b3a22f8e9f91c2b3243f93b2576dddc1f07d901ac4c864334994"
     },
     {
       "path": ".github/scripts/astra-cake-id-local-runtime.py",
@@ -39,6 +53,27 @@
       "object": "a17f0247da08a499ae2193bc1f3c288af7d883e0",
       "bytes": 6997,
       "sha256": "d9f51cf3093bdb0069d6730cc6318722649f026efd42cc5619f8eea7d15d8b7f"
+    },
+    {
+      "path": ".github/validation/cake-auth-browser/official-browsers.json",
+      "mode": "100644",
+      "object": "5ed62af55d77cc473d505172d51f66ad2849a670",
+      "bytes": 1137,
+      "sha256": "545d52f8382c391e605562c330e9c1c534a16045898203037a49bb8bd769a946"
+    },
+    {
+      "path": ".github/validation/cake-auth-browser/package-lock.json",
+      "mode": "100644",
+      "object": "4d799a0ddf8b25b34a3ed103a66707e892a1e4dc",
+      "bytes": 1572,
+      "sha256": "d938dd12806229030e1109e3096aa22f0e7fd2b63788c0a5c8e1dfc748f4ef3c"
+    },
+    {
+      "path": ".github/validation/cake-auth-browser/package.json",
+      "mode": "100644",
+      "object": "043ce3f377d45bd95bb5cf4e13b54dff3571cf93",
+      "bytes": 169,
+      "sha256": "8592e7f97b0db0ec900212dfd0bf45a10e388e60174b667da48bdaf0a10757a8"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -176,9 +211,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "d9ca2b43c4f67ecd5a1574e466a981526fffde1a",
-      "bytes": 3035,
-      "sha256": "f4b88b63043cf90922982e2af6570bc1913027794a1e3cdcb73afe56c745128d"
+      "object": "014f8d338e81aceee22fcd78d85c5d2a2af19f65",
+      "bytes": 4118,
+      "sha256": "23661288fef3cad51b4064b0165cb49502d9fa3c1e6a3ce01cbe0c2f7f36cdca"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -41726,6 +41761,13 @@
       "sha256": "c4bc80f6a8ae8c82b35da8aa507725b0c8363cb9fc1fa7e1feca6dc66cbbf90c"
     },
     {
+      "path": "cloud/cake-id-auth/tests/login-traffic-browser.mjs",
+      "mode": "100644",
+      "object": "d06d041d46fa707874967f5f0850a920f0d9c8ab",
+      "bytes": 12576,
+      "sha256": "5b09fa68169031dd4d622d35fbe8218679921e6a6f783df81dec566f73e04712"
+    },
+    {
       "path": "cloud/cake-id-auth/tests/password-hash-worker.ts",
       "mode": "100644",
       "object": "e8a6998d331b91f3cdd6e49514bfe8c6d89e59e7",
@@ -65466,7 +65508,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-cake-id-local-runtime-cut.json",
-  "limits": "Exact owner29 source only, isolated native Ubuntu x64 local Wrangler/D1 tests. No deployment, cloud credentials, billable services, DNS, user migration or Home authority. All command exits required zero. Raw potentially private logs and ephemeral vars/database never archived. Source before/after permits only maintained public/auth-ui.txt generated output. Cleanup proof is bounded sampled original-session proof, not universal unobserved descendant scheduling. Bounded sanitized first/last actual stdout/stderr plus final JSON markers retained; secrets observed from ephemeral local vars and auth/password/cookie/JWT/email/opaque values redacted before archival. Raw logs never uploaded. Original validate Windows job excludes only this isolated validation family; exactly one local-runtime job runs. Gitlink entries remain pinned in immutable Git cut, but runner does not claim physical submodule materialization or unrelated .NET/native tests. Head/tail edge lines truncated by byte bounds are omitted BEFORE redaction; no partial secret/JWT/token fragments from truncation are retained. Actual owner final public success JSON for integration and password runtime uniquely required and whitelist-retained; integration local issuer/endpoints/no deployment and password local runtime/default scrypt/no database/external service are checked. This remains owner-local protocol evidence, not .NET client integration or deployed CPU limit parity. Local endpoint origin checked by parsed URL; actual maintained issuer base can legitimately have an empty path, no inferred trailing slash required. For logs <=512KiB, overlapping head/tail reconstructed without duplication before sanitizing/marker parsing; above512KiB complete bounded edge lines only. Fixed public integration marker strings exactly source-checked. Exact actual dispatch422 correction only: optional string workflow inputs keep normal Windows invocation available; isolated local job requires exact HEAD/cut SHA before any source capture. Owner29/helpers/commands/sanitizer/markers unchanged; root must seed unique corrective ref from failed ed5c. Exact actual failed2364 fixture-only proposal: owner branch and original29 input bytes untouched; solely integration fixture GETs emailed reset validation URL and reads the token from verified302 callback. Unchanged backend28, helper, policies, six full commands and all later assertions inherited. This validation is separate from unchanged-owner failure and makes no .NET integration/deployment claims. Root must seed new unique corrective ref at exact failed parent. Supersedes10 solely correcting the explicit ownerBindings path-key SHA repin; actual proposal bytes unchanged. Stage10 is unselected and preserved. Exact actual failed26b8 managed-client404 correction: HTTP create uses maintained sessionMiddleware/admin-role clientPrivileges /oauth2/create-client, never SERVER_ONLY admin HTTP exposure. Public PKCE defaults true, DCR remains disabled. Reset correction and every later original registration assertion retained; backend28/helpers/policies/sixcommands unchanged. Exact actual d268 authenticated401 diagnostic only: explicit supported customFetchImpl and actual cookie/get-session200/sessionID/canonicalUserID/private-role exclusion guards precede unchanged privileged registration. Import order alone does not establish transport failure; filtered private role remains a source-backed candidate. Backend28, owner branch, six commands and every later assertion unchanged. A positive session followed by same401 remains a genuine diagnostic failure, not acceptance. Exact actual positive-session401 failed88e0 OWNER PROPOSAL only:3explicit auth/local/integration replacements, backend26 unchanged from actual diagnostic. Fresh private DB role lookup by authenticated canonical session ID for BOTH privilege hooks, private role never public; real ordinary client/resource401 +actual promoted admin server API/resource200/client201. Existing APP_MODE/loopback/ephemeralkey guarded local transport invokes real maintained server-only resource API, no fakeuser or production HTTP endpoint. Owner branch/input29 untouched; full six local commands/helper/policies/sanitizer/source guards inherited byteexact. No deployment/publication or owner approval inferred. Actual CAKE14 private-role fix progressed client registration401\u2192400 because webclientloopback forbidden by maintainedstrictredirectpolicy. Sole fixture requesttypes now native, returnednative asserted/publicresult explicitnarrowloopbackPKCE scope. Exact callback/PKCE/ordinaryadmin/resource/reset/token/scopereplay assertions retained. Selected28backendfiles unchangedfromactual5a7b, originalownerbranch/input29 untouched. No productionHTTPS/redirect/cert policy weakening or .NET/webHTTPS acceptance. Six commands/actual publicmarker/sanitizer/cleanup unchanged. Actual native-client registration now progresses to authorization; maintained handleRedirect returns JSON redirect:true,url for browser fetch. Sole fixture strict redirect representation parser accepts exact JSON200 or302/303Location, retains actual login/consent HTML and signedquery/PKCE/state/issuer guards. Wrong-resource now requires real invalid_target and no code in either representation. All28 backend files unchanged, owner branch untouched, no runtime acceptance. Strict same bounded exactissuer/callback/noCredentials URL admission now shared by HTTP302/303 and JSON200 redirects; no foreign samepath admission. Actual CAKE17 genuine login/consent/authorization progressed to expectedbadPKCE; maintained provider consumes code BEFOREvalidation and returns401invalid_request. SOLEfixture asserts exact401/description/noToken, actualsamecodecorrectverifier400invalid_grant/noToken, then newreal authorization/session/consentcode for successfulexchange. Originalunauthclienthook/reset/privateordinaryadmin/resource/callback/issuer/state/token/scope/replay assertions retained. Backend28/helper/workflow/sixcommands unchanged, ownerbranch/input29 untouched, no runtime acceptance. HELD18 repeated grant couldreuseexistingoauthConsent andbypassfixtureexpectation. Standard prompt=consent now explicitlyrequestsactualsignedqueryconsentUI on EVERYfixtureauthorization; maintainedpromptbranchprecedesconsentcache. No backend skip/no-skip change, all consentHTML/issuer/state/PKCE/resource guards retained.",
+  "limits": "Independent synthetic local Wrangler/D1 700 sequential requests and genuine pinned Playwright browser duplicate-submit. Exact29 proposed owner files retained untouched from actual7a50 parent; original full6command OIDC job still required and expected known IDtoken failure cannot be converted to overall auth acceptance. First4bootstrap plus independent fixture in separatejob; no cloud/deploy/existingusertransfer/billedCPU/credentialcostcounter/concurrency/nativeHTTPS/.NETclaim. Exact introduced private state identity plus verified sampled pidfd session drain required before cleanup; rawvars/D1/receipt/keys/tokens excluded artifacts.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/root-cake-id-auth-owner-input109/immutable-owner-source-map-verified111.json",
@@ -65595,6 +65637,26 @@
     {
       "path": "/workspace/astra-source/worker4-cake-token-response-shape-diagnostic-fixture11/manifest.json",
       "sha256": "7bf032b2fb654b8687289750adf8768a23a5ff326756bfcd5879e049c35d4536"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth-direct-traffic-browser-fixture05-private-state-receipt/manifest.json",
+      "sha256": "316195127d539bb6c240758e9da26cad253a1876043320e5b0cb8fd58dfa9fbe"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-independent-supervised-state-wrapper-source02-final-secret-observation/manifest.json",
+      "sha256": "39235879223201cdc4581489eb7cad8905de2a8f9c32bc2e9bca3ea5c5524b74"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint22-publication-local.json",
+      "sha256": "b7ff7fc3baeac9dc86764c280bc689a01cd167849eea46b1434ca527ac9c92ba"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth-direct-traffic-browser-fixture06-short-public-marker/manifest.json",
+      "sha256": "ab32768b1ae909182a59d8c429990b0a76a03da33553f3abbad2a7c8db50060c"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-independent-full-caller-package03-auth-dependency-closure/manifest.json",
+      "sha256": "38b54ce94b2042376ac91181e4841d4e34d1fbdd7e06f51f6d8e0e803db01bb6"
     }
   ],
   "sharedCakeIdContract": null
