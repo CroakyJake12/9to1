@@ -18,7 +18,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../Forms/CUI/HavenOS.Forms.csproj" />
-    <ProjectReference Include="..\..\src\Haven.Desktop\Haven.Desktop.csproj" />
+    <ProjectReference Include="..\..\src\Haven.Desktop\Haven.Desktop.csproj">
+      <SetTargetFramework Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">TargetFramework=net10.0-windows10.0.19041.0</SetTargetFramework>
+    </ProjectReference>
     <ProjectReference Include="../../../Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />
     <ProjectReference Include="../../../Files/CUI/HavenOS.Files.CUI.csproj" />
     <PackageReference Include="Avalonia.Headless.XUnit" />

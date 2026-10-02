@@ -218,7 +218,7 @@
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
-      "sha256": "ad05c27d6bcb282dbf1f8f02f78073da6787ea063a7a299ace0af8155b56a6a7"
+      "sha256": "5f1ceeea8b0d4d2c825bc79fabe99b34430ea702365153ce3082e5a8341465e2"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
@@ -274,7 +274,7 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
       "preservedPredecessorSha256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
-      "sha256": "ad05c27d6bcb282dbf1f8f02f78073da6787ea063a7a299ace0af8155b56a6a7"
+      "sha256": "5f1ceeea8b0d4d2c825bc79fabe99b34430ea702365153ce3082e5a8341465e2"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",

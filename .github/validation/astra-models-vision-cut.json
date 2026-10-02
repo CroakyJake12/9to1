@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "ecacceb47697a51b219f736337be9bc0f2803951",
-  "programTree": "1c0b1e954750e33effdb1e5b477fcb2aec81fe1f",
-  "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
+  "baselineCommit": "1be544917eea9fde94199f6bb475c894445cc671",
+  "programTree": "b75e664ef0cfdbbd4f3a4bc04e791c0bb6cdc50d",
+  "currentNormalCommit": "e1644a16b989255528fea449a32c0cc9b31fc7e8",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/scripts/astra-monologue-windows-owning.py",
       "mode": "100644",
-      "object": "4ed33c18aec55b189825f12016ed846ee96bc9cf",
-      "bytes": 28543,
-      "sha256": "cf9601d2186d61884abbafd27ba51baa3b11bdc98c3145aea09ea25591f8b14c"
+      "object": "c2455a5a449dbfd78d0b9102d64c179a72f96077",
+      "bytes": 34256,
+      "sha256": "5de4b3891c6572f34f944541dbbb6c3d23671fb28d2b868943d651d352475b04"
     },
     {
       "path": ".github/scripts/astra-monologue-windows-restore-evidence.py",
@@ -85,9 +85,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "eb715a4a94a2fd3945c6d5f6a0810e35b067593f",
+      "object": "bbf17b63a0055eb4fd523c03c122663e9d0e3717",
       "bytes": 13171,
-      "sha256": "fc156c4e7dcd70871eec441b8dc581e332e6fd80bff5eb57b2d728fd0951c69c"
+      "sha256": "91283b9d26f6fc1e9f1569f939c95c5bcae86c094961c96ae9874f7a0c189b60"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -39565,9 +39565,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
       "mode": "100644",
-      "object": "dc7b4c8c5e60bb3adce79f5e80f84e20280aeebd",
-      "bytes": 1986,
-      "sha256": "ad05c27d6bcb282dbf1f8f02f78073da6787ea063a7a299ace0af8155b56a6a7"
+      "object": "b550aecdc3f49847eece52a8a82c20b85ebf0299",
+      "bytes": 2165,
+      "sha256": "5f1ceeea8b0d4d2c825bc79fabe99b34430ea702365153ce3082e5a8341465e2"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAccessibilityAutomationNotificationTests.cs",
@@ -65777,6 +65777,18 @@
     {
       "path": "/workspace/astra-source/worker1-monologue-windows-actual-declared-graph-restore-corrective-source06/manifest.json",
       "sha256": "f39ff03f20c22536858d2d57bcfc0cba44408248b22045b859b16cd062fba29a"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint21-publication-local.json",
+      "sha256": "d05231b43946c46d453a294beccccdc17a7ea25d7b2c4c5d691ade410a4efee7"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-windows08-exact-native-project-reference-corrective-source01/manifest.json",
+      "sha256": "4a75d7aa837b9f0ef9b03fdc731113addc4d3cf97a911db0f810ff761d21a03e"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue-windows-actual-native-producer-guard-source07/manifest.json",
+      "sha256": "4630b2714bcfbcc366c503df113bf3ca4bd46a37176d347036b90948a6adad7b"
     }
   ],
   "sharedCakeIdContract": null

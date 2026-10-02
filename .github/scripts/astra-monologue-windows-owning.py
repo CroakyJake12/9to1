@@ -163,6 +163,60 @@ restoreSpec=importlib.util.spec_from_file_location('root14_restore',root/'.githu
 restore=importlib.util.module_from_spec(restoreSpec);restoreSpec.loader.exec_module(restore)
 restoredProjects={}
 compiledTargets={} 
+nativeProducerPin=None
+nativeProducerProject='9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj'
+def actual_native_producer(testTarget,phase):
+ # Resolve the ACTUAL referring project's framework metadata and GetTargetPath,
+ # without rebuilding references or copying assets. A direct forced producer
+ # query alone would not prove the framework selected by the test project.
+ testProject='9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj'
+ props=['-p:Configuration=Release','-p:TargetFramework=net10.0-windows10.0.19041.0','-p:RuntimeIdentifier=win-x64','-p:RuntimeIdentifiers=win-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']+artifactsProps
+ references=subprocess.run(['dotnet','msbuild',testProject,'-nologo','-m:1','-nr:false',*props,'-p:BuildProjectReferences=false','-target:ResolveProjectReferences','-getItem:_MSBuildProjectReferenceExistent,_ResolvedProjectReferencePaths'],capture_output=True,text=True)
+ (out/('desktop-native-reference-'+phase+'.stdout')).write_text(references.stdout)
+ (out/('desktop-native-reference-'+phase+'.stderr')).write_text(references.stderr)
+ if references.returncode:raise SystemExit(references.returncode)
+ actual=json.loads(references.stdout)['Items']
+ producerProject=(root/nativeProducerProject).resolve()
+ def itemPath(item):
+  value=item.get('FullPath') or item.get('Identity')
+  if not isinstance(value,str) or not value:raise SystemExit('actual referenced producer path absent')
+  path=pathlib.Path(value);return (path if path.is_absolute() else root/path).resolve()
+ selected=[item for item in actual['_MSBuildProjectReferenceExistent'] if itemPath(item)==producerProject]
+ if len(selected)!=1 or selected[0].get('SetTargetFramework')!='TargetFramework=net10.0-windows10.0.19041.0':
+  raise SystemExit('actual Desktop project reference did not select the native Windows producer')
+ producerQuery=subprocess.run(['dotnet','msbuild',nativeProducerProject,'-nologo','-m:1','-nr:false',*props,'-getProperty:MSBuildProjectFullPath,TargetPath,OutputPath,RuntimeIdentifier,Configuration,DefineConstants,TargetFramework,TargetPlatformIdentifier,AvaloniaBuildTasksLocation'],capture_output=True,text=True)
+ (out/('desktop-native-producer-'+phase+'.stdout')).write_text(producerQuery.stdout)
+ (out/('desktop-native-producer-'+phase+'.stderr')).write_text(producerQuery.stderr)
+ if producerQuery.returncode:raise SystemExit(producerQuery.returncode)
+ evaluated=json.loads(producerQuery.stdout)['Properties']
+ symbols={value.strip() for value in re.split('[;,]',evaluated['DefineConstants']) if value.strip()}
+ producerTarget=pathlib.Path(evaluated['TargetPath']).resolve()
+ producerOutput=pathlib.Path(evaluated['OutputPath'])
+ producerOutput=(producerOutput if producerOutput.is_absolute() else producerProject.parent/producerOutput).resolve()
+ if pathlib.Path(evaluated['MSBuildProjectFullPath']).resolve()!=producerProject or evaluated['TargetFramework']!='net10.0-windows10.0.19041.0' or evaluated['TargetPlatformIdentifier'].lower()!='windows' or 'HAVEN_WINDOWS_DESKTOP' not in symbols or evaluated['RuntimeIdentifier']!='win-x64' or evaluated['Configuration']!='Release' or pathlib.Path(evaluated['AvaloniaBuildTasksLocation']).resolve()!=taskTarget:
+  raise SystemExit('actual referenced native producer framework/symbol/runtime/task mismatch')
+ if not producerOutput.is_relative_to(root.resolve()) or not producerTarget.is_relative_to(producerOutput) or producerTarget.suffix!='.dll' or not producerTarget.is_file() or not producerTarget.with_suffix('.pdb').is_file():
+  raise SystemExit('actual native producer DLL/PDB output unavailable')
+ resolved=[item for item in actual['_ResolvedProjectReferencePaths'] if itemPath(item)==producerTarget]
+ if len(resolved)!=1 or resolved[0].get('TargetPlatformIdentifier','').lower()!='windows':
+  raise SystemExit('actual SDK resolved reference does not name the Windows production DLL')
+ copied=[]
+ for source in (producerTarget,producerTarget.with_suffix('.pdb')):
+  destination=testTarget.parent/source.name
+  if source.is_symlink() or destination.is_symlink() or not destination.is_file() or digest(source)!=digest(destination):
+   raise SystemExit('executed test closure does not contain the exact native producer DLL/PDB')
+  copied.append({'producer':source.relative_to(root).as_posix(),'consumer':destination.relative_to(root).as_posix(),'bytes':source.stat().st_size,'sha256':digest(source)})
+ closure=[]
+ for path in sorted(producerTarget.parent.rglob('*')):
+  if path.is_symlink():raise SystemExit('actual native producer output symlink')
+  if path.is_file():closure.append({'path':path.relative_to(root).as_posix(),'bytes':path.stat().st_size,'sha256':digest(path)})
+ proof={'project':nativeProducerProject,'target':producerTarget.relative_to(root).as_posix(),'targetFramework':evaluated['TargetFramework'],'defineConstants':sorted(symbols),'selectedReferenceFramework':selected[0]['SetTargetFramework'],'copied':copied,'closure':closure}
+ (out/('desktop-native-producer-'+phase+'.json')).write_text(json.dumps(proof,indent=2)+'\n')
+ assert_task_unchanged();verify()
+ if phase=='before':
+  retained=out/'compiled'/'desktop-native-producer';retained.mkdir(parents=True,exist_ok=True)
+  for source in (producerTarget,producerTarget.with_suffix('.pdb')):shutil.copyfile(source,retained/source.name)
+ return proof
 def assert_compiled_target_unchanged(name):
  target,closure=compiledTargets[name]
  current=[]
@@ -174,7 +228,9 @@ def assert_compiled_target_unchanged(name):
  project,before=restoredProjects[name];after=restore.snapshot_restore(root,project,windows_context=True)
  (out/(name+'-restore-after.json')).write_text(json.dumps(after,indent=2)+'\n')
  if before!=after:raise SystemExit('actual restored graph/package payload changed during execution')
+ if name=='desktop' and actual_native_producer(target,'after')!=nativeProducerPin:raise SystemExit('actual native producer reference/closure changed during execution')
 def build_and_pin(name,project):
+ global nativeProducerPin
  # Genuine selected graph restore replaces incompatible shared child assets. Force
  # evaluation rather than adopting a prior cohort's cached framework graph.
  code=command(['dotnet','restore',project,*base[2:],'--force-evaluate','-p:Configuration=Release','-p:EnableWindowsTargeting=true'],name+'-main-restore');verify()
@@ -195,6 +251,7 @@ def build_and_pin(name,project):
  output=pathlib.Path(evaluated['OutputPath']);output=output if output.is_absolute() else (root/project).parent/output;output=output.resolve()
  if evaluated['RuntimeIdentifier']!='win-x64' or evaluated['Configuration']!='Release' or not output.is_relative_to(root.resolve()) or not target.is_relative_to(output) or not target.is_file() or target.suffix!='.dll':raise SystemExit('missing/unexpected SDK-evaluated Linux Release TargetPath/OutputPath')
  if not target.with_suffix('.pdb').is_file():raise SystemExit('Actual consumer portable PDB absent')
+ if name=='desktop':nativeProducerPin=actual_native_producer(target,'before')
  closure=[]
  for path in sorted(target.parent.rglob('*')):
   if path.is_symlink():raise SystemExit('unexpected compiled output symlink')
