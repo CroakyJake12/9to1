@@ -264,7 +264,11 @@ public sealed record NotesSaveResult(
     DateTimeOffset SavedAt,
     string Sha256,
     string CurrentPath,
-    string VersionPath);
+    string VersionPath)
+{
+    public bool VersionHistoryComplete { get; init; } = true;
+    public string? PostCommitWarning { get; init; }
+}
 
 /// <summary>
 /// A search hit within a notes document.

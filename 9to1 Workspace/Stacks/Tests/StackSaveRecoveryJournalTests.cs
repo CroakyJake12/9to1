@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace HavenOS.Apps.Stacks.Tests;
@@ -65,6 +66,9 @@ public sealed class StackSaveRecoveryJournalTests
             var inspection = await new JsonFileStackProjectStore(directory).InspectPendingSaveAsync();
             Assert.NotNull(inspection);
             Assert.Equal(main.ProjectId, inspection.ProjectId);
+            Assert.Equal(inspection, await new JsonFileStackProjectStore(directory).InspectPendingSaveAsync(main.ProjectId));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => new JsonFileStackProjectStore(directory).InspectPendingSaveAsync(Guid.NewGuid()));
+
             Assert.True(inspection.ManifestMatchesPrevious);
             Assert.False(inspection.ManifestMatchesProposed);
             Assert.False(inspection.RootsMatchPrevious);
@@ -82,4 +86,52 @@ public sealed class StackSaveRecoveryJournalTests
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
     }
+    [Theory]
+    [InlineData("journal-project")]
+    [InlineData("previous-project")]
+    [InlineData("proposed-root-owner")]
+    public async Task Read_only_inspection_refuses_self_consistent_hashes_with_foreign_canonical_identity(string change)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "astra-stack-journal-identity-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var first = new JsonFileStackProjectStore(directory);
+            var main = await new StackEngine(first).CreateProjectAsync(new("Identity fixture", StackStorageMode.Files, directory), StackActor.System);
+            var checks = 0;
+            var fault = new JsonFileStackProjectStore(directory, _ =>
+            {
+                if (++checks == 3) throw new IOException("Controlled original binding failure after roots publication");
+                return Task.CompletedTask;
+            });
+            var proposed = await fault.LoadAsync();
+            proposed.Roots.Add(new(Guid.NewGuid(), main.Id, ["source.txt"], DateTimeOffset.UtcNow, "controlled-fixture"));
+            await Assert.ThrowsAsync<StackFailureException>(() => fault.SaveAsync(proposed));
+            var journalPath = Path.Combine(directory, JsonFileStackProjectStore.PendingSaveRecoveryRelativePath);
+            var journal = JsonNode.Parse(await File.ReadAllBytesAsync(journalPath))!;
+            if (change == "journal-project") journal["projectId"] = Guid.NewGuid().ToString("D");
+            else
+            {
+                var field = change == "previous-project" ? "previousManifest" : "nextRoots";
+                var payload = JsonNode.Parse(Convert.FromBase64String(journal[field]!.GetValue<string>()))!;
+                if (change == "previous-project") payload["projectId"] = Guid.NewGuid().ToString("D");
+                else payload["roots"]![0]!["ownerDomainId"] = Guid.NewGuid().ToString("D");
+                var bytes = JsonSerializer.SerializeToUtf8Bytes(payload);
+                journal[field] = Convert.ToBase64String(bytes);
+                journal[field + "Sha256"] = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+            }
+            await File.WriteAllBytesAsync(journalPath, JsonSerializer.SerializeToUtf8Bytes(journal));
+            var before = await File.ReadAllBytesAsync(journalPath);
+            var manifestPath = Path.Combine(directory, JsonFileStackProjectStore.ManifestRelativePath);
+            var rootsPath = Path.Combine(directory, JsonFileStackProjectStore.RootsRelativePath);
+            var manifestBefore = await File.ReadAllBytesAsync(manifestPath);
+            var rootsBefore = await File.ReadAllBytesAsync(rootsPath);
+            var failed = await Assert.ThrowsAsync<StackFailureException>(() => new JsonFileStackProjectStore(directory).InspectPendingSaveAsync());
+            Assert.Equal(StackFailureCode.SourceCorrupt, failed.Code);
+            Assert.Equal(before, await File.ReadAllBytesAsync(journalPath));
+            Assert.Equal(manifestBefore, await File.ReadAllBytesAsync(manifestPath));
+            Assert.Equal(rootsBefore, await File.ReadAllBytesAsync(rootsPath));
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+    }
+
 }

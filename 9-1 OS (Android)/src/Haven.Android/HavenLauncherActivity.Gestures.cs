@@ -12,14 +12,22 @@ public sealed partial class HavenLauncherActivity
         _gestureChoiceDialog?.Dismiss(); _gestureChoiceDialog = null;
         _gestureDialog?.Dismiss(); _gestureDialog = null;
     }
+    private Func<bool>? CaptureOriginalGestureView()
+    {
+        if (!_homeReady || !_activityStarted || _launcherLifetime.IsCancellationRequested || _layout is null || _root is null) return null;
+        var expected = _layout; var root = _root; var epoch = _widgetRenderEpoch;
+        return () => _homeReady && _activityStarted && !_launcherLifetime.IsCancellationRequested &&
+            ReferenceEquals(_layout, expected) && ReferenceEquals(_root, root) && epoch == _widgetRenderEpoch && root.IsAttachedToWindow;
+    }
     private void RunGesture(LauncherGesture gesture)
     {
-        if (_launcherLifetime.IsCancellationRequested || IsFinishing || IsDestroyed || _layout is null) return;
+        if (!_homeReady || !_activityStarted || _launcherLifetime.IsCancellationRequested || IsFinishing || IsDestroyed || _layout is null) return;
         RunLauncherCommand((_layout.Current.Gestures ?? new()).Resolve(gesture));
     }
 
     private void RunLauncherCommand(LauncherCommand command)
     {
+        if (!_homeReady || !_activityStarted || _launcherLifetime.IsCancellationRequested || IsFinishing || IsDestroyed) return;
         switch (command)
         {
             case LauncherCommand.None: break;

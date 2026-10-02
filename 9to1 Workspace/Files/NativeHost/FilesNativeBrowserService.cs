@@ -49,6 +49,34 @@ public sealed class FilesNativeBrowserService(NativeFilesWorkspaceAuthority work
             page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor) : null);
     }
 
+    /// <summary>Resolve the canonical parent of the original current folder; names never determine identity.</summary>
+    public async Task<(Guid? ID, string Title)> GetParentAsync(FilesNativeBrowserPage originalPage,
+        AuthenticatedResourceActor originalActor, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(originalPage);
+        if (originalPage.ParentID is not { } currentFolderID)
+            throw new InvalidOperationException("The Files root has no parent folder.");
+        await RevalidateAsync(originalPage, originalActor, token).ConfigureAwait(false);
+        var workspace = await RequireWorkspaceAsync(originalActor, originalPage.StoreID, token).ConfigureAwait(false);
+        var current = await workspace.Provider.GetAsync(new(currentFolderID), token).ConfigureAwait(false);
+        if (!current.IsSuccess || current.Value!.Kind != HostedItemKind.Folder)
+            throw new InvalidOperationException("The original canonical folder is unavailable.");
+        await RequireMetadataAsync(current.Value, originalActor, originalPage.StoreID, token).ConfigureAwait(false);
+        (Guid? ID, string Title) destination = (null, "Files");
+        if (current.Value.ParentId is { } parentID)
+        {
+            var parent = await workspace.Provider.GetAsync(parentID, token).ConfigureAwait(false);
+            if (!parent.IsSuccess || parent.Value!.Kind != HostedItemKind.Folder)
+                throw new InvalidOperationException("The canonical parent folder is unavailable.");
+            await RequireMetadataAsync(parent.Value, originalActor, originalPage.StoreID, token).ConfigureAwait(false);
+            destination = (parent.Value.Id.Value, parent.Value.Name);
+        }
+        await RevalidateAsync(originalPage, originalActor, token).ConfigureAwait(false);
+        if (!ReferenceEquals((await RequireWorkspaceAsync(originalActor, originalPage.StoreID, token).ConfigureAwait(false)).Provider, workspace.Provider))
+            throw new UnauthorizedAccessException("The Files provider changed during parent navigation.");
+        return destination;
+    }
+
     public async Task RevalidateAsync(FilesNativeBrowserPage page, AuthenticatedResourceActor originalActor,
         CancellationToken token)
     {

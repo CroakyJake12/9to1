@@ -1,4 +1,5 @@
 using Haven.Application;
+using System.Text.Json;
 using HavenOS.Home.Core;
 using Xunit;
 
@@ -98,6 +99,104 @@ public sealed class HomeNativeWidgetRegistryTests
         var item = Assert.Single(await registry.ListAsync());
         resolver.OnRead = () => verifier.Owner = verifier.Owner with { ExecutableIdentity = "replaced" };
         Assert.Null(await registry.ResolveAsync(item.Reference));
+    }
+
+    // These are controlled transport-boundary fixtures, not actual installed-peer/platform proof.
+    [Fact]
+    public async Task Runtime_capture_uses_same_unique_entry_bounds_and_detached_authored_data()
+    {
+        var actors = new Actors(); var verifier = new Verifier();
+        var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [new Resolver()]));
+        using var metadata = await registry.RegisterAsync(Observed, [Definition()]);
+        var reference = Assert.Single(await registry.ListAsync()).Reference;
+        Assert.Null(await registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150));
+        metadata!.Dispose();
+        var endpoint = new RuntimeEndpoint();
+        using var registration = await registry.RegisterRuntimeAsync(Observed, [Definition()], endpoint);
+        Assert.Null(await registry.CaptureAsync(reference, actors.Current, new(5, 2), 200, 150));
+        Assert.Null(await registry.CaptureAsync(reference, actors.Current, new(2, 2), double.NaN, 150));
+        Assert.Equal(0, endpoint.Calls);
+        var surface = await registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150);
+        Assert.NotNull(surface);
+        Assert.Equal("fixture only", surface!.Data["caption"].GetString());
+        Assert.Equal(1, endpoint.Calls);
+        using var duplicate = await registry.RegisterAsync(Observed, [Definition()]);
+        Assert.Null(await registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150));
+        Assert.Equal(1, endpoint.Calls);
+    }
+
+    [Theory]
+    [InlineData("actor")]
+    [InlineData("acl")]
+    [InlineData("owner")]
+    [InlineData("foreign-surface")]
+    public async Task Runtime_capture_rechecks_original_actor_owner_and_resources_after_endpoint_await(string change)
+    {
+        var actors = new Actors(); var original = actors.Current; var verifier = new Verifier(); var resolver = new Resolver();
+        var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [resolver]));
+        var endpoint = new RuntimeEndpoint { WaitForRelease = true };
+        using var registration = await registry.RegisterRuntimeAsync(Observed, [Definition()], endpoint);
+        var reference = Assert.Single(await registry.ListAsync()).Reference;
+        var capture = registry.CaptureAsync(reference, original, new(2, 2), 200, 150).AsTask();
+        await endpoint.Entered.Task.WaitAsync(TimeSpan.FromSeconds(3));
+        if (change == "actor") actors.Current = original with { AuthenticationRevision = "switched" };
+        if (change == "acl") resolver.Allowed = false;
+        if (change == "owner") verifier.Owner = verifier.Owner with { InstallationRevision = "replacement" };
+        if (change == "foreign-surface") endpoint.ForeignSurface = true;
+        endpoint.Release.TrySetResult(true);
+        Assert.Null(await capture);
+        Assert.Equal(1, endpoint.Calls);
+    }
+
+    [Fact]
+    public async Task Runtime_disconnect_cancels_active_and_serialized_waiting_capture_without_delivering_stale_surface()
+    {
+        var actors = new Actors();
+        var registry = new HomeNativeWidgetRegistry(new Verifier(), actors, new(actors, [new Resolver()]));
+        var endpoint = new RuntimeEndpoint { WaitForCancellation = true };
+        var registration = await registry.RegisterRuntimeAsync(Observed, [Definition()], endpoint);
+        var reference = Assert.Single(await registry.ListAsync()).Reference;
+        var first = registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150).AsTask();
+        await endpoint.Entered.Task.WaitAsync(TimeSpan.FromSeconds(3));
+        var second = registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150).AsTask();
+        registration!.Dispose();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => first);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => second);
+        Assert.Equal(1, endpoint.Calls);
+        Assert.Null(await registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150));
+    }
+
+    [Fact]
+    public async Task A_duplicate_owner_registered_during_capture_prevents_original_surface_delivery()
+    {
+        var actors = new Actors();
+        var registry = new HomeNativeWidgetRegistry(new Verifier(), actors, new(actors, [new Resolver()]));
+        var endpoint = new RuntimeEndpoint { WaitForRelease = true };
+        using var registration = await registry.RegisterRuntimeAsync(Observed, [Definition()], endpoint);
+        var reference = Assert.Single(await registry.ListAsync()).Reference;
+        var capture = registry.CaptureAsync(reference, actors.Current, new(2, 2), 200, 150).AsTask();
+        await endpoint.Entered.Task.WaitAsync(TimeSpan.FromSeconds(3));
+        using var duplicate = await registry.RegisterAsync(Observed, [Definition()]);
+        endpoint.Release.TrySetResult(true);
+        Assert.Null(await capture);
+    }
+
+    private sealed class RuntimeEndpoint : IHomeNativeWidgetRuntimeEndpoint
+    {
+        public int Calls;
+        public bool ForeignSurface, WaitForCancellation, WaitForRelease;
+        public TaskCompletionSource<bool> Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<bool> Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<HomeNativeWidgetSurface?> CaptureAsync(HomeNativeWidgetCaptureRequest request, CancellationToken ct)
+        {
+            Calls++; Entered.TrySetResult(true);
+            if (WaitForCancellation) await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+            if (WaitForRelease) await Release.Task.WaitAsync(ct);
+            return HomeNativeWidgetSurface.Capture(request.Reference,
+                ForeignSurface ? "foreign.surface" : request.SurfaceReference,
+                "StackPanel { TextBlock Text: @caption }",
+                new Dictionary<string, JsonElement> { ["caption"] = JsonSerializer.SerializeToElement("fixture only") });
+        }
     }
 
     private sealed class Actors : IAuthenticatedResourceActorSource

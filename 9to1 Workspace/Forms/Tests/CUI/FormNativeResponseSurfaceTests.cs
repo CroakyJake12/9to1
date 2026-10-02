@@ -32,7 +32,9 @@ public sealed class FormNativeResponseSurfaceTests
                     using var host = Assert.IsType<CuiSceneHost>(window.Content); window.Show();
                     try
                     {
-                        Assert.Single(host.GetVisualDescendants().OfType<TextBox>(), input => Avalonia.Automation.AutomationProperties.GetName(input) == "Name").Text = "Ada";
+                        var nameInput = Assert.Single(host.GetVisualDescendants().OfType<TextBox>(), input => Avalonia.Automation.AutomationProperties.GetName(input) == "Name");
+                        Assert.Equal("Required. Enter the name to appear on your response.", Avalonia.Automation.AutomationProperties.GetHelpText(nameInput));
+                        nameInput.Text = "Ada";
                         await surface.DispatchAsync("Save", null, token);
                         Assert.Equal("Ada", Assert.Single(surface.Response!.Answers).Value.GetString());
                     }
@@ -85,10 +87,12 @@ public sealed class FormNativeResponseSurfaceTests
             Assert.Equal("Ada", Assert.Single(durable.Response!.Answers).Value.GetString());
             number = Named<NumericUpDown>("Amount");
             Assert.Equal("invalid", Assert.Single(number.GetVisualDescendants().OfType<TextBox>()).Text);
+            Assert.Contains("This answer could not be saved.", Avalonia.Automation.AutomationProperties.GetHelpText(number));
             Assert.Single(number.GetVisualDescendants().OfType<TextBox>()).Text = "4";
             await surface.DispatchAsync("Submit", null);
             Assert.Equal(FormResponseState.Submitted, surface.Response!.State);
             Assert.Equal(0, surface.UnsavedAnswerCount);
+            Assert.DoesNotContain("This answer could not be saved.", Avalonia.Automation.AutomationProperties.GetHelpText(Named<NumericUpDown>("Amount")));
             var reopened = fixture.Reopen();
             var saved = await reopened.ReadSessionAsync(project.FormID, response.ResponseID);
             Assert.Equal(FormResponseState.Submitted, saved.Response!.State);
@@ -164,6 +168,55 @@ public sealed class FormNativeResponseSurfaceTests
         Assert.Empty((await fixture.Sessions.ResumeAsync(project.FormID, response.ResponseID)).Response!.Answers);
     }
 
+    [Fact]
+    public async Task Published_native_columns_reflow_same_inputs_without_saving_draft_then_submit_through_actual_store()
+    {
+        await using var native = HeadlessUnitTestSession.StartNew(typeof(FormNativePreviewTests.PreviewApplication));
+        await native.Dispatch<bool>(async () =>
+        {
+            using var fixture = new Fixture(); var (project, response) = await fixture.Create(pageColumns: 2);
+            var originalProject = JsonSerializer.Serialize(project);
+            using var surface = (await FormNativeResponseSurface.OpenAsync(fixture.Sessions, project.FormID, response.ResponseID)).Surface!;
+            var registry = new CuiControlRegistry(); surface.Register(registry);
+            var window = await CuiSceneHost.CreateWindowAsync(new CuiNativeScene("forms-response-columns", "Response columns", "forms",
+                surface.CreateDocument(), surface, surface, new Ready()) { ControlRegistry = registry });
+            using var host = Assert.IsType<CuiSceneHost>(window.Content); window.Show();
+            try
+            {
+                var columns = Assert.Single(host.GetVisualDescendants().OfType<FormNativePageColumns>());
+                var name = Assert.Single(host.GetVisualDescendants().OfType<TextBox>(), control => Avalonia.Automation.AutomationProperties.GetName(control) == "Name");
+                var amount = Assert.Single(host.GetVisualDescendants().OfType<NumericUpDown>());
+                name.Text = "Ada"; amount.Value = 4;
+                var originalFiles = fixture.FileInventory();
+                var originalRevision = surface.Response!.Revision;
+                foreach (var width in new[] { 640d, 320d, 640d })
+                {
+                    columns.InvalidateMeasure(); columns.Measure(new Avalonia.Size(width, double.PositiveInfinity));
+                    columns.Arrange(new Avalonia.Rect(0, 0, width, columns.DesiredSize.Height));
+                    Assert.Equal("field-" + project.Fields[0].FieldID.ToString("N"), columns.Children[0].Name);
+                    Assert.Equal("field-" + project.Fields[1].FieldID.ToString("N"), columns.Children[1].Name);
+                    if (width == 640) { Assert.True(columns.Children[1].Bounds.X > columns.Children[0].Bounds.X); Assert.Equal(columns.Children[0].Bounds.Y, columns.Children[1].Bounds.Y); }
+                    else { Assert.Equal(columns.Children[0].Bounds.X, columns.Children[1].Bounds.X); Assert.True(columns.Children[1].Bounds.Y > columns.Children[0].Bounds.Y); }
+                    Assert.Same(name, Assert.Single(host.GetVisualDescendants().OfType<TextBox>(), control => Avalonia.Automation.AutomationProperties.GetName(control) == "Name"));
+                    Assert.Equal("Ada", name.Text); Assert.Equal(4, amount.Value);
+                    Assert.Equal(originalRevision, surface.Response!.Revision); Assert.Equal(2, surface.UnsavedAnswerCount);
+                    Assert.Equal(originalFiles, fixture.FileInventory());
+                }
+                Assert.Equal(originalProject, JsonSerializer.Serialize(project));
+                await surface.DispatchAsync("Submit", null);
+                Assert.Equal(FormResponseState.Submitted, surface.Response!.State);
+                var saved = await fixture.Reopen().ReadSessionAsync(project.FormID, response.ResponseID);
+                Assert.True(saved.Success); Assert.Equal(FormResponseState.Submitted, saved.Response!.State);
+                Assert.Equal("Ada", saved.Response.Answers.Single(answer => answer.FieldID == project.Fields[0].FieldID).Value.GetString());
+                Assert.Equal(4, saved.Response.Answers.Single(answer => answer.FieldID == project.Fields[1].FieldID).Value.GetDecimal());
+                Assert.Equal(2, saved.Presentation!.Pages[0].Layout.Columns);
+            }
+            finally { window.Close(); }
+            Assert.False(surface.IsActionAvailable("Save"));
+            return true;
+        }, default);
+    }
+
     private sealed class Fixture : IDisposable
     {
         private readonly Paths _paths = new();
@@ -182,22 +235,27 @@ public sealed class FormNativeResponseSurfaceTests
             var store = new VersionedAtomicSettingsStore(_paths);
             return new(new(store, store, _authority, new FormNativePublicationValidator(), actors: Actor), store, store, _authority, Actor);
         }
-        public async Task<(FormProject, FormResponse)> Create(bool marked = false, int maximumAttempts = 1)
+        public async Task<(FormProject, FormResponse)> Create(bool marked = false, int maximumAttempts = 1, int pageColumns = 1)
         {
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Durable response", FormModeKind.Form, now);
             project = project with { RuntimeSettings = project.RuntimeSettings with { MaximumAttempts = maximumAttempts } };
             foreach (var (kind, label) in new[] { (FormFieldKind.ShortText, "Name"), (FormFieldKind.Number, "Amount") })
                 project = FormProjectEditor.AddField(project, project.Revision, project.Pages[0].PageID,
-                    new(Guid.NewGuid(), kind, label, null, JsonSerializer.SerializeToElement(new { }), true, new(),
+                    new(Guid.NewGuid(), kind, label, kind == FormFieldKind.ShortText ? "Enter the name to appear on your response." : null, JsonSerializer.SerializeToElement(new { }), true, new(),
                         Assessment: marked && kind == FormFieldKind.ShortText ? new(1, 1,
                             [new(Guid.NewGuid(), FormMarkingRuleKind.AcceptedText, 1, AcceptedTexts: ["hidden expected answer"])]) : null), now);
+            if (pageColumns > 1)
+                project = project with { Pages = [project.Pages[0] with { Layout = new(Columns: pageColumns) }] };
             var created = await Publications.CreateAsync(project.FormID, FormProjectEditor.Project(project));
             var publication = (await Publications.PublishAsync(project.FormID, created.Publication!.Revision)).Publication!;
             var started = await Sessions.StartAsync(project.FormID, publication.Revision);
             Assert.True(started.Success);
             return (project, started.Response!);
         }
+        public string FileInventory() => string.Join("\n", Directory.EnumerateFiles(_paths.DataDirectory, "*", SearchOption.AllDirectories)
+            .Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(_paths.DataDirectory, path) + ":" +
+                Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path)))));
         public void Dispose() => _paths.Dispose();
     }
     private sealed class ActorSource : IAuthenticatedResourceActorSource

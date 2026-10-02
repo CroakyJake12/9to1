@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
@@ -44,6 +45,18 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
     private string _title = "Untitled form", _label = "Question", _help = "";
     private string _status = "Create a form or open a selected form";
     private bool _busy;
+    private string _regexPattern = "", _regexExample = "", _regexResult = "Enter a pattern and example.";
+    private int _regexMatchMode, _regexCaseMode;
+    private void TestRegexDraft()
+    {
+        try
+        {
+            _regexResult = FormMarking.TestRegex(_regexPattern, _regexExample, _regexMatchMode == 0, _regexCaseMode == 1)
+                ? "Example matches." : "Example does not match.";
+        }
+        catch (RegexMatchTimeoutException) { _regexResult = "Pattern exceeded the runtime time limit."; }
+        catch (ArgumentException) { _regexResult = "Invalid or unsupported pattern."; }
+    }
     public event PropertyChangedEventHandler? PropertyChanged;
     public Guid? FormID => _opened?.FormID;
     private FormPage? Page => _project?.Pages.SingleOrDefault(page => page.PageID == _pageID);
@@ -98,6 +111,10 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
     {
         value = path switch
         {
+            "RegexPattern" => _regexPattern, "RegexExample" => _regexExample, "RegexResult" => _regexResult,
+            "RegexMatchModes" => new[] { "Full match", "Partial match" }, "RegexMatchMode" => _regexMatchMode,
+            "RegexCaseModes" => new[] { "Case sensitive", "Ignore case" }, "RegexCaseMode" => _regexCaseMode,
+            "CanTestRegex" => IsActionAvailable("9to1.Forms.SaveField"),
             "PaletteNames" => Palette.Select(item => item.Label).ToArray(), "SelectedPaletteIndex" => _paletteIndex,
             "OptionNames" => Field?.Options?.Select(option => option.Label).ToArray() ?? [],
             "SelectedOptionIndex" => Field?.Options?.ToList().FindIndex(option => option.OptionID == _optionID) ?? -1,
@@ -141,7 +158,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
             "CanPublish" => IsActionAvailable("9to1.Forms.Publish"), "CanClose" => IsActionAvailable("9to1.Forms.Close"),
             _ => null
         };
-        return path is "PaletteNames" or "SelectedPaletteIndex" or "OptionNames" or "SelectedOptionIndex" or "OptionLabel"
+        return path is "RegexPattern" or "RegexExample" or "RegexResult" or "RegexMatchModes" or "RegexMatchMode" or "RegexCaseModes" or "RegexCaseMode" or "CanTestRegex" or "PaletteNames" or "SelectedPaletteIndex" or "OptionNames" or "SelectedOptionIndex" or "OptionLabel"
             or "MinimumRows" or "MaximumRows" or "CanEditTableBounds"
             or "FixedRowNames" or "SelectedFixedRowIndex" or "AddedRows" or "CanAddFixedRow" or "CanRemoveFixedRow" or "CanToggleAddedRows"
             or "ColumnNames" or "SelectedColumnIndex" or "ColumnLabel" or "ColumnType" or "ColumnRequired"
@@ -153,6 +170,24 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
 
     public bool TrySetValue(string path, object? value)
     {
+        if (path is "RegexPattern" or "RegexExample" or "RegexMatchMode" or "RegexCaseMode")
+        {
+            if (IsActionAvailable("9to1.Forms.SaveField") != true) return false;
+            if (path is "RegexPattern" or "RegexExample")
+            {
+                if (value is not string draft || draft.Length > 4096) return false;
+                if (path == "RegexPattern") _regexPattern = draft; else _regexExample = draft;
+            }
+            else
+            {
+                if (value is not int mode || mode is < 0 or > 1) return false;
+                if (path == "RegexMatchMode") _regexMatchMode = mode; else _regexCaseMode = mode;
+            }
+            TestRegexDraft();
+            PropertyChanged?.Invoke(this, new(path));
+            PropertyChanged?.Invoke(this, new("RegexResult"));
+            return true;
+        }
         if (!_busy && value is int index && index >= 0 && _project is not null)
         {
             if (path == "SelectedPaletteIndex" && IsActionAvailable("9to1.Forms.AddField") == true && index < Palette.Length)

@@ -108,6 +108,13 @@ public sealed partial class HavenLauncherActivity : Activity
     protected override void OnStop()
     {
         _activityStarted = false;
+        CloseAppDrawer();
+        _folderDialog?.Dismiss();
+        CloseGestureDialogs();
+        CloseLauncherSettingsDialog();
+        CloseApplicationShortcutDialog();
+        ClosePlacementMenu();
+        CloseOriginalDrawerDialogs();
         PauseLauncherDulche();
         ClearMountedWidgets();
         CloseWidgetDialogs();
@@ -145,9 +152,16 @@ public sealed partial class HavenLauncherActivity : Activity
 
     protected override void OnDestroy()
     {
+        _activityStarted = false;
+        CloseAppDrawer();
+        CloseLayoutDocumentDialogs();
         CloseLauncherDulche();
         _root?.SetOnTouchListener(null);
         CloseGestureDialogs();
+        CloseLauncherSettingsDialog();
+        CloseApplicationShortcutDialog();
+        ClosePlacementMenu();
+        CloseOriginalDrawerDialogs();
         CloseWidgetDialogs();
         ClearMountedWidgets();
         _folderDialog?.Dismiss();
@@ -200,7 +214,16 @@ public sealed partial class HavenLauncherActivity : Activity
 
     public override void OnBackPressed()
     {
-        if (_page != 0)
+        // Back dismisses transient navigation before any canonical page edit.
+        if (_movingPlacementId is not null)
+        {
+            _movingPlacementId = null;
+            if (_homeReady && _activityStarted && !_launcherLifetime.IsCancellationRequested) RenderPage();
+            return;
+        }
+        if (_folderDialog?.IsShowing == true) { _folderDialog.Dismiss(); return; }
+        if (_appDrawerDialog?.IsShowing == true) { CloseAppDrawer(); return; }
+        if (_homeReady && _activityStarted && !_launcherLifetime.IsCancellationRequested && _page != 0)
         {
             ChangePage(-_page);
             return;
@@ -214,6 +237,10 @@ public sealed partial class HavenLauncherActivity : Activity
     {
         _root?.SetOnTouchListener(null);
         CloseGestureDialogs();
+        CloseLauncherSettingsDialog();
+        CloseApplicationShortcutDialog();
+        ClosePlacementMenu();
+        CloseOriginalDrawerDialogs();
         _root = new LinearLayout(this)
         {
             Orientation = Orientation.Vertical,
@@ -223,7 +250,7 @@ public sealed partial class HavenLauncherActivity : Activity
         };
         _root.SetPadding(Dp(12), Dp(10), Dp(12), Dp(10));
         _root.SetOnTouchListener(new SwipeTouchListener(
-            swipeThresholdPixels: Dp(80), tapSlopPixels: Dp(12), dispatch: RunGesture));
+            swipeThresholdPixels: Dp(80), tapSlopPixels: Dp(12), captureOriginal: CaptureOriginalGestureView, dispatch: RunGesture));
 
         _widgetStrip = new LinearLayout(this)
         {

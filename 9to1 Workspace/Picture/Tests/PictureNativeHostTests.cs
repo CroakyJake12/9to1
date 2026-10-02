@@ -1,3 +1,6 @@
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Avalonia;
@@ -20,6 +23,173 @@ namespace HavenOS.Images.Tests;
 
 public sealed class PictureNativeHostTests
 {
+    [AvaloniaFact]
+    public async Task SaveCopy_real_native_CUI_Home_review_retains_original_Glycin_source_and_reopens_editable_copy()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var root = Path.Combine(Path.GetTempPath(), "picture-native-copy-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var home = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
+            var profiles = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+            var files = new NativeFilesWorkspaceService(home, profiles);
+            var permissions = new HomePermissionTrustService(home, new PictureNativeActionPolicies().TryGet);
+            var ownership = new HomeLocalStoreOwnership(home, profiles, new HomeLocalStoreEvidenceRegistry([files]), permissions);
+            var authority = new NativeFilesWorkspaceAuthority(files, profiles, new HomeResourceStoreOwnershipAuthority(ownership, profiles));
+            var chosen = Path.Combine(root, "selected-empty-workspace"); Directory.CreateDirectory(chosen);
+            await files.ConfigureNewAsync(chosen, ownership, ct);
+            var workspace = (await authority.GetCurrentAsync(ct))!;
+            Assert.NotNull(workspace);
+            var resources = new ResourceAuthorizationService(profiles,
+                [new FilesArtifactResourceResolver(async (actor, token) =>
+                {
+                    var current = await authority.GetCurrentAsync(token);
+                    return current?.Actor == actor ? current.Provider : null;
+                }, async (actor, app, token) =>
+                {
+                    var current = await authority.GetCurrentAsync(token);
+                    return current?.Actor == actor && current.Configuration.AppFolders.TryGetValue(app, out var folder) ? folder : null;
+                })]);
+            var broker = new HomeResourceOperationBroker(resources, permissions);
+            await using var runtime = new HomeCoreRuntime([new HomeCoreStateService(home), new HomePermissionsCoreService(permissions, profiles)]);
+            var media = new NativeFilesMediaAssetSourceResolver(authority, profiles, resources);
+            var services = new ServiceCollection();
+            var motionPath = Path.Combine(root, "ui-preferences.json");
+            var motion = new Haven.Infrastructure.LocalMotionPreferencesService(motionPath);
+            services.AddSingleton<Haven.Application.IMotionPreferenceSource>(motion);
+            services.AddSingleton(runtime); services.AddSingleton(profiles); services.AddSingleton<IAuthenticatedResourceActorSource>(profiles);
+            services.AddSingleton(files); services.AddSingleton(authority); services.AddSingleton(resources); services.AddSingleton(broker);
+            services.AddSingleton(permissions); services.AddSingleton(ownership); services.AddSingleton(media);
+            var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+            services.AddSingleton<IStorageProvider>(new PicturePickerFixture(bytes).Provider);
+            await using var provider = services.BuildServiceProvider();
+            var pictureFolder = workspace.Configuration.AppFolders["picture"];
+            var directory = (await authority.ResolveAppDirectoryAsync("picture", ct))!;
+            await File.WriteAllBytesAsync(Path.Combine(directory, "native-source.gif"), bytes, ct);
+            var rawId = HostedItemId.New(); var rawRevision = new FilesRevisionId(Guid.NewGuid());
+            var hash = Convert.ToHexString(SHA256.HashData(bytes));
+            var folderRevision = (await workspace.Provider.GetAsync(pictureFolder, ct)).Value!.CurrentRevisionId;
+            var commitGuard = await authority.CaptureCommitAuthorityAsync(workspace.Actor, workspace.Provider, () => true, ct);
+            Assert.True((await workspace.Provider.CommitUploadedContentAsync(new(rawId, pictureFolder, "native-source.gif", "image/gif", rawRevision,
+                null, workspace.Actor.ActorId, DateTimeOffset.UtcNow, bytes.Length, hash, "native-source.gif"),
+                [new(pictureFolder, folderRevision)], workspace.Configuration.StoreId, commitGuard, ct)).IsSuccess);
+            var bridge = new PictureFilesArtifactBridge(profiles, actor => actor == workspace.Actor ? workspace.Provider : null,
+                workspace.Directories, resources, () => true,
+                (actor, expectedProvider, token) => authority.CaptureCommitAuthorityAsync(actor, expectedProvider, () => true, token));
+            var original = await bridge.CreateAsync(PictureDocument.Create(2, 1, rawId.ToString(), rawRevision.ToString()).Rotate(1),
+                new(rawId.Value, rawRevision.Value, hash, bytes.Length, Guid.NewGuid()), workspace.Configuration.StoreId, workspace.Actor, ct);
+            var originalBytes = PictureArtifactCodec.Serialize(original.Artifact);
+            var window = new MainWindow(provider); window.Show();
+            try
+            {
+                await window.Initialization;
+                Button(window, "Open selected").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => Descendants(window).OfType<PictureNativeCuiSurface>().Any(), ct);
+                var sourceSurface = Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
+                AssertRed(Assert.IsAssignableFrom<Bitmap>(Assert.Single(Descendants(sourceSurface).OfType<Image>()).Source));
+                Button(sourceSurface,"Show original").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>sourceSurface.IsShowingOriginal,ct);
+                Assert.Equal(new PixelSize(2,1),Assert.IsAssignableFrom<Bitmap>(Assert.Single(Descendants(sourceSurface).OfType<Image>()).Source).PixelSize);
+                Assert.Equal(originalBytes,PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId),workspace.Configuration.StoreId,ct)).Artifact));
+                Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
+                Button(sourceSurface,"Show edited").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>!sourceSurface.IsShowingOriginal,ct);
+                Assert.Equal(new PixelSize(1,2),Assert.IsAssignableFrom<Bitmap>(Assert.Single(Descendants(sourceSurface).OfType<Image>()).Source).PixelSize);
+                // Actual native CUI view commands operate on the genuine decoded image only.
+                Assert.Equal(1,sourceSurface.PreviewScale);
+                Button(sourceSurface,"Zoom in").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>sourceSurface.PreviewScale>1,ct);
+                Button(sourceSurface,"Pan right").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>sourceSurface.PreviewOffset.X==50,ct);
+                Assert.Equal(originalBytes,PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId),workspace.Configuration.StoreId,ct)).Artifact));
+                Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
+                Button(sourceSurface,"Fit view").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>sourceSurface.PreviewScale==1 && sourceSurface.PreviewOffset==(0d,0d),ct);
+                var previewBorder=Assert.Single(Descendants(sourceSurface).OfType<Border>(),b=>b.Child is Image);
+                var center=new Point(previewBorder.Bounds.Width/2,previewBorder.Bounds.Height/2);
+                var nativePoint=previewBorder.TranslatePoint(center,window)!.Value;
+                window.MouseWheel(nativePoint,new Vector(0,1));await UntilAsync(()=>sourceSurface.PreviewScale==1.25,ct);
+                window.MouseDown(nativePoint,MouseButton.Middle);await UntilAsync(()=>sourceSurface.IsPreviewPanning,ct);
+                window.MouseMove(nativePoint+new Vector(20,10),RawInputModifiers.MiddleMouseButton);
+                await UntilAsync(()=>sourceSurface.PreviewOffset==(20d,10d),ct);
+                window.MouseUp(nativePoint+new Vector(20,10),MouseButton.Middle);
+                Assert.False(sourceSurface.IsPreviewPanning);
+                Assert.Equal(originalBytes,PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId),workspace.Configuration.StoreId,ct)).Artifact));
+                Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
+                Button(sourceSurface,"Fit view").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>sourceSurface.PreviewScale==1 && sourceSurface.PreviewOffset==(0d,0d),ct);
+                var saveCopy = Button(sourceSurface, "Save a Copy"); Assert.True(saveCopy.IsEnabled);
+                saveCopy.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1, ct);
+                var pending = Assert.Single((await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests);
+                Assert.Equal(PictureSaveCopyIntent.ActionId, pending.Scope.ActionName);
+                Assert.Equal(originalBytes, PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId), workspace.Configuration.StoreId, ct)).Artifact));
+                Assert.Single((await workspace.Provider.ListAsync(pictureFolder, null, null, ct)).Items, item => item.Kind == HostedItemKind.Artifact);
+                await ApprovePendingAsync(window, permissions, ct);
+                Button(window, "Finish approved request").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(() => Descendants(window).OfType<PictureNativeCuiSurface>().Any(item => !ReferenceEquals(item, sourceSurface)), ct);
+                var listing = await workspace.Provider.ListAsync(pictureFolder, null, null, ct);
+                var copiedItem = Assert.Single(listing.Items, item => item.Kind == HostedItemKind.Artifact && item.Id.Value != original.Artifact.BackingFileId);
+                var copied = await bridge.OpenAsync(copiedItem.Id, workspace.Configuration.StoreId, ct);
+                Assert.NotEqual(original.Artifact.Document.DocumentId, copied.Artifact.Document.DocumentId);
+                Assert.Equal(original.Artifact.SourceAsset, copied.Artifact.SourceAsset);
+                Assert.Equal(original.Artifact.Document.Operations, copied.Artifact.Document.Operations);
+                Assert.Equal(1, copied.Artifact.Document.CanvasWidth); Assert.Equal(2, copied.Artifact.Document.CanvasHeight);
+                Assert.Equal(0, copied.Artifact.Document.Revision);
+                Assert.Equal(originalBytes, PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId), workspace.Configuration.StoreId, ct)).Artifact));
+                Assert.Single(listing.Items, item => item.Kind == HostedItemKind.File && item.Id == rawId);
+                var copySurface = Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
+                var bitmap = Assert.IsAssignableFrom<Bitmap>(Assert.Single(Descendants(copySurface).OfType<Image>()).Source);
+                Assert.Equal(new PixelSize(1, 2), bitmap.PixelSize); AssertRed(bitmap);
+                await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).RecentAuditEvents.Any(
+                    item => item.Kind == HomePermissionAuditKind.ExecutionCompleted && item.RequestState == HomePermissionRequestState.Succeeded &&
+                        item.AffectedObjects.Any(affected => affected.ObjectType == "files.item" && affected.ObjectId == copiedItem.Id.ToString())), ct);
+                var fresh = new PictureFilesArtifactBridge(profiles, actor => actor == workspace.Actor ? workspace.Provider : null,
+                    workspace.Directories, resources, () => true,
+                    (actor, expectedProvider, token) => authority.CaptureCommitAuthorityAsync(actor, expectedProvider, () => true, token));
+                Assert.Equal(PictureArtifactCodec.Serialize(copied.Artifact), PictureArtifactCodec.Serialize((await fresh.OpenAsync(copiedItem.Id, workspace.Configuration.StoreId, ct)).Artifact));
+                var beforeFlipSurface=Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
+                var beforeFlipBytes=PictureArtifactCodec.Serialize(copied.Artifact);
+                Button(beforeFlipSurface,"Flip vertically").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(async()=> (await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests.Count==1,ct);
+                Assert.Equal(beforeFlipBytes,PictureArtifactCodec.Serialize((await bridge.OpenAsync(copiedItem.Id,workspace.Configuration.StoreId,ct)).Artifact));
+                await ApprovePendingAsync(window,permissions,ct);
+                Button(window,"Finish approved request").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+                await UntilAsync(()=>Descendants(window).OfType<PictureNativeCuiSurface>().Any(s=>!ReferenceEquals(s,beforeFlipSurface)),ct);
+                var flipped=await bridge.OpenAsync(copiedItem.Id,workspace.Configuration.StoreId,ct);
+                Assert.Equal(copied.Artifact.Document.Revision+1,flipped.Artifact.Document.Revision);
+                Assert.Equal(copied.Artifact.SourceAsset,flipped.Artifact.SourceAsset);
+                Assert.False(Assert.IsType<FlipOperation>(flipped.Artifact.Document.Operations.Last()).Horizontal);
+                Assert.Equal(originalBytes,PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId),workspace.Configuration.StoreId,ct)).Artifact));
+                copied=flipped;
+                var currentSurface=Assert.Single(Descendants(window).OfType<PictureNativeCuiSurface>());
+                var currentImage=Assert.Single(Descendants(currentSurface).OfType<Image>());
+                var currentBorder=Assert.Single(Descendants(currentSurface).OfType<Border>(),b=>b.Child is Image);
+                var currentPoint=currentBorder.TranslatePoint(new Point(currentBorder.Bounds.Width/2,currentBorder.Bounds.Height/2),window)!.Value;
+                var now=DateTimeOffset.UtcNow;
+                Assert.True((await workspace.Provider.MutateAsync(new(new(Guid.NewGuid()),workspace.Actor.ActorId,copiedItem.Id,pictureFolder,null,
+                    "Rename",copied.CasRevisionId,null,FilesOperationState.Pending,now,now,null,null),"stale-preview.9to1p",ct)).IsSuccess);
+                var changedBytes=await File.ReadAllBytesAsync(Path.Combine(workspace.Configuration.RootDirectory,".9to1-files","drive.json"));
+                var scale=currentSurface.PreviewScale;var offset=currentSurface.PreviewOffset;
+                IPointer? observedPointer=null;
+                currentBorder.AddHandler(InputElement.PointerWheelChangedEvent,(_,args)=>observedPointer=args.Pointer,handledEventsToo:true);
+                window.MouseWheel(currentPoint,new Vector(0,1));await UntilAsync(()=>currentImage.Source is null,ct);
+                Assert.Equal(scale,currentSurface.PreviewScale);Assert.Equal(offset,currentSurface.PreviewOffset);
+                Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
+                Assert.Equal(changedBytes,await File.ReadAllBytesAsync(Path.Combine(workspace.Configuration.RootDirectory,".9to1-files","drive.json")));
+                Assert.NotNull(observedPointer);window.Close();
+                currentBorder.RaiseEvent(new PointerWheelEventArgs(currentBorder,observedPointer!,window,currentPoint,0,
+                    new PointerPointProperties(),KeyModifiers.None,new Vector(0,1)));
+                Assert.Equal(changedBytes,await File.ReadAllBytesAsync(Path.Combine(workspace.Configuration.RootDirectory,".9to1-files","drive.json")));
+                Assert.False(currentSurface.IsPreviewPanning);Assert.Equal(scale,currentSurface.PreviewScale);
+
+            }
+            finally { window.Close(); }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [AvaloniaFact]
     public async Task Standalone_Cui_uses_actual_Home_Files_Glycin_and_approved_edit_then_clears_revoked_source()
     {

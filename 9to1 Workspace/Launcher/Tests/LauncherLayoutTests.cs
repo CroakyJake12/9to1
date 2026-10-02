@@ -444,7 +444,11 @@ public sealed class LauncherLayoutTests
             [new("clock", "1", "Clock", new(1, 1), new(2, 1), new(4, 2), "config.clock", "surface.clock", HomeNativeWidgetUpdateMode.Event, null, [], [])]);
         Assert.NotNull(registration);
         Assert.NotNull((await session.ReadWidgetAsync(snapshot, widget.Id))!.NativeDefinition);
+        var beforeTamperedRead = await File.ReadAllBytesAsync(f.StatePath);
         ((LauncherWidgetPlacement[])snapshot.Layout.Current.Widgets)[0] = widget with { Native = reference with { WidgetId = "forged" } };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => session.ReadWidgetAsync(snapshot, widget.Id));
+        Assert.Equal(beforeTamperedRead, await File.ReadAllBytesAsync(f.StatePath));
+        snapshot = (await session.ReadAsync())!; // Only a genuine new owning read renews private issuance.
         Assert.Equal(reference, (await session.ReadWidgetAsync(snapshot, widget.Id))!.Placement.Native);
         verifier.Available = false;
         Assert.Null((await session.ReadWidgetAsync(snapshot, widget.Id))!.NativeDefinition);

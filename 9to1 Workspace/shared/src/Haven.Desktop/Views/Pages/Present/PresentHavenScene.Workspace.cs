@@ -10,6 +10,8 @@ namespace Haven.Desktop.Views.Pages.Present;
 internal sealed partial class PresentHavenScene
 {
     private PopupMenu? _workspacePopup;
+    private PresentDocumentSummary[] _libraryDocuments = [];
+    private string _libraryFilter = string.Empty;
     private bool _suppressInlineText;
     private Guid? _inlineTextElementId;
     private Guid? _activeVectorElementId;
@@ -46,6 +48,8 @@ internal sealed partial class PresentHavenScene
 
     public Container MenuBar { get; private set; } = null!;
     public Container LibraryHost { get; private set; } = null!;
+    public Input LibrarySearch { get; private set; } = null!;
+    public HavenText LibrarySearchSummary { get; private set; } = null!;
     public Container RecentDecks { get; private set; } = null!;
     public Container PinnedDecks { get; private set; } = null!;
     public Container WorkspaceHost { get; private set; } = null!;
@@ -113,6 +117,19 @@ internal sealed partial class PresentHavenScene
         var librarySubtitle = new HavenText("Create, import or reopen a presentation. Your decks stay editable and local.") { Level = TextLevel.Paragraph };
         librarySubtitle.SetValue(HavenProperties.Foreground, "TextSecondary");
         LibraryHost.Add(librarySubtitle);
+        LibrarySearch = new Input { Name = "Present.Library.Search", Placeholder = "Search presentation titles" };
+        LibrarySearch.Accessibility.AccessibleName = "Search local presentation titles";
+        LibrarySearch.Invalidated += (_, _) =>
+        {
+            if (_disposed) return;
+            var filter = LibrarySearch.Text?.Trim() ?? string.Empty;
+            if (string.Equals(filter, _libraryFilter, StringComparison.Ordinal)) return;
+            _libraryFilter = filter;
+            RenderFilteredLibrary();
+        };
+        LibraryHost.Add(LibrarySearch);
+        LibrarySearchSummary = new HavenText(string.Empty) { Name = "Present.Library.SearchSummary", Level = TextLevel.Caption };
+        LibraryHost.Add(LibrarySearchSummary);
 
         var createRow = new Container { Name = "Present.Library.Create", Layout = HavenLayout.Wrap };
         createRow.SetValue(HavenProperties.Gap, HavenLength.Px(10));
@@ -351,14 +368,29 @@ internal sealed partial class PresentHavenScene
     public void SetLibrary(IReadOnlyList<PresentDocumentSummary> documents)
     {
         documents ??= Array.Empty<PresentDocumentSummary>();
-        LibraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        if (LibraryHost is null) BuildWorkspaceControls();
+        var libraryHost = LibraryHost ?? throw new InvalidOperationException("Presentation library controls are unavailable.");
+        libraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MenuBar.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         PlaybackOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
-        FillDeckGalleryPolished(PinnedDecks, documents.Where(document => document.Pinned));
-        FillDeckGalleryPolished(RecentDecks, documents);
+        _libraryDocuments = documents.ToArray();
+        RenderFilteredLibrary();
         StatusText.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         SetStatus(documents.Count == 0 ? "No presentations yet. Create one or import a PowerPoint file." : $"{documents.Count} presentation{(documents.Count == 1 ? string.Empty : "s")} available locally.");
+    }
+
+    private void RenderFilteredLibrary()
+    {
+        if (_disposed) return;
+        var matches = _libraryDocuments.Where(document => _libraryFilter.Length == 0 ||
+            document.Title.Contains(_libraryFilter, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        FillDeckGalleryPolished(PinnedDecks, matches.Where(document => document.Pinned));
+        FillDeckGalleryPolished(RecentDecks, matches);
+        LibrarySearchSummary.Content = _libraryFilter.Length == 0
+            ? $"{matches.Length} local presentation{(matches.Length == 1 ? string.Empty : "s")}."
+            : matches.Length == 0 ? "No local presentation titles match your search."
+                : $"{matches.Length} of {_libraryDocuments.Length} local presentations match.";
     }
 
     public void SetWorkspaceDocument(PresentDocument document, int slideIndex)

@@ -1,7 +1,8 @@
 <Cui id="9to1.Files.NativeBrowser" version="1">
-  <Grid id="files-browser-shell" rows="Auto,Auto,*,Auto" accessible-name="Files browser">
+  <Grid id="files-browser-shell" rows="Auto,Auto,*,Auto,Auto" accessible-name="Files browser">
     <WrapPanel orientation="Horizontal">
       <Button id="files-home" content="Files" action="9to1.Files.Home" is-enabled="{Binding CanNavigate}" accessible-name="Go to Files root" />
+      <Button id="files-up" content="Up" action="9to1.Files.Up" is-enabled="{Binding CanUp}" accessible-name="Go to canonical parent folder" />
       <Button id="files-back" content="Back" action="9to1.Files.Back" is-enabled="{Binding CanBack}" accessible-name="Previous folder" />
       <Button id="files-forward" content="Forward" action="9to1.Files.Forward" is-enabled="{Binding CanForward}" accessible-name="Next folder in history" />
       <Button id="files-refresh" content="Refresh" action="9to1.Files.Refresh" is-enabled="{Binding CanNavigate}" accessible-name="Refresh canonical Files metadata" />
@@ -11,9 +12,11 @@
     </WrapPanel>
     <StackPanel grid-row="1" orientation="Horizontal">
       <FilesSearchInput id="files-search-input" accessible-name="Search this folder" />
+      <FilesDisplayedSortInput id="files-displayed-sort" accessible-name="Sort names on this displayed page" />
       <Button id="files-search" content="Search" action="9to1.Files.Search" is-enabled="{Binding CanNavigate}" accessible-name="Search canonical names in this folder" />
     </StackPanel>
     <FilesCanonicalList id="files-canonical-list" grid-row="2" accessible-name="Canonical Files items" />
-    <TextBlock id="files-status" grid-row="3" text="{Binding Status}" accessible-name="Files operation status" />
+    <TextBlock id="files-selected-details" grid-row="3" text="{Binding SelectedDetails}" accessible-name="Selected item displayed details" />
+    <TextBlock id="files-status" grid-row="4" text="{Binding Status}" accessible-name="Files operation status" />
   </Grid>
 </Cui>

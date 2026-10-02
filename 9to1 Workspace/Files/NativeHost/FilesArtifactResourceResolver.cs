@@ -24,6 +24,7 @@ public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessReso
         if (scope.Kind != ResourceKind || !Guid.TryParse(scope.Id, out var id) || id == Guid.Empty || actor.OrganisationId is not null)
             return Deny("FilesScopeInvalid");
         var pictureExport = actionId == "picture.file.export";
+        var pictureCopy = actionId == "picture.file.copy";
         var pictureImport = actionId == "picture.file.import";
         var sitesWrite = actionId is "sites.project.create" or "sites.project.save";
         var mediaRead = actionId == "media.asset.read" && scope.Access == ResourceAccess.Read;
@@ -35,12 +36,12 @@ public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessReso
             "write.file.open" or "write.file.save" or "write.file.create" => "write",
             "canvas.file.open" or "canvas.file.save" or "canvas.file.create" => "canvas",
             "games.file.open" or "games.file.save" or "games.file.create" or "games.scene.observe" => "games",
-            "picture.file.open" or "picture.file.save" or "picture.file.create" or "picture.file.export" or "picture.file.import" => "picture",
+            "picture.file.open" or "picture.file.save" or "picture.file.create" or "picture.file.export" or "picture.file.import" or "picture.file.copy" => "picture",
             _ => null
         };
         if ((sitesWrite || pictureImport) && scope.Access != ResourceAccess.Write) return Deny("FilesActionInvalid");
-        if (pictureExport && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
-        if (!pictureExport && !sitesWrite && !mediaRead && !packageRead && !folderRead && !browserRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
+        if ((pictureExport || pictureCopy) && scope.Access is not (ResourceAccess.Read or ResourceAccess.Write)) return Deny("FilesActionInvalid");
+        if (!pictureExport && !pictureCopy && !sitesWrite && !mediaRead && !packageRead && !folderRead && !browserRead && (ownerApp is null || scope.Access != ((actionId.EndsWith(".open", StringComparison.Ordinal) || actionId == "games.scene.observe") ? ResourceAccess.Read : ResourceAccess.Write)))
             return Deny("FilesActionInvalid");
         var provider = await _providers(actor, cancellationToken).ConfigureAwait(false);
         if (provider is null) return Deny("FilesProviderUnauthorised");
@@ -53,14 +54,18 @@ public sealed class FilesArtifactResourceResolver : ICanonicalResourceAccessReso
         if (item.CurrentRevisionId is { } expectedRevision
             ? !Guid.TryParse(scope.Revision, out var suppliedRevision) || suppliedRevision != expectedRevision.Value
             : scope.Revision != "uncommitted") return Deny("FilesRevisionConflict");
-        if (sitesWrite || pictureImport || (pictureExport && scope.Access == ResourceAccess.Write))
+        if (sitesWrite || pictureImport || ((pictureExport || pictureCopy) && scope.Access == ResourceAccess.Write))
         {
             // This folder comes from the verified host configuration, never from caller arguments.
-            var configured = _appFolders is null ? null : await _appFolders(actor, pictureExport || pictureImport ? "picture" : "sites", cancellationToken).ConfigureAwait(false);
+            var configured = _appFolders is null ? null : await _appFolders(actor, pictureExport || pictureImport || pictureCopy ? "picture" : "sites", cancellationToken).ConfigureAwait(false);
             if (item.Kind != HostedItemKind.Folder || configured != item.Id)
                 return Deny("FilesAppFolderDenied");
             return new(true, "Allowed", actor.ActorId, revision, null);
         }
+        // Editable-copy raw dependencies are exact personal Files reads, not writable artifacts.
+        // The typed Picture intent binds every original source and destination together separately.
+        if (pictureCopy && scope.Access == ResourceAccess.Read && item.Kind == HostedItemKind.File)
+            return new(true, "Allowed", actor.ActorId, revision, null);
         if (folderRead) return item.Kind == HostedItemKind.Folder
             ? new(true, "Allowed", actor.ActorId, revision, null) : Deny("FilesNativeFolderInvalid");
         if (browserRead) return new(true, "Allowed", actor.ActorId, revision, null);

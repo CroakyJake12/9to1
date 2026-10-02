@@ -14,9 +14,10 @@ public sealed class PictureImportIntent : IDisposable
     private readonly byte[] _artifactBytes;
     private readonly JsonElement _arguments;
     internal PictureImportIntent(PicturePickedImage picked, AuthenticatedResourceActor actor,
-        FilesWorkspaceDirectoryBinding binding, FilesRevisionId? folderRevision)
+        FilesWorkspaceDirectoryBinding binding, FilesRevisionId? folderRevision, Guid expectedStoreId)
     {
-        Actor = actor; Binding = binding; FolderRevision = folderRevision;
+        if (expectedStoreId == Guid.Empty) throw new ArgumentException("Original store identity is required.", nameof(expectedStoreId));
+        StoreId = expectedStoreId; Actor = actor; Binding = binding; FolderRevision = folderRevision;
         RawFileId = HostedItemId.New(); RawRevision = new(Guid.NewGuid()); BackingFileId = HostedItemId.New();
         Name = picked.Name; MimeType = picked.MimeType; _sourceBytes = picked.CopyBytes(); SourceHash = picked.ContentHash;
         SizeBytes = _sourceBytes.LongLength;
@@ -30,12 +31,13 @@ public sealed class PictureImportIntent : IDisposable
         ArtifactName = Name + ".picture.json";
         Scopes = Array.AsReadOnly(new[] { new ResourceScope("files.item", binding.FolderId.ToString(),
             folderRevision?.ToString() ?? "uncommitted", ResourceAccess.Write) });
-        _arguments = JsonSerializer.SerializeToElement(new { name = Name, mimeType = MimeType, rawFileId = RawFileId.Value,
+        _arguments = JsonSerializer.SerializeToElement(new { storeId = StoreId, name = Name, mimeType = MimeType, rawFileId = RawFileId.Value,
             rawRevision = RawRevision.Value, sourceHash = SourceHash, sizeBytes = SizeBytes,
             backingFileId = BackingFileId.Value, documentId = document.DocumentId, artifactHash = ArtifactHash,
             sourceAsset = Artifact.SourceAsset, artifactName = ArtifactName, destinationFolderId = binding.FolderId.Value,
             destinationRevision = folderRevision?.Value, sourcePreservation = "original-encoded-bytes-all-frames-and-metadata" });
     }
+    public Guid StoreId { get; }
     public const string ActionId = "picture.file.import";
     public string Name { get; }
     public string MimeType { get; }
@@ -69,15 +71,16 @@ public sealed class PictureHomeImportOperation(HomeResourceOperationBroker home,
     FilesWorkspaceDirectoryResolver directories, ResourceAuthorizationService authorization, Func<bool> hostAllowsWrites,
     Func<AuthenticatedResourceActor, DurableDriveProvider, CancellationToken, ValueTask<FilesCommitAuthorityGuard>>? captureCommitAuthority = null)
 {
-    public async Task<PictureImportIntent> PrepareAsync(PicturePickedImage picked, CancellationToken cancellationToken = default)
+    public async Task<PictureImportIntent> PrepareAsync(PicturePickedImage picked, Guid expectedStoreId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(picked);
         var actor = await ActorAsync(cancellationToken).ConfigureAwait(false);
-        var binding = await BindingAsync(actor, cancellationToken).ConfigureAwait(false);
         var provider = providers(actor) ?? throw new UnauthorizedAccessException("No canonical Files provider is available.");
+        await provider.GetStoreEvidenceAsync(expectedStoreId, cancellationToken).ConfigureAwait(false);
+        var binding = await BindingAsync(actor, cancellationToken).ConfigureAwait(false);
         var folder = await provider.GetAsync(binding.FolderId, cancellationToken).ConfigureAwait(false);
         if (!folder.IsSuccess) throw new UnauthorizedAccessException("The configured Picture folder is unavailable.");
-        var intent = new PictureImportIntent(picked, actor, binding, folder.Value!.CurrentRevisionId);
+        var intent = new PictureImportIntent(picked, actor, binding, folder.Value!.CurrentRevisionId, expectedStoreId);
         try { await ValidateAsync(intent, cancellationToken).ConfigureAwait(false); return intent; }
         catch { intent.Dispose(); throw; }
     }
@@ -115,20 +118,22 @@ public sealed class PictureHomeImportOperation(HomeResourceOperationBroker home,
                 new(intent.BackingFileId, "picture", document.DocumentId.ToString("N") + ":" + document.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     intent.Actor.ActorId, now, artifactBytes.LongLength, intent.ArtifactHash, artifactRelative, null),
                 [new(intent.Binding.FolderId, intent.FolderRevision)],
-                commitAuthority,
+                intent.StoreId, commitAuthority,
                 cancellationToken).ConfigureAwait(false);
             if (!result.IsSuccess) throw new InvalidOperationException(result.Error!.Message + " Unpublished immutable candidates remain recoverable.");
-            return new(PictureArtifactCodec.Deserialize(artifactBytes), result.Value!.ArtifactRevision, result.Value.ArtifactRevision.Id);
+            return new(PictureArtifactCodec.Deserialize(artifactBytes), result.Value!.ArtifactRevision, result.Value.ArtifactRevision.Id) { StoreId = intent.StoreId };
         }
         finally { Array.Clear(rawBytes); Array.Clear(artifactBytes); }
     }
 
     private async Task<DurableDriveProvider> ValidateAsync(PictureImportIntent intent, CancellationToken ct)
     {
+        var provider = providers(intent.Actor) ?? throw new UnauthorizedAccessException("No canonical Files provider is available.");
+        await provider.GetStoreEvidenceAsync(intent.StoreId, ct).ConfigureAwait(false);
         if (await ActorAsync(ct).ConfigureAwait(false) != intent.Actor || await BindingAsync(intent.Actor, ct).ConfigureAwait(false) != intent.Binding ||
             await authorization.AuthorizeAsync(PictureImportIntent.ActionId, intent.Scopes, ct).ConfigureAwait(false) != intent.Actor)
             throw new UnauthorizedAccessException("The authenticated actor or import destination changed.");
-        return providers(intent.Actor) ?? throw new UnauthorizedAccessException("No canonical Files provider is available.");
+        return provider;
     }
     private async Task<AuthenticatedResourceActor> ActorAsync(CancellationToken ct)
     {
