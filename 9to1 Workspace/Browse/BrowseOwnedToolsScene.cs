@@ -61,7 +61,7 @@ public sealed class BrowseOwnedToolsScene : IDisposable
     { lock (_tasksGate) return Task.WhenAll(_accepted.ToArray()); }
     private HuiButton Button(string name, string text, Func<Task> action)
     {
-        var button = new HuiButton(text) { Name = name };
+        var button = new HuiButton { Content = text, Name = name };
         button.Invoked += (_, _) => Accept(action);
         return button;
     }

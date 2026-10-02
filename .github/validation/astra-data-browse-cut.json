@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "f3bdbd5ea4b1022b48c318d5f45eac7c560d976a",
-  "programTree": "856a4b3f3bf13d2e07ea026e9551fe62284ce438",
+  "baselineCommit": "2f420c90782bcfb8ec76c3bce3eca8c0da5b495d",
+  "programTree": "3c2bb450c0d39534be79d812cd4f45624bc7555c",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -4327,9 +4327,9 @@
     {
       "path": "9to1 Workspace/Browse/BrowseOwnedToolsScene.cs",
       "mode": "100644",
-      "object": "059950e3f7560ca98c17f4147d23f7642ba79e70",
-      "bytes": 10474,
-      "sha256": "001f11e60b6d78ab840d57a4cd8acea9f7be11dbd3658637d4b54511f1965010"
+      "object": "bdeb26e44a86a41ae110eff55c6c18bd618180ca",
+      "bytes": 10484,
+      "sha256": "126063c8caeab5139acee1d5f7b4c3da6182456ccfeb87681906e81f3e7161af"
     },
     {
       "path": "9to1 Workspace/Browse/BrowseOwnedWebMcpBinding.cs",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Actual CS0246 corrective only: imports existing permission namespace in exact selected WebMcp DI registration. No registrations/authority/test/filters changed; prior alias correction and whole owning/resource suites with all source/restore/compiled/class/artifact guards retained. Uncompiled/unrun.",
+  "limits": "Actual Avalonia CS1729 corrective only: default Button constructor with Content initializer; Name/events/Accept/ownership/lifetime unchanged. Whole prior owning and full resource suites, all exact classes/source22+3/restore/producers/hosttasks/compiled/artifact guards preserved. No omission or compilation/runtime claim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64722,6 +64722,18 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective01/actual-failed-resource02/root-capture.json",
       "sha256": "3ae785209bb4d36286cd516be484720ce3de9cc7d8274fcf8b3cb16cce9a89d2"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-browse-actual-button-constructor-corrective01/manifest.json",
+      "sha256": "6ffa55ac0b1e4557307723e27b3fa9627974a0904d71c985e7b75ac8bf710dc5"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective02/actualfailed-11216417439/root-capture.json",
+      "sha256": "fbbf7b596d40fa6711b4a3848d7f2e7e7ddc8e0ed716056f4a62ab91463449e5"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective02/actualfailed-11216466938/root-capture.json",
+      "sha256": "32e4b77a05134ee2640de2248d4e62f73440e59a18421f16d6220f9b78d359f9"
     }
   ],
   "sharedCakeIdContract": null
