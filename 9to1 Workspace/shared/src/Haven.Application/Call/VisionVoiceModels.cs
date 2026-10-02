@@ -115,6 +115,10 @@ public sealed record MonologueRun(
     bool IsPaused,
     IReadOnlyList<string> SourceRefs)
 {
+    /// <summary>Exact last acknowledged native checkpoint operation; not audio or source authority.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public MonologuePlaybackReceipt? PlaybackReceipt { get; init; }
+
     /// <summary>Checks a deterministic resumable plan, without starting audio or authorising referenced sources.</summary>
     public string? Validate()
     {
@@ -123,6 +127,10 @@ public sealed record MonologueRun(
         if (Sections is null || Sections.Count == 0 || Sections.Any(string.IsNullOrWhiteSpace)) return "A Monologue plan requires nonempty ordered sections.";
         if (CurrentSection < 0 || CurrentSection >= Sections.Count || Position < TimeSpan.Zero) return "The Monologue playback position is outside its original plan.";
         if (SourceRefs is null || SourceRefs.Any(string.IsNullOrWhiteSpace)) return "Monologue source references must be explicit and nonempty when supplied.";
+        if (PlaybackReceipt is { } receipt && (receipt.OperationId == Guid.Empty || receipt.PlaybackId == Guid.Empty
+            || string.IsNullOrWhiteSpace(receipt.VoiceId) || receipt.VoiceId.Length > 512 || receipt.OriginalRevision < 0
+            || receipt.Section < 0 || receipt.Section >= Sections.Count || receipt.Position < TimeSpan.Zero))
+            return "The retained native checkpoint receipt is invalid.";
         return null;
     }
 }

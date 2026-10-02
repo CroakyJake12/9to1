@@ -1,0 +1,278 @@
+{
+  "classes": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PolicyAwareModelCatalogueTests.cs",
+      "class": "PolicyAwareModelCatalogueTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "f39270e7ad1d398608acd64f61eac04905f299b83429987c2b7c7a330cae3c53"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ModelGovernanceTests.cs",
+      "class": "ModelPermissionEvaluatorTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "8ccbffd86174bc85200c555ba8efca194ce17dbaf7bcb3091343296fb933dc2f"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ModelGovernanceTests.cs",
+      "class": "ModelPersonalityServiceTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "8ccbffd86174bc85200c555ba8efca194ce17dbaf7bcb3091343296fb933dc2f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+      "class": "HomeModelPickerFeatureProviderTests",
+      "namespace": "HavenOS.Home.Tests",
+      "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "class": "HomeModelPickerRouteEditorTests",
+      "namespace": "HavenOS.Home.Tests",
+      "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+      "class": "HomeCompletionAuditRecoveryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeModelPickerRegistrationTests.cs",
+      "class": "HomeModelPickerRegistrationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "d3eca52abf23b8e63f963b46bcd1ed940bf2f06f203f35b16b50f59af590764c"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ModelGovernanceStoresTests.cs",
+      "class": "ModelGovernanceStoresTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "af1f94e76f098f8a7a591c095576423f4978f32e30bac8d512e3961083c2052a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeModelPickerCuiSurfaceTests.cs",
+      "class": "HomeModelPickerCuiSurfaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "e64340ee924704d5e8ce1714d46e3a587ec98ea6cdc1cc2c9e78e9eb656d3f3f"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeModelPickerOriginalSessionTests.cs",
+      "class": "HomeModelPickerOriginalSessionTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "ad9910a1d890e00df1d4fc533ac4751402c1358c0722d268e0e84fa0a66b9932"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+      "sha256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b",
+      "namespace": "Haven.Application.Tests",
+      "class": "MultimodalSessionStoreTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/VoiceSessionContinuityTests.cs",
+      "sha256": "a637234931c6a14c32f59b77af27f3b024f4ddc9f3369dde94189df1e5fd18c1",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "VoiceSessionContinuityTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/VisionWorkspaceStateStoreTests.cs",
+      "sha256": "98f63681bf51acc60b9ac16c8d6c8d10cab76af83f74b034220d72c3ec549479",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "VisionWorkspaceStateStoreTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/VisionRegionCropperTests.cs",
+      "sha256": "fdbfb017d142667594446770551a89f739f280a023acab169049c779546c7149",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "VisionRegionCropperTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/VisionOneToOneTests.cs",
+      "sha256": "95049bf2e0315db8c2cc5dd1c91d2c45986cbc514432ba6522c8f049ba50a405",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "VisionOneToOneTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/VisionAnalysisServiceTests.cs",
+      "sha256": "76c88717541c9268ef3dbe0198c898e5d149311414831c008491c7cb1b3609fc",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "VisionAnalysisServiceTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallVoicePreviewControllerTests.cs",
+      "sha256": "da8a8394d791738197fa5a9265611fc5b5f249d904c0a6cdc62b3f8bfad80e8f",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "CallVoicePreviewControllerTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/VoiceReactionRuntimeTests.cs",
+      "sha256": "57d02ee6c2e59b5e365ea480282fdd99a636179c1a09eab1031bf0daffeec433",
+      "namespace": "Haven.Core.Tests",
+      "class": "VoiceReactionRuntimeTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/VoiceProfileCatalogTests.cs",
+      "sha256": "af770a75de36fa748426619037b4312de34c832a222148202cc23be7581e83be",
+      "namespace": "Haven.Core.Tests",
+      "class": "VoiceProfileCatalogTests"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CallVoiceLatencyTests.cs",
+      "sha256": "eb28a69c193cb3385aa075438b27878d9a1f35824d36cc9d6d4ce1e11fa8b95b",
+      "namespace": "Haven.Core.Tests",
+      "class": "CallVoiceLatencyTests"
+    },
+    {
+      "class": "MonologueSessionWorkflowTests",
+      "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+      "namespace": "Haven.Application.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
+      "sha256": "ae720cd89e1fa41a23e8166761b55d91b16e5659090491e69121c19ce5d9519e",
+      "origin": "Root18 normalized immutable owning source"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+      "class": "MonologueOriginalPlaybackTests",
+      "namespace": "Haven.Application.Tests",
+      "sha256": "54b424e8e72235a46cd07b2bb42f7324575d380610e66dc48a4c44a5b5722ece"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CallCoordinatorTests.cs",
+      "class": "CallCoordinatorTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "7df36d26179da1276f93210a2a974694fb875a1e2f4ae8fae141451900ecdf1a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallCompletionControllerTests.cs",
+      "class": "CallCompletionControllerTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "a8ccc3f5bc4e4a3dfcd9212b34e6b4f4ae04953faa90daea4eea62284e1e9598"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallMonologueNarrationRouteTests.cs",
+      "class": "CallMonologueNarrationRouteTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "64f8f47df41a23ad44a140a77220b5d32cec179b33345234bd604d6bf91ad8f6"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallSingletonIntegrationTests.cs",
+      "class": "CallSingletonIntegrationTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "3f65bcba3a553d87e0ea0e39b087ac3cdea4ab4eac4328654ccb2131aa788093"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ExperienceAutomationAndCallTests.cs",
+      "class": "ExperienceAutomationAndCallTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "a0ed9f6a1702d3625d6b6c49f008eb654b4df4b2cd5289c0914787dd213443c0"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/GlobalCallHavenSceneTests.cs",
+      "class": "GlobalCallHavenSceneTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "a3068005648e29efebb4be3327cd2b9e69ca5defdcb69d4c4433b13b709bf035"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MonologueOriginalPlaybackHostTests.cs",
+      "class": "MonologueOriginalPlaybackHostTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "2841b935f230107c3c6c4a3fe9db9448876cf3ab15f065871ce1ccb6ca9a9705"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CallRepositoryTests.cs",
+      "class": "CallRepositoryTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "09b05b9aef3ed8b8c4da10da7f9e5877f3091a53387c7671dad3c02495401470"
+    }
+  ],
+  "dependencyPins": [
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "sha256": "02189a1318d272dbd621dff89bc42dc0397a164b39dc3e3d90f1962dcd74df2a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "sha256": "c5a4b50032e30cf90fe59872b148b14bd26a8c2bf8a31ec71c4a8b9afbc3caf5"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "sha256": "f1876b75576e8087b6ea17d54f42bef4a688991714507a52d7e80445f00322fb"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "sha256": "7e75751d1049a08da7eb14ef31dc46d319eab0bec86c860251c771f5cd4bf501"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeResourceOperationBroker.cs",
+      "sha256": "3db843d571222d93e57893772a2c1cdebbfece3d3f3518e3be75436828bce8b6"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeVersionedModelRouteRepository.cs",
+      "sha256": "08c8dd1ce7675f94335d8f841538110025b06e9b12903d68732cd589a42fea02"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiViewModel.cs",
+      "sha256": "4dbf9dc3b3290e77313d0b893fa7bff33adca6ed3d0ecfb29319da6221518251"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiSceneHost.cs",
+      "sha256": "965c0b1246f40e07d7c38155ba499d62021f9d9b166678ef4d8799c492dc57de"
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+      "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerRouteEditor.cs",
+      "sha256": "923cda7fc1443b2fc58b333c5e972946806e2b97cc35b2bcc8fdc43c129f6e1f"
+    }
+  ],
+  "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6",
+  "coherentDependencyRebind": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "preservedPredecessorSha256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "preservedPredecessorSha256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798",
+      "sha256": "7e75751d1049a08da7eb14ef31dc46d319eab0bec86c860251c771f5cd4bf501"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "preservedPredecessorSha256": "347a8b95b75ab47bab07508c9c30e3a10852d231c9d5f60a6b07dae96c882147",
+      "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+    }
+  ]
+}

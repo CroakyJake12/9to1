@@ -3,7 +3,7 @@ using Haven.Application.Call;
 namespace Haven.Application;
 
 /// <summary>Coordinates canonical Vision &amp; Voice session metadata and its revisioned store.</summary>
-public sealed class VisionVoiceSessionService(MultimodalSessionStore store, TimeProvider? timeProvider = null)
+public sealed partial class VisionVoiceSessionService(MultimodalSessionStore store, TimeProvider? timeProvider = null)
 {
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
 
