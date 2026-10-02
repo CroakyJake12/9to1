@@ -17,6 +17,10 @@ internal static class AndroidHavenBootstrap
 {
     private static readonly SemaphoreSlim StartupGate = new(1, 1);
     private static bool _applicationStarted;
+    private static IServiceProvider? _startedServices;
+    private static WeakReference<MainActivity>? _activityOwner;
+    private static long _mountGeneration;
+    private static CancellationTokenSource? _mountLifetime;
     private static string? _pendingSurface;
     private static string? _pendingPrompt;
     private static string? _pendingHomeReview;
@@ -27,26 +31,32 @@ internal static class AndroidHavenBootstrap
     }
     private static WeakReference<MainView>? _activeMainView;
     private static bool _activeMainViewReady;
+    private static Func<Task>? _activeBindingCheck;
 
-    public static void SetLaunchRequest(Intent? intent)
+    public static void SetLaunchRequest(MainActivity activity, Intent? intent)
     {
+        InvalidateMount();
+        _activityOwner = new(activity);
         _pendingSurface = intent?.GetStringExtra("haven_surface");
         _pendingPrompt = intent?.GetStringExtra("haven_prompt");
         _pendingHomeReview = HomeReviewRequest(intent);
     }
 
-    public static void NotifyConfigurationChanged()
+    public static void NotifyConfigurationChanged(MainActivity activity)
     {
+        if (!IsActivityOwner(activity)) return;
         if (!_activeMainViewReady
             || _activeMainView is null
             || !_activeMainView.TryGetTarget(out var mainView))
             return;
 
-        Dispatcher.UIThread.Post(mainView.RefreshMobileLayout);
+        var generation = Interlocked.Read(ref _mountGeneration);
+        Dispatcher.UIThread.Post(() => { if (IsActivityOwner(activity) && generation == Interlocked.Read(ref _mountGeneration)) mainView.RefreshMobileLayout(); });
     }
 
-    public static void ApplyLaunchRequest(Intent? intent)
+    public static void ApplyLaunchRequest(MainActivity activity, Intent? intent)
     {
+        if (!IsActivityOwner(activity)) return;
         var surface = intent?.GetStringExtra("haven_surface");
         var prompt = intent?.GetStringExtra("haven_prompt");
         var review = HomeReviewRequest(intent);
@@ -55,9 +65,10 @@ internal static class AndroidHavenBootstrap
 
         if (_activeMainViewReady
             && _activeMainView is not null
-            && _activeMainView.TryGetTarget(out var mainView))
+            && _activeMainView.TryGetTarget(out var mainView)
+            && _activeBindingCheck is { } bindingCheck)
         {
-            Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, surface, prompt, review));
+            Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, surface, prompt, bindingCheck, review));
             return;
         }
 
@@ -70,13 +81,17 @@ internal static class AndroidHavenBootstrap
         MainView mainView,
         string? surface,
         string? prompt,
+        Func<Task> bindingCheck,
         string? review = null)
     {
         try
         {
+            await bindingCheck();
             if (review is not null) await mainView.ReviewHomeRequestAsync(review);
             else await mainView.ApplyMobileLaunchRequestAsync(surface, prompt);
+            await bindingCheck();
         }
+        catch (OperationCanceledException) { }
         catch (Exception exception)
         {
             AndroidRuntimeDiagnostics.Record(
@@ -95,83 +110,117 @@ internal static class AndroidHavenBootstrap
         return request;
     }
 
+    private static bool IsActivityOwner(MainActivity activity) =>
+        _activityOwner is not null && _activityOwner.TryGetTarget(out var current) && ReferenceEquals(current, activity);
+
+    private static void InvalidateMount()
+    {
+        Interlocked.Increment(ref _mountGeneration);
+        var previous = _mountLifetime; _mountLifetime = null;
+        previous?.Cancel(); previous?.Dispose();
+        _activeMainView = null; _activeMainViewReady = false; _activeBindingCheck = null;
+    }
+    public static void DetachActivity(MainActivity activity)
+    {
+        if (!IsActivityOwner(activity)) return;
+        InvalidateMount(); _activityOwner = null;
+    }
     public static Control CreateMainView()
     {
-        try
-        {
-            var services = App.Services
-                ?? throw new InvalidOperationException(
-                    "Haven services were not created before Android requested its main view.");
-
-            var preferences = services.GetRequiredService<UserPreferencesService>();
-            preferences.ApplyAppearance(preferences.Appearance, save: false);
-            // Keyboard AI uses normal Haven model routing and stays off unless the
-            // user enables it; secure fields never reach the executor regardless.
-            var keyboardSettings = new HavenKeyboardSettings(global::Android.App.Application.Context);
-            HavenKeyboardAiController.Configure(new RoutedKeyboardAiExecutor(
-                services.GetRequiredService<IModelProviderRegistry>(),
-                services.GetRequiredService<HomePersonalModelRoutes>(),
-                services.GetRequiredService<IProviderConfigurationStore>(),
-                services.GetRequiredService<IPrivacyPreferenceStore>(),
-                () => keyboardSettings.CloudAiAllowed));
-            _ = services.GetRequiredService<AndroidNotificationBridge>();
-            _ = services.GetRequiredService<AndroidProjectorDisplayService>();
-
-            // Android can recreate an Activity. Create a fresh Avalonia control graph while
-            // reusing Haven's application and infrastructure services.
-            var mainView = ActivatorUtilities.CreateInstance<MainView>(services);
-            _activeMainView = new WeakReference<MainView>(mainView);
-            _activeMainViewReady = false;
-
-            // Keep the uninitialised desktop shell hidden. New Haven creates repository-backed
-            // pages, so it must only be applied after the database lifecycle has completed.
-            mainView.IsVisible = false;
-
-            Dispatcher.UIThread.Post(() => _ = InitializeMainViewAsync(mainView, services));
-            return mainView;
-        }
-        catch (Exception exception)
-        {
-            AndroidRuntimeDiagnostics.Record(
-                exception,
-                "Haven main-view creation",
-                showDialog: true);
-            throw;
-        }
+        var services = App.Services ?? throw new InvalidOperationException("Haven services were not created before Android requested its main view.");
+        if (_activityOwner is null || !_activityOwner.TryGetTarget(out var activity))
+            throw new InvalidOperationException("The Android main view has no owning activity.");
+        InvalidateMount();
+        var generation = Interlocked.Read(ref _mountGeneration);
+        var lifetime = new CancellationTokenSource(); _mountLifetime = lifetime;
+        var token = lifetime.Token;
+        var placeholder = new ContentControl { Content = new TextBlock { Text = "Starting Haven…" } };
+        bool Current() => generation == Interlocked.Read(ref _mountGeneration) && IsActivityOwner(activity) &&
+            ReferenceEquals(App.Services, services) && !activity.IsFinishing && !activity.IsDestroyed && !token.IsCancellationRequested;
+        placeholder.DetachedFromVisualTree += (_, _) => { if (Current()) InvalidateMount(); };
+        Dispatcher.UIThread.Post(() => _ = InitializeMainViewAsync(placeholder, services, Current, token));
+        return placeholder;
     }
 
     private static async Task InitializeMainViewAsync(
-        MainView mainView,
-        IServiceProvider services)
+        ContentControl placeholder,
+        IServiceProvider services,
+        Func<bool> isCurrent,
+        CancellationToken mountToken)
     {
+        MainView? mainView = null;
+        AuthenticatedResourceActor? originalActor = null;
+        IAuthenticatedResourceActorSource? actors = null;
+        async Task RequireOriginalAsync()
+        {
+            mountToken.ThrowIfCancellationRequested();
+            if (!isCurrent() || originalActor is null || actors is null || await actors.GetCurrentAsync(mountToken) != originalActor || !isCurrent())
+                throw new UnauthorizedAccessException("The original Android activity or Home session changed during startup.");
+        }
         try
         {
-            await StartupGate.WaitAsync().ConfigureAwait(true);
+            actors = services.GetRequiredService<IAuthenticatedResourceActorSource>();
+            if (!isCurrent()) return;
+            originalActor = await actors.GetCurrentAsync(mountToken);
+            await RequireOriginalAsync();
+            await StartupGate.WaitAsync(mountToken).ConfigureAwait(true);
             try
             {
-                var home = await AndroidHomeServiceHost.EnsureAsync(installedApplications: false);
-                if (home.State != HomeNativeHostState.Ready)
+                if (!isCurrent()) return;
+                await RequireOriginalAsync();
+                var home = await AndroidHomeServiceHost.EnsureAsync(installedApplications: false, cancellationToken: mountToken);
+                await RequireOriginalAsync();
+                if (home.State != HomeNativeHostState.Ready || !ReferenceEquals(home.Services, services))
                     throw new InvalidOperationException(home.Message);
                 var recovery = services.GetRequiredService<IStartupRecoveryCoordinator>();
-                StartupRecoveryState? recoveryState = null;
+                StartupRecoveryState? recoveryState = string.IsNullOrEmpty(recovery.Current.RunId) ? null : recovery.Current;
 
-                if (!_applicationStarted)
+                var lifecycle = services.GetRequiredService<IApplicationLifecycle>();
+                if (!_applicationStarted || !ReferenceEquals(_startedServices, services))
                 {
+                    if (!lifecycle.IsStartupComplete)
+                    {
+                    if (recoveryState is not null)
+                        throw new InvalidOperationException("Haven database startup did not finish in this process. Its preserved state requires recovery.");
                     recoveryState = await recovery.BeginStartupAsync(CancellationToken.None);
 
-                    BrowserAutomationRegistry.Register(
-                        services.GetRequiredService<BrowserSessionService>(),
-                        services.GetRequiredService<IBrowserAutomationService>());
-
-                    var lifecycle = services.GetRequiredService<IApplicationLifecycle>();
+                    await RequireOriginalAsync();
                     await lifecycle.CrashRecoveryAsync(CancellationToken.None);
+                    await RequireOriginalAsync();
                     await lifecycle.StartupAsync(CancellationToken.None);
+                    await RequireOriginalAsync();
+                    if (!lifecycle.IsStartupComplete)
+                        throw new InvalidOperationException("Haven database startup did not complete. Its preserved state requires recovery.");
+                    }
                     await services.GetRequiredService<ModeSeedService>()
                         .SeedBuiltInModesAsync(CancellationToken.None);
 
-                    _applicationStarted = true;
+                    await RequireOriginalAsync();
+                    _applicationStarted = true; _startedServices = services;
                 }
+                if (!lifecycle.IsStartupComplete)
+                    throw new InvalidOperationException("Haven database startup is not ready.");
+                await RequireOriginalAsync();
+                BrowserAutomationRegistry.Register(services.GetRequiredService<BrowserSessionService>(), services.GetRequiredService<IBrowserAutomationService>());
+                var preferences = services.GetRequiredService<UserPreferencesService>();
+                preferences.ApplyAppearance(preferences.Appearance, save: false);
+                // Keyboard AI uses normal Haven model routing and stays off unless the
+                // user enables it; secure fields never reach the executor regardless.
+                var keyboardSettings = new HavenKeyboardSettings(global::Android.App.Application.Context);
+                HavenKeyboardAiController.Configure(new RoutedKeyboardAiExecutor(
+                    services.GetRequiredService<IModelProviderRegistry>(),
+                    services.GetRequiredService<HomePersonalModelRoutes>(),
+                    services.GetRequiredService<IProviderConfigurationStore>(),
+                    services.GetRequiredService<IPrivacyPreferenceStore>(),
+                    () => keyboardSettings.CloudAiAllowed));
+                _ = services.GetRequiredService<AndroidNotificationBridge>();
+                _ = services.GetRequiredService<AndroidProjectorDisplayService>();
 
+                await RequireOriginalAsync();
+                // MainView constructors start repository-backed sidebar work; schema must already be ready.
+                mainView = ActivatorUtilities.CreateInstance<MainView>(services);
+                mainView.IsVisible = false;
+                _activeMainView = new WeakReference<MainView>(mainView);
                 // Apply the Android shell only after StartupAsync has created and migrated the
                 // SQLite schema. Activity recreation still receives a fresh MainView instance.
                 mainView.ApplyEdition(HavenShellEdition.New);
@@ -184,27 +233,33 @@ internal static class AndroidHavenBootstrap
                 var migration = await services.GetRequiredService<ILegacyStateMigrator>()
                     .MigrateIfNeededAsync(CancellationToken.None);
 
-                await mainView.InitializeAsync(migration, CancellationToken.None);
-
+                await RequireOriginalAsync();
+                await mainView.InitializeAsync(migration, mountToken);
+                await RequireOriginalAsync();
                 var launchRequest = TakeLaunchRequest();
                 await mainView.ApplyMobileLaunchRequestAsync(
                     launchRequest.Surface,
                     launchRequest.Prompt);
+                await RequireOriginalAsync();
+                placeholder.Content = mainView;
                 mainView.IsVisible = true;
+                _activeBindingCheck = RequireOriginalAsync;
                 _activeMainViewReady = true;
                 // Approval UI can remain open. Do not hold the startup gate while awaiting its closure.
                 if (launchRequest.HomeReview is { } review)
-                    Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, null, null, review));
+                    Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, null, null, RequireOriginalAsync, review));
 
+                await RequireOriginalAsync();
                 var deferredLaunchRequest = TakeLaunchRequest();
                 if (deferredLaunchRequest.HomeReview is { } deferredReview)
-                    Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, null, null, deferredReview));
+                    Dispatcher.UIThread.Post(() => _ = ApplyLaunchRequestToMainViewAsync(mainView, null, null, RequireOriginalAsync, deferredReview));
                 else if (!string.IsNullOrWhiteSpace(deferredLaunchRequest.Surface)
                     || !string.IsNullOrWhiteSpace(deferredLaunchRequest.Prompt))
                 {
                     await mainView.ApplyMobileLaunchRequestAsync(
                         deferredLaunchRequest.Surface,
                         deferredLaunchRequest.Prompt);
+                    await RequireOriginalAsync();
                 }
 
                 if (recoveryState?.IsSafeMode == true)
@@ -217,21 +272,22 @@ internal static class AndroidHavenBootstrap
                         TimeSpan.FromSeconds(30));
                 }
 
-                if (recoveryState is not null)
-                {
-                    await recovery.MarkStartupCompletedAsync(CancellationToken.None);
-                }
+                await RequireOriginalAsync();
+                await recovery.MarkStartupCompletedAsync(CancellationToken.None);
+                await RequireOriginalAsync();
             }
             finally
             {
                 StartupGate.Release();
             }
         }
+        catch (OperationCanceledException) when (mountToken.IsCancellationRequested || !isCurrent()) { }
         catch (Exception exception)
         {
+            if (!isCurrent()) return;
             _activeMainViewReady = false;
-            mainView.IsVisible = true;
-            mainView.SetStartupError(exception.Message);
+            if (mainView is not null) { mainView.IsVisible = true; mainView.SetStartupError(exception.Message); placeholder.Content = mainView; }
+            else placeholder.Content = new TextBlock { Text = "Haven could not finish starting. Open recovery to repair its preserved state." };
             AndroidRuntimeDiagnostics.Record(
                 exception,
                 "Haven service and main-view startup",
