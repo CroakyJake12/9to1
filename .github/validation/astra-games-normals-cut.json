@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
+  "baselineCommit": "cf6558dcfcd5761058e4822165730182a7664096",
   "programTree": "a1ff06257897a5b79169c8cfbc5b367fdf69aedb",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -18,6 +18,13 @@
       "object": "672fcc6f2b4fcce0f80eae27c883bc5c19239279",
       "bytes": 35,
       "sha256": "3a1d1dcb4ed7c98614dd922a04be1e3690f6388f899c3801348e88b3ba4f1d75"
+    },
+    {
+      "path": ".github/scripts/astra-auth-restore-evidence.py",
+      "mode": "100644",
+      "object": "5de116504d0c7c835a8553bb86533e1601aa20e4",
+      "bytes": 9404,
+      "sha256": "7e20ac12885e96c3a4732fe032610d366c7bf2b39c58108336498cb6fbd11743"
     },
     {
       "path": ".github/scripts/astra-games-native-bundle.py",
@@ -64682,79 +64689,15 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-games-normals-cut.json",
-  "limits": "Fresh Root18 full4 mandatory. Exactly four selected343 owning normal-source targets; Runtime csproj/project.godot/Main prerequisites identical currentRoot18, no inherited source rollback. Same reviewed existing coherent Skia startup experiment to avoid mixed PixelBuilder/defaultHeadless sessions; Games09 all4 green demonstrates intermittent concern, no proven product-cause repair claimed. All sixteen Desktop cases/full original classes/assertions/native witness/officialengine+SDK/maintainedNuGet/helper/source/restore/task/compiled/full file-set/zeroSkip/multipart guards retained. Whole unrelated Root18 Stacks/Media/Models/Web/Go/Compatibility preserved; no predecessor native/managed acceptance inherited.",
+  "limits": "Exact missing maintained restore helper from actually accepted Games09 only. Product source and all four owning/native/regression/resource gates unchanged; native predecessor success does not replace fresh whole-cut acceptance.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker6-games-canonical-normal-draft-03/manifest.json",
-      "sha256": "3c4147de881c76de57e006bd6ffdae857f048f9eec7844d7a61b2304282e50f5"
+      "path": "/workspace/astra-source/worker4-games-root18-owned-skia-union-gate11/manifest.json",
+      "sha256": "5c575070420edc068afcfc86d246d6994cb066d6c09ca65ab7ca460c88129ee4"
     },
     {
-      "path": "/workspace/astra-source/worker4-games-canonical-normal-witness-scene01/manifest.json",
-      "sha256": "6e1ccf633d827041583ab1ba5d0f5dbd8afa883a12af25856c2b32741a065168"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol17/manifest.json",
-      "sha256": "23ec78f5892c0b16f2616d2dd141fee9b55deec1d55882cb29d9acc69c851d33"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-games-maintained-nuget-hash-validator02/manifest.json",
-      "sha256": "01829a12323f29949080b1768584356e3ce334a04789f4272e148002c7794db0"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-games-normals-actual-restore-corrector06/original-recovery-receipt.json",
-      "sha256": "285b101a8fd413fe021918561ed95683f793d0898eafdd556d9e683a25b77981"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
-      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-games-original-recovery-capture01.json",
-      "sha256": "342d5d065c93cf39510e712b41648a147e01788e94cc24dca2ab54b4ae3dcc0d"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-games-canonical-normal-actual-diagnostic04/manifest.json",
-      "sha256": "84fad955f7d6d3417260a725780ed3a1586f2af44dffcb6eedc9d33796f38bd0"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-games-normals-corrector06-small-actual01/root-capture.json",
-      "sha256": "286163de3a4a041fce9f7019f42c0a29d68efdaa8b8b3316c30a991fa90daaef"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-games-normals-corrector06-managed/actual-capture-11222104264/root-capture.json",
-      "sha256": "25a6584543d233aa5b7758b1c48d2d94d92ebdeb948a2bead6b75f00f5f4f5a4"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-games-canonical-normal-packed-witness06/manifest.json",
-      "sha256": "9541cb84cdbfe72d5fc5a66b2cf3ec37160a96570552245309f5986406a75119"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-games08-actual-small-capture25.json",
-      "sha256": "9c3b9216ee4d715eed0dc828d0cf183f87814e5d620d30fdc30522d685af9dbe"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-games-packed06-source-math-peer01.json",
-      "sha256": "3c35336bf45fef01870bcd44c6bbb832f546118da6cd3d73c0931e7b397a82e6"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
-      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-games08-owning-small-capture32.json",
-      "sha256": "62893d3928e0bec0e12c35efac7de6d6c227ef81e348d1f8daa712dcd1782086"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint18-publication-local.json",
-      "sha256": "c9e810f1d7d7d8b023391e1d2f39c0c86fe43e4e26f4f175bc0dfa04f7293559"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-games09-root18-owner-scope-review01.json",
-      "sha256": "f57b23dc122ade7747978626ea4d3ed51326eb9893f1ba3f9fbf6857bd65d965"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-games-consistent-skia-owning-corrector10/manifest.json",
-      "sha256": "f1f6fe8ca4c86fd41477de2f899e30b5fd766d91a0bb7d6ce8afcb5b27bb6b20"
+      "path": "/workspace/astra-source/ready-artifacts/root-games11-small-failed38/root-capture.json",
+      "sha256": "152acfdbc24cf4e3e13f08bdbdf5a8f9cbc2fe00e129f2d64dfcda8de4abf2c6"
     }
   ],
   "sharedCakeIdContract": null
