@@ -1,0 +1,19 @@
+{
+  "officialVersion": "4.7.2-stable",
+  "officialSourceCommit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+  "archiveBytes": 107698034,
+  "archiveSha256": "129f82db7bafd54ae14bb5bb284041c73860e8c7a009a3a026ca5e946cbff247",
+  "archiveSha512": "1855960b27ee3ef5e66e5e228cced69d55637b24334a7411162687dcd077d8f9f645348cdb8eae984bec8135d49ed855a1e3a16476786b8bce60774fd8402d13",
+  "fullArchiveUnpackedBytes": 232474103,
+  "selectedUnpackedBytes": 199686397,
+  "omitted": [
+    "Godot_v4.7.2-stable_mono_linux_x86_64/GodotSharp/Api/Release/GodotSharp.xml",
+    "Godot_v4.7.2-stable_mono_linux_x86_64/GodotSharp/Api/Debug/GodotSharp.xml"
+  ],
+  "executable": "/workspace/astra-tools/godot-4.7.2/Godot_v4.7.2-stable_mono_linux_x86_64/Godot_v4.7.2-stable_mono_linux.x86_64",
+  "executableSha256": "fc1bd592b5e771c65d52968f99835b4f2b7fe7b7cbc141e202cb63e01c95ec4d",
+  "sourceCheckoutPresent": false,
+  "archiveUrl": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_mono_linux_x86_64.zip",
+  "officialSumsUrl": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/SHA512-SUMS.txt",
+  "officialSumsSha256": "b8bdff6704f833e7a021df16ec08e1478edd5a285c1f894929b91a7f74a5c7c0"
+}

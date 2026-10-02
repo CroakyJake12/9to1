@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Astra.NuGet.ContentHash.Validation</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="NuGet.Packaging"><HintPath>$(MSBuildBinPath)/NuGet.Packaging.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="NuGet.Frameworks"><HintPath>$(MSBuildBinPath)/NuGet.Frameworks.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="NuGet.Common"><HintPath>$(MSBuildBinPath)/NuGet.Common.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="NuGet.Versioning"><HintPath>$(MSBuildBinPath)/NuGet.Versioning.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="NuGet.Configuration"><HintPath>$(MSBuildBinPath)/NuGet.Configuration.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(MSBuildBinPath)/Newtonsoft.Json.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="System.Security.Cryptography.Pkcs"><HintPath>$(MSBuildBinPath)/System.Security.Cryptography.Pkcs.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="System.Security.Cryptography.ProtectedData"><HintPath>$(MSBuildBinPath)/System.Security.Cryptography.ProtectedData.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>

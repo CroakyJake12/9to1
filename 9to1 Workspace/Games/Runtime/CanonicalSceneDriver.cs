@@ -12,11 +12,13 @@ public partial class CanonicalSceneDriver : Node3D
 {
     public override void _Ready()
     {
+        Guid? loadedProjectId=null;Guid? requestedSceneId=null;
         try
         {
             var arguments = OS.GetCmdlineUserArgs();
             if (arguments.Length != 2 || !Guid.TryParse(arguments[1], out var sceneID))
                 throw new InvalidDataException("A canonical project data file and scene identity are required.");
+            requestedSceneId=sceneID;
             var info = new FileInfo(arguments[0]);
             if (!info.Exists || info.Length is < 2 or > GamesProjectCodec.MaximumDocumentBytes)
                 throw new InvalidDataException("The project data exceeds configured limits.");
@@ -25,21 +27,15 @@ public partial class CanonicalSceneDriver : Node3D
             var bytes = new byte[checked((int)input.Length)];
             input.ReadExactly(bytes);
             if (input.ReadByte() != -1) throw new InvalidDataException("Project grew during read.");
-            var project = GamesProjectCodec.Decode(bytes);
+            var project = GamesProjectCodec.Decode(bytes);loadedProjectId=project.ProjectID;
             var scene = project.Scenes.Single(item => item.SceneID == sceneID);
             var meshes = new Dictionary<Guid, Mesh>();
             foreach (var mesh in scene.Meshes)
             {
                 Mesh native;
-                if (mesh.Geometry is { } geometry)
+                if (mesh.Geometry is not null)
                 {
-                    var arrays = new Godot.Collections.Array();
-                    arrays.Resize((int)Mesh.ArrayType.Max);
-                    arrays[(int)Mesh.ArrayType.Vertex] = geometry.Vertices.Select(Vector).ToArray();
-                    arrays[(int)Mesh.ArrayType.Index] = geometry.TriangleIndices.ToArray();
-                    var arrayMesh = new ArrayMesh();
-                    arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-                    native = arrayMesh;
+                    native = HavenOS.Games.Runtime.CanonicalTriangleMesher.Create(mesh);
                 }
                 else native = new BoxMesh { Size = Vector(mesh.Size) };
                 native.SetMeta("_9to1_resource_id", mesh.ResourceID.ToString("D"));
@@ -82,6 +78,9 @@ public partial class CanonicalSceneDriver : Node3D
         }
         catch (Exception exception)
         {
+            GD.Print("ASTRA_GAMES_MANAGED_SCENE_ERROR="+JsonSerializer.Serialize(new{projectID=loadedProjectId,sceneID=requestedSceneId,
+                resourceID=(exception as HavenOS.Games.Runtime.CanonicalMeshPreparationException)?.ResourceID,
+                code=(exception as HavenOS.Games.Runtime.CanonicalMeshPreparationException)?.Code??"GamesScenePreparationFailed",message=exception.Message,canonicalWrites=false}));
             GD.PushError("Canonical managed scene failed: " + exception.Message);
             GetTree().Quit(2);
         }
