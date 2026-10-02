@@ -77,6 +77,7 @@ internal sealed class OsSessionHome(ShellViewModel model) : ICuiSceneReadiness, 
         services.AddSingleton<IHomeActionPolicySource, ShellSemanticActionPolicies>();
         services.AddSingleton<ShellSemanticFeatureProvider>();
         services.AddSingleton<LinuxApplicationLauncher>();
+        services.AddOsCompatibilityManager(_lifetime.Token);
         services.AddSingleton<IGoProvider, InstalledApplicationsGoProvider>();
         services.AddSingleton<IGoProvider, ShellNavigationGoProvider>();
         services.AddSingleton<GoService>();

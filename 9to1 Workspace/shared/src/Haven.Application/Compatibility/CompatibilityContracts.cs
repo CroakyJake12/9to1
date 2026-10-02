@@ -1,7 +1,7 @@
 namespace Haven.Application.Compatibility;
 
 public enum CompatibilityBackendKind { Wine, WindowsEnvironment, Android }
-public enum CompatibilityRoutingStatus { ReviewRequired, Denied, Unavailable, PreferredBackendUnavailable }
+public enum CompatibilityRoutingStatus { ReviewRequired, Denied, Unavailable, PreferredBackendUnavailable, RequestedBackendUnavailable }
 
 /// <summary>Current owning runtime evidence. Availability is never inferred from a source checkout.</summary>
 public sealed record CompatibilityBackendObservation(string BackendId, CompatibilityBackendKind Kind,

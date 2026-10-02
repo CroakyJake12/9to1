@@ -1,0 +1,18 @@
+<Cui id="compatibility-framework-choice" version="1">
+  <Actions><Action name="ChooseDisplayedFramework" command="ChooseFramework" parameter="{Binding framework}" /></Actions>
+  <StackPanel id="compatibility-framework-body" spacing="12">
+    <TextBlock id="compatibility-framework-title" text="Choose compatibility framework" />
+    <TextBlock id="compatibility-framework-status" text="{Binding Status}" accessible-name="Framework routing status" text-wrapping="Wrap" />
+    <TextBlock id="compatibility-framework-proposed" text="{Binding Proposed}" />
+    <Repeat Source="{Binding Frameworks}" As="framework" Key="{Binding framework.Id}">
+      <StackPanel id="compatibility-framework-row" spacing="6">
+        <Button id="compatibility-framework-choice" content="{Binding framework.Label}" action="ChooseDisplayedFramework" is-enabled="{Binding framework.CanChoose}" />
+        <TextBlock id="compatibility-framework-detail" text="{Binding framework.Details}" text-wrapping="Wrap" />
+      </StackPanel>
+    </Repeat>
+    <TextBlock id="compatibility-framework-review-boundary" text="Choosing a framework prepares a routing proposal. Home review, current runtime admission and installation or launch permission remain required." text-wrapping="Wrap" />
+    <Button id="compatibility-framework-refresh" content="Check frameworks again" action="Refresh" />
+    <Button id="compatibility-framework-close" content="Close" action="Close" accessible-name="Close application frameworks" />
+    <Button id="compatibility-framework-install" content="Install or launch" is-enabled="False" />
+  </StackPanel>
+</Cui>

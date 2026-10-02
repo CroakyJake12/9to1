@@ -36,6 +36,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     public ShellViewModel()
     {
         _lifetimeToken = _lifetime.Token;
+        _bindings.Set("GoQueryState", "Idle"); _bindings.Set("GoQuerySummary", "Enter a query or open a Go section.");
         _bindings.Set("GoGroup", ""); _bindings.Set("ShowGroupedGoResults", false); _bindings.Set("ShowLinearGoResults", true);
         _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups");
         _bindings.GetOrCreateList<GoResult>("LinearGoResults");
@@ -404,16 +405,20 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         using var queryLifetime = CancellationTokenSource.CreateLinkedTokenSource(ct, _lifetimeToken);
         _query = queryLifetime;
         var results = _bindings.GetOrCreateList<GoResult>("Results");
+        var reportedCompletion = false;
+        var unavailable = homeView is "Recent" or "Suggested" or "NoSections" ||
+            homeView == "Dashboard" && presentation.Sections.Any(s => s.Visible && s.Kind is GoHomeSectionKind.Recent or GoHomeSectionKind.Suggested);
         try
         {
             if (!await owner.IsCurrentAsync(request, queryLifetime.Token))
             {
-                await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
+                await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", "The original Home session changed. Reopen Go."); _bindings.Set("GoQueryState", "Unavailable"); _bindings.Set("GoQuerySummary", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
                 return;
             }
             await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request) && !queryLifetime.IsCancellationRequested)
             {
                 results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("GoHomeView", homeView);
+                _bindings.Set("GoQueryState", "Searching"); _bindings.Set("GoQuerySummary", "Searching available owners…");
                 var grouped = homeView != "Search" && presentation.Layout != GoHomeLayout.CompactSearch;
                 _bindings.Set("GoResultColumns", presentation.Layout == GoHomeLayout.Dashboard ? "*,*" : "*");
                 _bindings.Set("ShowGroupedGoResults", grouped); _bindings.Set("ShowLinearGoResults", !grouped);
@@ -429,7 +434,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
             {
                 if (!await owner.IsCurrentAsync(request, queryLifetime.Token))
                 {
-                    await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
+                    await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", "The original Home session changed. Reopen Go."); _bindings.Set("GoQueryState", "Unavailable"); _bindings.Set("GoQuerySummary", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
                     return;
                 }
                 await Dispatcher.UIThread.InvokeAsync(() =>
@@ -439,13 +444,34 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
                     if (update.Result is { } result) { results.Add(result); _displayedGo[result] = request;
                         if (homeView == "Search" || presentation.Layout == GoHomeLayout.CompactSearch) _bindings.GetOrCreateList<GoResult>("LinearGoResults").Add(result);
                         if (sectionUpdate.Section is { } section) _goSectionResults.Add((section, result)); PublishGoResultGroups(presentation, homeView); }
+                    reportedCompletion |= update.Complete;
+                    unavailable |= update.Failure is not null;
+                    _bindings.Set("GoQueryState", unavailable ? (results.Count > 0 ? "Partial" : "Unavailable") : (results.Count > 0 ? "Streaming" : "Searching"));
+                    _bindings.Set("GoQuerySummary", unavailable ? (results.Count > 0 ? "Available results are shown; some owners are unavailable." : "Some owners are unavailable. This is not an empty result.") : (results.Count > 0 ? "Results are arriving; other owners may still be searching." : "Searching available owners…"));
                     if (update.Failure is { } failure) _bindings.Set("Status", update.ProviderId + ": " + failure);
                 });
             }
+            if (!await owner.IsCurrentAsync(request, queryLifetime.Token))
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request)) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("GoQueryState", "Unavailable"); _bindings.Set("GoQuerySummary", "The original Home session changed. Reopen Go."); owner.Invalidate(); } });
+                return;
+            }
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!owner.IsDisplayed(request) || queryLifetime.IsCancellationRequested) return;
+                var known = reportedCompletion || results.Count > 0;
+                var state = unavailable ? (results.Count > 0 ? "Partial" : "Unavailable") : !known ? "Unavailable" : results.Count == 0 ? "Empty" : "Complete";
+                _bindings.Set("GoQueryState", state);
+                _bindings.Set("GoQuerySummary", state switch {
+                    "Partial" => "Available results are shown; some owners are unavailable.",
+                    "Unavailable" => "This query cannot confirm an empty result because an owner or section is unavailable.",
+                    "Empty" => "No matching items were returned by the available owners.",
+                    _ => results.Count + (results.Count == 1 ? " result is available." : " results are available.") });
+            });
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
         {
-            await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request) && !queryLifetime.IsCancellationRequested) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", ex.Message); } });
+            await Dispatcher.UIThread.InvokeAsync(() => { if (owner.IsDisplayed(request) && !queryLifetime.IsCancellationRequested) { results.Clear(); _displayedGo.Clear(); _goSectionResults.Clear(); _bindings.GetOrCreateList<GoHomeResultGroup>("GoResultGroups").Clear(); _bindings.GetOrCreateList<GoResult>("LinearGoResults").Clear(); _bindings.Set("Status", ex.Message); _bindings.Set("GoQueryState", "Unavailable"); _bindings.Set("GoQuerySummary", "The query is unavailable; no empty-result claim can be made."); } });
         }
         finally { if (ReferenceEquals(_query, queryLifetime)) _query = null; }
     }
@@ -464,7 +490,11 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         foreach (var section in presentation.Sections.Where(s => s.Visible && (homeView == "Dashboard" || GoSectionLabel(s.Kind) == homeView)))
         {
             if (section.Kind == GoHomeSectionKind.Pinned)
-            { foreach (var result in await new ShellGoPinnedHome(_configuration, _go).ReadAsync(request.Original, ct)) yield return new(section.Kind, new(result.ProviderId, result, false, null)); }
+            {
+                var pinned = await new ShellGoPinnedHome(_configuration, _go).ReadAsync(request.Original, ct);
+                foreach (var result in pinned) yield return new(section.Kind, new(result.ProviderId, result, false, null));
+                yield return new(section.Kind, new("os.installed-applications", null, true, null));
+            }
             else if (section.Kind == GoHomeSectionKind.AllApps)
             { await foreach (var update in new ShellGoAllAppsHome(_configuration, _go).ReadAsync(request.Original, ct)) yield return new(section.Kind, update); }
         }

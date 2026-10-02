@@ -54,6 +54,7 @@
         <WrapPanel><TextBlock text="{Binding goSection.Label}" /><Button content="{Binding goSection.EarlierLabel}" action="GoSectionEarlierAction" /><Button content="{Binding goSection.LaterLabel}" action="GoSectionLaterAction" /><Button content="{Binding goSection.VisibilityLabel}" action="GoSectionVisibilityAction" /><Button content="{Binding goSection.SizeLabel}" action="GoSectionSizeAction" /><Button content="{Binding goSection.GroupLabel}" action="GoSectionGroupAction" /></WrapPanel>
       </Repeat>
       <TextBlock text="{Binding GoHomeView}" accessible-name="Go view" />
+      <TextBlock id="go-query-status" text="{Binding GoQuerySummary}" accessible-name="Go query status" text-wrapping="Wrap" />
       <TextBlock text="{Binding GoHomeAvailability}" /><TextBlock text="{Binding GoCategory}" accessible-name="Go search category" />
       <StackPanel orientation="Horizontal">
         <GoSearchInput id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search applications and desktop navigation" width="420" accessible-name="Go search" />
