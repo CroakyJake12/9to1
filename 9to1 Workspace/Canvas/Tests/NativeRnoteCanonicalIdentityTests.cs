@@ -20,6 +20,7 @@ public sealed class NativeRnoteCanonicalIdentityTests
         var second = document.DrawStroke([new(900, 950, 0.3), new(930, 980, 0.8)],
             new CanvasMutationRequest(document.Snapshot.RevisionId, Guid.NewGuid(), actor));
         var currentRevision = document.Snapshot.RevisionId;
+        var secondBytes = document.ExportCanonicalStrokeSelection([second],currentRevision);
         Assert.Equal(first, document.DrawStroke(firstSamples, firstRequest)); // canonical idempotent replay
         Assert.Equal(currentRevision, document.Snapshot.RevisionId);
         Assert.Equal(2, document.Snapshot.Pages[0].Strokes.Count);
@@ -33,9 +34,21 @@ public sealed class NativeRnoteCanonicalIdentityTests
         Assert.Throws<InvalidOperationException>(() => reopened.ExportCanonicalStrokeSelection([Guid.NewGuid()], currentRevision));
         Assert.Throws<ArgumentException>(() => reopened.ExportCanonicalStrokeSelection([first, first], currentRevision));
         Assert.Equal(before, reopened.Serialize());
-        // Shared CanvasArtifactSession history currently belongs to the live
-        // session; artifact restart retains bindings/content, not undo stacks.
-        Assert.Contains("HistoryUnavailable", Assert.Throws<InvalidOperationException>(() => reopened.Undo(new(currentRevision, Guid.NewGuid(), actor))).Message);
+        // The common canonical history envelope restores data frames across restart.
+        // Native keys and exact editable stroke data must survive owning Undo/Redo.
+        reopened.Undo(new(currentRevision, Guid.NewGuid(), actor));
+        Assert.NotEqual(currentRevision, reopened.Snapshot.RevisionId);
+        Assert.Equal(first, Assert.Single(reopened.Snapshot.Pages[0].Strokes).StrokeId);
+        AssertSameStroke(firstBytes, reopened.ExportCanonicalStrokeSelection([first], reopened.Snapshot.RevisionId));
+        Assert.Throws<InvalidOperationException>(() => reopened.ExportCanonicalStrokeSelection([second], reopened.Snapshot.RevisionId));
+        reopened.Redo(new(reopened.Snapshot.RevisionId, Guid.NewGuid(), actor));
+        Assert.Equal(new[] { first, second }.Order(), reopened.Snapshot.Pages[0].Strokes.Select(stroke => stroke.StrokeId).Order());
+        AssertSameStroke(firstBytes, reopened.ExportCanonicalStrokeSelection([first], reopened.Snapshot.RevisionId));
+        AssertSameStroke(secondBytes, reopened.ExportCanonicalStrokeSelection([second], reopened.Snapshot.RevisionId));
+        using var reopenedAgain = CanvasRnoteDocument.Open(reopened.Serialize());
+        Assert.Equal(reopened.Snapshot.RevisionId, reopenedAgain.Snapshot.RevisionId);
+        Assert.Equal(new[] { first, second }.Order(), reopenedAgain.Snapshot.Pages[0].Strokes.Select(stroke => stroke.StrokeId).Order());
+        AssertSameStroke(secondBytes,reopenedAgain.ExportCanonicalStrokeSelection([second],reopenedAgain.Snapshot.RevisionId));
         document.Undo(new(currentRevision, Guid.NewGuid(), actor));
         Assert.Single(document.Snapshot.Pages[0].Strokes);
         AssertSameStroke(firstBytes, document.ExportCanonicalStrokeSelection([first], document.Snapshot.RevisionId));
@@ -57,16 +70,24 @@ public sealed class NativeRnoteCanonicalIdentityTests
         var bindings = state["NativeStrokeKeys"]!.AsObject();
         bindings[Guid.NewGuid().ToString()] = bindings[first.ToString()]!.DeepClone();
         SaveState(foreign, state);
+        // Retained history is content-bound: malformed current native state is
+        // refused by the canonical codec before native materialization.
+        Assert.Throws<CanvasArtifactFormatException>(() => CanvasArtifactCodec.Serialize(foreign));
+        foreign.SemanticHistory = null; // Detached history-free fixture isolates the native binding boundary.
         Assert.Throws<InvalidDataException>(() => CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(foreign)));
         var duplicate = document.Snapshot;
         state = State(duplicate);
         state["NativeStrokeKeys"]![second.ToString()] = state["NativeStrokeKeys"]![first.ToString()]!.DeepClone();
         SaveState(duplicate, state);
+        Assert.Throws<CanvasArtifactFormatException>(() => CanvasArtifactCodec.Serialize(duplicate));
+        duplicate.SemanticHistory = null; // A separate native boundary fixture, not a history bypass in production.
         Assert.Throws<InvalidDataException>(() => CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(duplicate)));
         var legacy = document.Snapshot;
         state = State(legacy);
         state.Remove("NativeStrokeKeys");
         SaveState(legacy, state);
+        Assert.Throws<CanvasArtifactFormatException>(() => CanvasArtifactCodec.Serialize(legacy));
+        legacy.SemanticHistory = null; // Model the actual older history-free envelope with no key bindings.
         using var unbound = CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(legacy));
         Assert.Throws<NotSupportedException>(() => unbound.ExportCanonicalStrokeSelection([first], unbound.Snapshot.RevisionId));
         Assert.Equal(2, unbound.Snapshot.Pages[0].Strokes.Count);

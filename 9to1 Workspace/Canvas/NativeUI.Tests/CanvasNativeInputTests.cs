@@ -25,14 +25,14 @@ public sealed class CanvasNativeInputTests
     public async Task Native_view_navigation_preserves_document_coordinates_and_cancels_unsubmitted_ink()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        Assert.True(await native.Dispatch<bool>(async () =>
         {
             var ct = CancellationToken.None;
             await using var fixture = await Fixture.Create(ct);
             var submissions = 0;
             using var surface = new CanvasNativeCuiSurface(token => fixture.OpenDocument(token), fixture.Readiness,
                 new(fixture.FileId, fixture.Opened.CasRevisionId, fixture.Opened.Artifact.ArtifactId, fixture.Opened.Artifact.RevisionId,
-                    () => true, (_, _) => { submissions++; return Task.CompletedTask; }));
+                    () => true, (_, _) => { submissions++; return Task.CompletedTask; },fixture.Opened.StoreId));
             var window = new Window { Width = 1000, Height = 800, Content = surface }; window.Show();
             try
             {
@@ -79,7 +79,8 @@ public sealed class CanvasNativeInputTests
                 Assert.Empty((await fixture.Bridge.OpenAsync(fixture.FileId, ct)).Artifact.Pages[0].Strokes);
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
 
     [Theory]
@@ -88,7 +89,7 @@ public sealed class CanvasNativeInputTests
     public async Task Routed_native_mouse_stroke_requires_real_Home_approval_and_exact_Files_revision(bool changeRevision)
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        Assert.True(await native.Dispatch<bool>(async () =>
         {
             var ct = CancellationToken.None;
             await using var fixture = await Fixture.Create(ct);
@@ -102,7 +103,7 @@ public sealed class CanvasNativeInputTests
                         pending = await fixture.Broker.AuthorizeAsync(CanvasStrokeWriteIntent.TargetAppId,
                             CanvasStrokeWriteIntent.ActionId, intent.Scopes, intent.Arguments,
                             "Draw the exact captured red stroke in this Canvas revision", null, "native-canvas-test-session", token);
-                    }));
+                    },fixture.Opened.StoreId));
             using var approvals = new HomeApprovalCuiSurface(fixture.Runtime, fixture.Profiles, fixture.Permissions);
             var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("2*,*") };
             Grid.SetColumn(approvals, 1); grid.Children.Add(surface); grid.Children.Add(approvals);
@@ -123,6 +124,7 @@ public sealed class CanvasNativeInputTests
                 Assert.NotNull(captured);
                 Assert.Equal(HomePermissionRequestState.PendingApproval, pending!.State);
                 Assert.Equal("#FFFF0000", captured!.Style.Color);
+                Assert.Equal(fixture.Opened.StoreId,captured.ExpectedStoreId);
                 Assert.Equal(fixture.Opened.CasRevisionId, (await fixture.Bridge.OpenAsync(fixture.FileId, ct)).CasRevisionId);
                 Assert.Empty((await fixture.Bridge.OpenAsync(fixture.FileId, ct)).Artifact.Pages[0].Strokes);
                 await approvals.FocusRequestAsync(pending.RequestId, ct);
@@ -162,7 +164,8 @@ public sealed class CanvasNativeInputTests
                 }
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
 
     private static IEnumerable<Button> Buttons(Control value) { value.UpdateLayout(); return value.GetVisualDescendants().OfType<Button>(); }

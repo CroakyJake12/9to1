@@ -5,6 +5,7 @@ using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Core;
+using Haven.Infrastructure;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Automations;
 
@@ -29,6 +30,9 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
     private IAutomationDefinitionCallerReview? _pendingEditorReview;
     private string? _pendingEditorFingerprint;
     private readonly Dictionary<Guid, (string Fingerprint, IAutomationDefinitionCallerReview Review)> _pendingLibraryChanges = [];
+    private readonly AutomationLinkedDefinitionReviewCaller? _linkedOwnerCaller;
+    private readonly Dictionary<Guid, (string Fingerprint, AutomationLinkedDefinitionReview Review)> _pendingLinkedChanges = [];
+    private bool _definitionPageComplete;
     private readonly SemaphoreSlim _definitionChanges = new(1, 1);
     private readonly AutomationsHavenScene _scene;
     private readonly HavenSceneControl _sceneHost;
@@ -50,13 +54,15 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         Func<string, Task> runTask,
         IVersionedSettingsStore? versionedSettings = null,
         IAutomationDefinitionReviewCaller? ownerCaller = null,
-        IAutomationDefinitionCallerSelection? originalSelection = null)
+        IAutomationDefinitionCallerSelection? originalSelection = null,
+        AutomationLinkedDefinitionReviewCaller? linkedOwnerCaller = null)
     {
         ArgumentNullException.ThrowIfNull(tasks);
         _automations = automations ?? throw new ArgumentNullException(nameof(automations));
         _containerId = containerId;
         _ownerCaller = ownerCaller;
         _originalSelection = originalSelection;
+        _linkedOwnerCaller = linkedOwnerCaller;
         _startOneTimeTask = startOneTimeTask ?? throw new ArgumentNullException(nameof(startOneTimeTask));
         _runTask = runTask ?? throw new ArgumentNullException(nameof(runTask));
         _historySettings = versionedSettings ?? Haven.Desktop.App.Services?.GetService(typeof(IVersionedSettingsStore)) as IVersionedSettingsStore;
@@ -91,6 +97,8 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         return _ownerCaller.RequireCurrentAsync(_originalSelection, token);
     }
     internal AutomationsHavenScene Scene => _scene;
+    private Task _lastLibraryAction = Task.CompletedTask;
+    internal Task WhenLibraryActionIdleAsync() => _lastLibraryAction;
     internal HavenSceneControl SceneHost => _sceneHost;
 
     private async void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -105,8 +113,8 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
     private void OnRunWorkflowRequested(Guid id) => _ = RunWorkflowAsync(id);
     private void OnEditWorkflowRequested(Guid id) => OpenWorkflow(id);
     private void OnTestWorkflowRequested(Guid id) => _ = TestWorkflowAsync(id);
-    private void OnDeleteWorkflowRequested(Guid id) => _ = DeleteWorkflowAsync(id);
-    private void OnSetWorkflowEnabledRequested(Guid id, bool enabled) => _ = SetWorkflowEnabledAsync(id, enabled);
+    private void OnDeleteWorkflowRequested(Guid id) => _lastLibraryAction = DeleteWorkflowAsync(id);
+    private void OnSetWorkflowEnabledRequested(Guid id, bool enabled) => _lastLibraryAction = SetWorkflowEnabledAsync(id, enabled);
     private void OnOpenScheduledRequested(Guid id) => OpenScheduled(id);
     private void OnBackRequested(object? sender, EventArgs e) => _scene.ShowDashboard();
     private void OnSaveRequested(object? sender, EventArgs e) => _ = SaveEditorAsync();
@@ -130,6 +138,7 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
             if (_ownerCaller is null || _originalSelection is null)
                 throw new InvalidOperationException("Original automation ownership is unavailable.");
             var library = await _ownerCaller.LoadLibraryAsync(_originalSelection, new(IncludeDisabled: true, Limit: 100), _lifetime.Token);
+            _definitionPageComplete = library.Definitions.NextCursor is null;
             _workflows = library.Tasks.Items.Select(item => item.Value)
                 .Where(item => item.ContainerId is null || item.ContainerId == _containerId).ToArray();
             _scheduled = library.Definitions.Items.Select(item => item.Value).Where(item => item.ContainerId == _containerId).ToArray();
@@ -368,14 +377,23 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
     {
         var original = _workflows.FirstOrDefault(item => item.Id == id);
         if (original is null) return;
-        if (_scheduled.Any(item => item.Id == id))
-        { _scene.SetStatus("Linked scheduled definition changes require a coherent owning review; no partial change was made.", true); return; }
+        var linked = _scheduled.FirstOrDefault(item => item.Id == id);
+        // Capture both displayed immutable rows before waiting; never adopt later refreshed heads.
+        if (linked is not null)
+        {
+            await ReviewLinkedLibraryChangeAsync(original, linked, kind);
+            return;
+        }
+        if (!_definitionPageComplete)
+        { _scene.SetStatus("Linked definition lookup is incomplete; no single-row change was admitted.", true); return; }
         try
         {
             await _definitionChanges.WaitAsync(_lifetime.Token);
             try
             {
                 if (_ownerCaller is null || _originalSelection is null) throw new InvalidOperationException("Original automation ownership is unavailable.");
+                if (_pendingLinkedChanges.ContainsKey(id))
+                    throw new InvalidOperationException("Finish the original linked definition review first.");
                 var fingerprint = JsonSerializer.Serialize(new { kind, original.Id, original.Revision });
                 if (_pendingLibraryChanges.TryGetValue(id, out var retained) && retained.Fingerprint != fingerprint)
                     throw new InvalidOperationException("The original library review is still retained; no substituted change is admitted.");
@@ -394,6 +412,44 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         }
         catch (Exception error) when (error is not OperationCanceledException)
         { _scene.SetStatus("Definition review unavailable: " + error.Message, true); }
+    }
+
+    private async Task ReviewLinkedLibraryChangeAsync(ReusableTaskDefinition original,
+        AutomationDefinition schedule, AutomationDefinitionChangeKind kind)
+    {
+        var fingerprint = JsonSerializer.Serialize(new { kind, original.Id,
+            TaskRevision = original.Revision, ScheduleRevision = schedule.Revision });
+        try
+        {
+            await _definitionChanges.WaitAsync(_lifetime.Token);
+            try
+            {
+                if (_disposed) return;
+                if (_linkedOwnerCaller is null || _originalSelection is null)
+                    throw new InvalidOperationException("Original linked definition ownership is unavailable.");
+                if (_pendingLibraryChanges.ContainsKey(original.Id))
+                    throw new InvalidOperationException("Finish the original single definition review first.");
+                if (_pendingLinkedChanges.TryGetValue(original.Id, out var retained) && retained.Fingerprint != fingerprint)
+                    throw new InvalidOperationException("The exact original linked pair review is still retained.");
+                if (retained.Review is null)
+                {
+                    var taskProposal = original with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention };
+                    var scheduleProposal = schedule with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention };
+                    var review = await _linkedOwnerCaller.ReviewAsync(_originalSelection, taskProposal, scheduleProposal,
+                        original.Revision, schedule.Revision, kind, _lifetime.Token);
+                    retained = (fingerprint, review);
+                    _pendingLinkedChanges.Add(original.Id, retained);
+                }
+                var result = await retained.Review.FinishAsync(_lifetime.Token);
+                if (_disposed) return; // Keep exact issued handles even when their presentation closes.
+                _scene.SetStatus($"{result.Code}. Home requests: {string.Join(", ", retained.Review.RequestIDs)}.", result.Committed != true);
+                if (result.Committed == true && result.Code == "LinkedDefinitionsCommitted")
+                { _pendingLinkedChanges.Remove(original.Id); await RefreshAsync(); }
+            }
+            finally { _definitionChanges.Release(); }
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        { if (!_disposed) _scene.SetStatus("Linked definition review unavailable: " + error.Message, true); }
     }
 
     private void OpenScheduled(Guid id)

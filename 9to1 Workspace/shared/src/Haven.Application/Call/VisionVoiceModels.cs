@@ -104,7 +104,7 @@ public sealed record LiveTranslateLanguageSet(
     IReadOnlyList<LiveTranslateOutputPreference> Outputs,
     IReadOnlyList<string> GlossaryIds);
 
-/// <summary>Tracks the resumable outline and current position of a Monologue run.</summary>
+/// <summary>Tracks the resumable outline. Position is an offset within CurrentSection; advancing to a later section may reset this offset.</summary>
 public sealed record MonologueRun(
     Guid RunId,
     string Objective,
@@ -113,7 +113,19 @@ public sealed record MonologueRun(
     int CurrentSection,
     TimeSpan Position,
     bool IsPaused,
-    IReadOnlyList<string> SourceRefs);
+    IReadOnlyList<string> SourceRefs)
+{
+    /// <summary>Checks a deterministic resumable plan, without starting audio or authorising referenced sources.</summary>
+    public string? Validate()
+    {
+        if (RunId == Guid.Empty || string.IsNullOrWhiteSpace(Objective)) return "A Monologue plan requires a stable RunID and objective.";
+        if (TargetDuration is { } duration && duration <= TimeSpan.Zero) return "A target duration must be positive.";
+        if (Sections is null || Sections.Count == 0 || Sections.Any(string.IsNullOrWhiteSpace)) return "A Monologue plan requires nonempty ordered sections.";
+        if (CurrentSection < 0 || CurrentSection >= Sections.Count || Position < TimeSpan.Zero) return "The Monologue playback position is outside its original plan.";
+        if (SourceRefs is null || SourceRefs.Any(string.IsNullOrWhiteSpace)) return "Monologue source references must be explicit and nonempty when supplied.";
+        return null;
+    }
+}
 
 /// <summary>One useful derived event from contextual ambient listening.</summary>
 public sealed record LiveListenerEvent(
@@ -180,8 +192,8 @@ public sealed record MultimodalSession(
             var languageError = LiveTranslateLanguages.Validate();
             if (languageError is not null) return languageError;
         }
-        if (Monologue is { } outline && (outline.Sections is null || outline.SourceRefs is null))
-            return "A Monologue outline requires explicit section and source-reference collections.";
+        if (Monologue is { } outline && outline.Validate() is { } invalidOutline)
+            return invalidOutline;
         if (LiveTranslateLanguages is { } retainedLanguages && retainedLanguages.Validate() is { } retainedError)
             return retainedError;
         if (VoiceMode == VisionVoiceMode.Monologue && Monologue is { RunId: var runId } && runId == Guid.Empty)

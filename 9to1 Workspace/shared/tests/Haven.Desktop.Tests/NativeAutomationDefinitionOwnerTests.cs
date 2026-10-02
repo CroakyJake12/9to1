@@ -64,7 +64,7 @@ public sealed class NativeAutomationDefinitionOwnerTests
                 Input("Automations.Editor.Rules").Text = "Substituted queued rules B";
             }
             finally { mutationGate.Release(); }
-            await UntilAsync(() => page.Scene.StatusText.Content.Contains("Home request:", StringComparison.Ordinal), token, () => page.Scene.StatusText.Content);
+            await UntilAsync(() => page.Scene.StatusText.Content.Contains("Home request:", StringComparison.Ordinal), token);
             var tasks = graph.GetRequiredService<IReusableTaskOwnerRepository>();
             Assert.Empty((await tasks.ListOwnedTasksAsync(new(), token)).Items);
             var permissions = graph.GetRequiredService<HomePermissionTrustService>();
@@ -90,12 +90,14 @@ public sealed class NativeAutomationDefinitionOwnerTests
             Assert.True(run.State.HasFlag(HavenElementState.Disabled));
             Assert.True(run.KeyDown(new(HavenKey.Enter, HavenKeyModifiers.None)));
             Assert.True(run.KeyUp(new(HavenKey.Enter, HavenKeyModifiers.None)));
+            Assert.Equal(0, runtimeCalls);
+            Assert.Equal(saved.Revision, (await tasks.GetOwnedTaskAsync(saved.Id, token))!.Value.Revision);
             Press($"Automations.Workflow.{saved.Id:N}.Enabled");
             await UntilAsync(() => page.Scene.StatusText.Content.Contains("publication authority is unavailable", StringComparison.Ordinal), token);
             Assert.Equal(saved.Revision, (await tasks.GetOwnedTaskAsync(saved.Id, token))!.Value.Revision);
             Assert.Equal(0, runtimeCalls);
             Press($"Automations.Workflow.{saved.Id:N}.Delete");
-            await UntilAsync(() => page.Scene.StatusText.Content.Contains("Home request:", StringComparison.Ordinal), token, () => page.Scene.StatusText.Content);
+            await UntilAsync(() => page.Scene.StatusText.Content.Contains("Home request:", StringComparison.Ordinal), token);
             Assert.NotNull(await tasks.GetOwnedTaskAsync(saved.Id, token));
             var archiveRequest = Assert.Single((await permissions.GetSnapshotAsync(cancellationToken: token)).PendingRequests);
             Assert.True((await permissions.DecideAsync(archiveRequest.RequestId, HomeApprovalChoice.Accept, cancellationToken: token)).Succeeded);
@@ -121,11 +123,11 @@ public sealed class NativeAutomationDefinitionOwnerTests
         }
         finally { window?.Close(); SqliteConnection.ClearAllPools(); Directory.Delete(root, true); }
     }
-    private static async Task UntilAsync(Func<bool> condition, CancellationToken token, Func<string>? diagnostic = null)
+    private static async Task UntilAsync(Func<bool> condition, CancellationToken token)
     {
         var end = DateTimeOffset.UtcNow.AddSeconds(10);
         while (!condition() && DateTimeOffset.UtcNow < end) { Dispatcher.UIThread.RunJobs(); await Task.Delay(10, token); }
-        Assert.True(condition(), diagnostic?.Invoke());
+        Assert.True(condition());
     }
     private sealed class Paths(string root) : IAppPaths
     {

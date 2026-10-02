@@ -12,19 +12,20 @@ public sealed class CanvasStrokeWriteIntent
     private readonly ImmutableArray<RnotePointerSample> _samples;
     private readonly JsonElement _arguments;
     private CanvasStrokeWriteIntent(HostedItemId fileId, FilesRevisionId expectedFilesRevision, Guid artifactId,
-        Guid expectedArtifactRevision, Guid operationId, ImmutableArray<RnotePointerSample> samples, CanvasRnoteInkStyle style)
+        Guid expectedArtifactRevision, Guid operationId, ImmutableArray<RnotePointerSample> samples, CanvasRnoteInkStyle style,Guid expectedStoreId = default)
     {
-        FileId = fileId; ExpectedFilesRevision = expectedFilesRevision; ArtifactId = artifactId;
+        ExpectedStoreId=expectedStoreId;FileId = fileId; ExpectedFilesRevision = expectedFilesRevision; ArtifactId = artifactId;
         ExpectedArtifactRevision = expectedArtifactRevision; OperationId = operationId; _samples = samples; Style = style;
         _arguments = JsonSerializer.SerializeToElement(new
         {
-            operation = "stroke.draw", fileId = fileId.Value, expectedFilesRevision = expectedFilesRevision.Value,
+            operation = "stroke.draw", expectedStoreId, fileId = fileId.Value, expectedFilesRevision = expectedFilesRevision.Value,
             artifactId, expectedArtifactRevision, operationId, samples, style
         }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         Scopes = Array.AsReadOnly(new[] { new ResourceScope("files.item", fileId.ToString(), expectedFilesRevision.ToString(), ResourceAccess.Write) });
     }
     public const string TargetAppId = "canvas";
     public const string ActionId = "canvas.file.save";
+    public Guid ExpectedStoreId {get;}
     public HostedItemId FileId { get; }
     public FilesRevisionId ExpectedFilesRevision { get; }
     public Guid ArtifactId { get; }
@@ -35,6 +36,14 @@ public sealed class CanvasStrokeWriteIntent
     public JsonElement Arguments => _arguments.Clone();
     internal IReadOnlyList<RnotePointerSample> Samples => _samples;
 
+    /// <summary>Explicit original-store-bound successor. Never infers the store from the current save provider.</summary>
+    public static CanvasStrokeWriteIntent Capture(HostedItemId fileId,FilesRevisionId expectedFilesRevision,Guid artifactId,
+        Guid expectedArtifactRevision,Guid operationId,Guid expectedStoreId,IReadOnlyList<RnotePointerSample> samples,CanvasRnoteInkStyle? style=null)
+    {
+        if(expectedStoreId==Guid.Empty)throw new ArgumentException("The original Files store identity is required.",nameof(expectedStoreId));
+        var detached=Capture(fileId,expectedFilesRevision,artifactId,expectedArtifactRevision,operationId,samples,style);
+        return new(fileId,expectedFilesRevision,artifactId,expectedArtifactRevision,operationId,detached._samples,detached.Style,expectedStoreId);
+    }
     public static CanvasStrokeWriteIntent Capture(HostedItemId fileId, FilesRevisionId expectedFilesRevision, Guid artifactId,
         Guid expectedArtifactRevision, Guid operationId, IReadOnlyList<RnotePointerSample> samples, CanvasRnoteInkStyle? style = null)
     {
@@ -65,7 +74,9 @@ public sealed class CanvasHomeStrokeOperation(CanvasFilesArtifactBridge files, H
         ArgumentNullException.ThrowIfNull(capability);
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("No current authenticated Home actor is available.");
-        var opened = await files.OpenAsync(intent.FileId, cancellationToken).ConfigureAwait(false);
+        var opened = intent.ExpectedStoreId==Guid.Empty
+            ? await files.OpenAsync(intent.FileId,cancellationToken).ConfigureAwait(false)
+            : await files.OpenAsync(intent.FileId,intent.ExpectedStoreId,cancellationToken).ConfigureAwait(false);
         if (opened.CasRevisionId != intent.ExpectedFilesRevision || opened.Artifact.ArtifactId != intent.ArtifactId ||
             opened.Artifact.RevisionId != intent.ExpectedArtifactRevision)
             throw new InvalidOperationException("The canonical Canvas target changed before draw preparation.");
@@ -80,7 +91,9 @@ public sealed class CanvasHomeStrokeOperation(CanvasFilesArtifactBridge files, H
         // The bridge rechecks live actor/ACL/read-only state and metadata CAS
         // before and after immutable candidate IO. Only this acknowledged
         // revision can replace the host's active document.
-        var committed = await files.SaveAsync(intent.FileId, snapshot, intent.ExpectedFilesRevision, claimed, cancellationToken).ConfigureAwait(false);
+        var committed = intent.ExpectedStoreId==Guid.Empty
+            ? await files.SaveAsync(intent.FileId,snapshot,intent.ExpectedFilesRevision,claimed,cancellationToken).ConfigureAwait(false)
+            : await files.SaveAsync(intent.FileId,snapshot,intent.ExpectedFilesRevision,intent.ExpectedStoreId,claimed,cancellationToken).ConfigureAwait(false);
         return new(intent.FileId, snapshot, committed, stroke);
     }
 }

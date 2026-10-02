@@ -9,6 +9,11 @@ namespace HavenOS.Home.PermissionsTrustNotifications;
 /// </summary>
 public sealed class HomePermissionTrustService
 {
+    internal bool IsBoundToStore(IHomeCoreStateStore candidate) => ReferenceEquals(_stateStore, candidate);
+    // Trusted configured catalog only; no request/page metadata supplies a policy.
+    internal HomePermissionActionPolicy? ResolveTrustedActionPolicy(string appId, string actionId)
+    { try { return _resolvePolicy(appId, actionId); } catch { return null; } }
+
     private static readonly TimeSpan AcceptAndTrustLifetime = TimeSpan.FromDays(30);
     private const int AuditPageSize = 100;
     private const string StateRecordId = "home.permissions-trust";
@@ -168,6 +173,30 @@ public sealed class HomePermissionTrustService
                 grant.Caller.CallerId == request.Caller.CallerId && grant.Caller.IdentityVersion == request.Caller.IdentityVersion &&
                 ScopeEquals(grant.Scope, request.Scope) &&
                 (grant.ExpiresAt is null || grant.ExpiresAt > _timeProvider.GetUtcNow()));
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Actual durable request observation only. No creation, expiration write or approval grant.
+    /// Collections are detached so callers cannot mutate the producer's loaded state.</summary>
+    public async Task<HomePermissionRequest?> ReadRequestObservationAsync(string requestId, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            var request = state.Requests.SingleOrDefault(item => item.RequestId == requestId);
+            return request is null ? null : request with
+            {
+                Scope = request.Scope with { Objects = Array.AsReadOnly(request.Scope.Objects.ToArray()) },
+                Impact = request.Impact with
+                {
+                    AffectedObjectTypes = Array.AsReadOnly(request.Impact.AffectedObjectTypes.ToArray()),
+                    KnownObjects = Array.AsReadOnly(request.Impact.KnownObjects.ToArray()),
+                    ResourceBinding = request.Impact.ResourceBinding is { } binding
+                        ? binding with { Scopes = Array.AsReadOnly(binding.Scopes.ToArray()) } : null
+                }
+            };
         }
         finally { _gate.Release(); }
     }

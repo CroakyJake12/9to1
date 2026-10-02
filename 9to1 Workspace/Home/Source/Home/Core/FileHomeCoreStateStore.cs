@@ -9,7 +9,7 @@ namespace HavenOS.Home.Core;
 /// Crash-safe, revision-checked local Home state storage. A corrupt or newer file is reported
 /// without replacing it, so permission/device/package state can be repaired instead of erased.
 /// </summary>
-public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
+public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeLocalOperationLeaseSource
 {
     public const int CurrentSchemaVersion = 1;
 

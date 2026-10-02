@@ -6,7 +6,10 @@ using HavenOS.Home.Core;
 
 namespace HavenOS.Apps.Canvas;
 
-public sealed record CanvasCreationTarget(HostedItemId FolderId, FilesRevisionId? ExpectedFolderRevision);
+public sealed record CanvasCreationTarget(HostedItemId FolderId, FilesRevisionId? ExpectedFolderRevision)
+{
+    public Guid ExpectedStoreId { get; init; }
+}
 
 /// <summary>Captured new document and configured destination, never caller-supplied actor authority.</summary>
 public sealed class CanvasCreateIntent
@@ -20,7 +23,7 @@ public sealed class CanvasCreateIntent
         {
             operation = "artifact.create", artifactId = artifact.ArtifactId, revisionId = artifact.RevisionId,
             displayName = artifact.DisplayName, canvasMode = artifact.CanvasMode.ToString(),
-            folderId = target.FolderId.Value, expectedFolderRevision = target.ExpectedFolderRevision?.Value,
+            folderId = target.FolderId.Value, expectedStoreId = target.ExpectedStoreId, expectedFolderRevision = target.ExpectedFolderRevision?.Value,
             contentHash = Convert.ToHexString(SHA256.HashData(bytes)), sizeBytes = bytes.Length
         }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         Scopes = Array.AsReadOnly(new[] { new ResourceScope("files.item", target.FolderId.ToString(),
@@ -36,7 +39,7 @@ public sealed class CanvasCreateIntent
     public static CanvasCreateIntent Capture(CanvasArtifact artifact, CanvasCreationTarget target)
     {
         ArgumentNullException.ThrowIfNull(artifact); ArgumentNullException.ThrowIfNull(target);
-        if (target.FolderId.Value == Guid.Empty || target.ExpectedFolderRevision?.Value == Guid.Empty)
+        if (target.ExpectedStoreId == Guid.Empty || target.FolderId.Value == Guid.Empty || target.ExpectedFolderRevision?.Value == Guid.Empty)
             throw new ArgumentException("Canvas creation requires the exact configured destination revision.");
         var bytes = CanvasArtifactCodec.Serialize(artifact);
         var captured = CanvasArtifactCodec.Deserialize(bytes);
