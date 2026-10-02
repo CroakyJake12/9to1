@@ -447,7 +447,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesIndependentEditorRevisionTests.cs",
       "namespace": "Haven.Infrastructure.Tests",
       "class": "NotesIndependentEditorRevisionTests",
-      "sha256": "ff77ae512253a00fa1844b57a3542cc0c379c4824e4535c404fcd0f80168caa8"
+      "sha256": "64da2b4288bd1c94be2ec1843cd69d4cdd7240f3b757a9b48f194bb40c7806d4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesMediaAssetServiceTests.cs",

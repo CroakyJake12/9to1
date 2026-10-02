@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
-  "programTree": "d884a2cd3d2b0c68a58e9d7d36129c3d81b381d6",
+  "baselineCommit": "2eca1751c40ad2cedb3636f9fb2afc61ce3e7072",
+  "programTree": "6a518fc17da1e9de1e52536fcfd74c7be68aea52",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "a2f4e123c2ef9e938c5a6786c5c9ba27de94b096",
+      "object": "c0d00f426c72babdb7a890604880e50f46abe433",
       "bytes": 30087,
-      "sha256": "8d8bde648ba0bddbc60496fb2379aa40319af752961b387da39cbbd5c01cb946"
+      "sha256": "d02e6aa139f3930f77d5ea86600cf9de70db3cc293e6320ae73e2fe703846767"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -40125,9 +40125,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesIndependentEditorRevisionTests.cs",
       "mode": "100644",
-      "object": "316394f8cedf6d88b4243fbcfd2a9b3f4f51f4b0",
-      "bytes": 5500,
-      "sha256": "ff77ae512253a00fa1844b57a3542cc0c379c4824e4535c404fcd0f80168caa8"
+      "object": "0ff9b25ac62cbe467f04d7d8c3a1c81f71f21b3f",
+      "bytes": 5494,
+      "sha256": "64da2b4288bd1c94be2ec1843cd69d4cdd7240f3b757a9b48f194bb40c7806d4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesMediaAssetServiceTests.cs",
@@ -64451,7 +64451,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Fresh isolated Root15 exact18 Write05/Mail01/Boards picker01/movement03/Planner01 winners; independently all18 basebyte/absence CAS verified exactnormal Git. Full actual Core/Application/Infrastructure/Desktop projects with every source-inventoried Notes/Write/Mail/Boards/Planner owning whole class, six exactnew classes, original currentregression/resource filters and all source22+3/7producers/task/restore/compiled/TRX guards retained. Present04 and Home/Auto/Maps/Games/Canvas future sources excluded. Known inherited Boards unsaved-switch and Planner async-open/delete limitations unclaimed. Source-only unexecuted, root chooses fullcut; no normal activation.",
+  "limits": "Exact selected Desktop18 one-expression analyzer correction only; all original 64 owning class files, all 75 FQN selections and full regression/resource projects, source, restore, compiled and zero-skip guards preserved. Future24 graph excluded; unexecuted pending root review.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-desktop-visible-owning-source-graph01/manifest.json",
@@ -64480,6 +64480,22 @@
     {
       "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol17/manifest.json",
       "sha256": "23ec78f5892c0b16f2616d2dd141fee9b55deec1d55882cb29d9acc69c851d33"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-desktop18-actual-xunit2031-corrective01/manifest.json",
+      "sha256": "690a96d21624161a530c417908086ec1811e98cb66477fbff8094f30f4c0a662"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/desktop-visible-root15-owning01/actual-capture-11221102857/root-capture.json",
+      "sha256": "82d88be8ee24a9d57ad769c3223f7aa8314b812117a8206693cd907591641757"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/desktop-visible-root15-owning01/actual-capture-11220998543/root-capture.json",
+      "sha256": "748aed615c0efb76feeb9f3670c4d02d33915bc68f3fa19d3b7af39164b1ef95"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/desktop-visible-root15-owning01/actual-capture-11221345894/root-capture.json",
+      "sha256": "bc3fd2ecc2af36e90037381bfddf987b826e976544e5aadf4442310d7c872011"
     }
   ],
   "sharedCakeIdContract": null

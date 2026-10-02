@@ -46,7 +46,7 @@ public sealed class NotesIndependentEditorRevisionTests
                     catch (NotesRevisionConflictException) { return false; }
                 }
                 var results = await Task.WhenAll(Save(first, left), Save(second, right));
-                Assert.Single(results.Where(result => result));
+                Assert.Single(results, result => result);
                 var current = Assert.IsType<NotesDocument>(await Create().LoadAsync(seed.Id, ct));
                 Assert.Equal(2, current.Version); Assert.Contains(current.Title, new[] { "Left", "Right" });
                 Assert.Equal(seed.Id, current.Id);
