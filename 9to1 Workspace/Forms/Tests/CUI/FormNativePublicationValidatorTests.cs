@@ -52,7 +52,7 @@ public sealed class FormNativePublicationValidatorTests
             "graph" => project with { ModeDefinition = new(Guid.NewGuid(), FormModeKind.Custom, Guid.NewGuid(), Guid.NewGuid()) },
             "renderer" => project with { Fields = [field with { Kind = FormFieldKind.Graph }] },
             "theme" => project with { Theme = new("custom") },
-            "layout" => project with { Pages = [project.Pages[0] with { Layout = new(Columns: 2) }] },
+            "layout" => project with { Fields = project.Fields.Select(definition => definition with { Layout = new(Columns: 2) }).ToArray() },
             _ => throw new ArgumentOutOfRangeException(nameof(capability))
         };
         var validator = new FormNativePublicationValidator();

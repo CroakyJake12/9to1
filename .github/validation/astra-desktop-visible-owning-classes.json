@@ -1,0 +1,241 @@
+{
+  "ownerManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
+  "classes": [
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
+      "class": "FormNativeHomePublicationResponseTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source",
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeHomePublicationResponseTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
+      "class": "FormNativePageOrderOwnerTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source",
+      "source": "/workspace/astra-source/worker3-forms-final-join25-04/FormNativePageOrderOwnerTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "class": "FormNativePreviewTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "58291b6eef950b275bf526ceef15b53cf2724fedaa8e37cd01f5582e8cdc0156",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source",
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativePreviewTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs",
+      "class": "FormNativePublicationValidatorTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "3eec3883374bca1c833cd5c232b0f7f794000b873c4f6ae930f403d68e2fc22e",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source",
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
+      "class": "FormNativeResponseSurfaceTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "85890468d85ab06f8c062dcd3f22bb34ccbfef2e524f0fe34c58ba87957397a5",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source",
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeResponseSurfaceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
+      "class": "FormsCuiWorkspaceTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "67526f28a5f3c46e8c0def35762962f2eccc04e308a5c1c9b630a1085167190e",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source",
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspaceTests.cs"
+    },
+    {
+      "class": "FormNativePreviewViewportTests",
+      "fullClass": "HavenOS.Forms.Tests.FormNativePreviewViewportTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewViewportTests.cs",
+      "sha256": "b736d09401c2f8e2277f7906d8ef93e2a19090afb95596b639f54d32ab4bc95c",
+      "origin": "Exact current Root19 plus accepted owned Forms10 source"
+    }
+  ],
+  "consoleHarness": {
+    "path": "9to1 Workspace/Files/CUI.Tests/Program.cs",
+    "sha256": "b837c0a84fc24fff5e9093577e46147bb8690a74b9d3530a8aea75767f9e050d",
+    "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
+  },
+  "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
+  "data22ManifestSha256": "1747fee9e62509924a802f25d6c7cabb3349f066912ef2dd0d360600a50f0715",
+  "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-04/joined-source25.json",
+  "forms25ManifestSha256": "3e3e7b9563d97d4ab9d3767f7f5caceb332c21b0d4bbcb2be7a7f9b02b2bba62",
+  "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
+  "forms26OwnerRows": [
+    {
+      "source": "/workspace/astra-source/worker3-forms-host-session-successor/FormPublicationService.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
+      "sha256": "2ebf75539a820f00197ec80891a114eda5e868174986c59f505e3b8037f31438",
+      "expectedOriginalSHA256": "2cff1f4665082ea77555214b57b1a990343d0d55c452c32f1507d8ba3be05d2c"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-final-join25-03/FormPublicationOriginatingActorTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormPublicationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs",
+      "sha256": "e926b6c3e26dc93155f32066b7c9730694510b54ac380491e674ecf284d5efdf",
+      "expectedOriginalSHA256": "5593e48f4bd171baeb404f2137a2ade823262bc6640861f90f1d52212566cdc8"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormAuthoringWorkflowTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs",
+      "sha256": "6ad0808410c7b8c15394bc90da8a0b0fed95ef937ab4e0b6b6d1601e669a483e",
+      "expectedOriginalSHA256": "d8aa664848bde41d2807f1058a044449fad80f92b96fadd3b546cca5807e3c54"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormGraphReferenceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
+      "sha256": "efec344e536f3cbcb98633e9726df8364da703310071aa680c3ad3eb5f9f4c72",
+      "expectedOriginalSHA256": "986a418eda078e75c9fe3a23b4cf5715666c443713c0c97007c6e3c4cc834582"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormResponseSessionTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs",
+      "sha256": "a9ab42186095b5cdf65644dc20962da0013eafce9d0c0b58009dbce5b6b8d7da",
+      "expectedOriginalSHA256": "2809a8d5e3edb80938540f19f015f8bd7b40a85867ce3253db8be90e5d5decc9"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormLocalStoreAuthorityTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs",
+      "sha256": "deb0abb8824be3a78a8e3fe2b88c2f89843b34c69d4be6dd97ce071b88a1ddc8",
+      "expectedOriginalSHA256": "2696e13f498e05e7c6c9344c940d76dc6b1d892c05f1e3eb4c3630542bbf76d6"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormDataPreparationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
+      "sha256": "dcf0bf4ec33978f7f21b00fe551142e1609cf1bf5cb47e1e83bae4986fcd75f9",
+      "expectedOriginalSHA256": "7e32eed3aa978f26c4f96b8b5166cad3c07027a2968c201f332cb9212ddb685d"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspaceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
+      "sha256": "2d86ab1d7dbc5626f0b346d839775c8a828e490434f7453ded17883fcaa8477a",
+      "expectedOriginalSHA256": "da30f7d47779e89dd90d8366470db1d0dd052a85f6d0e86e48b289a438f0145f"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeResponseSurfaceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
+      "sha256": "3115d29f06cea487aca5b677ea0cc76c2e80968d95bea86c9345c7ee440c4d83",
+      "predecessorSource": "/workspace/astra-source/worker3-next-forms-publication-actor/FormNativeResponseSurfaceTests.cs",
+      "predecessorSha256": "7052236c16fb85b9ca7c9a15ff6d2f0b758937b404032038320443df9f7b2c7d",
+      "expectedOriginalSHA256": "1fe6768e4dc3fb2cb33eae1429ec0d88cc9a2f9413860bcb09fdff54e546fd5e"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormResponseSessionService.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
+      "sha256": "bd31e5f85d504eb0518ef63dbe61139092708816bd81cf3c6e4e044b83caede2",
+      "expectedOriginalSHA256": "b78a1f14a6435829038a06829cd7ddccab15d3cca28a40cdacbac50eeff692e9"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspace.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
+      "sha256": "cf9ab455ad0f1a14fd06bbf6efa09566d7ce4679b84b2ccaad96e7f8add7c2b8",
+      "predecessorSource": "/workspace/9to1/9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
+      "predecessorSha256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381",
+      "expectedOriginalSHA256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsWorkspace.cui",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
+      "sha256": "1eac413aa482a06099a6cf20b683ccfc946e7f99e22f4df82e1f538a45259703",
+      "predecessorSource": "/workspace/9to1/9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
+      "predecessorSha256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749",
+      "expectedOriginalSHA256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-final-join25-04/FormNativePageOrderOwnerTests.cs",
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeHomePublicationResponseTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-host-session-lifetime-03/FormHostSession.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormHostSession.cs",
+      "sha256": "0865b32c1275e3f1227f42875d7ea98930b33cd03564549a33221212c31d54b6",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker1-forms-publication-di-owner16-lifetime03/FormPublicationServiceCollectionExtensions.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Infrastructure/DI/FormPublicationServiceCollectionExtensions.cs",
+      "sha256": "7d8d37345354d9af1181473b3917463db47cec1cb75b3ef43f338b781d807d90",
+      "expectedOriginalSHA256": null,
+      "owner": "worker1_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker1-forms-publication-di-owner16-lifetime03/FormPublicationRegistrationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
+      "sha256": "4737ee8b8fc4c1d91a34250e98606ef812469bb1d050362880a7ebd3418d06d8",
+      "expectedOriginalSHA256": null,
+      "owner": "worker1_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/App.axaml.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
+      "sha256": "70e64e5f4fae4994ac934d2d3ebd0a9a1d12e87a4f6cae10943640c5b3dd38e5",
+      "expectedOriginalSHA256": "07023b77e901d035a787878ed50335e52f942618bbda11d731873b14da4a0aa5"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/MainView.Forms.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Forms.cs",
+      "sha256": "bd1eeb4bb1ee79ebd5ea8143cdd2cef9e47de438604114f72d992b6e6c91f090",
+      "expectedOriginalSHA256": "279749fa7613019998899bc59a7db49d99486cdad3cccc15f2524c5283de23ae"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/FormsNativeWorkspaceHost.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Forms/FormsNativeWorkspaceHost.cs",
+      "sha256": "1e8c8d84c957149bfe9e112f56bdc0ed09f8e3cd53ec29762089548bd7b0d87a",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker2-forms-closed-response-fixture-06/FormsNativeWorkspaceHostTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-owning-home-metadata-draft/HavenOS.Forms.CUI.Tests.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
+      "sha256": "41dbfd35a57ca4be65f18cab872af621512e1285073480cb04fd3766ea01824c",
+      "expectedOriginalSHA256": "340549aa066e889dd6bd3bf124a18e575c2ae935602e896a0b9985ea0df9107a",
+      "owner": "worker4_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-desktop-metadata-draft-sol1/Haven.Desktop.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519",
+      "expectedOriginalSHA256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798",
+      "owner": "worker4_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-desktop-metadata-draft-sol1/Haven.Desktop.Tests.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "expectedOriginalSHA256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
+      "owner": "worker4_sol"
+    },
+    {
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "expectedOriginalSHA256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativePreviewTests.cs",
+      "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36"
+    }
+  ],
+  "joined95": "joined-source95.json"
+}

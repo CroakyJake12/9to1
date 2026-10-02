@@ -12,6 +12,8 @@ using Haven.Core.Forms;
 
 namespace HavenOS.Forms;
 
+public enum FormPreviewViewportKind { Desktop, Tablet, Mobile, Embedded }
+
 /// <summary>Native CUI Object renderers over the same canonical response engine as published Forms.
 /// This author preview never creates a durable respondent or performs linked Data writes.</summary>
 public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable
@@ -28,6 +30,9 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     public event EventHandler? Changed;
     public event PropertyChangedEventHandler? PropertyChanged;
     public string? ValidationCode { get; private set; }
+    public FormPreviewViewportKind Viewport { get; private set; } = FormPreviewViewportKind.Desktop;
+    public double PreviewWidth => Viewport switch
+    { FormPreviewViewportKind.Desktop => 1200, FormPreviewViewportKind.Tablet => 768, FormPreviewViewportKind.Mobile => 390, _ => 280 };
     public FormResponse Response => _runtime.Read();
 
     public FormNativePreview(FormProject project, TimeProvider? clock = null) : this(project, null, clock) { }
@@ -47,7 +52,7 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     {
         if (componentCount != 0 || fields.Any(field => !CanRender(field.Kind)
                 || field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
-            || pages.Any(page => page.Layout.Columns != 1) || fields.Any(field => field.Layout.Columns != 1)
+            || fields.Any(field => field.Layout.Columns != 1)
             || theme.ThemeID != "default" || theme.StyleAssetID is not null)
             throw new NotSupportedException("CapabilityUnavailable: this form needs an additional native renderer, layout or theme provider.");
     }
@@ -61,6 +66,19 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     public void Register(CuiControlRegistry registry)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        registry.RegisterObjectRenderer("forms.page-columns", component =>
+        {
+            if (component.Name is not { } name || !name.StartsWith("page-", StringComparison.Ordinal)
+                || !Guid.TryParseExact(name[5..], "N", out var id)) throw new InvalidDataException("Preview page identity is missing.");
+            var page = _project.Pages.Single(item => item.PageID == id);
+            var columns = new FormNativePageColumns(page.Layout.Columns, (double)page.Layout.Gap);
+            foreach (var child in page.Children)
+            {
+                var field = CreateField(child.ID); field.Name = "field-" + child.ID.ToString("N");
+                columns.Children.Add(field);
+            }
+            return columns;
+        });
         registry.RegisterObjectRenderer("forms.answer", component =>
         {
             if (component.Name is not { } name || !name.StartsWith("field-", StringComparison.Ordinal)
@@ -76,6 +94,15 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         using (var writer = XmlWriter.Create(text, new XmlWriterSettings { OmitXmlDeclaration = true }))
         {
             writer.WriteStartElement("Cui"); writer.WriteStartElement("StackPanel"); writer.WriteAttributeString("spacing", "12");
+            writer.WriteAttributeString("id", "forms-preview-viewport");
+            writer.WriteAttributeString("max-width", "{Binding PreviewWidth}");
+            writer.WriteStartElement("TextBlock"); writer.WriteAttributeString("text", "{Binding ViewportLabel}"); writer.WriteEndElement();
+            foreach (var viewport in Enum.GetValues<FormPreviewViewportKind>())
+            {
+                writer.WriteStartElement("Button");
+                writer.WriteAttributeString("action", "9to1.Forms.Preview.Viewport." + viewport);
+                writer.WriteAttributeString("content", viewport + " layout"); writer.WriteEndElement();
+            }
             foreach (var page in _project.Pages)
             {
                 writer.WriteStartElement("StackPanel");
@@ -83,10 +110,18 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
                 if (page.Layout.MinimumWidth is { } minimum) writer.WriteAttributeString("min-width", minimum.ToString(CultureInfo.InvariantCulture));
                 if (page.Layout.MaximumWidth is { } maximum) writer.WriteAttributeString("max-width", maximum.ToString(CultureInfo.InvariantCulture));
                 writer.WriteStartElement("TextBlock"); writer.WriteAttributeString("text", page.Title); writer.WriteEndElement();
+                if (page.Layout.Columns > 1)
+                {
+                    writer.WriteStartElement("Object"); writer.WriteAttributeString("id", "page-" + page.PageID.ToString("N"));
+                    writer.WriteAttributeString("type", "forms.page-columns"); writer.WriteEndElement();
+                }
+                else
+                {
                 foreach (var child in page.Children)
                 {
                     writer.WriteStartElement("Object"); writer.WriteAttributeString("id", "field-" + child.ID.ToString("N"));
                     writer.WriteAttributeString("type", "forms.answer"); writer.WriteEndElement();
+                }
                 }
                 writer.WriteEndElement();
             }
@@ -111,6 +146,8 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         var input = ownedInput.Control;
         _detach.Add(ownedInput.Dispose);
         AutomationProperties.SetName(input, definition.Label);
+        AutomationProperties.SetHelpText(input, string.Join(" ",
+            new[] { definition.Required ? "Required." : null, definition.Help }.Where(text => !string.IsNullOrWhiteSpace(text))));
         _inputs.Add((fieldID, input));
         var detachInput = _detach[^1];
         void Detached(object? sender, Avalonia.VisualTreeAttachmentEventArgs args)
@@ -175,20 +212,31 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
         var response = Response;
         value = path switch
         {
+            "PreviewWidth" => PreviewWidth, "ViewportLabel" => Viewport + " layout preview",
             "CanAdvance" => IsActionAvailable("9to1.Forms.Preview.Advance"), "CanSubmit" => IsActionAvailable("9to1.Forms.Preview.Submit"),
             "Status" => ValidationCode is not null ? "Check your answers before continuing." : response.State == FormResponseState.Submitted ? "Preview submitted" : "Preview in progress",
             "Score" => response.AwardedPoints is { } score ? $"{score} / {response.MaximumPoints}" : "Results are not released yet",
             _ => null
         };
-        return path is "CanAdvance" or "CanSubmit" or "Status" or "Score";
+        return path is "CanAdvance" or "CanSubmit" or "Status" or "Score" or "PreviewWidth" or "ViewportLabel";
     }
-    public bool? IsActionAvailable(string action) => !_disposed && _invalidDrafts.Count == 0 && Response.State == FormResponseState.InProgress
-        && (action == "9to1.Forms.Preview.Submit" || action == "9to1.Forms.Preview.Advance" && _project.ModeDefinition.Kind == FormModeKind.Quiz && Response.CurrentFieldID is not null);
+    private static FormPreviewViewportKind? ViewportForAction(string action) => action switch
+    {
+        "9to1.Forms.Preview.Viewport.Desktop" => FormPreviewViewportKind.Desktop,
+        "9to1.Forms.Preview.Viewport.Tablet" => FormPreviewViewportKind.Tablet,
+        "9to1.Forms.Preview.Viewport.Mobile" => FormPreviewViewportKind.Mobile,
+        "9to1.Forms.Preview.Viewport.Embedded" => FormPreviewViewportKind.Embedded,
+        _ => null
+    };
+    public bool? IsActionAvailable(string action) => !_disposed && (ViewportForAction(action) is not null
+        || _invalidDrafts.Count == 0 && Response.State == FormResponseState.InProgress
+        && (action == "9to1.Forms.Preview.Submit" || action == "9to1.Forms.Preview.Advance" && _project.ModeDefinition.Kind == FormModeKind.Quiz && Response.CurrentFieldID is not null));
     public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (parameter is not null || IsActionAvailable(command) != true) throw new InvalidOperationException("Preview action is unavailable.");
-        if (command == "9to1.Forms.Preview.Advance") Advance(); else Submit();
+        if (ViewportForAction(command) is { } viewport) { Viewport = viewport; Notify(); }
+        else if (command == "9to1.Forms.Preview.Advance") Advance(); else Submit();
         return ValueTask.CompletedTask;
     }
     private void Notify() { Changed?.Invoke(this, EventArgs.Empty); PropertyChanged?.Invoke(this, new(null)); }

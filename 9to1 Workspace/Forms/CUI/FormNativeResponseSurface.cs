@@ -20,6 +20,8 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
     private readonly FormResponseSessionScope _scope;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Dictionary<Guid, JsonElement> _drafts = [];
+    private readonly Dictionary<Guid, string> _fieldErrors = [];
+    private const string InvalidFieldMessage = "This answer could not be saved. Check its format and requirements.";
     private readonly List<FormNativeAnswerInput> _inputs = [];
     private readonly List<Action> _detachButtons = [];
     private StackPanel? _root;
@@ -81,6 +83,12 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                 MinWidth = (double)(page.Layout.MinimumWidth ?? 0),
                 MaxWidth = page.Layout.MaximumWidth is { } pageMaximum ? (double)pageMaximum : double.PositiveInfinity };
             pagePanel.Children.Add(new TextBlock { Text = page.Title });
+            Panel fields = pagePanel;
+            if (page.Layout.Columns > 1)
+            {
+                fields = new FormNativePageColumns(page.Layout.Columns, (double)page.Layout.Gap);
+                pagePanel.Children.Add(fields);
+            }
             foreach (var child in page.Children)
             {
                 var field = _project.Fields.Single(field => field.FieldID == child.ID);
@@ -96,6 +104,8 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                     RefreshStatus();
                 });
                 AutomationProperties.SetName(input.Control, field.Label);
+                AutomationProperties.SetHelpText(input.Control, string.Join(" ",
+                    new[] { field.Required ? "Required." : null, field.Help, _fieldErrors.GetValueOrDefault(field.FieldID) }.Where(text => !string.IsNullOrWhiteSpace(text))));
                 input.Control.IsEnabled = !_busy && !_conflicted && response.State == FormResponseState.InProgress;
                 _inputs.Add(input);
                 var group = new StackPanel { Spacing = (double)field.Layout.Gap,
@@ -104,9 +114,12 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                 group.Children.Add(new TextBlock { Text = field.Label + (field.Required ? " *" : "") });
                 if (!string.IsNullOrWhiteSpace(field.Help)) group.Children.Add(new TextBlock { Text = field.Help });
                 group.Children.Add(input.Control);
+                if (_fieldErrors.TryGetValue(field.FieldID, out var fieldError))
+                    group.Children.Add(new TextBlock { Text = fieldError });
                 if (response.ReleasedResults.TryGetValue(field.FieldID, out var mark))
                     group.Children.Add(new TextBlock { Text = $"{mark.AwardedPoints} / {mark.MaximumPoints}" });
-                pagePanel.Children.Add(group);
+                group.Name = "field-" + field.FieldID.ToString("N");
+                fields.Children.Add(group);
             }
             _root.Children.Add(pagePanel);
         }
@@ -167,7 +180,7 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                 if (!loaded.Success) { HandleFailure(loaded.Code); return; }
                 if (loaded.Response!.FormVersionID != response.FormVersionID || loaded.Presentation!.ProjectRevision != _project.ProjectRevision)
                     throw new InvalidDataException("The retained response schema changed.");
-                Response = loaded.Response; _drafts.Clear(); _conflicted = false; StatusCode = null;
+                Response = loaded.Response; _drafts.Clear(); _fieldErrors.Clear(); _conflicted = false; StatusCode = null;
                 return;
             }
             foreach (var field in _project.Fields)
@@ -177,8 +190,13 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                 var saved = await _sessions.AnswerAsync(response.FormID, response.ResponseID, response.Revision,
                     field.FieldID, draft, token, _scope);
                 if (_disposed) return;
-                if (!saved.Success) { HandleFailure(saved.Code); return; }
-                Response = saved.Response; _drafts.Remove(field.FieldID);
+                if (!saved.Success)
+                {
+                    if (saved.Code is "ValidationFailed" or "InvalidAnswer")
+                        _fieldErrors[field.FieldID] = InvalidFieldMessage;
+                    HandleFailure(saved.Code); return;
+                }
+                Response = saved.Response; _drafts.Remove(field.FieldID); _fieldErrors.Remove(field.FieldID);
             }
             response = Response!;
             if (command is "Advance" or "Submit")
@@ -213,7 +231,7 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
         foreach (var input in _inputs) input.Dispose();
         _inputs.Clear();
         foreach (var detach in _detachButtons) detach();
-        _detachButtons.Clear(); _drafts.Clear(); Response = null;
+        _detachButtons.Clear(); _drafts.Clear(); _fieldErrors.Clear(); Response = null;
         _lifetime.Dispose();
         if (_root is not null) { _root.DetachedFromVisualTree -= Detached; _root.Children.Clear(); _root.IsEnabled = false; }
         // A service commit already published before cancellation remains durable; no rollback is claimed.
