@@ -242,7 +242,7 @@
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs",
       "namespace": "NineToOne.Os.Shell.Tests",
       "class": "CompatibilityPackageHealthNativeTests",
-      "sha256": "395c53128c422122f0e2aed11168b47070bb14c478f77a9803d443654665553b",
+      "sha256": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44",
       "source": "/workspace/astra-source/worker5-compatibility-go-default-registration04-original-close/CompatibilityPackageHealthNativeTests.cs"
     },
     {

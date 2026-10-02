@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "14f8a88774ed1fc1066f4e7e3fa691b0200f26c6",
+  "baselineCommit": "be5a43a497c6f1c309f5a684543d91da72f9d50d",
   "programTree": "a37cf15c474440402d1ccedbcefaab3d675243d7",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
@@ -43,9 +43,9 @@
     {
       "path": ".github/validation/astra-compatibility53-test-classes.json",
       "mode": "100644",
-      "object": "f734201b7f7f3c28aca0471a59d4aa701fb57864",
+      "object": "1487b45501ac91644860fd20385e4a0d3b863b73",
       "bytes": 15957,
-      "sha256": "bb843b2e0b711f9b73394b868397300ef6b5d90bede72dfd8f2b936b637d1af0"
+      "sha256": "fb7081e3eac9ea992c73047d96297adc81fc6c36594daabcd5e81386982732a1"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -64052,7 +64052,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-compatibility53-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
+  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained. Exact changed owning source-SHA re-pin only, identical class names/count/path/filter; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/manifest.json",
@@ -64069,6 +64069,10 @@
     {
       "path": "/workspace/astra-source/worker4-compatibility12-go42-hosted-plan-sol2/manifest.json",
       "sha256": "75efd8d5fc8d752eeecacebb5fecdebd3638f6e2810549894d7cea24565b5056"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-compatibility53-original-selection-signature-fix01/manifest.json",
+      "sha256": "172a285689f4458dca855ec9b8851221770cf824c8deadd187d81d50c9aa4193"
     },
     {
       "path": "/workspace/astra-source/worker5-compatibility53-original-selection-signature-fix01/manifest.json",
