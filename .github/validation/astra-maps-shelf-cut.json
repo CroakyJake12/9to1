@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "9707ae52881744fc5a3f0d9fcea5d58f8608d8cb",
-  "programTree": "e67f475baa3b5aef1d8f5509410b949740ca4a22",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "baselineCommit": "63ad5d95d07694be38ead3a267bb06b2684c47f3",
+  "programTree": "0e444fb399846bcfaeac7e067c7d2dec00727d1d",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "fb34e28fff96a6c365b2b5f3fd031a8d0e16756f",
+      "object": "266dd06485ec96c50c60c3763d2e058db92ce34d",
       "bytes": 15096,
-      "sha256": "ed1ff2a9330006bce50ed915c02682b7982e9c4094568608ad32aedbb2839fe7"
+      "sha256": "8e49fa7eb0cc4d37498bd042407b9c6dcb4e029432b8a736b00779e175ef14df"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -4304,6 +4304,41 @@
       "sha256": "d262eefba07548026dcee2c68d7138c6047cddefca0610bfa92a5d1bb1baa9a5"
     },
     {
+      "path": "9to1 Workspace/Browse/BrowseOwnedDocumentCatalogue.cs",
+      "mode": "100644",
+      "object": "4466ecc2559696685c013e4903070783896a28be",
+      "bytes": 7787,
+      "sha256": "557763a924f749a4b6a2a802f2fbaab89c8a0f3627f35291083d83cea63d376a"
+    },
+    {
+      "path": "9to1 Workspace/Browse/BrowseOwnedDocumentRegistry.cs",
+      "mode": "100644",
+      "object": "e5fbd96f4182c3f86fc7b833139abfa74d0765d8",
+      "bytes": 8371,
+      "sha256": "c02052648f21d1cf1a0401d6d52a6c43d5cd2d26f96ab4649c8f0a9c57066b75"
+    },
+    {
+      "path": "9to1 Workspace/Browse/BrowseOwnedToolWorkspace.cs",
+      "mode": "100644",
+      "object": "90f9bcdbd026e5c5cdd89dc1fb1d61ad0f611ee6",
+      "bytes": 4864,
+      "sha256": "f5c08d4169f907e240950fffc1184a07c2383e4eee98e5b28fca72636df49f48"
+    },
+    {
+      "path": "9to1 Workspace/Browse/BrowseOwnedToolsScene.cs",
+      "mode": "100644",
+      "object": "bdeb26e44a86a41ae110eff55c6c18bd618180ca",
+      "bytes": 10484,
+      "sha256": "126063c8caeab5139acee1d5f7b4c3da6182456ccfeb87681906e81f3e7161af"
+    },
+    {
+      "path": "9to1 Workspace/Browse/BrowseOwnedWebMcpBinding.cs",
+      "mode": "100644",
+      "object": "9deb64dd8327116c8042cefa28c04b9463abf76f",
+      "bytes": 19184,
+      "sha256": "a8611937a7fd4309bc92e5e3c3bc6ea107f647fad4d1068a0383778ee9c85d10"
+    },
+    {
       "path": "9to1 Workspace/Browse/BrowseWebMcpBinding.cs",
       "mode": "100644",
       "object": "e52b8be5f5ca8def9c1d5d69c647a5c0f910cb1f",
@@ -4311,11 +4346,18 @@
       "sha256": "b07d6cb34e5b979471244fd0493f781e11d6eca3058a1de127e5dec1f4b62afc"
     },
     {
+      "path": "9to1 Workspace/Browse/BrowseWebMcpInvocationScripts.cs",
+      "mode": "100644",
+      "object": "24ac34a025f47178a4dce8e910fd8171bf975442",
+      "bytes": 3577,
+      "sha256": "5e7d76d7023707bcd30d4a2f6ee504438bbd58d7a6d445e1fd4b93da0250cbec"
+    },
+    {
       "path": "9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj",
       "mode": "100644",
-      "object": "918aed561d8026d8f75cdcccda10678952461366",
-      "bytes": 2210,
-      "sha256": "c0f27155cbffc13f92fcbb1229a30b8a02d6b8bcc6724b0eb1c38113bbdd0bf5"
+      "object": "de07f74c76eeaff5f90963518ec7e3e9ae83edbb",
+      "bytes": 2572,
+      "sha256": "e78f74ae82a8f7c2a9d2217fb7721a4421051a5d4816fe0cfab983d1f3e7c812"
     },
     {
       "path": "9to1 Workspace/Browse/README.md",
@@ -23668,9 +23710,9 @@
     {
       "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
       "mode": "100644",
-      "object": "a1601ba4d8db055df9c88082fd2196997975a06a",
-      "bytes": 12845,
-      "sha256": "19a76b6750ebd80005a4d843ae6c17b3e84f6668b1e93098d6eae04dbea2e58a"
+      "object": "48ca0f94e56a018ae6ae3e41d2ed3f3f1403083a",
+      "bytes": 13985,
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
@@ -29371,11 +29413,32 @@
       "sha256": "cf61f901740e5a777d145b8ca6182e4589586011e42a9c13f74c404f8d5d2cf9"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Browser/Session/BrowserOriginalSessionDispatch.cs",
+      "mode": "100644",
+      "object": "496c827f4d9da83fd01fc1a560836f33909d439c",
+      "bytes": 4316,
+      "sha256": "30fca30e9a22ebd68eb5c7789d0f2e26ef621889d1fb99aaaf27f5fb18e84b8e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Browser/Session/BrowserOriginalSessionFork.cs",
+      "mode": "100644",
+      "object": "3c116dff0ddcbc3445dad6b9b84451316e214f0b",
+      "bytes": 881,
+      "sha256": "081b764c8696da398a0049499ff2f6286e0f5901d5997557ff6fc37951ba53cb"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Browser/Session/BrowserOriginalSessionOwnedDispatch.cs",
+      "mode": "100644",
+      "object": "7816820a3de389f9da2c5c2578f985a0a541299c",
+      "bytes": 5360,
+      "sha256": "a7be39634aaa30e730343ce0807f2dda79693dafa127ddc193e2f7506f2cad5d"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Browser/Session/BrowserSessionService.cs",
       "mode": "100644",
-      "object": "e32d9825937a77f8f17e92e4a99f85b4cba2b727",
-      "bytes": 24558,
-      "sha256": "9aa98b041fd3adb7dded314de9d2ca0267f2890755cfcbb9ed8e227f11194fbc"
+      "object": "9559abfcefaa227ac8e02904d8f84c746cad7565",
+      "bytes": 24840,
+      "sha256": "910473ced459d555114bc39941e5238019523e751354c4b02729e3bc6a2c44e3"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Connector/ConnectorWorkspaceRegistry.cs",
@@ -31410,9 +31473,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
       "mode": "100644",
-      "object": "9a69cf92c0c35f4ef725c0927b5c4468483d2108",
-      "bytes": 5959,
-      "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519"
+      "object": "f5894bce8cc966980433602e91ab253e6e0c2272",
+      "bytes": 6037,
+      "sha256": "4c44b5cb06932f1caf1df77004f902d22495762b19615af2ff604e2c37b821b1"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaImageResolver.cs",
@@ -64696,7 +64759,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Exact actual9707ae ShelfNativeWorkspaceHost/Page two production namespace imports only; every sourcebody/native route/originalactor/hostlifetime and unchanged full oldfixtures+16coupled ownership tests preserved. No fixture changes, allsame30class source pins/counts/filters/full2 owning/resource/source22+3/7producers/hosttasks/restore/compiled/TRX guards unchanged. No futurepreflight/sourcegraph07 features. Source-only unexecuted.",
+  "limits": "Actual63ad App namespacefailure fixed by whole34Browse/Haven.Browser producer family exactactualcompiledDataafc3/5fc byteidentity and sole additive Desktop\u2192Browse reference, all5sharedApplication prerequisites EXACTalreadyselected unchanged. No App/host/BrowserView/Home authority replacement. SharedHomeWebMcpBrowserLeaseTests is exactsame failedData19a source; includes W1peer-cleared privateissuer/generation controlleddocument-token fixture ABI correction only to satisfy newly supplied typedBrowser protocol, all5facts/assertions retained. SamefullMaps owning/resource classes/nativeold+16/source/producers/restore/compiled/zeroSkip guards retained; no productionnative/writemutationacceptance until actualwholegate. Root16CAS; unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-maps-owning-source-graph04/manifest.json",
@@ -64761,6 +64824,22 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-maps-persisted-request-corrective04/actual-capture-11220796224/root-capture.json",
       "sha256": "70390a87be2f31e24671d381df60dc7ace88277a62536292940350a6913d8e74"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps-actual-browse-producer-closure01/manifest.json",
+      "sha256": "20f6a12e388df47ae02b75eed6d4c32712e098a55fe7d22accac9bd1de767014"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-webmcp-actual-afc3-document-provenance-fixture02/manifest.json",
+      "sha256": "8febff6393df9be914b0a0244a2795482e4edcd99552759eca25aeec3b131934"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-maps-native-cui-imports-corrector05/actual-capture-11222397425/root-capture.json",
+      "sha256": "2514641d3a4e1c8a1a6eb9927ec4564f3e43eb96bd4de25fea876505b5e58bb1"
     }
   ],
   "sharedCakeIdContract": null
