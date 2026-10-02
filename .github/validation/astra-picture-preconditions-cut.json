@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e4c602a72b845f1f1c7849ce0616121240adf85c",
+  "baselineCommit": "89891cda30313c88df25c70fb903eeff505be212",
   "programTree": "c9ebb98da9b1cab9884ea4bc8cb3a5e93091b8a0",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "new",
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-picture-fast-preconditions.py",
       "mode": "100644",
-      "object": "a146fce2e9e3b43fed4f1a352e21acdcc62ef9c0",
-      "bytes": 6425,
-      "sha256": "f14e0a1aee0319b7e8fe395afe7917a82d7eefb575c4e4bc0ed7a864e72599d7"
+      "object": "d78766ed1656f8220bee458f18a57d410eeb9a10",
+      "bytes": 6704,
+      "sha256": "0fb0b4bd7e072ac0f19c317f69b6e824fb01c49015ca722fef2359461c5b2cfc"
     },
     {
       "path": ".github/scripts/astra-picture19-artifact-parts.py",
@@ -64017,7 +64017,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture-preconditions-cut.json",
-  "limits": "Isolated readonly precondition-only job on exact e4 fullPicture101 failed cut; no SDK/Rust build, no native acceptance, no original test/source/gate modifications. Exact trueprobe +immediate bounded kernelring/PID/time/feature inventory +pinned official ABI4 parser -Q -K no kernel or cache loading/writing. No policy or security changes. System bwrap/parser required, missing tools fail. Root-ratified ephemeral official distro prerequisites: existing tools preferred, install only if absent --no-upgrade, retain exact installed version archives/index/SHA/copyright; no service/policy commands. Package maintainer effects are not assumed absent: exact loaded-profile before/after bytes captured and cmp mandatory; mismatch aborts job and preserves transaction evidence. Root-ratified provisioning is separate from read-only observation. Existing registered haven-chat-model-ci.yml dispatcher replaced only on isolated validationbranch with exclusive readonly-prefix job. Full original e4 native101 scripts/source/semantic unchanged; no main/default workflow mutation. No fullnative acceptance.",
+  "limits": "Isolated readonly precondition-only job on exact e4 fullPicture101 failed cut; no SDK/Rust build, no native acceptance, no original test/source/gate modifications. Exact trueprobe +immediate bounded kernelring/PID/time/feature inventory +pinned official ABI4 parser -Q -K no kernel or cache loading/writing. No policy or security changes. System bwrap/parser required, missing tools fail. Root-ratified ephemeral official distro prerequisites: existing tools preferred, install only if absent --no-upgrade, retain exact installed version archives/index/SHA/copyright; no service/policy commands. Package maintainer effects are not assumed absent: exact loaded-profile before/after bytes captured and cmp mandatory; mismatch aborts job and preserves transaction evidence. Root-ratified provisioning is separate from read-only observation. Existing registered haven-chat-model-ci.yml dispatcher replaced only on isolated validationbranch with exclusive readonly-prefix job. Full original e4 native101 scripts/source/semantic unchanged; no main/default workflow mutation. No fullnative acceptance. Actual readonly03 dmesg ISO syntax failure correction only: UTC strftime human timestamp and TZ=UTC command environment; UnixNs/PID/start/end retained, dmesg --version captured. Original exact trueprobe, profile dryparse, boundedreadonly/packagequalification/e4native101 source/semantic all unchanged. No kernel evidence acceptance until actual04 observation.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
@@ -64046,6 +64046,10 @@
     {
       "path": "/workspace/astra-source/worker4-picture-readonly-audit-diagnostics02/manifest.json",
       "sha256": "246989f661e79a918fa591144e5aecbedc461992345f9d17c5f465083e051e36"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/picture-preconditions-readonly03/actual-capture01/root-capture.json",
+      "sha256": "5307ef58a8b5ebbafcf7643f01397da0f822ad91263d4ffd9e67580dd5b72a78"
     }
   ],
   "sharedCakeIdContract": null,

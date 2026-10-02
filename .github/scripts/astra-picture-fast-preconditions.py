@@ -20,7 +20,7 @@ MAX_DIAGNOSTIC_BYTES=262144
 def bounded_readonly(argv,name):
     stdout=bytearray();stderr=bytearray();truncated=False;timedout=False
     try:
-        started=time.time_ns(); process=subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE); pid=process.pid
+        started=time.time_ns(); process=subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=dict(os.environ,TZ='UTC')); pid=process.pid
     except OSError as error:
         return {'argv':argv,'error':type(error).__name__+': '+str(error)}
     streams=selectors.DefaultSelector();streams.register(process.stdout,selectors.EVENT_READ,'stdout');streams.register(process.stderr,selectors.EVENT_READ,'stderr');deadline=time.monotonic()+15
@@ -50,10 +50,12 @@ result['bwrapExecutableSha256']=sha(pathlib.Path(binary).resolve().read_bytes())
 result['commands'].append(bounded_readonly([binary,'--version'],'bwrap-version'))
 # Keep exactly original namespace/sandbox command. Record true PID/start/end then immediate ring capture.
 result['commands'].append(bounded_readonly([binary,'--unshare-all','--die-with-parent','--ro-bind','/','/','/usr/bin/true'],'bwrap-genuine-userns'))
-since=datetime.datetime.fromtimestamp(result['commands'][-1]['startedUnixNs']/1e9-2,datetime.timezone.utc).isoformat()
+since=datetime.datetime.fromtimestamp(result['commands'][-1]['startedUnixNs']/1e9-2,datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 result['commands'].append(bounded_readonly(['sudo','-n','--','dmesg','--time-format','iso','--since',since],'kernel-ring-immediate-readonly'))
 result['commands'].append(bounded_readonly(['sudo','-n','--','aa-status','--json'],'apparmor-status-readonly'))
 result['commands'].append(bounded_readonly(['apparmor_parser','--version'],'parser-version'))
+result['commands'].append(bounded_readonly(['dmesg','--version'],'dmesg-version'))
+result['timeEnvironment']={'commandTZ':'UTC','sinceFormat':'%Y-%m-%d %H:%M:%S','sourceUnixNs':result['commands'][1]['startedUnixNs'],'since':since}
 profile=root/'.github/validation/picture-bwrap-upstream-abi4.profile'
 result['profileSha256']=sha(profile.read_bytes())
 # -Q: never load into kernel; -K: neither read nor write caches. Parsing may fail and is evidence.
