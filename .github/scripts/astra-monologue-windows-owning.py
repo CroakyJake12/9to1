@@ -177,7 +177,7 @@ def assert_compiled_target_unchanged(name):
 def build_and_pin(name,project):
  # Genuine selected graph restore replaces incompatible shared child assets. Force
  # evaluation rather than adopting a prior cohort's cached framework graph.
- code=command(['dotnet','restore',project,*base[2:],'--force-evaluate','-p:Configuration=Release','-p:TargetFramework='+framework(project),'-p:EnableWindowsTargeting=true'],name+'-main-restore');verify()
+ code=command(['dotnet','restore',project,*base[2:],'--force-evaluate','-p:Configuration=Release','-p:EnableWindowsTargeting=true'],name+'-main-restore');verify()
  if code:raise SystemExit(code)
  restore_tools(name)
  assert_task_unchanged()

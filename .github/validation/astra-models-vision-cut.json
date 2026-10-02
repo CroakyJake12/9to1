@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "281138a754e21535e604021e2f81255ac9f653d7",
+  "baselineCommit": "ecacceb47697a51b219f736337be9bc0f2803951",
   "programTree": "1c0b1e954750e33effdb1e5b477fcb2aec81fe1f",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
@@ -57,9 +57,9 @@
     {
       "path": ".github/scripts/astra-monologue-windows-owning.py",
       "mode": "100644",
-      "object": "c2e033476b2cbd065ab184863519f4b76183ffac",
-      "bytes": 28584,
-      "sha256": "63ca9f47d53328da3cc8d675b9d48eba018e2d513799d5eea6332ac48538fd69"
+      "object": "4ed33c18aec55b189825f12016ed846ee96bc9cf",
+      "bytes": 28543,
+      "sha256": "cf9601d2186d61884abbafd27ba51baa3b11bdc98c3145aea09ea25591f8b14c"
     },
     {
       "path": ".github/scripts/astra-monologue-windows-restore-evidence.py",
@@ -65773,6 +65773,10 @@
     {
       "path": "/workspace/astra-source/worker1-monologue06-actual-positive-plan-corrective-source01/manifest.json",
       "sha256": "96726d938c413d4cf06f4341efbc7eabef4599fd849d8436954b14805c3ac1df"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue-windows-actual-declared-graph-restore-corrective-source06/manifest.json",
+      "sha256": "f39ff03f20c22536858d2d57bcfc0cba44408248b22045b859b16cd062fba29a"
     }
   ],
   "sharedCakeIdContract": null
