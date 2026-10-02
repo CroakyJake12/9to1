@@ -70,8 +70,15 @@ public sealed class BoardsNativePageMovementTests
         Assert.Equal(viewBytes, await File.ReadAllBytesAsync(Path.Combine(fixture.Paths.DataDirectory, "Notes", "Documents", board.Id.ToString("D"), "current.haven-notes.json"), fixture.Token));
         var other = await fixture.Boards.CreateNotebookAsync("Replacement", fixture.Token);
         Assert.True(await fixture.Page.OpenDeepLinkAsync(new BoardsDeepLink(other.Id).ToString(), fixture.Token));
+        // Switching acknowledges the original board autosave; the retired move must not add an effect.
+        var retiredBytes = await File.ReadAllBytesAsync(Path.Combine(fixture.Paths.DataDirectory, "Notes", "Documents", board.Id.ToString("D"), "current.haven-notes.json"), fixture.Token);
+        var acknowledgedOriginal = (await fixture.Boards.OpenNotebookAsync(board.Id, fixture.Token))!;
+        Assert.Equal(original.Version, acknowledgedOriginal.Version);
+        Assert.Contains(acknowledgedOriginal.Sections.SelectMany(section => section.Pages), page => page.Id == pageId);
+        Assert.Contains(acknowledgedOriginal.Sections.SelectMany(section => section.Pages), page => page.Id == extra.Id);
+        Assert.Equal(BoardsPageEditMode.View, fixture.Boards.GetEditMode(acknowledgedOriginal, pageId));
         Assert.False(await fixture.Page.MovePageFromHierarchyAsync(original, extra.Id, target.Id, 1));
-        Assert.Equal(viewBytes, await File.ReadAllBytesAsync(Path.Combine(fixture.Paths.DataDirectory, "Notes", "Documents", board.Id.ToString("D"), "current.haven-notes.json"), fixture.Token));
+        Assert.Equal(retiredBytes, await File.ReadAllBytesAsync(Path.Combine(fixture.Paths.DataDirectory, "Notes", "Documents", board.Id.ToString("D"), "current.haven-notes.json"), fixture.Token));
         Assert.Equal(other.Id, fixture.Page.Document!.Id);
     }
 

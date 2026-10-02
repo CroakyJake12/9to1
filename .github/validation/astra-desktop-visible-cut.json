@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "programTree": "6827421373b9861039ce8d010c18d64a66850162",
+  "baselineCommit": "deb128ac8cefab6f36b913d7f9c86e621df499e4",
+  "programTree": "5f2af1712236b09abac0ffa347dc91eff34e82b4",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "da3b55e3de7f5fbd4ff1066937898049c5cb8b7e",
+      "object": "ccc5638e55cc3fff90bd9b92e6949fe265c6dc55",
       "bytes": 33931,
-      "sha256": "64e9db7db1f23535775e1fd02be5f88c0c6c5838b969f3d23c70b6a9d9c88104"
+      "sha256": "90f601037746e362ca67ee4fc68ad69ae296496f561d2646438355dc0a26b8ef"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -34462,9 +34462,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.Workspace.cs",
       "mode": "100644",
-      "object": "914cc9d784c1beef38f84b37cac311641a108a77",
-      "bytes": 47291,
-      "sha256": "8b59e48e53628f5c7da73bfde1082cdf732cfddf999c822c71d84f5c35c5e087"
+      "object": "270caf3f8420a4776c2451bbdd677eecc9d2a176",
+      "bytes": 47350,
+      "sha256": "1f4b601e0fbac2a5f434b36aa68a0fcbdd9b0f0e4045526f1db5e3aa36531972"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Present/PresentHavenScene.cs",
@@ -38214,9 +38214,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsNativePageMovementTests.cs",
       "mode": "100644",
-      "object": "24d10ee8e61a740d011ddffdccbbec40b992cf86",
-      "bytes": 9558,
-      "sha256": "773069c7ed2f458117ceb31562a909bd71ceabcff51de55b8b7e3d9e2b32cd8b"
+      "object": "be63e704c5e67cb18113b72ce3276866b767483a",
+      "bytes": 10374,
+      "sha256": "57b2c86c6c6c4a0bcb3173d0325a6b309920e1885f45b851f424f64319e5b960"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsNotebookSwitchSnapshotTests.cs",
@@ -64724,7 +64724,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Fresh Root18 owned26 source targets only, with exact current normal CAS. Preserves all actual Notes/Mail/analyzer/factory/Write/picker corrections. All84 whole owning classes and complete12 regression/35 resource classes retain original full projects, source/producer/restore/task/compiled/zeroSkip checks. No predecessor acceptance inheritance or optional future source joins; full fresh three-gate execution mandatory.",
+  "limits": "Exact actual failed-parent minimal correction only. Full existing source and assertions retained. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-desktop24-root16-full-owning-gate02/manifest.json",
@@ -64737,6 +64737,10 @@
     {
       "path": "/workspace/astra-source/checkpoint18-publication-local.json",
       "sha256": "c9e810f1d7d7d8b023391e1d2f39c0c86fe43e4e26f4f175bc0dfa04f7293559"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-desktop26-actual-library-retirement-corrective02/manifest.json",
+      "sha256": "f5e3d70f35e249e801b73f8c2830170cf82ac90cc8d1ef6864438e62abc14fc2"
     }
   ],
   "sharedCakeIdContract": null

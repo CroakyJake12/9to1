@@ -219,7 +219,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsNativePageMovementTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "BoardsNativePageMovementTests",
-      "sha256": "773069c7ed2f458117ceb31562a909bd71ceabcff51de55b8b7e3d9e2b32cd8b"
+      "sha256": "57b2c86c6c6c4a0bcb3173d0325a6b309920e1885f45b851f424f64319e5b960"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsRecoveryAcceptanceTests.cs",

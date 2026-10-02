@@ -368,6 +368,7 @@ internal sealed partial class PresentHavenScene
     public void SetLibrary(IReadOnlyList<PresentDocumentSummary> documents)
     {
         documents ??= Array.Empty<PresentDocumentSummary>();
+        if (LibraryHost is null) BuildWorkspaceControls();
         LibraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MenuBar.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
