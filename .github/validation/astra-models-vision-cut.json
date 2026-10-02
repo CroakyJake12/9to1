@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "3cc98b818e3c440763a22e6325f2147ba7a691b3",
-  "programTree": "8449652323297ea5b613f6894d94de88a21d43ab",
+  "baselineCommit": "281138a754e21535e604021e2f81255ac9f653d7",
+  "programTree": "1c0b1e954750e33effdb1e5b477fcb2aec81fe1f",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/scripts/astra-monologue-windows-owning.py",
       "mode": "100644",
-      "object": "efff13323fc895adea4d5e22b56a0450bf6e4ade",
-      "bytes": 28242,
-      "sha256": "f8398295a760c897e0d6d982cef4528c3a1f8634c489e6351272162779e4750a"
+      "object": "c2e033476b2cbd065ab184863519f4b76183ffac",
+      "bytes": 28584,
+      "sha256": "63ca9f47d53328da3cc8d675b9d48eba018e2d513799d5eea6332ac48538fd69"
     },
     {
       "path": ".github/scripts/astra-monologue-windows-restore-evidence.py",
@@ -85,9 +85,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "cd9fb491450e8e12e3c1ddfd66e288d051834e9d",
+      "object": "eb715a4a94a2fd3945c6d5f6a0810e35b067593f",
       "bytes": 13171,
-      "sha256": "e66f08f342e4b6c0e9b5dd514c777a6cb7d497db9581683ef83b1f7e531125b3"
+      "sha256": "fc156c4e7dcd70871eec441b8dc581e332e6fd80bff5eb57b2d728fd0951c69c"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -38011,9 +38011,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
       "mode": "100644",
-      "object": "40a1989d55f8727ec56680d3243444aa4840dafc",
-      "bytes": 16569,
-      "sha256": "54b424e8e72235a46cd07b2bb42f7324575d380610e66dc48a4c44a5b5722ece"
+      "object": "8770e74711e8d448555cbf5b6dc1f1122d9977b2",
+      "bytes": 16816,
+      "sha256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
@@ -40636,9 +40636,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WindowsMonologueOriginalPlaybackTests.cs",
       "mode": "100644",
-      "object": "5ac6a19837966252a6c8ac2132faa434ba174b11",
-      "bytes": 7007,
-      "sha256": "b2ebcf1772eeff7a42283aaa3de7b89bb5bf21149b92cf1a01a93e4a4d362e6b"
+      "object": "952da494dee71a866ee8558a7d870d9fb5aa8234",
+      "bytes": 7247,
+      "sha256": "e6c6b3a6490a74b8334b24f0d2a2148f7eaaf1db5139aec49b033b4577700a83"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WindowsOriginalSpeechContinuationTests.cs",
@@ -65704,7 +65704,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-models-vision-cut.json",
-  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Dedicated actual Windows2025 win-x64 owning lane retains all five prior Core/Home/Infrastructure/Desktop/Application cohorts and adds both whole native classes/five exact Passed methods. Actual Windows target/symbol/sourcebuilt tasks/compiled DLL PDB/restore beforeafter/voice inventory mandatory. Linux portable05 and complete current regression/resource remain independently mandatory, tables preserved here without claiming execution. Exact corrected receipt issuer selected. No fake voice, skip, audio-output ACK or installed-user grant. Workflow branch admits exactly one Windows job; original Ubuntu models-prefix job unchanged. Exact maintained Files/Picture multipart splitter byte-identical, all original Windows evidence payloads retained in <=26MiB stored inner bundles and index, each outer upload below connector32MiB bound, bounded12parts; no payload/source/test change. Original01 preserved unselected. Exact actual Windows02 failed before runtime at strict cut SHA admission. Disposable Windows runner Git core.autocrlf=false/core.eol=lf BEFORE checkout preserves exact immutable Git/cut bytes, no digest normalization or source guard relaxation. Postcheckout actual raw SHA/Gitblob/config diagnostics retained before unchanged runner. Products/32ownclasses/native5/script/helper/voice/multipart unchanged. Portable05 actual9Desktop failures remain separate source diagnosis; this metadata diagnostic does not infer native or broader runtime success. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory. Actual Windows04 failed before tests because PATH Bash selected WSL without distributions. Sole runner metadata correction binds absolute Bash/cygpath from actual Git installation, retaining exact source script and all32 whole classes/native5/voice/restore/compiled/PDB/zero-skip guards. No product changes or runtime acceptance.",
+  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Dedicated actual Windows2025 win-x64 owning lane retains all five prior Core/Home/Infrastructure/Desktop/Application cohorts and adds both whole native classes/five exact Passed methods. Actual Windows target/symbol/sourcebuilt tasks/compiled DLL PDB/restore beforeafter/voice inventory mandatory. Linux portable05 and complete current regression/resource remain independently mandatory, tables preserved here without claiming execution. Exact corrected receipt issuer selected. No fake voice, skip, audio-output ACK or installed-user grant. Workflow branch admits exactly one Windows job; original Ubuntu models-prefix job unchanged. Exact maintained Files/Picture multipart splitter byte-identical, all original Windows evidence payloads retained in <=26MiB stored inner bundles and index, each outer upload below connector32MiB bound, bounded12parts; no payload/source/test change. Original01 preserved unselected. Exact actual Windows02 failed before runtime at strict cut SHA admission. Disposable Windows runner Git core.autocrlf=false/core.eol=lf BEFORE checkout preserves exact immutable Git/cut bytes, no digest normalization or source guard relaxation. Postcheckout actual raw SHA/Gitblob/config diagnostics retained before unchanged runner. Products/32ownclasses/native5/script/helper/voice/multipart unchanged. Portable05 actual9Desktop failures remain separate source diagnosis; this metadata diagnostic does not infer native or broader runtime success. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory. Actual Windows04 failed before tests because PATH Bash selected WSL without distributions. Sole runner metadata correction binds absolute Bash/cygpath from actual Git installation, retaining exact source script and all32 whole classes/native5/voice/restore/compiled/PDB/zero-skip guards. No product changes or runtime acceptance. Actual Windows05 installedvoices/Gitbash/hosttasks passed then Core sharedartifact graph lost net10.0 assets. Genuine exact percohort main +netstandard analyzer force-evaluate restore immediatelybefore ownbuild, full original output/helper/query/compiled/task/beforeafter package guards unchanged. SAMEtwo positivefixture activationCAS corrections explicitly selectedApplication+actualWindowsphysical, alloldnative5/32classes/12/36/source startup4/ac2d/rawbytecheckout retained. No fakeassets or guardexemption/native success inference.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-monologue-root18-full-owning-gate02/manifest.json",
@@ -65761,6 +65761,18 @@
     {
       "path": "/workspace/astra-source/worker1-monologue-windows-actual-git-bash-corrective-source03/manifest.json",
       "sha256": "22f1f3ecb57ef5ec2954e134571b6a09d234afa4c386947e70b3de273f68119a"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-windows-actual-git-bash-corrective05/manifest.json",
+      "sha256": "a6da68401ab89e5e6d918f7cd9fd6cd2cdd5647f4f8daa7c29136dda1d08d458"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue-windows-actual-cohort-restore-corrective-source05/manifest.json",
+      "sha256": "6f51a76da5e8da16a3959256790f1e6bb16171650fa391ffd88edbdd7c642308"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue06-actual-positive-plan-corrective-source01/manifest.json",
+      "sha256": "96726d938c413d4cf06f4341efbc7eabef4599fd849d8436954b14805c3ac1df"
     }
   ],
   "sharedCakeIdContract": null

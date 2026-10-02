@@ -30,8 +30,10 @@ public sealed class WindowsMonologueOriginalPlaybackTests
             var started = await sessions.StartAsync(Guid.NewGuid(), null, VisionVoiceMode.Monologue, "local-only", true, cancellationToken: ct);
             var planned = await sessions.PlanMonologueAsync(started.Value!.SessionId, started.Value.Revision,
                 "Original native narration", null, ["Original section"], [], ct); Assert.True(planned.IsSuccess);
-            var original = await MonologueOriginalPlayback.StartAsync(sessions, output, planned.Value!.SessionId,
-                planned.Value.Revision, planned.Value.Monologue!.RunId, 0,
+            var activated = await sessions.RecordMonologueProgressAsync(planned.Value!.SessionId, planned.Value.Revision,
+                planned.Value.Monologue!.RunId, 0, TimeSpan.Zero, false, ct); Assert.True(activated.IsSuccess);
+            var original = await MonologueOriginalPlayback.StartAsync(sessions, output, activated.Value!.SessionId,
+                activated.Value.Revision, activated.Value.Monologue!.RunId, 0,
                 string.Join(" ", Enumerable.Repeat("This original section retains its native media and its planned structure.", 100)),
                 voiceId, "default", () => true, ct);
             var originalId = original.PlaybackId; var bytes = await File.ReadAllBytesAsync(Path.Combine(root, "settings.json"), ct);

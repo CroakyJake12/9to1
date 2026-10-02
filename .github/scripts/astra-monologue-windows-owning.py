@@ -98,26 +98,26 @@ base+=artifactsProps
 restoreEntries=['9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj', '9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj', '9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj', '9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj', '9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj']
 def framework(project):
  return 'net10.0-windows10.0.19041.0' if project.endswith('Haven.Desktop.Tests.csproj') else 'net10.0'
-for project in restoreEntries:
- code=command(['dotnet','restore',project,*base[2:],'-p:Configuration=Release','-p:TargetFramework='+framework(project),'-p:EnableWindowsTargeting=true'],'main-restore-'+pathlib.Path(project).stem);verify()
- if code:raise SystemExit(code)
+# Each main graph is restored immediately before its own build below.
 hostArtifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/monologue-windows-host-build-tasks'),'-p:IncludeProjectNameInArtifactsPaths=true']
 hostTaskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
 hostTaskRestoreProps=['-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*hostArtifactsProps]
 code=command(['dotnet','restore',hostTaskProject,'--disable-build-servers','-m:1','-nr:false',*hostTaskRestoreProps],'avalonia-build-tasks-restore');verify()
 if code:raise SystemExit(code)
-# These six netstandard assets are written LAST; no subsequent build may restore.
+# Analyzer assets are restored after each main graph; no consumer build restores.
 toolProjects=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj']
-for tool in toolProjects:
- code=command(['dotnet','restore',tool,*base[2:],'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true'],'tool-restore-'+pathlib.Path(tool).stem);verify()
- if code:raise SystemExit(code)
- toolQuery=subprocess.run(['dotnet','msbuild',tool,'-nologo','-m:1','-nr:false','-p:RuntimeIdentifier=win-x64','-p:RuntimeIdentifiers=win-x64','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*artifactsProps,'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true','-getProperty:TargetFramework,MSBuildProjectFullPath,ProjectAssetsFile'],capture_output=True,text=True)
- (out/('tool-framework-'+pathlib.Path(tool).stem+'.stdout')).write_text(toolQuery.stdout);(out/('tool-framework-'+pathlib.Path(tool).stem+'.stderr')).write_text(toolQuery.stderr)
- if toolQuery.returncode:raise SystemExit(toolQuery.returncode)
- toolActual=json.loads(toolQuery.stdout)['Properties'];assetPath=pathlib.Path(toolActual['ProjectAssetsFile']);assetPath=assetPath if assetPath.is_absolute() else (root/tool).parent/assetPath
- if toolActual['TargetFramework']!='netstandard2.0' or pathlib.Path(toolActual['MSBuildProjectFullPath']).resolve()!=(root/tool).resolve() or not assetPath.resolve().is_relative_to(root) or not assetPath.is_file():raise SystemExit('actual restored analyzer framework/path mismatch')
- toolAssets=json.loads(assetPath.read_text())
- if not any(key.split('/')[0]=='netstandard2.0' for key in toolAssets['targets']):raise SystemExit('actual analyzer assets missing declared netstandard2.0')
+def restore_tools(label):
+ for tool in toolProjects:
+  code=command(['dotnet','restore',tool,*base[2:],'--force-evaluate','-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true'],label+'-tool-restore-'+pathlib.Path(tool).stem);verify()
+  if code:raise SystemExit(code)
+  toolQuery=subprocess.run(['dotnet','msbuild',tool,'-nologo','-m:1','-nr:false','-p:RuntimeIdentifier=win-x64','-p:RuntimeIdentifiers=win-x64','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*artifactsProps,'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true','-getProperty:TargetFramework,MSBuildProjectFullPath,ProjectAssetsFile'],capture_output=True,text=True)
+  (out/(label+'-tool-framework-'+pathlib.Path(tool).stem+'.stdout')).write_text(toolQuery.stdout);(out/(label+'-tool-framework-'+pathlib.Path(tool).stem+'.stderr')).write_text(toolQuery.stderr)
+  if toolQuery.returncode:raise SystemExit(toolQuery.returncode)
+  toolActual=json.loads(toolQuery.stdout)['Properties'];assetPath=pathlib.Path(toolActual['ProjectAssetsFile']);assetPath=assetPath if assetPath.is_absolute() else (root/tool).parent/assetPath
+  if toolActual['TargetFramework']!='netstandard2.0' or pathlib.Path(toolActual['MSBuildProjectFullPath']).resolve()!=(root/tool).resolve() or not assetPath.resolve().is_relative_to(root) or not assetPath.is_file():raise SystemExit('actual restored analyzer framework/path mismatch')
+  toolAssets=json.loads(assetPath.read_text())
+  if not any(key.split('/')[0]=='netstandard2.0' for key in toolAssets['targets']):raise SystemExit('actual analyzer assets missing declared netstandard2.0')
+restore_tools("initial")
 
 # Source-built genuine build-host task; its ProjectReference removes application RID.
 taskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
@@ -175,6 +175,12 @@ def assert_compiled_target_unchanged(name):
  (out/(name+'-restore-after.json')).write_text(json.dumps(after,indent=2)+'\n')
  if before!=after:raise SystemExit('actual restored graph/package payload changed during execution')
 def build_and_pin(name,project):
+ # Genuine selected graph restore replaces incompatible shared child assets. Force
+ # evaluation rather than adopting a prior cohort's cached framework graph.
+ code=command(['dotnet','restore',project,*base[2:],'--force-evaluate','-p:Configuration=Release','-p:TargetFramework='+framework(project),'-p:EnableWindowsTargeting=true'],name+'-main-restore');verify()
+ if code:raise SystemExit(code)
+ restore_tools(name)
+ assert_task_unchanged()
  code=command(['dotnet','build',project,*base,'--no-restore','-f',framework(project),'-p:EnableWindowsTargeting=true'],name+'-build');verify()
  if code:raise SystemExit(code)
  props=['-p:Configuration=Release','-p:TargetFramework='+framework(project),'-p:RuntimeIdentifier=win-x64','-p:RuntimeIdentifiers=win-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']+artifactsProps

@@ -132,7 +132,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
       "class": "MonologueOriginalPlaybackTests",
       "namespace": "Haven.Application.Tests",
-      "sha256": "54b424e8e72235a46cd07b2bb42f7324575d380610e66dc48a4c44a5b5722ece"
+      "sha256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CallCoordinatorTests.cs",
@@ -192,7 +192,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WindowsMonologueOriginalPlaybackTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "WindowsMonologueOriginalPlaybackTests",
-      "sha256": "b2ebcf1772eeff7a42283aaa3de7b89bb5bf21149b92cf1a01a93e4a4d362e6b"
+      "sha256": "e6c6b3a6490a74b8334b24f0d2a2148f7eaaf1db5139aec49b033b4577700a83"
     }
   ],
   "dependencyPins": [
