@@ -431,6 +431,32 @@ internal static class WaveSelfTest
             var splitExportPath = Path.Combine(directory, "split.wav");
             WaveProjectExporter.ExportPcm16(roundTrip, splitExportPath);
             Require(File.ReadAllBytes(splitExportPath).SequenceEqual(exportedBytes), "A non-destructive split changed audible PCM output.");
+            var joinRight = roundTrip.Tracks[0].Clips[1];
+            var joinedProject = WaveProjectEdits.Join(roundTrip, roundTrip.Revision, clip.ClipId, joinRight.ClipId);
+            var joinedClip = joinedProject.Tracks[0].Clips.Single();
+            Require(joinedClip.ClipId == clip.ClipId && joinedClip.SourceReferenceId == clip.SourceReferenceId
+                && joinedClip.FrameCount == clip.FrameCount && joinedClip.SourceStartFrame == clip.SourceStartFrame,
+                "Join changed canonical source identity or range.");
+            WaveProjectStore.Save(editedPath, joinedProject, roundTrip.Revision);
+            var joinedReopen = WaveProjectStore.Open(editedPath);
+            Require(joinedReopen.Revision == joinedProject.Revision && joinedReopen.Tracks[0].Clips.Single() == joinedClip,
+                "Physical joined-project reopen changed range or identity.");
+            var joinedExport = Path.Combine(directory, "joined.wav"); WaveProjectExporter.ExportPcm16(joinedReopen, joinedExport);
+            Require(File.ReadAllBytes(joinedExport).SequenceEqual(exportedBytes), "Compatible source join changed audible output.");
+            foreach (var incompatible in new[]
+            {
+                joinRight with { Gain = .5 }, joinRight with { SourceStartFrame = joinRight.SourceStartFrame + 1 },
+                joinRight with { TimelineStartFrame = joinRight.TimelineStartFrame + 1 }, joinRight with { FadeInFrames = 1 },
+                joinRight with { SourceReferenceId = Guid.NewGuid() }
+            })
+            {
+                var candidate = roundTrip with { Tracks = [roundTrip.Tracks[0] with { Clips = [roundTrip.Tracks[0].Clips[0], incompatible] }] };
+                var denied = false;
+                try { WaveProjectEdits.Join(candidate, candidate.Revision, clip.ClipId, joinRight.ClipId); }
+                catch (NotSupportedException) { denied = true; }
+                Require(denied, "Incompatible source/processing join must deny rather than silently alter audio.");
+            }
+            Require(File.ReadAllBytes(tonePath).SequenceEqual(sourceBytes), "Join modified canonical PCM source bytes.");
             var staleSaveRejected = false;
             try { WaveProjectStore.Save(editedPath, roundTrip, 0); }
             catch (InvalidOperationException exception) when (exception.Message == "RevisionConflict") { staleSaveRejected = true; }
@@ -520,6 +546,7 @@ internal static class Program
     private static int Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+        if (args.Length == 1 && args[0] == "--markers-regions-test") return WaveMarkersRegionsWorkflowTest.Run();
         if (args.Length == 1 && args[0] == "--pcm-formats-test") return WavePcmFormatsWorkflowTest.Run();
         if (args.Length == 1 && args[0] == "--files-workflow-test") return WaveFilesProjectWorkflowTest.RunAsync().GetAwaiter().GetResult();
         if (args.Length > 0 && args[0] == "project") return WaveProjectCommands.Run(args);
