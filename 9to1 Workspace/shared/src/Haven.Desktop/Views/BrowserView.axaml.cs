@@ -546,7 +546,7 @@ internal sealed class NativeWebViewHost : IOriginalSessionOwnedBrowserHost, IDis
     {
         if (!Dispatcher.UIThread.CheckAccess())
         {
-            var queued = await Dispatcher.UIThread.InvokeAsync(() => RunNativeLifecycleAsync(nativeAction, token));
+            var queued = await Dispatcher.UIThread.InvokeAsync<Task>(() => RunNativeLifecycleAsync(nativeAction, token));
             await queued.ConfigureAwait(false);
             return;
         }
@@ -612,7 +612,7 @@ internal sealed class NativeWebViewHost : IOriginalSessionOwnedBrowserHost, IDis
         RequireOwnedEntryCurrent(generation, cancellationToken); // Before dispatch/queue, not a fresh page adoption.
         if (Dispatcher.UIThread.CheckAccess())
             return await ExecuteOwnedEntryCoreAsync(script, admission, generation, cancellationToken);
-        var entry = await Dispatcher.UIThread.InvokeAsync(
+        var entry = await Dispatcher.UIThread.InvokeAsync<Task<string?>>(
             () => ExecuteOwnedEntryCoreAsync(script, admission, generation, cancellationToken));
         return await entry.ConfigureAwait(false);
     }
@@ -669,7 +669,7 @@ internal sealed class NativeWebViewHost : IOriginalSessionOwnedBrowserHost, IDis
             {
                 // Marshal ONLY direct native evaluation; owning turn is already held.
                 // Never recursively enqueue ExecuteOwnedScriptAsync or acquire its semaphore.
-                var evaluation = await Dispatcher.UIThread.InvokeAsync(() => EvaluateObservationAsync(script, token));
+                var evaluation = await Dispatcher.UIThread.InvokeAsync<Task<string?>>(() => EvaluateObservationAsync(script, token));
                 return await evaluation.ConfigureAwait(false);
             }
             if (Volatile.Read(ref _closed) != 0) throw new ObjectDisposedException(nameof(NativeEntryObservation));

@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "0eb6150acd378dd7aae6baa27b60d635fbfb50c5",
-  "programTree": "9c004b7381d9f4f8c3952453a04d1914c069adda",
+  "baselineCommit": "eee0bc6450c4d8b133204fe15b113139f04026aa",
+  "programTree": "b66584f97771d13e9180db8aff36fdb6e02e8616",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
@@ -33076,9 +33076,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/BrowserView.axaml.cs",
       "mode": "100644",
-      "object": "1d75a58a26d584e85dcf46570daa319846f88609",
-      "bytes": 42226,
-      "sha256": "b195cfbd265fbefa16cfa4111fec30eaddce29797e445b3d981e5e8463f92bf7"
+      "object": "b2f1559fbfa83ab094f40e045912063b003fe59e",
+      "bytes": 42262,
+      "sha256": "1cb4476b18a28fb3d2efb7a83bc0ecafecb574639943d360914b625f751f3e5a"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/CatalogView.axaml",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Actual two owning failures exact3-source corrective: Forms known target rejection cannot mutate sourcejournal Pending\u2192Conflict absent ack; explicit reconcile remains. Data deterministic UpdateRecord validation before SaveAttempted restores original knownFailed/noeffect audit assertions plus exactphysicalbytes/Finish; actual postSave Unknown cases unchanged. Two changed owningtestSHA re-pins ONLY within identical35owning/35resource class lists; filters/counts/whole2gates/source22+3/restore/producers/hosttasks/compiled/TRX guards unchanged. W1 semanticpeer approvedsource, no execution/passclaim.",
+  "limits": "Actual selectedeee BrowserView three dispatcher queue calls explicit generic Task/Task<string?> results choose genuine Avalonia DispatcherOperation<TResult>, preserving existing two-stage await/API and all native routes/generation/originalissuer/cancellation/admission/lifecycle. Sole production source correction; allsame35 owning/resource class manifests/filters/counts and both full source22+3/7producer/task/restore/compiled/TRX guards unchanged. Source-only unexecuted, no futureprofiling/Forms/nativefeatures joins.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64746,6 +64746,18 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective04/actual-failed05-11218156232/root-capture.json",
       "sha256": "8715df6c8c54f5ea4e20aae0a0e09ecbf8caaf015d91ca697666379e65c7637f"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-browse-actual-dispatcher-overloads-corrective01/manifest.json",
+      "sha256": "15cce7218ed3dea6116b2fe68810a8e9bac2158742529975d609542b1b2acdd5"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-forms-actual-corrective05/actual-capture-11218539286/root-capture.json",
+      "sha256": "73c89e06671a2d7c427fd825828321e3200fe3252baae9337d7567f874329349"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-forms-actual-corrective05/actual-capture-11219146940/root-capture.json",
+      "sha256": "e392c202cf494b6d4e036119702f86422e6a6fdc109455bdd46292fb6b4f32d4"
     }
   ],
   "sharedCakeIdContract": null
