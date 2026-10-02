@@ -73,7 +73,7 @@ try:
  after=profiles('profiles-after-load');assert after-before=={'bwrap (enforce)','unpriv_bwrap (enforce)'} and before<=after
  assert restriction()=='1'
  run(['/usr/bin/bwrap','--unshare-all','--die-with-parent','--ro-bind','/','/','/usr/bin/true'],'same-genuine-true-probe')
- run(['/usr/bin/bwrap','--unshare-all','--die-with-parent','--ro-bind','/','/','/bin/sh','-c','printf "%s\\n" "$$"; cat /proc/$$/attr/current; cat /proc/$$/status'],'actual-restricted-child')
+ run(['/usr/bin/bwrap','--unshare-all','--die-with-parent','--ro-bind','/','/','--proc','/proc','/bin/sh','-c','printf "%s\\n" "$$"; cat /proc/$$/attr/current; cat /proc/$$/status'],'actual-restricted-child')
  child=(out/'actual-restricted-child.stdout').read_text();childPid=int(child.splitlines()[0]);label=child.splitlines()[1]
  assert label=='bwrap//&unpriv_bwrap (enforce)'
  status={line.split(':',1)[0]:line.split(':',1)[1].strip()for line in child.splitlines()[2:]if ':'in line}

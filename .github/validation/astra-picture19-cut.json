@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e4c602a72b845f1f1c7849ce0616121240adf85c",
+  "baselineCommit": "667c6620ad70b392109e03cca479ccb02c5ebad9",
   "programTree": "c9ebb98da9b1cab9884ea4bc8cb3a5e93091b8a0",
   "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-picture-ephemeral-profile.py",
       "mode": "100644",
-      "object": "c137dcdc549fca5a80a87c2964a1d35f82eed46b",
-      "bytes": 7262,
-      "sha256": "86191af3bc6b6042b8c8066047d5aebe492f83aad510b92f7482a74897bdd3b2"
+      "object": "e6d3c33067f8405c5bbea3e868142a6072fe29ea",
+      "bytes": 7279,
+      "sha256": "096e6059864df047820a439336946c7d11f7d427f1e4204d42a444fca69fffc6"
     },
     {
       "path": ".github/scripts/astra-picture19-artifact-parts.py",
@@ -64010,7 +64010,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Root-ratified dedicated ephemeral hosted complete exact officialABI4 two-profile activation with mandatory child deny/stacking, globaluserns restriction1 unchanged, reject existing names and unknown optional local includes. Actual parse/preprocess/inventory/childlabel/NoNewPrivs/zero-capabilities required before whole originalmandatory native101/allcohort runner. Always remove only introduced profiles and compare originalinventory. No bareexemption/globaldisable/localprodload; source/fullsuite unchanged, no acceptance before actual wholepass.",
+  "limits": "Exactactual667c observer fix only: --proc /proc after rootrobind on diagnosticchild, sameunalteredtrueprobe/fullofficial2profile/strictoriginalPIDexactstacklabel/NoNewPrivs/zero4caps/globalrestriction1/fullnative101/allcohorts/finalcleanup guards retained. Originalobserver incorrectlyread hostproc for namespacePID2; no label/cap/assertion weakening, actual failedload/trueprobe/cleanup succeeded. Root16CAS preserved, no localpolicyload/native.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
@@ -64055,6 +64055,10 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root16-normal-ci-actual01/root-capture.json",
       "sha256": "4cfa4c2d4f55955a2fcf9ffd60c6f0e9cecadca4b22396a36d30c5269326881c"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-picture-abi4-profile-corrector07/actual-failed08/picture/root-capture.json",
+      "sha256": "edc8782d9026c74282d459de2cdfd23c9cf50cefaf255a1d807926a4c27de568"
     }
   ],
   "sharedCakeIdContract": null,
