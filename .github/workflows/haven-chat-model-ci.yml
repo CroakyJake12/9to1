@@ -1,4 +1,4 @@
-name: Astra immutable managed follow-up
+name: Picture isolated read-only host preconditions
 on:
   workflow_dispatch:
     inputs:
@@ -11,166 +11,48 @@ on:
 permissions:
   contents: read
 jobs:
-  validate:
-    if: startsWith(github.ref, 'refs/heads/validation/astra-picture19-')
+  preconditions:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-picture-preconditions-')
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
-    env:
-      AVALONIA_TELEMETRY_OPTOUT: '1'
-      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
-      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
-      MSBUILDDISABLENODEREUSE: '1'
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: false
           persist-credentials: false
-      - name: Materialize only three pinned managed source dependencies
-        shell: bash
+      - name: Retain exact official distro prerequisites without upgrades
         run: |
           set -euo pipefail
-          git submodule update --init --recursive -- \
-            "framework/CUI/vendor/Avalonia/external/XamlX" \
-            "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" \
-            "9to1 Workspace/Terminal/Source/libvterm"
-          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
-      - name: Materialize separately approved exact Glycin donor
-        run: git submodule update --init --depth=1 -- "9to1 Workspace/Picture/Source/glycin"
-      - uses: dtolnay/rust-toolchain@1.98.1
-      - name: Install existing native headless donor dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential pkg-config libglib2.0-dev libseccomp-dev liblcms2-dev libxml2-dev libfontconfig1-dev bubblewrap
-          dpkg-query -W > native-hosted-packages.txt
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-      - name: Verify immutable source and run bounded managed suites
+          mkdir -p artifacts/picture-preconditions/package-provenance
+          missing=()
+          command -v bwrap >/dev/null || missing+=(bubblewrap)
+          command -v apparmor_parser >/dev/null || missing+=(apparmor-utils)
+          command -v aa-status >/dev/null || missing+=(apparmor-utils)
+          sudo -n cat /sys/kernel/security/apparmor/profiles >artifacts/picture-preconditions/package-provenance/loaded-profiles-before.txt
+          if (( ${#missing[@]} )); then
+            sudo apt-get update >artifacts/picture-preconditions/package-provenance/apt-update.log 2>&1
+            sudo apt-get install --no-upgrade --no-install-recommends -y "${missing[@]}" >artifacts/picture-preconditions/package-provenance/apt-install.log 2>&1
+          fi
+          sudo -n cat /sys/kernel/security/apparmor/profiles >artifacts/picture-preconditions/package-provenance/loaded-profiles-after.txt
+          cmp artifacts/picture-preconditions/package-provenance/loaded-profiles-before.txt artifacts/picture-preconditions/package-provenance/loaded-profiles-after.txt
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' bubblewrap apparmor >artifacts/picture-preconditions/package-provenance/versions.txt
+          while read -r package version architecture; do
+            (cd artifacts/picture-preconditions/package-provenance && apt-get download "${package}=${version}")
+            apt-cache show "${package}=${version}" >>artifacts/picture-preconditions/package-provenance/official-package-index.txt
+          done <artifacts/picture-preconditions/package-provenance/versions.txt
+          sha256sum artifacts/picture-preconditions/package-provenance/*.deb >artifacts/picture-preconditions/package-provenance/archive-sha256.txt
+          cp /usr/share/doc/bubblewrap/copyright artifacts/picture-preconditions/package-provenance/bubblewrap-copyright.txt
+          cp /usr/share/doc/apparmor/copyright artifacts/picture-preconditions/package-provenance/apparmor-copyright.txt
+      - name: Observe genuine host preconditions without build or policy changes
         env:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}
           EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
-        run: python3 .github/scripts/astra-picture19-hosted-managed.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-picture19-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
-      - name: Freeze bounded independently verifiable evidence bundles
-        id: bundles
-        if: always()
-        run: |
-          test ! -f native-hosted-packages.txt || cp native-hosted-packages.txt artifacts/picture19-managed/
-          python3 .github/scripts/astra-picture19-artifact-parts.py --input artifacts/picture19-managed --output artifacts/picture19-parts
-      - name: Retain fullfile and independent bundle manifest
+        run: python3 .github/scripts/astra-picture-fast-preconditions.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-picture-preconditions-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+      - name: Retain actual read-only observations including failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: astra-picture19-manifest-${{ github.sha }}
-          path: artifacts/picture19-parts/manifest.json
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 00
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 0 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-00-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-00.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 01
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 1 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-01-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-01.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 02
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 2 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-02-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-02.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 03
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 3 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-03-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-03.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 04
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 4 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-04-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-04.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 05
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 5 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-05-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-05.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 06
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 6 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-06-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-06.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 07
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 7 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-07-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-07.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 08
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 8 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-08-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-08.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 09
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 9 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-09-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-09.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 10
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 10 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-10-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-10.zip
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 14
-      - name: Retain independently bounded evidence bundle 11
-        if: ${{ always() && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 11 }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: astra-picture19-bundle-11-${{ github.sha }}
-          path: artifacts/picture19-parts/bundle-11.zip
-          compression-level: 0
+          name: astra-picture-preconditions-${{ github.sha }}
+          path: artifacts/picture-preconditions
           if-no-files-found: error
           retention-days: 14
