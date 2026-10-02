@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "baselineCommit": "ad48b0ed7ec32f61427abe6ce2e8262d7bff6508",
   "programTree": "ec0ad519dab6c4e4bb978886426560e233c3803f",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -218,9 +218,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "19cadaab0e338806c8ae0e473b346bb3c2e31979",
-      "bytes": 3375,
-      "sha256": "929fd4155d1a68cbe373d05a232a4de71216380663dffc0b542b72c3c9a28854"
+      "object": "2dece94b0c91543da549b52b2ca42758a97eac4b",
+      "bytes": 3493,
+      "sha256": "1f9ab9d02529ffd4e7ff7991843cfab349383e449616ac4cafa8dc801d73a27c"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -64402,7 +64402,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-media11-cut.json",
-  "limits": "Fresh Root15 media11: all full Wave4 workflows, whole Motion --self-test project workflow and unchanged real GES native-render-test, full PlayMatchServiceTests plus every current full regression/resource class/filter retained; exact existing native media fixture SHA and hosted official matching distro GES/version/copyright. All actual normal fullprojects/source22+3/7producers/hosttasks/restore/compiled/TRX guards retained, no fake renderer. Source-only unexecuted.",
+  "limits": "Actual official UbuntuGES provisioning probe correction only: unsupported ges-launch --version becomes official donor-supported --ges-version (ges.c270\u2013272,308\u2013311; launcher1423); version also recorded independently by official dpkg package/version/architecture and executable owner, no inferred engine version text. Same actual11 producttree/allWave4/fullMotion2/fullPlay+everyfullcurrent regression/resource/source/producers/restore/compiled/TRX and genuineGESSHA guards unchanged. No SDK/native rerun locally/no fake renderer. Unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-media11-owning-source-plan01/manifest.json",
@@ -64423,6 +64423,18 @@
     {
       "path": "/workspace/astra-source/worker3-play-pinned-state-isolation02/manifest.json",
       "sha256": "a9ddb9edb8600f6aca10bf333402af191d2fdae1d3c7bd4726d0285af5a246b8"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/media11-root15-owning01/actual-capture-11220187692/root-capture.json",
+      "sha256": "020337a10650cc97f811cbb9339c18b567092d6908d233bdd21c09a0bf2198cd"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/media11-root15-owning01/actual-capture-11220202755/root-capture.json",
+      "sha256": "088b5b107d147b0a1c8139aaad656d07b10c105151b7c858b6fd41188b2d4aae"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/media11-root15-owning01/actual-capture-11220857455/root-capture.json",
+      "sha256": "fb352597291fbbfac65eaf85fd872f5030e5adcc89b3b9d9eccd2bbf108fc999"
     }
   ],
   "sharedCakeIdContract": null

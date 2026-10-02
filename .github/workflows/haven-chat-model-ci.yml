@@ -47,9 +47,10 @@ jobs:
           sudo apt-get update >artifacts/media11-owning/native-ges/apt-update.log 2>&1
           sudo apt-get install --no-upgrade --no-install-recommends -y ges1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad >artifacts/media11-owning/native-ges/apt-install.log 2>&1
           command -v ges-launch-1.0 >artifacts/media11-owning/native-ges/executable-path.txt
-          ges-launch-1.0 --version >artifacts/media11-owning/native-ges/version.txt 2>&1
+          ges-launch-1.0 --ges-version >artifacts/media11-owning/native-ges/version.txt 2>&1
           sha256sum "$(command -v ges-launch-1.0)" >artifacts/media11-owning/native-ges/executable-sha256.txt
           dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' ges1.0-tools 'libges*' 'gstreamer1.0-*' >artifacts/media11-owning/native-ges/package-versions.txt
+          dpkg-query -S /usr/bin/ges-launch-1.0 >artifacts/media11-owning/native-ges/executable-package-owner.txt
           cp /usr/share/doc/ges1.0-tools/copyright artifacts/media11-owning/native-ges/official-copyright.txt
           printf 'ASTRA_GES_EXECUTABLE=%s\n' "$(command -v ges-launch-1.0)" >> "$GITHUB_ENV"
           printf 'ASTRA_MOTION_FIXTURE=%s/.github/validation/motion-native-input.webm\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
