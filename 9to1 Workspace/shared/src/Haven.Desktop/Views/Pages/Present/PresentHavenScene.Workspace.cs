@@ -369,7 +369,8 @@ internal sealed partial class PresentHavenScene
     {
         documents ??= Array.Empty<PresentDocumentSummary>();
         if (LibraryHost is null) BuildWorkspaceControls();
-        LibraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
+        var libraryHost = LibraryHost ?? throw new InvalidOperationException("Presentation library controls are unavailable.");
+        libraryHost.SetValue(HavenProperties.Visibility, HavenVisibility.Visible);
         WorkspaceHost.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         MenuBar.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
         PlaybackOverlay.SetValue(HavenProperties.Visibility, HavenVisibility.Collapsed);
