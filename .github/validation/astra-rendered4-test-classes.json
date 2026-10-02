@@ -27,5 +27,6 @@
   ],
   "dependencyPins": [],
   "ownerManifestSha256": "e4a6b8c36cd3ed5056e511d0504a92d7e69804e9e80bb91f124ce54ad2f71837",
-  "correctionManifestSha256": "5ccf89b14c305075236b702a9a087866b38796a48975cf250d0932e4682ffaf7"
+  "correctionManifestSha256": "5ccf89b14c305075236b702a9a087866b38796a48975cf250d0932e4682ffaf7",
+  "strictCauseManifestSha256": "85d5c18cb69d578487fcd08b350f63017c91fe295db614d83e8920740ce3efbe"
 }

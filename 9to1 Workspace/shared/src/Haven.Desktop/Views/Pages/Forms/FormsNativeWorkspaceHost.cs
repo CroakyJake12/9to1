@@ -53,6 +53,7 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
             candidate.SetActionDispatcher(new OriginDispatcher(this, workspace));
             var loaded = candidate.TryLoad(FormsCuiWorkspace.LoadDocument());
             RequireRoot(loaded.Root, loaded.Diagnostics);
+            candidate.WireBindings(loaded.Root ?? throw new InvalidDataException("The Forms workspace root is unavailable."));
             await _requireOriginal(linked.Token);
             linked.Token.ThrowIfCancellationRequested();
             Content = loaded.Root;
@@ -81,6 +82,7 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
         loader.SetActionDispatcher(new OriginDispatcher(this, actions));
         var loaded = loader.TryLoad(document);
         RequireRoot(loaded.Root, loaded.Diagnostics);
+        loader.WireBindings(loaded.Root ?? throw new InvalidDataException("The Forms child root is unavailable."));
         await _requireOriginal(linked.Token);
         linked.Token.ThrowIfCancellationRequested();
         var window = new Window { Title = title, Width = 760, Height = 680,
