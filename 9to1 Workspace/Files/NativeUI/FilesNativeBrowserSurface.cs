@@ -26,6 +26,11 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
     private readonly List<(Guid? ID, string Title)> _history = [(null, "Files")];
     private readonly ListBox _items = new();
     private readonly TextBox _search = new() { PlaceholderText = "Search this folder", Width = 280, MaxLength = 256 };
+    private readonly ComboBox _sort = new()
+    {
+        ItemsSource = new[] { "Displayed names: A–Z", "Displayed names: Z–A" },
+        SelectedIndex = 0, Width = 200
+    };
     private CuiSceneHost? _scene;
     private FilesNativeBrowserPage? _page;
     private Guid? _boundStoreId;
@@ -46,6 +51,11 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
         _items.ItemTemplate = new FuncDataTemplate<HostedItemMetadata>((item, _) => new TextBlock
         { Text = item is null ? "" : $"{(item.Kind == HostedItemKind.Folder ? "Folder" : item.Kind.ToString())}  {item.Name}", Margin = new(8) });
         _items.SelectionChanged += (_, _) => Changed();
+        _sort.SelectionChanged += (_, _) =>
+        {
+            if (!Available || _page is null || _sort.SelectedIndex is < 0 or > 1) return;
+            ApplyDisplayedNameSort(); Changed();
+        };
         _items.DoubleTapped += async (_, _) => await InvokeAsync("9to1.Files.Open", CancellationToken.None);
         _items.KeyDown += async (_, args) =>
         { if (args.Key == Key.Enter) { args.Handled = true; await InvokeAsync("9to1.Files.Open", CancellationToken.None); } };
@@ -68,13 +78,14 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
             var registry = new CuiControlRegistry();
             registry.RegisterControlType("FilesCanonicalList", _ => _items);
             registry.RegisterControlType("FilesSearchInput", _ => _search);
+            registry.RegisterControlType("FilesDisplayedSortInput", _ => _sort);
             _scene = new CuiSceneHost(registry);
             var available = await _scene.ShowAsync(new("files", "Files", "Browser", LoadDocument(), this, this, _readiness), linked.Token);
             if (available.State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException(available.Message);
             await _browser.RevalidateAsync(page, _originalActor, linked.Token);
             await RequireReadyAsync(linked.Token);
             linked.Token.ThrowIfCancellationRequested();
-            _boundStoreId = page.StoreID; _page = page; _items.ItemsSource = page.Items; Content = _scene;
+            _boundStoreId = page.StoreID; _page = page; ApplyDisplayedNameSort(); Content = _scene;
             _status = $"{page.Items.Count} items"; Changed();
         }
         catch { Dispose(); throw; }
@@ -104,15 +115,29 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
         value = path switch
         {
             "FolderTitle" => _history[_historyIndex].Title,
+            "SelectedDetails" => SelectedDetails,
             "Status" => _status,
             "CanNavigate" => Available,
+            "CanUp" => Available && _page?.ParentID is not null,
             "CanBack" => Available && _historyIndex > 0,
             "CanForward" => Available && _historyIndex + 1 < _history.Count,
             "CanMore" => Available && _page?.Next is not null,
             "CanOpen" => Available && CanOpenSelection,
             _ => null
         };
-        return path is "FolderTitle" or "Status" or "CanNavigate" or "CanBack" or "CanForward" or "CanMore" or "CanOpen";
+        return path is "SelectedDetails" or "FolderTitle" or "Status" or "CanNavigate" or "CanUp" or "CanBack" or "CanForward" or "CanMore" or "CanOpen";
+    }
+    private string SelectedDetails
+    {
+        get
+        {
+            if (_disposed || _lifetime.IsCancellationRequested || _page is null ||
+                _items.SelectedItem is not HostedItemMetadata selected ||
+                !_page.Items.Any(item => ReferenceEquals(item, selected))) return "Select an item to view its displayed details.";
+            var size = selected.SizeBytes is { } bytes ? $"{bytes:N0} bytes" : "Not reported";
+            return $"{selected.Name}\nType: {selected.Kind}\nSize: {size}\nAvailability: {selected.Availability}\n" +
+                $"Shared: {(selected.IsShared ? "Yes" : "No")}\nModified: {selected.ModifiedAt.ToLocalTime():g}";
+        }
     }
     private bool Available => !_disposed && !_busy && !_lifetime.IsCancellationRequested && _scene is not null;
     private bool CanOpenSelection => _page is not null && _items.SelectedItem is HostedItemMetadata selected &&
@@ -121,6 +146,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
     public bool? IsActionAvailable(string command) => command switch
     {
         "9to1.Files.Home" or "9to1.Files.Refresh" or "9to1.Files.Search" => Available,
+        "9to1.Files.Up" => Available && _page?.ParentID is not null,
         "9to1.Files.Back" => Available && _historyIndex > 0,
         "9to1.Files.Forward" => Available && _historyIndex + 1 < _history.Count,
         "9to1.Files.More" => Available && _page?.Next is not null,
@@ -173,6 +199,11 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
                     _status = "Opened package inspection"; return;
                 }
             }
+            else if (command == "9to1.Files.Up")
+            {
+                destination = await _browser.GetParentAsync(originalPage!, _originalActor, linked.Token);
+                RequireRetainedPage(); appendHistory = true; _query = ""; _search.Text = "";
+            }
             else if (command == "9to1.Files.Home") { destination = (null, "Files"); appendHistory = true; _query = ""; _search.Text = ""; }
             else if (command == "9to1.Files.Back") { index--; destination = _history[index]; _query = ""; _search.Text = ""; }
             else if (command == "9to1.Files.Forward") { index++; destination = _history[index]; _query = ""; _search.Text = ""; }
@@ -188,7 +219,7 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
                 if (_history.Count >= 128) { _history.RemoveAt(0); _historyIndex--; }
                 _history.Add(destination); index = _history.Count - 1;
             }
-            _historyIndex = index; _page = page; _items.SelectedItem = null; _items.ItemsSource = page.Items;
+            _historyIndex = index; _page = page; _items.SelectedItem = null; ApplyDisplayedNameSort();
             _status = $"{page.Items.Count} items";
         }
         catch (Exception error) when (error is UnauthorizedAccessException or InvalidOperationException or IOException or NotSupportedException or ArgumentException or OperationCanceledException)
@@ -205,7 +236,24 @@ public sealed class FilesNativeBrowserSurface : UserControl, IDisposable,
     private async Task RequireReadyAsync(CancellationToken token)
     { if ((await _readiness.CheckAsync(token)).State != CuiSceneAvailabilityState.Ready) throw new UnauthorizedAccessException("Home cannot authorise this Files view."); }
     private void ClearSources() { _page = null; _items.SelectedItem = null; _items.ItemsSource = null; Changed(); }
-    private void Changed() => PropertyChanged?.Invoke(this, new(null));
+    private void ApplyDisplayedNameSort()
+    {
+        if (_page is null) return;
+        // Reorder retained metadata objects, never replace canonical identities or fetch a new page.
+        var selected = _items.SelectedItem as HostedItemMetadata;
+        var ordered = _sort.SelectedIndex == 1
+            ? _page.Items.OrderByDescending(item => item.Name, StringComparer.CurrentCultureIgnoreCase)
+            : _page.Items.OrderBy(item => item.Name, StringComparer.CurrentCultureIgnoreCase);
+        _items.ItemsSource = ordered.ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ThenBy(item => item.Id.Value).ToArray();
+        _items.SelectedItem = selected is not null && _page.Items.Any(item => ReferenceEquals(item, selected))
+            ? selected : null;
+    }
+    private void Changed()
+    {
+        _sort.IsEnabled = Available && _page is not null;
+        PropertyChanged?.Invoke(this, new(null));
+    }
     public void Dispose()
     {
         if (_disposed) return;
