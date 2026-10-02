@@ -165,12 +165,16 @@ entries=[(name,project) for name,project,_ in checks]
 for name,project in entries:
  code=command(['dotnet','restore',project,*base[2:],'-p:Configuration=Release','-p:TargetFramework=net10.0','-p:EnableWindowsTargeting=true'],name+'-restore');verify()
  if code:raise SystemExit(code)
+toolProjects=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj']
+for tool in toolProjects:
+ code=command(['dotnet','restore',tool,*base[2:],'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true'],'tool-restore-'+pathlib.Path(tool).stem);verify()
+ if code:raise SystemExit(code)
 for name,project in entries:
- restoreBefore[name]=restore.snapshot_restore(root,project)
+ restoreBefore[name]=restore.snapshot_restore(root,project,toolProjects)
  (out/(name+'-restore-before.json')).write_text(json.dumps(restoreBefore[name],indent=2)+'\n')
  for item in restoreBefore[name]['projects']:
-  sourceProject=item['path'];key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
-  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
+  sourceProject=item['path'];effectiveFramework='netstandard2.0' if sourceProject in toolProjects else 'net10.0';key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
+  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
   if command(args,'evaluated-'+key):raise SystemExit('actual evaluated source/generator graph failed')
 
 # Bind actual evaluated source/generator paths to pinned source, exact materialized donors,
@@ -234,7 +238,7 @@ def build_and_pin(name,project):
 name,project,filter_value=checks[0];target=build_and_pin(name,project)
 args=['dotnet','test',project,*base,'-f','net10.0','-p:EnableWindowsTargeting=true','--no-build','--no-restore','--logger','trx;LogFileName=picture-full.trx','--results-directory',str(out/'trx')]
 code=command(args,'picture-full-test');assert_compiled_target_unchanged(name);verify()
-restoreAfter=restore.snapshot_restore(root,project)
+restoreAfter=restore.snapshot_restore(root,project,toolProjects)
 (out/'picture-full-restore-after.json').write_text(json.dumps(restoreAfter,indent=2)+'\n')
 if restoreBefore[name]!=restoreAfter:raise SystemExit('restored inputs changed')
 import xml.etree.ElementTree as ET
@@ -264,8 +268,8 @@ for file in sorted((root/'artifacts/picture19-managed-build').rglob('*')):
 for name,project in entries:
  graph=restoreBefore[name]
  for item in graph['projects']:
-  sourceProject=item['path'];key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
-  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
+  sourceProject=item['path'];effectiveFramework='netstandard2.0' if sourceProject in toolProjects else 'net10.0';key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
+  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
   if command(args,'postbuild-evaluated-'+key):raise SystemExit('postbuild compiler input query failed')
   data=json.loads((out/('postbuild-evaluated-'+key+'.log')).read_text())
   for items in data.get('Items',{}).values():

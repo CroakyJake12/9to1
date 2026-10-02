@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "128d9c01d3f8f022cb1eb3be04f0617ab64cabf0",
+  "baselineCommit": "4a9bb6f4433b4c6687f0a89cd60dfc7f2bc6c127",
   "programTree": "3aa887cd4ad7e51d4a736f5febdac2c1f13fd910",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
@@ -29,16 +29,16 @@
     {
       "path": ".github/scripts/astra-picture19-hosted-managed.py",
       "mode": "100644",
-      "object": "a89e07a4eda5a89ff24666a09068b0e2fdf70099",
-      "bytes": 24611,
-      "sha256": "7dd8ea76796fbe8503cc692df9b9a79babcf75d1c635e37ba7671a332bff2e3f"
+      "object": "d2bcf9c8d42b49526eacf4e4ee263071bb7539c9",
+      "bytes": 25687,
+      "sha256": "daa0d5815b031a7907b7601f6cf859d9109d528f38e4be5a4af33c4bd45c0047"
     },
     {
       "path": ".github/scripts/astra-picture19-restore-evidence.py",
       "mode": "100644",
-      "object": "050c0adbff77e7417dc2e1442f1196b78d4afd8f",
-      "bytes": 5528,
-      "sha256": "319eb80d9f184036a729ce460c9fc25c19fc2fe67db05b2d5b21dd07359ce198"
+      "object": "37452d50e05b03e044cedd917777648f67e6e0c4",
+      "bytes": 5708,
+      "sha256": "f48524269c93f19720606d4b10ffc1179468c9dd3b59aa984b10e9e8377118ca"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -64006,6 +64006,10 @@
     {
       "path": "/workspace/astra-source/worker6-picture19-vertical-fixture-fix-01/manifest.json",
       "sha256": "d9cd4814b4d32e31e64f75006691f06875d048757db52413f7f915eaa8d212ad"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol5/manifest.json",
+      "sha256": "07b5ea13ce0cb9c4eed54964a5916443c308f6ecf6c75671de03dd0cdd855a83"
     }
   ],
   "sharedCakeIdContract": null,
