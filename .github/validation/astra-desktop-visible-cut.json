@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "26764b74b1638ccdd913038c2428c7b41c4fcaa7",
-  "programTree": "6f0f970f8e376f1eea35633572d072aed46cdd17",
-  "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
+  "baselineCommit": "c57d84411d4eb90500b521f8bac7a17301476ec8",
+  "programTree": "6fdf4a214a10225272f1b9b84b705234a56960ac",
+  "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
   "kind": "corrective",
   "files": [
     {
@@ -36184,9 +36184,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentRepository.cs",
       "mode": "100644",
-      "object": "e4c0c1ee253546cd850635b90d6c29c19de86b92",
-      "bytes": 10896,
-      "sha256": "14682336730b32ca134da2536381078631c0ccd3e519753c13690e924efeb6bf"
+      "object": "b1ef9eff0158bf4a10977b4ebb1e83bf45ccd898",
+      "bytes": 11032,
+      "sha256": "f5c56fc195126c9eadcca468c44123c0f1409acc649d5cce3051060a245085d5"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/ProviderConfigurationStore.cs",
@@ -64724,7 +64724,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Exact actual failed-parent minimal correction only. Full existing source and assertions retained. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
+  "limits": "Exact actual failed-parent minimal correction only. Full existing source and assertions retained. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present. External Root19 CAS only; exact actual c57 diagnostic semantic tree is retained, not current Root19 combined publication acceptance. Fresh current product source intersection/whole gate remains required before publication.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-desktop24-root16-full-owning-gate02/manifest.json",
@@ -64745,6 +64745,14 @@
     {
       "path": "/workspace/astra-source/worker2-desktop26-actual-library-nullflow-corrective03/manifest.json",
       "sha256": "7e3c5d307113e47e8168cd57cbd96354ee7ba20b78f798690009878519488024"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint19-publication-local.json",
+      "sha256": "11325cd5953770aa8bd6ce93d01679d949d4c5a2fef764e1f5ae34d94f5409b9"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-desktop12-actual-pinned-summary-corrective01/manifest.json",
+      "sha256": "898fbfdf2156f9157ca65029bca310ed93d5b2adc05fc9494abac9963755f864"
     }
   ],
   "sharedCakeIdContract": null
