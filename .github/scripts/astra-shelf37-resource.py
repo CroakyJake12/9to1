@@ -187,7 +187,7 @@ def assert_compiled_target_unchanged(name):
   if path.is_file():current.append({'path':str(path.relative_to(root)),'bytes':path.stat().st_size,'sha256':digest(path)})
  if current!=closure:raise SystemExit('compiled entire pinned output closure changed during execution')
  assert_task_unchanged()
- project,before=restoredProjects[name];after=restore.snapshot_restore(root,project)
+ project,before=restoredProjects[name];after=restore.snapshot_restore(root,project,evidence_cohort='resource',evidence_output=out,managed_artifacts=root/'artifacts/root14-managed-build',host_artifacts=root/'artifacts/root14-host-build-tasks')
  (out/(name+'-restore-after.json')).write_text(json.dumps(after,indent=2)+'\n')
  if before!=after:raise SystemExit('actual restored graph/package payload changed during execution')
 def build_and_pin(name,project):
@@ -211,7 +211,7 @@ def build_and_pin(name,project):
  for extension in ('.dll','.pdb','.deps.json','.runtimeconfig.json'):
   candidate=target.with_name(target.stem+extension)
   if candidate.is_file():shutil.copyfile(candidate,retained/candidate.name)
- restoreBefore=restore.snapshot_restore(root,project)
+ restoreBefore=restore.snapshot_restore(root,project,evidence_cohort='resource',evidence_output=out,managed_artifacts=root/'artifacts/root14-managed-build',host_artifacts=root/'artifacts/root14-host-build-tasks')
  (out/(name+'-restore-before.json')).write_text(json.dumps(restoreBefore,indent=2)+'\n')
  restoredProjects[name]=(project,restoreBefore)
  compiledTargets[name]=(target,closure)

@@ -276,9 +276,9 @@
       "class": "FormDataReferenceLookupSourceTests",
       "namespace": "Haven.Infrastructure.Tests",
       "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
-      "sha256": "a62736def6509d18d258a267ef00308cb9bdb1542481d301db0d4162882639c2",
-      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
-      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs"
+      "sha256": "e604b2dabcf489f6107df4c17f5aa40e504b0b25fefbbff01e21258766d27715",
+      "origin": "Actual c7b7 fixture-only two required IAppPaths properties; all cases/assertions retained",
+      "source": "/workspace/astra-source/worker3-shelf37-actual-c7b7-reference-path-contract-corrective01/FormDataReferenceLookupSourceTests.cs"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs",

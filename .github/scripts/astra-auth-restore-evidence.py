@@ -3,8 +3,13 @@ import json,pathlib,hashlib,base64,subprocess,os
 
 DEFAULT_TOOLS=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj']
 DEFAULT_TOOLS.append('framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj')
-def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
- root=root.resolve();entry=(root/entry).resolve();pending=[(entry,None,False)]+[((root/p).resolve(),None,p.endswith("/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj")) for p in extra_projects];seen=set();projects=[];packages={}
+def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS,*,evidence_cohort,evidence_output,managed_artifacts,host_artifacts):
+ root=root.resolve()
+ if type(evidence_cohort) is not str or evidence_cohort not in ('owning','regression','resource') or os.environ.get('COHORT')!=evidence_cohort:raise ValueError('explicit exact Shelf37 evidence cohort required')
+ for label,value,expected in [('evidence output',evidence_output,root/('artifacts/desktop-visible-'+evidence_cohort)),('managed artifacts',managed_artifacts,root/'artifacts/root14-managed-build'),('host artifacts',host_artifacts,root/'artifacts/root14-host-build-tasks')]:
+  if not isinstance(value,pathlib.Path) or value.resolve()!=expected.resolve() or not value.resolve().is_relative_to(root):raise ValueError('explicit Shelf37 '+label+' context mismatch')
+ evidence_output=evidence_output.resolve();managed_artifacts=managed_artifacts.resolve();host_artifacts=host_artifacts.resolve()
+ entry=(root/entry).resolve();pending=[(entry,None,False)]+[((root/p).resolve(),None,p.endswith("/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj")) for p in extra_projects];seen=set();projects=[];packages={}
  def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
  while pending:
   project,restoredSpec,hostContext=pending.pop()
@@ -17,7 +22,7 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
   if restoredSpec is not None:
    frameworks=restoredSpec.get('restore',{}).get('originalTargetFrameworks',[])
    if effectiveFramework not in frameworks and len(frameworks)==1:effectiveFramework=frameworks[0]
-  props=['-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/('artifacts/root14-host-build-tasks' if hostContext else 'artifacts/root14-managed-build')),'-p:IncludeProjectNameInArtifactsPaths=true']
+  props=['-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(host_artifacts if hostContext else managed_artifacts),'-p:IncludeProjectNameInArtifactsPaths=true']
   taskLocation=os.environ.get('ASTRA_ACTUAL_AVALONIA_BUILD_TASKS')
   if taskLocation is None or not pathlib.Path(taskLocation).resolve().is_relative_to(root) or not pathlib.Path(taskLocation).is_file():raise ValueError('source-built actual build task admission missing')
   props.append('-p:AvaloniaBuildTasksLocation='+taskLocation)
@@ -25,9 +30,7 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
   argv=['dotnet','msbuild',str(project),'-nologo','-m:1','-nr:false',*props,'-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath']
   query=subprocess.run(argv,capture_output=True,text=True)
   diagnostic={'project':str(project.relative_to(root)),'argv':argv,'cwd':str(pathlib.Path.cwd()),'exitCode':query.returncode,'stdout':query.stdout,'stderr':query.stderr}
-  cohort=os.environ.get('COHORT')
-  if cohort not in ('owning','resource'):raise ValueError('explicit Data/Browse owning evidence cohort required')
-  diagnostics=root/('artifacts/maps-shelf-'+cohort)/'restore-diagnostics';diagnostics.mkdir(parents=True,exist_ok=True)
+  diagnostics=evidence_output/'restore-diagnostics';diagnostics.mkdir(parents=True,exist_ok=True)
   diagnosticPath=diagnostics/(hashlib.sha256((str(project)+str(contextKey)).encode()).hexdigest()+'.json')
   diagnosticPath.write_text(json.dumps(diagnostic,indent=2)+'\n')
   query.check_returncode()

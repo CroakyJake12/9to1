@@ -554,6 +554,8 @@ public sealed class FormDataReferenceLookupSourceTests
         public string DatabasePath => Path.Combine(DataDirectory, "actual.sqlite");
         public string BrowserProfileDirectory => Path.Combine(DataDirectory, "browser");
         public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+        public string LogsDirectory => Path.Combine(DataDirectory, "logs");
+        public string LegacyStatePath => Path.Combine(DataDirectory, "legacy.json");
         public void Dispose() { try { Directory.Delete(DataDirectory, true); } catch (IOException) { } }
     }
 }
