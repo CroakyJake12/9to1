@@ -98,7 +98,7 @@ globalThis.fetch = async (input, init = {}) => {
   return response;
 };
 
-const authClient = createAuthClient({ baseURL: `${baseURL}${authPath}`, plugins: [oauthProviderClient()] });
+const authClient = createAuthClient({ baseURL: `${baseURL}${authPath}`, fetchOptions: { customFetchImpl: globalThis.fetch }, plugins: [oauthProviderClient()] });
 
 async function waitForWorker() {
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -304,6 +304,14 @@ try {
   assert.equal(login.error, null, "the new password verifies through the Worker password hasher");
   durationMs.passwordResetAndLogin = Math.round(performance.now() - startHash);
   testAccount.password = "New-test-passphrase-8!LocallyVerified";
+
+  assert.ok([...cookies.keys()].some((name) => name.endsWith("session_token")), "real sign-in supplies a session cookie to the local harness");
+  const currentSessionResponse = await response(`${authPath}/get-session`);
+  assert.equal(currentSessionResponse.status, 200, "real session endpoint accepts the cookie harness");
+  const currentSession = await currentSessionResponse.json();
+  assert.ok(currentSession?.session?.id, "real current session exists before privileged client registration");
+  assert.equal(currentSession.user.id, testAccount.id, "real session belongs to the verified synthetic account");
+  assert.equal(Object.hasOwn(currentSession.user, "role"), false, "private role remains excluded from public session output");
 
   const clientResponse = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
     client_name: "9to1 local integration test",
