@@ -147,7 +147,7 @@ public sealed class PictureHomeHistoryOperationTests
         fixture.OnFinalCommitAdmission=async () =>
         {
             var actor=(await fixture.GetCurrentAsync(ct))!;
-            var other=new DurableDriveProvider(Path.Combine(fixture.Root,"drive.json"),fixture.Provider.Location,actor.ActorId);
+            var other=new DurableDriveProvider(Path.Combine(fixture.Root,"drive.json"),fixture.Provider.Location.Id,actor.ActorId);
             var rawId=new HostedItemId(current.Artifact.SourceAsset!.FileId);
             var metadata=(await other.GetAsync(rawId,ct)).Value!; var now=DateTimeOffset.UtcNow;
             Assert.True((await other.MutateAsync(new(new(Guid.NewGuid()),actor.ActorId,rawId,metadata.ParentId,mutation=="Delete"?null:metadata.ParentId,

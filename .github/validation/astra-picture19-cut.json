@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "6247653fc7ac1efa51e9f3b5871efeb480b7fef5",
-  "programTree": "3aa887cd4ad7e51d4a736f5febdac2c1f13fd910",
-  "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
+  "baselineCommit": "fc7fa331e829f9e479cc9e7e5382eea9b6869883",
+  "programTree": "ad83b61e18c5dbdd7b7813aae6058d78077d6fcf",
+  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
     {
@@ -24172,9 +24172,9 @@
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomeHistoryOperationTests.cs",
       "mode": "100644",
-      "object": "ce3197c60f34209c5612477885f87fb8e97fc1b1",
-      "bytes": 36026,
-      "sha256": "798b870b3ea1b86ab0b780beba02a232548ce927e17811e06b8007e38db7ebb3"
+      "object": "ed684b0d76f7b4297db6f8678558641646d30536",
+      "bytes": 36029,
+      "sha256": "3f0888d6365a35553ca4ed2af567b2a6ce9b08403867f67376a04393325a446a"
     },
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomePngExportTests.cs",
@@ -63989,7 +63989,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Source-only exactRoot977owner19; new freshRust1.98.1 lock/liveELF/mandatorybubblewrap+actualmanagedchildmaps/fullowningTests; independentparts rootretention not atomic; no HDR/highres/fullnativeOSjourney acceptance.",
+  "limits": "Source-only exactRoot977owner19; new freshRust1.98.1 lock/liveELF/mandatorybubblewrap+actualmanagedchildmaps/fullowningTests; independentparts rootretention not atomic; no HDR/highres/fullnativeOSjourney acceptance. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-comparison-draft-03/root13-selection.json",
@@ -64030,6 +64030,10 @@
     {
       "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol11/manifest.json",
       "sha256": "062973833f5b98d5131ec6747bfe83c01dd92762721b40dcd3457767282dbf73"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
+      "sha256": "6dd54abdda8846dc83c4a2883aa18e15552d58ae247e225ab0f219dfdc502d4f"
     }
   ],
   "sharedCakeIdContract": null,
