@@ -53,7 +53,12 @@ public sealed class PictureHomePngExportTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Edits.ExecuteAsync(intent, capability, ct));
         var next = PictureEditIntent.Capture(committed, new FlipOperation(true));
         var nextCapability = await fixture.ApproveEdit(next);
-        await fixture.Files.SaveAsync(committed.Artifact with { Document = committed.Artifact.Document.Resize(2, 2) }, committed.CasRevisionId, ct);
+        var concurrent = PictureEditIntent.Capture(committed,new ResizeOperation(2,2));
+        var concurrentCapability=await fixture.ApproveEdit(concurrent);
+        var concurrentCommit=await fixture.Edits.ExecuteAsync(concurrent,concurrentCapability,ct);
+        Assert.True((await fixture.Home.CompleteExecutionAsync(concurrentCapability,new(HomePermissionRequestState.Succeeded,
+            "PICTURE_RESIZED","Actual competing resize revision acknowledged.",[new("files.item",fixture.FileId.ToString())]),ct)).Succeeded);
+        Assert.NotEqual(committed.CasRevisionId,concurrentCommit.CasRevisionId);
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Edits.ExecuteAsync(next, nextCapability, ct));
         var reopened = await fixture.Files.OpenAsync(fixture.FileId, ct);
         Assert.DoesNotContain(reopened.Artifact.Document.Operations, operation => operation is FlipOperation);

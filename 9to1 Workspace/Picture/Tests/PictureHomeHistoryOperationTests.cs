@@ -180,7 +180,8 @@ public sealed class PictureHomeHistoryOperationTests
         await File.WriteAllTextAsync(path, envelope.ToJsonString(), ct);
         var foreignBytes = await File.ReadAllBytesAsync(path, ct);
         var artifacts = Directory.GetFiles(Path.Combine(fixture.Root, ".9to1-artifacts"), "*", SearchOption.AllDirectories).Order().ToArray();
-        var document = PictureDocument.Create(2, 1, original.Artifact.Document.FileId, original.Artifact.Document.SourceRevision);
+        var document = new PictureDocument { DisplayName="Restored original-store create",CanvasWidth=2,CanvasHeight=1,
+            FileId=original.Artifact.Document.FileId,SourceRevision=original.Artifact.Document.SourceRevision };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => fixture.Files.CreateAsync(document,
             original.Artifact.SourceAsset, original.StoreId, actor, ct));
         Assert.Equal(foreignBytes, await File.ReadAllBytesAsync(path, ct));
@@ -210,7 +211,8 @@ public sealed class PictureHomeHistoryOperationTests
             await File.WriteAllTextAsync(path, envelope.ToJsonString(), ct);
             foreignBytes = await File.ReadAllBytesAsync(path, ct);
         };
-        var document = PictureDocument.Create(2, 1, original.Artifact.Document.FileId, original.Artifact.Document.SourceRevision);
+        var document = new PictureDocument { DisplayName="Restored original-store create",CanvasWidth=2,CanvasHeight=1,
+            FileId=original.Artifact.Document.FileId,SourceRevision=original.Artifact.Document.SourceRevision };
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Files.CreateAsync(document,
             original.Artifact.SourceAsset, original.StoreId, actor, ct));
         Assert.NotNull(foreignBytes);
@@ -303,8 +305,11 @@ public sealed class PictureHomeHistoryOperationTests
         {
             var raw = new HostedItemId(original.Artifact.SourceAsset!.FileId);
             var now = DateTimeOffset.UtcNow;
-            var result = await fixture.Provider.MutateAsync(new(new(Guid.NewGuid()), actor.ActorId, raw, null, null,
-                mutation, null, null, FilesOperationState.Pending, now, now, null, null), "changed-source.gif", ct);
+            var other = new DurableDriveProvider(Path.Combine(fixture.Root,"drive.json"),fixture.Provider.Location.Id,actor.ActorId);
+            var metadata=(await other.GetAsync(raw,ct)).Value!;
+            var result = await other.MutateAsync(new(new(Guid.NewGuid()), actor.ActorId, raw, metadata.ParentId,
+                mutation=="Delete"?null:metadata.ParentId, mutation, metadata.CurrentRevisionId, null,
+                FilesOperationState.Pending, now, now, null, null), mutation=="Rename"?"changed-source.gif":null, ct);
             Assert.True(result.IsSuccess);
             afterMutation = await File.ReadAllBytesAsync(Path.Combine(fixture.Root, "drive.json"), ct);
         };

@@ -105,6 +105,11 @@ def verify():
  # --check never updates clones or rewrites tracked source.
  if subprocess.run(['bash','9to1 Workspace/shared/eng/prepare-cui-source.sh','--check'],check=False).returncode:raise SystemExit('independent clean pinned source check failed')
 verify();command(['dotnet','--info'],'toolchain');command(['dotnet','workload','list'],'workloads')
+# Actual immutable Glycin donor inherits RUST_LOG through clearenv/setenv; diagnostics only.
+os.environ['RUST_LOG']='glycin=debug,glycin_core=debug,glycin_utils=debug'
+# Genuine sandbox observation only: full mandatory Glycin suite remains unchanged.
+code=command([sys.executable,'.github/scripts/astra-picture-bwrap-diagnostics.py',str(out/'sandbox-diagnostics')],'sandbox-diagnostics');verify()
+if code:raise SystemExit(code)
 env={'AVALONIA_TELEMETRY_OPTOUT':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1','DOTNET_SKIP_FIRST_TIME_EXPERIENCE':'1','MSBUILDDISABLENODEREUSE':'1','DOTNET_CLI_TELEMETRY_OPTOUT':'1','DOTNET_CLI_USE_MSBUILD_SERVER':'0'};os.environ.update(env)
 base=['-c','Release','-r','linux-x64','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True']
 artifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true']

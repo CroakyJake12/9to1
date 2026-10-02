@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7c1169f7a6c58b7304fa8d3f85357ba4a7d410bf",
-  "programTree": "ad83b61e18c5dbdd7b7813aae6058d78077d6fcf",
+  "baselineCommit": "fd98cc8127ceefcdbfca02d2e3b0f8321ce6ea3c",
+  "programTree": "ef68151657e61a9fac10194a62057568696347f9",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -20,6 +20,13 @@
       "sha256": "3a1d1dcb4ed7c98614dd922a04be1e3690f6388f899c3801348e88b3ba4f1d75"
     },
     {
+      "path": ".github/scripts/astra-picture-bwrap-diagnostics.py",
+      "mode": "100644",
+      "object": "4b7003df21c5fffcd23fee69fc8856ac5e81d5d1",
+      "bytes": 2601,
+      "sha256": "ec1dd829a1cf2e837687702ea8d5e7c105670289f50c625e1d189d091fff9d36"
+    },
+    {
       "path": ".github/scripts/astra-picture19-artifact-parts.py",
       "mode": "100644",
       "object": "c908990a6ef44755abaeef5ae69e48252822d5a7",
@@ -29,9 +36,9 @@
     {
       "path": ".github/scripts/astra-picture19-hosted-managed.py",
       "mode": "100644",
-      "object": "b48b17a5329d92189c61a369d9a3972ab6e2fa94",
-      "bytes": 32403,
-      "sha256": "f8c7584b25805fd5892ac6b30fd867531403339dbe66ec522e965d40c00d8f49"
+      "object": "6a6f6e9de8488c18a198fd146d3c5af736b9dae9",
+      "bytes": 32831,
+      "sha256": "9b0fa0b1a52af60ff4b68ab218eb865701db31fa8bddc49b461dc105e2d18052"
     },
     {
       "path": ".github/scripts/astra-picture19-restore-evidence.py",
@@ -50,9 +57,9 @@
     {
       "path": ".github/validation/astra-picture19-test-classes.json",
       "mode": "100644",
-      "object": "80f98f9314bed36bd2e2b4603255ab5c61379a53",
+      "object": "3536c6d8d8c96127287598fc5f415800c9bb8653",
       "bytes": 4572,
-      "sha256": "f269f33161685b25629218fdfabfa298f245beffa64af4a6b9492fdd348ab6a6"
+      "sha256": "0a6f48167145e2915858cdde42adb29994910f105f5e3de71f26c8bee0bda1a5"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -24172,16 +24179,16 @@
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomeHistoryOperationTests.cs",
       "mode": "100644",
-      "object": "ed684b0d76f7b4297db6f8678558641646d30536",
-      "bytes": 36029,
-      "sha256": "3f0888d6365a35553ca4ed2af567b2a6ce9b08403867f67376a04393325a446a"
+      "object": "b16e7e2e8983cee17c860445b042c424827b1e7e",
+      "bytes": 36532,
+      "sha256": "67def437888b8b8686a20dcea6c3ea9d5fa4b69743edda4f5377018bb2544e8c"
     },
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomePngExportTests.cs",
       "mode": "100644",
-      "object": "aeba8af605f698e61f80c33b9d48373b441666b3",
-      "bytes": 40443,
-      "sha256": "1b5697115b3ad22cc8a894a8962fef958023df6499017b629b3f0b1bf420386a"
+      "object": "dfc6c7dbedacf273ec8de26e6ad5f5c4c8f96453",
+      "bytes": 40903,
+      "sha256": "eedb47e3d262c468d6eb5e98b3b6217e5633a448cfe687db97556c1f153a2bbe"
     },
     {
       "path": "9to1 Workspace/Picture/Tests/PictureNativeHostTests.cs",
@@ -63989,55 +63996,23 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Source-only exactRoot977owner19; new freshRust1.98.1 lock/liveELF/mandatorybubblewrap+actualmanagedchildmaps/fullowningTests; independentparts rootretention not atomic; no HDR/highres/fullnativeOSjourney acceptance. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained. Exact changed owning source-SHA re-pin only, identical class names/count/path/filter; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
+  "limits": "Exact minimal owner source correction; all existing fullsuite/classes/filter/count/nativeABI/mandatorysandbox/source22+3+additionalnativegitlinks/7producers/hosttasks/restorepayload/compiledclosure/partartifacts preserved. Picture additionally records genuine sandbox preconditions only, never policychanges/relaxation. Actual failed root capture retained; no runtime acceptance. Glycin supported RUST_LOG debug env inherited by actual loader through donor clearenv/setenv, stderr diagnostic only; mandatory sandbox unchanged.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker6-picture-comparison-draft-03/root13-selection.json",
-      "sha256": "f2ace3d1f421defa0736a088cee9592109193dfafe03cc87bde201a184361ba6"
+      "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
+      "sha256": "cb6c49431596b189fdedf010f842e2390c3b0536cfc363984d9373d2f9a09d26"
     },
     {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol3/manifest.json",
-      "sha256": "955060db6941ff70eb13fdc9a51a5d990fbbbc005b214c8a862e886f9c3e5f2b"
+      "path": "/workspace/astra-source/ready-artifacts/root-native-minimal-actual-recovery02/picture/root-capture.json",
+      "sha256": "afadec5211588d0c359439b482cbf22a9230f887737f4c032ddf1959c0a48a90"
     },
     {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol4/manifest.json",
-      "sha256": "91fa3921efaf89771c7b8103ce3334b5ff6a7d89477e62fd372a50fc6f9de437"
+      "path": "/workspace/astra-source/worker4-picture-bwrap-diagnostic01/manifest.json",
+      "sha256": "ce028184ff9aaf779675235ef019a245a35a3d29ec05ee2ed1e96f6abebbc360"
     },
     {
-      "path": "/workspace/astra-source/worker6-picture19-vertical-fixture-fix-01/manifest.json",
-      "sha256": "d9cd4814b4d32e31e64f75006691f06875d048757db52413f7f915eaa8d212ad"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol5/manifest.json",
-      "sha256": "07b5ea13ce0cb9c4eed54964a5916443c308f6ecf6c75671de03dd0cdd855a83"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol6/manifest.json",
-      "sha256": "a31f6425f1c80d8aaaef5f61836a46a19010d7779b6f177a6365e4b8e5a14222"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol8/manifest.json",
-      "sha256": "0c530bf3e9d59245b3baea2ba336d0c4f6dc6b3e793fc346f94e359b733f178b"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol9/manifest.json",
-      "sha256": "d2a8004f7add1c6f2ab4df1fb1407b090e18b7274e2f78fb2e797d001ff06ab8"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol10/manifest.json",
-      "sha256": "12bc7d8ff9b5417265a0282bc96aef22be196b60ddf57c558cb9b75c75bb2b58"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol11/manifest.json",
-      "sha256": "062973833f5b98d5131ec6747bfe83c01dd92762721b40dcd3457767282dbf73"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
-      "sha256": "6dd54abdda8846dc83c4a2883aa18e15552d58ae247e225ab0f219dfdc502d4f"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
-      "sha256": "6dd54abdda8846dc83c4a2883aa18e15552d58ae247e225ab0f219dfdc502d4f"
+      "path": "/workspace/astra-source/worker4-native-actual-correctors02/manifest.json",
+      "sha256": "72ae1d65eabd732cd037af524a5921f0f1c8751bbeb7a36e4c89b73b6dc82f0e"
     }
   ],
   "sharedCakeIdContract": null,
