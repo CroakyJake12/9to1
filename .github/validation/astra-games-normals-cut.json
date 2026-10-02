@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "24df6daf56ba3507df09899e33521fbaea7923ef",
-  "programTree": "a978d85a5dbb68634300cb7c9b7b679a72274285",
-  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
+  "baselineCommit": "446bf4ad5b94d02a25325442daa374aab68864df",
+  "programTree": "17a39676c1eca3c7b97540ba1d6b0daf5c60a433",
+  "currentNormalCommit": "5f8fe5be2534e6e1efb8428b4c2a9ab15cd37a77",
   "kind": "corrective",
   "files": [
     {
@@ -22282,9 +22282,9 @@
     {
       "path": "9to1 Workspace/Games/Runtime/Tests/CanonicalMeshNormalsWitness.cs",
       "mode": "100644",
-      "object": "15c088c00ad2b05e0e9a00b01620553bc88d2bd9",
-      "bytes": 3051,
-      "sha256": "d63de80b7df35efca965d29d46cc0773209afee12ae9aa4ccdd151caf7945a1c"
+      "object": "90b879631d99da7261bd4d39fde253c47fa42799",
+      "bytes": 4497,
+      "sha256": "8f31393eb5ea9c6c741b528fae56bbed72f1b0af6d01cd55363cf12572c46b62"
     },
     {
       "path": "9to1 Workspace/Games/Runtime/Tests/CanonicalMeshNormalsWitness.tscn",
@@ -64437,7 +64437,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-games-normals-cut.json",
-  "limits": "Actual24df native restore/fullRuntime/helper passed then true winding assertion failed; sole witness exception adds original/reverseXYZ/vertices/engine without assertion or driver/mesher change. Actualmanaged two NotExecuted fixtures require ASTRA_GODOT_RUNTIME+ASTRA_GAMES_MANAGED_MODULE; owning now prepares sameexact officialengine/fullRuntime/compiled/maintainedNuGet proof BEFORE7producers-last, sets exactactual env, verifiesmodule/engine/assets unchanged afterwards and preservesall14Desktop/fourrealgateszeroSkip. Complete native AND owning original evidence retainedseparately24MiBparts, boundedlogs. No inferrednormalsfix/conditionalacceptance or syntheticgrant, Root16CAS unchanged. Unexecuted. Successor08 independently recaptures sorted complete compiled and engine inventories after owning tests and requires exact path/bytes/SHA list equality, rejecting additions and removals as well as mutations.",
+  "limits": "Actual446 native original negativeZ is exact and reversed positiveZ is(-1.5259255E-05,-1.5259255E-05,1), matching pinned4.7.2 octa16 truncation/decode. Sole owning witness uses maintained codec oracle while preserving IsEqualApprox/finite/unit/dot and meaningful negative orientation checks, no arbitrary tolerance or geometry driver/mesher changes. W1 exact source/math peer3c353 passed. All four current native/owning/regression/resource gates/officialengine+SDK/source/maintainedNuGet helper/full file-set closure/zeroSkip/multipart evidence unchanged; no managed08 results inherited from06. Root17 CAS; actual fresh full4 mandatory, no native/production acceptance inferred.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-games-canonical-normal-draft-03/manifest.json",
@@ -64478,6 +64478,22 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-games-normals-corrector06-managed/actual-capture-11222104264/root-capture.json",
       "sha256": "25a6584543d233aa5b7758b1c48d2d94d92ebdeb948a2bead6b75f00f5f4f5a4"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-games-canonical-normal-packed-witness06/manifest.json",
+      "sha256": "9541cb84cdbfe72d5fc5a66b2cf3ec37160a96570552245309f5986406a75119"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-games08-actual-small-capture25.json",
+      "sha256": "9c3b9216ee4d715eed0dc828d0cf183f87814e5d620d30fdc30522d685af9dbe"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-games-packed06-source-math-peer01.json",
+      "sha256": "3c35336bf45fef01870bcd44c6bbb832f546118da6cd3d73c0931e7b397a82e6"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
+      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
     }
   ],
   "sharedCakeIdContract": null
