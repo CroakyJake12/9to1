@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "programTree": "dc54063a846ec79fc7a20f3a3c8fdc9e08ce552a",
+  "baselineCommit": "05977866d449ce861c24960f5718826a2c8ac158",
+  "programTree": "e4498c3a7994bf84031ee1b6ef134ec8c5ffda27",
   "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "272557e7f62a39ef27bebbeefaed72a23d9cab20",
+      "object": "f591c949b833bc016ddf3c286cbb4c4aaceeba74",
       "bytes": 17210,
-      "sha256": "3147d64bc40c07094aa6d0a5dbc27a6bafa57ba0545811af84b927e300766427"
+      "sha256": "224731eea2f2e3e0e800cae2026c321ee6ea402993e1f08bae42033e6af0959d"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -39558,9 +39558,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailMailboxReadLifetimeTests.cs",
       "mode": "100644",
-      "object": "ac75a09c4b7f42d174d469feac4424ee1dc785ac",
-      "bytes": 7722,
-      "sha256": "97eb800300f743e93871eb461da44285ca98722a93457f43e0a7f484d9c37b38"
+      "object": "f8a93d813891b36c450ad245d9742b605e89cb03",
+      "bytes": 7800,
+      "sha256": "9d2378cac398c55ebbfd6956ae90855e917f7693c857f5f4b477847a04582563"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailReadingPaneChoiceTests.cs",
@@ -39586,9 +39586,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailSelectedThreadLifetimeTests.cs",
       "mode": "100644",
-      "object": "e3c1b8a47216248bd4a97b3642188642fe12f895",
-      "bytes": 10481,
-      "sha256": "d802ca81c8ef5a48f99033afeaf75d30235a36732650f3b05d3eeb252956746d"
+      "object": "9ef131609665ef9d88a0b98073ac5e9dcb450cb2",
+      "bytes": 10676,
+      "sha256": "1df00924cf7519639839a84d35a9b8001de83ac7fc100a9027cf0661a7e694a0"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsFormsDonorTests.cs",
@@ -65340,7 +65340,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Exact selected mail product scope only; complete old owning families plus new whole fixtures, current full regression/resource and Files console retained. Full source/restore/task/compiled/zero-skip guards remain. Native control/physical local evidence only; no remote transport, provider, cloud or OS delivery parity claim. Regression/resource evidence output directories exactly match original desktop-visible workflow upload paths; no test/class/product narrowing.",
+  "limits": "Exact actual failed-parent minimal correction only. Only seven genuine test-task WaitAsync deadline calls gain TestContext.Current.CancellationToken. Five thread and two mailbox calls preserve existing deadlines/assertions/real service forwarding/cleanup, all old classes and production sources. No production change or analyzer suppression. All three complete cohorts must rerun; no Desktop cases ran in this failed compile. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-mail-local-native-root19-source-graph03/manifest.json",
@@ -65357,6 +65357,10 @@
     {
       "path": "/workspace/astra-source/worker4-mail-root19-full-owning-gate02/manifest.json",
       "sha256": "e4bd936205183de9f5a050fca24b18470f047407ea2d3475d7e562a06331a426"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail03-actual-cancellation-token-corrective01/manifest.json",
+      "sha256": "15486b2739d44271136bafd174a02a44ce4b6097e9da866d1f970b23e01d215f"
     }
   ],
   "sharedCakeIdContract": null

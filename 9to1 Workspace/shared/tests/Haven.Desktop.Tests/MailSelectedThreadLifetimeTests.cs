@@ -23,7 +23,7 @@ public sealed class MailSelectedThreadLifetimeTests
         var old = page.SelectedMessageLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             page.SelectedSummary = Summary("B");
             await page.SelectedMessageLoad;
             if (returnToA) { page.SelectedSummary = a; await page.SelectedMessageLoad; }
@@ -53,7 +53,7 @@ public sealed class MailSelectedThreadLifetimeTests
         var old = page.SelectedMessageLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             page.SelectedSummary = Summary("B"); await page.SelectedMessageLoad;
             var current = page.SelectedMessage; var status = page.Status; var state = page.State;
             reads.Pending.SetException(new IOException("Old thread read failed."));
@@ -79,7 +79,7 @@ public sealed class MailSelectedThreadLifetimeTests
         var old = page.SelectedMessageLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             page.Dispose();
             reads.Pending.SetResult([Message("A", "retired", false)]); await old;
             Assert.Null(page.SelectedMessage); Assert.Empty(page.ThreadMessages); Assert.Empty(reads.ReadRequests);
@@ -104,7 +104,7 @@ public sealed class MailSelectedThreadLifetimeTests
         var old = page.SelectedMessageLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             page.SelectedSummary = Summary("B"); await page.SelectedMessageLoad;
             var current = Assert.IsType<MailMessage>(page.SelectedMessage);
             Assert.Equal("B", current.Id);
@@ -134,7 +134,7 @@ public sealed class MailSelectedThreadLifetimeTests
         var old = page.SelectedMessageLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             page.SelectedAccount = replacementAccount;
             Assert.Null(page.SelectedMessage); Assert.Empty(page.ThreadMessages);
             page.SelectedSummary = Summary("B"); await page.SelectedMessageLoad;

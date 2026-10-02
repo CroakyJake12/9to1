@@ -23,7 +23,7 @@ public sealed class MailMailboxReadLifetimeTests
         var old = page.MailboxLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             page.SelectedFolder = new("new", "New folder", MailFolderKind.Inbox);
             await page.MailboxLoad;
             await page.SelectedMessageLoad;
@@ -63,7 +63,7 @@ public sealed class MailMailboxReadLifetimeTests
         var old = page.MailboxLoad;
         try
         {
-            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await reads.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             if (clearAccount) { page.SelectedAccount = null; Assert.False(page.IsBusy); }
             else page.Dispose();
             var status = page.Status; var state = page.State;

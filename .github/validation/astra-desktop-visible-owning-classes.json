@@ -54,7 +54,7 @@
       "class": "MailMailboxReadLifetimeTests",
       "namespace": "Haven.Desktop.Tests",
       "fullClass": "Haven.Desktop.Tests.MailMailboxReadLifetimeTests",
-      "sha256": "97eb800300f743e93871eb461da44285ca98722a93457f43e0a7f484d9c37b38",
+      "sha256": "9d2378cac398c55ebbfd6956ae90855e917f7693c857f5f4b477847a04582563",
       "origin": "Exact Root19 final owning union"
     },
     {
@@ -86,7 +86,7 @@
       "class": "MailSelectedThreadLifetimeTests",
       "namespace": "Haven.Desktop.Tests",
       "fullClass": "Haven.Desktop.Tests.MailSelectedThreadLifetimeTests",
-      "sha256": "d802ca81c8ef5a48f99033afeaf75d30235a36732650f3b05d3eeb252956746d",
+      "sha256": "1df00924cf7519639839a84d35a9b8001de83ac7fc100a9027cf0661a7e694a0",
       "origin": "Exact Root19 final owning union"
     },
     {
