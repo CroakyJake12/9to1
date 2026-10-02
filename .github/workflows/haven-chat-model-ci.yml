@@ -1,50 +1,60 @@
-# FILE DOCUMENTATION
-# Where: .github/workflows/haven-chat-model-ci.yml in the GitHub automation configuration used by continuous integration.
-# What: This file automates or configures the repository operation described by its commands and keys.
-# How: Read from top to bottom: inputs and environment first, validation/processing next, and explicit success or failure output last.
-# Why: The file keeps one cohesive responsibility in a predictable location so callers can find and replace it without unrelated changes.
-name: Haven Chat and Model Pass
-
+name: Astra Android14 actual UI tooling preconditions
 on:
   workflow_dispatch:
-
+    inputs:
+      expected_commit:
+        required: true
+        type: string
+      cut_manifest_sha256:
+        required: true
+        type: string
 permissions:
   contents: read
-
 jobs:
-  validate:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  observe:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-android14-ui-tool-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ASTRA_ANDROID_VARIANT: normal
+      EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
         with:
-          global-json-file: global.json
-
-      - name: Restore
-        run: dotnet restore "9to1 Workspace/shared/Haven.sln"
-
-      - name: Build Debug
-        run: dotnet build "9to1 Workspace/shared/Haven.sln" -c Debug --no-restore
-
-      - name: Test Debug
-        run: dotnet test "9to1 Workspace/shared/Haven.sln" -c Debug --no-build
-
-      - name: Build automation worker
-        run: dotnet build "9to1 Workspace/shared/src/Haven.AutomationWorker/Haven.AutomationWorker.csproj" -c Debug --no-restore
-
-      - name: Upload source snapshot
+          submodules: false
+          persist-credentials: false
+      - name: Exact source before preparation
+        env:
+          ASTRA_ANDROID_SOURCE_PHASE: before-preparation
+        run: python3 .github/scripts/astra-android14-ui-tool-observation.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-android14-ui-tool-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+      - name: Materialize only exact three maintained dependencies
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - name: Enable existing hosted emulator KVM prerequisite
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Actual API36 CLI capability observation only
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        env:
+          ASTRA_ANDROID_SOURCE_PHASE: after-build
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save
+          script: python3 .github/scripts/astra-android14-ui-tool-observation.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-android14-ui-tool-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA" --observe
+      - name: Retain actual observations including errors
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: haven-source-snapshot
-          path: |
-            .
-            !**/bin/**
-            !**/obj/**
-            !.git/**
-          include-hidden-files: true
-          retention-days: 3
+          name: astra-android14-ui-tool-${{ github.sha }}
+          path: artifacts/android14-ui-preconditions/
+          if-no-files-found: error
+          retention-days: 14
