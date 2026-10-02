@@ -136,7 +136,7 @@ public sealed class FormDataReferenceLookupSourceTests
         await using var native = HeadlessUnitTestSession.StartNew(typeof(LookupApplication));
         await native.Dispatch<bool>(async () =>
         {
-            using var fixture = new Fixture(); await fixture.InitializeAsync();
+            using var fixture = new Fixture(); await fixture.InitializeAsync(startResponse: false);
             var shown = 0; Guid? originalResponseID = null; Guid? selectedRecordID = null;
             async Task PresentAsync(FormNativeResponseSurface surface, CancellationToken token)
             {
@@ -413,7 +413,7 @@ public sealed class FormDataReferenceLookupSourceTests
             Profiles = new(Home, new OperatingSystemPrincipalSource());
             Settings = new(Paths); Data = new(Paths); Observed = new(Data);
         }
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(bool startResponse = true)
         {
             Actor = await Profiles.GetCurrentAsync(default) ?? throw new InvalidOperationException();
             var policy = new DataMutationActionPolicies();
@@ -449,9 +449,15 @@ public sealed class FormDataReferenceLookupSourceTests
             _publications = new(Settings, Settings, _formsAuthority, new BackendCanonicalValidator(), actors: Profiles);
             var created = await _publications.CreateAsync(form.FormID, FormProjectEditor.Project(form)); Assert.True(created.Success);
             var published = await _publications.PublishAsync(form.FormID, created.Publication!.Revision); Assert.True(published.Success);
-            Responses = ReopenResponses(); var started = await Responses.StartAsync(form.FormID, published.Publication!.Revision);
-            Assert.True(started.Success); ResponseID = started.Response!.ResponseID;
-            Binding = new(form.FormID, started.Response.FormVersionID, fieldID, columnID, storeID,
+            Responses = ReopenResponses();
+            var versionID = published.Publication!.ActiveVersionID ?? throw new InvalidOperationException("Actual published version required.");
+            if (startResponse)
+            {
+                var started = await Responses.StartAsync(form.FormID, published.Publication.Revision);
+                Assert.True(started.Success); ResponseID = started.Response!.ResponseID;
+                Assert.Equal(versionID, started.Response.FormVersionID);
+            }
+            Binding = new(form.FormID, versionID, fieldID, columnID, storeID,
                 workbook.Id, table.Id, table.Fields[0].FieldID, workbook.RevisionId, workbook.Version);
             Source = CreateSource(Home);
         }
