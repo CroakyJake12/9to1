@@ -10,7 +10,7 @@ public sealed class MonologueOriginalPlayback
     private sealed class OriginalStarts { public readonly HashSet<(Guid Session, Guid Run, int Section)> Runs = []; }
     private static readonly ConditionalWeakTable<VisionVoiceSessionService, OriginalStarts> Starts = new();
     private readonly VisionVoiceSessionService _sessions;
-    private readonly IOriginalSpeechPlaybackIssuer _issuer;
+    private readonly IOriginalSpeechPlaybackReceiptIssuer _issuer;
     private readonly ISpeechPlaybackContinuation _playback;
     private readonly Func<bool> _originalCurrent;
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -25,7 +25,7 @@ public sealed class MonologueOriginalPlayback
     private bool _paused;
     private volatile bool _contextRetired;
 
-    private MonologueOriginalPlayback(VisionVoiceSessionService sessions, IOriginalSpeechPlaybackIssuer issuer,
+    private MonologueOriginalPlayback(VisionVoiceSessionService sessions, IOriginalSpeechPlaybackReceiptIssuer issuer,
         ISpeechPlaybackContinuation playback, Func<bool> originalCurrent, Guid sessionId, long revision, Guid runId, int section)
     { _sessions = sessions; _issuer = issuer; _playback = playback; _originalCurrent = originalCurrent;
         _sessionId = sessionId; _revision = revision; _runId = runId; _section = section; }

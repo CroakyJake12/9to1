@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e985382bc58e460f386273ea44313696e9594eff",
-  "programTree": "a3089a4f83c5dcd32fe980f4fe118b47684de62c",
+  "baselineCommit": "453b98d323e0af37d29b1e86809959eef85e92aa",
+  "programTree": "c5f6648d91accf5a61c79a02f718ce37aa8f7a40",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -27945,9 +27945,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Call/MonologueOriginalPlayback.cs",
       "mode": "100644",
-      "object": "6792429b0718804a7eaab58491ff9661b2f78b25",
-      "bytes": 13670,
-      "sha256": "fbd5d2a1c651235b193544715c7ca67b546eba86dc81408bbecc838b4aabc786"
+      "object": "c4936b942856ab8d6510b235994f3801f3c73750",
+      "bytes": 13684,
+      "sha256": "ac2d97079791f3994ccc949f67f897717fdfb6986bd55e23eccaa9e093ab87bf"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Call/MonologuePlaybackReceipt.cs",
@@ -65676,7 +65676,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-models-vision-cut.json",
-  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required.",
+  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Exact failed453b private field/constructor issuer type correction only; StartAsync already requires receipt issuer. Every body/public ABI/fixture unchanged, all24 owner sources and30/12/36 full classes/scripts/workflow retained. Historical failed compile supplies no runtime acceptance; fresh all3 required.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-monologue-root18-full-owning-gate02/manifest.json",
@@ -65689,6 +65689,14 @@
     {
       "path": "/workspace/astra-source/checkpoint20-publication-local.json",
       "sha256": "30a6864cd30770fbf3f917e63da230b77150d2d07597ee71b5893c1830aee585"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-call-current20-portable-full-owning-gate04/manifest.json",
+      "sha256": "d7bf5e859ce83db25b1b3b492672d00416c5f7c4d25252b39c1a09bfba5e0f12"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue04-actual-receipt-issuer-corrective01/manifest.json",
+      "sha256": "8fdb9e0366d20863bb944dafa7f71790fc2f78922be849987175859004051e82"
     }
   ],
   "sharedCakeIdContract": null
