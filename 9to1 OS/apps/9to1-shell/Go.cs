@@ -4,7 +4,7 @@ using Haven.Application.Go;
 
 namespace NineToOne.Os.Shell;
 
-public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistry registry, LinuxApplicationLauncher launcher) : IGoCanonicalResolver, IGoOriginalActorInvocation, IGoOriginalActorQuery, IGoOriginalActorCanonicalResolver
+public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistry registry, LinuxApplicationLauncher launcher, IInstalledApplicationCompatibilityNavigation? compatibility = null) : IGoCanonicalResolver, IGoOriginalActorInvocation, IGoOriginalActorQuery, IGoOriginalActorCanonicalResolver
 {
     public string ProviderId => "os.installed-applications";
     public async IAsyncEnumerable<GoResult> QueryAsync(GoQuery query, [EnumeratorCancellation] CancellationToken ct)
@@ -70,9 +70,17 @@ public sealed class InstalledApplicationsGoProvider(IInstalledApplicationRegistr
     }
     private GoResult Result(InstalledApplicationReference app) => new(ProviderId,
         new("Home", "os.installed-application", app.ApplicationId.ToString("D"), app.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture)),
-        app.Label, "Apps", [new("Open", "Open")]);
+        app.Label, "Apps", compatibility is null ? [new("Open", "Open")] : [new("Open", "Open"), new("Frameworks", "Application frameworks")]);
     public Task InvokeForActorAsync(GoCanonicalReference reference, string actionId, AuthenticatedResourceActor expectedActor, CancellationToken ct)
     {
+        if (actionId == "Frameworks")
+        {
+            if (compatibility is null || reference.Owner != "Home" || reference.Kind != "os.installed-application" ||
+                !Guid.TryParseExact(reference.Id, "D", out var selectedId) || selectedId == Guid.Empty ||
+                !long.TryParse(reference.Revision, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var selectedRevision) || selectedRevision <= 0)
+                throw new UnauthorizedAccessException("The original compatibility navigation is unavailable.");
+            return compatibility.OpenForActorAsync(selectedId, selectedRevision, expectedActor, ct);
+        }
         if (reference.Owner != "Home" || reference.Kind != "os.installed-application" || actionId != "Open" || !Guid.TryParse(reference.Id, out var id) || !long.TryParse(reference.Revision, out var revision))
             throw new UnauthorizedAccessException("Unknown canonical application action.");
         return launcher.LaunchForActorAsync(id, revision, expectedActor, ct);

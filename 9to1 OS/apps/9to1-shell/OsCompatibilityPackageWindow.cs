@@ -80,7 +80,7 @@ public sealed class OsCompatibilityPackageBindings(CompatibilityPackageInspector
     { add => _bindings.PropertyChanged += value; remove => _bindings.PropertyChanged -= value; }
     public bool TryGetValue(string path, out object? value) => _bindings.TryGetValue(path, out value);
     public void Clear()
-    { _bindings.Set("Name", string.Empty); _bindings.Set("Format", string.Empty); _bindings.Set("Architecture", string.Empty); _bindings.Set("DeclaredIdentity", string.Empty); _bindings.Set("Status", string.Empty); }
+    { _bindings.Set("Name", string.Empty); _bindings.Set("Format", string.Empty); _bindings.Set("Architecture", string.Empty); _bindings.Set("DeclaredIdentity", string.Empty); _bindings.Set("Status", string.Empty); _bindings.Set("PackageState", "Unchecked"); }
     public void Refresh() => _ = RefreshSafelyAsync();
     public void SetActive(bool active)
     {
@@ -98,11 +98,11 @@ public sealed class OsCompatibilityPackageBindings(CompatibilityPackageInspector
     {
         using var request = CancellationTokenSource.CreateLinkedTokenSource(ct, lifetime);
         await _gate.WaitAsync(request.Token);
+        var generation = _generation;
         try
         {
             if (_disposed) return;
-            var generation = _generation;
-            _bindings.Set("CanRefresh", false);
+            _bindings.Set("CanRefresh", false); _bindings.Set("PackageState", "Checking"); _bindings.Set("Status", "Checking this selected Files revision…");
             if (await actors.GetCurrentAsync(request.Token) != expected.ObservedActor)
                 throw new UnauthorizedAccessException("The original Home session changed.");
             var result = await inspector.InspectAsync(expected.StoreId, expected.ObservedActor, expected.FileId, expected.ContentRevision, request.Token);
@@ -117,8 +117,28 @@ public sealed class OsCompatibilityPackageBindings(CompatibilityPackageInspector
                 _bindings.Set("Name", result.Name); _bindings.Set("Format", result.Format switch { "windows-exe" => "Windows application", "windows-msi" => "Windows installer", _ => "Android application" });
                 _bindings.Set("Architecture", result.Architectures.Count == 0 ? "Architecture: not resolved" : (result.Format == "android-apk" ? "Declared ABIs: " : "Architecture: ") + string.Join(", ", result.Architectures));
                 _bindings.Set("DeclaredIdentity", result.DeclaredApplicationIdentity is { } id ? "Declared application: " + id : "Application identity: not verified");
+                _bindings.Set("PackageState", "Inspected");
                 _bindings.Set("Status", "The selected Files revision was checked. Publisher trust and installation permission remain separate.");
             });
+        }
+        catch (Exception error) when (error is InvalidDataException or NotSupportedException)
+        {
+            // A format diagnosis is not a trust/launch grant. Clear all previously inspected fields.
+            // Foreign actor/owner access failures continue to close the original selection below.
+            try
+            {
+                if (await actors.GetCurrentAsync(request.Token) != expected.ObservedActor)
+                    throw new UnauthorizedAccessException("The original Home session changed.");
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (_disposed || !_active || generation != _generation || request.IsCancellationRequested) return;
+                    Clear(); _bindings.Set("PackageState", error is NotSupportedException ? "Unsupported" : "Invalid");
+                    _bindings.Set("Status", error is NotSupportedException
+                        ? "This package format is unsupported. Close this view and choose a supported EXE, MSI or APK in Files."
+                        : "This package could not be inspected safely. Close this view and choose an intact package in Files. Existing files were preserved.");
+                });
+            }
+            catch { await Dispatcher.UIThread.InvokeAsync(() => { Clear(); close(); }); throw; }
         }
         catch { await Dispatcher.UIThread.InvokeAsync(() => { Clear(); close(); }); throw; }
         finally { if (!_disposed) _bindings.Set("CanRefresh", true); _gate.Release(); }

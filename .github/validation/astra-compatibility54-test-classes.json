@@ -1,0 +1,341 @@
+{
+  "classes": [
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "CompatibilityPackageFormatTests",
+      "sha256": "6ae36418075cda03999a00e48389fd0d4a0c09f839da9ad9d2af8007b1f4bc03",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
+      "minimumExpectedPassed": 8,
+      "priorAcceptedPassed": 8
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "CompatibilityPackageInspectorTests",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "minimumExpectedPassed": 10,
+      "priorAcceptedPassed": 10
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "CompatibilityRoutingTests",
+      "sha256": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs",
+      "minimumExpectedPassed": 4,
+      "priorAcceptedPassed": 4
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/DesktopPagesTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "DesktopPagesTests",
+      "sha256": "8ea1801dfebe1060af9c589fa4306876dab416c7634a49e6646883bfb7dd7492",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/DesktopPagesTests.cs",
+      "minimumExpectedPassed": 4,
+      "priorAcceptedPassed": 4
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoAndCuiTests",
+      "sha256": "ad57556e8b0f5331c30879538ea20f17e2f5e18c13fb4f05123bfc117f9ae12d",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoAndCuiTests.cs",
+      "minimumExpectedPassed": 8,
+      "priorAcceptedPassed": 8
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoDisplayKeyTests",
+      "sha256": "df61234ede087f13e9dc2fa84d83d7ad1ef1b79f75fad55b4c73374d2b0c6380",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayKeyTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoDisplayNativeTests",
+      "sha256": "86bffc7aeb8445f03d0b54a4e858ffbde612ad4a6b1601293cdbb0e84c3f7374",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoDisplayNativeTests.cs",
+      "minimumExpectedPassed": 1,
+      "priorAcceptedPassed": 1
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoHomeCustomizationNativeTests",
+      "sha256": "b5e23c2f09aa31b8d0ca6b5e29699b10453031e4d4aad5526a0b025ed6780c38",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationNativeTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoHomeCustomizationTests",
+      "sha256": "5628b8cdee6bdd1da9839c90260faed1afbe0278135316cf2c88a6158ccf1291",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeCustomizationTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoHomeLayoutNativeTests",
+      "sha256": "692cc4019bb2066aac0bb94c97cbcdb9125bb9a434864f9e95bdf420b11abef3",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeLayoutNativeTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoHomeNativeTests",
+      "sha256": "0a20ef826e8ed16ec5555e2947a99c2a6f338e8b562cec2f75d7007aeee7f7c2",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoHomeNativeTests.cs",
+      "minimumExpectedPassed": 2,
+      "priorAcceptedPassed": 2
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoKeyboardTests",
+      "sha256": "2b098b0fbe61e73cf23721296f4ee7ee31db623c510834710b0e35ec6174d8df",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoKeyboardTests.cs",
+      "minimumExpectedPassed": 2,
+      "priorAcceptedPassed": 2
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoNativeSessionTests",
+      "sha256": "a1b0fab5aa6b61df970449bb508de2a710abd144276f78a66cf63c1be64a9062",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoNativeSessionTests.cs",
+      "minimumExpectedPassed": 2,
+      "priorAcceptedPassed": 2
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoPrivateOriginalReadNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoPrivateOriginalReadNativeTests",
+      "sha256": "499f3f79f62c03ade849df51fae016164738d722a25fe6c7e3add08a982ad3bc",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoPrivateOriginalReadNativeTests.cs",
+      "minimumExpectedPassed": 4,
+      "priorAcceptedPassed": 4
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoQueryStateNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoQueryStateNativeTests",
+      "sha256": "bfdf5030cd801f57a2a343c21b293583392ad340acef5e977fe4220c619e26b8",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/GoQueryStateNativeTests.cs",
+      "minimumExpectedPassed": 6,
+      "priorAcceptedPassed": 6
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "GoScopeTests",
+      "sha256": "087e088349b86c601d2c45221e62fdd2631a3221d984bd08cbddb0bb9bc8e373",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/GoScopeTests.cs",
+      "minimumExpectedPassed": 5,
+      "priorAcceptedPassed": 5
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptInteropTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "InstallationReceiptInteropTests",
+      "sha256": "e35e644a9b6a1229053f2559f33c8a16b62c711a69066560e22de7ae7e046f4b",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptInteropTests.cs",
+      "minimumExpectedPassed": 1,
+      "priorAcceptedPassed": 1
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "InstallationReceiptTests",
+      "sha256": "f87b9bf5b6f858a7c13060f2a967e75a9dbb46834405f16c384331b5b9929697",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/InstallationReceiptTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "InstalledApplicationsOriginalActorReadTests",
+      "sha256": "347635bcc3642d099e4545d7c73803ae7368c1b812086bdc704478da130d156d",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/InstalledApplicationsOriginalActorReadTests.cs",
+      "minimumExpectedPassed": 8,
+      "priorAcceptedPassed": 8
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "LinuxControlledLaunchTests",
+      "sha256": "81f9ccde208088c0342ecf38cf6a58951770d70f2174982c7554a5208546c48f",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxControlledLaunchTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxDiscoveryServerTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "LinuxDiscoveryServerTests",
+      "sha256": "6373c6991b9119afa7b1a223946c590b55003bf78fd627958f65962a2b368719",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxDiscoveryServerTests.cs",
+      "minimumExpectedPassed": 1,
+      "priorAcceptedPassed": 1
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxRuntimeEvidenceTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "LinuxRuntimeEvidenceTests",
+      "sha256": "8078a14532971bb602337a787925d3482dbc029dd3652e87b3464c0e8ef90501",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/LinuxRuntimeEvidenceTests.cs",
+      "minimumExpectedPassed": 5,
+      "priorAcceptedPassed": 5
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "ModelPickerTests",
+      "sha256": "3dc14fd3317fd555961ec5aa007e510f195fb7a0a33d3207b106fe9db0458e4c",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ModelPickerTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "ShellConfigurationTests",
+      "sha256": "02bcdb42d1c917f20fc7512e9bf2ed37bd6054b7f644d272089c67a013233994",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellConfigurationTests.cs",
+      "minimumExpectedPassed": 25,
+      "priorAcceptedPassed": 25
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "ShellGoAllAppsHomeTests",
+      "sha256": "c7e9e6ecc8c4b45f3b2076add2703342ae6bfbdf39c836ba90deb9fd1b1050f0",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoAllAppsHomeTests.cs",
+      "minimumExpectedPassed": 2,
+      "priorAcceptedPassed": 2
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "ShellGoPinnedHomeTests",
+      "sha256": "20befde0dd3c8284489d9328a4134461c53a84aaa55ff8a4574ccd60240a6b15",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellGoPinnedHomeTests.cs",
+      "minimumExpectedPassed": 3,
+      "priorAcceptedPassed": 3
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellNavigationGoTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "ShellNavigationGoTests",
+      "sha256": "bda839a535376a2ca1075f4f16807c324469072919f8517986da324c46b3901a",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellNavigationGoTests.cs",
+      "minimumExpectedPassed": 6,
+      "priorAcceptedPassed": 6
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellSemanticTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "ShellSemanticTests",
+      "sha256": "8e85745e6acba3453e012476d6e9b64914ec42926d3d860b385f0aaf589610de",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 OS/tests/NineToOne.Os.Shell.Tests/ShellSemanticTests.cs",
+      "minimumExpectedPassed": 8,
+      "priorAcceptedPassed": 8
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeInstalledApplicationOriginalActorTests",
+      "sha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+      "minimumExpectedPassed": 2,
+      "priorAcceptedPassed": 2
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "GoOriginalActorInvocationTests",
+      "sha256": "a153ed11fbe6ae389583636e755fdcf80621e3f91afa9a65a874632dfce1ef49",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/GoOriginalActorInvocationTests.cs",
+      "minimumExpectedPassed": 4,
+      "priorAcceptedPassed": 4
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/OriginalActorDiscoveryTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "OriginalActorDiscoveryTests",
+      "sha256": "a5cad4c2211a352ef163a511279435579cc8bd4d2721b8d2839eb365f8267009",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/9to1 Workspace/shared/tests/Haven.Core.Tests/OriginalActorDiscoveryTests.cs",
+      "minimumExpectedPassed": 8,
+      "priorAcceptedPassed": 8
+    },
+    {
+      "path": "framework/CUI/Runtime.Tests/CuiActionCompletionObservationTests.cs",
+      "namespace": "CakeOS.Cui.Runtime.Tests",
+      "class": "CuiActionCompletionObservationTests",
+      "sha256": "bbb87b863ab057ad8ddd3fa5ffb1f884a2ce5ef6a99ed10fc7e65e0eb96cc076",
+      "source": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/sources/framework/CUI/Runtime.Tests/CuiActionCompletionObservationTests.cs",
+      "minimumExpectedPassed": 2,
+      "priorAcceptedPassed": 2
+    },
+    {
+      "path": "framework/CUI/Runtime.Tests/CuiDynamicActionLifetimeTests.cs",
+      "namespace": "CakeOS.Cui.Runtime.Tests",
+      "class": "CuiDynamicActionLifetimeTests",
+      "sha256": "d1b0830b0fedf4f90a0e401b93fe9be4f437378d148c8ed6fd543ed1963d11ff",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:framework/CUI/Runtime.Tests/CuiDynamicActionLifetimeTests.cs",
+      "minimumExpectedPassed": 4,
+      "priorAcceptedPassed": 4
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "CompatibilityOriginalFrameworkChoiceTests",
+      "sha256": "4debc33fa83b27edcd758b488ca164d6661badbd2e07d598d82d4b5f395afd0a",
+      "source": "/workspace/astra-source/worker5-compatibility-native-keyboard-close05/CompatibilityOriginalFrameworkChoiceTests.cs",
+      "minimumExpectedPassed": 11,
+      "priorAcceptedPassed": 10
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "class": "CompatibilityPackageHealthNativeTests",
+      "sha256": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44",
+      "source": "/workspace/astra-source/worker5-compatibility53-original-selection-signature-fix01/CompatibilityPackageHealthNativeTests.cs",
+      "minimumExpectedPassed": 4,
+      "priorAcceptedPassed": 4
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "FilesCompatibilityPackageContentSourceTests",
+      "sha256": "97bf566c0cd09b2620fed3a6a042218894de89080ce0f05b6e5bed1f5e839d51",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "minimumExpectedPassed": 1,
+      "priorAcceptedPassed": 1
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "FilesNativeBrowserSurfaceTests",
+      "sha256": "0cb33b5176ee4dbf0368f60a25fa094b11ecfc84beeb64b75ddd617752209925",
+      "source": "8f25fe10eccfecf71e4ac4831da915caae1f93ca:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "minimumExpectedPassed": 1,
+      "priorAcceptedPassed": 1
+    }
+  ],
+  "ownerManifestSha256": "a9be414b0c7cfab50021a2f0b12768eb82d74da15f4bbb71e15c01920f26ce1c",
+  "qualification": "Fresh source05 keyboard-close successor/normalRoot15 unrun. Preserves37 exact classes, adds actual eleventh Choice case, requires151 OS and173 total minimum. Prior172 accepted proof separate; no acceptance inheritance.",
+  "minimumTotalPassed": 173,
+  "minimumOsPassed": 151
+}
