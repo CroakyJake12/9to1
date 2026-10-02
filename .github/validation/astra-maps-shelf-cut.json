@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "4ab1cccc8cde2034f47f6cb81ace8711ff7938e4",
-  "programTree": "fc3970956df94fa3a18271de6a8ac8b49d301d0f",
+  "baselineCommit": "6b6a8ab162ee34a56699d45f633c9993ee13c69e",
+  "programTree": "ab0b0bfa07c1c8d02d6b196699e97c4e80b4f67e",
   "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
   "kind": "corrective",
   "files": [
@@ -32313,9 +32313,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/ShelfWorkspace.cui",
       "mode": "100644",
-      "object": "77dda4b29f46e4abd690b62fe256a0e9db782ed3",
-      "bytes": 892,
-      "sha256": "2efc7ef08fa0888d1a8d85ae3293595214d903fbbfc05cfad7b36d2f02967220"
+      "object": "6ad5d84cbbe471581f05d8a043a538785bdc8052",
+      "bytes": 931,
+      "sha256": "6ed32419a7bb9e5e3bcedb2846596d02a2128dedd292acac65fdf388f2849c49"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/EMOJI-PROVENANCE.md",
@@ -64759,7 +64759,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Exact actual failed-parent minimal correction only. Actual replacement physical settings UUID triggers owning VersionedAtomicSettingsStore InvalidOperationException before native construction. Sole assertion exception type correction; all exact foreign/Home byte preservation and original private display tests preserved. Does not fix or classify separate Shelf native failures/hang. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
+  "limits": "Exact actual failed-parent minimal correction only. Full existing source and assertions retained. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-workspace-actual-maps07-retirement-corrective01/manifest.json",
@@ -64796,6 +64796,10 @@
     {
       "path": "/workspace/astra-source/worker3-maps13-actual-root-identity-exception-corrective01/manifest.json",
       "sha256": "5a330c9b5f65ff92f4c0d9b6831f33f6a2a23ed6690b1447ad71df12eff5ad2e"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps15-actual-shelf-two-way-binding-corrective01/manifest.json",
+      "sha256": "2de1287aaad6722ccbe9ed4f225d39a82053a12825108322aee3ae24e905b35a"
     }
   ],
   "sharedCakeIdContract": null

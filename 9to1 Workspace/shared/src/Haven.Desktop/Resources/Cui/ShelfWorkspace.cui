@@ -2,11 +2,11 @@
   <StackPanel margin="20" max-width="760">
     <TextBlock text="Shelf library" font-size="26" />
     <TextBlock text="{Binding Library}" text-wrapping="Wrap" />
-    <TextBox id="shelf-name" text="{Binding Name}" />
-    <TextBox id="shelf-address" text="{Binding Address}" />
+    <TextBox id="shelf-name" text="{Binding Name, Mode=TwoWay}" />
+    <TextBox id="shelf-address" text="{Binding Address, Mode=TwoWay}" />
     <Button id="shelf-review" action="Review" content="Review web target" />
     <TextBlock text="{Binding Requests}" text-wrapping="Wrap" />
-    <TextBox id="shelf-request" text="{Binding SelectedRequest}" />
+    <TextBox id="shelf-request" text="{Binding SelectedRequest, Mode=TwoWay}" />
     <Button id="shelf-home" action="Home" content="Review in Home" />
     <Button id="shelf-apply" action="Apply" content="Apply approved request or recover outcome" />
     <Button id="shelf-finish" action="Finish" content="Finish audit" />
