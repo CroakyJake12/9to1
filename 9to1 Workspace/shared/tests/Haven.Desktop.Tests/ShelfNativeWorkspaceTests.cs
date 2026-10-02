@@ -24,7 +24,7 @@ public sealed class ShelfNativeWorkspaceTests
         var window = new Window { Content = host }; window.Show();
         try
         {
-            Fill(host); var before = await File.ReadAllBytesAsync(f.SettingsFile);
+            await Fill(host); var before = await File.ReadAllBytesAsync(f.SettingsFile);
             await Click(host, "Review web target"); var review = Assert.Single(host.Reviews);
             Assert.Equal(before, await File.ReadAllBytesAsync(f.SettingsFile));
             await Click(host, "Review in Home"); Assert.Equal(review.RequestID, opened);
@@ -57,7 +57,7 @@ public sealed class ShelfNativeWorkspaceTests
         var window = new Window { Content = host }; window.Show();
         try
         {
-            Fill(host); await Click(host, "Review web target");
+            await Fill(host); await Click(host, "Review web target");
             var id = Assert.Single(host.Reviews).RequestID;
             var before = await File.ReadAllBytesAsync(f.SettingsFile);
             var retained = Assert.Single(host.GetVisualDescendants().OfType<Button>(), b => Equals(b.Content, "Apply approved request or recover outcome"));
@@ -81,7 +81,7 @@ public sealed class ShelfNativeWorkspaceTests
         var window = new Window { Content = host }; window.Show();
         try
         {
-            Fill(host);
+            await Fill(host);
             if (finalPublication)
             {
                 await Click(host, "Review web target");
@@ -96,7 +96,13 @@ public sealed class ShelfNativeWorkspaceTests
                 finalPublication ? "Apply approved request or recover outcome" : "Review web target"));
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             var accepted = host.WhenActionsIdleAsync();
-            try { await f.Held.Entered.Task; host.Dispose(); }
+            try { await f.Held.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); host.Dispose(); }
+            catch
+            {
+                f.Held.Release.TrySetResult();
+                try { await accepted; } catch { } // Preserve the original entry/assertion failure after observing the action.
+                throw;
+            }
             finally { f.Held.Release.TrySetResult(); }
             await accepted;
             Assert.Equal(before, await File.ReadAllBytesAsync(f.SettingsFile));
@@ -124,7 +130,7 @@ public sealed class ShelfNativeWorkspaceTests
         var window = new Window { Content = host }; window.Show();
         try
         {
-            Fill(host);
+            await Fill(host);
             var envelope = JsonNode.Parse(await File.ReadAllTextAsync(f.SettingsFile))!.AsObject();
             var foreignID = Guid.NewGuid();
             envelope[nameof(SettingsExportManifest.StoreIdentity)]![nameof(SettingsStoreIdentity.StoreId)] = foreignID;
@@ -160,15 +166,21 @@ public sealed class ShelfNativeWorkspaceTests
         var window = new Window { Content = host }; window.Show();
         try
         {
-            Fill(host); var before = await File.ReadAllBytesAsync(f.SettingsFile);
+            await Fill(host); var before = await File.ReadAllBytesAsync(f.SettingsFile);
             var button = Assert.Single(host.GetVisualDescendants().OfType<Button>(), b => Equals(b.Content, "Review web target"));
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); var accepted = host.WhenActionsIdleAsync();
             string id;
             try
             {
-                await entered.Task; id = Assert.Single(host.Reviews).RequestID;
+                await entered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); id = Assert.Single(host.Reviews).RequestID;
                 Assert.Equal("Ready", host.PresentationStatus); Assert.Equal("", host.PresentedRequestID);
                 host.Dispose();
+            }
+            catch
+            {
+                release.TrySetResult();
+                try { await accepted; } catch { } // Preserve the original failure before fixture deletion.
+                throw;
             }
             finally { release.TrySetResult(); }
             await accepted;
@@ -180,10 +192,11 @@ public sealed class ShelfNativeWorkspaceTests
         }
         finally { release.TrySetResult(); window.Close(); }
     }
-    private static void Fill(ShelfNativeWorkspaceHost host)
+    private static async Task Fill(ShelfNativeWorkspaceHost host)
     {
         var inputs = host.GetVisualDescendants().OfType<TextBox>().ToArray(); Assert.Equal(3, inputs.Length);
         inputs[0].Text = "Reference site"; inputs[1].Text = "https://example.test/reference";
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
     }
     private static async Task Click(ShelfNativeWorkspaceHost host, string content)
     {
@@ -195,7 +208,7 @@ public sealed class ShelfNativeWorkspaceTests
         public Paths Paths { get; } = new();
         public string SettingsFile => Path.Combine(Paths.DataDirectory, "settings.json");
         public string HomeFile => Path.Combine(Paths.DataDirectory, "home.json");
-        public HomePermissionTrustService Permissions { get; }
+        public HomePermissionTrustService Permissions { get; private set; } = null!;
         public HomeShelfLibraryOwner Owner { get; private set; } = null!;
         public AuthenticatedResourceActor Actor { get; private set; } = null!;
         public ShelfLibraryService Library { get; }
@@ -209,12 +222,21 @@ public sealed class ShelfNativeWorkspaceTests
             _settings = new(Paths); Held = new(_settings); Library = new(Held);
             _home = new(Path.Combine(Paths.DataDirectory, "home.json"));
             _profiles = new(_home, new OperatingSystemPrincipalSource());
-            var policy = new ShelfOwnedLibraryActionPolicies();
-            Permissions = new(_home, policy.TryGet);
+
         }
         public async Task InitializeAsync()
         {
             Actor = await _profiles.GetCurrentAsync(default) ?? throw new InvalidOperationException("Actual local Home actor required.");
+            // Actual production policy owner supplies the maintained individual store-import policy.
+            // The same authentic OS-profile caller/Home store and owning Shelf policy are composed;
+            // no graph or invocation operation is dispatched by this native ownership fixture.
+            var graphDatabase = new SqliteDatabase(Paths);
+            var policyOwner = new HomeAppAiServices(new ModelProviderRegistry([]), _home,
+                new HomePermissionCallerIdentity(Actor.ActorId, "9to1 native Home host", "os-bound-local-profile", Actor.AuthenticationRevision, true),
+                new ExecutionEventRepository(graphDatabase),
+                new HomeInvocationCatalogue(new ModeRegistry(graphDatabase), new ExtensionRepository(graphDatabase)),
+                [new ShelfOwnedLibraryActionPolicies()]);
+            Permissions = policyOwner.Permissions;
             var identity = await _settings.GetStoreIdentityAsync(default);
             var ownership = new HomeLocalStoreOwnership(_home, _profiles,
                 new HomeLocalStoreEvidenceRegistry([new ShelfOwnedLibraryEvidence(Held)]), Permissions);

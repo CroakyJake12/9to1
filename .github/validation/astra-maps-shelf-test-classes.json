@@ -104,7 +104,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "MapsJourneyLibraryPanelTests",
-      "sha256": "998b039eac6a95156734c432e392b0dd0e988799dc256b54c9c424f529d23df4"
+      "sha256": "1813cfded28e61c33b7a671ac1481ee3133bce544666c3db81ea719c474ebcc9"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsNativeJourneyHostTests.cs",
@@ -116,7 +116,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "ShelfNativeWorkspaceTests",
-      "sha256": "4dfa6aa232f0effd1270dc99c391adbbeb29be4300c512859de1938d6c2f77fa"
+      "sha256": "d83ee97ca3357f051fc2fd8b19de21b840b2f37263b669b6b1f8e3cb9f3c8c94"
     },
     {
       "class": "DataLocalStoreAuthorityTests",

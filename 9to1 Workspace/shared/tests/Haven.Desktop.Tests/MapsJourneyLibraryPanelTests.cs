@@ -188,7 +188,7 @@ public sealed class MapsJourneyLibraryPanelTests
         var home = await File.ReadAllBytesAsync(fixture.HomeFile);
         try
         {
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => MapsJourneyLibraryPanel.CreateForOriginalDisplayAsync(
+            await Assert.ThrowsAsync<InvalidOperationException>(() => MapsJourneyLibraryPanel.CreateForOriginalDisplayAsync(
                 fixture.Owner, next.Selection, _ => Task.CompletedTask));
             Assert.Equal(foreign, await File.ReadAllBytesAsync(fixture.SettingsFile));
             Assert.Equal(home, await File.ReadAllBytesAsync(fixture.HomeFile));

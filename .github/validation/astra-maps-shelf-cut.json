@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "f81defb79484017869ff74794f18d9916387b43a",
-  "programTree": "4c49a6b2ebb544e6ccc24a84bb55d29a7cc2080e",
-  "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
+  "baselineCommit": "4ab1cccc8cde2034f47f6cb81ace8711ff7938e4",
+  "programTree": "fc3970956df94fa3a18271de6a8ac8b49d301d0f",
+  "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "ec2610d91cd6d384281bcb597c4be82185086c05",
+      "object": "9a76e304a562c86eebd0b80d0cdfe9ac04e5a51f",
       "bytes": 15096,
-      "sha256": "0b06a18d2eacc282a14bfabbfdfa243a6e7a1180da827540a182eff911f4d72d"
+      "sha256": "04dbbdc9f4a6715b22767ffd252ecfbd10c7deb8c5465bec61d7aa469b00ea62"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -39047,9 +39047,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
       "mode": "100644",
-      "object": "82802b0061582f84427ec6cc987cc11dc4064eae",
-      "bytes": 22081,
-      "sha256": "998b039eac6a95156734c432e392b0dd0e988799dc256b54c9c424f529d23df4"
+      "object": "16da3552c5d972c4f7941a98db856ff032e9ea82",
+      "bytes": 22079,
+      "sha256": "1813cfded28e61c33b7a671ac1481ee3133bce544666c3db81ea719c474ebcc9"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsLocalStoreEvidenceProviderTests.cs",
@@ -39488,9 +39488,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "mode": "100644",
-      "object": "2813fa7a004b05e79fe5ee0b9cc627c030385f57",
-      "bytes": 18707,
-      "sha256": "4dfa6aa232f0effd1270dc99c391adbbeb29be4300c512859de1938d6c2f77fa"
+      "object": "973b37be8128eadf08708428f3239384315af895",
+      "bytes": 20274,
+      "sha256": "d83ee97ca3357f051fc2fd8b19de21b840b2f37263b669b6b1f8e3cb9f3c8c94"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -64759,7 +64759,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Exact actual failed-parent minimal correction only. Sole actual fixture counterpart correction: genuine independent Shelf service on SAME Settings, preserving Maps independent instance and all 16 coupled cases; no production changes. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
+  "limits": "Exact actual failed-parent minimal correction only. Actual replacement physical settings UUID triggers owning VersionedAtomicSettingsStore InvalidOperationException before native construction. Sole assertion exception type correction; all exact foreign/Home byte preservation and original private display tests preserved. Does not fix or classify separate Shelf native failures/hang. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-workspace-actual-maps07-retirement-corrective01/manifest.json",
@@ -64784,6 +64784,18 @@
     {
       "path": "/workspace/astra-source/worker3-maps-actual-shelf-competing-instance-corrective02/manifest.json",
       "sha256": "85c87081c0ff4a19c298a3370913c6b8f05699eb1140a8f2d98847d5e4f91cf5"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps13-actual-shelf-native-policy-delivery-corrective02/manifest.json",
+      "sha256": "c77f73842aa2ffdd5bdf60ccee678facddc972fb8375c934e96125551bdb8249"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint19-publication-local.json",
+      "sha256": "11325cd5953770aa8bd6ce93d01679d949d4c5a2fef764e1f5ae34d94f5409b9"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps13-actual-root-identity-exception-corrective01/manifest.json",
+      "sha256": "5a330c9b5f65ff92f4c0d9b6831f33f6a2a23ed6690b1447ad71df12eff5ad2e"
     }
   ],
   "sharedCakeIdContract": null
