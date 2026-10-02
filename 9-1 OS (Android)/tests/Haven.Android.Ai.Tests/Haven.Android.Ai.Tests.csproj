@@ -5,6 +5,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/Haven.Android/WindowsNaturalSpeechOutputService.Android.cs" Link="Production/WindowsNaturalSpeechOutputService.Android.cs" />
     <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutDocumentReader.cs" Link="Production/AndroidLauncherLayoutDocumentReader.cs" />
     <Compile Include="../../src/Haven.Android/AndroidLauncherFolderNavigation.cs" Link="Production/AndroidLauncherFolderNavigation.cs" />
     <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutDocumentSelections.cs" Link="Production/AndroidLauncherLayoutDocumentSelections.cs" />
