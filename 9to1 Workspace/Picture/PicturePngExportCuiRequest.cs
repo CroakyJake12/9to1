@@ -8,7 +8,7 @@ namespace HavenOS.Images;
 
 /// <summary>Owning export preparation UI. The injected host mounts actual Home approval; this form never grants or executes authority.</summary>
 public sealed class PicturePngExportCuiRequest(PictureHomePngExportOperation operation, HostedItemId sourceFileId,
-    FilesRevisionId sourceRevision, Guid documentId, long documentRevision, Func<bool> isAvailable,
+    FilesRevisionId sourceRevision, Guid documentId, long documentRevision, Guid expectedStoreId, Func<bool> isAvailable,
     Func<PicturePngExportIntent, CancellationToken, Task<string>> requestApproval)
     : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
@@ -80,7 +80,7 @@ public sealed class PicturePngExportCuiRequest(PictureHomePngExportOperation ope
             {
                 _prepared = null;
                 var prepared = await operation.PrepareAsync(sourceFileId, sourceRevision, documentId, documentRevision,
-                    _fileName, _acknowledged, cancellationToken);
+                    _fileName, _acknowledged, expectedStoreId, cancellationToken);
                 if (!isAvailable()) throw new UnauthorizedAccessException("The current host no longer permits exporting this snapshot.");
                 _prepared = prepared;
                 _status = "The snapshot is prepared. Review it in Home to approve creating the new file.";

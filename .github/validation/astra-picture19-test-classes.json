@@ -1,0 +1,108 @@
+{
+  "classes": [
+    {
+      "path": "9to1 Workspace/Picture/Tests/ImageJourneyTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "ImageJourneyTests",
+      "sha256": "069ae9403080e8550c361d6fbe30488625e8e7071c21743e6fcbb349dca799e7"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinAnimationTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinAnimationTests",
+      "sha256": "a593193fe8e286df2a884daab652e58bd640e4a9e6faeb8f6170986786ddb4ba"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinCancellationTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinCancellationTests",
+      "sha256": "b118efcb188ba534d39b320eb76b9d10f6a1381ddba5822d06ca02785ed5571d"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinClientTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinClientTests",
+      "sha256": "dba4ea1ea8e08d03ad3c73f888445e20dd00dfef0701b10a2ddcf1f56eec06cc"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinDecodeTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinDecodeTests",
+      "sha256": "3e589b74f9352bb8b9f0efb09221f09367f7d89557cd5a3ccdff4ae3e1441803"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinPngExportTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinPngExportTests",
+      "sha256": "c48534b1d8907d71ac221342057c7a14fcf1c1316688cfa618efbc804f21ca5b"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinRasterExportTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinRasterExportTests",
+      "sha256": "38846988f41804261b136997a608fb05c67643f2ec2fac309b8bfc71541132df"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinSharedAnimationTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinSharedAnimationTests",
+      "sha256": "d6977464aba2f6fae187df3b0d1a339dc1925d59abd53b31f791c6c297fd6e7c"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/NativeGlycinSharedRasterTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "NativeGlycinSharedRasterTests",
+      "sha256": "81908c2ca830d0009591fa049b2e2804a7eb1e1f1eb7f19c1f983ed2f9b75493"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureAppAiContextTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureAppAiContextTests",
+      "sha256": "097a2ec434e1e34010c2432ddae96849fe6bb084a4eb5a25742bd1eb001a536d"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureArtifactCodecTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureArtifactCodecTests",
+      "sha256": "a5edc6b3c878ec6ba09876cd5aa71522509ce164190ba582ca7e37895b46fb41"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureCuiWorkspaceTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureCuiWorkspaceTests",
+      "sha256": "aa9289b7b78fdca10ee69f8f0ff2765e9b3e44058f5c7f8d57befaf85b5e7183"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureFilesArtifactBridgeTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureFilesArtifactBridgeTests",
+      "sha256": "1425c8db236f704fd7074f33d320af021dc23e40950ac901aede578a58dec755"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureFilesSourceRendererTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureFilesSourceRendererTests",
+      "sha256": "5700929ced8ee1f4e8a65129bdd4ab1ee3ccd8979061b45afb7713cb82eb08cc"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureHomeHistoryOperationTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureHomeHistoryOperationTests",
+      "sha256": "67def437888b8b8686a20dcea6c3ea9d5fa4b69743edda4f5377018bb2544e8c"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureHomePngExportTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureHomePngExportTests",
+      "sha256": "f57ae24f7995ca8f987d4dd42f564d18ed932798980a2708c71fa5a991b2f6a9"
+    },
+    {
+      "path": "9to1 Workspace/Picture/Tests/PictureNativeHostTests.cs",
+      "namespace": "HavenOS.Images.Tests",
+      "class": "PictureNativeHostTests",
+      "sha256": "79d564ace5b70e27e60435c0b9aca300dc80399ab0bc506d9967f8cda716656b"
+    }
+  ],
+  "dependencyPins": [],
+  "ownerSelectionSha256": "f2ace3d1f421defa0736a088cee9592109193dfafe03cc87bde201a184361ba6"
+}

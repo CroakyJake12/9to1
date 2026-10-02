@@ -7,7 +7,7 @@ namespace HavenOS.Images;
 public sealed class PictureNativeActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appId, string actionId) =>
-        appId == "picture" && actionId is "picture.file.export" or "picture.file.import" or "picture.file.save"
+        appId == "picture" && actionId is "picture.file.export" or "picture.file.import" or "picture.file.save" or "picture.file.copy"
             ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, true, false, true)
             : null;
 }

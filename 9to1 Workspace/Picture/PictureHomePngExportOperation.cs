@@ -15,7 +15,8 @@ public sealed class PicturePngExportIntent
     internal PicturePngExportIntent(PictureFilesOpenResult source, FilesWorkspaceDirectoryBinding binding,
         FilesRevisionId? folderRevision, FilesRevisionId rawRevision, AuthenticatedResourceActor actor, string name, byte[] png)
     {
-        SourceFileId = new(source.Artifact.BackingFileId); SourceRevision = source.CasRevisionId;
+        if (source.StoreId == Guid.Empty) throw new ArgumentException("Original store identity is required.", nameof(source));
+        StoreId = source.StoreId; SourceFileId = new(source.Artifact.BackingFileId); SourceRevision = source.CasRevisionId;
         DocumentId = source.Artifact.Document.DocumentId; DocumentRevision = source.Artifact.Document.Revision;
         SourceAsset = source.Artifact.SourceAsset!; RawRevision = rawRevision;
         Binding = binding; Actor = actor; DestinationFolderId = binding.FolderId; DestinationRevision = folderRevision;
@@ -26,13 +27,14 @@ public sealed class PicturePngExportIntent
             new ResourceScope("files.item", DestinationFolderId.ToString(), DestinationRevision?.ToString() ?? "uncommitted", ResourceAccess.Write)
         });
         _arguments = JsonSerializer.SerializeToElement(new {
-            sourceFileId = SourceFileId.Value, sourceRevision = SourceRevision.Value, documentId = DocumentId, documentRevision = DocumentRevision,
+            storeId = StoreId, sourceFileId = SourceFileId.Value, sourceRevision = SourceRevision.Value, documentId = DocumentId, documentRevision = DocumentRevision,
             sourceAsset = SourceAsset, rawRevision = RawRevision.Value, destinationFolderId = DestinationFolderId.Value,
             destinationRevision = DestinationRevision?.Value, outputFileId = OutputFileId.Value, outputRevision = OutputRevision.Value,
             fileName = FileName, contentHash = ContentHash, sizeBytes = _png.LongLength,
             flatten = "first-frame-srgb-png-without-source-metadata", explicitSnapshotAcknowledgement = true
         });
     }
+    public Guid StoreId { get; }
     public const string TargetAppId = "picture";
     public const string ActionId = "picture.file.export";
     public HostedItemId SourceFileId { get; }
@@ -65,7 +67,7 @@ public sealed class PictureHomePngExportOperation(PictureFilesArtifactBridge fil
     Func<AuthenticatedResourceActor, DurableDriveProvider, CancellationToken, ValueTask<FilesCommitAuthorityGuard>>? captureCommitAuthority = null)
 {
     public async Task<PicturePngExportIntent> PrepareAsync(HostedItemId sourceFileId, FilesRevisionId expectedRevision,
-        Guid documentId, long documentRevision, string fileName, bool acknowledgeFlattenedFirstFrame,
+        Guid documentId, long documentRevision, string fileName, bool acknowledgeFlattenedFirstFrame, Guid expectedStoreId,
         CancellationToken cancellationToken = default)
     {
         if (!acknowledgeFlattenedFirstFrame)
@@ -75,7 +77,8 @@ public sealed class PictureHomePngExportOperation(PictureFilesArtifactBridge fil
             throw new ArgumentException("A simple PNG file name is required.", nameof(fileName));
         var actor = await ActorAsync(cancellationToken).ConfigureAwait(false);
         var provider = providers(actor) ?? throw new UnauthorizedAccessException("No canonical Files provider is available.");
-        var source = await files.OpenAsync(sourceFileId, cancellationToken).ConfigureAwait(false);
+        await provider.GetStoreEvidenceAsync(expectedStoreId, cancellationToken).ConfigureAwait(false);
+        var source = await files.OpenAsync(sourceFileId, expectedStoreId, cancellationToken).ConfigureAwait(false);
         RequireSource(source, expectedRevision, documentId, documentRevision);
         var raw = source.Artifact.SourceAsset ?? throw new NotSupportedException("PNG export requires a canonical retained raster source.");
         var rawMetadata = await provider.GetAsync(new(raw.FileId), cancellationToken).ConfigureAwait(false);
@@ -126,7 +129,7 @@ public sealed class PictureHomePngExportOperation(PictureFilesArtifactBridge fil
             "image/png", intent.OutputRevision, null, intent.Actor.ActorId, DateTimeOffset.UtcNow, intent.SizeBytes, intent.ContentHash, relative),
             [new(intent.SourceFileId, intent.SourceRevision), new(intent.DestinationFolderId, intent.DestinationRevision),
              new(new(intent.SourceAsset.FileId), intent.RawRevision)],
-            commitAuthority,
+            intent.StoreId, commitAuthority,
             cancellationToken).ConfigureAwait(false);
         if (!committed.IsSuccess) throw new InvalidOperationException(committed.Error!.Message);
         return new(intent.OutputFileId, committed.Value!);
@@ -134,10 +137,12 @@ public sealed class PictureHomePngExportOperation(PictureFilesArtifactBridge fil
 
     private async Task<DurableDriveProvider> ValidateAsync(PicturePngExportIntent intent, CancellationToken cancellationToken)
     {
+        var provider = providers(intent.Actor) ?? throw new UnauthorizedAccessException("The canonical Files provider is unavailable.");
+        await provider.GetStoreEvidenceAsync(intent.StoreId, cancellationToken).ConfigureAwait(false);
         if (await ActorAsync(cancellationToken).ConfigureAwait(false) != intent.Actor ||
             await BindingAsync(intent.Actor, cancellationToken).ConfigureAwait(false) != intent.Binding)
             throw new UnauthorizedAccessException("The authenticated actor or configured export destination changed.");
-        var source = await files.OpenAsync(intent.SourceFileId, cancellationToken).ConfigureAwait(false);
+        var source = await files.OpenAsync(intent.SourceFileId, intent.StoreId, cancellationToken).ConfigureAwait(false);
         RequireSource(source, intent.SourceRevision, intent.DocumentId, intent.DocumentRevision);
         if (source.Artifact.SourceAsset != intent.SourceAsset)
             throw new InvalidDataException("The retained Picture source changed.");
@@ -145,7 +150,7 @@ public sealed class PictureHomePngExportOperation(PictureFilesArtifactBridge fil
             await authorization.AuthorizeAsync("media.asset.read", [new ResourceScope("files.item", intent.SourceAsset.FileId.ToString(),
                 intent.RawRevision.ToString(), ResourceAccess.Read)], cancellationToken).ConfigureAwait(false) != intent.Actor)
             throw new UnauthorizedAccessException("Current Files authority does not allow this exact export.");
-        return providers(intent.Actor) ?? throw new UnauthorizedAccessException("The canonical Files provider is unavailable.");
+        return provider;
     }
     private async Task<AuthenticatedResourceActor> ActorAsync(CancellationToken cancellationToken)
     {
