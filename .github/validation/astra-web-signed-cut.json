@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "a505bfb9eba2fd00ae3039ea154725ea4f922c01",
-  "programTree": "3475720df0a92f1772d5dc5d53ececddac8b9726",
+  "baselineCommit": "86cfa702bf6837013ae83f1f0b9cd8834d3a64a1",
+  "programTree": "d498d521212a330b96ce860d2a4ddc3e14f4bde9",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -25565,9 +25565,9 @@
     {
       "path": "9to1 Workspace/Web/RemoteWebOidcEndpoints.cs",
       "mode": "100644",
-      "object": "936552117325738182f8e167e970ea40783d1087",
-      "bytes": 11702,
-      "sha256": "d1f22f256de1ab8593ec407bd9e8b0bfa232089e5427c4d79d842913ff4d1885"
+      "object": "5c3e73e6b34fc8e1723205c97d1e0810d6617e9e",
+      "bytes": 11867,
+      "sha256": "ece6ab873b1dff88bcafa02fc5fc189617584251ef2287d2f8b57fba039c9279"
     },
     {
       "path": "9to1 Workspace/Web/RemoteWebOidcFlow.cs",
@@ -64479,7 +64479,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-web-signed-cut.json",
-  "limits": "Exact independently captured actual failed source correction: Four exact acceptedRoot14 legacy harness project/source blobs were absent from normalproduct100; full intended legacy executable now actually present, no omission or alternate harness. All owning/regression/resource or Accountslegacy/FundedOrg/PublicClient/Remote/Node/signedWeb/authenticatedWeb/Chromium checks, source22+3/full restore/producers/host/compiled guards unchanged; no SDK/localbuild/runtimeclaim.",
+  "limits": "Actual ASP0016 correction only: explicitly typed Func<HttpContext,Task<IResult>> selects ASP.NET Delegate route handler overload so real IResult executes. All five async IResult methods corrected together. No analyzer suppression or route/security behavior change; all full prior owning suites and source/restore/compiled/class/artifact guards unchanged. Uncompiled/unrun.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-web-oidc-production-coherent36-plan02/joined-source36.json",
@@ -64512,6 +64512,14 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root14-coherent114-fifth-actual-green05/root-capture.json",
       "sha256": "9557f2344dc443e267dc45674ad389ee472b1accb179d2736dbd2368601161e8"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-web-actual-corrective01/actual-failed02/root-capture.json",
+      "sha256": "f16144f074f4559e0bee2b8390524e805ae9f580b34304a21b3fad2a51172591"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-data-web-actual-correctors01/manifest.json",
+      "sha256": "0860f9c1e7796f3f92cd52832005475d02c06706607450d8ad3e8d362225f5ae"
     }
   ],
   "sharedCakeIdContract": null

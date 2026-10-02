@@ -124,11 +124,11 @@ public static class RemoteWebOidcEndpointMount
 {
  public static void MapRemoteWebOidc(this IEndpointRouteBuilder endpoints,RemoteWebOidcHost host)
  {
-  endpoints.MapGet("/remote/signin",host.SignInAsync);
-  endpoints.MapPost("/remote/oidc/begin",host.BeginAsync);
-  endpoints.MapGet("/remote/oidc/callback",host.CallbackAsync);
-  endpoints.MapGet("/remote/account",host.CurrentAccountAsync);
-  endpoints.MapGet("/remote/account/profile",host.AccountProfileAsync);
+  endpoints.MapGet("/remote/signin",(Func<HttpContext,Task<IResult>>)host.SignInAsync);
+  endpoints.MapPost("/remote/oidc/begin",(Func<HttpContext,Task<IResult>>)host.BeginAsync);
+  endpoints.MapGet("/remote/oidc/callback",(Func<HttpContext,Task<IResult>>)host.CallbackAsync);
+  endpoints.MapGet("/remote/account",(Func<HttpContext,Task<IResult>>)host.CurrentAccountAsync);
+  endpoints.MapGet("/remote/account/profile",(Func<HttpContext,Task<IResult>>)host.AccountProfileAsync);
   foreach(var name in new[]{"signin-page.mjs","web-oidc-signin.mjs","login-submit.mjs"})
   {
    var captured=name;endpoints.MapGet("/remote/oidc/"+captured,()=>
