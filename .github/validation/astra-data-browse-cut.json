@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "afc3a421223ae74dfd6afd7da694123beaea5c94",
+  "baselineCommit": "2dbda727c4a991da801413989e146684fe7a6013",
   "programTree": "8c9dbeaadc6a68157d5999c16a10f00e9ed33ecf",
-  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
+  "currentNormalCommit": "5f8fe5be2534e6e1efb8428b4c2a9ab15cd37a77",
   "kind": "corrective",
   "files": [
     {
@@ -197,9 +197,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "f4934752b3473975af24a4f96580263440575ba8",
-      "bytes": 2087,
-      "sha256": "9acec4e250afd65e06585923b764b30b6fc99b24e1dc6fcc8054f81afb1a257f"
+      "object": "a9d980ec5f54c86037d0fe6b37261700ecdc927e",
+      "bytes": 3248,
+      "sha256": "ef1cd7ff48b8f2277dcda8498a09de751a902ae7a78f2a5e4fc136cf4fb3b13f"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Exactactualafc3 fixture ABI protocol correction only: host-issued issuer/generation/private document selection and typeddispatch rejects stale/foreign before observation, extraRequire afterAcquire. Alloriginalfivefacts/assertions/timeout/full2 source/restore/producers/compiled/zeroSkip guards preserved; controlledbrowser/OS fixture qualification, no native document/external effect proof or production fallback. Root16CAS reviewed; unexecuted.",
+  "limits": "Actual Data08 sole Desktop16/17 failure Unable to initialize GTK during genuine NativeWebView attach; selected owning workflow had no display. Owning-only Xvfb real display wrapper captures actual installed executable/package/hash/display provenance and fails missing prerequisites; no local install, native substitute, fixture/source change or test filter/count removal. Same selected semantic tree, full owning/resource/17Desktop+alloriginal classes/source/producers/restore/compiled/zeroSkip guards preserved. GTK success still requires actual hosted full gate. Root16 CAS unchanged. Root17 normal CAS independently verified; exact failed2db selected semantic tree, workflow overlay bytes and full2 owning/resource gates remain unchanged.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64778,6 +64778,14 @@
     {
       "path": "/workspace/astra-source/worker1-home-webmcp-actual-afc3-document-provenance-fixture02/manifest.json",
       "sha256": "8febff6393df9be914b0a0244a2795482e4edcd99552759eca25aeec3b131934"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-run-37000454401-actual25/artifact-11223843092.json",
+      "sha256": "7ebb8ac19b594110a819553d6c27b82f9f9dc36e2e93a31a3cded9c3975fd988"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
+      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
     }
   ],
   "sharedCakeIdContract": null

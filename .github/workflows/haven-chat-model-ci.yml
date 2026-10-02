@@ -44,7 +44,23 @@ jobs:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}
           EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
           COHORT: ${{ matrix.cohort }}
-        run: python3 ".github/scripts/astra-data-browse-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-data-browse-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+        run: |
+          set -euo pipefail
+          if [ "$COHORT" = owning ]; then
+            mkdir -p artifacts/data-browse-owning
+            command -v Xvfb > artifacts/data-browse-owning/actual-xvfb-path.txt
+            command -v xvfb-run > artifacts/data-browse-owning/actual-xvfb-run-path.txt
+            command -v xauth > artifacts/data-browse-owning/actual-xauth-path.txt
+            dpkg-query -W -f='${binary:Package} ${Version} ${Status}\n' xvfb xauth > artifacts/data-browse-owning/actual-display-package-provenance.txt
+            sha256sum "$(command -v Xvfb)" "$(command -v xvfb-run)" "$(command -v xauth)" > artifacts/data-browse-owning/actual-display-executable-sha256.txt
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24 -nolisten tcp' bash -c '
+              test -n "$DISPLAY"
+              printf "%s\n" "$DISPLAY" > artifacts/data-browse-owning/actual-display.txt
+              python3 ".github/scripts/astra-data-browse-owning.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-data-browse-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+            '
+          else
+            python3 ".github/scripts/astra-data-browse-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-data-browse-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+          fi
       - name: Retain actual evidence including failure
         if: always()
         uses: actions/upload-artifact@v4
