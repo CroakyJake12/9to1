@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
@@ -96,7 +97,13 @@ public sealed class WritePageTests
             Assert.Equal(1, repository.SaveCalls);
             Assert.Equal("Results Day brief", repository.LastSaved?.Title);
             Assert.Equal("Bold stronger italic", repository.LastSaved?.Sections[0].Pages[0].Blocks[0].PlainText);
-            Assert.Same(table, repository.LastSaved?.Sections[0].Pages[0].Blocks[1]);
+            var savedTable = Assert.IsType<NotesBlock>(repository.LastSaved?.Sections[0].Pages[0].Blocks[1]);
+            Assert.NotSame(table, savedTable);
+            Assert.Equal(table.Id, savedTable.Id);
+            var originalTablePayload = JsonSerializer.Serialize(table);
+            Assert.Equal(originalTablePayload, JsonSerializer.Serialize(savedTable));
+            table.Table!.Rows[0].Cells[0].Text = "Later unsaved table change";
+            Assert.Equal(originalTablePayload, JsonSerializer.Serialize(savedTable));
         }
         finally
         {
