@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "5a33f9ac1123a7a142a21361ffef2f709133e25b",
-  "programTree": "97726a22941b735efb3ba98cfd6eaf0712519b01",
+  "baselineCommit": "d39ddc1fe3f7e469d55d69b42dd8c82c9b462042",
+  "programTree": "5ebba727b5f7722d5784f889839ea9389986c8f7",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "e4f504bd7b1961da3966b9631bc1f612566ec3d4",
+      "object": "4277b36be552e48914c1ee8e703d5ae125bc05fb",
       "bytes": 14864,
-      "sha256": "af33ab3f74f1461f90456aafd8e4222fc023e3589c33ab3a42c9d106348a5e4e"
+      "sha256": "71e07914bc591bbdb954069dc6f23dabc4b8c884af20c268523c1f2c7adb9893"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -71,9 +71,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-resource-classes.json",
       "mode": "100644",
-      "object": "4e7aea9fa76ff3dcd5cc6f525a10506f25eb8087",
+      "object": "58014ff79fc2c041c0c19511c8fba8214b42f25b",
       "bytes": 30193,
-      "sha256": "39061caa32443367dec9024b47ddfa3cebe476203674c9169646df1895a6c720"
+      "sha256": "d038e795df80c57c101c04a76a50a6dbd46bbcaf368e1f32dfc098f34ca05599"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -22163,9 +22163,9 @@
     {
       "path": "9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
       "mode": "100644",
-      "object": "b33be46685e6bccce151f2649ecfdab623e15f3e",
-      "bytes": 31866,
-      "sha256": "4918de660ee8e7cde5c578ee51262eb111ea288af78791726b301fab7a47db1b"
+      "object": "f8680c0aba8d0364d69bd05d783f1b8e73121435",
+      "bytes": 31984,
+      "sha256": "81e0ecdeebe689bac3a17362125e6abcc811758b89ac19d8faf6aaa8771b41d7"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj",
@@ -22226,9 +22226,9 @@
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
       "mode": "100644",
-      "object": "fd591cc827eb4e7003c75be1499db8459d409ffc",
-      "bytes": 30604,
-      "sha256": "a3c43495880cd9e61af22ec9e936dc913a295362749da3f599004f706351aeff"
+      "object": "6384fcceb6881eb922985f51f311455105a898c8",
+      "bytes": 31085,
+      "sha256": "67526f28a5f3c46e8c0def35762962f2eccc04e308a5c1c9b630a1085167190e"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
@@ -64647,7 +64647,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Exact actual failed-parent minimal correction only. Actual selected fixture-only correction; all original cases/assertions retained, production unchanged. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
+  "limits": "Exact actual failed-parent minimal correction only. Regex transient setter emits only changed scalar and result notifications, preventing global refresh from overwriting another pending genuine native text edit. Full mounted fixture retains all original assertions and adds exact model/text/control identity preservation witnesses. No shared CUI or persistence changes. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-forms-native-page-columns04/manifest.json",
@@ -64664,6 +64664,10 @@
     {
       "path": "/workspace/astra-source/worker3-forms-actual-native-delivery-corrective01/manifest.json",
       "sha256": "5137915ea98255e711da817317e14b1bcfbeb6dbf6f7a67d301cc2ae6367b7ca"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-actual-regex-pending-input-corrective02/manifest.json",
+      "sha256": "c0f4e24ed057fc65b2086ebba4cbf4dd6ee1733042fde7d67a2ab88535cdd516"
     }
   ],
   "sharedCakeIdContract": null

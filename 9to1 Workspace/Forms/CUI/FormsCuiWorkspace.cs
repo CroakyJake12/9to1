@@ -183,7 +183,10 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                 if (value is not int mode || mode is < 0 or > 1) return false;
                 if (path == "RegexMatchMode") _regexMatchMode = mode; else _regexCaseMode = mode;
             }
-            TestRegexDraft(); Changed(); return true;
+            TestRegexDraft();
+            PropertyChanged?.Invoke(this, new(path));
+            PropertyChanged?.Invoke(this, new("RegexResult"));
+            return true;
         }
         if (!_busy && value is int index && index >= 0 && _project is not null)
         {

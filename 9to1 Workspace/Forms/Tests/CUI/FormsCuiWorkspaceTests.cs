@@ -363,6 +363,10 @@ public sealed class FormsCuiWorkspaceTests
                 var pattern = Input("Regex test pattern"); var example = Input("Regex example input");
                 pattern.Text = "CPU"; example.Text = "a CPU unit";
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
+                Assert.True(workspace.TryGetValue("RegexPattern", out var retainedPattern)); Assert.Equal("CPU", retainedPattern);
+                Assert.True(workspace.TryGetValue("RegexExample", out var retainedExample)); Assert.Equal("a CPU unit", retainedExample);
+                Assert.Equal("CPU", pattern.Text); Assert.Equal("a CPU unit", example.Text);
+                Assert.Same(pattern, Input("Regex test pattern")); Assert.Same(example, Input("Regex example input"));
                 Assert.Equal("Example does not match.", Result());
                 Choice("Full or partial regex match").SelectedIndex = 1;
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
