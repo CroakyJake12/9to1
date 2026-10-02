@@ -305,7 +305,7 @@ try {
   durationMs.passwordResetAndLogin = Math.round(performance.now() - startHash);
   testAccount.password = "New-test-passphrase-8!LocallyVerified";
 
-  const clientResponse = await jsonRequest(`${authPath}/admin/oauth2/create-client`, "POST", {
+  const clientResponse = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
     client_name: "9to1 local integration test",
     redirect_uris: ["http://127.0.0.1:5096/callback"],
     token_endpoint_auth_method: "none",
