@@ -7,6 +7,7 @@
  * Maintenance: Preserve the layer boundary, nullability annotations, cancellation flow, and existing public signatures when changing this file.
  */
 
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -38,7 +39,12 @@ public sealed class NotesRepository(
     /// <summary>
     /// Stores gate locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> RootGates = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+    // Every owning repository instance for the same normalized configured root serializes mutations and reads.
+    // This is same-process coordination, not a cross-process storage authority claim.
+    private readonly SemaphoreSlim _gate = RootGates.GetOrAdd(
+        Path.GetFullPath(Path.Combine(paths.DataDirectory, "Notes", "Documents")), static _ => new(1, 1));
     /// <summary>
     /// Stores root locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -114,6 +120,25 @@ public sealed class NotesRepository(
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // Compare the actual current physical revision while the canonical root is held.
+            // Recovery still uses this repository's actual validated backup/version search; an
+            // independently committed valid current is never replaced by a stale editor.
+            var originalCurrentPresent = File.Exists(CurrentPath(document.Id));
+            NotesDocument? persisted;
+            if (originalCurrentPresent)
+            {
+                try { persisted = await ReadAndValidateAsync(CurrentPath(document.Id), cancellationToken).ConfigureAwait(false); }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+                { persisted = await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false); }
+            }
+            else persisted = await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false);
+            // CAS admission reads never quarantine or remove the original current before denying.
+            if (persisted is null && originalCurrentPresent)
+                throw new InvalidDataException("The current Notes document has no valid recovery copy; it cannot be replaced by this save.");
+            if (persisted is not null && persisted.Id != document.Id)
+                throw new InvalidDataException("The current Notes document identity differs from its canonical directory.");
+            if ((persisted?.Version ?? 0) != document.Version)
+                throw new NotesRevisionConflictException(document.Id, document.Version, persisted?.Version ?? 0);
             var directory = DocumentDirectory(document.Id);
             var versions = VersionsDirectory(document.Id);
             Directory.CreateDirectory(directory);
@@ -129,6 +154,7 @@ public sealed class NotesRepository(
             document.Recovery.RecoveryReason = string.Empty;
 
             var temporary = currentPath + ".tmp-" + Guid.NewGuid().ToString("N");
+            NotesSaveResult? canonicalReceipt = null;
             try
             {
                 await WriteJsonDurablyAsync(temporary, document, cancellationToken).ConfigureAwait(false);
@@ -149,12 +175,16 @@ public sealed class NotesRepository(
 
                 var versionId = VersionFileName(document.Version, now);
                 var versionPath = Path.Combine(versions, versionId + ".haven-notes.json");
+                // Only the actual acknowledged atomic current publication creates this receipt.
+                canonicalReceipt = new NotesSaveResult(document.Id, document.Version, now, hash, currentPath, versionPath)
+                    { VersionHistoryComplete = false };
                 await CopyDurablyAsync(currentPath, versionPath, cancellationToken).ConfigureAwait(false);
                 await WriteJsonDurablyAsync(
                     Path.Combine(versions, versionId + ".meta.json"),
                     new NotesVersionManifest(document.Version, now, NormalizeReason(reason), new FileInfo(versionPath).Length, hash),
                     cancellationToken).ConfigureAwait(false);
                 ApplyRetention(versions);
+                canonicalReceipt = canonicalReceipt with { VersionHistoryComplete = true };
 
                 await diagnostics.WriteAsync(
                     ReliabilitySeverity.Information,
@@ -169,7 +199,15 @@ public sealed class NotesRepository(
                         ["reason"] = NormalizeReason(reason)
                     },
                     cancellationToken: cancellationToken).ConfigureAwait(false);
-                return new NotesSaveResult(document.Id, document.Version, now, hash, currentPath, versionPath);
+                return canonicalReceipt;
+            }
+            catch (Exception) when (canonicalReceipt is not null)
+            {
+                // Ancillary history/diagnostics failure or cancellation cannot undo known current.
+                // Preserve the committed version; no retry of the document effect is necessary.
+                return canonicalReceipt with { PostCommitWarning = canonicalReceipt.VersionHistoryComplete
+                    ? "The document saved, but local diagnostics could not finish."
+                    : "The document saved, but its version history could not finish." };
             }
             catch
             {
@@ -574,7 +612,12 @@ public sealed class NotesAttachmentStore(IAppPaths paths, IProductionDiagnostics
     /// <summary>
     /// Stores gate locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> RootGates = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+    // Every owning repository instance for the same normalized configured root serializes mutations and reads.
+    // This is same-process coordination, not a cross-process storage authority claim.
+    private readonly SemaphoreSlim _gate = RootGates.GetOrAdd(
+        Path.GetFullPath(Path.Combine(paths.DataDirectory, "Notes", "Documents")), static _ => new(1, 1));
 
     /// <summary>
     /// Performs import asynchronously so I/O does not block the caller's thread.

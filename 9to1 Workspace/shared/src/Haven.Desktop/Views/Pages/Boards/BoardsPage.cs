@@ -244,21 +244,43 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         await RefreshLibraryAsync();
     }
 
+    private long _boardPickerGeneration;
+
     private async Task OpenBoardPickerAsync()
     {
+        try
+        {
+            var picker = await CreateBoardPickerAsync();
+            if (picker is null) return;
+            var flyout = new Flyout { Content = picker };
+            picker.Opened += (_, _) => flyout.Hide();
+            flyout.ShowAt(_boardSwitcher);
+        }
+        catch (Exception)
+        {
+            if (!_disposed) SetStatus("Couldn’t load the board picker. Try opening it again.");
+        }
+    }
+
+    internal async Task<BoardsNotebookPicker?> CreateBoardPickerAsync()
+    {
+        if (_disposed) return null;
+        var generation = ++_boardPickerGeneration;
         var boards = await _boards.ListNotebooksAsync(CancellationToken.None);
-        var picker = new MenuFlyout();
-        foreach (var summary in boards.OrderBy(value => value.Title, StringComparer.CurrentCultureIgnoreCase))
+        if (_disposed || generation != _boardPickerGeneration) return null;
+        return new BoardsNotebookPicker(boards, _document?.Id, async id =>
         {
-            var item = new MenuItem { Header = (_document?.Id == summary.Id ? "✓ " : "") + summary.Title };
-            item.Click += async (_, _) => await OpenNotebookAsync(summary.Id);
-            picker.Items.Add(item);
-        }
-        if (boards.Count == 0)
-        {
-            picker.Items.Add(new MenuItem { Header = "No available boards", IsEnabled = false });
-        }
-        picker.ShowAt(_boardSwitcher);
+            if (_disposed || generation != _boardPickerGeneration) return false;
+            var notebook = await _boards.OpenNotebookAsync(id, CancellationToken.None);
+            if (_disposed || generation != _boardPickerGeneration) return false;
+            if (notebook is null)
+            {
+                SetStatus("That Boards notebook is unavailable or no longer exists.");
+                return false;
+            }
+            ActivateNotebook(notebook, null, null);
+            return true;
+        });
     }
 
     private void UpdateBoardSwitcher()
