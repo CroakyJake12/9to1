@@ -74,7 +74,7 @@ public sealed class CanvasNativeEraserInput : ICanvasEraserInput, IDisposable
         if(!StillCaptured()){Cancel("Eraser settings or document access changed; no request was submitted.");return;}
         foreach(var point in args.GetIntermediatePoints(_viewport))
         {
-            if(_capturedOptions!.Mode==CanvasEraserMode.Quick && (point.Position-_press).Length>8)
+            if(_capturedOptions!.Mode==CanvasEraserMode.Quick && ((point.Position.X-_press.X)*(point.Position.X-_press.X)+(point.Position.Y-_press.Y)*(point.Position.Y-_press.Y))>64)
             {Cancel("Quick erasing requires a tap; no request was submitted.");return;}
             if(_viewport.ToDocumentPoint(point.Position) is not {} position){Cancel("The gesture left the displayed document; no request was submitted.");return;}
             if(!Add(position.X,position.Y,point.Properties,args.Pointer.Type))return;
@@ -88,7 +88,7 @@ public sealed class CanvasNativeEraserInput : ICanvasEraserInput, IDisposable
         {
             if(!StillCaptured()){Cancel("The eraser context changed; reopen the current revision.");return;}
             var point=args.GetCurrentPoint(_viewport);
-            if(_capturedOptions!.Mode==CanvasEraserMode.Quick && (point.Position-_press).Length>8)
+            if(_capturedOptions!.Mode==CanvasEraserMode.Quick && ((point.Position.X-_press.X)*(point.Position.X-_press.X)+(point.Position.Y-_press.Y)*(point.Position.Y-_press.Y))>64)
             {Cancel("Quick erasing requires a tap; no request was submitted.");return;}
             if(_viewport.ToDocumentPoint(point.Position) is not {} position || !Add(position.X,position.Y,point.Properties,args.Pointer.Type))
             {Cancel("The gesture ended outside the document; no request was submitted.");return;}

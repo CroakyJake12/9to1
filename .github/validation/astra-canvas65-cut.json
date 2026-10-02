@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "1454463c3d6f817a35cfd4bc205a99ebb8943daf",
-  "programTree": "0f3c877f26a9caf3ca879ccbf40acec6f106da67",
-  "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
+  "baselineCommit": "bdfd212c270029a7b753fcb8e1dbfbe893ab279e",
+  "programTree": "2b17134908da22ed8190550f7432271a75cc4f27",
+  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
     {
@@ -4495,9 +4495,9 @@
     {
       "path": "9to1 Workspace/Canvas/NativeUI/CanvasNativeEraserInput.cs",
       "mode": "100644",
-      "object": "23f5ef78ee653ef3ff6cca22e41aba99d0440a27",
-      "bytes": 10701,
-      "sha256": "29b0a8c2835ea46215ac3f54a506f5a2dc322529571ead168fd088d2a51d78fe"
+      "object": "f047de6e0e15dab967a67bcc67846156a43017f4",
+      "bytes": 10869,
+      "sha256": "3dd7d8a9c6ce8ae43e01b0a32b5e6947922ef3dd53a6c70d8963792c8c82b85c"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI/CanvasNativeInkContext.cs",
@@ -64143,7 +64143,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Exacttwo fixture/projectitem corrective againstactualfailed65. All66 bindings/strictsixCore/86Canvas/sevenNativeUI cases/freshnativeRust/ABI/fullclosure/parts unchanged. Predecessor18Rust+Files/5Corepass1fail retained; no runtime claim.",
+  "limits": "Exacttwo fixture/projectitem corrective againstactualfailed65. All66 bindings/strictsixCore/86Canvas/sevenNativeUI cases/freshnativeRust/ABI/fullclosure/parts unchanged. Predecessor18Rust+Files/5Corepass1fail retained; no runtime claim. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-canvas65-hosted-plan-sol9/manifest.json",
@@ -64220,6 +64220,10 @@
     {
       "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol9/manifest.json",
       "sha256": "a0c7152558f474890fa998d48ea0bf779b5c9dc5cb21b090bc4b3cccb27e8b76"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
+      "sha256": "6dd54abdda8846dc83c4a2883aa18e15552d58ae247e225ab0f219dfdc502d4f"
     }
   ],
   "sharedCakeIdContract": null,
