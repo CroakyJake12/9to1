@@ -9,7 +9,7 @@ namespace HavenOS.Home.Core;
 /// resource/receipt/configuration checks BEFORE ValidateAsync, then hold this fence through its
 /// actual durable commit and dispose it BEFORE recording Home's terminal audit.
 /// While held, neither caller nor guard may recursively read Home, resources or the owner store.</summary>
-public sealed class HomeClaimedResourceCommitFence : IAsyncDisposable
+public sealed partial class HomeClaimedResourceCommitFence : IAsyncDisposable
 {
     private readonly HomeResourceOperationBroker _broker;
     private readonly FileHomeCoreStateStore _store;
@@ -76,6 +76,56 @@ public sealed class HomeClaimedResourceCommitFence : IAsyncDisposable
             !binding.Scopes.Any(scope => scope.Kind == resourceKind + ".library" && scope.Id == originalStoreId && scope.Access == ResourceAccess.Write))
             return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
         return CaptureCoreAsync(broker, store, profiles, ownership, resourceKind, originalStoreId,
+            originalCapability, originalActor, [], isOriginalLifetimeCurrent, ct);
+    }
+
+    /// <summary>Separate exact original Shelf collection claim. This grants no Settings mutation;
+    /// the private owning proposal/factory must validate before Settings-first final admission and
+    /// retain this fence through the durable write, then release before the Home completion audit.</summary>
+    public static ValueTask<HomeClaimedResourceCommitFence?> CaptureShelfCollectionAsync(HomeResourceOperationBroker broker,
+        FileHomeCoreStateStore store, HomeLocalProfileIdentity profiles, HomeResourceStoreOwnershipAuthority ownership,
+        string originalStoreId, long originalRevision, string originalAction, JsonElement originalArguments,
+        HomeResourceExecutionCapability originalCapability, AuthenticatedResourceActor originalActor,
+        Func<bool> isOriginalLifetimeCurrent, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(broker); ArgumentNullException.ThrowIfNull(store);
+        ArgumentNullException.ThrowIfNull(profiles); ArgumentNullException.ThrowIfNull(ownership);
+        ArgumentNullException.ThrowIfNull(originalCapability); ArgumentNullException.ThrowIfNull(originalActor);
+        ArgumentNullException.ThrowIfNull(isOriginalLifetimeCurrent);
+        if (originalAction is not ("shelf.collection.create" or "shelf.collection.membership.add") || originalRevision < 0 ||
+            !Guid.TryParseExact(originalStoreId, "D", out var uuid) || uuid == Guid.Empty || originalStoreId != uuid.ToString("D"))
+            return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
+        var admission = broker.CaptureClaimedAttestation(originalCapability);
+        var revision = originalRevision.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (admission is null || admission.Actor != originalActor || admission.Submission.Scope.TargetAppId != "shelf" ||
+            admission.Submission.Scope.ActionName != originalAction ||
+            admission.Submission.Impact.ResourceBinding is not { SchemaVersion: 1 } binding ||
+            !binding.Scopes.Any(scope => scope.Kind == "shelf.library" && scope.Id == originalStoreId &&
+                scope.Revision == revision && scope.Access == ResourceAccess.Write))
+            return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
+        try
+        {
+            if (originalArguments.ValueKind != JsonValueKind.Object ||
+                admission.Submission.Impact.ArgumentsDigest != Convert.ToHexString(SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(originalArguments.GetRawText()))))
+                return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
+            var names = originalArguments.EnumerateObject().Select(value => value.Name).ToArray();
+            if (names.Length != 6 || names.Distinct(StringComparer.Ordinal).Count() != 6 ||
+                originalArguments.GetProperty("operationID").GetGuid() == Guid.Empty ||
+                originalArguments.GetProperty("storeID").GetGuid() != uuid ||
+                originalArguments.GetProperty("revision").GetInt64() != originalRevision ||
+                originalArguments.GetProperty("operation").GetString() != originalAction)
+                return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
+            var collection = originalArguments.GetProperty("collection");
+            var membership = originalArguments.GetProperty("membership");
+            if (originalAction == "shelf.collection.create"
+                ? collection.ValueKind != JsonValueKind.Object || membership.ValueKind != JsonValueKind.Null
+                : membership.ValueKind != JsonValueKind.Object || collection.ValueKind != JsonValueKind.Null)
+                return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null);
+        }
+        catch (Exception error) when (error is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
+        { return ValueTask.FromResult<HomeClaimedResourceCommitFence?>(null); }
+        return CaptureCoreAsync(broker, store, profiles, ownership, "shelf", originalStoreId,
             originalCapability, originalActor, [], isOriginalLifetimeCurrent, ct);
     }
 

@@ -21,6 +21,7 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Dictionary<Guid, JsonElement> _drafts = [];
     private readonly Dictionary<Guid, string> _fieldErrors = [];
+    private readonly IFormDataReferenceLookupSource? _referenceLookup;
     private const string InvalidFieldMessage = "This answer could not be saved. Check its format and requirements.";
     private readonly List<FormNativeAnswerInput> _inputs = [];
     private readonly List<Action> _detachButtons = [];
@@ -32,21 +33,25 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
     public string? StatusCode { get; private set; }
     public int UnsavedAnswerCount => _drafts.Count;
 
-    private FormNativeResponseSurface(FormResponseSessionService sessions, FormResponseDefinitionResult loaded)
+    private FormNativeResponseSurface(FormResponseSessionService sessions, FormResponseDefinitionResult loaded, IFormDataReferenceLookupSource? referenceLookup)
     {
-        _sessions = sessions;
+        _sessions = sessions; _referenceLookup = referenceLookup;
         _project = loaded.Presentation!;
         _scope = loaded.Scope!;
         Response = loaded.Response!;
-        FormNativePreview.RequireNativeLayout(_project.Fields, _project.Pages, _project.ComponentCount, _project.Theme);
+        FormNativePreview.RequireNativeLayout(_project.Fields, _project.Pages, _project.ComponentCount, _project.Theme, referenceLookup is not null);
     }
 
-    public static async Task<FormNativeResponseOpenResult> OpenAsync(FormResponseSessionService sessions,
+    public static Task<FormNativeResponseOpenResult> OpenAsync(FormResponseSessionService sessions,
         Guid formID, Guid responseID, CancellationToken token = default)
+        => OpenAsync(sessions, formID, responseID, token, null);
+
+    public static async Task<FormNativeResponseOpenResult> OpenAsync(FormResponseSessionService sessions,
+        Guid formID, Guid responseID, CancellationToken token, IFormDataReferenceLookupSource? referenceLookup)
     {
         var loaded = await sessions.ReadSessionAsync(formID, responseID, token);
         if (!loaded.Success) return new(false, loaded.Code, null);
-        try { return new(true, null, new(sessions, loaded)); }
+        try { return new(true, null, new(sessions, loaded, referenceLookup)); }
         catch (NotSupportedException) { return new(false, "CapabilityUnavailable", null); }
     }
 
@@ -102,7 +107,11 @@ public sealed class FormNativeResponseSurface : ICuiBindingContext, ICuiActionDi
                     _drafts[field.FieldID] = answer.Clone();
                     StatusCode = "UnsavedAnswers";
                     RefreshStatus();
-                });
+                }, _referenceLookup is null ? null : (columnID, inputAlive, token) =>
+                    _referenceLookup.OpenForOriginalResponseAsync(response.FormID, response.ResponseID,
+                        field.FieldID, columnID, _scope.Actor,
+                        () => !_disposed && !_conflicted && Response?.FormVersionID == response.FormVersionID
+                            && Response.State == FormResponseState.InProgress && inputAlive(), token));
                 AutomationProperties.SetName(input.Control, field.Label);
                 AutomationProperties.SetHelpText(input.Control, string.Join(" ",
                     new[] { field.Required ? "Required." : null, field.Help, _fieldErrors.GetValueOrDefault(field.FieldID) }.Where(text => !string.IsNullOrWhiteSpace(text))));

@@ -26,7 +26,8 @@ public enum HavenAppRouteKind
     Mesh = 14,
     Spaces = 15,
     Maps = 16,
-    Forms = 17
+    Forms = 17,
+    Shelf = 18
 }
 
 /// <summary>Describes the concrete route and visible surface for an App.</summary>
@@ -64,6 +65,7 @@ public static class HavenAppRoutePolicy
             "boards" => new(HavenAppRouteKind.ModeWorkspace, HavenSurface.Boards),
             "maps" => new(HavenAppRouteKind.Maps, HavenSurface.Maps),
             "forms" => new(HavenAppRouteKind.Forms, HavenSurface.Forms),
+            "shelf" => new(HavenAppRouteKind.Shelf, HavenSurface.Shelf),
             "motion" => new(HavenAppRouteKind.ModeWorkspace, HavenSurface.Motion),
             "launcher" => new(HavenAppRouteKind.ModeWorkspace, HavenSurface.Launcher),
             _ => new(HavenAppRouteKind.BaseMode, SurfaceFor(app.BaseMode))

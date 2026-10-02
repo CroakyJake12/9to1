@@ -48,10 +48,10 @@ public sealed class FormNativePreview : ICuiBindingContext, ICuiActionDispatcher
     }
 
     internal static void RequireNativeLayout(IReadOnlyList<FormField> fields, IReadOnlyList<FormPage> pages,
-        int componentCount, FormThemeReference theme)
+        int componentCount, FormThemeReference theme, bool originalReferenceProviderAvailable = false)
     {
         if (componentCount != 0 || fields.Any(field => !CanRender(field.Kind)
-                || field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
+                || !originalReferenceProviderAvailable && field.Table?.Columns.Any(column => column.Type == FormTableCellType.Reference) == true)
             || fields.Any(field => field.Layout.Columns != 1)
             || theme.ThemeID != "default" || theme.StyleAssetID is not null)
             throw new NotSupportedException("CapabilityUnavailable: this form needs an additional native renderer, layout or theme provider.");

@@ -85,10 +85,13 @@ public sealed partial class FormResponseSessionService(FormPublicationService pu
     {
         if (formID == Guid.Empty || responseID == Guid.Empty) return new(false, "InvalidArgument", null, null);
         var originatingActor = await actors.GetCurrentAsync(token).ConfigureAwait(false);
-        if (originatingActor is null) return new(false, "PermissionDenied", null, null);
+        if (originatingActor is null || scope is not null && scope.Actor != originatingActor) return new(false, "PermissionDenied", null, null);
         var originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
-        if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId == Guid.Empty) return new(false, "PermissionDenied", null, null);
-        var loaded = await publications.ReadAsync(formID, token).ConfigureAwait(false);
+        if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId == Guid.Empty
+            || scope is not null && scope.StoreID != originalRoot.StoreId
+            || await actors.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
+            return new(false, "PermissionDenied", null, null);
+        var loaded = await publications.ReadForOriginalActorAsync(formID, originatingActor, originalRoot.StoreId, token).ConfigureAwait(false);
         if (!loaded.Success) return new(false, loaded.Code, null, null);
         var publication = loaded.Publication!;
         var actor = await AuthorizeAsync(originalRoot.StoreId, publication, "forms.response.read", token).ConfigureAwait(false);

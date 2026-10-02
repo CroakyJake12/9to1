@@ -15,11 +15,19 @@ namespace HavenOS.Forms;
 /// controls affordances only; every persisted operation still checks the store's actual authority.</summary>
 public sealed class FormsCuiWorkspace(FormPublicationService publications, FormAuthoringService authoring,
     Func<Guid?> selectedForm, Func<string, bool> available,
-    Func<FormNativePreview, CancellationToken, Task>? showPreview = null,
-    FormResponseSessionService? responseSessions = null,
-    Func<FormNativeResponseSurface, CancellationToken, Task>? showResponse = null) : ICuiWritableBindingContext,
+    Func<FormNativePreview, CancellationToken, Task>? showPreview,
+    FormResponseSessionService? responseSessions,
+    Func<FormNativeResponseSurface, CancellationToken, Task>? showResponse,
+    IFormDataReferenceLookupSource? referenceLookup) : ICuiWritableBindingContext,
     ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged
 {
+    public FormsCuiWorkspace(FormPublicationService publications, FormAuthoringService authoring,
+        Func<Guid?> selectedForm, Func<string, bool> available,
+        Func<FormNativePreview, CancellationToken, Task>? showPreview = null,
+        FormResponseSessionService? responseSessions = null,
+        Func<FormNativeResponseSurface, CancellationToken, Task>? showResponse = null)
+        : this(publications, authoring, selectedForm, available, showPreview, responseSessions, showResponse, null) { }
+
     private readonly Dictionary<Guid, Guid> _responseIDs = [];
     private FormPublication? _opened;
     private FormProject? _project;
@@ -388,7 +396,7 @@ public sealed class FormsCuiWorkspace(FormPublicationService publications, FormA
                         if (!started.Success) throw new InvalidOperationException(started.Code);
                         responseID = started.Response!.ResponseID; _responseIDs[opened.FormID] = responseID;
                     }
-                    var responseOpen = await FormNativeResponseSurface.OpenAsync(responseSessions!, opened.FormID, responseID, cancellationToken);
+                    var responseOpen = await FormNativeResponseSurface.OpenAsync(responseSessions!, opened.FormID, responseID, cancellationToken, referenceLookup);
                     if (!responseOpen.Success) throw new InvalidOperationException(responseOpen.Code);
                     using (var responseSurface = responseOpen.Surface!) await showResponse!(responseSurface, cancellationToken);
                     _status = "Response closed; its saved answers remain in the published version.";

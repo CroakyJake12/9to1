@@ -669,6 +669,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         HavenSurface.Mail => "Haven Mail",
         HavenSurface.Maps => "Haven Maps",
         HavenSurface.Forms => "Haven Forms",
+        HavenSurface.Shelf => "Haven Shelf",
         _ => "Haven"
     };
 
@@ -1690,6 +1691,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (openInNewTab) AddNewTab();
             OpenMaps();
         }
+        else if (route.Kind == HavenAppRouteKind.Shelf)
+        {
+            await OpenShelfLibraryAsync(CancellationToken.None);
+        }
         else if (route.Kind == HavenAppRouteKind.Forms)
         {
             if (openInNewTab) AddNewTab();
@@ -1802,6 +1807,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                     break;
                 case HavenSurface.Maps:
                     OpenMaps();
+                    break;
+                case HavenSurface.Shelf:
+                    await OpenShelfLibraryAsync(CancellationToken.None);
                     break;
                 case HavenSurface.Forms:
                     OpenForms();
