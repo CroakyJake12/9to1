@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "9e37607aed4dafdaec8491e6e36d9ce2cd128eff",
+  "baselineCommit": "e4c602a72b845f1f1c7849ce0616121240adf85c",
   "programTree": "c9ebb98da9b1cab9884ea4bc8cb3a5e93091b8a0",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
     {
@@ -25,6 +25,13 @@
       "object": "4e6e38084ba993272c42839952e043597010edc3",
       "bytes": 6195,
       "sha256": "329484934d21e2dcee3254707d31809af0f8685cbbdd52d1670e1054848fc99f"
+    },
+    {
+      "path": ".github/scripts/astra-picture-ephemeral-profile.py",
+      "mode": "100644",
+      "object": "c137dcdc549fca5a80a87c2964a1d35f82eed46b",
+      "bytes": 7262,
+      "sha256": "86191af3bc6b6042b8c8066047d5aebe492f83aad510b92f7482a74897bdd3b2"
     },
     {
       "path": ".github/scripts/astra-picture19-artifact-parts.py",
@@ -60,6 +67,13 @@
       "object": "10b4723880ae68d77fa0c0c17893f4ea61cb608b",
       "bytes": 4572,
       "sha256": "5008b57b1330fc49a1166899b02f8f3ecad9b7dfcbb1f490082cad8a856c6cb0"
+    },
+    {
+      "path": ".github/validation/picture-bwrap-upstream-abi4.profile",
+      "mode": "100644",
+      "object": "286131626b73965c8dc0beafb3f0d4798b4e73fd",
+      "bytes": 1968,
+      "sha256": "a964037f6cf0df1099f14226b037eaedde6237c86e715188e93eb460b30be859"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -197,9 +211,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "8c8b2e2721df665a73db29e34be1bf6a80cb00a8",
-      "bytes": 8199,
-      "sha256": "3df41ce77ba8ddf25f6ccf4958c6542eb986ae963a61d4284280b0e71b153774"
+      "object": "e1c14c09012e4687304e838301ad07c54c1a550a",
+      "bytes": 8200,
+      "sha256": "96878858a6981b897bfada398ca7254a8ec21a8807c415dead410f53cd95c2e1"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -63996,7 +64010,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Metadata diagnostics-only: adds bounded actual readonly aa-status/parser VERSION/kerneljournal/caller and genuine bwrap childlabels. Original trueprobe, mandatorysandbox, RUST_LOGdebug and full101 unchanged. No securitypolicy/profile/sysctl/install/namespace/network/seccomp changes. RootW3 independently approved exactsource as observation candidate; no execution/nativepass acceptance. Programsemantic tree unchanged.",
+  "limits": "Root-ratified dedicated ephemeral hosted complete exact officialABI4 two-profile activation with mandatory child deny/stacking, globaluserns restriction1 unchanged, reject existing names and unknown optional local includes. Actual parse/preprocess/inventory/childlabel/NoNewPrivs/zero-capabilities required before whole originalmandatory native101/allcohort runner. Always remove only introduced profiles and compare originalinventory. No bareexemption/globaldisable/localprodload; source/fullsuite unchanged, no acceptance before actual wholepass.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
@@ -64025,6 +64039,22 @@
     {
       "path": "/workspace/astra-source/worker4-picture-readonly-audit-diagnostics02/manifest.json",
       "sha256": "246989f661e79a918fa591144e5aecbedc461992345f9d17c5f465083e051e36"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-picture-fast04-kernel-causality01/report.json",
+      "sha256": "4e5c52cde1316a092f0ee4a570c7a7233f6ed07db15bed2d503bca391a9621e8"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-picture-actual-kernel-profile-fit04/report.json",
+      "sha256": "16bcdddd986fa1bd89fb85cd0995d82194afc46646b9314977a3e6893bd12308"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root16-normal-ci-actual01/root-capture.json",
+      "sha256": "4cfa4c2d4f55955a2fcf9ffd60c6f0e9cecadca4b22396a36d30c5269326881c"
     }
   ],
   "sharedCakeIdContract": null,

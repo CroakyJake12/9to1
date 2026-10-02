@@ -51,7 +51,7 @@ jobs:
         env:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}
           EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
-        run: python3 .github/scripts/astra-picture19-hosted-managed.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-picture19-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+        run: python3 .github/scripts/astra-picture-ephemeral-profile.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-picture19-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
       - name: Freeze bounded independently verifiable evidence bundles
         id: bundles
         if: always()
