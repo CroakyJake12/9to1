@@ -226,7 +226,8 @@ public sealed class FilesNativeBrowserSurfaceTests
                 }
                 Assert.Empty(list.Items); Assert.True(upButton.IsEnabled);
                 Assert.True(view.TryGetValue("FolderTitle", out var title)); Assert.Equal("Deep canonical folder", title);
-                var search = Assert.Single(view.GetVisualDescendants().OfType<TextBox>());
+                var search = Assert.Single(view.GetVisualDescendants().OfType<TextBox>(),
+                    input => input.PlaceholderText == "Search this folder");
                 search.Text = "no matching item"; await view.DispatchAsync("9to1.Files.Search", null, token);
                 await view.DispatchAsync("9to1.Files.Up", null, token);
                 Assert.Equal(deep, Assert.Single(list.Items.Cast<HostedItemMetadata>()).Id); Assert.Equal("", search.Text);

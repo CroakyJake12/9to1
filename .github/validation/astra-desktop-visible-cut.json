@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "programTree": "e917da0822a2e326de88d92d6106e62c41748ebd",
+  "baselineCommit": "7f1a358e5dd15441c12cd8c98d83753ae9fff518",
+  "programTree": "742166ea59d58f7a368514c4c54edf9c86fd6f1c",
   "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -92,23 +92,23 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "95e1e27562a81324cafcffa96456274f4480139f",
+      "object": "47d220a226e06fef1892305ee1564760a24258a9",
       "bytes": 21968,
-      "sha256": "f02ec905211d5d039f6af0607c74471ac474d9974a85823456f497c6afcbc837"
+      "sha256": "a945bbd98743eab8bbb376302e8e1a203fb9beb3ef5879be483d198be7872aa5"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
       "mode": "100644",
-      "object": "cdc95a9fe75120a90f4f0b3fbd4f8d0730f1adaa",
+      "object": "d1611fd1754c342e6099da66852c78f8d6cdf223",
       "bytes": 12141,
-      "sha256": "e3c4d9f6528c38dbadc164f955a19ae6f5ea9066d3e5d777054937dddce09962"
+      "sha256": "5de4f34def94b19817a7538c5d552e3fa516f0ec968df5f53640f6dfe9edee87"
     },
     {
       "path": ".github/validation/astra-desktop-visible-resource-classes.json",
       "mode": "100644",
-      "object": "470eb21a24da87d6084c9c6f19ea77b2ac058f75",
+      "object": "0a1a74ac27466ab2e3215f3641bf03696382d307",
       "bytes": 29835,
-      "sha256": "a2c84e9b2c9915de06b60371806567cd02beacef683b6a1dd4b1a2b7f244a902"
+      "sha256": "4b81ada238cfca1bebfd96dfce0743d925a4e4636f503672939764ebc9a37102"
     },
     {
       "path": ".github/validation/picture-bwrap-upstream-abi4.profile",
@@ -39180,9 +39180,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
       "mode": "100644",
-      "object": "a60c8ab7eff22245da7532ef57be6bb67c46c5d6",
-      "bytes": 21834,
-      "sha256": "86c49bf703bd772a225fcfe6bb2b7f5bf1cd8a615fc150bd271e2d3ba4dbfe37"
+      "object": "3e60b30d630e293181704e1bd768b8a27acd322a",
+      "bytes": 21910,
+      "sha256": "7a419351e0fca150127511f870c842705e99c7903df30617936919492e89afb6"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs",
@@ -65340,7 +65340,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Exact selected files product scope only; complete old owning families plus new whole fixtures, current full regression/resource and Files console retained. Full source/restore/task/compiled/zero-skip guards remain. Native control/physical local evidence only; no remote transport, provider, cloud or OS delivery parity claim. Actual Games journey is canonical managed inspector with null rendering runtime: no Godot prerequisite. Canvas journey requires genuine Rnote Rust ABI; Picture journey requires genuine sandboxed Glycin. Exact maintained native bootstrap blocks retained with isolated identifiers, fresh cargo locked source/toolchain/ABI/ELF/lock output identity and before-after guards. Owning-only dedicated ephemeral full official two-profile experiment/global restriction1/strict child label/noNewPrivs/caps/final cleanup retained; no global security disable or native setup-only acceptance. Consistent maintained Skia startup is an environment precondition, not proof of all runtime typeface identity. Fresh fail-closed managed maps require both exact source-built renderer libraries in the owning compiled Desktop xUnit ELF apphost, exact mapped managed DLL and direct owned dotnet/testhost parent, startticks/ancestry/sourcecompiled output hashes retained. Actual SDK apphost DLL token is a fresh precondition, not a prior Files observation. Source peer precision successor freezes launcher startticks; actual child PPID/startticks and direct parent PPID/startticks are sampled and reread around exe/argv inspection, and every full owned ancestor chain element is revalidated to the same original launcher starttick before native witness admission. Regression/resource evidence output directories exactly match original desktop-visible workflow upload paths; no test/class/product narrowing. Original session PID/start/group/session capture and exact pidfd bounded drain execute on every test-finally path including launcher exit; policy removal refuses missing/failed drain proof. No native witness admission expansion. Owning-only exact reviewed Picture byte-preserving splitter: up to12 separately uploaded26MiB payload bundles, innerZIP<=29MiB with outer artifact reserve; fullfile SHA/pieces/path-set/CRC identities retained. Regression/resource ordinary uploads unchanged. Missing parts cannot be accepted.",
+  "limits": "Exact actual failed-parent minimal correction only. Full existing source and assertions retained. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-files-native-root19-source-graph04/manifest.json",
@@ -65381,6 +65381,10 @@
     {
       "path": "/workspace/astra-source/worker4-picture-root19-current-owned-union20/manifest.json",
       "sha256": "206dc5ad12b1ee1be62ce4517649840a8ac901281474b506192de535ddc87ae5"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-files13-actual-native-search-selector-corrective01/manifest.json",
+      "sha256": "c7befc3ca2e4a9497c7219b77864ef51acd57ece0a456d7e3bbcc8e19453c8a6"
     }
   ],
   "sharedCakeIdContract": null
