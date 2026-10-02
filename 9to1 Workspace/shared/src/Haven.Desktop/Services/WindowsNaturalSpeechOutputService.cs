@@ -237,7 +237,15 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IC
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!ReferenceEquals(_current, original) || original.Completion.Task.IsCompleted)
-            throw new InvalidOperationException("The original speech playback is no longer live.");
+        {
+            // Retain refusal for this exact original, but expose its actual terminal evidence.
+            // A native MediaFailed fault must not disappear behind the lifetime rejection.
+            var completion = original.Completion.Task;
+            var reason = completion.IsFaulted ? "faulted" : completion.IsCanceled ? "canceled" :
+                completion.IsCompletedSuccessfully ? "ended" : "replaced";
+            throw new InvalidOperationException("The original speech playback is no longer live (" + reason + ").",
+                completion.Exception);
+        }
     }
     private async Task<SpeechPlaybackCheckpoint> ControlOriginalAsync(PlaybackState original, bool pause, CancellationToken ct)
     {

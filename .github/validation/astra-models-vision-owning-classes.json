@@ -267,6 +267,10 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerRouteEditor.cs",
       "sha256": "923cda7fc1443b2fc58b333c5e972946806e2b97cc35b2bcc8fdc43c129f6e1f"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs",
+      "sha256": "68c07ce282c416810455db044f3ea34c2dc7e083eed71a9948049ef6b00e3129"
     }
   ],
   "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6",

@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "1be544917eea9fde94199f6bb475c894445cc671",
-  "programTree": "b75e664ef0cfdbbd4f3a4bc04e791c0bb6cdc50d",
-  "currentNormalCommit": "e1644a16b989255528fea449a32c0cc9b31fc7e8",
+  "baselineCommit": "618bfa815bf160bc98cc0ace91af412731ba120d",
+  "programTree": "553ff65df3d03c04166d77b28bcd40f9bab5a209",
+  "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
     {
@@ -85,9 +85,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "bbf17b63a0055eb4fd523c03c122663e9d0e3717",
-      "bytes": 13171,
-      "sha256": "91283b9d26f6fc1e9f1569f939c95c5bcae86c094961c96ae9874f7a0c189b60"
+      "object": "3ff083f54d65c27ec3e55e4ae9788b4ee33efae8",
+      "bytes": 13370,
+      "sha256": "ad7b6675715dbdca84979d351da89fadb3e908d025ca8a277e20f7a069341795"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -33405,9 +33405,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs",
       "mode": "100644",
-      "object": "37d14981f942d209297e98054f6ba039ab12fc41",
-      "bytes": 21405,
-      "sha256": "7a8693a1ac8eb3b851bd0cd13615055af9cc077f9f79489f3986a8f55a12e9f9"
+      "object": "7b02436634a886e41087e15b9bd5910e8813c912",
+      "bytes": 21895,
+      "sha256": "68c07ce282c416810455db044f3ea34c2dc7e083eed71a9948049ef6b00e3129"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/WorkspaceSessionCoordinator.cs",
@@ -65789,6 +65789,18 @@
     {
       "path": "/workspace/astra-source/worker1-monologue-windows-actual-native-producer-guard-source07/manifest.json",
       "sha256": "4630b2714bcfbcc366c503df113bf3ca4bd46a37176d347036b90948a6adad7b"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-windows09-original-terminal-cause-source01/manifest.json",
+      "sha256": "9b31eddf0aa6d6f9072f35f04191657fb3be5a33e8a48654b0eaa8ff68ff3ea0"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint22-publication-local.json",
+      "sha256": "b7ff7fc3baeac9dc86764c280bc689a01cd167849eea46b1434ca527ac9c92ba"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-windows09-original-terminal-cause-source02-metadata/manifest.json",
+      "sha256": "7b2ee937abf95f7043af7e7c45d06c8600c2e58611923fffd8219c0ac3a48736"
     }
   ],
   "sharedCakeIdContract": null
