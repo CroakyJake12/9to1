@@ -81,7 +81,10 @@ public sealed class CompatibilityOriginalFrameworkChoiceTests
                 var close = Find(root, "Close"); Assert.True(close.Focus());
                 var calls = f.Owner.Calls; f.Principal.Value = "foreign-principal";
                 host.Window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
-                host.Window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
+                // Enter closes the original manager on key-down. The matching release belongs to
+                // its still-live owner, as native focus returns there; the closed top-level has no input backend.
+                Assert.False(host.Window.IsVisible); Assert.True(parent.IsVisible);
+                parent.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
                 await host.WhenActionsIdleAsync().WaitAsync(TimeSpan.FromSeconds(5));
                 Assert.False(host.Window.IsVisible); Assert.Null(host.Window.Content);
                 Assert.Empty(parent.OwnedWindows); Assert.Equal(calls, f.Owner.Calls);

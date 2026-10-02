@@ -301,7 +301,7 @@
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs",
       "namespace": "NineToOne.Os.Shell.Tests",
       "class": "CompatibilityOriginalFrameworkChoiceTests",
-      "sha256": "4debc33fa83b27edcd758b488ca164d6661badbd2e07d598d82d4b5f395afd0a",
+      "sha256": "99ca7b90ecbcce7e184c4e930f58e5329a60dcea1ed3241e2b01afd0d5015d26",
       "source": "/workspace/astra-source/worker5-compatibility-native-keyboard-close05/CompatibilityOriginalFrameworkChoiceTests.cs",
       "minimumExpectedPassed": 11,
       "priorAcceptedPassed": 10

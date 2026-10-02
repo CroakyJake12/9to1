@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
-  "programTree": "f8202eef779d40b3a05211a99de0ba293162a7dc",
+  "baselineCommit": "820c165a230fcafcc3035c4db8d25fd190a120e6",
+  "programTree": "f7e4e6fef1f3c4ac6a446882764d3c141ae23b91",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -71,9 +71,9 @@
     {
       "path": ".github/validation/astra-compatibility54-test-classes.json",
       "mode": "100644",
-      "object": "b11648a261698235069f7e6eb75a77ae3550921f",
+      "object": "6ef74a2714966e8f08c470d0be808394152ead0d",
       "bytes": 18590,
-      "sha256": "69db5c2438a9f3284ca462bb73405560f3a28536ecfc8dee6eaa2d992f5b3ac5"
+      "sha256": "2526930bc72fdb7ef24aaf65719441d4b82454664e9f6fa73a6c8ef1a769ed38"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -3060,9 +3060,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs",
       "mode": "100644",
-      "object": "a92495538e86e3631766c1af22dc129ff4d7c9d4",
-      "bytes": 20537,
-      "sha256": "4debc33fa83b27edcd758b488ca164d6661badbd2e07d598d82d4b5f395afd0a"
+      "object": "8250726c4930a0453703548c52af340c1ba948e1",
+      "bytes": 20829,
+      "sha256": "99ca7b90ecbcce7e184c4e930f58e5329a60dcea1ed3241e2b01afd0d5015d26"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
@@ -64430,7 +64430,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-compatibility54-cut.json",
-  "limits": "Exact53 selected sourcebindings/15 newnormal changes; full existing37classes and151 OS/173 overall minima with explicit keyboardclose05 successor. Prior172 accepted source04 proof preserved separately, no acceptance inheritance. All3 full owning/regression/resource gates, source22+3/7producers/hosttasks/restorepackage/donorcompiled/TRXzeroSkip guards preserved. No Androidfuture/Linuxinstaller/installedWine/Windows/nativeauthority acceptance.",
+  "limits": "Actual selectedC54 keyboard test fixture-only correction: real focused Enter down closes principal-revoked original manager, matching native KeyRelease delivered to still-live actual parent headless backend; actual idle/closedmanager/principal/unchanged ownerCalls assertions intact. Same37class names/filter/minima11Choice/OS151/total173 and allfull owning/regression/resource source/producer/restore/compiled/TRX guards retained; solefixtureSHA repin. Prioraccepted172 separate unchanged. Source-only unexecuted, no futureAndroid/shell joins.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-compatibility54-selected-normalized-owner01/manifest.json",
@@ -64447,6 +64447,22 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root15-normal-ci-actual01/root-capture.json",
       "sha256": "b86ea6bcb80dc8f6212394b8c8b54a44eec90b9422a4f8d7631b87a25780062c"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-compatibility-native-keyboard-close06-live-keyup-owner/manifest.json",
+      "sha256": "bd95af0e692858c1494f365e365f908e85b6261341cd0f5e143990cf01d6bda0"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/compatibility54-root15-full-owning01/actual-capture-11218839333/root-capture.json",
+      "sha256": "0bf1e5d6b0785a2b653f6a1372fed2a1b787f03e33a7f8cb162f12d8c1a31db7"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/compatibility54-root15-full-owning01/actual-capture-11219269244/root-capture.json",
+      "sha256": "6aef10b34eb673d6276ce794e8bce027b8c612822296e4b74c3dae1ea1efed3c"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/compatibility54-root15-full-owning01/actual-capture-11219399855/root-capture.json",
+      "sha256": "344329d438887d5737ab31b2f4a2c907956bff882de8726979bdd8b3cf79e0b5"
     }
   ],
   "sharedCakeIdContract": null
