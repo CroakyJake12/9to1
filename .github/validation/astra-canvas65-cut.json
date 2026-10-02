@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "bdfd212c270029a7b753fcb8e1dbfbe893ab279e",
-  "programTree": "2b17134908da22ed8190550f7432271a75cc4f27",
+  "baselineCommit": "49d94783f1b38cf4e18c40d8516e2ffbb7d67069",
+  "programTree": "ea1e0d3ce5cd59ca88165ee9f193369c75378945",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -4425,9 +4425,9 @@
     {
       "path": "9to1 Workspace/Canvas/Host/CanvasHostWindow.Eraser.cs",
       "mode": "100644",
-      "object": "cf2d8f96df4fde6f16756a32e8337631a4aee348",
-      "bytes": 5231,
-      "sha256": "5217b7b930eb6f09ccc44db06a1a4925505855b085a0ae2c5e0f7916b88beee8"
+      "object": "89f672143c6e33f3121355da3857d8e74b787f0a",
+      "bytes": 5256,
+      "sha256": "72580ba1b11fb935e99f573f307eade01d664db32515b45679f867f5d606a7ea"
     },
     {
       "path": "9to1 Workspace/Canvas/Host/CanvasHostWindow.cs",
@@ -64143,87 +64143,19 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Exacttwo fixture/projectitem corrective againstactualfailed65. All66 bindings/strictsixCore/86Canvas/sevenNativeUI cases/freshnativeRust/ABI/fullclosure/parts unchanged. Predecessor18Rust+Files/5Corepass1fail retained; no runtime claim. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
+  "limits": "Exact minimal owner source correction; all existing fullsuite/classes/filter/count/nativeABI/mandatorysandbox/source22+3+additionalnativegitlinks/7producers/hosttasks/restorepayload/compiledclosure/partartifacts preserved. Picture additionally records genuine sandbox preconditions only, never policychanges/relaxation. Actual failed root capture retained; no runtime acceptance.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker4-canvas65-hosted-plan-sol9/manifest.json",
-      "sha256": "ed84162b72a7357b754987aa569cf19d3f0c99f720607d042e110be2f7c55af7"
+      "path": "/workspace/astra-source/worker6-canvas-host-namespace-fix02/manifest.json",
+      "sha256": "82ddf5ae00e6bdf1de915fdb82204c034478f1972ec4fa4e4703afc9e8df9ba9"
     },
     {
-      "path": "/workspace/astra-source/worker6-canvas-root13-selection-01/manifest.json",
-      "sha256": "1b5e9006827716be5da78e3c0192b0a08d2c1dced94ca61fbe856fe4ae24f5d5"
+      "path": "/workspace/astra-source/ready-artifacts/root-native-minimal-actual-recovery02/canvas/root-capture.json",
+      "sha256": "a00666d60dbd684e6c41f0a11718ce5c35ba73061958f556feefc112f4536685"
     },
     {
-      "path": "/workspace/astra-source/worker6-canvas-schema2-fixture-embedded-fix-01/root13-selection.json",
-      "sha256": "8bbd59047cf761db5e32499ed17adfa064f82f9f3f77984941a96b458bc5dd27"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas66-hosted-plan-sol1/manifest.json",
-      "sha256": "be344319b9d4c715cb9bb01847eba5e7920ee52cdceb8ecf52bbf2948c7961d5"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas67-hosted-plan-sol1/manifest.json",
-      "sha256": "21a7cd77c25dfe5b29793853450cb05f209b58a2511755c79e707f7578116f96"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-canvas-history-coverage-restore-01/manifest.json",
-      "sha256": "a46d70d2bdd15e4424b31d36804a4b32bf2b41f5f05a1d3f1dc2cc404e7867a2"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-canvas-history-coverage-restore-01/root13-selection.json",
-      "sha256": "1b60b5f4ff29b8eae110ea454d5030700756fbb1efb15583145e7936ba0cb59e"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas67-hosted-plan-sol2/manifest.json",
-      "sha256": "7cb492c91911fada0c062ced8d384b664b987074c6af608bd2d1b292a0f57508"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-canvas-native-input-await-fix-01/manifest.json",
-      "sha256": "ead7ecc054e3552005ea1c022ad52f5fe5e06c01bc28c68cba621cdbd6f62696"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-canvas-native-eraser-await-fix-01/manifest.json",
-      "sha256": "c60ec54efc0e44880af5e90d825a644febeae5407b9aefac95576070fe0f7b7d"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-canvas-native-eraser-await-fix-01/root13-selection.json",
-      "sha256": "3eb0275cb028d04befa7dd3ab618eeff574c00e55b1514f700c9b518aa2b47b1"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol1/manifest.json",
-      "sha256": "4dda870d1fbc001d3fae0a82a73fd95afc0da24b478da455d12bdafb1ec405c8"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol2/manifest.json",
-      "sha256": "18b6be0e84d8df194196b861313605934c381c1f0df0a29d5cab3c49bd34fc0e"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol3/manifest.json",
-      "sha256": "d9957f02053dc478ebddde17e3da925f6fd1830d88fa31baa4f8ca65bc3ac841"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol5/manifest.json",
-      "sha256": "9939a0d81543b88fa3540a37c09b46eb11ebb1d00ea64fd3f6aabbc86c34bcc9"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol6/manifest.json",
-      "sha256": "8ae57056ef315a9a9ac20a1cceb7f53344af736c4961345df10dacf425f6927b"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol7/manifest.json",
-      "sha256": "298c14d8d2c632a3457969dc80613e8a3d09acfb0a8ec9c3cddadc16b07b0f9f"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol8/manifest.json",
-      "sha256": "f23114281e44a4697284f2e0c6d5832b5b39f9067ae26e6d08b88d239979d69d"
-    },
-    {
-      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol9/manifest.json",
-      "sha256": "a0c7152558f474890fa998d48ea0bf779b5c9dc5cb21b090bc4b3cccb27e8b76"
-    },
-    {
-      "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
-      "sha256": "6dd54abdda8846dc83c4a2883aa18e15552d58ae247e225ab0f219dfdc502d4f"
+      "path": "/workspace/astra-source/worker4-native-actual-correctors02/manifest.json",
+      "sha256": "72ae1d65eabd732cd037af524a5921f0f1c8751bbeb7a36e4c89b73b6dc82f0e"
     }
   ],
   "sharedCakeIdContract": null,

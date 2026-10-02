@@ -1,3 +1,4 @@
+using Haven.Application;
 using System.Text.Json;
 using CakeOS.Cui.Runtime;
 using HavenOS.Files;
