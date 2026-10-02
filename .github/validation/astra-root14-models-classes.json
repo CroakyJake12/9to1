@@ -84,11 +84,11 @@
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
-      "sha256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e"
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
-      "sha256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798"
+      "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeResourceOperationBroker.cs",
@@ -112,7 +112,7 @@
     },
     {
       "path": "framework/CUI/Runtime/CuiControlLoader.cs",
-      "sha256": "347a8b95b75ab47bab07508c9c30e3a10852d231c9d5f60a6b07dae96c882147"
+      "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
     },
     {
       "path": "framework/CUI/Runtime/CuiViewModel.cs",
@@ -135,5 +135,22 @@
       "sha256": "923cda7fc1443b2fc58b333c5e972946806e2b97cc35b2bcc8fdc43c129f6e1f"
     }
   ],
-  "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6"
+  "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6",
+  "coherentDependencyRebind": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "preservedPredecessorSha256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "preservedPredecessorSha256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798",
+      "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "preservedPredecessorSha256": "347a8b95b75ab47bab07508c9c30e3a10852d231c9d5f60a6b07dae96c882147",
+      "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+    }
+  ]
 }

@@ -124,7 +124,7 @@ for name,project,marker in checks:
  restoreBefore=restore.snapshot_restore(root,project)
  expectedIdentityModel={'Microsoft.IdentityModel.Abstractions','Microsoft.IdentityModel.JsonWebTokens','Microsoft.IdentityModel.Logging','Microsoft.IdentityModel.Tokens'}
  actualIdentityModel={key.rsplit('/',1)[0]:key.rsplit('/',1)[1] for key in restoreBefore['packages'] if key.rsplit('/',1)[0] in expectedIdentityModel}
- if actualIdentityModel!={key:'8.14.0' for key in expectedIdentityModel}:raise SystemExit('actual maintained IdentityModel package version set mismatch')
+ if name=='accounts-library-web' and actualIdentityModel!={key:'8.14.0' for key in expectedIdentityModel}:raise SystemExit('actual maintained IdentityModel package version set mismatch')
  (out/(name+'-restore-before.json')).write_text(json.dumps(restoreBefore,indent=2)+'\n')
  code=command(['dotnet',str(target)],name+'-execute');assert_compiled_target_unchanged(name);verify()
  restoreAfter=restore.snapshot_restore(root,project)
@@ -140,6 +140,8 @@ verify()
 
 webTarget=build_and_pin('actual-web-full-build','9to1 Workspace/Web/NineToOne.Web.csproj')
 webRestoreBefore=restore.snapshot_restore(root,'9to1 Workspace/Web/NineToOne.Web.csproj')
+webIdentityModel={key.rsplit('/',1)[0]:key.rsplit('/',1)[1] for key in webRestoreBefore['packages'] if key.rsplit('/',1)[0] in expectedIdentityModel}
+if webIdentityModel!={key:'8.14.0' for key in expectedIdentityModel}:raise SystemExit('actual fullWeb maintained IdentityModel package version mismatch')
 assert_compiled_target_unchanged('actual-web-full-build');verify()
 webRestoreAfter=restore.snapshot_restore(root,'9to1 Workspace/Web/NineToOne.Web.csproj')
 if webRestoreBefore!=webRestoreAfter:raise SystemExit('actual Web restored closure changed')

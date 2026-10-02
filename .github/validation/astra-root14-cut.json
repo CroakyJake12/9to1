@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
+  "baselineCommit": "6871e456558001873d54fc217fbf3b5572d5d976",
   "programTree": "c1b9318844df56135e396f5452df082b42f97c89",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -22,16 +22,16 @@
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
       "mode": "100644",
-      "object": "e4eaeb70ba444995b16f1708ab5e9c4412639c70",
-      "bytes": 3644,
-      "sha256": "1cd7e8b9e181429582dda2f729fd331541260f6144b80ae46c539815027a6d04"
+      "object": "1b9cdc11f5404241a0987a0fe91d31e2a922a125",
+      "bytes": 5568,
+      "sha256": "21c485ed840a89bb9085e25787ef0640ef2bdb8862494ad20e805ad78d258867"
     },
     {
       "path": ".github/scripts/astra-root14-accounts-managed.py",
       "mode": "100644",
-      "object": "6af82f1bfb93ed76e68fc8133a327afc18f2838d",
-      "bytes": 12822,
-      "sha256": "36d162ebc74aed500a5c2cc1a1948e724aef522fb17648cf6feed423a6c52f5c"
+      "object": "3533b4843706200a243bcec53f0cc120c71f9b1e",
+      "bytes": 13159,
+      "sha256": "30c5e04496431bb2ff4072afc292c0f092474e7f88c8bbd81fc1edd812807dce"
     },
     {
       "path": ".github/scripts/astra-root14-apps-managed.py",
@@ -113,9 +113,9 @@
     {
       "path": ".github/validation/astra-root14-models-classes.json",
       "mode": "100644",
-      "object": "715656b8ad709f70c0cbbd6438ac05a622e37d9c",
-      "bytes": 5967,
-      "sha256": "acc6773efba1f07a53d0aa1d8bb60694204c3197a6b2130a600758963704d6ff"
+      "object": "c94c5fed99713aa529d10421b937ae39767d610c",
+      "bytes": 6832,
+      "sha256": "e959b1443251fef168fa8f38aa20aaaf7dd5e6f7d8d9fff2d378b4d81c4003d9"
     },
     {
       "path": ".github/validation/astra-root14-regression-classes.json",
@@ -64587,6 +64587,10 @@
     {
       "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol8/manifest.json",
       "sha256": "1a45ac229ffd71620bb44eb51cb19fc61f74952c79206e4433688a8458324096"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol9/manifest.json",
+      "sha256": "4a07b572f14ae1b46a9987d6756804d7f685eb0d9d96d60a82485225893ed7e2"
     }
   ],
   "sharedCakeIdContract": {
