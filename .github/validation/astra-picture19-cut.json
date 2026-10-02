@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "354c34f43ee0b3950efbe2d6ebd855060953a3d3",
+  "baselineCommit": "9e37607aed4dafdaec8491e6e36d9ce2cd128eff",
   "programTree": "c9ebb98da9b1cab9884ea4bc8cb3a5e93091b8a0",
-  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
     {
@@ -22,9 +22,9 @@
     {
       "path": ".github/scripts/astra-picture-bwrap-diagnostics.py",
       "mode": "100644",
-      "object": "4b7003df21c5fffcd23fee69fc8856ac5e81d5d1",
-      "bytes": 2601,
-      "sha256": "ec1dd829a1cf2e837687702ea8d5e7c105670289f50c625e1d189d091fff9d36"
+      "object": "4e6e38084ba993272c42839952e043597010edc3",
+      "bytes": 6195,
+      "sha256": "329484934d21e2dcee3254707d31809af0f8685cbbdd52d1670e1054848fc99f"
     },
     {
       "path": ".github/scripts/astra-picture19-artifact-parts.py",
@@ -63996,7 +63996,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Actual owning fixture private Home broker property fix only; source class pin updated with exact same classnames/count/fields. Full101 test checks and mandatory native/BWRAP sandbox plus genuine bwrap diagnostic and donor debug RUST_LOG preserved unchanged. Actual precondition failure not relaxed; no compilation or native success claim.",
+  "limits": "Metadata diagnostics-only: adds bounded actual readonly aa-status/parser VERSION/kerneljournal/caller and genuine bwrap childlabels. Original trueprobe, mandatorysandbox, RUST_LOGdebug and full101 unchanged. No securitypolicy/profile/sysctl/install/namespace/network/seccomp changes. RootW3 independently approved exactsource as observation candidate; no execution/nativepass acceptance. Programsemantic tree unchanged.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
@@ -64021,6 +64021,10 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-picture-actual-corrective02/actual-failed03/root-capture.json",
       "sha256": "ec9aa386e90efd647600d7a088f2e4ff5aec608789412d81bd7e7737c6a571a6"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture-readonly-audit-diagnostics02/manifest.json",
+      "sha256": "246989f661e79a918fa591144e5aecbedc461992345f9d17c5f465083e051e36"
     }
   ],
   "sharedCakeIdContract": null,
