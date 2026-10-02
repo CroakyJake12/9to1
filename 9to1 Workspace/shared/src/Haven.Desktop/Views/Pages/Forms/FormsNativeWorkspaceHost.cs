@@ -17,6 +17,7 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
     private readonly Action _revokeOrigin;
     private readonly HashSet<Window> _children = [];
     private CuiControlLoader? _loader;
+    private CuiControlLoader? _workspaceActionLoader;
     private bool _disposed;
 
     public FormsNativeWorkspaceHost(Func<CancellationToken, Task> requireOriginal, Func<Window?> owner, Action revokeOrigin)
@@ -25,6 +26,11 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
         _owner = owner;
         _revokeOrigin = revokeOrigin;
     }
+
+    /// <summary>Read-only snapshot of actual workspace-root button pipelines already accepted by the
+    /// real loader. Capture after Click; disposal does not replace pending work with a completed task.
+    /// This observes completion, never grants dispatch or attests owner success; it excludes future clicks.</summary>
+    public Task WhenActionsIdleAsync() => _workspaceActionLoader?.WhenActionsIdleAsync() ?? Task.CompletedTask;
 
     public async Task RequireCurrentAsync(CancellationToken token)
     {
@@ -47,10 +53,12 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
             candidate.SetActionDispatcher(new OriginDispatcher(this, workspace));
             var loaded = candidate.TryLoad(FormsCuiWorkspace.LoadDocument());
             RequireRoot(loaded.Root, loaded.Diagnostics);
+            candidate.WireBindings(loaded.Root ?? throw new InvalidDataException("The Forms workspace root is unavailable."));
             await _requireOriginal(linked.Token);
             linked.Token.ThrowIfCancellationRequested();
             Content = loaded.Root;
             _loader = candidate;
+            _workspaceActionLoader = candidate;
         }
         catch { candidate.Dispose(); throw; }
     }
@@ -74,6 +82,7 @@ public sealed class FormsNativeWorkspaceHost : ContentControl, IDisposable
         loader.SetActionDispatcher(new OriginDispatcher(this, actions));
         var loaded = loader.TryLoad(document);
         RequireRoot(loaded.Root, loaded.Diagnostics);
+        loader.WireBindings(loaded.Root ?? throw new InvalidDataException("The Forms child root is unavailable."));
         await _requireOriginal(linked.Token);
         linked.Token.ThrowIfCancellationRequested();
         var window = new Window { Title = title, Width = 760, Height = 680,

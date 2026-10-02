@@ -309,8 +309,17 @@ public sealed class ShellConfigurationTests
             ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("fixture-platform", "Fixture platform", false, true,
                 [new("desktop:fixture.desktop", "desktop:fixture.desktop", "Fixture app", "fixture-digest", true)])]);
     }
-    private sealed class PausedInstalledRegistry(IInstalledApplicationRegistry actual) : IInstalledApplicationRegistry
+    private sealed class PausedInstalledRegistry(IInstalledApplicationRegistry actual) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry
     {
+        public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshForActorAsync(AuthenticatedResourceActor actor, CancellationToken ct)
+            => (actual as IInstalledApplicationOriginalActorRegistry ?? throw new UnauthorizedAccessException()).RefreshForActorAsync(actor, ct);
+        public async ValueTask<InstalledApplicationReference?> ResolveLaunchForActorAsync(Guid id, long revision, AuthenticatedResourceActor actor, CancellationToken ct)
+        {
+            var owner = actual as IInstalledApplicationOriginalActorRegistry ?? throw new UnauthorizedAccessException();
+            var observed = await owner.ResolveLaunchForActorAsync(id, revision, actor, ct);
+            if (Interlocked.Increment(ref Reads) == 2) { Entered.TrySetResult(); await Release.Task.WaitAsync(ct); }
+            return observed;
+        }
         public int Reads;
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -24,7 +24,7 @@ public sealed class GoNativeSessionTests
                 var actors = new Actors(); var home = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
                 var resources = new ResourceAuthorizationService(actors, [new ShellConfigurationResourceResolver(home)]);
                 var configuration = new ShellConfigurationService(new HomeShellConfigurationStore(home, actors, resources));
-                var provider = new Provider(); var registry = new EmptyRegistry();
+                var provider = new Provider(actors); var registry = new EmptyRegistry();
                 using var model = new ShellViewModel();
                 await model.StartAsync(configuration, new GoService([provider]), new LinuxApplicationLauncher(registry, resources, actors), default);
                 // Complete startup before pausing the next real canonical actor read.
@@ -66,8 +66,20 @@ public sealed class GoNativeSessionTests
         }
         public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected, HomeStateCommitPhase phase, CancellationToken ct) => ValueTask.FromResult(Current == expected);
     }
-    private sealed class Provider : IGoOriginalActorInvocation
+    private sealed class Provider(Actors actors) : IGoOriginalActorInvocation, IGoOriginalActorQuery
     {
+        // Controlled fixture actor seam; actual FileHome/installed owner proof is in GoPrivateOriginalReadNativeTests.
+        public async IAsyncEnumerable<GoResult> QueryForActorAsync(GoQuery query, AuthenticatedResourceActor expected,
+            [EnumeratorCancellation] CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            await foreach (var result in QueryAsync(query, ct))
+            {
+                if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+                yield return result;
+            }
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+        }
         public string ProviderId => "fixture.original-owner";
         public List<string> Queries { get; } = [];
         public int Invocations;

@@ -6,6 +6,7 @@ namespace Haven.Application;
 public sealed record MapsJourneyLibrary(int SchemaVersion, long Revision, IReadOnlyList<CanonicalMapPlace> Places,
     IReadOnlyList<MapSavedJourney> Journeys, IReadOnlyList<MapJourneyProgress> ActiveJourneys)
 {
+    public MapsOwnedMutationReceipt? LastOwnedMutation { get; init; }
     public IReadOnlyList<MapPlannerJourneyReference> PlannerJourneyReferences { get; init; } = [];
     public static MapsJourneyLibrary Empty { get; } = new(1, 0, [], [], []);
 }
@@ -47,6 +48,47 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
 
     public Task<MapsJourneyResult<MapSavedJourney>> SaveJourneyAsync(long revision, MapSavedJourney journey,
         long? expectedJourneyRevision = null, CancellationToken token = default) =>
+        SaveJourneyCoreAsync(revision, journey, expectedJourneyRevision, token, null, null);
+    public Task<MapsJourneyResult<MapSavedJourney>> SaveJourneyAsync(long revision, MapSavedJourney journey,
+        long? expectedJourneyRevision, ISettingsCommitAdmission admission, MapsOwnedMutationReceipt receipt, CancellationToken token) =>
+        SaveJourneyCoreAsync(revision, journey, expectedJourneyRevision, token, admission, receipt);
+
+    private Task<MapsJourneyResult<MapSavedJourney>> SaveJourneyCoreAsync(long revision, MapSavedJourney journey,
+        long? expectedJourneyRevision, CancellationToken token, ISettingsCommitAdmission? admission, MapsOwnedMutationReceipt? receipt)
+    {
+        ArgumentNullException.ThrowIfNull(journey);
+        MapSavedJourney captured;
+        try
+        {
+            // Enforce the caller collection contract before repeated validation or serializer enumeration.
+            var steps = CaptureJourneyList(journey.Steps).Select(step => step is null ? throw new InvalidDataException("Journey step is required.") : step with
+            { UserDefinedPath = step.UserDefinedPath is null ? null : CaptureJourneyList(step.UserDefinedPath) }).ToArray();
+            captured = journey with { Steps = steps };
+            MapJourneyLogic.Validate(captured);
+            captured = JsonSerializer.Deserialize<MapSavedJourney>(JsonSerializer.Serialize(captured))!;
+        }
+        catch (Exception error) when (error is InvalidDataException or ArgumentException)
+        { return Task.FromResult(new MapsJourneyResult<MapSavedJourney>(null, "InvalidData", error.Message)); }
+        return SaveCapturedJourneyAsync(revision, captured, expectedJourneyRevision, token, admission, receipt);
+    }
+
+    private static T[] CaptureJourneyList<T>(IReadOnlyList<T> supplied)
+    {
+        if (supplied is null) throw new InvalidDataException("Journey collection is required.");
+        var expected = supplied.Count;
+        if (expected < 0) throw new InvalidDataException("Invalid journey collection count.");
+        var captured = new List<T>();
+        foreach (var value in supplied)
+        {
+            if (captured.Count == expected) throw new InvalidDataException("Journey enumeration exceeds its declared count.");
+            captured.Add(value);
+        }
+        if (captured.Count != expected) throw new InvalidDataException("Journey enumeration differs from its declared count.");
+        return captured.ToArray();
+    }
+
+    private Task<MapsJourneyResult<MapSavedJourney>> SaveCapturedJourneyAsync(long revision, MapSavedJourney journey,
+        long? expectedJourneyRevision, CancellationToken token, ISettingsCommitAdmission? admission = null, MapsOwnedMutationReceipt? receipt = null) =>
         MutateAsync(revision, library =>
         {
             MapJourneyLogic.Validate(journey);
@@ -63,7 +105,7 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
             var saved = journey with { Revision = checked((current?.Revision ?? 0) + 1), CreatedAt = current?.CreatedAt ?? now, ModifiedAt = now };
             var journeys = library.Journeys.Where(item => item.JourneyId != saved.JourneyId).Append(saved).ToArray();
             return (library with { Journeys = journeys }, saved);
-        }, token);
+        }, token, admission, receipt);
 
     public Task<MapsJourneyResult<MapSavedJourney>> DuplicateJourneyAsync(long revision, Guid id, string name, CancellationToken token = default) =>
         MutateAsync(revision, library =>
@@ -104,9 +146,10 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
         }, token);
 
     private async Task<MapsJourneyResult<T>> MutateAsync<T>(long revision, Func<MapsJourneyLibrary, (MapsJourneyLibrary Library, T Value)> apply, CancellationToken token,
-        ISettingsCommitAdmission? admission = null)
+        ISettingsCommitAdmission? admission = null, MapsOwnedMutationReceipt? receipt = null)
     {
         await _gate.WaitAsync(token).ConfigureAwait(false);
+        var writeStarted = false;
         try
         {
             if (_settings is not IVersionedSettingsCompareExchange atomic)
@@ -119,11 +162,19 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
             if (revision != current.Revision) return new(default, "RevisionConflict", "Maps changed; refresh before applying this action.");
             var (next, value) = apply(current);
             next = next with { Revision = checked(revision + 1) };
+            if (receipt is not null)
+            {
+                if (receipt.SchemaVersion != 1 || receipt.OperationID == Guid.Empty || receipt.StoreID != stored.StoreIdentity?.StoreId
+                    || receipt.ExpectedLibraryRevision != revision || receipt.PayloadSHA256.Length != 64)
+                    throw new ArgumentException("Exact actual Maps mutation receipt required.");
+                next = next with { LastOwnedMutation = receipt };
+            }
             Validate(next);
             if (admission is not null)
             {
                 if (_settings is not IVersionedSettingsGuardedCompareExchange guarded)
                     return new(default, "AtomicStoreUnavailable", "Maps requires guarded atomic storage.");
+                writeStarted = true;
                 var committed = await guarded.CompareExchangeGuardedAsync(Key, expectedJson, JsonSerializer.Serialize(next),
                     new Dictionary<string, string?>(), admission, token).ConfigureAwait(false);
                 if (!committed.Exchanged) return committed.AdmissionRejected
@@ -134,6 +185,8 @@ public sealed partial class MapsJourneyService(IVersionedSettingsStore settings)
                 return new(default, "RevisionConflict", "Maps changed; refresh before applying this action.");
             return new(value, null, null);
         }
+        catch (Exception) when (writeStarted && receipt is not null)
+        { return new(default, "CompletionUnknown", "Actual Maps write completion is unknown; observe its exact durable receipt without replay."); }
         catch (JourneyRevisionException) { return new(default, "RevisionConflict", "The saved journey changed."); }
         catch (InvalidOperationException exception) when (exception.Message.StartsWith("RevisionConflict:", StringComparison.Ordinal))
         { return new(default, "RevisionConflict", exception.Message); }

@@ -191,6 +191,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     {
         if (_configuration is null || _snapshot is null || _go is null) return;
         var expected = _snapshot;
+        var originalConfiguration = _configuration;
         var selectedItemId = SelectedItem()?.Id;
         var requestedGoGroup = _bindings.Get("GoGroup")?.ToString() ?? "";
         using var request = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetimeToken);
@@ -279,16 +280,30 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
             }
             if (command == "OpenPageItem" && parameter is DesktopPageItem pageItem)
             {
-                if (pageItem.Kind != DesktopPageItemKind.Application || pageItem.Target is not { Owner: "Home", Kind: "os.installed-application" } target || !Guid.TryParse(target.Id, out var id) || _launcher is null)
-                    throw new InvalidOperationException("This desktop item canonical owner action is unavailable.");
-                await _launcher.LaunchCurrentAsync(id, request.Token); return;
+                if (!ReferenceEquals(expected, _snapshot) || !DesktopPageEdits.Effective(expected.Effective).ActivePage.Items.Any(i => ReferenceEquals(i, pageItem)))
+                    throw new UnauthorizedAccessException("Choose an original displayed desktop shortcut.");
+                if (pageItem.Kind != DesktopPageItemKind.Application || pageItem.Target is not { Owner: "Home", Kind: "os.installed-application" } target ||
+                    !Guid.TryParse(target.Id, out var id) || _launcher is null || expected.Stored.SessionActor is not { } originalActor)
+                    throw new InvalidOperationException("This desktop item's canonical owner action is unavailable.");
+                await _launcher.LaunchCurrentForActorAsync(id, originalActor,
+                    token => IsOriginalShortcutCurrentAsync(originalConfiguration, expected, token), request.Token); return;
             }
             if (command == "OpenItem" && parameter is TaskbarItem item)
             {
-                if (item.Kind == TaskbarItemKind.Go) { await SearchSafelyAsync(request.Token); return; }
-                if (item.Kind != TaskbarItemKind.Application || item.Target is not { Owner: "Home", Kind: "os.installed-application" } target || !Guid.TryParse(target.Id, out var id) || _launcher is null)
+                var layer = expected.Effective.ActiveSpace.Taskbar.Layers.Single(l => l.Id == expected.Effective.ActiveSpace.Taskbar.ActiveLayerId);
+                if (!ReferenceEquals(expected, _snapshot) || !layer.Items.Any(i => ReferenceEquals(i, item)))
+                    throw new UnauthorizedAccessException("Choose an original displayed taskbar item.");
+                if (item.Kind == TaskbarItemKind.Go)
+                {
+                    if (!await IsOriginalShortcutCurrentAsync(originalConfiguration, expected, request.Token))
+                        throw new UnauthorizedAccessException("The original taskbar session changed.");
+                    await SearchSafelyAsync(request.Token); return;
+                }
+                if (item.Kind != TaskbarItemKind.Application || item.Target is not { Owner: "Home", Kind: "os.installed-application" } target ||
+                    !Guid.TryParse(target.Id, out var id) || _launcher is null || expected.Stored.SessionActor is not { } originalActor)
                     throw new InvalidOperationException("This taskbar item's canonical owner action is unavailable.");
-                await _launcher.LaunchCurrentAsync(id, request.Token); return;
+                await _launcher.LaunchCurrentForActorAsync(id, originalActor,
+                    token => IsOriginalShortcutCurrentAsync(originalConfiguration, expected, token), request.Token); return;
             }
             if (command == "Keep") { Populate(await _configuration.KeepAsync(expected.Preview?.Id ?? Guid.Empty, request.Token)); return; }
             if (command == "Revert") { Populate(await _configuration.RevertAsync(expected.Preview?.Id ?? Guid.Empty, request.Token)); return; }
@@ -347,6 +362,18 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or FormatException or OverflowException or Win32Exception)
         { _bindings.Set("Status", ex.Message); }
         finally { _actions.Release(); }
+    }
+    private async ValueTask<bool> IsOriginalShortcutCurrentAsync(ShellConfigurationService configuration,
+        ShellConfigurationSnapshot expected, CancellationToken ct)
+    {
+        if (!ReferenceEquals(_configuration, configuration) || !ReferenceEquals(_snapshot, expected)) return false;
+        if (!await configuration.IsCurrentSessionAsync(expected.Stored, ct)) return false;
+        var current = await configuration.GetAsync(ct);
+        if (!ReferenceEquals(_configuration, configuration) || !ReferenceEquals(_snapshot, expected) ||
+            current.Stored.SessionActor != expected.Stored.SessionActor || current.Stored.AuthorityId != expected.Stored.AuthorityId ||
+            current.Stored.Revision != expected.Stored.Revision || current.IntentGeneration != expected.IntentGeneration ||
+            current.Preview?.Id != expected.Preview?.Id) return false;
+        return await configuration.IsCurrentSessionAsync(expected.Stored, ct) && ReferenceEquals(_snapshot, expected) && ReferenceEquals(_configuration, configuration);
     }
     private int Integer(string name) => int.Parse(_bindings.Get(name)?.ToString() ?? "", System.Globalization.CultureInfo.InvariantCulture);
     private double Number(string name) => double.Parse(_bindings.Get(name)?.ToString() ?? "", System.Globalization.CultureInfo.InvariantCulture);
@@ -433,7 +460,7 @@ public sealed class ShellViewModel : ICuiWritableBindingContext, ICuiRepeatItemB
     {
         if (_configuration is null || _go is null || homeView is "Recent" or "Suggested" or "NoSections") yield break;
         if (homeView == "Search")
-        { await foreach (var update in _go.QueryAsync(request.Query, ct)) yield return new(null, update); yield break; }
+        { await foreach (var update in _go.QueryForActorAsync(request.Query, request.Original.SessionActor ?? throw new UnauthorizedAccessException("The displayed Go actor is unavailable."), ct)) yield return new(null, update); yield break; }
         foreach (var section in presentation.Sections.Where(s => s.Visible && (homeView == "Dashboard" || GoSectionLabel(s.Kind) == homeView)))
         {
             if (section.Kind == GoHomeSectionKind.Pinned)

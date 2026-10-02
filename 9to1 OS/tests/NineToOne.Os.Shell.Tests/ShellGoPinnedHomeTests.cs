@@ -11,7 +11,7 @@ public sealed class ShellGoPinnedHomeTests
     public async Task ActualHomePinUsesFreshOwnerLabelRevisionAndNotCopiedStoredEntity()
     {
         using var f = new Fixture(); var original = await f.PinAsync();
-        var owner = new Resolver(); var service = new ShellGoPinnedHome(f.Configuration, new GoService([owner]));
+        var owner = new Resolver(f.Actors); var service = new ShellGoPinnedHome(f.Configuration, new GoService([owner]));
         var result = Assert.Single(await service.ReadAsync(original, default));
         Assert.Equal("Fresh owner label", result.Label); Assert.Equal("42", result.Reference.Revision);
         Assert.Equal(f.ApplicationId.ToString("D"), result.Reference.Id);
@@ -21,20 +21,39 @@ public sealed class ShellGoPinnedHomeTests
     public async Task OriginalSessionChangeDuringCanonicalResolutionPublishesNothing()
     {
         using var f = new Fixture(); var original = await f.PinAsync();
-        var owner = new Resolver { Suspend = true }; var service = new ShellGoPinnedHome(f.Configuration, new GoService([owner]));
+        var owner = new Resolver(f.Actors) { Suspend = true }; var service = new ShellGoPinnedHome(f.Configuration, new GoService([owner]));
         var pending = service.ReadAsync(original, default); await owner.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "replacement" }; owner.Release.TrySetResult();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
     }
     [Fact]
-    public async Task MissingCanonicalResolverDoesNotInventPinnedResult()
+    public async Task MissingOriginalCanonicalResolverExplicitlyDeniesWithoutInventingPinnedResult()
     {
         using var f = new Fixture(); var original = await f.PinAsync();
-        Assert.Empty(await new ShellGoPinnedHome(f.Configuration, new GoService([])).ReadAsync(original, default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => new ShellGoPinnedHome(f.Configuration, new GoService([])).ReadAsync(original, default));
     }
     // Controlled canonical dispatch only; this is not installed-platform admission/launch proof.
-    private sealed class Resolver : IGoCanonicalResolver
+    private sealed class Resolver(Actors actors) : IGoCanonicalResolver, IGoOriginalActorQuery, IGoOriginalActorCanonicalResolver
     {
+        // Controlled fixture actor seam; actual FileHome/installed owner proof is in GoPrivateOriginalReadNativeTests.
+        public async IAsyncEnumerable<GoResult> QueryForActorAsync(GoQuery query, AuthenticatedResourceActor expected,
+            [EnumeratorCancellation] CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            await foreach (var result in QueryAsync(query, ct))
+            {
+                if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+                yield return result;
+            }
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+        }
+        public async Task<GoResult?> ResolveForActorAsync(GoCanonicalLocator locator, AuthenticatedResourceActor expected, CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            var result = await ResolveAsync(locator, ct);
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            return result;
+        }
         public string ProviderId => "os.installed-applications";
         public bool Suspend;
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -11,7 +11,7 @@ public sealed class ShellGoAllAppsHomeTests
     public async Task AllAppsScopesActualGoDispatchAndDoesNotQueryAndroidDrawer()
     {
         using var f = new Fixture(); var original = (await f.Configuration.GetAsync()).Stored;
-        var installed = new Resolver(); var drawer = new Resolver { Id = "android.launcher-drawer" };
+        var installed = new Resolver(f.Actors); var drawer = new Resolver(f.Actors) { Id = "android.launcher-drawer" };
         var service = new ShellGoAllAppsHome(f.Configuration, new GoService([installed, drawer]));
         var results = new List<GoResult>();
         await foreach (var update in service.ReadAsync(original, default)) if (update.Result is { } result) results.Add(result);
@@ -22,15 +22,34 @@ public sealed class ShellGoAllAppsHomeTests
     public async Task SessionSwitchBetweenIncrementalUpdatesDeniesNextPublication()
     {
         using var f = new Fixture(); var original = (await f.Configuration.GetAsync()).Stored;
-        var service = new ShellGoAllAppsHome(f.Configuration, new GoService([new Resolver()]));
+        var service = new ShellGoAllAppsHome(f.Configuration, new GoService([new Resolver(f.Actors)]));
         await using var updates = service.ReadAsync(original, default).GetAsyncEnumerator();
         Assert.True(await updates.MoveNextAsync()); Assert.NotNull(updates.Current.Result);
         f.Actors.Current = f.Actors.Current with { AuthenticationRevision = "replacement" };
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => { await updates.MoveNextAsync(); });
     }
     // Controlled canonical dispatch only; this is not installed-platform admission/launch proof.
-    private sealed class Resolver : IGoCanonicalResolver
+    private sealed class Resolver(Actors actors) : IGoCanonicalResolver, IGoOriginalActorQuery, IGoOriginalActorCanonicalResolver
     {
+        // Controlled fixture actor seam; actual FileHome/installed owner proof is in GoPrivateOriginalReadNativeTests.
+        public async IAsyncEnumerable<GoResult> QueryForActorAsync(GoQuery query, AuthenticatedResourceActor expected,
+            [EnumeratorCancellation] CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            await foreach (var result in QueryAsync(query, ct))
+            {
+                if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+                yield return result;
+            }
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+        }
+        public async Task<GoResult?> ResolveForActorAsync(GoCanonicalLocator locator, AuthenticatedResourceActor expected, CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            var result = await ResolveAsync(locator, ct);
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            return result;
+        }
         public string Id = "os.installed-applications";
         public string ProviderId => Id;
         public int Queries;

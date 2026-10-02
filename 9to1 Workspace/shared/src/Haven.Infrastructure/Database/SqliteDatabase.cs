@@ -996,6 +996,7 @@ internal static class Migrations
             ALTER TABLE external_connections ADD COLUMN capability_snapshot_json TEXT NULL;
             ALTER TABLE external_connections ADD COLUMN capability_snapshot_version TEXT NULL;
         """),
-        new(27, PlannerRichEntitiesMigration.Sql)
+        new(27, PlannerRichEntitiesMigration.Sql),
+        new(AutomationOwnerStateMigration.Version, AutomationOwnerStateMigration.Sql)
     ];
 }

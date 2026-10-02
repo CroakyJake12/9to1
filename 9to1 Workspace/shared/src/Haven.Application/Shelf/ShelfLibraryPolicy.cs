@@ -52,6 +52,24 @@ public static class ShelfLibraryPolicy
         return library with { Revision = checked(library.Revision + 1), Memberships = library.Memberships.Append(membership).ToArray() };
     }
 
+    /// <summary>Reorders an existing manual collection by an exact permutation of its canonical
+    /// memberships. Item identities, target parameters and all other collections remain unchanged.</summary>
+    public static ShelfLibrary ReorderCollection(ShelfLibrary library, Guid collectionId, IReadOnlyList<Guid> orderedItemIds)
+    {
+        ArgumentNullException.ThrowIfNull(library); ArgumentNullException.ThrowIfNull(orderedItemIds);
+        var captured = orderedItemIds.ToArray(); EnsureValid(library);
+        var collection = library.Collections.FirstOrDefault(item => item.Id == collectionId)
+            ?? throw new KeyNotFoundException("The Shelf collection does not exist.");
+        if (collection.Kind != ShelfCollectionKind.Manual)
+            throw new InvalidOperationException("Smart collection ordering follows its declared criteria; only manual collections can be reordered.");
+        var members = library.Memberships.Where(item => item.CollectionId == collectionId).Select(item => item.LaunchItemId).ToHashSet();
+        if (captured.Length != members.Count || captured.Distinct().Count() != captured.Length || !members.SetEquals(captured))
+            throw new ArgumentException("Supply each current collection member exactly once; refresh before reordering.", nameof(orderedItemIds));
+        var positions = captured.Select((id, index) => (id, index)).ToDictionary(item => item.id, item => item.index);
+        return library with { Revision = checked(library.Revision + 1), Memberships = library.Memberships
+            .Select(item => item.CollectionId == collectionId ? item with { Order = positions[item.LaunchItemId] } : item).ToArray() };
+    }
+
     public static ShelfLibrary RemoveMembership(ShelfLibrary library, Guid collectionId, Guid launchItemId)
     {
         ArgumentNullException.ThrowIfNull(library);
