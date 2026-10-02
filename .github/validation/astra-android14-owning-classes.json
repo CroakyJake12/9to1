@@ -1,0 +1,624 @@
+{
+  "status": "Whole current21 source declaration inventory; actual evaluated Compile/discovery/TRX authoritative.",
+  "classes": [
+    {
+      "fullClass": "Haven.Android.AndroidGoProviderTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidGoProviderTests.cs",
+      "sha256": "b392b2a991f54176522e986df18d0147fe9337621da154cfdd332d87f5d7e53e",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "AndroidGoProviderTests"
+    },
+    {
+      "fullClass": "Haven.Android.AndroidLauncherAiContextTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherAiContextTests.cs",
+      "sha256": "08c8b436db47aa01f51010d9dd3f228849cbaeba00a87327517242a1c937a6a1",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "AndroidLauncherAiContextTests"
+    },
+    {
+      "fullClass": "Haven.Android.AndroidLauncherLayoutSessionTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherLayoutSessionTests.cs",
+      "sha256": "5ace258e7932f1abd32f89d782a69f06300f330bf383bec837c9774f15a74cf2",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "AndroidLauncherLayoutSessionTests"
+    },
+    {
+      "fullClass": "Haven.Android.AndroidLauncherPageNavigationTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherPageNavigationTests.cs",
+      "sha256": "1916eafc016d619d376a4e14b9b99055d66b44abaf8c90b107abdd2b3abfc8c0",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "AndroidLauncherPageNavigationTests"
+    },
+    {
+      "fullClass": "Haven.Android.AndroidLauncherWidgetTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidLauncherWidgetTests.cs",
+      "sha256": "fe6aa2081bdc7607c91a657d48a32562ec03c76abb973da3de346339f42e93d8",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "AndroidLauncherWidgetTests"
+    },
+    {
+      "fullClass": "Haven.Android.AndroidOriginalAppSelectionTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidOriginalAppSelectionTests.cs",
+      "sha256": "b4c4bbf122744de21ae795dd2c94cbd1d4ccd5ad8d543ee0d47724113e1b299d",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "AndroidOriginalAppSelectionTests"
+    },
+    {
+      "fullClass": "Haven.Android.RoutedKeyboardAiExecutorTests",
+      "namespace": "Haven.Android",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/RoutedKeyboardAiExecutorTests.cs",
+      "sha256": "76c9555fa0835308883a91a960880c3a522591305a4f6ccb55310bfadad782e8",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
+      "class": "RoutedKeyboardAiExecutorTests"
+    },
+    {
+      "fullClass": "Haven.Android.Cui.Tests.AndroidCuiSurfaceLoaderTests",
+      "namespace": "Haven.Android.Cui.Tests",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Cui.Tests/AndroidCuiSurfaceLoaderTests.cs",
+      "sha256": "a7be7b8be07177148636680704a57a2aa9a78b8b47b03e57b0e9773a7d99977b",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Cui.Tests/Haven.Android.Cui.Tests.csproj",
+      "class": "AndroidCuiSurfaceLoaderTests"
+    },
+    {
+      "fullClass": "Haven.Android.Hui.Tests.AndroidHuiCommandAdapterTests",
+      "namespace": "Haven.Android.Hui.Tests",
+      "path": "9-1 OS (Android)/tests/Haven.Android.Hui.Tests/AndroidHuiCommandAdapterTests.cs",
+      "sha256": "4d2a8ffe1b8b1351898d6fc5fef904a15e7939ddcd037bb704df3d570dd945b0",
+      "project": "9-1 OS (Android)/tests/Haven.Android.Hui.Tests/Haven.Android.Hui.Tests.csproj",
+      "class": "AndroidHuiCommandAdapterTests"
+    },
+    {
+      "fullClass": "NineToOne.Launcher.Tests.LauncherLayoutTests",
+      "namespace": "NineToOne.Launcher.Tests",
+      "path": "9to1 Workspace/Launcher/Tests/LauncherLayoutTests.cs",
+      "sha256": "cf9b594d85f6c5f5456634281de298c0f8b171fb1345542d6695bf34e4a7b4d1",
+      "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
+      "class": "LauncherLayoutTests"
+    },
+    {
+      "fullClass": "NineToOne.Launcher.Tests.LauncherOriginalHostCommitTests",
+      "namespace": "NineToOne.Launcher.Tests",
+      "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalHostCommitTests.cs",
+      "sha256": "25b193c441d19ec6c152983179ac4a031a6931ec0eda3353075105dcd4c874a9",
+      "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
+      "class": "LauncherOriginalHostCommitTests"
+    },
+    {
+      "fullClass": "NineToOne.Launcher.Tests.LauncherOriginalInitializationTests",
+      "namespace": "NineToOne.Launcher.Tests",
+      "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalInitializationTests.cs",
+      "sha256": "23d7d866fbb48a091f3ea46bacca8d5f06b25ad56891976e69702cc2d71a0234",
+      "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
+      "class": "LauncherOriginalInitializationTests"
+    },
+    {
+      "fullClass": "NineToOne.Launcher.Tests.LauncherOriginalNavigationGoTests",
+      "namespace": "NineToOne.Launcher.Tests",
+      "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalNavigationGoTests.cs",
+      "sha256": "23853a65f08a1b7abb029c1506de3f1534b0939ec7e099284603a567d446a16d",
+      "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
+      "class": "LauncherOriginalNavigationGoTests"
+    },
+    {
+      "fullClass": "NineToOne.Launcher.Tests.LauncherOriginalReadCompositionTests",
+      "namespace": "NineToOne.Launcher.Tests",
+      "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalReadCompositionTests.cs",
+      "sha256": "0cb6e0f4adada0d217da8cbb13f38306425cff534982ab62a1b12c6723215c9a",
+      "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
+      "class": "LauncherOriginalReadCompositionTests"
+    },
+    {
+      "fullClass": "NineToOne.Launcher.Tests.LauncherSemanticTests",
+      "namespace": "NineToOne.Launcher.Tests",
+      "path": "9to1 Workspace/Launcher/Tests/LauncherSemanticTests.cs",
+      "sha256": "17739679e999e60bd84aad699874ec7c959e8369d4733438cc9461999d7ab28e",
+      "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
+      "class": "LauncherSemanticTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/AgentPresentationTests.cs",
+      "sha256": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "AgentPresentationTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs",
+      "sha256": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "DenAttachmentCommitAuthorityTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.DenCommitAuthorityTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs",
+      "sha256": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "DenCommitAuthorityTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.DenModelInstallationAuthorityTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs",
+      "sha256": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "DenModelInstallationAuthorityTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs",
+      "sha256": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "DenNamespaceAuthorityTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs",
+      "sha256": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "DenReadLifetimeTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs",
+      "sha256": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "DenSyncAuthorityTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeArtifactReferenceObjectsTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
+      "sha256": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeArtifactReferenceObjectsTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeAutomationDefinitionCommitFenceTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+      "sha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeAutomationDefinitionCommitFenceTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+      "sha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeClaimedResourceAttestationTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeCompletionAuditRecoveryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+      "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeCompletionAuditRecoveryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeCoreStateStoreTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+      "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeCoreStateStoreTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardCancellationTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+      "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeDashboardCancellationTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardDisposeTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+      "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeDashboardDisposeTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardRecoveryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+      "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeDashboardRecoveryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+      "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeDashboardTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+      "sha256": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeDiscoverCatalogTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+      "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeEcosystemTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeEquationObjectTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs",
+      "sha256": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeEquationObjectTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationOriginalActorTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+      "sha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeInstalledApplicationOriginalActorTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+      "sha256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeInstalledApplicationRegistryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeInvocationCatalogueTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs",
+      "sha256": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeInvocationCatalogueTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+      "sha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeLocalOperationLeaseTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs",
+      "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeLocalProfileIdentityTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeLocalStoreSetupEvidenceTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
+      "sha256": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeLocalStoreSetupEvidenceTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+      "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeModelPickerFeatureProviderTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeModelPickerRouteEditorTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
+      "sha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativeActionPolicyTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativeControlledLaunchTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
+      "sha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativeControlledLaunchTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativeDiscoverySessionTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
+      "sha256": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativeDiscoverySessionTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativePeerObservationTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs",
+      "sha256": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativePeerObservationTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativeServiceHostTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs",
+      "sha256": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativeServiceHostTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativeSessionLeaseTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs",
+      "sha256": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativeSessionLeaseTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+      "sha256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNativeWidgetRegistryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs",
+      "sha256": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNotesSharedObjectsTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+      "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeNotificationFeatureProviderTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeObservedRejectedClaimAuditTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+      "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeObservedRejectedClaimAuditTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+      "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomePackageDatabaseTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+      "sha256": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomePermissionTrustServiceTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs",
+      "sha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomePersonalDenFactoryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+      "sha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomePreparedResourceReviewTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+      "sha256": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeProductivityEngineTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs",
+      "sha256": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeProductivityEnvelopeTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs",
+      "sha256": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeProductivityGeometryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityInsertionTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs",
+      "sha256": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeProductivityInsertionTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityRasterTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs",
+      "sha256": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeProductivityRasterTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityStyleTransferTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs",
+      "sha256": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeProductivityStyleTransferTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeRejectedBeginAuditTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs",
+      "sha256": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeRejectedBeginAuditTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeRejectedClaimAuditTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs",
+      "sha256": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeRejectedClaimAuditTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+      "sha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeResourceOperationBrokerTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+      "sha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeSettingsClaimedResourceCommitFenceTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeStoreImportAuditTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs",
+      "sha256": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeStoreImportAuditTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeTerminalAdviceTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs",
+      "sha256": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeTerminalAdviceTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeUnclaimedExecutionAbortTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs",
+      "sha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeUnclaimedExecutionAbortTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeVectorShapeObjectTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
+      "sha256": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeVectorShapeObjectTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeVersionedNodeGraphRepositoryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs",
+      "sha256": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeVersionedNodeGraphRepositoryTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeWebMcpBrowserLeaseTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.HomeWebMcpOriginalActorApprovalTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+      "sha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "HomeWebMcpOriginalActorApprovalTests"
+    },
+    {
+      "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
+      "namespace": "HavenOS.Home.Tests",
+      "path": "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs",
+      "sha256": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60",
+      "project": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "class": "WebMcpInvocationTests"
+    },
+    {
+      "fullClass": "NineToOne.Cui.Markup.Tests.CuiMarkupTests",
+      "namespace": "NineToOne.Cui.Markup.Tests",
+      "path": "framework/CUI/tests/CuiMarkupTests.cs",
+      "sha256": "ad4ccbfe60b2f525f7dd67b59b4e667c1408a0f5f0d822b5c3e6493a3120511b",
+      "project": "framework/CUI/tests/NineToOne.Cui.Markup.Tests.csproj",
+      "class": "CuiMarkupTests"
+    },
+    {
+      "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/AndroidOriginalSpeechAdapterTests.cs",
+      "sha256": "529463e783678d5faa0264d79f776572f0609888266b9c35ea31602720eb64c1",
+      "namespace": "Haven.Android",
+      "class": "AndroidOriginalSpeechAdapterTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+      "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeClaimedResourceCommitFenceTests"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+      "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f",
+      "namespace": "HavenOS.Home.Tests",
+      "class": "HomeActualPersistedWriteObserverTests"
+    }
+  ],
+  "dependencyPins": []
+}
