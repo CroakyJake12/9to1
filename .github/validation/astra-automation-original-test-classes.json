@@ -116,7 +116,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationLinkedPairTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "NativeAutomationLinkedPairTests",
-      "sha256": "c1f001f6e6363f5bb4769e80e12e5d8effc8b805cb397937e1e3174813a6aa02"
+      "sha256": "58dd9f51cdc4bebbf4033bcdfc0ca77cb6556dd885eb071f43e1912e9db89ac2"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",

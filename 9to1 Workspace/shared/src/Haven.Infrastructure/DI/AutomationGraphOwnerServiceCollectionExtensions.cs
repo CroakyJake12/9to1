@@ -45,9 +45,10 @@ public static class AutomationGraphOwnerServiceCollectionExtensions
             var store = sp.GetRequiredService<IHomeCoreStateStore>() as FileHomeCoreStateStore
                 ?? throw new NotSupportedException("Actual local Home operation leases are required.");
             var profiles = sp.GetRequiredService<HomeLocalProfileIdentity>();
+            if (!ReferenceEquals(sp.GetRequiredService<IAuthenticatedResourceActorSource>(), profiles))
+                throw new NotSupportedException("The original canonical local Home actor and ownership graph are required.");
             var ownership = sp.GetRequiredService<HomeResourceStoreOwnershipAuthority>();
-            if (!ReferenceEquals(sp.GetRequiredService<IAuthenticatedResourceActorSource>(), profiles) ||
-                !ReferenceEquals(sp.GetRequiredService<IResourceStoreOwnershipAuthority>(), ownership))
+            if (!ReferenceEquals(sp.GetRequiredService<IResourceStoreOwnershipAuthority>(), ownership))
                 throw new NotSupportedException("The original canonical local Home actor and ownership graph are required.");
             var registry = sp.GetRequiredService<HomeGraphPublicationResourceRegistry>();
             var resolvers = sp.GetServices<ICanonicalResourceAccessResolver>().Where(r => r.ResourceKind == registry.ResourceKind).ToArray();

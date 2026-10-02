@@ -135,7 +135,7 @@ public sealed class AutomationDefinitionChange
         var scheduleChange = new AutomationDefinitionChange(actualStoreID, scheduleCopy.Id, expectedScheduleRevision,
             AutomationOwnerEntityKind.Automation, kind, scheduleCopy, scheduleOperation, originalActor,
             linkedEffect: root, linkedScopes: scopes);
-        return new(pairID, Convert.ToHexString(SHA256.HashData(payload)), taskChange, scheduleChange);
+        return new(pairID, Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(root))), taskChange, scheduleChange);
     }
 
     public static string ComputeRawRowSHA256(IReadOnlyDictionary<string, string?> row)

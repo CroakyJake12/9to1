@@ -1,3 +1,4 @@
+using Haven.Desktop.Controls;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;

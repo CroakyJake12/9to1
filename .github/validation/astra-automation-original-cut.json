@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "c167d1e90fe8e9dd9d5d26f03786ca8bbb550c6a",
-  "programTree": "8b1be71c7fa59d2df70fa6225a5420f7f4df6768",
+  "baselineCommit": "d82d6a7460500e2acc61d7cc8a3e943cbcac968b",
+  "programTree": "9ca55107ffcaabb942d0fe60eea783354c5ff09c",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
@@ -71,9 +71,9 @@
     {
       "path": ".github/validation/astra-automation-original-test-classes.json",
       "mode": "100644",
-      "object": "96a729fa635caadf8c7333ba83b2535406edbec6",
+      "object": "adc3ed019b263626650b713c2b1cfe3893058f3b",
       "bytes": 17446,
-      "sha256": "dbe90d258367e661b0ce84d4a850d6179d7a2567388303199d6ba645f6021a2f"
+      "sha256": "ad2f35d26b82ad5aeabeeadc139e220ebb674f8847afa5f28c82554cfa7f838a"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -27161,9 +27161,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Automations/AutomationOwnerCommitContracts.cs",
       "mode": "100644",
-      "object": "56e7d5f93b761e69e44a92b7525a32e0734d1641",
-      "bytes": 15428,
-      "sha256": "ff2b024dcdf95ac6f4f8b9211cdf7f54a581f32435182c67b7ca920fbd79fb89"
+      "object": "a802283e626bdf041fb2006647154ec287f01e4c",
+      "bytes": 15462,
+      "sha256": "555a89ab0cc81dc89c65795f10e89a8405d54d0aae9f1b3795e2aa55397e35dd"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Automations/BuiltInAutomationActionNodes.cs",
@@ -35428,9 +35428,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/AutomationGraphOwnerServiceCollectionExtensions.cs",
       "mode": "100644",
-      "object": "860ca2914dd9ad33c8a615703c3c44bef44a2c02",
-      "bytes": 5674,
-      "sha256": "f0d530bff3d3fe1dff34087d675bd2a60c89eb80b885559d2c30391f15138f0b"
+      "object": "f08d5ebd1183881ddfaeaf2cf21e15682c48bb16",
+      "bytes": 5798,
+      "sha256": "ff366957f4896b5d05f55052249c93fefc1788c57066315e07f9fd0d45690f7e"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/AutomationLinkedDefinitionServiceCollectionExtensions.cs",
@@ -39012,9 +39012,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationLinkedPairTests.cs",
       "mode": "100644",
-      "object": "b2dfd0da19d9d183c1b485746dda655dc09ff717",
-      "bytes": 11889,
-      "sha256": "c1f001f6e6363f5bb4769e80e12e5d8effc8b805cb397937e1e3174813a6aa02"
+      "object": "bc68d0cc37ebd8885bd4fa534baa27697ec7ce49",
+      "bytes": 11919,
+      "sha256": "58dd9f51cdc4bebbf4033bcdfc0ca77cb6556dd885eb071f43e1912e9db89ac2"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",
@@ -64703,7 +64703,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-automation-original-cut.json",
-  "limits": "Actual compile corrective only: two existing actual namespace imports only, no producer/consumer/interface or new SQL/graph semantics. All full Maps2/Automation3 gates, filters/counts/source22+3/restore/producers/hosttasks/compiled/TRX guards unchanged; no runtime acceptance.",
+  "limits": "Actual exactd82 three-source correction only: producerhash of identical captured JsonElement matches genuineSQL linkedpair encoder, early foreignactor DI denial before HomeIO, actual SurfacePaletteCatalog namespace import in full unchangednativefixture. Sameclass names/filters/full3 owning/regression/resource and source22+3/7producer/task/restore/compiled/TRX guards unchanged; one fixtureclass SHA repin only. No futureAutomation/Home/SQL lifetime graphs. Source-only unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-automation-owning-source-graph02/manifest.json",
@@ -64752,6 +64752,22 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-automation-producer-actual-corrective01/actual-failed05-11218450432/root-capture.json",
       "sha256": "03c9927873ac98686010e57432a1cf9ce59a56504b7daeba8582f558f631f2b6"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-automation-exact-d82-owning-corrective02/manifest.json",
+      "sha256": "709ae924743b4c0fb979d5f83507287bbff3d03e3437c36875fe3d2befe49a7e"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-automation-actual-compile-corrective03/actual-capture-11218967312/root-capture.json",
+      "sha256": "25cb6cfd1273240f2612f7b070791850cac3d21b7c663978616a767b2c3ea598"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-automation-actual-compile-corrective03/actual-capture-11219161586/root-capture.json",
+      "sha256": "acd139f2f037b5f53711e785609a0252659bcc5c444d0318f96021a4da36a765"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-automation-actual-compile-corrective03/actual-capture-11219490554/root-capture.json",
+      "sha256": "2281b205fd62fba03ba01f6210624c277b57c47ec495c6c15ba172775a88e7c8"
     }
   ],
   "sharedCakeIdContract": null
