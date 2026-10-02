@@ -80,7 +80,7 @@ public sealed class FormNativePreviewTests
             var now = DateTimeOffset.UtcNow;
             var project = FormProjectEditor.Create("Numeric draft", FormModeKind.Form, now);
             project = FormProjectEditor.AddField(project, project.Revision, project.Pages[0].PageID,
-                new(Guid.NewGuid(), kind, "Amount", null, JsonSerializer.SerializeToElement(new { }), true, new()), now);
+                new(Guid.NewGuid(), kind, "Amount", "Enter a numeric amount.", JsonSerializer.SerializeToElement(new { }), true, new()), now);
             using var preview = new FormNativePreview(project);
             var registry = new CuiControlRegistry(); preview.Register(registry);
             var window = await CuiSceneHost.CreateWindowAsync(new CuiNativeScene("forms-number", "Number", "forms",
@@ -88,6 +88,7 @@ public sealed class FormNativePreviewTests
             using var host = Assert.IsType<CuiSceneHost>(window.Content);
             window.Show();
             var number = Assert.Single(host.GetVisualDescendants().OfType<NumericUpDown>());
+            Assert.Equal("Required. Enter a numeric amount.", Avalonia.Automation.AutomationProperties.GetHelpText(number));
             var numericText = Assert.Single(number.GetVisualDescendants().OfType<TextBox>());
             number.Value = 3;
             Assert.Equal(3, Assert.Single(preview.Response.Answers).Value.GetDecimal());

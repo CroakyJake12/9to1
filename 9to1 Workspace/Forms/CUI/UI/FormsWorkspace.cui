@@ -54,6 +54,14 @@
         <TextBlock text="{Binding AddedRows}" />
         <Button action="9to1.Forms.ToggleAddedRows" is-enabled="{Binding CanToggleAddedRows}" content="Toggle respondent-added rows" />
         <Button action="9to1.Forms.DiscardInspector" is-enabled="{Binding CanDiscard}" content="Discard unsaved inspector edits" />
+        <StackPanel spacing="6" accessible-name="Regex tester">
+          <TextBlock text="Test a pattern without changing the question" />
+          <TextBox text="{Binding RegexPattern, Mode=TwoWay}" is-enabled="{Binding CanTestRegex}" accessible-name="Regex test pattern" />
+          <TextBox text="{Binding RegexExample, Mode=TwoWay}" is-enabled="{Binding CanTestRegex}" accessible-name="Regex example input" />
+          <ComboBox ItemsSource="{Binding RegexMatchModes}" SelectedIndex="{Binding RegexMatchMode, mode=TwoWay, type=int}" is-enabled="{Binding CanTestRegex}" accessible-name="Full or partial regex match" />
+          <ComboBox ItemsSource="{Binding RegexCaseModes}" SelectedIndex="{Binding RegexCaseMode, mode=TwoWay, type=int}" is-enabled="{Binding CanTestRegex}" accessible-name="Regex case matching" />
+          <TextBlock text="{Binding RegexResult}" accessible-name="Regex test result" />
+        </StackPanel>
         <TextBlock text="{Binding Required}" />
         <Button action="9to1.Forms.ToggleRequired" is-enabled="{Binding CanEdit}" content="Toggle required answer" />
       </StackPanel>

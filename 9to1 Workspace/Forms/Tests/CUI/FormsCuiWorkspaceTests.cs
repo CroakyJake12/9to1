@@ -1,3 +1,9 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Automation;
+using Avalonia.VisualTree;
+using CakeOS.Cui.Runtime;
 using System.Text;
 using System.Text.Json;
 using Haven.Application;
@@ -7,6 +13,7 @@ using HavenOS.Forms;
 
 namespace HavenOS.Forms.Tests;
 
+[Collection("Forms native renderer")]
 public sealed class FormsCuiWorkspaceTests
 {
     [Fact]
@@ -287,6 +294,99 @@ public sealed class FormsCuiWorkspaceTests
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await reopened.DispatchAsync("9to1.Forms.Close", null));
         authority.Allowed = true;
         Assert.Equal(retained.Revision, (await reopenedPublications.ReadAsync(selected.Value)).Publication!.Revision);
+    }
+
+    [Fact]
+    public async Task Live_regex_tester_uses_runtime_semantics_without_changing_physical_form()
+    {
+        Assert.NotNull(FormsCuiWorkspace.LoadDocument());
+        using var paths = new Paths(); var settings = new VersionedAtomicSettingsStore(paths);
+        var publications = new FormPublicationService(settings, settings, new Authority(), new FormNativePublicationValidator(), actors: new PublicationActor());
+        var allowed = true;
+        var surface = new FormsCuiWorkspace(publications, new(publications), () => null, _ => allowed);
+        Assert.False(surface.TrySetValue("RegexPattern", "CPU")); // No actual selected question.
+        await surface.DispatchAsync("9to1.Forms.Create", null);
+        await surface.DispatchAsync("9to1.Forms.AddText", null);
+        var id = surface.FormID!.Value;
+        var before = (await publications.ReadAsync(id)).Publication!;
+        var bytes = Directory.GetFiles(paths.DataDirectory, "*", SearchOption.AllDirectories)
+            .ToDictionary(path => path, File.ReadAllBytes);
+        string Result() { Assert.True(surface.TryGetValue("RegexResult", out var result)); return Assert.IsType<string>(result); }
+        Assert.True(surface.TrySetValue("RegexPattern", "CPU"));
+        Assert.True(surface.TrySetValue("RegexExample", "a CPU unit"));
+        Assert.Equal("Example does not match.", Result());
+        Assert.True(surface.TrySetValue("RegexMatchMode", 1));
+        Assert.Equal("Example matches.", Result());
+        Assert.True(surface.TrySetValue("RegexExample", "cpu"));
+        Assert.Equal("Example does not match.", Result());
+        Assert.True(surface.TrySetValue("RegexCaseMode", 1));
+        Assert.Equal("Example matches.", Result());
+        Assert.True(surface.TrySetValue("RegexPattern", "["));
+        Assert.Equal("Invalid or unsupported pattern.", Result());
+        Assert.True(surface.TryGetValue("RegexPattern", out var retained)); Assert.Equal("[", retained);
+        Assert.True(surface.TrySetValue("RegexPattern", "CPU")); Assert.Equal("Example matches.", Result());
+        Assert.False(surface.TrySetValue("RegexMatchMode", 2));
+        Assert.False(surface.TrySetValue("RegexExample", new string('x', 4097)));
+        var after = (await publications.ReadAsync(id)).Publication!;
+        Assert.Equal(before.Revision, after.Revision); Assert.Equal(before.Draft.GetRawText(), after.Draft.GetRawText());
+        Assert.Equal(bytes.Keys.Order(), Directory.GetFiles(paths.DataDirectory, "*", SearchOption.AllDirectories).Order());
+        foreach (var pair in bytes) Assert.Equal(pair.Value, File.ReadAllBytes(pair.Key));
+        var reopenedStore = new VersionedAtomicSettingsStore(paths);
+        var reopened = new FormPublicationService(reopenedStore, reopenedStore, new Authority(), new FormNativePublicationValidator(), actors: new PublicationActor());
+        Assert.Equal(before.Draft.GetRawText(), (await reopened.ReadAsync(id)).Publication!.Draft.GetRawText());
+        allowed = false;
+        Assert.False(surface.TrySetValue("RegexPattern", "Denied"));
+        Assert.True(surface.TryGetValue("RegexPattern", out retained)); Assert.Equal("CPU", retained);
+    }
+
+    [Fact]
+    public async Task Mounted_regex_inputs_refresh_live_results_and_preserve_invalid_pattern()
+    {
+        await using var session = HeadlessUnitTestSession.StartNew(typeof(RegexApplication));
+        await session.Dispatch<bool>(async () =>
+        {
+            using var paths = new Paths(); var store = new VersionedAtomicSettingsStore(paths);
+            var publications = new FormPublicationService(store, store, new Authority(), new FormNativePublicationValidator(), actors: new PublicationActor());
+            var workspace = new FormsCuiWorkspace(publications, new(publications), () => null, _ => true);
+            await workspace.DispatchAsync("9to1.Forms.Create", null);
+            await workspace.DispatchAsync("9to1.Forms.AddText", null);
+            var before = (await publications.ReadAsync(workspace.FormID!.Value)).Publication!;
+            var window = await CuiSceneHost.CreateWindowAsync(new CuiNativeScene("regex-inspector", "Forms", "forms",
+                FormsCuiWorkspace.LoadDocument(), workspace, workspace, new RegexReady()));
+            using var host = Assert.IsType<CuiSceneHost>(window.Content);
+            try
+            {
+                window.Show();
+                TextBox Input(string label) => Assert.Single(host.GetVisualDescendants().OfType<TextBox>(), x => AutomationProperties.GetName(x) == label);
+                ComboBox Choice(string label) => Assert.Single(host.GetVisualDescendants().OfType<ComboBox>(), x => AutomationProperties.GetName(x) == label);
+                string Result() => Assert.Single(host.GetVisualDescendants().OfType<TextBlock>(), x => AutomationProperties.GetName(x) == "Regex test result").Text!;
+                var pattern = Input("Regex test pattern"); var example = Input("Regex example input");
+                pattern.Text = "CPU"; example.Text = "a CPU unit";
+                Assert.Equal("Example does not match.", Result());
+                Choice("Full or partial regex match").SelectedIndex = 1;
+                Assert.Equal("Example matches.", Result());
+                pattern.Text = "["; Assert.Equal("Invalid or unsupported pattern.", Result()); Assert.Equal("[", pattern.Text);
+                pattern.Text = "CPU"; example.Text = "cpu";
+                Assert.Equal("Example does not match.", Result());
+                Choice("Regex case matching").SelectedIndex = 1;
+                Assert.Equal("Example matches.", Result());
+                var after = (await publications.ReadAsync(workspace.FormID.Value)).Publication!;
+                Assert.Equal(before.Revision, after.Revision); Assert.Equal(before.Draft.GetRawText(), after.Draft.GetRawText());
+            }
+            finally { window.Close(); }
+            return true;
+        }, default);
+    }
+    public sealed class RegexApplication : Avalonia.Application
+    {
+        public static AppBuilder BuildAvaloniaApp() => CuiNativeHost.ConfigureFonts(AppBuilder.Configure<RegexApplication>().UseSkia())
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+        public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this);
+    }
+    private sealed class RegexReady : ICuiSceneReadiness
+    {
+        public ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken token) =>
+            ValueTask.FromResult(new CuiSceneAvailability(CuiSceneAvailabilityState.Ready, "ready", "Ready"));
     }
 
     private static FormProject Decode(JsonElement value) => FormProjectCodec.Decode(Encoding.UTF8.GetBytes(value.GetRawText()));
