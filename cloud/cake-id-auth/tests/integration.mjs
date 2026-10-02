@@ -197,6 +197,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
   const authorizeURL = new URL(discovery.authorization_endpoint);
   authorizeURL.search = new URLSearchParams({
     response_type: "code",
+    prompt: "consent", // This fixture explicitly exercises the real consent screen on every grant.
     client_id: clientId,
     redirect_uri: "http://127.0.0.1:5096/callback",
     scope: scopes,
@@ -387,10 +388,16 @@ try {
   assert.equal(discovery.registration_endpoint, undefined, "Dynamic Client Registration is not published");
 
   // Exercise Better Auth's client hook from the unauthenticated authorization redirect.
-  const profileFlow = await authorizationCode(discovery, client.client_id, "openid profile email cake:account:read cake:profile:read", false);
+  const rejectedPkceFlow = await authorizationCode(discovery, client.client_id, "openid profile email cake:account:read cake:profile:read", false);
+  const wrongVerifier = await exchangeCode(discovery, client.client_id, rejectedPkceFlow.code, randomBytes(32).toString("base64url"), 401);
+  assert.equal(wrongVerifier.error, "invalid_request", "maintained provider rejects wrong PKCE verifier");
+  assert.equal(wrongVerifier.error_description, "code verification failed");
+  assert.equal(wrongVerifier.access_token, undefined, "wrong verifier issues no access token");
+  const consumedCode = await exchangeCode(discovery, client.client_id, rejectedPkceFlow.code, rejectedPkceFlow.verifier, 400);
+  assert.equal(consumedCode.error, "invalid_grant", "authorization code was consumed before verifier validation");
+  assert.equal(consumedCode.access_token, undefined, "consumed code cannot issue a token even with correct verifier");
+  const profileFlow = await authorizationCode(discovery, client.client_id, "openid profile email cake:account:read cake:profile:read", true);
   const startedExchange = performance.now();
-  const wrongVerifier = await exchangeCode(discovery, client.client_id, profileFlow.code, randomBytes(32).toString("base64url"), 400);
-  assert.ok(wrongVerifier.error, "wrong PKCE verifier is rejected");
   const profileToken = await exchangeCode(discovery, client.client_id, profileFlow.code, profileFlow.verifier);
   durationMs.passwordLoginAndTokenExchange = Math.round(performance.now() - startedExchange);
   assert.ok(profileToken.access_token && profileToken.id_token, "authorization code produced OIDC and API tokens");
