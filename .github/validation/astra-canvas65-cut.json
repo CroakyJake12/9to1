@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d5b4d47da47762287ea339081baf3ff6a5f27403",
-  "programTree": "b663d22ef52b932f04feae4b18fb7507c120b3b1",
+  "baselineCommit": "c916686bf0264b51388758c8471ebce22c272605",
+  "programTree": "f6399a869c598fe4313debfcbc6d0ce4f3b4d218",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "e50c351dd370acfdc06c7420d605681a305f39d2",
-      "bytes": 5513,
-      "sha256": "ea5658242667e5df488c96defd1616570d29544d740e4603f9a12a4a577a2906"
+      "object": "54ae33c493dfed8a09e307e55d0e6ea9f8012206",
+      "bytes": 5793,
+      "sha256": "67d042d63e7fb39776f41a1487ddd7c67ca2ec14ba04fcd00a00f98e22b50fe1"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -4687,6 +4687,13 @@
       "object": "fa492fe44101c787eb8ddb8aa001ef47b053f158",
       "bytes": 9077,
       "sha256": "0f1a09ba8d603ab8af40a5f50c06867826af3627869ff2dc9f1ee66d20885bf9"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteHistoryRestorationTests.cs",
+      "mode": "100644",
+      "object": "a0e5a1792569d09673a97b4b53ff5ed60df37bb9",
+      "bytes": 2941,
+      "sha256": "7ac3a520933ecae45627b77cdce5f318b1e8523f9ae5d134b6479c100fee0efa"
     },
     {
       "path": "9to1 Workspace/Canvas/Tests/NativeRnoteJourneyTests.cs",
@@ -64153,6 +64160,18 @@
     {
       "path": "/workspace/astra-source/worker4-canvas66-hosted-plan-sol1/manifest.json",
       "sha256": "be344319b9d4c715cb9bb01847eba5e7920ee52cdceb8ecf52bbf2948c7961d5"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas67-hosted-plan-sol1/manifest.json",
+      "sha256": "21a7cd77c25dfe5b29793853450cb05f209b58a2511755c79e707f7578116f96"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-history-coverage-restore-01/manifest.json",
+      "sha256": "a46d70d2bdd15e4424b31d36804a4b32bf2b41f5f05a1d3f1dc2cc404e7867a2"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-history-coverage-restore-01/root13-selection.json",
+      "sha256": "1b60b5f4ff29b8eae110ea454d5030700756fbb1efb15583145e7936ba0cb59e"
     }
   ],
   "sharedCakeIdContract": null,

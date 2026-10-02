@@ -113,6 +113,12 @@
       "class": "NativeFilesMediaOriginalStoreTests",
       "namespace": "Haven.Desktop.Tests",
       "sha256": "1f152922cd67edf5f0bf0707a22aaeb11d7d47b1770bc9c01a6c67c3c5615798"
+    },
+    {
+      "path": "9to1 Workspace/Canvas/Tests/NativeRnoteHistoryRestorationTests.cs",
+      "namespace": "HavenOS.Apps.Canvas.Tests",
+      "class": "NativeRnoteHistoryRestorationTests",
+      "sha256": "7ac3a520933ecae45627b77cdce5f318b1e8523f9ae5d134b6479c100fee0efa"
     }
   ],
   "dependencyPins": [],
