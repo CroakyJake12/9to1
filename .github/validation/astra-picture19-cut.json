@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "f1de28158c4310dcfdddce3f0d12db19948087e8",
+  "baselineCommit": "8385c22de7dd5647312238a1172244ccf43fea43",
   "programTree": "81aedb88221ebb76e61a255e887a96007288cd7e",
-  "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
+  "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
   "kind": "corrective",
   "files": [
     {
@@ -64,9 +64,9 @@
     {
       "path": ".github/scripts/astra-picture19-hosted-managed.py",
       "mode": "100644",
-      "object": "72fc2aec640d7d485d918c6e11219ec67119d5a0",
-      "bytes": 37421,
-      "sha256": "ed20307ebea13d45e38be90f8c946891834bb3bbba2bada9b602835e27b93dcf"
+      "object": "d929cd8a34a104b4dfd770ff4819c9b760c27f37",
+      "bytes": 40323,
+      "sha256": "3ca7c01bc897c5830f2c80b03e5f3b657484a881491d3b0a45d3fa87ea6620ad"
     },
     {
       "path": ".github/scripts/astra-picture19-restore-evidence.py",
@@ -64703,7 +64703,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Metadata-only exact actual produced xUnit apphost admission. All21 current Root18 Picture/Files product sources and original native101 assertions remain byte-identical failed f1de; all17/13/35 classes and full3 suites/source/restore/producer/compiled/profile/global1/cleanup guards remain mandatory. Exact SDK-generated ELF host, bound mapped managed test DLL, startup metadata before/after entire closure and owned exact dotnet-testhost parent admit actual proven process topology; original dotnet witness remains. No generic executable admission, cachewarming preflight, native fixture/production change or future source join. New null-terminated managed DLL apphost binding and SDK properties are fresh fail-closed checks; original artifact did not retain apphost binary, so these are not claimed as prior independently observed bytes.",
+  "limits": "Exact actual Picture13 8385 metadata-only producer admission correction. Maintained donor declares precisely five MicroComIdl generated Compile outputs across Avalonia.Native and Avalonia.Win32; evaluate exact unique pairs, source/IDL/import/project hashes, admitted restored MicroCom.CodeGenerator.MSBuild 0.11.4 generator and targets, UseLocalMicroComBuild denied, unique actual Compile output and exact physical output hash. Every postbuild compiler input remains individually admitted or fails; no wildcard/skip or product/test changes. Entire original101/native apphost freshness/compiled closure, full followup cohorts, profile/global1/cleanup and source guards unchanged. Connector job log proves original failure only; original multipart acceptance and all results remain root verification obligation. Root19 normal CAS/receipt adaptation ONLY. Semantic failed-parent8385 programme and all owning class sources remain exact old diagnostic composition; this is not current Root19 combined product acceptance or publication. Exact current Root19 source intersection/drift and full combined owning gate remain required before product publication. Actual W6 source peer CLEAR received after14 freeze; earlier inherited status is not itself proof.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-picture-save-copy-diagnostic-corrector09/manifest.json",
@@ -64732,6 +64732,22 @@
     {
       "path": "/workspace/astra-source/worker6-picture-apphost-corrector12-source-peer01.json",
       "sha256": "c84db077c4fa590d098735addd95e24110c6991dd1a77d6a65ce4b00d039a088"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas-root18-complete-owned-union-gate09/metadata/astra-canvas65-hosted-managed.py",
+      "sha256": "439a586cbe02276a98a77439dad8e3ab67d0ecb56689ff917afe66050174d8ee"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-actual58-job-110902453725.log",
+      "sha256": "06bdd3f3cce48ef0237e0cf1a805bf6a531bab761bb6e9532e3bb21177d8fbaf"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint19-publication-local.json",
+      "sha256": "11325cd5953770aa8bd6ce93d01679d949d4c5a2fef764e1f5ae34d94f5409b9"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture-root18-complete-microcom-corrector14/manifest.json",
+      "sha256": "f559e677aa866ebdeceeae4c09b8df8d37b9788a304e4284337f46de98d0604a"
     }
   ],
   "sharedCakeIdContract": null,

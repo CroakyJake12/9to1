@@ -219,7 +219,7 @@ for name,project in entries:
  (out/(name+'-restore-before.json')).write_text(json.dumps(restoreBefore[name],indent=2)+'\n')
  for item in restoreBefore[name]['projects']:
   sourceProject=item['path'];effectiveFramework=item['effectiveFramework'];key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
-  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
+  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource,MicroComIdl','-getProperty:TargetPath,MSBuildProjectExtensionsPath,MicroComGeneratorMSBuildDll,UseLocalMicroComBuild']
   if item.get('hostContext'):
    args=[v for v in args if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained=','-p:ArtifactsPath='))]+['-p:ArtifactsPath='+str(root/'artifacts/picture19-host-build-tasks')]
   key+=('-host' if item.get('hostContext') else '-consumer')
@@ -370,12 +370,39 @@ for name,project in entries:
  graph=restoreBefore[name]
  for item in graph['projects']:
   sourceProject=item['path'];effectiveFramework=item['effectiveFramework'];key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
-  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']+[actualTaskProperty]
+  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource,MicroComIdl','-getProperty:TargetPath,MSBuildProjectExtensionsPath,MicroComGeneratorMSBuildDll,UseLocalMicroComBuild']+[actualTaskProperty]
   if item.get('hostContext'):
    args=[v for v in args if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained=','-p:ArtifactsPath='))]+['-p:ArtifactsPath='+str(root/'artifacts/picture19-host-build-tasks')]
   key+=('-host' if item.get('hostContext') else '-consumer')
   if command(args,'postbuild-evaluated-'+key):raise SystemExit('postbuild compiler input query failed')
   data=json.loads((out/('postbuild-evaluated-'+key+'.log')).read_text())
+  # Complete exact maintained donor MicroCom map; evaluated items must equal these source-declared pairs.
+  microComProjects={
+   'framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj':[('avn.idl','Interop.Generated.cs')],
+   'framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj':[('WinRT/winrt.idl','WinRT/WinRT.Generated.cs'),('Win32Com/win32.idl','Win32Com/Win32.Generated.cs'),('DirectX/directx.idl','DirectX/directx.Generated.cs'),('DComposition/dcomp.idl','DComposition/DComp.Generated.cs')]
+  }
+  projectKey=pathlib.Path(sourceProject).resolve().relative_to(root).as_posix()
+  if projectKey in microComProjects:
+   nativeProject=root/projectKey
+   assert admitted[str(nativeProject.resolve())]==digest(nativeProject)
+   props=data['Properties'];assert props.get('UseLocalMicroComBuild','').lower()!='true'
+   idls=data['Items'].get('MicroComIdl',[]);expectedPairs=microComProjects[projectKey]
+   actualPairs=[(pathlib.Path(i['FullPath']).resolve().relative_to(nativeProject.parent).as_posix(),i['CSharpInteropPath'].replace(chr(92),'/'))for i in idls]
+   assert len(actualPairs)==len(set(actualPairs)) and sorted(actualPairs)==sorted(expectedPairs)
+   for entry in idls:
+    idl=pathlib.Path(entry['FullPath']).resolve();output=(nativeProject.parent/entry['CSharpInteropPath'].replace(chr(92),'/')).resolve()
+    assert (idl.relative_to(nativeProject.parent).as_posix(),output.relative_to(nativeProject.parent).as_posix()) in expectedPairs
+    assert not idl.is_symlink() and not output.is_symlink() and idl.is_file() and output.is_file()
+    assert admitted[str(idl)]==digest(idl)
+    generator=pathlib.Path(props['MicroComGeneratorMSBuildDll']).resolve()
+    assert generator.as_posix().lower().endswith('/microcom.codegenerator.msbuild/0.11.4/tools/netstandard2.0/microcom.codegenerator.msbuild.dll')
+    assert admitted[str(generator)]==digest(generator)
+    packageRoot=generator.parents[2];targets=packageRoot/'build/MicroCom.CodeGenerator.MSBuild.targets'
+    assert admitted[str(targets.resolve())]==digest(targets)
+    imported=root/'framework/CUI/vendor/Avalonia/build/MicroCOM.props';assert admitted[str(imported.resolve())]==digest(imported)
+    compilePaths=[pathlib.Path(x['FullPath']).resolve()for x in data['Items']['Compile']];assert compilePaths.count(output)==1
+    generated[str(output)]={'bytes':output.stat().st_size,'sha256':digest(output),'producer':'MicroCom.CodeGenerator.MSBuild/0.11.4 GenerateMicroComItems → UpdateMicroComCompileItems','projectSha256':digest(nativeProject),'idlSha256':digest(idl),'generatorSha256':digest(generator),'targetsSha256':digest(targets),'importSha256':digest(imported)}
+    (out/'actual-generated-output-pins.json').write_text(json.dumps(generated,indent=2)+'\n')
   for items in data.get('Items',{}).values():
    for item in items:
     file=pathlib.Path(item['FullPath']).resolve();expected=admitted.get(str(file),generated.get(str(file),{}).get('sha256'))
