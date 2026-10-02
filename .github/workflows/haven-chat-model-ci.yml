@@ -1,4 +1,4 @@
-name: Astra Games canonical normals native and full existing regressions
+name: Recover exact original Games failed native artifact
 on:
   workflow_dispatch:
     inputs:
@@ -10,46 +10,75 @@ on:
         type: string
 permissions:
   contents: read
+  actions: read
 jobs:
-  validate:
-    if: startsWith(github.ref, 'refs/heads/validation/astra-games-normals-')
-    strategy:
-      fail-fast: false
-      matrix:
-        cohort: [native, owning, regression, resource]
+  recover:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-games-artifact-recovery')
     runs-on: ubuntu-24.04
-    timeout-minutes: 100
-    env:
-      AVALONIA_TELEMETRY_OPTOUT: '1'
-      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
-      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
-      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
-      MSBUILDDISABLENODEREUSE: '1'
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: false
           persist-credentials: false
-      - name: Materialize only three exact source dependencies
-        run: |
-          set -euo pipefail
-          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
-          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-      - name: Validate identical joined program
+      - name: Fetch and validate only exact existing original artifact
         env:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}
           EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
-          COHORT: ${{ matrix.cohort }}
-        run: python3 ".github/scripts/astra-games-normals-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-games-normals-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
-      - name: Retain actual evidence including failure
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/astra-games-original-artifact-recovery.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-games-artifact-recovery-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+      - name: Retain small original inner logs and verified reconstruction metadata
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: astra-games-normals-${{ matrix.cohort }}-${{ github.sha }}
-          path: artifacts/games-normals-${{ matrix.cohort }}
+          name: astra-games-original-small-${{ github.sha }}
+          path: |
+            artifacts/games-artifact-recovery/*.json
+            artifacts/games-artifact-recovery/*.log
           if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact original ZIP part 000 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-original-part-000-${{ github.sha }}
+          path: artifacts/games-artifact-recovery/original-artifact.part-000.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain exact original ZIP part 001 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-original-part-001-${{ github.sha }}
+          path: artifacts/games-artifact-recovery/original-artifact.part-001.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain exact original ZIP part 002 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-original-part-002-${{ github.sha }}
+          path: artifacts/games-artifact-recovery/original-artifact.part-002.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain exact original ZIP part 003 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-original-part-003-${{ github.sha }}
+          path: artifacts/games-artifact-recovery/original-artifact.part-003.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain exact original ZIP part 004 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-original-part-004-${{ github.sha }}
+          path: artifacts/games-artifact-recovery/original-artifact.part-004.bin
+          if-no-files-found: error
+          compression-level: 0
           retention-days: 14
