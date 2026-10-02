@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "49d94783f1b38cf4e18c40d8516e2ffbb7d67069",
-  "programTree": "ea1e0d3ce5cd59ca88165ee9f193369c75378945",
-  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "baselineCommit": "d5fb65c222129588b2102016dbd4852c1f136b19",
+  "programTree": "5bd2994672e2b3a08b109ca6e01169cec49a71c7",
+  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
     {
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "71869a626eeb9bff7235184d1c832581058780de",
+      "object": "acc4111a693c4f9da965ea550dd9820558b9f030",
       "bytes": 5793,
-      "sha256": "a7cd7a5b072f41ed2091e4ec2fbed57525d3d7bc0bf0795c6b571cbfe8732397"
+      "sha256": "5b2c4a3cdef6bca783b2d7228d733dcf0fd7ad410f69a5334dff2243755f8316"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -4460,9 +4460,9 @@
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeEraserControlTests.cs",
       "mode": "100644",
-      "object": "e3c977e045f77aff235ed70a4cc052f212202f4b",
-      "bytes": 27808,
-      "sha256": "6256acf4a1929142d890721f7ded864b6ce7c76d357e7e72b1ee39746c2ba941"
+      "object": "104250ff8cb28fde0e0ed7d3ae1667afa061a468",
+      "bytes": 27968,
+      "sha256": "74c437a2500f493b2654793b5240ccfd7371afa5c3efb45c5a78a9e894baaf7d"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeHostTests.cs",
@@ -64143,7 +64143,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Exact minimal owner source correction; all existing fullsuite/classes/filter/count/nativeABI/mandatorysandbox/source22+3+additionalnativegitlinks/7producers/hosttasks/restorepayload/compiledclosure/partartifacts preserved. Picture additionally records genuine sandbox preconditions only, never policychanges/relaxation. Actual failed root capture retained; no runtime acceptance.",
+  "limits": "Actual selected NativeUI fixture HomeExecutionOutcome mandatory affectedObjects constructor parameter only; exact actual committed FilesId included at all4calls. Same seven owning cases/assertions and allclass rows/counts/filters retained, only changedsourceSHA re-pinned. Full Rust18/Core6/Canvas86/NativeUI closure preserved with all source/restore/compiled/native checks; no future96/fence04 join and no nativeUIpass claim. New normal startup5 CAS; isolated failedparent d5 unchanged.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-canvas-host-namespace-fix02/manifest.json",
@@ -64156,6 +64156,14 @@
     {
       "path": "/workspace/astra-source/worker4-native-actual-correctors02/manifest.json",
       "sha256": "72ae1d65eabd732cd037af524a5921f0f1c8751bbeb7a36e4c89b73b6dc82f0e"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-native-outcome-fixture-fix03/manifest.json",
+      "sha256": "472aa87b015e497fd7bfa1f2132d85debd72875a60b2a4a153c32a7c6515b7a3"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-canvas-actual-corrective02/actual-failed-latest03/canvas/root-capture.json",
+      "sha256": "c34f5dddbfed609f3c6d10718c7e5272109c88c6d77ab5e697cfb485fa610bfc"
     }
   ],
   "sharedCakeIdContract": null,

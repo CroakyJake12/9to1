@@ -48,7 +48,7 @@ public sealed class CanvasNativeEraserControlTests
                 var owner=new CanvasHomeStrokeEditOperation(f.Bridge,f.Broker,f.Profiles);
                 var commit=await owner.ExecuteAsync(chosen,cap,ct);
                 Assert.Empty(commit.Artifact.Pages[0].Strokes);
-                Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_CHOSEN_ERASE_COMMITTED","Exact chosen stroke committed."),ct)).Succeeded);
+                Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_CHOSEN_ERASE_COMMITTED","Exact chosen stroke committed.",[new("files.item",f.FileId.ToString())]),ct)).Succeeded);
                 var reopened=await f.Bridge.OpenAsync(f.FileId,f.Opened.StoreId,ct);
                 using var document=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(reopened.Artifact));
                 Assert.Empty(document.Snapshot.Pages[0].Strokes);
@@ -106,7 +106,7 @@ public sealed class CanvasNativeEraserControlTests
                     var commit=await new CanvasHomeEraserOperation(f.Bridge,f.Broker,f.Profiles).ExecuteAsync(whole,cap,ct);
                     Assert.Empty(commit.Artifact.Pages[0].Strokes);
                 }
-                Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_NATURAL_ERASE_COMMITTED","Exact natural eraser revision committed."),ct)).Succeeded);
+                Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_NATURAL_ERASE_COMMITTED","Exact natural eraser revision committed.",[new("files.item",f.FileId.ToString())]),ct)).Succeeded);
                 var reopened=await f.Bridge.OpenAsync(f.FileId,f.Opened.StoreId,ct);
                 using var document=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(reopened.Artifact));
                 Assert.NotEmpty(document.Snapshot.SemanticHistory!.Undo);
@@ -153,7 +153,7 @@ public sealed class CanvasNativeEraserControlTests
                 var cap=Assert.IsType<HomeResourceExecutionCapability>(await f.Broker.BeginExecutionCapabilityAsync(pending.RequestId,captured.Arguments,ct));
                 var commit=await new CanvasHomeQuickEraserOperation(f.Bridge,f.Broker,f.Profiles).ExecuteAsync(captured,cap,ct);
                 Assert.Empty(commit.Artifact.Pages[0].Strokes);
-                Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_QUICK_COMMITTED","Actual Quick target committed."),ct)).Succeeded);
+                Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_QUICK_COMMITTED","Actual Quick target committed.",[new("files.item",f.FileId.ToString())]),ct)).Succeeded);
                 var reopened=await f.Bridge.OpenAsync(f.FileId,f.Opened.StoreId,ct);
                 using var document=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(reopened.Artifact));
                 Assert.Empty(document.Snapshot.Pages[0].Strokes);
@@ -230,7 +230,7 @@ public sealed class CanvasNativeEraserControlTests
                         var cap=Assert.IsType<HomeResourceExecutionCapability>(await f.Broker.BeginExecutionCapabilityAsync(pending!.RequestId,captured.Arguments,ct));
                         var commit=await new CanvasHomeHistoryOperation(f.Bridge,f.Broker,f.Profiles).ExecuteAsync(captured,cap,ct);
                         Assert.Equal(kind==CanvasHistoryKind.Undo ? 0 : 1,commit.Artifact.Pages[0].Strokes.Count);
-                        Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_HISTORY_COMMITTED","Exact history revision committed."),ct)).Succeeded);
+                        Assert.True((await f.Broker.CompleteExecutionAsync(cap,new(HomePermissionRequestState.Succeeded,"CANVAS_NATIVE_HISTORY_COMMITTED","Exact history revision committed.",[new("files.item",f.FileId.ToString())]),ct)).Succeeded);
                         var reopened=await f.Bridge.OpenAsync(f.FileId,original.StoreId,ct);
                         using var document=CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(reopened.Artifact));
                         Assert.Equal(kind==CanvasHistoryKind.Undo ? 0 : 1,document.Snapshot.Pages[0].Strokes.Count);
