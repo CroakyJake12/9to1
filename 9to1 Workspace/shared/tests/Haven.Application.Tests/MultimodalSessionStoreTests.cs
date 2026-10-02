@@ -345,6 +345,80 @@ public sealed class MultimodalSessionStoreTests
         1,
         VisionVoiceRetention.Ephemeral);
 
+    [Theory]
+    [InlineData(MultimodalSessionState.Starting)]
+    [InlineData(MultimodalSessionState.Listening)]
+    [InlineData(MultimodalSessionState.UserSpeaking)]
+    [InlineData(MultimodalSessionState.Processing)]
+    [InlineData(MultimodalSessionState.AssistantSpeaking)]
+    [InlineData(MultimodalSessionState.Paused)]
+    [InlineData(MultimodalSessionState.Reconnecting)]
+    [InlineData(MultimodalSessionState.Stopped)]
+    [InlineData(MultimodalSessionState.Ended)]
+    [InlineData(MultimodalSessionState.Failed)]
+    public async Task Repeated_state_commits_a_revision_without_claiming_new_capture_or_changing_session_metadata(MultimodalSessionState state)
+    {
+        var settings = new MemorySettingsStore(); var store = new MultimodalSessionStore(settings);
+        var initial = CreateSession() with { State = state, MicrophoneState = MicrophoneCaptureState.Off };
+        await store.CreateAsync(initial, CancellationToken.None);
+        var service = new VisionVoiceSessionService(store);
+        var result = await service.TransitionAsync(initial.SessionId, 1, state, CancellationToken.None);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.Revision);
+        Assert.Equal(JsonSerializer.Serialize(initial with { Revision = 2 }), JsonSerializer.Serialize(result.Value));
+        Assert.Equal(JsonSerializer.Serialize(result.Value), JsonSerializer.Serialize(await store.GetAsync(initial.SessionId, CancellationToken.None)));
+        var stale = await service.TransitionAsync(initial.SessionId, 1, state, CancellationToken.None);
+        Assert.Equal(VisionVoiceErrorCode.Conflict, stale.Error!.Code);
+        Assert.Equal(2, (await store.GetAsync(initial.SessionId, CancellationToken.None))!.Revision);
+    }
+
+    [Fact]
+    public async Task Same_state_command_cannot_overwrite_a_competing_surface_after_its_original_read()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10)); var ct = timeout.Token;
+        var settings = new MemorySettingsStore(); var store = new MultimodalSessionStore(settings);
+        var initial = CreateSession(); await store.CreateAsync(initial, ct);
+        settings.PauseNextGet = true;
+        var command = new VisionVoiceSessionService(store).TransitionAsync(initial.SessionId, 1, initial.State, ct);
+        await settings.ReadPaused.Task.WaitAsync(ct);
+        var competing = initial with { Revision = 2, State = MultimodalSessionState.Paused };
+        try { await new MultimodalSessionStore(settings).UpdateAsync(initial.SessionId, 1, competing, ct); }
+        finally { settings.ResumeRead.TrySetResult(); }
+        var result = await command;
+        Assert.Equal(VisionVoiceErrorCode.Conflict, result.Error!.Code);
+        Assert.Equal(JsonSerializer.Serialize(competing), JsonSerializer.Serialize(await store.GetAsync(initial.SessionId, ct)));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task Exhausted_persisted_session_revision_returns_conflict_and_preserves_exact_metadata(int action)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var settings = new MemorySettingsStore(); var store = new MultimodalSessionStore(settings);
+        var session = CreateSession() with { Revision = long.MaxValue };
+        var key = "visionvoice.multimodal-session.v1." + session.SessionId.ToString("N");
+        var envelope = new MultimodalSessionStore.MultimodalSessionEnvelope(1, session);
+        await settings.SetAsync(key, envelope, ct); // Actual persisted boundary metadata, not a substituted service.
+        var before = JsonSerializer.Serialize(envelope);
+        var service = new VisionVoiceSessionService(store);
+        var result = action switch
+        {
+            0 => await service.TransitionAsync(session.SessionId, long.MaxValue, session.State, ct),
+            1 => await service.SetModeAsync(session.SessionId, long.MaxValue, session.VoiceMode, cancellationToken: ct),
+            _ => await service.SetRetentionAsync(session.SessionId, long.MaxValue, true, true, true, ct)
+        };
+        Assert.False(result.IsSuccess);
+        Assert.Equal(VisionVoiceErrorCode.Conflict, result.Error!.Code);
+        Assert.Equal(before, JsonSerializer.Serialize(await settings.GetAsync<MultimodalSessionStore.MultimodalSessionEnvelope>(key, ct)));
+        Assert.Equal(JsonSerializer.Serialize(session), JsonSerializer.Serialize(await store.GetAsync(session.SessionId, ct)));
+        Assert.False(MultimodalSessionLifecycle.TryTransition(session, session.State, out var same, out _));
+        Assert.Same(session, same);
+        Assert.False(MultimodalSessionLifecycle.TrySetMode(session, session.VoiceMode, out var mode, out _));
+        Assert.Same(session, mode);
+    }
+
     private sealed class MemorySettingsStore : IVersionedSettingsStore, IVersionedSettingsCompareExchange
     {
         private readonly Dictionary<string, object> _values = new(StringComparer.OrdinalIgnoreCase);
