@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "89cec14275cd2ab68102a22e6243a3fd4a8f752f",
+  "baselineCommit": "ae2abbfef20d1caebedb674ed486985ce6f130f2",
   "normalSourceOverlayProvenance": [
     {
       "source": "/workspace/astra-source/worker5-root977-startup-credential-coherent05/AndroidHavenBootstrap.cs",
@@ -1416,7 +1416,7 @@
   },
   "programTree": "4bce8956364e44da5d6972b1d2d6789908d569ec",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -1449,9 +1449,9 @@
     {
       "path": ".github/scripts/astra-android29-verify.py",
       "mode": "100644",
-      "object": "87cec76ae65734174b652208b7ab9cf29459c9fb",
+      "object": "4072f1cb16533c96f2d0f7abb7bf4182c2771993",
       "bytes": 4380,
-      "sha256": "ae3e5ebb7f4df7abe0866ab23ca7bf5dec973a9b1f15599b3aa85bb737d1e228"
+      "sha256": "abb987774d8d2f10a274071125b686d9054e881c69a5411ecea8d01934ef5b75"
     },
     {
       "path": ".github/scripts/astra-android32-two-launch.py",
@@ -65808,7 +65808,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-root14-android-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
+  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority. Exact root14 branch namespace correction only; all105 program, normal/probe provenance and full guards unchanged; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-root13-android-fresh-validation-plan-sol2/manifest.json",
@@ -65853,6 +65853,10 @@
     {
       "path": "/workspace/astra-source/worker4-root14-android-product100-startup5-plan02/manifest.json",
       "sha256": "7d6edf756af16deb88629ccabf6e41b47ca1bad2625789026b5560fcefa8d08d"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-android105-namespace-corrector01/namespace-audit.json",
+      "sha256": "25f5a1240ca2bccce51964ca2028f65c7465eee60db298159edbf774980e2e9c"
     }
   ],
   "sharedCakeIdContract": null,

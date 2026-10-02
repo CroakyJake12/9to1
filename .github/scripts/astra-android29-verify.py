@@ -8,7 +8,7 @@ manifest=Path(os.environ['ASTRA_ANDROID_METADATA_ROOT'])/'.github/validation/ast
 m=json.loads(manifest.read_text());commit=run('git','rev-parse','HEAD');expected=m['normalSourceCommit'] if os.environ.get('ASTRA_ANDROID_VARIANT')=='normal' else os.environ['EXPECTED_COMMIT'];mh=os.environ['EXPECTED_MANIFEST_SHA256']
 assert re.fullmatch('[0-9a-f]{40}',expected) and commit==expected
 assert re.fullmatch('[0-9a-f]{64}',mh) and sha(manifest)==mh
-assert os.environ['GITHUB_REF'].startswith('refs/heads/validation/astra-root13-android-')
+assert os.environ['GITHUB_REF'].startswith('refs/heads/validation/astra-root14-android-')
 mode=sys.argv[1]
 if mode=='source':
  subprocess.run([sys.executable,str(Path(os.environ['ASTRA_ANDROID_METADATA_ROOT'])/'.github/scripts/astra-root13-android-source.py')],check=True)
