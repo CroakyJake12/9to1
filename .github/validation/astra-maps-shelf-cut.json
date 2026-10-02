@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "6b6a8ab162ee34a56699d45f633c9993ee13c69e",
-  "programTree": "ab0b0bfa07c1c8d02d6b196699e97c4e80b4f67e",
+  "baselineCommit": "bdf0136981f8f726cfad00373d767b813078b83b",
+  "programTree": "aec42705faeb1054747771c7f4ec937d84e2376f",
   "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
   "kind": "corrective",
   "files": [
@@ -34672,9 +34672,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Shelf/ShelfNativeWorkspacePage.cs",
       "mode": "100644",
-      "object": "425eb7f2c5cdcd01af42acb7a7b1c5ad5c50c6f5",
-      "bytes": 5263,
-      "sha256": "91e90a582bc5815847b4feed01d7e0a1c2041f634162960af483c6fde6ef6ca0"
+      "object": "318daa9df7056681ebe26073d1fdd566bf8881ea",
+      "bytes": 5287,
+      "sha256": "e058a8bb35a19b993eea9cbacc5bcbc72669bf5069e810679d6fe997f50ec058"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
@@ -64800,6 +64800,10 @@
     {
       "path": "/workspace/astra-source/worker3-maps15-actual-shelf-two-way-binding-corrective01/manifest.json",
       "sha256": "2de1287aaad6722ccbe9ed4f225d39a82053a12825108322aee3ae24e905b35a"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps16-actual-shelf-observable-context-corrective01/manifest.json",
+      "sha256": "6b738da25d009436853ae1487c105d8b075e505bbc544b19b3a079be9de1eaa5"
     }
   ],
   "sharedCakeIdContract": null

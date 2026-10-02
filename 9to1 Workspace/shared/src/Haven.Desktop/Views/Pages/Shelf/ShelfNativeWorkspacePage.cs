@@ -6,7 +6,7 @@ using Haven.Infrastructure;
 namespace Haven.Desktop.Views.Pages.Shelf;
 
 /// <summary>Actual library caller. Public IDs select retained reviews; they never confer authority.</summary>
-public sealed class ShelfNativeWorkspacePage : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, IDisposable
+public sealed class ShelfNativeWorkspacePage : ICuiWritableBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable
 {
     private readonly ShelfLibraryWorkspace _workspace;
     private readonly Func<string, Task> _reviewHome;
