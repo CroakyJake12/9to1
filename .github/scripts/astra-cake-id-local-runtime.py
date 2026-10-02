@@ -1,5 +1,10 @@
 import pathlib,subprocess,json,hashlib,os,time,importlib.util,tempfile,sys,re,urllib.parse
-root=pathlib.Path.cwd();out=root/'artifacts/cake-id-local-runtime';out.mkdir(parents=True,exist_ok=False)
+root=pathlib.Path.cwd()
+expected_commit=os.environ.get('EXPECTED_COMMIT','');expected_cut=os.environ.get('CUT_MANIFEST_SHA256','')
+assert re.fullmatch(r'[0-9a-f]{40}',expected_commit) and re.fullmatch(r'[0-9a-f]{64}',expected_cut),'Exact dispatch inputs required for isolated local job'
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==expected_commit
+assert hashlib.sha256((root/'.github/validation/astra-cake-id-local-runtime-cut.json').read_bytes()).hexdigest()==expected_cut
+out=root/'artifacts/cake-id-local-runtime';out.mkdir(parents=True,exist_ok=False)
 sha=lambda b:hashlib.sha256(b).hexdigest()
 helper=root/'.github/scripts/astra_original_native_session_drain.py';spec=importlib.util.spec_from_file_location('drain',helper);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 assert sys.platform=='linux' and subprocess.check_output(['uname','-m'],text=True).strip()=='x86_64'

@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
+  "baselineCommit": "ed5c5d8915d7d98167b08ca86b7acbd93cdb0c31",
   "programTree": "dc27a1e585e24efa4098c43d7d854ab17f14a9e7",
   "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -22,9 +22,9 @@
     {
       "path": ".github/scripts/astra-cake-id-local-runtime.py",
       "mode": "100644",
-      "object": "2b1f4047c2bfa59472f6bcb2e0dd97db2bdcf3bb",
-      "bytes": 7990,
-      "sha256": "53ce6d7b6f418ba7d8cee8d8beee253684a670d760ce06f18e3081fd991786ae"
+      "object": "b1905a39978ba13e3e593dc603670968a8032df1",
+      "bytes": 8474,
+      "sha256": "b035e830b1462af25cae9d4aff608dc18a97c5ca4deaec48d5c85fb58be5a804"
     },
     {
       "path": ".github/scripts/astra_original_native_session_drain.py",
@@ -176,9 +176,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "b6d8ba974686ecfdf80cbd9c091459b7c36e94e9",
-      "bytes": 2567,
-      "sha256": "3e02559c9ae16f9d09e97c738ca81d95ce64b52d15cea090cda8538e17df8c43"
+      "object": "d9ca2b43c4f67ecd5a1574e466a981526fffde1a",
+      "bytes": 3035,
+      "sha256": "f4b88b63043cf90922982e2af6570bc1913027794a1e3cdcb73afe56c745128d"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -65466,7 +65466,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-cake-id-local-runtime-cut.json",
-  "limits": "Exact owner29 source only, isolated native Ubuntu x64 local Wrangler/D1 tests. No deployment, cloud credentials, billable services, DNS, user migration or Home authority. All command exits required zero. Raw potentially private logs and ephemeral vars/database never archived. Source before/after permits only maintained public/auth-ui.txt generated output. Cleanup proof is bounded sampled original-session proof, not universal unobserved descendant scheduling. Bounded sanitized first/last actual stdout/stderr plus final JSON markers retained; secrets observed from ephemeral local vars and auth/password/cookie/JWT/email/opaque values redacted before archival. Raw logs never uploaded. Original validate Windows job excludes only this isolated validation family; exactly one local-runtime job runs. Gitlink entries remain pinned in immutable Git cut, but runner does not claim physical submodule materialization or unrelated .NET/native tests. Head/tail edge lines truncated by byte bounds are omitted BEFORE redaction; no partial secret/JWT/token fragments from truncation are retained. Actual owner final public success JSON for integration and password runtime uniquely required and whitelist-retained; integration local issuer/endpoints/no deployment and password local runtime/default scrypt/no database/external service are checked. This remains owner-local protocol evidence, not .NET client integration or deployed CPU limit parity. Local endpoint origin checked by parsed URL; actual maintained issuer base can legitimately have an empty path, no inferred trailing slash required. For logs <=512KiB, overlapping head/tail reconstructed without duplication before sanitizing/marker parsing; above512KiB complete bounded edge lines only. Fixed public integration marker strings exactly source-checked.",
+  "limits": "Exact owner29 source only, isolated native Ubuntu x64 local Wrangler/D1 tests. No deployment, cloud credentials, billable services, DNS, user migration or Home authority. All command exits required zero. Raw potentially private logs and ephemeral vars/database never archived. Source before/after permits only maintained public/auth-ui.txt generated output. Cleanup proof is bounded sampled original-session proof, not universal unobserved descendant scheduling. Bounded sanitized first/last actual stdout/stderr plus final JSON markers retained; secrets observed from ephemeral local vars and auth/password/cookie/JWT/email/opaque values redacted before archival. Raw logs never uploaded. Original validate Windows job excludes only this isolated validation family; exactly one local-runtime job runs. Gitlink entries remain pinned in immutable Git cut, but runner does not claim physical submodule materialization or unrelated .NET/native tests. Head/tail edge lines truncated by byte bounds are omitted BEFORE redaction; no partial secret/JWT/token fragments from truncation are retained. Actual owner final public success JSON for integration and password runtime uniquely required and whitelist-retained; integration local issuer/endpoints/no deployment and password local runtime/default scrypt/no database/external service are checked. This remains owner-local protocol evidence, not .NET client integration or deployed CPU limit parity. Local endpoint origin checked by parsed URL; actual maintained issuer base can legitimately have an empty path, no inferred trailing slash required. For logs <=512KiB, overlapping head/tail reconstructed without duplication before sanitizing/marker parsing; above512KiB complete bounded edge lines only. Fixed public integration marker strings exactly source-checked. Exact actual dispatch422 correction only: optional string workflow inputs keep normal Windows invocation available; isolated local job requires exact HEAD/cut SHA before any source capture. Owner29/helpers/commands/sanitizer/markers unchanged; root must seed unique corrective ref from failed ed5c.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/root-cake-id-auth-owner-input109/immutable-owner-source-map-verified111.json",
@@ -65503,6 +65503,10 @@
     {
       "path": "/workspace/astra-source/worker4-cake-id-local-runtime-gate07/manifest.json",
       "sha256": "1775ff701353efcb29dbd592b6ca8ae4e2e419a8a0b8fc86faf4a7d4f293662c"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-id-local-runtime-gate08/manifest.json",
+      "sha256": "ad028bdb4d8d70d268da6a300cf56f4c4aa897d7f6348b443520ddb49edb0dbd"
     }
   ],
   "sharedCakeIdContract": null

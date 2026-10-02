@@ -7,6 +7,17 @@ name: Haven Chat and Model Pass
 
 on:
   workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact validation commit (local runtime job only)
+        required: false
+        default: ''
+        type: string
+      cut_manifest_sha256:
+        description: Exact immutable validation cut SHA256 (local runtime job only)
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -66,6 +77,8 @@ jobs:
       - name: Actual maintained local-only Worker and D1 runtime
         env:
           WRANGLER_SEND_METRICS: 'false'
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          CUT_MANIFEST_SHA256: ${{ inputs.cut_manifest_sha256 }}
         run: python3 .github/scripts/astra-cake-id-local-runtime.py
       - name: Retain bounded source and command evidence only
         if: always()
