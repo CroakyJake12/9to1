@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
-  "programTree": "7658c98b5633f95feeb3659c4245c1d529c8b543",
+  "baselineCommit": "a505bfb9eba2fd00ae3039ea154725ea4f922c01",
+  "programTree": "3475720df0a92f1772d5dc5d53ececddac8b9726",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -25386,6 +25386,34 @@
       "object": "4f37ca9fe2057d695f774958657cabb4a3c9c1b0",
       "bytes": 1832,
       "sha256": "c898edd1bd0105f13f8758686edeca3516415fdcf0e38dd957dc0321646278dc"
+    },
+    {
+      "path": "9to1 Workspace/Validation/Accounts.PublicClient.Specs/CakeAccountHttpClient.cs",
+      "mode": "100644",
+      "object": "e9a7a271162bbf6eb16d2786d3f8896af9b9a5b4",
+      "bytes": 7612,
+      "sha256": "b4a41a9e9f1785725f2274478766b41528707ded6a9eb27c5a0432be9c9170a5"
+    },
+    {
+      "path": "9to1 Workspace/Validation/Accounts.PublicClient.Specs/CakeAccountHttpClientSpecs.cs",
+      "mode": "100644",
+      "object": "407c7981a05a41cca999cb7abd7454144e792198",
+      "bytes": 5559,
+      "sha256": "ba68849c1f5bd3f694a089cbff7c38bc0c61741144b01eeca12d61f41f454216"
+    },
+    {
+      "path": "9to1 Workspace/Validation/Accounts.PublicClient.Specs/NineToOne.Accounts.PublicClient.Specs.csproj",
+      "mode": "100644",
+      "object": "4ed263205b477cbd9adfe16797ec1974ea6b3e8c",
+      "bytes": 658,
+      "sha256": "86e5f6bfafc4bdf449de31621b258993b0fb95ebfb3c600044eb1a2dcab54e12"
+    },
+    {
+      "path": "9to1 Workspace/Validation/Accounts.PublicClient.Specs/Program.cs",
+      "mode": "100644",
+      "object": "4a91b3e0942c4b4f2f8f614503eed674a1513c80",
+      "bytes": 170,
+      "sha256": "9a42a841c040bdfce5750113bb245bc2b7ecc8f400c84f91ac42932a71af0672"
     },
     {
       "path": "9to1 Workspace/Validation/Subscription.Browser/subscription-browser.mjs",
@@ -64451,7 +64479,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-web-signed-cut.json",
-  "limits": "SOURCE_ONLY_UNRUN actual compiled fullWeb+signedHttpContextOIDC spec+legacyAccounts+maintainedRemote+Node4+actualauthenticatedWeb+Chromium6 against existing fictional cost inputs; full source22gitlinks/3materialized/7sourceproducers/hosttasks/restorepackage/compiledclosure retained. No production Worker/password/account/pricing/cost/deployment/Homegrant acceptance. Adds complete original Accounts and fundedOrg executable suites, captures genuine Chromium process executable/version/SHA beforeafter, removes only own private temp fixture after processgroup termination. Explicit old hostedmetadata3 excluded from product source mapping, one current acceptedRoot14 helper/workflow target winner; restore helper owning namespace matches actualmatrix. All34 actualproductsource bytes unchanged.",
+  "limits": "Exact independently captured actual failed source correction: Four exact acceptedRoot14 legacy harness project/source blobs were absent from normalproduct100; full intended legacy executable now actually present, no omission or alternate harness. All owning/regression/resource or Accountslegacy/FundedOrg/PublicClient/Remote/Node/signedWeb/authenticatedWeb/Chromium checks, source22+3/full restore/producers/host/compiled guards unchanged; no SDK/localbuild/runtimeclaim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-web-oidc-production-coherent36-plan02/joined-source36.json",
@@ -64472,6 +64500,18 @@
     {
       "path": "/workspace/astra-source/worker4-web-oidc-subscription-fullgate02/manifest.json",
       "sha256": "5b16e5abebe23afbb12189b12c30afdd8907c7493cc798f187b27072c74b63e2"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-web-oidc-subscription-fullgate03/manifest.json",
+      "sha256": "ee1da9e66b07bc3afdb5c7b29b947d480a96ef95b7f4bd6488d79a324324490c"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/web-signed-coherent-owning03/actual-failed-owning01/root-capture.json",
+      "sha256": "6d0cc2ffab69f59bdb92236520cdbed21b01d62c036c96a6b7b15e78c9ce914d"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root14-coherent114-fifth-actual-green05/root-capture.json",
+      "sha256": "9557f2344dc443e267dc45674ad389ee472b1accb179d2736dbd2368601161e8"
     }
   ],
   "sharedCakeIdContract": null
