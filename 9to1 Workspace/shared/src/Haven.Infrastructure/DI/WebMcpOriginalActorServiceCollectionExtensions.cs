@@ -1,5 +1,6 @@
 using Haven.Application;
 using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Haven.Infrastructure;

@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "a8d9f96453175efba3c22d068c01b4a1de527b87",
-  "programTree": "18a8287daf976974506a999decb96fb3a559a322",
+  "baselineCommit": "f3bdbd5ea4b1022b48c318d5f45eac7c560d976a",
+  "programTree": "856a4b3f3bf13d2e07ea026e9551fe62284ce438",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
   "files": [
@@ -35449,9 +35449,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/WebMcpOriginalActorServiceCollectionExtensions.cs",
       "mode": "100644",
-      "object": "e1d58b3d8d3559f229d75f890b647aff1a17d658",
-      "bytes": 2458,
-      "sha256": "f992e2613693d8385acef35585a0bd4e0a176f8074f01bbee11790d8493ee92a"
+      "object": "1ea7f79cf8762466e17a374dac2306b5438a1cf0",
+      "bytes": 2508,
+      "sha256": "895ed240d04ef595af8af35e7ab69151c60a6a3981c7f46a8ec289f795f98111"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Data/DataHomeJunctionTableDesigner.cs",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Exact independently captured actual failed source correction: PermissionTrustLevel alias in attestation productionfile only; no claim/grant expansion or test change. All owning/regression/resource or Accountslegacy/FundedOrg/PublicClient/Remote/Node/signedWeb/authenticatedWeb/Chromium checks, source22+3/full restore/producers/host/compiled guards unchanged; no SDK/localbuild/runtimeclaim.",
+  "limits": "Actual CS0246 corrective only: imports existing permission namespace in exact selected WebMcp DI registration. No registrations/authority/test/filters changed; prior alias correction and whole owning/resource suites with all source/restore/compiled/class/artifact guards retained. Uncompiled/unrun.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64710,6 +64710,18 @@
     {
       "path": "/workspace/astra-source/worker1-home-attestation-permission-trust-alias02/manifest.json",
       "sha256": "f80330baf0f4565d62a1d15b5e47b27fb32293baa98dc089d6b9e07283086a48"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-webmcp-local-owner-di-import-corrective03/manifest.json",
+      "sha256": "1d05664184e9b397bf35a55ee567de10ea8cd476e1d0e7e7cbdcbc815b6beadf"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective01/actual-failed-owning02/root-capture.json",
+      "sha256": "2f2a2cd028c952541180c3091ac58f2558b9846d125eee5677ed8b1c09c77b70"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective01/actual-failed-resource02/root-capture.json",
+      "sha256": "3ae785209bb4d36286cd516be484720ce3de9cc7d8274fcf8b3cb16cce9a89d2"
     }
   ],
   "sharedCakeIdContract": null
