@@ -40,7 +40,7 @@ public interface IEmbeddedBrowserHost
 /// <summary>
 /// Represents browser session service and keeps its related state and behavior together.
 /// </summary>
-public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService, IDisposable
+public sealed partial class BrowserSessionService(IAppPaths paths) : IBrowserToolService, IDisposable
 {
     /// <summary>
     /// Stores json options locally so this component can preserve the dependency, cache, or state between member calls.
@@ -97,6 +97,8 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
     /// </summary>
     public void Attach(IEmbeddedBrowserHost host)
     {
+        ArgumentNullException.ThrowIfNull(host);
+        Interlocked.Increment(ref _ownedSessionGeneration);
         if (_host is not null) _host.StateChanged -= ForwardState;
         _host = host;
         _host.StateChanged += ForwardState;
@@ -109,6 +111,7 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
     public void Detach(IEmbeddedBrowserHost host)
     {
         if (!ReferenceEquals(_host, host)) return;
+        Interlocked.Increment(ref _ownedSessionGeneration);
         _host.StateChanged -= ForwardState;
         _host = null;
     }
@@ -448,7 +451,7 @@ public sealed class BrowserSessionService(IAppPaths paths) : IBrowserToolService
     /// <summary>
     /// Performs the dispose step owned by this component.
     /// </summary>
-    public void Dispose() => _http.Dispose();
+    public void Dispose() { Interlocked.Exchange(ref _ownedSessionDisposed, 1); Interlocked.Increment(ref _ownedSessionGeneration); _http.Dispose(); }
 
     /// <summary>
     /// Represents page snapshot dto and keeps its related state and behavior together.
