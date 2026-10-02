@@ -1,5 +1,6 @@
 using Haven.Application;
 using Haven.Core;
+using Haven.Infrastructure;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Maps;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,12 @@ public sealed partial class MainView
 
         var page = new MapsPage(maps, tiles, savedPlaces, _structuredFormTemplate, _genUiRouter, _genUiInstances);
         page.DataWorkbookRequested += OnDataWorkbookRequested;
-        AddOrSelectTab(key, "Maps", page, closeable: true, surface: HavenSurface.Maps);
+        // Preserve the existing map/search/Data places page; the companion Journey surface uses only the real owner.
+        var owner = services?.GetService<HomeMapsLibraryOwner>();
+        var actors = services?.GetService<IAuthenticatedResourceActorSource>();
+        var host = new MapsNativeJourneyHost(page, owner, actors,
+            () => !IsDisposed && ReferenceEquals(App.Services, services),
+            (requestID, originalActor) => ReviewHomeRequestForOriginalHostAsync(requestID, services!, originalActor));
+        AddOrSelectTab(key, "Maps", host, closeable: true, surface: HavenSurface.Maps);
     }
 }

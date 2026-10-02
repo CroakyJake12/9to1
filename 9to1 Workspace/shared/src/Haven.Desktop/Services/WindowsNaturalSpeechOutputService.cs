@@ -20,7 +20,7 @@ namespace Haven.Desktop.Services;
 /// Desktop-only speech output using the modern Windows speech synthesis voice bank.
 /// Playback is process-local and interruptible without waiting behind the active utterance.
 /// </summary>
-public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IAsyncDisposable
+public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IContinuableSpeechOutputService, IOriginalSpeechPlaybackReceiptIssuer, IAsyncDisposable
 {
     /// <summary>
     /// Stores utterance gate locally so this component can preserve the dependency, cache, or state between member calls.
@@ -93,11 +93,41 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
     /// <summary>
     /// Performs speak asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task SpeakAsync(
-        string text,
-        string? voiceName,
-        string? outputDeviceId,
-        CancellationToken cancellationToken)
+    public Task SpeakAsync(string text, string? voiceName, string? outputDeviceId, CancellationToken cancellationToken)
+        => SpeakCoreAsync(text, voiceName, outputDeviceId, cancellationToken, null);
+
+    public bool CanContinueVoice(string voiceId) => !_disposed && !string.IsNullOrWhiteSpace(voiceId) &&
+        Voices.Any(voice => string.Equals(voice.Id, voiceId, StringComparison.OrdinalIgnoreCase));
+
+    public bool WasIssuedPlayback(ISpeechPlaybackContinuation playback) =>
+        playback is OriginalPlayback issued && issued.WasIssuedBy(this);
+
+    public bool IsOriginalPlayback(ISpeechPlaybackContinuation playback)
+    {
+        lock (_stateGate)
+            return !_disposed && playback is OriginalPlayback issued && issued.BelongsTo(this, _current);
+    }
+
+    public Task<ISpeechPlaybackContinuation> StartContinuableAsync(string text, string? voiceName,
+        string? outputDeviceId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(text)) throw new ArgumentException("An original utterance is required.", nameof(text));
+        if (string.IsNullOrWhiteSpace(voiceName)) throw new ArgumentException("An exact original Windows voice ID is required.", nameof(voiceName));
+        var opened = new TaskCompletionSource<ISpeechPlaybackContinuation>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operation = SpeakCoreAsync(text, voiceName, outputDeviceId, cancellationToken,
+            state => opened.TrySetResult(new OriginalPlayback(this, state)));
+        _ = ObserveStartAsync(operation, opened);
+        return opened.Task;
+    }
+    private static async Task ObserveStartAsync(Task operation, TaskCompletionSource<ISpeechPlaybackContinuation> opened)
+    {
+        try { await operation.ConfigureAwait(false); }
+        catch (OperationCanceledException error) { opened.TrySetCanceled(error.CancellationToken); }
+        catch (Exception error) { opened.TrySetException(error); }
+    }
+
+    private async Task SpeakCoreAsync(string text, string? voiceName, string? outputDeviceId,
+        CancellationToken cancellationToken, Action<PlaybackState>? opened)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!IsAvailable) throw new InvalidOperationException(UnavailableReason);
@@ -112,21 +142,22 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
         PlaybackState? state = null;
         try
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
+            lock (_stateGate) { ObjectDisposedException.ThrowIf(_disposed, this); }
             StopCurrent();
             cancellationToken.ThrowIfCancellationRequested();
 
             var synthesizer = new SpeechSynthesizer();
-            var selected = SpeechSynthesizer.AllVoices.FirstOrDefault(voice =>
-                string.Equals(voice.Id, voiceName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(voice.DisplayName, voiceName, StringComparison.OrdinalIgnoreCase));
-            if (selected is not null) synthesizer.Voice = selected;
-
             SpeechSynthesisStream? stream = null;
             MediaSource? source = null;
             MediaPlayer? player = null;
             try
             {
+                var selected = SpeechSynthesizer.AllVoices.FirstOrDefault(voice =>
+                    string.Equals(voice.Id, voiceName, StringComparison.OrdinalIgnoreCase) ||
+                    opened is null && string.Equals(voice.DisplayName, voiceName, StringComparison.OrdinalIgnoreCase));
+                if (selected is not null) synthesizer.Voice = selected;
+                if (opened is not null && (selected is null || !string.Equals(selected.Id, voiceName, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("The original Windows voice is unavailable; continuation never selects a fallback.");
                 stream = await synthesizer.SynthesizeTextToStreamAsync(text);
                 cancellationToken.ThrowIfCancellationRequested();
                 source = MediaSource.CreateFromStream(stream, stream.ContentType);
@@ -136,18 +167,20 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
                     Source = source
                 };
 
-                state = new PlaybackState(synthesizer, stream, source, player, cancellationToken);
+                state = new PlaybackState(synthesizer, stream, source, player, synthesizer.Voice.Id, cancellationToken);
                 lock (_stateGate)
                 {
                     ObjectDisposedException.ThrowIf(_disposed, this);
                     _current = state;
+                    opened?.Invoke(state);
+                    player.Play();
                 }
 
-                player.Play();
                 await state.Completion.Task.ConfigureAwait(false);
             }
-            catch
+            catch (Exception error)
             {
+                state?.Completion.TrySetException(error);
                 if (state is null)
                 {
                     player?.Dispose();
@@ -169,6 +202,80 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
                 state.Dispose();
             }
             _utteranceGate.Release();
+        }
+    }
+
+    private sealed class OriginalPlayback(WindowsNaturalSpeechOutputService owner, PlaybackState original)
+        : IOriginalSpeechPlaybackStop
+    {
+        public bool WasIssuedBy(WindowsNaturalSpeechOutputService candidate) => ReferenceEquals(owner, candidate);
+        public bool BelongsTo(WindowsNaturalSpeechOutputService candidate, PlaybackState? current) =>
+            ReferenceEquals(owner, candidate) && ReferenceEquals(original, current) && !original.Completion.Task.IsCompleted;
+        public Guid PlaybackId => original.Id;
+        public string VoiceId => original.VoiceId;
+        public Task Completion => original.Completion.Task;
+        public Task<SpeechPlaybackCheckpoint> PauseAsync(CancellationToken ct) => owner.ControlOriginalAsync(original, true, ct);
+        public Task<SpeechPlaybackCheckpoint> ResumeAsync(CancellationToken ct) => owner.ControlOriginalAsync(original, false, ct);
+        public Task<bool> StopOriginalAsync(CancellationToken ct) => owner.StopOriginalAsync(original, ct);
+    }
+    // Cleanup can retire only the privately retained original. Do not resolve ambient _current
+    // and do not wait behind a paused control: cancellation wakes its actual Completion waiter.
+    private Task<bool> StopOriginalAsync(PlaybackState original, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        lock (_stateGate)
+        {
+            if (!ReferenceEquals(_current, original) || original.Completion.Task.IsCompleted)
+                return Task.FromResult(false);
+            _current = null;
+        }
+        original.Cancel();
+        return Task.FromResult(true);
+    }
+
+    private void RequireOriginal(PlaybackState original)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!ReferenceEquals(_current, original) || original.Completion.Task.IsCompleted)
+            throw new InvalidOperationException("The original speech playback is no longer live.");
+    }
+    private async Task<SpeechPlaybackCheckpoint> ControlOriginalAsync(PlaybackState original, bool pause, CancellationToken ct)
+    {
+        await original.Controls.WaitAsync(ct).ConfigureAwait(false);
+        var observed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        MediaPlaybackSession? session = null;
+        void Changed(MediaPlaybackSession sender, object args)
+        {
+            try
+            {
+                if (sender.PlaybackState == (pause ? MediaPlaybackState.Paused : MediaPlaybackState.Playing)) observed.TrySetResult();
+            }
+            catch (ObjectDisposedException) { } // Terminal disposal is observed through the original completion task.
+        }
+        var subscribed = false;
+        try
+        {
+            lock (_stateGate)
+            {
+                ct.ThrowIfCancellationRequested(); RequireOriginal(original);
+                session = original.Player.PlaybackSession;
+                session.PlaybackStateChanged += Changed; subscribed = true;
+                if (pause) original.Player.Pause(); else original.Player.Play();
+                Changed(session, new object());
+            }
+            await Task.WhenAny(observed.Task, original.Completion.Task).WaitAsync(ct).ConfigureAwait(false);
+            lock (_stateGate)
+            {
+                ct.ThrowIfCancellationRequested(); RequireOriginal(original);
+                if (session!.PlaybackState != (pause ? MediaPlaybackState.Paused : MediaPlaybackState.Playing))
+                    throw new InvalidOperationException("Original playback did not confirm the requested state.");
+                return new(original.Id, original.VoiceId, session.Position, pause);
+            }
+        }
+        finally
+        {
+            if (subscribed) { try { session!.PlaybackStateChanged -= Changed; } catch (ObjectDisposedException) { } }
+            original.Controls.Release();
         }
     }
 
@@ -202,12 +309,16 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
-        _disposed = true;
+        lock (_stateGate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+        }
         StopCurrent();
         await _utteranceGate.WaitAsync().ConfigureAwait(false);
         _utteranceGate.Release();
-        _utteranceGate.Dispose();
+        // Existing queued callers must observe disposal and release safely. No native
+        // wait handle is created: AvailableWaitHandle is never exposed by this service.
         GC.SuppressFinalize(this);
     }
 
@@ -216,6 +327,10 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
     /// </summary>
     private sealed class PlaybackState : IDisposable
     {
+        internal Guid Id { get; } = Guid.NewGuid();
+        internal string VoiceId { get; }
+        internal SemaphoreSlim Controls { get; } = new(1, 1);
+        internal MediaPlayer Player => _player;
         /// <summary>
         /// Stores synthesizer locally so this component can preserve the dependency, cache, or state between member calls.
         /// </summary>
@@ -256,8 +371,10 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
             SpeechSynthesisStream stream,
             MediaSource source,
             MediaPlayer player,
+            string voiceId,
             CancellationToken cancellationToken)
         {
+            VoiceId = voiceId;
             _synthesizer = synthesizer;
             _stream = stream;
             _source = source;
@@ -330,7 +447,7 @@ namespace Haven.Desktop.Services;
 /// The Windows implementation remains unchanged; this seam keeps Linux startup
 /// fail-closed without pretending that Windows speech APIs are available.
 /// </summary>
-public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IAsyncDisposable
+public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IContinuableSpeechOutputService, IOriginalSpeechPlaybackReceiptIssuer, IAsyncDisposable
 {
     public bool IsAvailable => false;
 
@@ -349,6 +466,18 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IA
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromException(new PlatformNotSupportedException(UnavailableReason));
+    }
+
+    public bool WasIssuedPlayback(ISpeechPlaybackContinuation playback) => false;
+    public bool IsOriginalPlayback(ISpeechPlaybackContinuation playback) => false;
+
+    public bool CanContinueVoice(string voiceId) => false;
+
+    public Task<ISpeechPlaybackContinuation> StartContinuableAsync(string text, string? voiceName,
+        string? outputDeviceId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromException<ISpeechPlaybackContinuation>(new PlatformNotSupportedException(UnavailableReason));
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

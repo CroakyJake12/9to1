@@ -152,6 +152,7 @@ public sealed partial class HavenLauncherActivity : Activity
 
     protected override void OnDestroy()
     {
+        RetireOriginalWidgetSelection();
         _activityStarted = false;
         CloseAppDrawer();
         CloseLayoutDocumentDialogs();

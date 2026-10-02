@@ -98,3 +98,27 @@ internal sealed class AndroidLauncherWidgetViews<TView>(HomeLauncherSession sess
         finally { if (!accepted) platform.ReleaseView(view); }
     }
 }
+
+/// <summary>Activity-local platform callback phase only; never a Home or binding authority.</summary>
+internal sealed class AndroidLauncherWidgetSelectionPhase
+{
+    private int _allocatedId;
+    private bool _configuration;
+    public void Begin(int allocatedId)
+    {
+        if (allocatedId <= 0 || _allocatedId != 0) throw new InvalidOperationException("Widget selection is already active or invalid.");
+        _allocatedId = allocatedId; _configuration = false;
+    }
+    public bool IsExpected(int allocatedId, bool configuration)
+        => allocatedId > 0 && allocatedId == _allocatedId && configuration == _configuration;
+    public void BeginConfiguration(int allocatedId)
+    {
+        if (!IsExpected(allocatedId, false)) throw new InvalidOperationException("Widget configuration does not belong to the current picker.");
+        _configuration = true;
+    }
+    public void Complete(int allocatedId)
+    {
+        if (allocatedId != _allocatedId) return;
+        _allocatedId = 0; _configuration = false;
+    }
+}

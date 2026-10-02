@@ -8,6 +8,24 @@ namespace Haven.Android;
 public sealed class AndroidLauncherWidgetTests
 {
     [Fact]
+    public async Task StalePlatformPhaseCannotCompleteCurrentSelectionOrReleaseCanonicalConfiguration()
+    {
+        using var f = new Fixture(); var original = await f.Seed();
+        var phase = new AndroidLauncherWidgetSelectionPhase(); phase.Begin(17);
+        Assert.False(phase.IsExpected(17, true)); // Stale configure result during a new picker.
+        Assert.False(phase.IsExpected(16, false)); // Foreign old allocation.
+        phase.Complete(16); Assert.True(phase.IsExpected(17, false));
+        phase.BeginConfiguration(17); Assert.False(phase.IsExpected(17, false));
+        Assert.True(phase.IsExpected(17, true));
+        Assert.Throws<InvalidOperationException>(() => phase.BeginConfiguration(17));
+        phase.Complete(17); Assert.False(phase.IsExpected(17, true));
+        phase.Begin(18); Assert.False(phase.IsExpected(17, false));
+        Assert.True(await f.Session.IsCurrentAsync(original));
+        Assert.Single(f.Bindings.Read()); Assert.Equal(0, f.Platform.Released);
+        Assert.Equal(Assert.Single(original.Layout.Current.Widgets), Assert.Single((await f.Session.ReadAsync())!.Layout.Current.Widgets));
+    }
+
+    [Fact]
     public void DeviceCacheRejectsCrossProfileReassignmentAndPreservesCorruption()
     {
         var storage = new Storage(); var bindings = new AndroidLauncherWidgetBindings(storage);

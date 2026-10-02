@@ -8,6 +8,8 @@
  */
 
 using Haven.Application;
+using Haven.Application.Call;
+using Haven.Desktop.Views.Pages.Call;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Services;
@@ -58,6 +60,13 @@ public static class DesktopCallServiceRegistration
         services.AddSingleton<CallVoicePreviewController>(provider => new CallVoicePreviewController(
             provider.GetRequiredService<ISpeechOutputService>(),
             provider.GetRequiredService<IProductionDiagnostics>()));
+        // Metadata is created only after the user's explicit original-reply narration action.
+        // This is the same existing local Call owner/settings composition, not a Home/source grant.
+        services.AddSingleton<MultimodalSessionStore>(provider =>
+            new MultimodalSessionStore(provider.GetRequiredService<IVersionedSettingsStore>()));
+        services.AddSingleton<VisionVoiceSessionService>();
+        services.AddSingleton<CallMonologueNarrationRoute>(provider => new CallMonologueNarrationRoute(
+            provider.GetRequiredService<CallCoordinator>(), provider.GetRequiredService<VisionVoiceSessionService>()));
         services.AddSingleton<CallCompletionController>();
         services.AddSingleton<NotesDictationController>();
         services.AddSingleton<NotesReadAloudController>();

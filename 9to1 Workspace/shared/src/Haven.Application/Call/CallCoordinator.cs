@@ -18,7 +18,7 @@ namespace Haven.Application;
 /// only expose transcripts/snapshots, which keeps raw audio and video out of
 /// persistence by construction.
 /// </summary>
-public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IVoiceInputStatusSource, ICallDeviceSelection
+public sealed partial class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IVoiceInputStatusSource, ICallDeviceSelection
 {
     /// <summary>
     /// Stores default system prompt locally so this component can preserve the dependency, cache, or state between member calls.
@@ -425,6 +425,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
     public async Task PauseAsync(CancellationToken cancellationToken)
     {
         EnsureActive();
+        await RetireOriginalNarrationAsync().ConfigureAwait(false);
         _turnCts?.Cancel();
         await StopMediaInputAndOutputAsync(cancellationToken).ConfigureAwait(false);
         SetInputStatus(new VoiceInputStatus(VoiceInputState.Paused, "Microphone paused.", CanRetry: true));
@@ -512,6 +513,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
     public async Task InterruptAsync(CancellationToken cancellationToken)
     {
         if (!IsActive) return;
+        await RetireOriginalNarrationAsync().ConfigureAwait(false);
         _turnCts?.Cancel();
         try { await _speechOutput.StopAsync(cancellationToken).ConfigureAwait(false); }
         catch (Exception) { /* media cleanup is best effort */ }
@@ -561,8 +563,11 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
         try
         {
             EnsureActive();
+            await RetireOriginalNarrationAsync().ConfigureAwait(false);
             var options = _options!;
             var conversation = CurrentConversation!;
+            var narrationLifetime = _lifetimeCts;
+            var narrationCall = CurrentSession!;
             _turnCts?.Dispose();
             _turnCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken,
@@ -674,6 +679,11 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
                         await _conversations.AddMessageAsync(assistant, CancellationToken.None).ConfigureAwait(false);
                     else
                         AppendEphemeral(new OllamaMessage("assistant", content));
+                    if (!interrupted && fatalError is null && !turnToken.IsCancellationRequested &&
+                        narrationLifetime is not null && ReferenceEquals(_lifetimeCts, narrationLifetime) &&
+                        ReferenceEquals(_options, options) && CurrentSession?.Id == narrationCall.Id &&
+                        CurrentConversation?.Id == conversation.Id && IsActive && !_ending && !_disposed)
+                        PublishOriginalNarration(narrationCall.Id, conversation.Id, assistantId, narrationLifetime, options, content);
                     TranscriptChanged?.Invoke(this, new(assistantId, MessageRole.Assistant, content, false, true, interrupted));
                 }
             }
@@ -907,6 +917,7 @@ public sealed class CallCoordinator : ICallCoordinator, IVoiceReactionSource, IV
         _ending = true;
         try
         {
+            await RetireOriginalNarrationAsync().ConfigureAwait(false);
             _lifetimeCts?.Cancel();
             _turnCts?.Cancel();
             await CleanupMediaAsync(cancellationToken).ConfigureAwait(false);

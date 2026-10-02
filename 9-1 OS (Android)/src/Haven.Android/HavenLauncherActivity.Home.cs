@@ -15,6 +15,7 @@ public sealed partial class HavenLauncherActivity
         // request bit from the actual framework HOME intent, without adopting any actor or command.
         _nativeControllerProbeRequested = intent.GetBooleanExtra("astra_native_controller_probe", false);
 #endif
+        RetireOriginalWidgetSelection();
         CloseLayoutDocumentDialogs();
         CloseAppDrawer();
         _folderDialog?.Dismiss();

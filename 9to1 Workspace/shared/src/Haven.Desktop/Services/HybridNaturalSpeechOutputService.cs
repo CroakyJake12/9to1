@@ -9,6 +9,7 @@
  */
 
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 using Haven.Application;
 using Haven.Core;
 using KokoroSharp;
@@ -22,7 +23,7 @@ namespace Haven.Desktop.Services;
 /// modern Windows synthesizer. Cached neural models are prepared in the background
 /// so the first spoken answer does not pay model-loading cost.
 /// </summary>
-public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAdaptiveSpeechOutputService, ISpeechOutputWarmup, IAsyncDisposable
+public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IContinuableSpeechOutputService, IOriginalSpeechPlaybackReceiptIssuer, IAdaptiveSpeechOutputService, ISpeechOutputWarmup, IAsyncDisposable
 {
     private const string NeuralPrefix = "kokoro:";
     private readonly WindowsNaturalSpeechOutputService _windows;
@@ -32,6 +33,8 @@ public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAd
     private Task<KokoroTTS>? _neuralLoadTask;
     private KokoroTTS? _neural;
     private bool _disposed;
+    private CancellationTokenSource? _continuationLifetime;
+    private ISpeechPlaybackContinuation? _ownedContinuation;
 
     private static readonly CallVoice[] NeuralVoices =
     [
@@ -79,6 +82,68 @@ public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAd
         _ = ResolveVoiceProfile(voiceName[NeuralPrefix.Length..]);
     }
 
+    private readonly ConditionalWeakTable<ISpeechPlaybackContinuation, object> _issuedContinuations = new();
+    public bool WasIssuedPlayback(ISpeechPlaybackContinuation playback) =>
+        _issuedContinuations.TryGetValue(playback, out _) && _windows.WasIssuedPlayback(playback);
+
+    public bool IsOriginalPlayback(ISpeechPlaybackContinuation playback)
+    {
+        lock (_stateGate)
+            return !_disposed && ReferenceEquals(_ownedContinuation, playback) &&
+                _continuationLifetime is { IsCancellationRequested: false } && _windows.IsOriginalPlayback(playback);
+    }
+
+    public bool CanContinueVoice(string voiceId) => !_disposed && !string.IsNullOrWhiteSpace(voiceId) &&
+        !voiceId.StartsWith(NeuralPrefix, StringComparison.OrdinalIgnoreCase) && _windows.CanContinueVoice(voiceId);
+
+    /// <summary>Retains the exact selected Windows media through the same shared speech gate.
+    /// Neural routes expose no genuine position API here and are explicitly unavailable for continuation.</summary>
+    public async Task<ISpeechPlaybackContinuation> StartContinuableAsync(string text, string? voiceName,
+        string? outputDeviceId, CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (voiceName is null || !CanContinueVoice(voiceName))
+            throw new PlatformNotSupportedException("The original selected voice does not support retained playback continuation.");
+        await _speechGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var transferred = false;
+        try
+        {
+            lock (_stateGate)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                _continuationLifetime = lifetime;
+            }
+            var original = await _windows.StartContinuableAsync(text, voiceName, outputDeviceId, lifetime.Token).ConfigureAwait(false);
+            _issuedContinuations.GetValue(original, _ => new object());
+            lock (_stateGate)
+            {
+                if (ReferenceEquals(_continuationLifetime, lifetime)) _ownedContinuation = original;
+            }
+            _ = ReleaseContinuationAsync(original.Completion, lifetime);
+            transferred = true;
+            return original;
+        }
+        finally
+        {
+            if (!transferred)
+            {
+                lock (_stateGate) { if (ReferenceEquals(_continuationLifetime, lifetime)) { _continuationLifetime = null; _ownedContinuation = null; } }
+                lifetime.Dispose(); _speechGate.Release();
+            }
+        }
+    }
+    private async Task ReleaseContinuationAsync(Task originalCompletion, CancellationTokenSource lifetime)
+    {
+        try { await originalCompletion.ConfigureAwait(false); }
+        catch (Exception) { } // The exact handle exposes the same original failure; observe the gate-release task too.
+        finally
+        {
+            lock (_stateGate) { if (ReferenceEquals(_continuationLifetime, lifetime)) { _continuationLifetime = null; _ownedContinuation = null; } }
+            lifetime.Dispose(); _speechGate.Release();
+        }
+    }
+
     public Task SpeakAsync(string text, string? voiceName, string? outputDeviceId, CancellationToken cancellationToken) =>
         SpeakAsync(text, voiceName, outputDeviceId, VoiceDeliveryStyle.Conversational, cancellationToken);
 
@@ -95,6 +160,7 @@ public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAd
         await _speechGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            lock (_stateGate) { ObjectDisposedException.ThrowIf(_disposed, this); }
             if (voiceName?.StartsWith(NeuralPrefix, StringComparison.OrdinalIgnoreCase) != true)
             {
                 await _windows.SpeakAsync(text, voiceName, outputDeviceId, cancellationToken).ConfigureAwait(false);
@@ -268,15 +334,27 @@ public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAd
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        lock (_stateGate) _neural?.StopPlayback();
+        CancellationTokenSource? originalLifetime;
+        lock (_stateGate) { originalLifetime = _continuationLifetime; _neural?.StopPlayback(); }
         await _windows.StopAsync(cancellationToken).ConfigureAwait(false);
+        if (originalLifetime is not null)
+        {
+            lock (_stateGate)
+            {
+                if (ReferenceEquals(_continuationLifetime, originalLifetime)) originalLifetime.Cancel();
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
-        _disposed = true;
-        lock (_stateGate) _neural?.StopPlayback();
+        lock (_stateGate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _continuationLifetime?.Cancel();
+            _neural?.StopPlayback();
+        }
         await _speechGate.WaitAsync().ConfigureAwait(false);
         lock (_stateGate)
         {
@@ -285,6 +363,8 @@ public sealed class HybridNaturalSpeechOutputService : ISpeechOutputService, IAd
             _voiceProfiles.Clear();
         }
         _speechGate.Release();
-        _speechGate.Dispose();
+        // Prior queued callers must acquire, observe disposal and release safely. This managed
+        // semaphore never exposes AvailableWaitHandle, so retaining it creates no native handle.
+        // Disposing it here would race those admitted waiters and their finally Release calls.
     }
 }
