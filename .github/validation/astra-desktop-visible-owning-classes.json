@@ -411,7 +411,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WritePageTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "WritePageTests",
-      "sha256": "0f545af668fe6500a1eaf2ecd08e131c9d1125423ea9f951dc8ed9f699852df6"
+      "sha256": "5f53204badf8db28c306c1f2dc1cda6e7386bc0040836992c750772fc7d647a4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteRibbonLayoutTests.cs",
