@@ -10,7 +10,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-files-strict-native11/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "namespace": "Haven.Desktop.Tests"
     },
     {
       "class": "FilesNativeBrowserSurfaceTests",
@@ -21,7 +22,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-files-strict-native11/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "namespace": "Haven.Desktop.Tests"
     },
     {
       "class": "FilesNativeBrowserAuthorityTests",
@@ -32,7 +34,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-files-browser-owner5/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "namespace": "Haven.Desktop.Tests"
     },
     {
       "class": "DataDocumentWorkspaceHostTests",
@@ -43,7 +46,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-host-mount2/9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs",
+      "namespace": "Haven.Desktop.Tests"
     },
     {
       "class": "DataJunctionTableDesignTests",
@@ -54,7 +58,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-junction-owner10/9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs",
+      "namespace": "Haven.Core.Tests"
     },
     {
       "class": "CanvasDurableHistoryTests",
@@ -65,7 +70,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-durable-history5/9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",
+      "namespace": "Haven.Core.Tests"
     },
     {
       "class": "DataLocalStoreAuthorityTests",
@@ -76,7 +82,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-junction-owner10/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
       "origin": "joined95 selectedowner",
-      "source": "/workspace/astra-source/worker3-data-bounded-values-successor-02/DataLocalStoreAuthorityTests.cs"
+      "source": "/workspace/astra-source/worker3-data-bounded-values-successor-02/DataLocalStoreAuthorityTests.cs",
+      "namespace": "Haven.Infrastructure.Tests"
     },
     {
       "class": "HomeDataConversationRegistrationTests",
@@ -87,7 +94,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-relationship-di2/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
       "origin": "joined95 selectedowner",
-      "source": "/workspace/astra-source/worker1-data-record-di-draft03/HomeDataConversationRegistrationTests.cs"
+      "source": "/workspace/astra-source/worker1-data-record-di-draft03/HomeDataConversationRegistrationTests.cs",
+      "namespace": "Haven.Infrastructure.Tests"
     },
     {
       "class": "StudioRegisteredToolEvidenceTests",
@@ -98,7 +106,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-studio-registered2/9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
+      "namespace": "HavenOS.AIStudio.Tests"
     },
     {
       "class": "ContextualAiCuiSurfaceTests",
@@ -109,7 +118,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-home-cui-coherent12/9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
+      "namespace": "Haven.Desktop.Tests"
     },
     {
       "class": "ArtifactAiContextTests",
@@ -118,7 +128,8 @@
       "sha256": "4b455118fda5f17365007f31a440cffc9890bcbf66e684a584d6d41af4c5b45c",
       "qualification": "unchanged baseline test dependency, must pin exacthash in Root12 cut manifest (not claimed selected captured successor)",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ArtifactAiContextTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ArtifactAiContextTests.cs",
+      "namespace": "Haven.Desktop.Tests"
     },
     {
       "class": "AppAiCoordinatorTests",
@@ -129,7 +140,8 @@
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-home-cui-coherent12/framework/CUI/AI.Tests/AppAiCoordinatorTests.cs",
       "origin": "normal896 immutableGitblob",
-      "source": "896cd047cfd6fa420582c51efea11598d27844ad:framework/CUI/AI.Tests/AppAiCoordinatorTests.cs"
+      "source": "896cd047cfd6fa420582c51efea11598d27844ad:framework/CUI/AI.Tests/AppAiCoordinatorTests.cs",
+      "namespace": "NineToOne.Cui.AI.Tests"
     }
   ],
   "captureManifests": [

@@ -4,30 +4,31 @@ import json,pathlib,hashlib,base64,subprocess,os
 DEFAULT_TOOLS=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj']
 DEFAULT_TOOLS.append('framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj')
 def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
- root=root.resolve();entry=(root/entry).resolve();pending=[(entry,None)]+[((root/p).resolve(),None) for p in extra_projects];seen=set();projects=[];packages={}
+ root=root.resolve();entry=(root/entry).resolve();pending=[(entry,None,False)]+[((root/p).resolve(),None,p.endswith("/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj")) for p in extra_projects];seen=set();projects=[];packages={}
  def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
  while pending:
-  project,restoredSpec=pending.pop()
-  if project in seen:continue
+  project,restoredSpec,hostContext=pending.pop()
+  contextKey=(project,hostContext,restoredSpec.get("restore",{}).get("outputPath") if restoredSpec else None)
+  if contextKey in seen:continue
   if not project.is_relative_to(root) or not project.is_file():raise ValueError('restored source project not bound to root')
-  seen.add(project)
+  seen.add(contextKey)
   # Standalone entry and Accounts project use standard project-relative obj; actual graph dgspec validates every path.
   effectiveFramework='netstandard2.0' if str(project.relative_to(root)) in extra_projects else 'net10.0'
   if restoredSpec is not None:
    frameworks=restoredSpec.get('restore',{}).get('originalTargetFrameworks',[])
    if effectiveFramework not in frameworks and len(frameworks)==1:effectiveFramework=frameworks[0]
-  props=['-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
+  props=['-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/('artifacts/root14-host-build-tasks' if hostContext else 'artifacts/root14-managed-build')),'-p:IncludeProjectNameInArtifactsPaths=true']
   taskLocation=os.environ.get('ASTRA_ACTUAL_AVALONIA_BUILD_TASKS')
   if taskLocation is None or not pathlib.Path(taskLocation).resolve().is_relative_to(root) or not pathlib.Path(taskLocation).is_file():raise ValueError('source-built actual build task admission missing')
   props.append('-p:AvaloniaBuildTasksLocation='+taskLocation)
-  if str(project.relative_to(root))=='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj':props=[v for v in props if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained='))]
+  if hostContext:props=[v for v in props if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained='))]
   argv=['dotnet','msbuild',str(project),'-nologo','-m:1','-nr:false',*props,'-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath']
   query=subprocess.run(argv,capture_output=True,text=True)
   diagnostic={'project':str(project.relative_to(root)),'argv':argv,'cwd':str(pathlib.Path.cwd()),'exitCode':query.returncode,'stdout':query.stdout,'stderr':query.stderr}
   cohort=os.environ.get('COHORT')
   if cohort not in ('regression','resource','go','models','apps','rendered','automation','accounts'):raise ValueError('explicit Root14 evidence cohort required')
   diagnostics=root/('artifacts/root14-'+cohort)/'restore-diagnostics';diagnostics.mkdir(parents=True,exist_ok=True)
-  diagnosticPath=diagnostics/(hashlib.sha256(str(project).encode()).hexdigest()+'.json')
+  diagnosticPath=diagnostics/(hashlib.sha256((str(project)+str(contextKey)).encode()).hexdigest()+'.json')
   diagnosticPath.write_text(json.dumps(diagnostic,indent=2)+'\n')
   query.check_returncode()
   evaluated=json.loads(query.stdout)['Properties'];obj=pathlib.Path(evaluated['MSBuildProjectExtensionsPath']);obj=obj if obj.is_absolute() else project.parent/obj;obj=obj.resolve()
@@ -47,11 +48,11 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
   metadata=[]
   for f in sorted(obj.iterdir()):
    if f.is_file() and (f.name in ('project.assets.json','project.nuget.cache') or f.name.endswith(('.nuget.dgspec.json','.nuget.g.props','.nuget.g.targets'))):metadata.append({'path':str(f.relative_to(root)),'bytes':f.stat().st_size,'sha256':sha(f)})
-  projects.append({'path':str(project.relative_to(root)),'sourceSha256':sha(project),'metadata':metadata})
+  projects.append({'path':str(project.relative_to(root)),'sourceSha256':sha(project),'hostContext':hostContext,'restoreOutputPath':str(obj.relative_to(root)),'metadata':metadata})
   for path,spec in graph['projects'].items():
    other=pathlib.Path(path).resolve()
    if not other.is_relative_to(root) or not other.is_file():raise ValueError('dgspec foreign project')
-   if other!=project:pending.append((other,spec))
+   if other!=project:pending.append((other,spec,hostContext))
   folders=[pathlib.Path(x) for x in data['packageFolders']]
   libraries=dict(data['libraries'])
   for framework in data['project']['restore']['frameworks'].values():
@@ -86,4 +87,4 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS):
    evidence={'root':str(directory),'sha512':recorded,'assetsSha512':lib.get('sha512'),'metadataContentHash':contentHash,'physicalArchiveSha512':physical,'files':payload}
    if identity in packages and packages[identity]!=evidence:raise ValueError('same package identity has differing root/payload/hash')
    packages[identity]=evidence
- return {'projects':sorted(projects,key=lambda x:x['path']),'packages':packages}
+ return {'projects':sorted(projects,key=lambda x:(x['path'],x['restoreOutputPath'],x['hostContext'])),'packages':packages}
