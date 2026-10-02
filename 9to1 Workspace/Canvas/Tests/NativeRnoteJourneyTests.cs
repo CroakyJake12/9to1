@@ -236,6 +236,8 @@ public sealed class NativeRnoteJourneyTests
         var state = artifact.DocumentSettings.Properties["9to1.Canvas.RnoteState"];
         var json = state.GetRawText().Replace(state.GetProperty("Sha256").GetString()!, new string('0', 64), StringComparison.Ordinal);
         artifact.DocumentSettings.Properties["9to1.Canvas.RnoteState"] = System.Text.Json.JsonDocument.Parse(json).RootElement.Clone();
+        Assert.Throws<CanvasArtifactFormatException>(() => CanvasArtifactCodec.Serialize(artifact));
+        artifact.SemanticHistory = null; // Isolate checksum refusal for a history-free older envelope.
         Assert.Throws<InvalidDataException>(() => CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(artifact)));
     }
 

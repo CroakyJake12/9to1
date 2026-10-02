@@ -37,19 +37,30 @@ public sealed class CanvasToolState : IDisposable
     private readonly Func<CanvasPrimaryTool, CanvasToolCapability> _capability;
     private readonly Action<CanvasToolSelection> _activate;
     private readonly CanvasAiSurfaceState? _ai;
+    private readonly Func<CanvasEraserOptions,CanvasToolCapability>? _eraserCapability;
     private bool _disposed;
 
     public CanvasToolState(Func<CanvasPrimaryTool, CanvasToolCapability> capability,
-        Action<CanvasToolSelection> activate, CanvasAiSurfaceState? ai = null)
+        Action<CanvasToolSelection> activate, CanvasAiSurfaceState? ai = null,
+        Func<CanvasEraserOptions,CanvasToolCapability>? eraserCapability = null)
     {
         _capability = capability ?? throw new ArgumentNullException(nameof(capability));
         _activate = activate ?? throw new ArgumentNullException(nameof(activate));
-        _ai = ai;
+        _ai = ai; _eraserCapability = eraserCapability;
         if (_ai is not null) _ai.Changed += AiChanged;
     }
 
     public CanvasPrimaryTool Selected { get; private set; } = CanvasPrimaryTool.Select;
     public CanvasRnoteInkStyle InkStyle { get; private set; } = CanvasRnoteInkStyle.Default;
+    public CanvasEraserOptions EraserOptions { get; private set; } = new();
+    public CanvasToolCapability EraserCapability(CanvasEraserOptions options) => _eraserCapability?.Invoke(options) ?? CanvasToolCapability.Unavailable("The native eraser operation is unavailable.");
+    public void SetEraserOptions(CanvasEraserOptions options)
+    {
+        ObjectDisposedException.ThrowIf(_disposed,this); options.Validate();
+        var capability=EraserCapability(options);
+        if(!capability.Available) throw new NotSupportedException(capability.Reason);
+        EraserOptions=options; Changed?.Invoke(this,EventArgs.Empty);
+    }
     public bool OptionsFocused { get; private set; }
     public CanvasAiSurfaceState? Ai => _ai;
     public event EventHandler? Changed;

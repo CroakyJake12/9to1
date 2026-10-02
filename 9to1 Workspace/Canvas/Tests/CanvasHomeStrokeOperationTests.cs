@@ -116,10 +116,10 @@ public sealed class CanvasHomeStrokeOperationTests
         var stroke = Assert.Single(opened.Artifact.Pages[0].Strokes);
         var owner = new CanvasHomeStrokeEditOperation(fixture.Files, fixture.Home, fixture.Actors);
         var edit = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
-            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, CanvasStrokeEditKind.Translate, 100, 200);
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, CanvasStrokeEditKind.Translate, opened.StoreId, 100, 200);
         var capability = await fixture.Approve(edit);
         var changed = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
-            opened.Artifact.RevisionId, edit.OperationId, stroke.StrokeId, CanvasStrokeEditKind.Translate, 900, 950);
+            opened.Artifact.RevisionId, edit.OperationId, stroke.StrokeId, CanvasStrokeEditKind.Translate, opened.StoreId, 900, 950);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.ExecuteAsync(changed, capability));
         var untouched = await fixture.Files.OpenAsync(fixture.FileId);
         Assert.Equal(opened.CasRevisionId, untouched.CasRevisionId);
@@ -132,7 +132,7 @@ public sealed class CanvasHomeStrokeOperationTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => owner.ExecuteAsync(edit, capability));
         opened = await fixture.Files.OpenAsync(fixture.FileId);
         var deletion = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
-            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, CanvasStrokeEditKind.Delete);
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, CanvasStrokeEditKind.Delete, opened.StoreId);
         var deleted = await owner.ExecuteAsync(deletion, await fixture.Approve(deletion));
         Assert.Empty(deleted.Artifact.Pages[0].Strokes);
         using var reopened = CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize((await fixture.Files.OpenAsync(fixture.FileId)).Artifact));
@@ -154,7 +154,7 @@ public sealed class CanvasHomeStrokeOperationTests
         opened = await fixture.Files.OpenAsync(fixture.FileId);
         var stroke = Assert.Single(opened.Artifact.Pages[0].Strokes);
         var edit = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
-            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, kind,
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, kind, opened.StoreId,
             kind == CanvasStrokeEditKind.Translate ? 100 : 0, kind == CanvasStrokeEditKind.Translate ? 200 : 0);
         var capability = await fixture.Approve(edit);
         var actor = (await fixture.Actors.GetCurrentAsync(default))!;
@@ -303,6 +303,32 @@ public sealed class CanvasHomeStrokeOperationTests
         Assert.Empty(current.Artifact.Pages[0].Strokes);
     }
 
+    [Theory]
+    [InlineData(CanvasStrokeEditKind.Delete)]
+    [InlineData(CanvasStrokeEditKind.Translate)]
+    public async Task Keyed_edit_refuses_replaced_store_with_same_target_identity_without_rewriting_foreign_bytes(CanvasStrokeEditKind kind)
+    {
+        await using var fixture = await Fixture.Create();
+        var opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var draw = CanvasStrokeWriteIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), [new(10, 20, .2), new(40, 60, .7)]);
+        await new CanvasHomeStrokeOperation(fixture.Files, fixture.Home, fixture.Actors)
+            .ExecuteAsync(draw, await fixture.Approve(draw));
+        opened = await fixture.Files.OpenAsync(fixture.FileId);
+        var stroke = Assert.Single(opened.Artifact.Pages[0].Strokes);
+        var intent = CanvasStrokeEditIntent.Capture(fixture.FileId, opened.CasRevisionId, opened.Artifact.ArtifactId,
+            opened.Artifact.RevisionId, Guid.NewGuid(), stroke.StrokeId, kind, opened.StoreId,
+            kind == CanvasStrokeEditKind.Translate ? 100 : 0, kind == CanvasStrokeEditKind.Translate ? 200 : 0);
+        var capability = await fixture.Approve(intent);
+        var envelope = System.Text.Json.Nodes.JsonNode.Parse(await File.ReadAllBytesAsync(fixture.StatePath))!.AsObject();
+        envelope["state"]!.AsObject()["storeId"] = Guid.NewGuid().ToString();
+        var foreignBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(envelope);
+        await File.WriteAllBytesAsync(fixture.StatePath, foreignBytes);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            new CanvasHomeStrokeEditOperation(fixture.Files, fixture.Home, fixture.Actors).ExecuteAsync(intent, capability));
+        Assert.Equal(foreignBytes, await File.ReadAllBytesAsync(fixture.StatePath));
+    }
+
     private sealed class Fixture : IAsyncDisposable, ICanonicalResourceAccessResolver, IAuthenticatedResourceActorSource
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "canvas-home-owner-" + Guid.NewGuid().ToString("N"));
@@ -327,7 +353,12 @@ public sealed class CanvasHomeStrokeOperationTests
         public ResourceAuthorizationService Resources { get; private set; } = null!;
         public HostedItemId FileId { get; private set; }
         private HostedItemId _folderId;
-        public async Task<CanvasCreationTarget> CreationTarget() => new(_folderId, (await _provider.GetAsync(_folderId, default)).Value!.CurrentRevisionId);
+        public async Task<CanvasCreationTarget> CreationTarget()
+        {
+            var storeId = (await _provider.GetStoreEvidenceAsync(default)).StoreId;
+            var revision = (await _provider.GetAsync(_folderId, default)).Value!.CurrentRevisionId;
+            return new(_folderId, revision) { ExpectedStoreId = storeId };
+        }
         public bool WritesAllowed { get; set; } = true;
         public string ResourceKind => "files.item";
 

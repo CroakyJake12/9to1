@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.IO.Compression;
 using System.Text.Json;
 using Haven.Application;
 
@@ -152,6 +153,162 @@ public sealed class CanvasRnoteDocument : IDisposable
         }
     }
 
+    /// <summary>Materialize a genuine split against exact retained canonical donor state.
+    /// Original document/native state and history remain unchanged.</summary>
+    public CanvasSplitErasePreview PreviewSplitErase(IReadOnlyList<RnotePointerSample> samples, double width, Guid expectedRevision,
+        IReadOnlyDictionary<ulong, Guid>? retainedFragmentIdentities = null)
+    {
+        var captured = RnoteCanvasEngine.CaptureSamples(samples);
+        if (!double.IsFinite(width) || width is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(width));
+        lock (_gate)
+        {
+            EnsureOpen(); var artifact = _session.GetArtifactSnapshot();
+            if (expectedRevision == Guid.Empty || artifact.RevisionId != expectedRevision)
+                throw new InvalidOperationException("Canvas changed before genuine split preview.");
+            var state = ReadPersistedState(artifact);
+            var bindings = state.NativeStrokeKeys ?? throw new NotSupportedException("Split needs original canonical/native stroke identity bindings.");
+            // View-only camera movement is not a new owning snapshot. Resolve
+            // geometry against exact canonical native bytes, not a live view grant.
+            using var canonicalNative = RnoteCanvasEngine.Open(Convert.FromBase64String(state.PayloadBase64));
+            var candidate = canonicalNative.CreateSplitEraseCandidate(captured, width);
+            var materialization = CanvasRnoteSplitMaterializer.Materialize(artifact, bindings, candidate.CopyReceipt(), retainedFragmentIdentities);
+            return new(artifact.ArtifactId, artifact.RevisionId, artifact.Pages[0].PageId, captured, width, candidate, materialization);
+        }
+    }
+
+    /// <summary>One atomic canonical replace/create/delete, one shared history frame.
+    /// Exact replay/stale/locked refusals never invoke or adopt the donor callback.</summary>
+    public void ApplySplitErase(CanvasSplitErasePreview preview, CanvasMutationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(preview); ArgumentNullException.ThrowIfNull(request);
+        if (request.BaseRevisionId != preview.BaseRevisionId) throw new ArgumentException("Split preview does not bind this mutation revision.");
+        lock (_gate)
+        {
+            EnsureOpen();
+            if (_session.ArtifactId != preview.ArtifactId) throw new InvalidOperationException("Split preview belongs to another artifact.");
+            var artifact = _session.GetArtifactSnapshot();
+            RnoteCanvasEngine? candidate = null;
+            try
+            {
+                CanvasDocumentSettings Capture()
+                {
+                    candidate = RnoteCanvasEngine.Open(preview.Candidate.CopyNative());
+                    if (!candidate.ReadStrokeKeys().ToHashSet().SetEquals(preview.NativeBindings.Values))
+                        throw new InvalidDataException("Split candidate identities disagree with the exact canonical materialization.");
+                    return SettingsWithEngineState(artifact.DocumentSettings, candidate, CompatibilityReport, preview.NativeBindings);
+                }
+                var result = _session.ReplaceStructuredStrokes(request, preview.PageId, preview.CopyReplacements(),
+                    preview.RemovedStrokeIds, preview.StrokeOrder, Capture);
+                RequireSuccess(result);
+                if (candidate is not null)
+                {
+                    var prior = _engine; _engine = candidate; candidate = null; prior.Dispose();
+                }
+            }
+            finally { candidate?.Dispose(); }
+        }
+    }
+
+    /// <summary>Resolve one genuine topmost hit, without changing history or native bytes.
+    /// Unsupported/unbound/locked top hits refuse; they never expose a lower neighbor.</summary>
+    public Guid? PreviewQuickErase(double x, double y, Guid expectedRevision)
+    {
+        lock (_gate)
+        {
+            EnsureOpen();
+            var artifact = _session.GetArtifactSnapshot();
+            if (artifact.RevisionId != expectedRevision) throw new InvalidOperationException("Canvas changed before Quick erase targeting.");
+            if (artifact.Pages.Count != 1 || artifact.Pages[0].Layers.Count != 1 ||
+                artifact.SharedResources.Count != 0 || artifact.Pages[0].Objects.Count != 0)
+                throw new NotSupportedException("Quick eraser needs an ink-only single-layer native mapping; broader layer/object parity is not established.");
+            var bindings = ReadPersistedState(artifact).NativeStrokeKeys;
+            var page = artifact.Pages[0];
+            if (bindings is null || page.StrokeOrder.Any(id => !bindings.ContainsKey(id)) ||
+                !_engine.ReadRenderedStrokeKeys().SequenceEqual(page.StrokeOrder.Select(id => bindings[id])))
+                throw new NotSupportedException("Canonical stroke order and retained donor render order need explicit reconciliation before Quick erasing.");
+            var key = _engine.FindQuickEraseTarget(x, y);
+            if (key is null) return null;
+            var matches = bindings?.Where(pair => pair.Value == key.Value).Select(pair => pair.Key).ToArray() ?? [];
+            if (matches.Length != 1) throw new NotSupportedException("The topmost donor entity has no unique canonical stroke identity.");
+            var stroke = page.Strokes.SingleOrDefault(value => value.StrokeId == matches[0])
+                ?? throw new InvalidDataException("The topmost donor identity has no canonical stroke.");
+            if (page.Layers.Single(value => value.LayerId == stroke.LayerId).IsLocked)
+                throw new InvalidOperationException("The topmost Quick erase target is locked.");
+            return stroke.StrokeId;
+        }
+    }
+
+    /// <summary>Read-only preview on a detached genuine donor candidate. No document/history mutation.</summary>
+    public IReadOnlyList<Guid> PreviewWholeStrokeErase(IReadOnlyList<RnotePointerSample> samples, double width, Guid expectedRevision)
+    {
+        var captured = RnoteCanvasEngine.CaptureSamples(samples);
+        lock (_gate)
+        {
+            EnsureOpen();
+            var artifact = _session.GetArtifactSnapshot();
+            if (artifact.RevisionId != expectedRevision) throw new InvalidOperationException("The Canvas changed before eraser preview.");
+            using var candidate = RnoteCanvasEngine.Open(_engine.Save());
+            candidate.EraseWholeStrokes(captured, width);
+            return Array.AsReadOnly(IdentifyWholeStrokeErasure(artifact,candidate));
+        }
+    }
+
+    /// <summary>Apply exactly the previewed canonical IDs as one owning revision/history boundary.</summary>
+    public void EraseWholeStrokes(IReadOnlyList<RnotePointerSample> samples, double width,
+        IReadOnlyList<Guid> expectedStrokeIds, CanvasMutationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request); ArgumentNullException.ThrowIfNull(expectedStrokeIds);
+        var captured = RnoteCanvasEngine.CaptureSamples(samples);
+        var keys = new List<Guid>();
+        foreach (var id in expectedStrokeIds) { keys.Add(id); if(keys.Count==1025) break; }
+        if(keys.Count is < 1 or > 1024 || keys.Any(id=>id==Guid.Empty) || keys.Distinct().Count()!=keys.Count)
+            throw new ArgumentException("Erasure requires a bounded exact set of previewed canonical stroke IDs.",nameof(expectedStrokeIds));
+        keys.Sort();
+        lock (_gate)
+        {
+            EnsureOpen();
+            var artifact = _session.GetArtifactSnapshot(); var page = artifact.Pages[0];
+            RnoteCanvasEngine? candidate = null;
+            try
+            {
+                CanvasDocumentSettings Capture()
+                {
+                    candidate = RnoteCanvasEngine.Open(_engine.Save());
+                    candidate.EraseWholeStrokes(captured,width);
+                    var removed = IdentifyWholeStrokeErasure(artifact,candidate);
+                    if(!keys.SequenceEqual(removed)) throw new InvalidDataException("The donor erasure differs from its exact canonical preview.");
+                    var bindings = new Dictionary<Guid,ulong>(ReadPersistedState(artifact).NativeStrokeKeys!);
+                    foreach(var id in keys) bindings.Remove(id);
+                    return SettingsWithEngineState(artifact.DocumentSettings,candidate,CompatibilityReport,bindings);
+                }
+                var result = _session.DeleteStructuredStrokes(request,page.PageId,keys,Capture);
+                RequireSuccess(result);
+                if(candidate is not null)
+                {
+                    var prior = _engine; _engine = candidate; candidate = null; prior.Dispose();
+                }
+            }
+            finally { candidate?.Dispose(); }
+        }
+    }
+
+    private Guid[] IdentifyWholeStrokeErasure(CanvasArtifact artifact,RnoteCanvasEngine candidate)
+    {
+        var before = _engine.ReadStrokeKeys().ToHashSet(); var after = candidate.ReadStrokeKeys().ToHashSet();
+        if(after.Except(before).Any()) throw new NotSupportedException("Split erasure requires canonical reconstruction of genuine new donor paths.");
+        var removed = before.Except(after).ToHashSet();
+        var bindings = ReadPersistedState(artifact).NativeStrokeKeys ?? new Dictionary<Guid,ulong>();
+        var reverse = bindings.ToDictionary(binding=>binding.Value,binding=>binding.Key);
+        if(removed.Any(key=>!reverse.ContainsKey(key))) throw new NotSupportedException("Erased imported donor entities require explicit canonical migration.");
+        var ids = removed.Select(key=>reverse[key]).Order().ToArray();
+        var page = artifact.Pages[0];
+        if(ids.Length>1024 || ids.Any(id=>!page.Strokes.Any(stroke=>stroke.StrokeId==id)))
+            throw new NotSupportedException("This eraser operation requires bounded same-page canonical ink.");
+        if(page.Strokes.Where(stroke=>ids.Contains(stroke.StrokeId)).Any(stroke=>page.Layers.First(layer=>layer.LayerId==stroke.LayerId).IsLocked))
+            throw new UnauthorizedAccessException("The eraser cannot modify locked-layer ink.");
+        return ids;
+    }
+
     public void DeleteStroke(Guid strokeId, CanvasMutationRequest request) =>
         EditStroke(strokeId, request, delete: true, 0, 0);
 
@@ -166,6 +323,8 @@ public sealed class CanvasRnoteDocument : IDisposable
             EnsureOpen();
             var artifact = _session.GetArtifactSnapshot();
             var page = artifact.Pages[0];
+            if (!delete && page.Strokes.Any(stroke => stroke.StrokeId == strokeId && stroke.PathGeometry is not null))
+                throw new NotSupportedException("Exact donor path translation requires an authoritative path replacement transaction.");
             RnoteCanvasEngine? candidate = null;
             try
             {
@@ -222,13 +381,28 @@ public sealed class CanvasRnoteDocument : IDisposable
         lock (_gate)
         {
             EnsureOpen();
-            var result = undo ? _session.Undo(request) : _session.Redo(request);
-            RequireSuccess(result);
-            var state = ReadPersistedState(_session.GetArtifactSnapshot());
-            var restored = RnoteCanvasEngine.Open(Convert.FromBase64String(state.PayloadBase64));
-            var prior = _engine;
-            _engine = restored;
-            prior.Dispose();
+            RnoteCanvasEngine? candidate = null;
+            try
+            {
+                void Prepare(CanvasArtifact proposed)
+                {
+                    // Validate donor version, checksum and canonical native-key bindings
+                    // before the session changes either current content or its stacks.
+                    using var validated = Open(CanvasArtifactCodec.Serialize(proposed));
+                    var state = ReadPersistedState(proposed);
+                    candidate = RnoteCanvasEngine.Open(Convert.FromBase64String(state.PayloadBase64));
+                }
+                var result = undo ? _session.Undo(request, Prepare) : _session.Redo(request, Prepare);
+                RequireSuccess(result);
+                if (candidate is not null)
+                {
+                    var prior = _engine;
+                    _engine = candidate;
+                    candidate = null;
+                    prior.Dispose();
+                }
+            }
+            finally { candidate?.Dispose(); }
         }
     }
 
@@ -316,7 +490,12 @@ public sealed class CanvasRnoteDocument : IDisposable
     {
         if (!artifact.DocumentSettings.Properties.TryGetValue(StateKey, out var state)) return;
         var bindings = state.Deserialize<RnotePersistedState>()?.NativeStrokeKeys;
-        if (bindings is null || bindings.Count == 0) return;
+        if (bindings is null || bindings.Count == 0)
+        {
+            if (artifact.Pages.SelectMany(page => page.Strokes).Any(stroke => stroke.PathGeometry is not null))
+                throw new InvalidDataException("Authoritative paths require retained native identity.");
+            return;
+        }
         if (bindings.Count > 1_000_000 || bindings.Keys.Any(id => id == Guid.Empty) || bindings.Values.Distinct().Count() != bindings.Count)
             throw new InvalidDataException("Canvas native stroke bindings have invalid or duplicate identity.");
         var canonical = artifact.Pages.SelectMany(page => page.Strokes).Select(stroke => stroke.StrokeId).ToHashSet();
@@ -325,6 +504,35 @@ public sealed class CanvasRnoteDocument : IDisposable
         var native = engine.ReadStrokeKeys().ToHashSet();
         if (bindings.Values.Any(key => !native.Contains(key)))
             throw new InvalidDataException("Canvas native stroke binding targets an absent persisted native entity.");
+        foreach (var stroke in artifact.Pages.SelectMany(page => page.Strokes).Where(stroke => stroke.PathGeometry is not null))
+        {
+            if (!bindings.TryGetValue(stroke.StrokeId, out var key))
+                throw new InvalidDataException("Authoritative path has no retained native identity.");
+            var exported = engine.ExportSelectedStrokes([key]);
+            using var compressed = new MemoryStream(exported, writable: false);
+            using var zip = new GZipStream(compressed, CompressionMode.Decompress);
+            using var expanded = new MemoryStream();
+            var buffer = new byte[81920];
+            int count;
+            while ((count = zip.Read(buffer)) != 0)
+            {
+                if (expanded.Length + count > 256L * 1024 * 1024)
+                    throw new InvalidDataException("Authoritative path native expansion exceeds its bound.");
+                expanded.Write(buffer, 0, count);
+            }
+            expanded.Position = 0;
+            using var document = JsonDocument.Parse(expanded);
+            var brushes = document.RootElement.GetProperty("data").GetProperty("engine_snapshot")
+                .GetProperty("stroke_components").EnumerateArray()
+                .Select(slot => slot.GetProperty("value"))
+                .Where(value => value.ValueKind == JsonValueKind.Object && value.TryGetProperty("brushstroke", out _)).ToArray();
+            if (brushes.Length != 1)
+                throw new InvalidDataException("Authoritative path export must contain exactly its owning brush stroke.");
+            long segmentBudget = 8192;
+            var genuine = CanvasRnoteSplitMaterializer.DecodePath(brushes[0].GetProperty("brushstroke").GetProperty("path"), ref segmentBudget);
+            if (!JsonElement.DeepEquals(JsonSerializer.SerializeToElement(genuine), JsonSerializer.SerializeToElement(stroke.PathGeometry)))
+                throw new InvalidDataException("Canonical authoritative path disagrees with its retained donor geometry.");
+        }
     }
 
     private sealed record RnotePersistedState(int SchemaVersion, string DonorRevision, string PayloadBase64, string Sha256,

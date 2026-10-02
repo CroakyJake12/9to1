@@ -6,7 +6,10 @@ namespace HavenOS.Apps.Canvas;
 
 /// <param name="Revision">Immutable content revision, retained across metadata-only changes.</param>
 /// <param name="CasRevisionId">Current Files item revision for ACL checks and the next write CAS.</param>
-public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevision Revision, FilesRevisionId CasRevisionId);
+public sealed record CanvasFilesOpenResult(CanvasArtifact Artifact, FilesRevision Revision, FilesRevisionId CasRevisionId)
+{
+    public Guid StoreId { get; init; }
+}
 
 /// <summary>
 /// Canvas-owned codec over an explicitly bound canonical Files folder. Candidates
@@ -44,6 +47,9 @@ public sealed class CanvasFilesArtifactBridge(
         if (claimedActor is not null && actor != claimedActor)
             throw new UnauthorizedAccessException("The Canvas creation actor differs from the claimed Home actor.");
         var provider = providers(actor) ?? throw new UnauthorizedAccessException("No authorised canonical Files provider is available.");
+        if (target is not null && (target.ExpectedStoreId == Guid.Empty ||
+            (await provider.GetStoreEvidenceAsync(target.ExpectedStoreId, cancellationToken).ConfigureAwait(false)).StoreId != target.ExpectedStoreId))
+            throw new InvalidOperationException("The original Canvas destination store was replaced.");
         var binding = await BindingAsync(actor, cancellationToken).ConfigureAwait(false);
         var folder = await provider.GetAsync(binding.FolderId, cancellationToken).ConfigureAwait(false);
         if (!folder.IsSuccess) throw new InvalidOperationException(folder.Error!.Message);
@@ -76,17 +82,28 @@ public sealed class CanvasFilesArtifactBridge(
             ? new FilesCommitAuthorityGuard(actor.ActorId, async token =>
                 await actors.GetCurrentAsync(token).ConfigureAwait(false) == actor && hostAllowsWrites())
             : await captureCommitAuthority(actor, provider, cancellationToken).ConfigureAwait(false);
-        var committed = await provider.CommitCreatedArtifactAsync(reference,
-            new(fileId, OwnerAppId, artifact.RevisionId.ToString("N"), actor.ActorId, DateTimeOffset.UtcNow,
-                bytes.LongLength, Convert.ToHexString(SHA256.HashData(bytes)), relative, null), guards, commitAuthority, cancellationToken).ConfigureAwait(false);
+        var createCommit = new FilesOwningAppRevisionCommit(fileId, OwnerAppId, artifact.RevisionId.ToString("N"),
+            actor.ActorId, DateTimeOffset.UtcNow, bytes.LongLength, Convert.ToHexString(SHA256.HashData(bytes)), relative, null);
+        var committed = target is not null
+            ? await provider.CommitCreatedArtifactAsync(reference, createCommit, guards, target.ExpectedStoreId, commitAuthority, cancellationToken).ConfigureAwait(false)
+            : await provider.CommitCreatedArtifactAsync(reference, createCommit, guards, commitAuthority, cancellationToken).ConfigureAwait(false);
         if (!committed.IsSuccess)
             throw new InvalidOperationException(committed.Error!.Message + " The unpublished candidate remains recoverable; no artifact was registered.");
         return (fileId, committed.Value!);
     }
 
-    public async Task<CanvasFilesOpenResult> OpenAsync(HostedItemId fileId, CancellationToken cancellationToken = default)
+    public Task<CanvasFilesOpenResult> OpenAsync(HostedItemId fileId, CancellationToken cancellationToken = default)
+        => OpenCoreAsync(fileId, null, cancellationToken);
+
+    public Task<CanvasFilesOpenResult> OpenAsync(HostedItemId fileId, Guid expectedStoreId, CancellationToken cancellationToken = default)
     {
-        var resolved = await ResolveAsync(fileId, ResourceAccess.Read, cancellationToken).ConfigureAwait(false);
+        if (expectedStoreId == Guid.Empty) throw new ArgumentException("The original Files store identity is required.", nameof(expectedStoreId));
+        return OpenCoreAsync(fileId, expectedStoreId, cancellationToken);
+    }
+
+    private async Task<CanvasFilesOpenResult> OpenCoreAsync(HostedItemId fileId, Guid? expectedStoreId, CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveAsync(fileId, ResourceAccess.Read, cancellationToken, expectedStoreId).ConfigureAwait(false);
         var binding = await BindingAsync(resolved.Actor, cancellationToken).ConfigureAwait(false);
         // Logical Files moves change the parent, never the registered payload anchor.
         var content = await resolved.Provider.GetCurrentArtifactContentAsync(fileId, cancellationToken).ConfigureAwait(false);
@@ -108,27 +125,39 @@ public sealed class CanvasFilesArtifactBridge(
         if (revision.OwningAppId != OwnerAppId || revision.OwningAppRevisionId != artifact.RevisionId.ToString("N"))
             throw new InvalidDataException("Canvas document revision differs from its owning canonical Files revision.");
         await RecheckAsync(resolved.Actor, resolved.Scope, "canvas.file.open", cancellationToken).ConfigureAwait(false);
+        if ((await resolved.Provider.GetStoreEvidenceAsync(resolved.StoreId, cancellationToken).ConfigureAwait(false)).StoreId != resolved.StoreId)
+            throw new InvalidOperationException("Files store changed during Canvas materialization.");
         return new(artifact, revision, resolved.Metadata.CurrentRevisionId
-            ?? throw new InvalidDataException("Canvas current Files item has no structural revision."));
+            ?? throw new InvalidDataException("Canvas current Files item has no structural revision.")) { StoreId = resolved.StoreId };
     }
 
     public Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
-        CancellationToken cancellationToken = default) => SaveCoreAsync(fileId, artifact, expectedFileRevision, null, cancellationToken);
+        CancellationToken cancellationToken = default) => SaveCoreAsync(fileId, artifact, expectedFileRevision, null, null, cancellationToken);
 
     /// <summary>Preserves the exact actor whose Home capability was claimed, including its authentication revision.</summary>
     public Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
         AuthenticatedResourceActor claimedActor, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(claimedActor);
-        return SaveCoreAsync(fileId, artifact, expectedFileRevision, claimedActor, cancellationToken);
+        return SaveCoreAsync(fileId, artifact, expectedFileRevision, claimedActor, null, cancellationToken);
+    }
+
+    public Task<FilesRevision> SaveAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
+        Guid expectedStoreId, AuthenticatedResourceActor claimedActor, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(claimedActor);
+        if (expectedStoreId == Guid.Empty) throw new ArgumentException("An original Files store identity is required.", nameof(expectedStoreId));
+        return SaveCoreAsync(fileId, artifact, expectedFileRevision, claimedActor, expectedStoreId, cancellationToken);
     }
 
     private async Task<FilesRevision> SaveCoreAsync(HostedItemId fileId, CanvasArtifact artifact, FilesRevisionId? expectedFileRevision,
-        AuthenticatedResourceActor? claimedActor, CancellationToken cancellationToken)
+        AuthenticatedResourceActor? claimedActor, Guid? expectedStoreId, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         if (!hostAllowsWrites()) throw new UnauthorizedAccessException("The current Canvas host is read-only.");
-        var resolved = await ResolveAsync(fileId, ResourceAccess.Write, cancellationToken).ConfigureAwait(false);
+        var resolved = await ResolveAsync(fileId, ResourceAccess.Write, cancellationToken, expectedStoreId).ConfigureAwait(false);
+        if (expectedStoreId is { } originalStore && resolved.StoreId != originalStore)
+            throw new InvalidOperationException("The original Files store has been replaced.");
         if (claimedActor is not null && resolved.Actor != claimedActor)
             throw new UnauthorizedAccessException("The Canvas write actor differs from the claimed Home execution actor.");
         if (!Guid.TryParse(resolved.Reference.ArtifactId, out var registeredId) || artifact.ArtifactId != registeredId)
@@ -172,27 +201,34 @@ public sealed class CanvasFilesArtifactBridge(
             ? new FilesCommitAuthorityGuard(resolved.Actor.ActorId, async token =>
                 await actors.GetCurrentAsync(token).ConfigureAwait(false) == resolved.Actor && hostAllowsWrites())
             : await captureCommitAuthority(resolved.Actor, resolved.Provider, cancellationToken).ConfigureAwait(false);
-        var committed = await resolved.Provider.CommitDurableRevisionAsync(new(fileId, OwnerAppId, artifact.RevisionId.ToString("N"),
-            resolved.Metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, bytes.LongLength, hash,
-            relative, expectedFileRevision), commitAuthority,
-            cancellationToken).ConfigureAwait(false);
+        var commit = new FilesOwningAppRevisionCommit(fileId, OwnerAppId, artifact.RevisionId.ToString("N"),
+            resolved.Metadata.OwnerPrincipalId, DateTimeOffset.UtcNow, bytes.LongLength, hash, relative, expectedFileRevision);
+        var committed = expectedStoreId is { } pinnedStore
+            ? await resolved.Provider.CommitDurableRevisionAsync(commit, Array.Empty<FilesItemRevisionPrecondition>(), pinnedStore, commitAuthority, cancellationToken).ConfigureAwait(false)
+            : await resolved.Provider.CommitDurableRevisionAsync(commit, commitAuthority, cancellationToken).ConfigureAwait(false);
         if (!committed.IsSuccess)
             throw new InvalidOperationException(committed.Error!.Message + " The candidate remains recoverable and the prior canonical revision is unchanged.");
         return committed.Value!;
     }
 
-    private async Task<(AuthenticatedResourceActor Actor, DurableDriveProvider Provider, FilesArtifactReference Reference, HostedItemMetadata Metadata, ResourceScope Scope)>
-        ResolveAsync(HostedItemId fileId, ResourceAccess access, CancellationToken cancellationToken)
+    private async Task<(AuthenticatedResourceActor Actor, DurableDriveProvider Provider, FilesArtifactReference Reference, HostedItemMetadata Metadata, ResourceScope Scope, Guid StoreId)>
+        ResolveAsync(HostedItemId fileId, ResourceAccess access, CancellationToken cancellationToken, Guid? expectedStoreId = null)
     {
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) ?? throw new UnauthorizedAccessException("No verified Home actor is active.");
         var provider = providers(actor) ?? throw new UnauthorizedAccessException("No canonical Files provider is bound to the Home actor.");
+        var storeId = expectedStoreId is { } originalStore
+            ? (await provider.GetStoreEvidenceAsync(originalStore, cancellationToken).ConfigureAwait(false)).StoreId
+            : (await provider.GetStoreEvidenceAsync(cancellationToken).ConfigureAwait(false)).StoreId;
+        if (storeId == Guid.Empty) throw new InvalidDataException("Files store identity is unavailable.");
         var metadata = await provider.GetAsync(fileId, cancellationToken).ConfigureAwait(false);
         var reference = await provider.GetArtifactAsync(fileId, cancellationToken).ConfigureAwait(false);
         if (!metadata.IsSuccess || !reference.IsSuccess || reference.Value!.OwnerAppId != OwnerAppId || reference.Value.ArtifactType != nameof(FilesArtifactType.Canvas))
             throw new InvalidDataException("The canonical Canvas artifact is unavailable or belongs to another app.");
         var scope = new ResourceScope("files.item", fileId.ToString(), metadata.Value!.CurrentRevisionId?.ToString() ?? "uncommitted", access);
         await RecheckAsync(actor, scope, access == ResourceAccess.Read ? "canvas.file.open" : "canvas.file.save", cancellationToken).ConfigureAwait(false);
-        return (actor, provider, reference.Value, metadata.Value, scope);
+        if ((await provider.GetStoreEvidenceAsync(storeId, cancellationToken).ConfigureAwait(false)).StoreId != storeId)
+            throw new InvalidOperationException("Files store changed during resolution.");
+        return (actor, provider, reference.Value, metadata.Value, scope, storeId);
     }
 
     private async Task<FilesWorkspaceDirectoryBinding> BindingAsync(AuthenticatedResourceActor actor, CancellationToken cancellationToken)
