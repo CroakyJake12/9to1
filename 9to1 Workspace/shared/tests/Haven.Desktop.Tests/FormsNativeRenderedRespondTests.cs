@@ -117,11 +117,19 @@ public sealed class FormsNativeRenderedRespondTests
     private static async Task AssertNoPersistedPendingAsync(IHomeCoreStateStore home, CancellationToken token)
     {
         var read = await home.ReadAsync(token); Assert.True(read.IsSuccess);
-        var record = Assert.Single(read.State!.Records, item => item.RecordId == "home.permissions-trust");
-        Assert.Equal("home.permissions-trust", record.RecordType); Assert.Equal(1, record.SchemaVersion);
-        var requests = record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()
-            ?? throw new InvalidDataException("Actual persisted permission requests required.");
-        Assert.DoesNotContain(requests, request => request.State == HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.PendingApproval);
+        // A suspended origin precheck can legitimately precede creation of any permission record.
+        // Inspect every existing canonical broker record without creating/normalizing one.
+        foreach (var record in read.State!.Records.Where(item => item.RecordId == "home.permissions-trust" ||
+            item.RecordType == "home.permissions-trust"))
+        {
+            Assert.Equal("home.permissions-trust", record.RecordId);
+            Assert.Equal("home.permissions-trust", record.RecordType); Assert.Equal(1, record.SchemaVersion);
+            var requests = record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()
+                ?? throw new InvalidDataException("Actual persisted permission requests required.");
+            Assert.DoesNotContain(requests, request => request.State is
+                HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.PendingApproval or
+                HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequestState.Executing);
+        }
     }
     private static async Task UntilAsync(Func<Task<bool>> condition, CancellationToken token)
     {

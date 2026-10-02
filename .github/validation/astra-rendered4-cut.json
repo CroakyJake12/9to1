@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "5d8da989b2c3812dad117f3d08b30c7c6833106c",
-  "programTree": "2ab5dc80205a49df2a62988748a17e75d70b03d1",
+  "baselineCommit": "04d7e630d20bc9e1690359361ea6273f7ae06317",
+  "programTree": "e9385690cbc663e966b4f4f0dd9d1772fb284170",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-rendered4-test-classes.json",
       "mode": "100644",
-      "object": "600646f5a53d379253fcb5d16c65a3639a656429",
+      "object": "ebcfb5cf18876379339831fcccd4ef804b920f28",
       "bytes": 1458,
-      "sha256": "1ddb5cba57aa78fbfbf394245aa44f412075fe9ca50bf3a7174d70e1871d0d76"
+      "sha256": "7456abda32cc87b901efae94ff3de04ce302130e403d32b5cee7b9ff9e4b1be0"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -37962,9 +37962,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeRenderedRespondTests.cs",
       "mode": "100644",
-      "object": "7dfb6a138fcb0049527609fc93983895df9e8593",
-      "bytes": 11735,
-      "sha256": "3249622dd089526bd8ee5b9abd7611e350a710cd7b8b103f5ef777b3f356e534"
+      "object": "407c78058353e48e6c117f04e90129f386ee51d7",
+      "bytes": 12206,
+      "sha256": "47b9904434c3eed4fa4e385aed2924931da66f286d170f525235fff743330bc9"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
@@ -63986,6 +63986,14 @@
     {
       "path": "/workspace/astra-source/worker4-rendered4-hosted-plan-sol6/manifest.json",
       "sha256": "615a78d4ea236692b7160afc6a2a975b5d7162c452c44fe475f46a5b0bb298ca"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-rendered4-hosted-plan-sol7/manifest.json",
+      "sha256": "158b536f40733cda1926ad88a3d8a0107b2ad6457de913686e5bb4d5ce45e924"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-rendered-no-broker-record-fixturefix02/manifest.json",
+      "sha256": "caef013dc33f97b15003edd30eef62bf5a4fb382da4fb43f89e41fc4abe8a12c"
     }
   ],
   "sharedCakeIdContract": null
