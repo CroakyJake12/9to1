@@ -217,7 +217,7 @@ public sealed class ShelfMapsFinalClaimFenceTests
                     MapObjectVisibility.Private, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0);
                 Assert.True((await new MapsJourneyService(Settings).SaveJourneyAsync(0, other)).Success);
             }
-            else Assert.True((await _library.AddItemAsync(0, new(Guid.NewGuid(), "Competing app", new(ShelfTargetKind.InstalledApplication, "other-app")))).Success);
+            else Assert.True((await new ShelfLibraryService(Settings).AddItemAsync(0, new(Guid.NewGuid(), "Competing app", new(ShelfTargetKind.InstalledApplication, "other-app")))).Success);
         }
         public async Task AssertOneCommittedAsync()
         {

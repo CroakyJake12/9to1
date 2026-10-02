@@ -152,7 +152,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
       "namespace": "Haven.Infrastructure.Tests",
       "class": "ShelfMapsFinalClaimFenceTests",
-      "sha256": "c70d42bbdf51995ad080dc9f5b7d1aced4d420b4ccc8b0fb4aebe4b2d6e07b07"
+      "sha256": "c7d1b160e6cfbce7cc8f838a7260fd0000869a1173c3f3e34ffc5f904d5d2102"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",

@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "1fe5c845a463318d86d84d1d2b303c6b1174ba4d",
-  "programTree": "e3e3c32d308893a3cfcfa18e3e773af2c40c8dc7",
+  "baselineCommit": "f81defb79484017869ff74794f18d9916387b43a",
+  "programTree": "4c49a6b2ebb544e6ccc24a84bb55d29a7cc2080e",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "1807630a308ba971914db1e1bd7fb5b42f237f48",
+      "object": "ec2610d91cd6d384281bcb597c4be82185086c05",
       "bytes": 15096,
-      "sha256": "72f6ff0e6ed9fe453a2addb38d7d9d54aa161052951cdc9904df7ef3cbd7be71"
+      "sha256": "0b06a18d2eacc282a14bfabbfdfa243a6e7a1180da827540a182eff911f4d72d"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40615,9 +40615,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
       "mode": "100644",
-      "object": "b3eb1726640bcaa60f01a4e6c7e5be4a622d957e",
-      "bytes": 19765,
-      "sha256": "c70d42bbdf51995ad080dc9f5b7d1aced4d420b4ccc8b0fb4aebe4b2d6e07b07"
+      "object": "5439d132751061c4d89bc5c1bd2c748e194f368e",
+      "bytes": 19790,
+      "sha256": "c7d1b160e6cfbce7cc8f838a7260fd0000869a1173c3f3e34ffc5f904d5d2102"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
@@ -64759,7 +64759,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Exact actual failed-parent minimal correction only. Actual selected fixture-only correction; all original cases/assertions retained, production unchanged. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
+  "limits": "Exact actual failed-parent minimal correction only. Sole actual fixture counterpart correction: genuine independent Shelf service on SAME Settings, preserving Maps independent instance and all 16 coupled cases; no production changes. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-workspace-actual-maps07-retirement-corrective01/manifest.json",
@@ -64780,6 +64780,10 @@
     {
       "path": "/workspace/astra-source/worker3-maps-actual-competing-instance-corrective01/manifest.json",
       "sha256": "4f4362b0f715126d78b22fb4614ef94870ba46de958bffed05ab730c0cfc7ede"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps-actual-shelf-competing-instance-corrective02/manifest.json",
+      "sha256": "85c87081c0ff4a19c298a3370913c6b8f05699eb1140a8f2d98847d5e4f91cf5"
     }
   ],
   "sharedCakeIdContract": null
