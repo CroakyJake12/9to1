@@ -129,7 +129,29 @@ public sealed class NotesRepository(
             {
                 try { persisted = await ReadAndValidateAsync(CurrentPath(document.Id), cancellationToken).ConfigureAwait(false); }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
-                { persisted = await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false); }
+                {
+                    persisted = null;
+                    // Supported legacy schemas are valid migration origins, not corrupt current
+                    // documents. Read/validate their canonical migrated revision under this same
+                    // root gate; the normal ID/revision CAS and backup publication remain below.
+                    try
+                    {
+                        var legacy = await new NotesDocumentMigrator().ReadAndMigrateAsync(CurrentPath(document.Id), cancellationToken).ConfigureAwait(false);
+                        await using var originalInput = File.OpenRead(CurrentPath(document.Id));
+                        if (originalInput.Length is <= 0 or > 256L * 1024 * 1024)
+                            throw new InvalidDataException("The original legacy Notes file exceeds the migration bounds.");
+                        var original = await JsonSerializer.DeserializeAsync<NotesDocument>(originalInput,
+                            new JsonSerializerOptions(JsonOptions) { AllowTrailingCommas = true, ReadCommentHandling = JsonCommentHandling.Skip, MaxDepth = 256 },
+                            cancellationToken).ConfigureAwait(false);
+                        if (legacy.SourceSchemaVersion >= 0 && legacy.SourceSchemaVersion < NotesDocument.CurrentSchemaVersion &&
+                            legacy.TargetSchemaVersion == NotesDocument.CurrentSchemaVersion && original is not null &&
+                            original.Id == legacy.Document.Id && original.Version >= 0 && original.Version == legacy.Document.Version &&
+                            validator.Validate(legacy.Document).IsValid)
+                            persisted = legacy.Document;
+                    }
+                    catch (Exception legacyError) when (legacyError is IOException or UnauthorizedAccessException or JsonException or InvalidDataException) { }
+                    persisted ??= await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false);
+                }
             }
             else persisted = await RecoverCoreAsync(document.Id, cancellationToken).ConfigureAwait(false);
             // CAS admission reads never quarantine or remove the original current before denying.

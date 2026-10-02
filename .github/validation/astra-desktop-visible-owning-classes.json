@@ -261,7 +261,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailReadingPaneChoiceTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "MailReadingPaneChoiceTests",
-      "sha256": "60996d2d79807fe48a23acf79aa168bcca65b661bc61804ef4ff6166bee4aa5d"
+      "sha256": "224da4e9786a372cabe34302ba4566b8bb29be2b105172b19884d4e14f46bb21"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailResponsiveLayoutPolicyTests.cs",

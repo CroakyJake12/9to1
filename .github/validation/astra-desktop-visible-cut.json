@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "2eca1751c40ad2cedb3636f9fb2afc61ce3e7072",
-  "programTree": "6a518fc17da1e9de1e52536fcfd74c7be68aea52",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "baselineCommit": "e25711bfd49532d68135723652abff0c353639e9",
+  "programTree": "7cb7624421a4cc445238cc36cf70f7ff0f4b2eff",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "c0d00f426c72babdb7a890604880e50f46abe433",
+      "object": "6f2948b6ed58e3b89f95b0cf062d983c4f1ca26a",
       "bytes": 30087,
-      "sha256": "d02e6aa139f3930f77d5ea86600cf9de70db3cc293e6320ae73e2fe703846767"
+      "sha256": "7969987bfcb2bee35a988e607b4b8bdab8d8f523def41a6d9ef9977588fe46f2"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -35897,9 +35897,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
       "mode": "100644",
-      "object": "daa94a9ef4aa1e34969440b614f0ecfd03be26a8",
-      "bytes": 38922,
-      "sha256": "e0f78d48080aa7b659e6c5b831e8d95c6a359be3ee6da758a37d2a0bf4c4be1d"
+      "object": "3768f23d1d6635d12dbfd9ae9eaf36245ec010a7",
+      "bytes": 40838,
+      "sha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/PresentPackageCodec.cs",
@@ -38732,9 +38732,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailReadingPaneChoiceTests.cs",
       "mode": "100644",
-      "object": "168687f189ed1ae58fc7b2ca001506a288e1ead5",
-      "bytes": 2956,
-      "sha256": "60996d2d79807fe48a23acf79aa168bcca65b661bc61804ef4ff6166bee4aa5d"
+      "object": "257f14e31ef7e23c8d6be956d2a313a5af52250f",
+      "bytes": 3014,
+      "sha256": "224da4e9786a372cabe34302ba4566b8bb29be2b105172b19884d4e14f46bb21"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailResponsiveLayoutPolicyTests.cs",
@@ -64451,7 +64451,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Exact selected Desktop18 one-expression analyzer correction only; all original 64 owning class files, all 75 FQN selections and full regression/resource projects, source, restore, compiled and zero-skip guards preserved. Future24 graph excluded; unexecuted pending root review.",
+  "limits": "Exactactuale257 twofiles only: legitimate olderNotes supported migration under unchanged originalrootgate/ID+nonnegativeVersionCAS with rawbackup/history/integrity guards, actualMailPage native alias only/fullassertions. Reviewedactualanalyzerfixture remains winner; sameallfullthree gates/originalclass/source/producers/restore/compiled/zeroSkip guards, no future24 joins. Root16CAS verified. Unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-desktop-visible-owning-source-graph01/manifest.json",
@@ -64496,6 +64496,26 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/desktop-visible-root15-owning01/actual-capture-11221345894/root-capture.json",
       "sha256": "bc3fd2ecc2af36e90037381bfddf987b826e976544e5aadf4442310d7c872011"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-desktop-actuale257-migration-mail-corrective02/manifest.json",
+      "sha256": "169715048b800561cb5c10e29ff8cb78721eb233426c18cd0ee2e496ae3eb376"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-desktop18-analyzer-corrector03/actual-capture-11222373906/root-capture.json",
+      "sha256": "53f1dfa4d7abffbf7bb5e90c609c1c45658af18feaa45607611834d135525e4f"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-desktop18-analyzer-corrector03/actual-capture-11222677095/root-capture.json",
+      "sha256": "18faebeb9b44a38583907b6f7acaf85032265e05d3d3d785a7fa3271c2b6a301"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-desktop18-analyzer-corrector03/actual-capture-11222117577/root-capture.json",
+      "sha256": "6ae1ad6c9e30fd973dd66ff98858472e92fa1f2a35b68a97bfc3efa9d8672ce5"
     }
   ],
   "sharedCakeIdContract": null

@@ -1,3 +1,4 @@
+using MailPage = Haven.Desktop.Views.Pages.Mail.MailPage;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
