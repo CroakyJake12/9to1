@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "eee0bc6450c4d8b133204fe15b113139f04026aa",
-  "programTree": "b66584f97771d13e9180db8aff36fdb6e02e8616",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "baselineCommit": "5fc88a34c9e70601da62d52b840ffc4ff2d25498",
+  "programTree": "70020486a728b951de9fc5caae9f7354fa0509a4",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-data-browse-test-classes.json",
       "mode": "100644",
-      "object": "74c4632595614cd464a43dbeea95f9b0395b4fe3",
+      "object": "fc193bc401e7b8d502e42ecfa3e169460da907d2",
       "bytes": 16447,
-      "sha256": "73a119b78dafe60d99f7bffe91ed5964cb9a5ac34132fca5e73143d8579ab90c"
+      "sha256": "9a78ebb1acddf93b48755a493563da7552e8eba8c93c9db93a4e37a291791bad"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -38228,9 +38228,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BrowserOwnedToolsMountTests.cs",
       "mode": "100644",
-      "object": "453d5d1ceb3f52576114cfdd7bc52e744c2598c6",
-      "bytes": 5110,
-      "sha256": "fdd42cf0dd8b5a95831c706dd093c0401e73fd3d03d1efed939b05b8ee206968"
+      "object": "cce4c4727a49052eaf68b2561baba27ca5a74f26",
+      "bytes": 7568,
+      "sha256": "c1123125f4442334413faf96ae8fe0f7649e5629b5ad6a811d85553a547de24f"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BrowserSafetyViewTests.cs",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Actual selectedeee BrowserView three dispatcher queue calls explicit generic Task/Task<string?> results choose genuine Avalonia DispatcherOperation<TResult>, preserving existing two-stage await/API and all native routes/generation/originalissuer/cancellation/admission/lifecycle. Sole production source correction; allsame35 owning/resource class manifests/filters/counts and both full source22+3/7producer/task/restore/compiled/TRX guards unchanged. Source-only unexecuted, no futureprofiling/Forms/nativefeatures joins.",
+  "limits": "One actual selected owning fixture composition repair and sole class SHA repin; same full owning/resource gates and complete17Desktop/201resource/21Core/41Infrastructure assertions. Production, authority and routes unchanged. No future graphs; Root16 normal CAS verified independently.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64758,6 +64758,22 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-forms-actual-corrective05/actual-capture-11219146940/root-capture.json",
       "sha256": "e392c202cf494b6d4e036119702f86422e6a6fdc109455bdd46292fb6b4f32d4"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-browse-actual-native-automation-attachment-corrective01/manifest.json",
+      "sha256": "6c2af175250cf475fa3721222952e6ed3d5f912872c3437481dd2c6949feec9b"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-browse-dispatcher-corrective06/actual-capture-11220464018/root-capture.json",
+      "sha256": "34c8fb79203ea11450ff4639278747d31c4d4d582e6dd7e90bc09e46820aad7c"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-browse-dispatcher-corrective06/actual-capture-11221221745/root-capture.json",
+      "sha256": "8925188cfd58337ebb823cd5323d290fcd404a439387d4bc79dbe1fbdd9e3480"
     }
   ],
   "sharedCakeIdContract": null

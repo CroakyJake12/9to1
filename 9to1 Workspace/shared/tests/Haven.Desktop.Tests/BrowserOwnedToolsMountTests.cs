@@ -29,9 +29,38 @@ public sealed class BrowserOwnedToolsMountTests
         services.AddSingleton<IHomeCoreStateStore>(new FileHomeCoreStateStore(Path.Combine(directory, "home.json")));
         services.AddSingleton<BrowserSessionService>();
         App.AddOwnedBrowserTools(services); // Exact production registration entry, not a parallel issuer graph.
+        // Match the production browser automation composition; retain navigation, safe-mode and native-download owners.
+        services.AddSingleton<BrowserNavigationPolicy>();
+        services.AddSingleton<IBrowserNavigationPolicy>(provider => provider.GetRequiredService<BrowserNavigationPolicy>());
+        services.AddSingleton<BrowserAutomationStore>();
+        services.AddSingleton<IBrowserAutomationStore>(provider => provider.GetRequiredService<BrowserAutomationStore>());
+        services.AddSingleton<BrowserDownloadTransport>();
+        services.AddSingleton<BrowserBackgroundPageLoader>();
+        services.AddSingleton(provider => new BrowserAutomationService(
+            provider.GetRequiredService<BrowserSessionService>(),
+            provider.GetRequiredService<IBrowserNavigationPolicy>(),
+            provider.GetRequiredService<IBrowserAutomationStore>(),
+            provider.GetRequiredService<BrowserDownloadTransport>(),
+            provider.GetRequiredService<BrowserBackgroundPageLoader>()));
+        services.AddSingleton(provider => new SafeModeBrowserAutomationService(
+            provider.GetRequiredService<BrowserAutomationService>(),
+            provider.GetRequiredService<IProductionDiagnostics>()));
+        services.AddSingleton(provider => new BrowserNativeDownloadAutomationService(
+            provider.GetRequiredService<SafeModeBrowserAutomationService>(),
+            provider.GetRequiredService<IBrowserNavigationPolicy>(),
+            provider.GetRequiredService<IBrowserAutomationStore>()));
+        services.AddSingleton<IBrowserAutomationService>(provider => provider.GetRequiredService<BrowserNativeDownloadAutomationService>());
+        services.AddSingleton<IBrowserNativeDownloadService>(provider => provider.GetRequiredService<BrowserNativeDownloadAutomationService>());
+        services.AddSingleton<IBrowserToolService>(provider => provider.GetRequiredService<BrowserSessionService>());
         await using var provider = services.BuildServiceProvider();
         using var bus = new HavenEventBus();
         using var browser = provider.GetRequiredService<BrowserSessionService>();
+        // Production App.InitialiseHaven attaches this exact pair before creating the BrowserPage.
+        var automation = provider.GetRequiredService<IBrowserAutomationService>();
+        Assert.Same(provider.GetRequiredService<BrowserNativeDownloadAutomationService>(), automation);
+        Assert.Same(browser, provider.GetRequiredService<IBrowserToolService>());
+        BrowserAutomationRegistry.Register(browser, automation);
+        Assert.Same(automation, BrowserAutomationRegistry.Resolve(browser));
         var actors = provider.GetRequiredService<IAuthenticatedResourceActorSource>();
         var actor = await actors.GetCurrentAsync(token) ?? throw new InvalidOperationException("Actual Home actor required.");
         var registry = provider.GetRequiredService<BrowseOwnedDocumentRegistry>();

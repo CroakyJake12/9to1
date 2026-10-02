@@ -56,7 +56,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BrowserOwnedToolsMountTests.cs",
       "class": "BrowserOwnedToolsMountTests",
       "namespace": "Haven.Desktop.Tests",
-      "sha256": "fdd42cf0dd8b5a95831c706dd093c0401e73fd3d03d1efed939b05b8ee206968"
+      "sha256": "c1123125f4442334413faf96ae8fe0f7649e5629b5ad6a811d85553a547de24f"
     },
     {
       "class": "ContextualAiCuiSurfaceTests",
