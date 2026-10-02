@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "programTree": "0eac5ae1902b4f159c235b3fb9d0bac35251cace",
+  "baselineCommit": "128d9c01d3f8f022cb1eb3be04f0617ab64cabf0",
+  "programTree": "3aa887cd4ad7e51d4a736f5febdac2c1f13fd910",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-picture19-test-classes.json",
       "mode": "100644",
-      "object": "34d43916350c1ed735a3f97c98638d3b222d3663",
+      "object": "300d7a179f446496cfd2c915bf768a352c24ca2b",
       "bytes": 4572,
-      "sha256": "1062457ee64f0a9716ba57bebaa1e59e0b580e2d5e2175027ede53ca4462e407"
+      "sha256": "9255b006a5611aa644a4e0a708087e5770b7dd99bcc227eb567d74b31793da97"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -190,9 +190,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "58fc9657e9ecdaa7ec1f2c27027cff6d03572b75",
-      "bytes": 8180,
-      "sha256": "0ff78ef21ddbba5894b5e10437d295b5ce7af1bc739544c7c1b950e9641e9a82"
+      "object": "8c8b2e2721df665a73db29e34be1bf6a80cb00a8",
+      "bytes": 8199,
+      "sha256": "3df41ce77ba8ddf25f6ccf4958c6542eb986ae963a61d4284280b0e71b153774"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -24172,9 +24172,9 @@
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomeHistoryOperationTests.cs",
       "mode": "100644",
-      "object": "76964e4ebf4c7981fdead27d4a62f40cde762282",
-      "bytes": 34906,
-      "sha256": "037590b942e13f60ee5b5792568a3768fb13835f53deeabb612be8c22221628c"
+      "object": "ce3197c60f34209c5612477885f87fb8e97fc1b1",
+      "bytes": 36026,
+      "sha256": "798b870b3ea1b86ab0b780beba02a232548ce927e17811e06b8007e38db7ebb3"
     },
     {
       "path": "9to1 Workspace/Picture/Tests/PictureHomePngExportTests.cs",
@@ -63998,6 +63998,14 @@
     {
       "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol3/manifest.json",
       "sha256": "955060db6941ff70eb13fdc9a51a5d990fbbbc005b214c8a862e886f9c3e5f2b"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol4/manifest.json",
+      "sha256": "91fa3921efaf89771c7b8103ce3334b5ff6a7d89477e62fd372a50fc6f9de437"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-picture19-vertical-fixture-fix-01/manifest.json",
+      "sha256": "d9cd4814b4d32e31e64f75006691f06875d048757db52413f7f915eaa8d212ad"
     }
   ],
   "sharedCakeIdContract": null,

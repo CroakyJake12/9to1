@@ -42,7 +42,7 @@ jobs:
       - name: Install existing native headless donor dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential pkg-config libglib2.0-dev libseccomp-dev liblcms2-dev libxml2-dev bubblewrap
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libglib2.0-dev libseccomp-dev liblcms2-dev libxml2-dev libfontconfig1-dev bubblewrap
           dpkg-query -W > native-hosted-packages.txt
       - uses: actions/setup-dotnet@v4
         with:

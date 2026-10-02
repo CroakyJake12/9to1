@@ -1,3 +1,7 @@
+using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Avalonia.Headless.XUnit;
 using Haven.Application;
@@ -14,7 +18,7 @@ public sealed class PictureHomeHistoryOperationTests
     [AvaloniaFact]
     public async Task Vertical_flip_genuine_Glycin_pixels_fresh_history_and_source_identity_remain_canonical()
     {
-        await using var f=await Fixture.Create();var ct=TestContext.Current.CancellationToken;
+        await using var f=await Fixture.Create(coloredSource:true);var ct=TestContext.Current.CancellationToken;
         var initial=await f.Files.OpenAsync(f.FileId,ct);
         async Task<HomeProductivityRasterFrame> Raster(PictureFilesOpenResult opened)
         {
@@ -23,7 +27,8 @@ public sealed class PictureHomeHistoryOperationTests
             var handler=new PictureSharedImageObjectHandler(prepared);var shared=new HomeProductivityEngine(handlers:[handler]);
             return Assert.Single(shared.RenderObject(shared.CreateObject("media.image",reference.DocumentId,handler.ReferenceContent)).RasterBindings).Frame;
         }
-        var before=await Raster(initial);var originalPixels=before.CopyPixels();var unchanged=await File.ReadAllBytesAsync(Path.Combine(f.Root,"drive.json"),ct);
+        var before=await Raster(initial);var originalPixels=before.CopyPixels();
+        Assert.NotEqual(originalPixels.AsSpan(0,before.Stride).ToArray(),originalPixels.AsSpan((before.Height-1)*before.Stride,before.Stride).ToArray());var unchanged=await File.ReadAllBytesAsync(Path.Combine(f.Root,"drive.json"),ct);
         var intent=PictureEditIntent.Capture(initial,new FlipOperation(false));var cap=await f.ApproveEdit(intent);
         Assert.Equal(unchanged,await File.ReadAllBytesAsync(Path.Combine(f.Root,"drive.json"),ct));
         var committed=await f.Edits.ExecuteAsync(intent,cap,ct);var after=await Raster(committed);var actual=after.CopyPixels();
@@ -346,7 +351,7 @@ public sealed class PictureHomeHistoryOperationTests
         public bool DenyRaw { get; set; }
         public bool WritesAllowed { get; set; } = true;
         public string ResourceKind => "files.item";
-        public static async Task<Fixture> Create()
+        public static async Task<Fixture> Create(bool coloredSource=false)
         {
             var ct = TestContext.Current.CancellationToken;
             var fixture = new Fixture();
@@ -374,14 +379,27 @@ public sealed class PictureHomeHistoryOperationTests
                         await fixture.GetCurrentAsync(checkToken) == currentActor && fixture.WritesAllowed);
                 });
             var bytes = Convert.FromBase64String("R0lGODlhAgABAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAAAgABAAAIBQABAAgIACH5BAAMAAAALAAAAAACAAEAgQAA/wAAAAAAAAAAAAgFAAEACAgAOw==");
+            if(coloredSource)
+            {
+                using var bitmap=new WriteableBitmap(new PixelSize(2,2),new Vector(96,96),PixelFormat.Bgra8888,AlphaFormat.Premul);
+                using(var pixels=bitmap.Lock())
+                {
+                    Marshal.Copy(new byte[]{0,0,255,255,0,255,0,255},0,pixels.Address,8);
+                    Marshal.Copy(new byte[]{255,0,0,255,255,255,255,255},0,IntPtr.Add(pixels.Address,pixels.RowBytes),8);
+                }
+                using var encoded=new MemoryStream();bitmap.Save(encoded);bytes=encoded.ToArray();
+            }
+            var sourceName=coloredSource?"source.png":"source.gif";
             var rawId = HostedItemId.New(); var rawRevision = new FilesRevisionId(Guid.NewGuid());
-            var path = Path.Combine(fixture.Root, "source.gif");
+            var path = Path.Combine(fixture.Root, sourceName);
             await File.WriteAllBytesAsync(path, bytes, ct);
             var hash = Convert.ToHexString(SHA256.HashData(bytes));
-            Assert.True((await fixture.Provider.CommitUploadedContentAsync(new(rawId, fixture.FolderId, "source.gif", "image/gif",
-                rawRevision, null, actor.ActorId, now, bytes.Length, hash, "source.gif"), ct)).IsSuccess);
+            Assert.True((await fixture.Provider.CommitUploadedContentAsync(new(rawId, fixture.FolderId, sourceName, coloredSource?"image/png":"image/gif",
+                rawRevision, null, actor.ActorId, now, bytes.Length, hash, sourceName), ct)).IsSuccess);
             var reference = new PictureSourceAssetReference(rawId.Value, rawRevision.Value, hash, bytes.Length, Guid.NewGuid());
-            var opened = await fixture.Files.CreateAsync(PictureDocument.Create(2, 1, rawId.ToString(), rawRevision.ToString()).Crop(0, 0, 1, 1), reference, ct);
+            var initialDocument=coloredSource?PictureDocument.Create(2,2,rawId.ToString(),rawRevision.ToString())
+                :PictureDocument.Create(2,1,rawId.ToString(),rawRevision.ToString()).Crop(0,0,1,1);
+            var opened = await fixture.Files.CreateAsync(initialDocument, reference, ct);
             fixture.FileId = new(opened.Artifact.BackingFileId);
             var renderer = new PictureFilesSourceRenderer((_, _) => Task.FromResult(MediaEngineResult<MediaAssetReadLease>.Success(
                 new(new(new(reference.AssetId), rawId.Value, new Uri(path), rawRevision.ToString()), () => ValueTask.CompletedTask))), resources);
