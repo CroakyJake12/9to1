@@ -101,7 +101,7 @@
       "fullClass": "NineToOne.Launcher.Tests.LauncherOriginalNavigationGoTests",
       "namespace": "NineToOne.Launcher.Tests",
       "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalNavigationGoTests.cs",
-      "sha256": "b7eb238aa2cb90db56f5d8b8eb890d6103e33c0576b2e48b14d15c0509b3a27a",
+      "sha256": "23853a65f08a1b7abb029c1506de3f1534b0939ec7e099284603a567d446a16d",
       "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
       "class": "LauncherOriginalNavigationGoTests"
     },
@@ -109,7 +109,7 @@
       "fullClass": "NineToOne.Launcher.Tests.LauncherOriginalReadCompositionTests",
       "namespace": "NineToOne.Launcher.Tests",
       "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalReadCompositionTests.cs",
-      "sha256": "63214955ce97a783aa43006d71399b8c1ff7628e22d3031e6737aae899a2d581",
+      "sha256": "0cb6e0f4adada0d217da8cbb13f38306425cff534982ab62a1b12c6723215c9a",
       "project": "9to1 Workspace/Launcher/Tests/NineToOne.Launcher.Tests.csproj",
       "class": "LauncherOriginalReadCompositionTests"
     },

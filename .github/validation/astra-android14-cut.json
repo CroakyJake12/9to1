@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "programTree": "35a8f374067a663e6d03bda6fa111f68267ab3b2",
+  "baselineCommit": "574a16a43f8c7eafdbd8085a3ec8d49953fb8467",
+  "programTree": "bcb20c6e52732049865e5b723a6cc1e63284c0e6",
   "currentNormalCommit": "d61863bf9b5197f42421bc71a779cdf64960f9e3",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-android14-owning-classes.json",
       "mode": "100644",
-      "object": "38590381424fa0f9a6356569cd08f10abd84b170",
+      "object": "d556639cf46ab267d975f914df459817684c8607",
       "bytes": 30981,
-      "sha256": "48859b08f03d4530e42132740996f9e796bd5ec4f26bb8063222029596ccea4b"
+      "sha256": "3a59db1fc448b7857e798ecb56108f26c03c72d19ce1e34fffa88fdd0bd39169"
     },
     {
       "path": ".github/validation/astra-android14-regression-classes.json",
@@ -23381,9 +23381,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWidgetRegistry.cs",
       "mode": "100644",
-      "object": "ed13639548704c9df76e286ff83b97db6fb74912",
-      "bytes": 16846,
-      "sha256": "331b246b383306e77c81d19db766c690b5fda07ef695574b28a622be2962a08a"
+      "object": "659934b2bb378e56c39959e195ee508bc089fbd7",
+      "bytes": 16903,
+      "sha256": "6e2c4b599678550ecfac5954bceb2f02ad85cedb9e5cb8bbbc8f83dc63b8a59b"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeNativeWidgetRuntimeContracts.cs",
@@ -24193,16 +24193,16 @@
     {
       "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalNavigationGoTests.cs",
       "mode": "100644",
-      "object": "dbfbe161c357323c089cd6d54c6de7a0c557da4d",
-      "bytes": 7712,
-      "sha256": "b7eb238aa2cb90db56f5d8b8eb890d6103e33c0576b2e48b14d15c0509b3a27a"
+      "object": "f3ca4690e85b87dda4413866181ea0a8344c2a42",
+      "bytes": 7719,
+      "sha256": "23853a65f08a1b7abb029c1506de3f1534b0939ec7e099284603a567d446a16d"
     },
     {
       "path": "9to1 Workspace/Launcher/Tests/LauncherOriginalReadCompositionTests.cs",
       "mode": "100644",
-      "object": "f0dbb898b924f71414974d3e1f3160ae05dc88ac",
-      "bytes": 5752,
-      "sha256": "63214955ce97a783aa43006d71399b8c1ff7628e22d3031e6737aae899a2d581"
+      "object": "bbe094b064825093e880e5915e9922183d7ff7d7",
+      "bytes": 5759,
+      "sha256": "0cb6e0f4adada0d217da8cbb13f38306425cff534982ab62a1b12c6723215c9a"
     },
     {
       "path": "9to1 Workspace/Launcher/Tests/LauncherSemanticTests.cs",
@@ -65417,7 +65417,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-android14-cut.json",
-  "limits": "NEW coherent Root19 source composition; exact selected Android/Launcher 37 production-and-owning sources plus canonical registry prerequisites, actual four production Compile links and actual no-op03 registry successor only. Preserve every unrelated Root19 jointData/Home/broker/CUI/Android Browse reference and startup HUI resource by starting exact current normal. WHOLE six projects unfiltered and inventory ALL actual test-bearing source classes from Root19 plus owned union, not historical67 as a complete current count. Original full regression/resource class families retain current source hashes; source/task/restore/compiled/evaluated Compile/normal define/zero-skip guards unchanged. Normal defines normalize maintained semicolon/comma/whitespace tokens. Registry full old class plus3 physical FileHome cases; actual old3 failure cause only, no rerun success inferred. No optional widgets, Linux, donor or SDK/native acceptance.",
+  "limits": "Exact failed574a programme only: one maintained runtime cancellation observation after acquired semaphore, two optional owning-fixture explicit null initializers. No case/source/filter weakening, all75 wholeclasses/all six owning projects/currentreg12/resource35 retained, no optional widget/Linux/backend joins. Root must check absent newref and seed exact failed parent before unchanged corrective constructor. Current Root19 external CAS and source semantics unchanged except three explicitly reviewed product/fixture paths; fresh all3 mandatory, no SDK/native acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-android-coherent14-hosted-default-home-r1-gate-handoff06-whole-owning-source-count/manifest.json",
@@ -65438,6 +65438,18 @@
     {
       "path": "/workspace/astra-source/worker1-installed-registry-original-noop03/manifest.json",
       "sha256": "1706c043bbd9d79a79cab4084e94563112a291bfe3f1c15202324d883930f97d"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-native-widget-runtime-cancelled-waiter-source01/manifest.json",
+      "sha256": "dead16ab350367208fce26270c13703ec45ffb39259550f9b7f78a365ffa75b7"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-android14-managed04-launcher-fixture-compile-corrective01/manifest.json",
+      "sha256": "95f409cafb92c0821aaca7c25e834a2e836656abf3a53bcd85377df6f8adc465"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-android14-root19-whole-managed-gate04/manifest.json",
+      "sha256": "dadadc50ea4352ea44ee1c63052c43130117b144614f9a7246a3f8c3ab990061"
     }
   ],
   "sharedCakeIdContract": null

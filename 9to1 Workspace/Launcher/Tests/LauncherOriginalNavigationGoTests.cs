@@ -74,7 +74,7 @@ public sealed class LauncherOriginalNavigationGoTests
     }
     private sealed class Provider : IInstalledApplicationObservationProvider
     {
-        public string ProviderId => "android-test"; public int Calls; public Action? DuringObservation;
+        public string ProviderId => "android-test"; public int Calls; public Action? DuringObservation = null;
         public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct)
         { ct.ThrowIfCancellationRequested(); Calls++; DuringObservation?.Invoke(); return ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("personal", "Personal", false, true, [new("first", "first/main", "First app", "1", true)])]); }
     }

@@ -140,6 +140,7 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         await match.Entry.Lifetime.Captures.WaitAsync(linked.Token).ConfigureAwait(false);
         try
         {
+            linked.Token.ThrowIfCancellationRequested();
             if (!StillUnique(reference, match.Key, match.Entry) ||
                 !await CanReadAsync(match.Entry, match.Definition, linked.Token).ConfigureAwait(false)) return null;
             var request = new HomeNativeWidgetCaptureRequest(reference, match.Definition.SurfaceReference,
