@@ -702,6 +702,7 @@ public sealed partial class BrowserPage : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        _ownedTools?.Dispose();
         if (_readAloud is not null)
         {
             _readAloud.StatusChanged -= OnReadAloudStatusChanged;

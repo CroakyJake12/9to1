@@ -129,15 +129,28 @@ public sealed class FormDataPreparationTests
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             using var held = new FileStream(Path.Combine(paths.DataDirectory, "Data", "Workbooks", ".locks", workbook.Id.ToString("D") + ".lock"),
                 FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-            var running = operation.ExecuteAsync(intent, capability, timeout.Token);
+            var coordinator = new FormDataHomeWriteOperation(operation, journal);
+            var running = coordinator.ExecuteAsync(intent, capability, timeout.Token);
             await Task.WhenAny(sourceAuthority.Captured.Task, running);
             Assert.True(sourceAuthority.Captured.Task.IsCompletedSuccessfully);
             Assert.False(running.IsCompleted);
             await RevokeSourceAsync(); held.Dispose();
-            result = await running;
+            var unconfirmed = await running;
+            result = unconfirmed.Data;
+            Assert.False(result.OutcomeKnown); Assert.False(result.AuditRecorded);
+            Assert.Null(unconfirmed.Journal); Assert.Equal("DataOutcomeUnconfirmed", unconfirmed.ReconciliationCode);
+            Assert.Equal(HomePermissionRequestState.Executing, (await permissions.ReadRequestObservationAsync(request.RequestId))!.State);
+            var stillUnknown = await coordinator.FinishAsync(capability);
+            Assert.False(stillUnknown.Data.OutcomeKnown); Assert.Null(stillUnknown.Journal);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
         }
-        else if (sourceChange == 4) await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
-            new FormDataHomeWriteOperation(operation, journal).ExecuteAsync(intent, capability));
+        else if (sourceChange == 4)
+        {
+            var denied = await new FormDataHomeWriteOperation(operation, journal).ExecuteAsync(intent, capability);
+            result = denied.Data;
+            Assert.True(result.OutcomeKnown); Assert.False(result.Committed); Assert.Equal("PermissionDenied", result.Code);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
+        }
         else if (sourceChange == 0)
         {
             var unavailableAcknowledgement = new FormDataResponseWriteService(preparation, responses, new UnavailableReceiptSource());
@@ -147,7 +160,7 @@ public sealed class FormDataPreparationTests
             result = combined.Data;
         }
         else result = await operation.ExecuteAsync(intent, capability);
-        if (sourceChange != 4)
+        if (sourceChange is not (3 or 4))
         {
             Assert.NotNull(result); Assert.Equal(sourceChange == 0, result.Committed); Assert.True(result.AuditRecorded);
             if (sourceChange != 0) Assert.Equal("PermissionDenied", result.Code);

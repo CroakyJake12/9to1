@@ -7,12 +7,19 @@ using HavenOS.Home.PermissionsTrustNotifications;
 
 namespace HavenOS.Home.Core;
 
+/// <summary>Observational result of one actual broker invocation. Not a serialized owner admission.</summary>
+public enum HomeResourceClaimDisposition { Unavailable, InputNotConsumed, ConsumedRejected, Claimed }
+public sealed record HomeResourceClaimResult(HomeResourceClaimDisposition Disposition, AuthenticatedResourceActor? Actor);
+
 internal enum HomeResourceRejectionKind { Claim = -1, Begin = -3, UnclaimedAbort = -5 }
 
 /// <summary>Shared native/web operation bridge; resource ACLs intersect Home consent rather than being replaced by it.</summary>
-public sealed class HomeResourceOperationBroker(ResourceAuthorizationService resources, HomePermissionTrustService permissions)
+public sealed partial class HomeResourceOperationBroker(ResourceAuthorizationService resources, HomePermissionTrustService permissions)
 {
-    private sealed record Binding(AuthenticatedResourceActor Actor, string TargetAppId, string ActionId, ResourceScope[] Scopes, string Digest);
+    internal bool IsBoundToPermissions(HomePermissionTrustService candidate) => ReferenceEquals(permissions, candidate);
+
+    private sealed record Binding(AuthenticatedResourceActor Actor, string TargetAppId, string ActionId, ResourceScope[] Scopes, string Digest,
+        HomePermissionRequestSubmission? OriginalSubmission = null, HomePermissionActionPolicy? OriginalPolicy = null);
     private readonly ConcurrentDictionary<HomeResourceExecutionCapability, Binding> _executions = new();
     private readonly ConcurrentDictionary<string, Binding> _bindings = new();
     private readonly ConcurrentDictionary<string, HomeResourceExecutionCapability> _rejectedBegins = new();
@@ -39,18 +46,34 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
     {
         ArgumentNullException.ThrowIfNull(scopes);
         if (_bindings.Count + _rejectedBegins.Count >= 1024) throw new InvalidOperationException("Too many outstanding resource approval requests.");
-        var scopeSnapshot = scopes.ToArray();
-        var actor = await resources.AuthorizeAsync(actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false);
+        var capturedScopes = new List<ResourceScope>();
+        foreach (var scope in scopes)
+        {
+            if (capturedScopes.Count == 1000 || scope is null) throw new ArgumentException("Resource scopes exceed admission capacity/shape.", nameof(scopes));
+            capturedScopes.Add(scope);
+        }
+        var scopeSnapshot = capturedScopes.ToArray();
+        var capturedArguments = arguments.Clone();
+        var digest = Digest(capturedArguments);
+        var actor = expectedActor is null
+            ? await resources.AuthorizeAsync(actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false)
+            : await resources.AuthorizeForActorAsync(expectedActor, actionId, scopeSnapshot, cancellationToken).ConfigureAwait(false);
         if (actor is null) throw new UnauthorizedAccessException("The authenticated actor lacks current canonical resource access.");
         if (expectedActor is not null && actor != expectedActor)
             throw new UnauthorizedAccessException("The originating owner actor changed before Home review admission.");
         var objects = scopeSnapshot.Select(scope => new HomeObjectReference(scope.Kind, scope.Id)).ToArray();
-        var digest = Digest(arguments);
         var caller = new HomePermissionCallerIdentity(actor.ActorId, actor.ActorId, actor.ProfileId, actor.AuthenticationRevision, true);
-        var result = await permissions.AuthorizeAsync(new(null, caller, sessionId, new(targetAppId, actionId, objects),
-            new(objects.Select(item => item.ObjectType).Distinct().ToArray(), objects.Length, objects, false, preview, backupId, digest)), cancellationToken).ConfigureAwait(false);
+        // Retain the complete detached original tuple BEFORE durable Home authorization.
+        // Resource metadata attests the original scope; it grants no permission independently.
+        var submission = NormalizeOriginalSubmission(new HomePermissionRequestSubmission(Guid.NewGuid().ToString("N"), caller, sessionId,
+            new HomePermissionScope(targetAppId, actionId, objects),
+            new HomePermissionImpactPreview(objects.Select(item => item.ObjectType).Distinct().ToArray(), objects.Length,
+                objects, false, preview, backupId, digest,
+                new HomeCanonicalResourceBinding(1, actor, Array.AsReadOnly(scopeSnapshot.ToArray())))));
+        var originalPolicy = permissions.ResolveTrustedActionPolicy(submission.Scope.TargetAppId, submission.Scope.ActionName);
+        var result = await permissions.AuthorizeAsync(submission, cancellationToken).ConfigureAwait(false);
         if (result.State is HomePermissionRequestState.PendingApproval or HomePermissionRequestState.Approved)
-            _bindings[result.RequestId] = new(actor, targetAppId, actionId, scopeSnapshot, digest);
+            _bindings[result.RequestId] = new(actor, targetAppId, actionId, scopeSnapshot, digest, submission, originalPolicy);
         return result;
     }
 
@@ -67,7 +90,7 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
         CancellationToken cancellationToken = default)
     {
         if (_executions.Count >= 1024 || !_bindings.TryGetValue(requestId, out var binding) || binding.Digest != Digest(arguments)) return null;
-        var current = await resources.AuthorizeAsync(binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
+        var current = await resources.AuthorizeForActorAsync(binding.Actor, binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
         if (current != binding.Actor) return null;
         var approval = await permissions.GetAuthorizationAsync(requestId, cancellationToken).ConfigureAwait(false);
         if (!approval.IsAllowed || !_bindings.TryRemove(requestId, out var consumed) || consumed != binding) return null;
@@ -124,23 +147,55 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
         return result.Code == "HOME_CLAIM_REJECTION_NOT_OWNED" ? NotOwned() : result;
     }
 
-    /// <summary>Fresh actor, owner ACL and exact operation check followed by one-use claim. This is not a transaction
-    /// implementation: the owner still must enforce its canonical revision and atomically persist all intended targets.</summary>
+    /// <summary>Compatibility nullable claim result. Use the per-invocation observed overload
+    /// to distinguish exact-input mismatch from consumed rejection; neither result is a new owner grant.</summary>
     public async Task<AuthenticatedResourceActor?> ClaimExecutionAsync(HomeResourceExecutionCapability capability,
+        string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
+        CancellationToken cancellationToken = default) =>
+        (await ClaimExecutionObservedAsync(capability, targetAppId, actionId, scopes, arguments, cancellationToken)
+            .ConfigureAwait(false)).Actor;
+
+    /// <summary>Classifies THIS actual claim invocation, never a later racy handle-state read.
+    /// InputNotConsumed means this invocation rejected its tuple before consuming a handle, not that
+    /// another concurrent owner cannot consume it. Exceptions retain unknown/rejection recovery.
+    /// Public result metadata is observational; only actual issuer capability and owning final guard authorize writes.</summary>
+    public async Task<HomeResourceClaimResult> ClaimExecutionObservedAsync(HomeResourceExecutionCapability capability,
         string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes, JsonElement arguments,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(capability);
         ArgumentNullException.ThrowIfNull(scopes);
-        var scopeSnapshot = scopes.ToArray();
-        if (!_executions.TryGetValue(capability, out var binding) || binding.TargetAppId != targetAppId ||
-            binding.ActionId != actionId || binding.Digest != Digest(arguments) || !binding.Scopes.SequenceEqual(scopeSnapshot)) return null;
-        if (!_executions.TryRemove(capability, out var consumed) || consumed != binding) return null;
+        var capturedScopes = new List<ResourceScope>();
+        foreach (var scope in scopes)
+        {
+            if (capturedScopes.Count == 1000 || scope is null) throw new ArgumentException("Resource scopes exceed admission capacity/shape.", nameof(scopes));
+            capturedScopes.Add(scope);
+        }
+        var scopeSnapshot = capturedScopes.ToArray();
+        if (!_executions.TryGetValue(capability, out var binding))
+            return new(HomeResourceClaimDisposition.Unavailable, null);
+        if (binding.TargetAppId != targetAppId || binding.ActionId != actionId ||
+            binding.Digest != Digest(arguments) || !binding.Scopes.SequenceEqual(scopeSnapshot))
+            return new(HomeResourceClaimDisposition.InputNotConsumed, null);
+        if (!_executions.TryRemove(capability, out var consumed) || consumed != binding)
+            return new(HomeResourceClaimDisposition.Unavailable, null);
         try
         {
-            var current = await resources.AuthorizeAsync(binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
-            if (current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false) &&
-                capability.MarkClaimed(this)) return current;
+            var current = await resources.AuthorizeForActorAsync(binding.Actor, binding.ActionId, binding.Scopes, cancellationToken).ConfigureAwait(false);
+            if (current == binding.Actor && await permissions.IsExecutionCurrentAsync(capability.RequestId, cancellationToken).ConfigureAwait(false))
+            {
+                // Observe full original durable intent before claiming. Legacy bindings with no
+                // retained full tuple may claim through their existing path, but cannot receive an attestation.
+                var observed = binding.OriginalSubmission is null || binding.OriginalPolicy is null ? null
+                    : await permissions.ReadRequestObservationAsync(capability.RequestId, cancellationToken).ConfigureAwait(false);
+                var fullIntentMatches = binding.OriginalSubmission is null || binding.OriginalPolicy is null ||
+                    MatchesClaimedOriginal(binding, observed);
+                if (fullIntentMatches && capability.MarkClaimed(this))
+                {
+                    if (observed is not null) RetainClaimedAttestation(capability, binding, observed);
+                    return new(HomeResourceClaimDisposition.Claimed, current);
+                }
+            }
         }
         catch
         {
@@ -153,7 +208,7 @@ public sealed class HomeResourceOperationBroker(ResourceAuthorizationService res
         }
         capability.MarkRejected(this);
         await RetryRejectedClaimAuditAsync(capability, CancellationToken.None).ConfigureAwait(false);
-        return null;
+        return new(HomeResourceClaimDisposition.ConsumedRejected, null);
     }
 
     /// <summary>Audit-only recovery for this issuer's consumed, rejected claim. Cannot grant an owner
@@ -228,6 +283,8 @@ public sealed class HomeResourceExecutionCapability
     internal HomeResourceExecutionCapability(HomeResourceOperationBroker issuer, string requestId, string targetAppId, string actionId, IReadOnlyList<ResourceScope> scopes)
     { _issuer = issuer; RequestId = requestId; TargetAppId = targetAppId; ActionId = actionId; Scopes = scopes; }
     internal bool IssuedBy(HomeResourceOperationBroker issuer) => ReferenceEquals(_issuer, issuer);
+    internal bool IsUncompletedClaim(HomeResourceOperationBroker issuer) => ReferenceEquals(_issuer, issuer) &&
+        Volatile.Read(ref _claimState) == 1 && Volatile.Read(ref _outcome) is null;
     internal bool MarkClaimed(HomeResourceOperationBroker issuer) =>
         ReferenceEquals(_issuer, issuer) && Interlocked.CompareExchange(ref _claimState, 1, 0) == 0;
     internal bool MarkRejected(HomeResourceOperationBroker issuer, HomeResourceRejectionKind kind = HomeResourceRejectionKind.Claim) =>

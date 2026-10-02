@@ -29,4 +29,12 @@
     </PropertyGroup>
     <Error Condition="'$(CanonicalSelectedHavenUi)' != '$(CanonicalExpectedHavenUi)'" Text="Active product graphs require the canonical shared Haven.UI project; alternate assembly inputs are unsupported." />
   </Target>
+  <ItemGroup>
+    <Compile Include="BrowseOwnedDocumentRegistry.cs" />
+    <Compile Include="BrowseOwnedDocumentCatalogue.cs" />
+    <Compile Include="BrowseOwnedWebMcpBinding.cs" />
+    <Compile Include="BrowseOwnedToolWorkspace.cs" />
+    <Compile Include="BrowseOwnedToolsScene.cs" />
+    <Compile Include="BrowseWebMcpInvocationScripts.cs" />
+  </ItemGroup>
 </Project>
