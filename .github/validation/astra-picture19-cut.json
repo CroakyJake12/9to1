@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "fc7fa331e829f9e479cc9e7e5382eea9b6869883",
+  "baselineCommit": "7c1169f7a6c58b7304fa8d3f85357ba4a7d410bf",
   "programTree": "ad83b61e18c5dbdd7b7813aae6058d78077d6fcf",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-picture19-test-classes.json",
       "mode": "100644",
-      "object": "300d7a179f446496cfd2c915bf768a352c24ca2b",
+      "object": "80f98f9314bed36bd2e2b4603255ab5c61379a53",
       "bytes": 4572,
-      "sha256": "9255b006a5611aa644a4e0a708087e5770b7dd99bcc227eb567d74b31793da97"
+      "sha256": "f269f33161685b25629218fdfabfa298f245beffa64af4a6b9492fdd348ab6a6"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -63989,7 +63989,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Source-only exactRoot977owner19; new freshRust1.98.1 lock/liveELF/mandatorybubblewrap+actualmanagedchildmaps/fullowningTests; independentparts rootretention not atomic; no HDR/highres/fullnativeOSjourney acceptance. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
+  "limits": "Source-only exactRoot977owner19; new freshRust1.98.1 lock/liveELF/mandatorybubblewrap+actualmanagedchildmaps/fullowningTests; independentparts rootretention not atomic; no HDR/highres/fullnativeOSjourney acceptance. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained. Exact changed owning source-SHA re-pin only, identical class names/count/path/filter; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-comparison-draft-03/root13-selection.json",
@@ -64030,6 +64030,10 @@
     {
       "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol11/manifest.json",
       "sha256": "062973833f5b98d5131ec6747bfe83c01dd92762721b40dcd3457767282dbf73"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
+      "sha256": "6dd54abdda8846dc83c4a2883aa18e15552d58ae247e225ab0f219dfdc502d4f"
     },
     {
       "path": "/workspace/astra-source/worker6-native-failed-owner-fixes01/manifest.json",
