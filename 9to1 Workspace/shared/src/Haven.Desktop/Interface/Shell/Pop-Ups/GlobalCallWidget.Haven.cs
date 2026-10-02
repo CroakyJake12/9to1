@@ -19,6 +19,7 @@ namespace Haven.Desktop.Views.Shell.Overlays;
 public sealed partial class GlobalCallWidget : UserControl, IDisposable
 {
     private readonly GlobalCallHavenScene _scene;
+    private readonly InChatCallWidgetViewModel _applicationViewModel;
     private readonly DispatcherTimer _durationTimer;
     private bool _disposed;
 
@@ -32,6 +33,7 @@ public sealed partial class GlobalCallWidget : UserControl, IDisposable
         var applicationViewModel = viewModel ?? throw new InvalidOperationException(
             "GlobalCallWidget must be created with the application call view-model.");
 
+        _applicationViewModel = applicationViewModel;
         InitializeComponent();
         AutomationProperties.SetAutomationId(this, "VoiceFloatingSurface");
         AutomationProperties.SetName(this, "Voice floating surface");
@@ -73,6 +75,7 @@ public sealed partial class GlobalCallWidget : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        DisposeOriginalNarrationRoute();
 
         _durationTimer.Stop();
         _durationTimer.Tick -= OnDurationTimerTick;

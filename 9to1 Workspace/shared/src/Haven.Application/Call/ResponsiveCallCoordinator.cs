@@ -58,6 +58,11 @@ public sealed class ResponsiveCallCoordinator : ICallCoordinator, IVoiceReaction
         _inner.InputStatusChanged += OnInnerInputStatusChanged;
     }
 
+    /// <summary>Pure identity check for the same original local Call owner; no permission or playback grant.</summary>
+    // Pure trusted composition observation, not playback or source authorization.
+    public CallCoordinator? OriginalNarrationOwner => _inner as CallCoordinator;
+    public bool IsBoundToOriginalNarrationOwner(CallCoordinator owner) => ReferenceEquals(_inner, owner);
+
     public CallState State => _inner.State;
     public CallSession? CurrentSession => _inner.CurrentSession;
     public Conversation? CurrentConversation => _inner.CurrentConversation;
