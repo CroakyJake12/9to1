@@ -1,0 +1,78 @@
+{
+  "classes": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MapsJourneyAuthoringCaptureTests.cs",
+      "class": "MapsJourneyAuthoringCaptureTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "24047ed038376ab19155d21fb8d3d01803c6eb2d1d982d54a2956ab4dd9c4b0b"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ShelfCollectionOrderingTests.cs",
+      "class": "ShelfCollectionOrderingTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "f06576c24594186e8261687a4cdd13de4d9b0fbc85f6968ec4d82ffc6512ff30"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionOrderingPersistenceTests.cs",
+      "class": "ShelfCollectionOrderingPersistenceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "303141c89a7a83f8df40fe7242142291f6cb5efed0e1aeb41e611f152cda8fb8"
+    },
+    {
+      "path": "9to1 Workspace/Browse/Tests/BrowseWebMcpBindingTests.cs",
+      "class": "BrowseWebMcpBindingTests",
+      "namespace": "HavenOS.Apps.Browse.Tests",
+      "sha256": "f6112c0e658d04195fd68e18347d7140337fa006138788c54bd4a2d2756b0b07"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
+      "class": "ShelfMapsOwnedLibraryTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "ff9e4c0d3ddf7594dcfcb8e0b6fae7cbeab6cb34ebdec5595632df9ec5c110b8"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ShelfLibraryServiceTests.cs",
+      "class": "ShelfLibraryServiceTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "f2f387838cc648bc781fae7caf12bd9f394a9c45ec5824e1680506cf26d82fd6"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ShelfLibraryPolicyTests.cs",
+      "class": "ShelfLibraryPolicyTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "ac42d0c208499bf096d2fd6aa1416992d92a8d897f302679bd3e72c1056ea0bf"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/MapsJourneyServiceTests.cs",
+      "class": "MapsJourneyServiceTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "16bd27c15028771edcb891c4b8320db4ca765e6543bf7849bea5187fd5a4012a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/MapsModelTests.cs",
+      "class": "WebMercatorProjectionTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "4ba71f760919bf49e1537916befc7e80f6f455ae1a6a61ace44fcb12d32a58a3"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/MapsModelTests.cs",
+      "class": "NominatimRateLimiterTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "4ba71f760919bf49e1537916befc7e80f6f455ae1a6a61ace44fcb12d32a58a3"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/MapsModelTests.cs",
+      "class": "MapRouteSummaryTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "4ba71f760919bf49e1537916befc7e80f6f455ae1a6a61ace44fcb12d32a58a3"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/MapsModelTests.cs",
+      "class": "MapsStoreLogicTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "4ba71f760919bf49e1537916befc7e80f6f455ae1a6a61ace44fcb12d32a58a3"
+    }
+  ],
+  "dependencyPins": [],
+  "ownerManifestSha256": "f631604b3963bc8e2e4a258853531b1f38167ffde9b2b1fdcc5994a8ae253010"
+}

@@ -8,15 +8,23 @@ namespace HavenOS.Home.Core;
 
 /// <summary>Profile-bound durable platform index. Inaccessible profiles retain identity but never expose launch authority.</summary>
 public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, IAuthenticatedResourceActorSource actors,
-    IEnumerable<IInstalledApplicationObservationProvider> providers) : IInstalledApplicationRegistry
+    IEnumerable<IInstalledApplicationObservationProvider> providers) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry
 {
     private readonly IInstalledApplicationObservationProvider[] _providers = providers.ToArray();
     private sealed record State(string ProfileId, IReadOnlyList<InstalledApplicationReference> Applications);
     private static readonly AppOperability Unknown = new(AppOperabilityClassification.Unknown, AppOperabilityPath.TypedApi);
 
-    public async ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct)
+    public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct) => RefreshCoreAsync(null, ct);
+    public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return RefreshCoreAsync(expectedActor, ct);
+    }
+    private async ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshCoreAsync(AuthenticatedResourceActor? expectedActor, CancellationToken ct)
     {
         var actor = await actors.GetCurrentAsync(ct).ConfigureAwait(false);
+        if (expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The originating installed application actor changed.");
         if (actor is null || !Text(actor.ActorId) || !Text(actor.ProfileId) || !Text(actor.AuthenticationRevision) || actor.AccountId == Guid.Empty || actor.OrganisationId is not null) throw new UnauthorizedAccessException("A verified personal Home profile is required.");
         if (actors is not IHomeStateCommitActorGuard commitGuard)
             throw new UnauthorizedAccessException("The current actor source cannot validate commit authority.");
@@ -25,7 +33,10 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
         var observed = new List<(string Provider, InstalledApplicationProfileObservation Profile)>();
         foreach (var provider in _providers)
         {
-            var profiles = (await provider.ObserveAsync(ct).ConfigureAwait(false))?.Take(257).ToArray();
+            var observation = await provider.ObserveAsync(ct).ConfigureAwait(false);
+            if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The originating installed application actor changed during observation.");
+            var profiles = observation?.Take(257).ToArray();
             if (profiles is null || profiles.Length > 256 || profiles.Any(p => p is null || !Text(p.PlatformProfileId) || !Text(p.Label) || p.Applications is null) ||
                 profiles.GroupBy(p => p.PlatformProfileId, StringComparer.Ordinal).Any(g => g.Count() != 1))
                 throw new InvalidDataException("Invalid platform profile observations.");
@@ -45,6 +56,8 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
         for (var attempt = 0; attempt < 4; attempt++)
         {
             var read = await store.ReadAsync(ct).ConfigureAwait(false);
+            if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false))
+                throw new UnauthorizedAccessException("The originating installed application actor changed during registry read.");
             if (!read.IsSuccess) throw new InvalidDataException("Installed application state requires recovery.");
             var record = read.State!.Records.SingleOrDefault(r => r.RecordId == id);
             var previous = Read(record, actor.ProfileId);
@@ -114,6 +127,14 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
         if (applicationId == Guid.Empty || expectedRevision < 1) return null;
         return (await RefreshAsync(ct).ConfigureAwait(false)).SingleOrDefault(a => a.ApplicationId == applicationId &&
             a.Revision == expectedRevision && a.Enabled && a.ProfileAccessible);
+    }
+    public async ValueTask<InstalledApplicationReference?> ResolveLaunchForActorAsync(Guid applicationId, long expectedRevision,
+        AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (applicationId == Guid.Empty || expectedRevision < 1) return null;
+        return (await RefreshForActorAsync(expectedActor, ct).ConfigureAwait(false)).SingleOrDefault(a =>
+            a.ApplicationId == applicationId && a.Revision == expectedRevision && a.Enabled && a.ProfileAccessible);
     }
     private static State Read(HomeCoreStateRecord? record, string profile)
     {

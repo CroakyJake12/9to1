@@ -19,6 +19,8 @@ public sealed class CuiControlLoader : IDisposable
     private readonly CuiControlRegistry _controlRegistry;
     private readonly CancellationTokenSource _lifetime = new();
     private bool _disposed;
+    private readonly object _actionTasksGate = new();
+    private readonly HashSet<Task> _pendingActionTasks = [];
     public event EventHandler<CuiActionFailure>? ActionFailed;
     private readonly Dictionary<string, string> _resourceScope;
     private readonly List<CuiDiagnostic> _runtimeDiagnostics = [];
@@ -60,6 +62,25 @@ public sealed class CuiControlLoader : IDisposable
 
     /// <summary>Set an action dispatcher for action= and on:click= attributes.</summary>
     public void SetActionDispatcher(ICuiActionDispatcher dispatcher) => _actionDispatcher = dispatcher;
+
+    /// <summary>Snapshot completion of the actual button dispatch pipelines already accepted by this loader.
+    /// Call after raising the click. This does not dispatch an action, attest success, or include future clicks.
+    /// Captured tasks remain awaitable after disposal, including dispatcher cancellation and cleanup.</summary>
+    public Task WhenActionsIdleAsync()
+    {
+        lock (_actionTasksGate) return Task.WhenAll(_pendingActionTasks.ToArray());
+    }
+
+    private void ObserveButtonDispatch(Button button)
+    {
+        var task = DispatchButtonAsync(button);
+        lock (_actionTasksGate) _pendingActionTasks.Add(task);
+        _ = task.ContinueWith(static (completed, state) =>
+        {
+            var loader = (CuiControlLoader)state!;
+            lock (loader._actionTasksGate) loader._pendingActionTasks.Remove(completed);
+        }, this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+    }
 
     public void Dispose()
     {
@@ -262,7 +283,7 @@ public sealed class CuiControlLoader : IDisposable
         if (control is Button button && _actionDispatcher is not null && !_wiredActions.Contains(button)
             && TryGetActionInvocation(button, out var invocation))
         {
-            EventHandler<RoutedEventArgs> handler = (_, _) => { _ = DispatchButtonAsync(button); };
+            EventHandler<RoutedEventArgs> handler = (_, _) => ObserveButtonDispatch(button);
             button.Click += handler;
             _actionHandlers[button] = handler;
             _wiredActions.Add(button);

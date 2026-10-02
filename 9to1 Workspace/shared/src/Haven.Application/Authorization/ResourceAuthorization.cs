@@ -27,14 +27,27 @@ public sealed class ResourceAuthorizationService(IAuthenticatedResourceActorSour
 {
     private readonly ICanonicalResourceAccessResolver[] _resolvers = resolvers.ToArray();
 
-    public async ValueTask<AuthenticatedResourceActor?> AuthorizeAsync(string actionId, IReadOnlyList<ResourceScope> scopes,
+    public ValueTask<AuthenticatedResourceActor?> AuthorizeAsync(string actionId, IReadOnlyList<ResourceScope> scopes,
         CancellationToken cancellationToken = default)
+        => AuthorizeCoreAsync(null, actionId, scopes, cancellationToken);
+
+    /// <summary>Checks the actual current actor against the originating actor before any owning resolver is invoked.</summary>
+    public ValueTask<AuthenticatedResourceActor?> AuthorizeForActorAsync(AuthenticatedResourceActor expectedActor,
+        string actionId, IReadOnlyList<ResourceScope> scopes, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return AuthorizeCoreAsync(expectedActor, actionId, scopes, cancellationToken);
+    }
+
+    private async ValueTask<AuthenticatedResourceActor?> AuthorizeCoreAsync(AuthenticatedResourceActor? expectedActor,
+        string actionId, IReadOnlyList<ResourceScope> scopes, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(actionId) || scopes is null || scopes.Count == 0 || scopes.Count > 1000) return null;
         var actor = await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
         if (actor is null || string.IsNullOrWhiteSpace(actor.ActorId) || string.IsNullOrWhiteSpace(actor.ProfileId) ||
             string.IsNullOrWhiteSpace(actor.AuthenticationRevision) || actor.AccountId == Guid.Empty || actor.OrganisationId == Guid.Empty ||
             (actor.OrganisationId is not null && actor.AccountId is null)) return null;
+        if (expectedActor is not null && actor != expectedActor) return null;
         foreach (var scope in scopes)
         {
             if (scope is null || string.IsNullOrWhiteSpace(scope.Kind) || string.IsNullOrWhiteSpace(scope.Id) ||

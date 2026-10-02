@@ -8,22 +8,28 @@ namespace NineToOne.Os.Shell;
 
 /// <summary>Device-local shell state belongs to the authenticated Home profile, never an app-private settings file.</summary>
 public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthenticatedResourceActorSource actors,
-    ResourceAuthorizationService authorization) : IShellConfigurationStore
+    ResourceAuthorizationService authorization) : IShellOriginalActorReadStore
 {
     public const string RecordType = "os.shell.configuration";
     public static string RecordId(string profileId) => RecordType + "." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(profileId)));
     private sealed record Payload(string ProfileId, ShellConfiguration Current, ShellConfiguration? Previous);
     public async Task<bool> IsCurrentSessionAsync(string authorityId, AuthenticatedResourceActor actor, CancellationToken ct)
         => authorityId == RecordId(actor.ProfileId) && actor == await actors.GetCurrentAsync(ct);
-    public async Task<ShellStoredConfiguration> ReadAsync(CancellationToken ct)
+    public Task<ShellStoredConfiguration> ReadAsync(CancellationToken ct) => ReadCoreAsync(null, ct);
+    public Task<ShellStoredConfiguration> ReadForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    { ArgumentNullException.ThrowIfNull(expectedActor); return ReadCoreAsync(expectedActor, ct); }
+    private async Task<ShellStoredConfiguration> ReadCoreAsync(AuthenticatedResourceActor? expectedActor, CancellationToken ct)
     {
         var actor = await ActorAsync(ct);
+        if (expectedActor is not null && actor != expectedActor)
+            throw new UnauthorizedAccessException("The original shell actor changed before Home lookup.");
         for (var attempt = 0; attempt < 4; attempt++)
         {
             var read = await home.ReadAsync(ct);
             if (!read.IsSuccess) throw new InvalidDataException("Home shell state requires recovery.");
             var record = read.State!.Records.SingleOrDefault(r => r.RecordId == RecordId(actor.ProfileId));
             if (record is not null) { var result = Decode(record, actor.ProfileId); await AuthorizeReadAsync(actor, result.Revision, ct); await SameActorAsync(actor, ct); return result with { SessionActor = actor }; }
+            if (expectedActor is not null) throw new UnauthorizedAccessException("The original shell record is no longer available; discovery cannot initialize it.");
             // Persist the initial stable identities atomically so reopening cannot silently replace them.
             var initial = new Payload(actor.ProfileId, ShellConfiguration.Default(), null);
             await SameActorAsync(actor, ct);
@@ -55,7 +61,7 @@ public sealed class HomeShellConfigurationStore(IHomeCoreStateStore home, IAuthe
         ?? throw new UnauthorizedAccessException("The current Home identity cannot guard shell persistence.");
     private async Task AuthorizeReadAsync(AuthenticatedResourceActor actor, long revision, CancellationToken ct)
     {
-        if (await authorization.AuthorizeAsync("os.shell.configuration.read", [new(RecordType, RecordId(actor.ProfileId),
+        if (await authorization.AuthorizeForActorAsync(actor, "os.shell.configuration.read", [new(RecordType, RecordId(actor.ProfileId),
             revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Read)], ct) != actor)
             throw new UnauthorizedAccessException("Current Home shell read access could not be verified.");
     }

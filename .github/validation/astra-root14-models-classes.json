@@ -1,0 +1,139 @@
+{
+  "classes": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PolicyAwareModelCatalogueTests.cs",
+      "class": "PolicyAwareModelCatalogueTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "f39270e7ad1d398608acd64f61eac04905f299b83429987c2b7c7a330cae3c53"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ModelGovernanceTests.cs",
+      "class": "ModelPermissionEvaluatorTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "8ccbffd86174bc85200c555ba8efca194ce17dbaf7bcb3091343296fb933dc2f"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ModelGovernanceTests.cs",
+      "class": "ModelPersonalityServiceTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "8ccbffd86174bc85200c555ba8efca194ce17dbaf7bcb3091343296fb933dc2f"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+      "class": "HomeModelPickerFeatureProviderTests",
+      "namespace": "HavenOS.Home.Tests",
+      "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "class": "HomeModelPickerRouteEditorTests",
+      "namespace": "HavenOS.Home.Tests",
+      "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+      "class": "HomeCompletionAuditRecoveryTests",
+      "namespace": "HavenOS.Home.Tests",
+      "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeModelPickerRegistrationTests.cs",
+      "class": "HomeModelPickerRegistrationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "d3eca52abf23b8e63f963b46bcd1ed940bf2f06f203f35b16b50f59af590764c"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ModelGovernanceStoresTests.cs",
+      "class": "ModelGovernanceStoresTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "af1f94e76f098f8a7a591c095576423f4978f32e30bac8d512e3961083c2052a"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeModelPickerCuiSurfaceTests.cs",
+      "class": "HomeModelPickerCuiSurfaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "e64340ee924704d5e8ce1714d46e3a587ec98ea6cdc1cc2c9e78e9eb656d3f3f"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeModelPickerOriginalSessionTests.cs",
+      "class": "HomeModelPickerOriginalSessionTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "ad9910a1d890e00df1d4fc533ac4751402c1358c0722d268e0e84fa0a66b9932"
+    }
+  ],
+  "dependencyPins": [
+    {
+      "path": "9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+      "sha256": "320ac6c354116a28027c2f0ec167484047a4f2610678af681d63e1f102c880ff"
+    },
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj",
+      "sha256": "9908203c277a0edc0cc7733f073adfe91c75e344a07d594d0f43cb4bdf0c66cf"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj",
+      "sha256": "d4c13417c5d7259806c777325fd3b90c6b71c472218282375ce8f72577d9dcaf"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
+      "sha256": "f9fa06ce3b5081942c0d2d52006639e49d7b41bda364153502dfdf32b834e139"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "sha256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "sha256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeResourceOperationBroker.cs",
+      "sha256": "78bd254fc21ce4c2ea4c21276d9e7c0210feea506c8513d8f2f2beff31afaa9c"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeVersionedModelRouteRepository.cs",
+      "sha256": "08c8dd1ce7675f94335d8f841538110025b06e9b12903d68732cd589a42fea02"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.props",
+      "sha256": "400dfe27735351b9a540396d681d80dd7fb67eb9c581c1b2897b6df312b05b58"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Build.targets",
+      "sha256": "664b5d56d3bb11e4a460bb6c2aeca9c8712476a30faa31ef2bd914bfc7be3374"
+    },
+    {
+      "path": "9to1 Workspace/Directory.Packages.props",
+      "sha256": "9a7a73030788b96d6827cd8d01348866f15b687654b468a931723ed8efe3d039"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "sha256": "347a8b95b75ab47bab07508c9c30e3a10852d231c9d5f60a6b07dae96c882147"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiViewModel.cs",
+      "sha256": "4dbf9dc3b3290e77313d0b893fa7bff33adca6ed3d0ecfb29319da6221518251"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiSceneHost.cs",
+      "sha256": "965c0b1246f40e07d7c38155ba499d62021f9d9b166678ef4d8799c492dc57de"
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4"
+    },
+    {
+      "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+      "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelPickerRouteEditor.cs",
+      "sha256": "923cda7fc1443b2fc58b333c5e972946806e2b97cc35b2bcc8fdc43c129f6e1f"
+    }
+  ],
+  "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6"
+}

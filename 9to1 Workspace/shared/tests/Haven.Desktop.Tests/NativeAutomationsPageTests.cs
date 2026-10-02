@@ -55,7 +55,7 @@ public sealed class NativeAutomationsPageTests
     }
 
     [AvaloniaFact]
-    public async Task Native_route_hosts_exactly_one_haven_scene_and_create_test_save_reopen_uses_that_scene()
+    public async Task Native_unbound_route_preserves_one_scene_and_pure_preview_but_cannot_persist_a_private_graph()
     {
         HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Automations, HavenUiAppearance.SuperDark));
         var tasks = new MemoryWorkspaceStateRepository();
@@ -111,19 +111,8 @@ public sealed class NativeAutomationsPageTests
                 text => text.Content.Contains("Succeeded: Emit value", StringComparison.Ordinal));
 
             Invoke(page.Scene.Root, "Automations.Editor.Save");
-            await WaitUntilAsync(() => tasks.Items.Any(item => item.Name == "Worker 05 native acceptance"));
-            var saved = Assert.Single(tasks.Items, item => item.Name == "Worker 05 native acceptance");
-            Assert.True(AutomationGraphCodec.TryDeserialize(saved.GraphJson, out var persisted));
-            Assert.Equal(2, persisted.Nodes.Count);
-            Assert.Single(persisted.Edges);
-            Assert.Contains(persisted.Nodes, node => node.Id == triggerId);
-            Assert.Contains(persisted.Nodes, node => node.Id == emitId);
-
-            Invoke(page.Scene.Root, "Automations.Tab.Library");
-            await WaitUntilAsync(() => page.Scene.Root.DescendantsAndSelf().Any(element => element.Name == $"Automations.Workflow.{saved.Id:N}.Edit"));
-            Invoke(page.Scene.Root, $"Automations.Workflow.{saved.Id:N}.Edit");
-
-            Assert.Equal("Worker 05 native acceptance", Input(page.Scene.Root, "Automations.Editor.Name").Text);
+            await WaitUntilAsync(() => page.Scene.StatusText.Content.Contains("Canonical graph authoring and publication are unavailable", StringComparison.Ordinal));
+            Assert.Empty(tasks.Items); Assert.Empty(await automations.GetAllAsync(default));
             Assert.Equal(2, page.Scene.GraphEditor.Document.Nodes.Count);
             Assert.Single(page.Scene.GraphEditor.Document.Edges);
             Assert.Contains(page.Scene.GraphEditor.Document.Nodes, node => node.Id == triggerId);
@@ -136,7 +125,7 @@ public sealed class NativeAutomationsPageTests
     }
 
     [AvaloniaFact]
-    public async Task Pause_and_resume_persist_workflow_and_linked_schedule_without_substitution()
+    public async Task Legacy_unbound_route_does_not_publish_or_partially_mutate_workflow_and_linked_schedule()
     {
         HavenUiResourceApplier.Apply(SurfacePaletteCatalog.For(HavenSurface.Automations, HavenUiAppearance.SuperDark));
         var now = DateTimeOffset.UtcNow;
@@ -155,18 +144,11 @@ public sealed class NativeAutomationsPageTests
         try
         {
             window.Show();
-            await WaitUntilAsync(() => page.Scene.StatusText.Content.Contains("1 reusable workflow", StringComparison.Ordinal));
-            Invoke(page.Scene.Root, "Automations.Tab.Library");
-            Invoke(page.Scene.Root, $"Automations.Workflow.{workflowId:N}.Enabled");
-
-            await WaitUntilAsync(() => tasks.Items.Single().IsEnabled == false && automations.Items.Single().IsEnabled == false);
-            Assert.Null(automations.Items.Single().NextRunAt);
-            Assert.Contains("Paused Scheduled review", page.Scene.StatusText.Content, StringComparison.Ordinal);
-
-            Invoke(page.Scene.Root, $"Automations.Workflow.{workflowId:N}.Enabled");
-            await WaitUntilAsync(() => tasks.Items.Single().IsEnabled && automations.Items.Single().IsEnabled);
-            Assert.NotNull(automations.Items.Single().NextRunAt);
-            Assert.Contains("Resumed Scheduled review", page.Scene.StatusText.Content, StringComparison.Ordinal);
+            await WaitUntilAsync(() => page.Scene.StatusText.Content.Contains("Original automation ownership is unavailable", StringComparison.Ordinal));
+            Assert.Equal(workflow, Assert.Single(tasks.Items));
+            Assert.Equal(scheduled, Assert.Single(await automations.GetAllAsync(default)));
+            Assert.DoesNotContain(page.Scene.Root.DescendantsAndSelf(), element => element.Name == $"Automations.Workflow.{workflowId:N}.Enabled");
+            Assert.NotNull(scheduled.NextRunAt);
         }
         finally
         {

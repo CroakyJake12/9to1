@@ -54,7 +54,7 @@ public sealed class HomeModelRouteActionPolicies : IHomeActionPolicySource
 /// mutation requires the same Home broker and the repository's actual expected revision.</summary>
 public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity profiles, IVersionedModelRouteRepository routes,
     IModelProviderRegistry providers, IPrivacyPreferenceStore privacy, ResourceAuthorizationService resources,
-    HomeResourceOperationBroker operations) : IHomeModelPickerFeatureProvider
+    HomeResourceOperationBroker operations) : IHomeModelPickerOriginalActorFeatureProvider
 {
     private readonly ConcurrentDictionary<string, (HomeResourceExecutionCapability Capability, string RouteId)> _pendingAudits = new();
 
@@ -90,16 +90,32 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
         return new(true, "Ready", route.Revision == 0 ? "New personal route draft; no model is selected until saved." : "Current personal Home route.", Snapshot(route) with { PendingAuditRequestId = pendingAudit });
     }
 
-    public async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit,
-        CancellationToken cancellationToken = default)
+    public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteAsync(HomeModelRouteEdit edit,
+        CancellationToken cancellationToken = default) => UpdateRouteCoreAsync(null, edit, cancellationToken);
+
+    public Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteForActorAsync(
+        AuthenticatedResourceActor expectedActor, HomeModelRouteEdit edit, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return UpdateRouteCoreAsync(expectedActor, edit, cancellationToken);
+    }
+
+    private async Task<HomeCoreOperationResult<HomeModelPickerSnapshot>> UpdateRouteCoreAsync(
+        AuthenticatedResourceActor? expectedActor, HomeModelRouteEdit edit, CancellationToken cancellationToken)
     {
         if (edit?.Route is not { } input || !TryCategory(input.Scope, input.Category, out var category) ||
-            input.Candidates is null || input.Candidates.Count > 256 || input.Policy.ValueKind != JsonValueKind.Object || edit.ExpectedRevision < 0 ||
+            input.Candidates is null || input.Policy.ValueKind != JsonValueKind.Object || edit.ExpectedRevision < 0 ||
             input.Version != edit.ExpectedRevision + 1) return Invalid<HomeModelPickerSnapshot>();
         // Freeze all caller-owned collections and JSON before the first asynchronous authority lookup.
         if (edit.ApprovalRequestId is { } pendingRequest && _pendingAudits.ContainsKey(pendingRequest))
             return new(false, "AuditPending", "The original route outcome is retained. Finish its audit; do not repeat the save.");
-        input = input with { Candidates = Array.AsReadOnly(input.Candidates.ToArray()), Policy = input.Policy.Clone() };
+        var capturedCandidates = new List<HomeModelRouteCandidate>();
+        foreach (var candidate in input.Candidates)
+        {
+            if (capturedCandidates.Count == 256) return Invalid<HomeModelPickerSnapshot>();
+            capturedCandidates.Add(candidate);
+        }
+        input = input with { Candidates = Array.AsReadOnly(capturedCandidates.ToArray()), Policy = input.Policy.Clone() };
         ProviderPolicy policy;
         try { policy = input.Policy.Deserialize<ProviderPolicy>() ?? throw new JsonException(); }
         catch (Exception exception) when (exception is JsonException or InvalidOperationException) { return Invalid<HomeModelPickerSnapshot>(); }
@@ -109,7 +125,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
             candidates.Select(item => item.Order).Distinct().Count() != candidates.Length) return Invalid<HomeModelPickerSnapshot>();
         if (routes is not IHomeGuardedModelRouteRepository guardedRoutes) return Denied<HomeModelPickerSnapshot>();
         var actor = await ActorAsync("models.routes.update", ResourceAccess.Write, cancellationToken).ConfigureAwait(false);
-        if (actor is null || input.ScopeId != actor.ProfileId || input.RouteId != RouteId(actor.ProfileId, category) ||
+        if (actor is null || expectedActor is not null && actor != expectedActor || input.ScopeId != actor.ProfileId || input.RouteId != RouteId(actor.ProfileId, category) ||
             input.AppId is not null || input.OverrideIdentity is not null) return Denied<HomeModelPickerSnapshot>();
         // Detach payloads before any approval or owner lookup. Provider descriptors currently do not attest artifact revisions.
         var route = new ConfiguredModelRoute(input.RouteId, input.Version, ModelRouteScope.User, actor.ProfileId, category,
@@ -126,7 +142,7 @@ public sealed class HomeModelPickerFeatureProvider(HomeLocalProfileIdentity prof
             return new(false, "PreviewTooLarge", "This route change is too large to review safely. Reduce candidate or policy details before requesting approval.");
         if (string.IsNullOrWhiteSpace(edit.ApprovalRequestId))
         {
-            var authorization = await operations.AuthorizeAsync(AppId, "models.routes.update", scopeList, arguments,
+            var authorization = await operations.AuthorizeForActorAsync(actor, AppId, "models.routes.update", scopeList, arguments,
                 changePreview, null,
                 actor.AuthenticationRevision, cancellationToken).ConfigureAwait(false);
             return new(false, "ApprovalRequired", "Review this exact route change in Home before saving.",

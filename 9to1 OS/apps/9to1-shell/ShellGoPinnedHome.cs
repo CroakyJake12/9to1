@@ -11,7 +11,7 @@ public sealed class ShellGoPinnedHome(ShellConfigurationService configuration, G
         {
             if (original.SessionActor is null || !await configuration.IsCurrentSessionAsync(original, ct))
                 throw new UnauthorizedAccessException("Reopen Go in the original Home session.");
-            var current = await configuration.GetAsync(ct);
+            var current = await configuration.GetForOriginalAsync(original, ct);
             if (current.Stored.SessionActor != original.SessionActor || current.Stored.AuthorityId != original.AuthorityId || current.Stored.Revision != original.Revision ||
                 !await configuration.IsCurrentSessionAsync(original, ct))
                 throw new UnauthorizedAccessException("The original Go home configuration changed.");
@@ -31,7 +31,7 @@ public sealed class ShellGoPinnedHome(ShellConfigurationService configuration, G
         {
             ct.ThrowIfCancellationRequested();
             await CurrentAsync();
-            var result = await go.ResolveAsync("os.installed-applications", locator, ct: ct);
+            var result = await go.ResolveForActorAsync("os.installed-applications", locator, original.SessionActor!, ct: ct);
             await CurrentAsync();
             if (result is not null) results.Add(result);
         }
