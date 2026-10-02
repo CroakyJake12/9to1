@@ -1,50 +1,67 @@
-# FILE DOCUMENTATION
-# Where: .github/workflows/haven-chat-model-ci.yml in the GitHub automation configuration used by continuous integration.
-# What: This file automates or configures the repository operation described by its commands and keys.
-# How: Read from top to bottom: inputs and environment first, validation/processing next, and explicit success or failure output last.
-# Why: The file keeps one cohesive responsibility in a predictable location so callers can find and replace it without unrelated changes.
-name: Haven Chat and Model Pass
-
+name: Recover exact original Maps13 failed owning artifact
 on:
   workflow_dispatch:
-
+    inputs:
+      expected_commit:
+        required: true
+        type: string
+      cut_manifest_sha256:
+        required: true
+        type: string
 permissions:
   contents: read
-
+  actions: read
 jobs:
-  validate:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  recover:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-maps13-artifact-recovery')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
         with:
-          global-json-file: global.json
-
-      - name: Restore
-        run: dotnet restore "9to1 Workspace/shared/Haven.sln"
-
-      - name: Build Debug
-        run: dotnet build "9to1 Workspace/shared/Haven.sln" -c Debug --no-restore
-
-      - name: Test Debug
-        run: dotnet test "9to1 Workspace/shared/Haven.sln" -c Debug --no-build
-
-      - name: Build automation worker
-        run: dotnet build "9to1 Workspace/shared/src/Haven.AutomationWorker/Haven.AutomationWorker.csproj" -c Debug --no-restore
-
-      - name: Upload source snapshot
+          submodules: false
+          persist-credentials: false
+      - name: Fetch and validate only exact existing original artifact
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/astra-maps13-original-artifact-recovery.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-maps13-artifact-recovery-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+      - name: Retain small original inner logs and verified reconstruction metadata
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: haven-source-snapshot
+          name: astra-maps13-original-small-${{ github.sha }}
           path: |
-            .
-            !**/bin/**
-            !**/obj/**
-            !.git/**
-          include-hidden-files: true
-          retention-days: 3
+            artifacts/maps-artifact-recovery/*.json
+            artifacts/maps-artifact-recovery/*.log
+            artifacts/maps-artifact-recovery/*.trx
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact original ZIP part 000 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-maps13-original-part-000-${{ github.sha }}
+          path: artifacts/maps-artifact-recovery/original-artifact.part-000.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain exact original ZIP part 001 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-maps13-original-part-001-${{ github.sha }}
+          path: artifacts/maps-artifact-recovery/original-artifact.part-001.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: Retain exact original ZIP part 002 independently
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-maps13-original-part-002-${{ github.sha }}
+          path: artifacts/maps-artifact-recovery/original-artifact.part-002.bin
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
