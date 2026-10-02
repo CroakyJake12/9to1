@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "9264a4dfc06841ff1898f3713e0fb8f3a15d2906",
-  "programTree": "cd9ad9157679bf7daee6edd927c619fbac994c70",
+  "baselineCommit": "33e10f9fcbc8f0ab1db655821e6f7d696e6d01ba",
+  "programTree": "38396e3cf6f1ce8bc2ad13551fb66318702eecb3",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -36,9 +36,9 @@
     {
       "path": ".github/validation/astra-automation28-test-classes.json",
       "mode": "100644",
-      "object": "531a7453aea8c3fc7b98ea49d1e7d3c58c9441be",
-      "bytes": 2679,
-      "sha256": "6fb1341a7d3c0f0f5045c18f2cda5d72011169ce003ee4088294b587e6f6ada7"
+      "object": "085e9d1e3cc1f13adbdde5d31e2365e2d232e068",
+      "bytes": 2778,
+      "sha256": "d3adcbdf63d20d307183e4333397460689e4bb6a477058d8eb261702a00f9743"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -38452,9 +38452,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
       "mode": "100644",
-      "object": "c5ca61930fb3d13c862c48cb8a7491b4eaa94be0",
-      "bytes": 9613,
-      "sha256": "7ddbb6b0ab89a6e35a1dfa4041bd36903193d8d93d1e3f7c1f867f0284d00564"
+      "object": "0c42dc7bbfe3c7d4d600a58cc4b5a30c5beef499",
+      "bytes": 9913,
+      "sha256": "cf201653e55645ef8cbfe2b23a68485874bc66d616e450e36f1a022dd8c9f670"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",
@@ -64073,7 +64073,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-automation28-cut.json",
-  "limits": "Only timeout assertion includes actual retained Scene.StatusText at both Home-review waits. Same condition/time budget/guards/assertions; no larger sleep or production change. Full source bindings/filters/runners/strictcounts/compiledclosures unchanged; no execution or acceptance claim; Root14 HOLD.",
+  "limits": "Actual isolated strictsource cause correction; same fullowning phases/filters/TRX/closures/sourcefullbindings; allfailedroots preserved. Root14stillconditional onACTUALpasses.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-automation-owner-native-root13-joined28-fixturefix02/manifest.json",
@@ -64090,6 +64090,14 @@
     {
       "path": "/workspace/astra-source/worker4-automation28-hosted-plan-sol5/manifest.json",
       "sha256": "634c29c0df1b527f5d9c115a71f1293e55cd1f2d160e95b57d4838ae78864beb"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-automation-native-key-release-fix02/manifest.json",
+      "sha256": "e073d2f0c347a7895276d1b5895938e9ab008805b24a95220ead3f0d54fa0358"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-automation28-hosted-plan-sol6/manifest.json",
+      "sha256": "427cd103448d5718bd540b89999d04ef7d905d7acf6b78b7cda4c517c7efdb37"
     }
   ],
   "sharedCakeIdContract": null

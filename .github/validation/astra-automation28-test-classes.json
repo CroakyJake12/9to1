@@ -28,7 +28,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
       "class": "NativeAutomationDefinitionOwnerTests",
       "namespace": "Haven.Desktop.Tests",
-      "sha256": "7ddbb6b0ab89a6e35a1dfa4041bd36903193d8d93d1e3f7c1f867f0284d00564"
+      "sha256": "cf201653e55645ef8cbfe2b23a68485874bc66d616e450e36f1a022dd8c9f670"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationsPageTests.cs",
@@ -51,5 +51,6 @@
   ],
   "dependencyPins": [],
   "ownerManifestSha256": "77d5bf40c002032c5981df1457cd3c1b17710fea361967dcb6039ba967caf114",
-  "correctionManifestSha256": "236ea399381f7a16ae3def6fc825d3469662a3b8cec2042fd1fe89067e110d2c"
+  "correctionManifestSha256": "236ea399381f7a16ae3def6fc825d3469662a3b8cec2042fd1fe89067e110d2c",
+  "strictCauseManifestSha256": "e073d2f0c347a7895276d1b5895938e9ab008805b24a95220ead3f0d54fa0358"
 }
