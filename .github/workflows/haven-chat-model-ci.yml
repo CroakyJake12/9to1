@@ -54,6 +54,7 @@ jobs:
           cp /usr/share/doc/ges1.0-tools/copyright artifacts/media11-owning/native-ges/official-copyright.txt
           printf 'ASTRA_GES_EXECUTABLE=%s\n' "$(command -v ges-launch-1.0)" >> "$GITHUB_ENV"
           printf 'ASTRA_MOTION_FIXTURE=%s/.github/validation/motion-native-input.webm\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+          printf 'ASTRA_GSTREAMER_FIXTURE=%s/.github/validation/wave-files-input.wav\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
       - name: Validate identical joined program
         env:
           EXPECTED_COMMIT: ${{ inputs.expected_commit }}

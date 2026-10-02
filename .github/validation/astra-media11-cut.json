@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "ad48b0ed7ec32f61427abe6ce2e8262d7bff6508",
+  "baselineCommit": "aa20e5a86174c31b9f085f8681b4652e4a82192b",
   "programTree": "ec0ad519dab6c4e4bb978886426560e233c3803f",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
     {
@@ -81,6 +81,13 @@
       "object": "3ee50bb6cacc951f00255f90d760632351d97829",
       "bytes": 42829,
       "sha256": "b0d01bacaffc0343f3446734ff430fe429faf65750811defd686df8f4ba5861e"
+    },
+    {
+      "path": ".github/validation/wave-files-input.wav",
+      "mode": "100644",
+      "object": "3dea0a1c26c71465b4620a641722ea1f835ac6b5",
+      "bytes": 20524,
+      "sha256": "9da9b84e0a981cc4fb05835ef0b3bcd77242794becf20f305e919b751fd24e00"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -218,9 +225,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "2dece94b0c91543da549b52b2ca42758a97eac4b",
-      "bytes": 3493,
-      "sha256": "1f9ab9d02529ffd4e7ff7991843cfab349383e449616ac4cafa8dc801d73a27c"
+      "object": "a01ab499f032ef13661315849fa6e10a057cccf9",
+      "bytes": 3618,
+      "sha256": "e2df780155e31fe5688ea4a33c457d8c7daa9659712f3c5ca47ddb335e2471f7"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -64402,7 +64409,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-media11-cut.json",
-  "limits": "Actual official UbuntuGES provisioning probe correction only: unsupported ges-launch --version becomes official donor-supported --ges-version (ges.c270\u2013272,308\u2013311; launcher1423); version also recorded independently by official dpkg package/version/architecture and executable owner, no inferred engine version text. Same actual11 producttree/allWave4/fullMotion2/fullPlay+everyfullcurrent regression/resource/source/producers/restore/compiled/TRX and genuineGESSHA guards unchanged. No SDK/native rerun locally/no fake renderer. Unexecuted.",
+  "limits": "Actual aa20 originalfailure explicitlymissingASTRA_GSTREAMER_FIXTURE; metadata-only exact retained20524byte physicalPCM16WAV source+environment supplied. All original Wave4/Motion2/Play/fullcurrentregression/resource/producers/restore/source/compiled nativeGES guards retained; productsemantic unchanged. Fixturevalidation only, no externalrecording/productionaudio parity. Unexecuted/no localSDK/native.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-media11-owning-source-plan01/manifest.json",
@@ -64435,6 +64442,26 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/media11-root15-owning01/actual-capture-11220857455/root-capture.json",
       "sha256": "fb352597291fbbfac65eaf85fd872f5030e5adcc89b3b9d9eccd2bbf108fc999"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-media11-ges-version-probe-corrector03/actual-capture-11221889006/root-capture.json",
+      "sha256": "be2f8925df231649a04f534d462e467962feaba1a074c7fdf2a3c65854773d19"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-media11-ges-version-probe-corrector03/actual-capture-11222368252/root-capture.json",
+      "sha256": "b5124ee9a3b63b6ee3a9abc80a8ece89c7cdbe0a17718648ab26b0af9f6bfe39"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-media11-ges-version-probe-corrector03/actual-capture-11222233396/root-capture.json",
+      "sha256": "710b2fb2cac880109d707fb66a742ee2b10bb4b6ee3219270459b1f06b99105a"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-media11-wave-fixture-corrector04/fixture-provenance.json",
+      "sha256": "d1ebf5cc1ce8dc4017bf190cedddc62a6e98c1a8cb9347dabd335f6de7137587"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
     }
   ],
   "sharedCakeIdContract": null
