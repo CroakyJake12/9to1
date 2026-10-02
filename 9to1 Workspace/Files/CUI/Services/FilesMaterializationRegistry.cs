@@ -80,6 +80,15 @@ public sealed class FilesMaterializationRegistry
 		return item;
 	}
 
+	/// <summary>Read an existing registry only; absence never creates a materialization or registry.</summary>
+	public async Task<FilesMaterializedFile?> GetExistingByItemIdAsync(HostedItemId itemId, CancellationToken cancellationToken = default)
+	{
+		var state = await _store.ReadExistingAsync(cancellationToken).ConfigureAwait(false);
+		var item = state.ItemsByPath.Values.SingleOrDefault(entry => entry.ItemId == itemId);
+		if (item is not null) ValidateLocalPath(item.LocalPath);
+		return item;
+	}
+
 	public async Task<FilesMaterializedFile?> GetByItemIdAsync(HostedItemId itemId, CancellationToken cancellationToken = default)
 	{
 		FilesMaterializationRegistryState state = await _store.ReadAsync(cancellationToken).ConfigureAwait(false);

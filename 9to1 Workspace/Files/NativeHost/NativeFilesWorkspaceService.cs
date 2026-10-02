@@ -52,6 +52,23 @@ public sealed class NativeFilesWorkspaceService(IHomeCoreStateStore home, HomeLo
         };
     }
 
+    internal bool IsOriginalReadComposition(HomeLocalProfileIdentity expectedProfiles, IResourceStoreOwnershipAuthority expectedOwnership) =>
+        ReferenceEquals(profiles, expectedProfiles) && HomeLocalReadComposition.IsBound(
+            home as FileHomeCoreStateStore, expectedProfiles, expectedOwnership as HomeResourceStoreOwnershipAuthority);
+
+    internal ValueTask<Func<CancellationToken, ValueTask<bool>>> CaptureOriginalReadConfigurationCheckAsync(
+        NativeFilesWorkspace original, CancellationToken cancellationToken)
+    {
+        // Provider alone cannot lend provenance to a caller's foreign directory/materialization services.
+        if (!_cache.Values.Any(cached => ReferenceEquals(cached.Provider, original.Provider)
+            && ReferenceEquals(cached.Directories, original.Directories)
+            && ReferenceEquals(cached.Materializations, original.Materializations)
+            && cached.Actor == original.Actor
+            && JsonSerializer.Serialize(cached.Configuration) == JsonSerializer.Serialize(original.Configuration)))
+            throw new UnauthorizedAccessException("Original Files workspace composition is unavailable.");
+        return CaptureConfigurationCheckAsync(original, cancellationToken);
+    }
+
     internal Task<NativeFilesWorkspace?> GetConfiguredAsync(CancellationToken cancellationToken) =>
         GetConfiguredAsync(null, cancellationToken);
 
@@ -214,6 +231,33 @@ public sealed class NativeFilesWorkspaceAuthority(NativeFilesWorkspaceService wo
             throw new UnauthorizedAccessException("Home ownership changed while capturing commit authority.");
         return new FilesCommitAuthorityGuard(expectedActor.ActorId, async token => isHostWriteAvailable() &&
             await configurationCurrent(token).ConfigureAwait(false) && await receipts.IsCurrentAsync(captured, expectedActor, token).ConfigureAwait(false));
+    }
+
+    // Original read observation only. Capture uses the privately cached provider/configuration;
+    // evaluation never calls GetCurrent or re-resolves a replacement provider.
+    internal async ValueTask<Func<CancellationToken, ValueTask<bool>>> CaptureOriginalReadCheckAsync(
+        NativeFilesWorkspace original, Func<bool> originalLifetime, CancellationToken cancellationToken)
+    {
+        bool Alive() { try { return originalLifetime(); } catch { return false; } }
+        if (!workspaces.IsOriginalReadComposition(profiles, ownership))
+            throw new UnauthorizedAccessException("Original Files Home composition is unavailable.");
+        if (!Alive() || await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != original.Actor
+            || ownership is not IResourceStoreOwnershipReceiptAuthority receipts)
+            throw new UnauthorizedAccessException("Original Files read unavailable.");
+        var configuration = await workspaces.CaptureOriginalReadConfigurationCheckAsync(original, cancellationToken).ConfigureAwait(false);
+        if (!Alive() || !await configuration(cancellationToken).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("Original Files configuration changed.");
+        var captured = await receipts.GetVerifiedAsync("files", original.Configuration.StoreId.ToString("D"), cancellationToken).ConfigureAwait(false);
+        if (captured?.Receipt is null || captured.ProfileId != original.Actor.ProfileId || captured.ResourceKind != "files"
+            || captured.StoreId != original.Configuration.StoreId.ToString("D")
+            || !Alive() || !await configuration(cancellationToken).ConfigureAwait(false)
+            || !await receipts.IsCurrentAsync(captured, original.Actor, cancellationToken).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("Original Files ownership changed.");
+        return async token => Alive() && await profiles.GetCurrentAsync(token).ConfigureAwait(false) == original.Actor
+            && await configuration(token).ConfigureAwait(false)
+            && await receipts.IsCurrentAsync(captured, original.Actor, token).ConfigureAwait(false)
+            && await configuration(token).ConfigureAwait(false) && Alive()
+            && await profiles.GetCurrentAsync(token).ConfigureAwait(false) == original.Actor;
     }
 
     public Task<NativeFilesWorkspace?> GetCurrentAsync(CancellationToken cancellationToken = default) =>

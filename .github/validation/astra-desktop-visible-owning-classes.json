@@ -1,0 +1,1429 @@
+{
+  "status": "FULL WHOLE CLASS CURRENT ROOT21 SOURCE INVENTORY, UNRUN",
+  "classes": [
+    {
+      "class": "PlannerAssignmentMutationTests",
+      "fullClass": "Haven.Application.Tests.PlannerAssignmentMutationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/PlannerAssignmentMutationTests.cs",
+      "sha256": "62b763d731db0b609c713091ebad56098525a1059569c0eeeeebf37d4605d9b0",
+      "namespace": "Haven.Application.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteNamedStyleOperationsTests",
+      "fullClass": "Haven.Application.Tests.WriteNamedStyleOperationsTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/WriteNamedStyleOperationsTests.cs",
+      "sha256": "14b672630f80455b052179d95a01ccb510cd8837ef3dc85845bf37f0452b61f8",
+      "namespace": "Haven.Application.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "CanvasDurableHistoryTests",
+      "fullClass": "Haven.Core.Tests.CanvasDurableHistoryTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",
+      "sha256": "6b85cdbb5e3d8694221ac884152c1daee3b1bf67548db3e0705c298d6811b0a9",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DataJunctionTableDesignTests",
+      "fullClass": "Haven.Core.Tests.DataJunctionTableDesignTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataJunctionTableDesignTests.cs",
+      "sha256": "99d1d550af52d513f3d6d0f6f117af9efc3252da357897749adc28044b49bef0",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesAdvancedServicesTests",
+      "fullClass": "Haven.Core.Tests.NotesAdvancedServicesTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/NotesAdvancedServicesTests.cs",
+      "sha256": "2d35029c50fd51e8abd602fadc82008bce743ceca12ca857f3bd347027b4efbe",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesProductivityTests",
+      "fullClass": "Haven.Core.Tests.NotesProductivityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/NotesProductivityTests.cs",
+      "sha256": "dd8bc5b2b67735497350b8a8b0ba7be6a9bc299df1ff1777856c65f792ff5912",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerAvailabilityTests",
+      "fullClass": "Haven.Core.Tests.PlannerAvailabilityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PlannerAvailabilityTests.cs",
+      "sha256": "6bc50443fe0ad5ff1bb002f3c800113e6e6fe9a63a1d0fee25d78b91974faa3e",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerCountdownTests",
+      "fullClass": "Haven.Core.Tests.PlannerCountdownTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PlannerCountdownTests.cs",
+      "sha256": "f975d0dd213dd4d48ea88faf0227a8b3fcf3a7377d516268c142d5ef044144c3",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerDayTimelineTests",
+      "fullClass": "Haven.Core.Tests.PlannerDayTimelineTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PlannerDayTimelineTests.cs",
+      "sha256": "5d5cfb331ed6ed14f1c22bf9bb69559a7028b9b84b90fa2f33bc919fb337a9b9",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerRecurrenceTests",
+      "fullClass": "Haven.Core.Tests.PlannerRecurrenceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PlannerRecurrenceTests.cs",
+      "sha256": "d5c841801fe30daa7d260890861e1d66d361b0d4ba9812f2539c184718416c6e",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerStructuredEntitiesTests",
+      "fullClass": "Haven.Core.Tests.PlannerStructuredEntitiesTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PlannerStructuredEntitiesTests.cs",
+      "sha256": "04dc19b16ace8eb96a70fd822c3fdb4b66f27a84f2c6c0e6a7c46cab6f668684",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerStudyAssignmentTests",
+      "fullClass": "Haven.Core.Tests.PlannerStudyAssignmentTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PlannerStudyAssignmentTests.cs",
+      "sha256": "4f4687f4824237e756f3b60c58adadd6bf859e9514938d2befeb780c00d90779",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PresentStructuredObjectTests",
+      "fullClass": "Haven.Core.Tests.PresentStructuredObjectTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/PresentStructuredObjectTests.cs",
+      "sha256": "85bbc0daf3b6b7b081d75e3d40bf10e2790520874a8cb7548926da3e338baf2c",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "QuickSettingsSliceTests",
+      "fullClass": "Haven.Core.Tests.QuickSettingsSliceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/QuickSettingsSliceTests.cs",
+      "sha256": "0da97906e401afc078a11d1b8d2e1038e6e59aa16b48c3e337f1ba62ee0fd5b1",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "StudyPlannerServiceTests",
+      "fullClass": "Haven.Core.Tests.StudyPlannerServiceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/StudyPlannerServiceTests.cs",
+      "sha256": "87d3922e8bcfbcbd92c733f66799c0d4f09fa6b63ca15b525f41d12fb13a79bc",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "ToolAvailabilityPlannerTests",
+      "fullClass": "Haven.Core.Tests.ToolAvailabilityPlannerTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ToolAvailabilityPlannerTests.cs",
+      "sha256": "66a91ec12cb05c7599b88d8fcdf861936a6216f74d15ef5ccdb778d48b457fb6",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "VersionedAtomicSettingsStoreTests",
+      "fullClass": "Haven.Core.Tests.VersionedAtomicSettingsStoreTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/VersionedAtomicSettingsStoreTests.cs",
+      "sha256": "3e10dd1c42d9f64abfadaa14b86f9f41463329e9ca3d39ae40f3995b3ac43c92",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "ArtifactAiContextTests",
+      "fullClass": "Haven.Desktop.Tests.ArtifactAiContextTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ArtifactAiContextTests.cs",
+      "sha256": "4b455118fda5f17365007f31a440cffc9890bcbf66e684a584d6d41af4c5b45c",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "BoardsNativePageMovementTests",
+      "fullClass": "Haven.Desktop.Tests.BoardsNativePageMovementTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsNativePageMovementTests.cs",
+      "sha256": "57b2c86c6c6c4a0bcb3173d0325a6b309920e1885f45b851f424f64319e5b960",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "BoardsNotebookSwitchSnapshotTests",
+      "fullClass": "Haven.Desktop.Tests.BoardsNotebookSwitchSnapshotTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsNotebookSwitchSnapshotTests.cs",
+      "sha256": "c94c70d42a9ded0aa580846e41c99c10e33cb10f171bb889df0eb98780b37aab",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "BoardsRecoveryAcceptanceTests",
+      "fullClass": "Haven.Desktop.Tests.BoardsRecoveryAcceptanceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsRecoveryAcceptanceTests.cs",
+      "sha256": "a048c2ba2e0883339c6b9deaa7212729dc0bd5ed23b111cc72c40d37b9f0533b",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "BoardsSearchablePickerTests",
+      "fullClass": "Haven.Desktop.Tests.BoardsSearchablePickerTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsSearchablePickerTests.cs",
+      "sha256": "16752329b0f1b534eb4a1a897264cc88e2dbd5634a94b4f2104ea97429ec79bf",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "BoardsWorkspaceTests",
+      "fullClass": "Haven.Desktop.Tests.BoardsWorkspaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/BoardsWorkspaceTests.cs",
+      "sha256": "1e9d53b70e25dc0a426a2d1c3df47bbcb0bdf56eda912d1ecda7c3008d4ee4a8",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "ContextualAiCuiSurfaceTests",
+      "fullClass": "Haven.Desktop.Tests.ContextualAiCuiSurfaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
+      "sha256": "567147d1f29ca59bc75281c88aa1721afb9f0d692cefa93c6b6812e312f21141",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DashboardEditPlannerTests",
+      "fullClass": "Haven.Desktop.Tests.DashboardEditPlannerTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DashboardEditPlannerTests.cs",
+      "sha256": "15e36a7e140b668b6f56e80086a9a2fb8ffff7a3076297181cd1c75b3f0c27a5",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DataDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataDocumentWorkspaceHostTests.cs",
+      "sha256": "a66c2c9c0540f1862b9e813aaf65e545aaa06f196d2631e201402e3b3d8f9996",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FileMailDraftStoreTests",
+      "fullClass": "Haven.Desktop.Tests.FileMailDraftStoreTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FileMailDraftStoreTests.cs",
+      "sha256": "6f75849582ced5a540f8d9ee9e72cebd08ebeac26d084e48b96c363d5d1a5427",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesArtifactIdentityTests",
+      "fullClass": "Haven.Desktop.Tests.FilesArtifactIdentityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesArtifactIdentityTests.cs",
+      "sha256": "63d166eea2214a8673e56d6df83f7a61a2bd3e23a7a1089aa110540b82e482f2",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesCompatibilityPackageContentSourceTests",
+      "fullClass": "Haven.Desktop.Tests.FilesCompatibilityPackageContentSourceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "sha256": "97bf566c0cd09b2620fed3a6a042218894de89080ce0f05b6e5bed1f5e839d51",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesExistingStoreHostAuthorityTests",
+      "fullClass": "Haven.Desktop.Tests.FilesExistingStoreHostAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "sha256": "f543be9db16d9c4ce51da890896380bac4db5c30193b203e94917754bbf206d6",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesHistoricalContentTests",
+      "fullClass": "Haven.Desktop.Tests.FilesHistoricalContentTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesHistoricalContentTests.cs",
+      "sha256": "ff146baaa534019f90e3ade0bc8fa0b57e8924cb5f4f81b6cea15d94213ddfa8",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesMailAttachmentContentTests",
+      "fullClass": "Haven.Desktop.Tests.FilesMailAttachmentContentTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMailAttachmentContentTests.cs",
+      "sha256": "e6621fc7df2ab5fdeb86d42cedb16369ba9e6d462972c0a41a0c017eae918040",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesMediaAssetSourceResolverTests",
+      "fullClass": "Haven.Desktop.Tests.FilesMediaAssetSourceResolverTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMediaAssetSourceResolverTests.cs",
+      "sha256": "2b61eb1bfd1880a33bfa484bb2e508614958c79f71af4210e9389a55b781021c",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesNativeBrowserAuthorityTests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "sha256": "48d095641a6328aee39b053417ec527428bacb7760108280fdb742f4a68c69e4",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesNativeBrowserSurfaceTests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "sha256": "7a419351e0fca150127511f870c842705e99c7903df30617936919492e89afb6",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesNativeChildFolderReadTests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeChildFolderReadTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs",
+      "sha256": "deafffd9402fe03385d6dba4c4152e3222a475e124db653cf248b46f0f1bf4fe",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesNativeHostCompositionTests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeHostCompositionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeHostCompositionTests.cs",
+      "sha256": "c482f6c160b8ca00f38ed8c3eedeb0fc50c922769830a7472820bdffe81b36fd",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesOriginalOwnerCompositionTests",
+      "fullClass": "Haven.Desktop.Tests.FilesOriginalOwnerCompositionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesOriginalOwnerCompositionTests.cs",
+      "sha256": "7ce0694150ceb07606633072e42b81ffc46ef3da1dd8be952835abe4f0cecad0",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "FilesStoreEvidenceTests",
+      "fullClass": "Haven.Desktop.Tests.FilesStoreEvidenceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesStoreEvidenceTests.cs",
+      "sha256": "f0455a7789926cfe4425a6fd308300462e5fb78da48111ee6481b2bab001bba1",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "LessonSettingsPageTests",
+      "fullClass": "Haven.Desktop.Tests.LessonSettingsPageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/LessonSettingsPageTests.cs",
+      "sha256": "4a7aecfe26e9606e7dbeea967915db3f0033f2758c4c598dfe7f3c2deef39cdf",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailCanonicalFilesAttachmentTests",
+      "fullClass": "Haven.Desktop.Tests.MailCanonicalFilesAttachmentTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailCanonicalFilesAttachmentTests.cs",
+      "sha256": "17697831aec6e9759497673bc643d155fcb0f47c49ef5cb95ea6ab491a507420",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailDraftRecoveryPolicyTests",
+      "fullClass": "Haven.Desktop.Tests.MailDraftRecoveryPolicyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailDraftRecoveryPolicyTests.cs",
+      "sha256": "0328e94c52b2c370f26f3d7099338dcf087b0267f01a73006080c57cede6b600",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailMailboxReadLifetimeTests",
+      "fullClass": "Haven.Desktop.Tests.MailMailboxReadLifetimeTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailMailboxReadLifetimeTests.cs",
+      "sha256": "9d2378cac398c55ebbfd6956ae90855e917f7693c857f5f4b477847a04582563",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailReadingPaneChoiceTests",
+      "fullClass": "Haven.Desktop.Tests.MailReadingPaneChoiceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailReadingPaneChoiceTests.cs",
+      "sha256": "224da4e9786a372cabe34302ba4566b8bb29be2b105172b19884d4e14f46bb21",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailReadingPanePreferenceTests",
+      "fullClass": "Haven.Desktop.Tests.MailReadingPanePreferenceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailReadingPanePreferenceTests.cs",
+      "sha256": "ea61197b533e509113ec4344802ee5d46715944027b3078357c8b0b5772e3f1a",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailResponsiveLayoutPolicyTests",
+      "fullClass": "Haven.Desktop.Tests.MailResponsiveLayoutPolicyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailResponsiveLayoutPolicyTests.cs",
+      "sha256": "4b4054ef64f26b3e2ee18c527d8bde2e7ef5df1b19106ed42ecd51d454dcc803",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailSelectedThreadLifetimeTests",
+      "fullClass": "Haven.Desktop.Tests.MailSelectedThreadLifetimeTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MailSelectedThreadLifetimeTests.cs",
+      "sha256": "1df00924cf7519639839a84d35a9b8001de83ac7fc100a9027cf0661a7e694a0",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MapsPlannerCommitAdmissionTests",
+      "fullClass": "Haven.Desktop.Tests.MapsPlannerCommitAdmissionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsPlannerCommitAdmissionTests.cs",
+      "sha256": "68c3ed6eff4e53aa360a4837f938d2dcc809b554de9d90446ceabe96fd153fec",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NativeFilesMediaOriginalStoreTests",
+      "fullClass": "Haven.Desktop.Tests.NativeFilesMediaOriginalStoreTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesMediaOriginalStoreTests.cs",
+      "sha256": "1f152922cd67edf5f0bf0707a22aaeb11d7d47b1770bc9c01a6c67c3c5615798",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NativeFilesSetupCuiSurfaceTests",
+      "fullClass": "Haven.Desktop.Tests.NativeFilesSetupCuiSurfaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesSetupCuiSurfaceTests.cs",
+      "sha256": "06d8378d21b903e00c965d6d72a5c8a1f8f144fcbd4728a7401ab196b775b10f",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NativeFilesWorkspaceServiceTests",
+      "fullClass": "Haven.Desktop.Tests.NativeFilesWorkspaceServiceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesWorkspaceServiceTests.cs",
+      "sha256": "90be6702d475d2831a230b9792d8492a533657304891d8d44c958c714e3dabbf",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NativePlanPageTests",
+      "fullClass": "Haven.Desktop.Tests.NativePlanPageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativePlanPageTests.cs",
+      "sha256": "acd651d22cfb821843904e2e555a5b5849c1d8741a78e3d898b938c59aa5fc55",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NativePlanWeekTests",
+      "fullClass": "Haven.Desktop.Tests.NativePlanWeekTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativePlanWeekTests.cs",
+      "sha256": "205c7a5ad590878807ebebe1b2ff7362a479b7a975abb162328e774af39d9167",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NativePresentationRoutePolicyTests",
+      "fullClass": "Haven.Desktop.Tests.NativePresentationRoutePolicyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativePresentationRoutePolicyTests.cs",
+      "sha256": "aa5925c86d33269f9a4eb6c8725b86d5509ae39f7b4bf5e0931f5c5b9ca61168",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesAccessibilityTests",
+      "fullClass": "Haven.Desktop.Tests.NotesAccessibilityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesAccessibilityTests.cs",
+      "sha256": "d1313ce8a35e9f54a0767747ec1be68fc15ff1e01b315f68ff5a881fa2f5336f",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesBlockInspectorTests",
+      "fullClass": "Haven.Desktop.Tests.NotesBlockInspectorTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesBlockInspectorTests.cs",
+      "sha256": "f3b6ff67de4720d61dd97f9487ec779bbea59890b7615a80c3e2d511696b3d52",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesCodeInspectorTests",
+      "fullClass": "Haven.Desktop.Tests.NotesCodeInspectorTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesCodeInspectorTests.cs",
+      "sha256": "eb90013739ef66842b00cfe94c4ccb1365aa5353c94ab1331f5444d01dbab4f2",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesDictationControllerTests",
+      "fullClass": "Haven.Desktop.Tests.NotesDictationControllerTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesDictationControllerTests.cs",
+      "sha256": "42ac9c62a02b058fa0535b43da0ae74049bade7decbaca8c762c94fda3fb2c27",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesDictationViewTests",
+      "fullClass": "Haven.Desktop.Tests.NotesDictationViewTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesDictationViewTests.cs",
+      "sha256": "cac9d2d32fdb1c484c9a12d3be8b4ced4d2ef8952d442b8d89e375b9091782ac",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesMediaAiReviewTests",
+      "fullClass": "Haven.Desktop.Tests.NotesMediaAiReviewTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesMediaAiReviewTests.cs",
+      "sha256": "b7d20474366bcdddd545c259142a1e187250298552a12258aa29c3f3403040ed",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesMediaAiViewTests",
+      "fullClass": "Haven.Desktop.Tests.NotesMediaAiViewTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesMediaAiViewTests.cs",
+      "sha256": "36cce23cd9ff095d35517ab5d4a36013525b3f2352ed9bd04234e96384a67c3a",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesReadAloudControllerTests",
+      "fullClass": "Haven.Desktop.Tests.NotesReadAloudControllerTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesReadAloudControllerTests.cs",
+      "sha256": "4203920d3cfb3a62eba734dcc473afba109b1c2cd85e1052678b3d90b1365e72",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesWorkspaceTests",
+      "fullClass": "Haven.Desktop.Tests.NotesWorkspaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NotesWorkspaceTests.cs",
+      "sha256": "57f443bc01fafec236b6879eb845e92834693fe3a5be2abe5d0a7d929d3d617b",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlanHavenSceneTests",
+      "fullClass": "Haven.Desktop.Tests.PlanHavenSceneTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PlanHavenSceneTests.cs",
+      "sha256": "c323ae882ecceaf1d14178448f334624c82645230fdc5e87bdfabfd3942ed8b6",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerJourneyCommitAuthorityTests",
+      "fullClass": "Haven.Desktop.Tests.PlannerJourneyCommitAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PlannerJourneyCommitAuthorityTests.cs",
+      "sha256": "2f4e583622f603bddd5b7eb876b154866f0065ecd1f28bf5a9658e5f207de9e8",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerLocalStoreEvidenceProviderTests",
+      "fullClass": "Haven.Desktop.Tests.PlannerLocalStoreEvidenceProviderTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PlannerLocalStoreEvidenceProviderTests.cs",
+      "sha256": "a3f4a1d5782a151f1d5c7d2f27156f755a78391abd9c297d3d4470a21f84ce00",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerNativeEditorSaveTests",
+      "fullClass": "Haven.Desktop.Tests.PlannerNativeEditorSaveTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PlannerNativeEditorSaveTests.cs",
+      "sha256": "436105767c17d55fd8822c11a9971d47d5e99541e8dc8df5a2a394ff697f99a9",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PresentAdvancedAuthoringTests",
+      "fullClass": "Haven.Desktop.Tests.PresentAdvancedAuthoringTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentAdvancedAuthoringTests.cs",
+      "sha256": "bbe84fc9b0eb8097fab4e4748c8e78cf50f98bbfa4e9f205f098e5952ed890fd",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PresentLibraryTitleSearchTests",
+      "fullClass": "Haven.Desktop.Tests.PresentLibraryTitleSearchTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentLibraryTitleSearchTests.cs",
+      "sha256": "ee588891be3d9a371a539164abc16c0183584d784803617c411cc21ad632e67b",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PresentPageTests",
+      "fullClass": "Haven.Desktop.Tests.PresentPageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentPageTests.cs",
+      "sha256": "1d4a8e01c618fcb00d2ac7b4224371770af24267c80756aee5d06a5ee9b8ab1e",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PresentThumbnailNavigatorKeyboardTests",
+      "fullClass": "Haven.Desktop.Tests.PresentThumbnailNavigatorKeyboardTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentThumbnailNavigatorKeyboardTests.cs",
+      "sha256": "6b0cce368f45b3b4ab82c27be927794bf53801ec11b0a663fa45b950499b8fcf",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SettingsHavenSceneTests",
+      "fullClass": "Haven.Desktop.Tests.SettingsHavenSceneTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SettingsHavenSceneTests.cs",
+      "sha256": "032ae9531ee65e082e8350d921d1f805d4c4fb9ad2cf2b4061679404101654ef",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SettingsPersonalisationSearchTests",
+      "fullClass": "Haven.Desktop.Tests.SettingsPersonalisationSearchTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SettingsPersonalisationSearchTests.cs",
+      "sha256": "6f8f5ae83009b0ab5dfd87ace16dd49159390dd1a0a3363c720bc5bacb8b311e",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SpaceEditPlannerTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
+      "sha256": "7cbddd9b84d7b4f458a87d9282333747544020f1d55097e383322ddb0b202d65",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SpaceFilesCanvasJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesCanvasJourneyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesCanvasJourneyTests.cs",
+      "sha256": "e14bb8f7733136c509b9819e8f00c992dd47a1ec3793f97109effb6e5e8f1820",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SpaceFilesGamesJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesGamesJourneyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesGamesJourneyTests.cs",
+      "sha256": "1bd7c637a05425ef03fedcc2bd215dbf773abcd2142080062e49c3a3d3af8600",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SpaceFilesPictureJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesPictureJourneyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesPictureJourneyTests.cs",
+      "sha256": "60318f8a2b16188708579534ee53a9c192f1ebea3f6cd6f79891ec2ae1079fd1",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "SpaceFilesWriteJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesWriteJourneyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesWriteJourneyTests.cs",
+      "sha256": "3c8a849f7b06ea8dd36069509662918ed0bd46c3d02d8c9465f260a45eeb59f6",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteAppSurfaceTests",
+      "fullClass": "Haven.Desktop.Tests.WriteAppSurfaceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteAppSurfaceTests.cs",
+      "sha256": "8d4cbe0ebee9b61c5cc6e6c069d1075d45dd97819caed9a8eb36a0bf7ff299b1",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteDirectAuthoringTests",
+      "fullClass": "Haven.Desktop.Tests.WriteDirectAuthoringTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteDirectAuthoringTests.cs",
+      "sha256": "7f7a329abc4e52c9975c3a5240b93353fd2d5234980d760d49a90ef62bad5d7d",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteFilesArtifactBridgeTests",
+      "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactBridgeTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteFilesArtifactBridgeTests.cs",
+      "sha256": "9389639759a458044f6a326c1b9d6dd09f6497169296c1c922f21c3477788798",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteFilesArtifactSnapshotTests",
+      "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactSnapshotTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteFilesArtifactSnapshotTests.cs",
+      "sha256": "f2c269791e42d47e49b81295d14a353f503d60f6e0c3f203cec63c33e9ccc2a6",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteHomeNotesOperationTests",
+      "fullClass": "Haven.Desktop.Tests.WriteHomeNotesOperationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteHomeNotesOperationTests.cs",
+      "sha256": "1426d6eddf8da25287deb14ddab918589ee39b47dca8ec1ef77588f327bb4868",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WritePageTests",
+      "fullClass": "Haven.Desktop.Tests.WritePageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WritePageTests.cs",
+      "sha256": "5f53204badf8db28c306c1f2dc1cda6e7386bc0040836992c750772fc7d647a4",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteRibbonLayoutTests",
+      "fullClass": "Haven.Desktop.Tests.WriteRibbonLayoutTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteRibbonLayoutTests.cs",
+      "sha256": "568b4d56248af8351150dc6df71a774f45351d45a73d9996fb7a6df7c931744a",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteSaveSnapshotTests",
+      "fullClass": "Haven.Desktop.Tests.WriteSaveSnapshotTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteSaveSnapshotTests.cs",
+      "sha256": "5aa5a4acbd8745d1cd970c059bcea843e83ed9ea150ee50f153540e841ccb00f",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "AppLibraryAtomicWriteTests",
+      "fullClass": "Haven.Infrastructure.Tests.AppLibraryAtomicWriteTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/AppLibraryAtomicWriteTests.cs",
+      "sha256": "3e9e532f41a5c5146dc77a49f1f3b859fbac916329379cfe2f2ff33bd95c2d72",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DataLocalStoreAuthorityTests",
+      "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "sha256": "41bdd502610227cc0bee81225d2f185be8e876a236eb0e10da5df0808515b563",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeDataConversationRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "LibreOfficeWriteEngineOptionsTests",
+      "fullClass": "Haven.Infrastructure.Tests.LibreOfficeWriteEngineOptionsTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/LibreOfficeWriteEngineOptionsTests.cs",
+      "sha256": "62162c89edd06ffd62b3e0d3664cfa04d16f90c47ad26bbc0b4335537081f9ad",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MapsPlannerJourneyTests",
+      "fullClass": "Haven.Infrastructure.Tests.MapsPlannerJourneyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/MapsPlannerJourneyTests.cs",
+      "sha256": "4c1c670323a170c5a1280da7e9e90e95c453ea475f33383b4438ef32777b1d53",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesIndependentEditorRevisionTests",
+      "fullClass": "Haven.Infrastructure.Tests.NotesIndependentEditorRevisionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesIndependentEditorRevisionTests.cs",
+      "sha256": "64da2b4288bd1c94be2ec1843cd69d4cdd7240f3b757a9b48f194bb40c7806d4",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesMediaAssetServiceTests",
+      "fullClass": "Haven.Infrastructure.Tests.NotesMediaAssetServiceTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesMediaAssetServiceTests.cs",
+      "sha256": "7d461650b31f7dd3ae55176798cc18c52c05f492b5360a8db84dd328688bedec",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesMigrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.NotesMigrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesMigrationTests.cs",
+      "sha256": "ecf4b07a19a67ffa5c2d2bb65edb79e836a07f429ec3c6e50a0d712107837838",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesProductionTests",
+      "fullClass": "Haven.Infrastructure.Tests.NotesProductionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesProductionTests.cs",
+      "sha256": "025c64a40983e5575e47e271e227c0f773c7fa8ce5f02951ca90780b1094b87c",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "NotesStressTests",
+      "fullClass": "Haven.Infrastructure.Tests.NotesStressTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/NotesStressTests.cs",
+      "sha256": "d5af9a544f6ffe4151a525a210f9f2a711d079689147f5d25e8789891b807baf",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerRepositoryTests",
+      "fullClass": "Haven.Infrastructure.Tests.PlannerRepositoryTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerRepositoryTests.cs",
+      "sha256": "6b885e43b9d8fb6ba7dbfe055c45695538caa7d6332441915a3ecedecee05352",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerServiceRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.PlannerServiceRegistrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerServiceRegistrationTests.cs",
+      "sha256": "72b0a95d4e10761b8ee351a93560c1fe5e8f1c314200bd1a7c1f5b2d271cff12",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PlannerStructuredConcurrencyTests",
+      "fullClass": "Haven.Infrastructure.Tests.PlannerStructuredConcurrencyTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PlannerStructuredConcurrencyTests.cs",
+      "sha256": "ecf3b305522db8b8fdec9cad3d1d3845ef439f437f410aaafc8739cea50864e2",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "PresentProductionTests",
+      "fullClass": "Haven.Infrastructure.Tests.PresentProductionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs",
+      "sha256": "9fd61e3f3266c8d67ab7b24a00e44a4eb854dde6914e6c09041542016444d38f",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteDocxFidelityTests",
+      "fullClass": "Haven.Infrastructure.Tests.WriteDocxFidelityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteDocxFidelityTests.cs",
+      "sha256": "0ff96df4fd4068bf9f4512d51b302e9fcad93699eb85d193bd8980f0fa3c4259",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteNativeDocumentPackageStoreTests",
+      "fullClass": "Haven.Infrastructure.Tests.WriteNativeDocumentPackageStoreTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteNativeDocumentPackageStoreTests.cs",
+      "sha256": "f1baa6a612ee8a7dbf77e94c18d528a5ed1b403fd13d8f9c4f2c3647bb281303",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteReviewedAiAndPageBreakTests",
+      "fullClass": "Haven.Infrastructure.Tests.WriteReviewedAiAndPageBreakTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteReviewedAiAndPageBreakTests.cs",
+      "sha256": "0d73cc9a53dfb8645211d1aa75ede4c0f43bafb32d774f1c9131471a69160527",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteSelectionFormattingTests",
+      "fullClass": "Haven.Infrastructure.Tests.WriteSelectionFormattingTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteSelectionFormattingTests.cs",
+      "sha256": "713f8415101f312b16868371a2520f2ed7567f1315950541f778795dc1ed60f4",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteTableEditingTests",
+      "fullClass": "Haven.Infrastructure.Tests.WriteTableEditingTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteTableEditingTests.cs",
+      "sha256": "1251cc4a94b3fe99de47a91f3c321c0273ac763ab577fdb0ff462fb1bd831eb5",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WriteWordProcessorTests",
+      "fullClass": "Haven.Infrastructure.Tests.WriteWordProcessorTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteWordProcessorTests.cs",
+      "sha256": "ff1cce599030a500b763b19de53dc6ebb7c8b3aff00fb6cee73ffa5ad5172ece",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "StudioRegisteredToolEvidenceTests",
+      "fullClass": "HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests",
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
+      "sha256": "a2dbc881dafd126e9d019ee43ae60f005e29821a33701ce98469b3dd6133e3f9",
+      "namespace": "HavenOS.AIStudio.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "AgentPresentationTests",
+      "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+      "path": "9to1 Workspace/Home/Tests/AgentPresentationTests.cs",
+      "sha256": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DenAttachmentCommitAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs",
+      "sha256": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DenCommitAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenCommitAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs",
+      "sha256": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DenModelInstallationAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenModelInstallationAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs",
+      "sha256": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DenNamespaceAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs",
+      "sha256": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DenReadLifetimeTests",
+      "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+      "path": "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs",
+      "sha256": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "DenSyncAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs",
+      "sha256": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeActualPersistedWriteObserverTests",
+      "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+      "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+      "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeArtifactReferenceObjectsTests",
+      "fullClass": "HavenOS.Home.Tests.HomeArtifactReferenceObjectsTests",
+      "path": "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
+      "sha256": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeAutomationDefinitionCommitFenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeAutomationDefinitionCommitFenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+      "sha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeClaimedResourceAttestationTests",
+      "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+      "sha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeClaimedResourceCommitFenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+      "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeCompletionAuditRecoveryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeCompletionAuditRecoveryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+      "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeCoreStateStoreTests",
+      "fullClass": "HavenOS.Home.Tests.HomeCoreStateStoreTests",
+      "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+      "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeDashboardCancellationTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardCancellationTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+      "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeDashboardDisposeTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardDisposeTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+      "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeDashboardRecoveryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardRecoveryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+      "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeDashboardTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+      "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeDiscoverCatalogTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+      "sha256": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeEcosystemTests",
+      "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+      "path": "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+      "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeEquationObjectTests",
+      "fullClass": "HavenOS.Home.Tests.HomeEquationObjectTests",
+      "path": "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs",
+      "sha256": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeInstalledApplicationOriginalActorTests",
+      "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationOriginalActorTests",
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+      "sha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeInstalledApplicationRegistryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+      "sha256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeInvocationCatalogueTests",
+      "fullClass": "HavenOS.Home.Tests.HomeInvocationCatalogueTests",
+      "path": "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs",
+      "sha256": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeLocalOperationLeaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+      "sha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeLocalProfileIdentityTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs",
+      "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeLocalReadCompositionTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalReadCompositionTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeLocalStoreSetupEvidenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalStoreSetupEvidenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
+      "sha256": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeModelPickerFeatureProviderTests",
+      "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+      "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeModelPickerRouteEditorTests",
+      "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativeActionPolicyTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
+      "sha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativeControlledLaunchTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeControlledLaunchTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
+      "sha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativeDiscoverySessionTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeDiscoverySessionTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
+      "sha256": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativePeerObservationTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativePeerObservationTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs",
+      "sha256": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativeServiceHostTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeServiceHostTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs",
+      "sha256": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativeSessionLeaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeSessionLeaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs",
+      "sha256": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNativeWidgetRegistryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+      "sha256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNotesSharedObjectsTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs",
+      "sha256": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeNotificationFeatureProviderTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+      "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeObservedRejectedClaimAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeObservedRejectedClaimAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+      "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomePackageDatabaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+      "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomePermissionTrustServiceTests",
+      "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+      "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+      "sha256": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomePersonalDenFactoryTests",
+      "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+      "path": "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs",
+      "sha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomePreparedResourceReviewTests",
+      "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+      "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+      "sha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeProductivityEngineTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+      "sha256": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeProductivityEnvelopeTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs",
+      "sha256": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeProductivityGeometryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs",
+      "sha256": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeProductivityInsertionTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityInsertionTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs",
+      "sha256": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeProductivityRasterTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityRasterTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs",
+      "sha256": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeProductivityStyleTransferTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityStyleTransferTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs",
+      "sha256": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeRejectedBeginAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeRejectedBeginAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs",
+      "sha256": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeRejectedClaimAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeRejectedClaimAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs",
+      "sha256": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeResourceOperationBrokerTests",
+      "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+      "path": "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+      "sha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeSettingsClaimedResourceCommitFenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+      "sha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeStoreImportAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeStoreImportAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs",
+      "sha256": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeTerminalAdviceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeTerminalAdviceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs",
+      "sha256": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeUnclaimedExecutionAbortTests",
+      "fullClass": "HavenOS.Home.Tests.HomeUnclaimedExecutionAbortTests",
+      "path": "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs",
+      "sha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeVectorShapeObjectTests",
+      "fullClass": "HavenOS.Home.Tests.HomeVectorShapeObjectTests",
+      "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
+      "sha256": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeVersionedNodeGraphRepositoryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeVersionedNodeGraphRepositoryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs",
+      "sha256": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeWebMcpBrowserLeaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "HomeWebMcpOriginalActorApprovalTests",
+      "fullClass": "HavenOS.Home.Tests.HomeWebMcpOriginalActorApprovalTests",
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+      "sha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "WebMcpInvocationTests",
+      "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
+      "path": "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs",
+      "sha256": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailFoundationTests",
+      "fullClass": "HavenOS.Mail.Tests.MailFoundationTests",
+      "path": "9to1 Workspace/Mail/Tests/MailFoundationTests.cs",
+      "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4",
+      "namespace": "HavenOS.Mail.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailKitRealTransportTests",
+      "fullClass": "HavenOS.Mail.Tests.MailKitRealTransportTests",
+      "path": "9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
+      "sha256": "8edeb64a3458461f26fe2f3d011dd966d4da5359ba2c8adf28a49bc0df522cf2",
+      "namespace": "HavenOS.Mail.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "MailKitSubmissionValidationTests",
+      "fullClass": "HavenOS.Mail.Tests.MailKitSubmissionValidationTests",
+      "path": "9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
+      "sha256": "8edeb64a3458461f26fe2f3d011dd966d4da5359ba2c8adf28a49bc0df522cf2",
+      "namespace": "HavenOS.Mail.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "AppAiCoordinatorTests",
+      "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+      "path": "framework/CUI/AI.Tests/AppAiCoordinatorTests.cs",
+      "sha256": "8a73ca723f53bc94b63c362f20858be3d64ec43ed327d4ce33f3afc2b88be9b3",
+      "namespace": "NineToOne.Cui.AI.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "CompatibilityOriginalFrameworkChoiceTests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs",
+      "sha256": "99ca7b90ecbcce7e184c4e930f58e5329a60dcea1ed3241e2b01afd0d5015d26",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "CompatibilityPackageFormatTests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
+      "sha256": "6ae36418075cda03999a00e48389fd0d4a0c09f839da9ad9d2af8007b1f4bc03",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "CompatibilityPackageHealthNativeTests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageHealthNativeTests",
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs",
+      "sha256": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "CompatibilityPackageInspectorTests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "CompatibilityRoutingTests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs",
+      "sha256": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    }
+  ]
+}

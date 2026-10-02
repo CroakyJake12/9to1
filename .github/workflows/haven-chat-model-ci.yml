@@ -1,50 +1,197 @@
-# FILE DOCUMENTATION
-# Where: .github/workflows/haven-chat-model-ci.yml in the GitHub automation configuration used by continuous integration.
-# What: This file automates or configures the repository operation described by its commands and keys.
-# How: Read from top to bottom: inputs and environment first, validation/processing next, and explicit success or failure output last.
-# Why: The file keeps one cohesive responsibility in a predictable location so callers can find and replace it without unrelated changes.
-name: Haven Chat and Model Pass
-
+name: Astra Mail canonical Files full native owning regression resource trusted TLS
 on:
   workflow_dispatch:
-
+    inputs:
+      expected_commit:
+        required: true
+        type: string
+      cut_manifest_sha256:
+        required: true
+        type: string
 permissions:
   contents: read
-
 jobs:
   validate:
-    runs-on: windows-latest
-    timeout-minutes: 45
+    if: startsWith(github.ref, 'refs/heads/validation/astra-desktop-visible-mail30-root22-')
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [owning, regression, resource]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      AVALONIA_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
+      MSBUILDDISABLENODEREUSE: '1'
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Materialize only three exact source dependencies
+        run: |
+          set -euo pipefail
+          git submodule update --init --recursive -- "framework/CUI/vendor/Avalonia/external/XamlX" "framework/CUI/vendor/Avalonia/external/Avalonia.DBus" "9to1 Workspace/Terminal/Source/libvterm"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh" --check
+      - name: Materialize exact original Canvas and Picture renderer donors for owning journeys
+        if: matrix.cohort == 'owning'
+        run: git submodule update --init --depth=1 -- "9to1 Workspace/Canvas/Source/Rnote" "9to1 Workspace/Picture/Source/glycin"
+      - uses: dtolnay/rust-toolchain@1.98.1
+        if: matrix.cohort == 'owning'
+      - name: Provision maintained headless native renderer prerequisites only
+        if: matrix.cohort == 'owning'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libglib2.0-dev libcairo2-dev libpango1.0-dev librsvg2-dev libseccomp-dev liblcms2-dev libxml2-dev libfontconfig1-dev bubblewrap apparmor-utils fonts-dejavu-core xvfb xauth openssl ca-certificates openjdk-21-jre-headless
+          mkdir -p artifacts/desktop-visible-owning
+          dpkg-query -W > artifacts/desktop-visible-owning/native-hosted-packages.txt
+      - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-
-      - name: Restore
-        run: dotnet restore "9to1 Workspace/shared/Haven.sln"
-
-      - name: Build Debug
-        run: dotnet build "9to1 Workspace/shared/Haven.sln" -c Debug --no-restore
-
-      - name: Test Debug
-        run: dotnet test "9to1 Workspace/shared/Haven.sln" -c Debug --no-build
-
-      - name: Build automation worker
-        run: dotnet build "9to1 Workspace/shared/src/Haven.AutomationWorker/Haven.AutomationWorker.csproj" -c Debug --no-restore
-
-      - name: Upload source snapshot
-        if: always()
+      - name: Validate identical joined program
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+          COHORT: ${{ matrix.cohort }}
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.cohort }}" = "owning" ]; then
+            python3 .github/scripts/astra-mail-trusted-tls.py -- xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24 -nolisten tcp" python3 .github/scripts/astra-files-ephemeral-profile.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-desktop-visible-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+          else
+            python3 ".github/scripts/astra-desktop-visible-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-desktop-visible-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+          fi
+      - name: Retain ordinary regression/resource evidence including failure
+        if: ${{ always() && matrix.cohort != 'owning' }}
         uses: actions/upload-artifact@v4
         with:
-          name: haven-source-snapshot
-          path: |
-            .
-            !**/bin/**
-            !**/obj/**
-            !.git/**
-          include-hidden-files: true
-          retention-days: 3
+          name: astra-desktop-visible-${{ matrix.cohort }}-${{ github.sha }}
+          path: artifacts/desktop-visible-${{ matrix.cohort }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Freeze bounded independently verifiable evidence bundles
+        id: bundles
+        if: ${{ always() && matrix.cohort == 'owning' }}
+        run: |
+          test ! -f native-hosted-packages.txt || cp native-hosted-packages.txt artifacts/desktop-visible-owning/
+          python3 .github/scripts/astra-files-artifact-parts.py --input artifacts/desktop-visible-owning --output artifacts/files-owning-parts
+      - name: Retain fullfile and independent bundle manifest
+        if: ${{ always() && matrix.cohort == 'owning' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-manifest-${{ github.sha }}
+          path: artifacts/files-owning-parts/manifest.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 00
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 0 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-00-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-00.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 01
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 1 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-01-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-01.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 02
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 2 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-02-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-02.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 03
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 3 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-03-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-03.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 04
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 4 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-04-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-04.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 05
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 5 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-05-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-05.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 06
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 6 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-06-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-06.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 07
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 7 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-07-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-07.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 08
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 8 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-08-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-08.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 09
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 9 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-09-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-09.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 10
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 10 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-10-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-10.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain independently bounded evidence bundle 11
+        if: ${{ always() && matrix.cohort == 'owning' && steps.bundles.outputs.count != '' && fromJSON(steps.bundles.outputs.count) > 11 }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-files-owning-bundle-11-${{ github.sha }}
+          path: artifacts/files-owning-parts/bundle-11.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+
