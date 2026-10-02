@@ -295,7 +295,17 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         string NextManifestSha256, string NextRootsSha256);
 
     /// <summary>Read-only observed metadata evidence. This record never authorizes repair or replay.</summary>
-    public async Task<StackPendingSaveInspection?> InspectPendingSaveAsync(CancellationToken cancellationToken = default)
+    public Task<StackPendingSaveInspection?> InspectPendingSaveAsync(CancellationToken cancellationToken = default) =>
+        InspectPendingSaveCoreAsync(null, cancellationToken);
+
+    /// <summary>Read-only evidence for the caller's original canonical project. Identity matching grants no permission.</summary>
+    public Task<StackPendingSaveInspection?> InspectPendingSaveAsync(Guid expectedProjectId, CancellationToken cancellationToken = default)
+    {
+        if (expectedProjectId == Guid.Empty) throw new ArgumentException("An original canonical project identity is required.", nameof(expectedProjectId));
+        return InspectPendingSaveCoreAsync(expectedProjectId, cancellationToken);
+    }
+
+    private async Task<StackPendingSaveInspection?> InspectPendingSaveCoreAsync(Guid? expectedProjectId, CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -323,6 +333,10 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
                 throw new StackFailureException(StackFailureCode.SourceCorrupt,
                     "Stack recovery evidence has invalid identities or content hashes. No repair was attempted.",
                     PendingSaveRecoveryRelativePath, recoverable: true);
+            if (expectedProjectId is Guid originalProject && originalProject != recovery.ProjectId)
+                throw new UnauthorizedAccessException("The recovery evidence belongs to another canonical Stack project.");
+            ValidateRecoverySide(recovery.PreviousManifest, recovery.PreviousRoots, recovery.ProjectId);
+            ValidateRecoverySide(recovery.NextManifest, recovery.NextRoots, recovery.ProjectId);
             byte[] manifestBytes = await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false);
             byte[] rootsBytes = await File.ReadAllBytesAsync(RootsPath, cancellationToken).ConfigureAwait(false);
             string manifestSha = Hash(manifestBytes), rootsSha = Hash(rootsBytes);
@@ -338,6 +352,46 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
                 rootsSha == recovery.PreviousRootsSha256, rootsSha == recovery.NextRootsSha256);
         }
         finally { _gate.Release(); }
+    }
+
+    private static void ValidateRecoverySide(byte[] manifestBytes, byte[] rootsBytes, Guid expectedProjectId)
+    {
+        try
+        {
+            var manifest = JsonSerializer.Deserialize<StackManifest>(manifestBytes, JsonOptions)
+                ?? throw new JsonException("Recovery manifest was empty.");
+            if (manifest.SchemaVersion != StackManifest.CurrentSchemaVersion || manifest.ProjectId != expectedProjectId ||
+                manifest.Domains is null || manifest.Roots is null ||
+                manifest.Domains.Any(static domain => domain is null || domain.BaseTree is null || domain.LocalChanges is null))
+                throw new JsonException("Recovery manifest has an invalid canonical identity or schema.");
+            ValidateManifest(manifest);
+            var roots = JsonSerializer.Deserialize<StackRootsDocument>(rootsBytes, JsonOptions)
+                ?? throw new JsonException("Recovery root index was empty.");
+            if (roots.SchemaVersion != StackManifest.CurrentSchemaVersion || roots.Roots is null)
+                throw new JsonException("Recovery root index has an invalid schema.");
+            var domainIds = manifest.Domains.Select(static domain => domain.Id).ToHashSet();
+            foreach (var list in new[] { manifest.Roots, roots.Roots })
+            {
+                var ids = new HashSet<Guid>();
+                foreach (var root in list)
+                {
+                    if (root is null || root.Id == Guid.Empty || !ids.Add(root.Id) || !domainIds.Contains(root.OwnerDomainId) ||
+                        root.Paths is null || root.Paths.Any(path => path is null || StackPath.Normalize(path) != path) ||
+                        root.Paths.Distinct(StringComparer.Ordinal).Count() != root.Paths.Count)
+                        throw new JsonException("Recovery root index has an invalid canonical owner, identity or path.");
+                }
+            }
+            var recorded = roots.Roots.OrderBy(static root => root.Id).ToArray();
+            var canonical = manifest.Roots.OrderBy(static root => root.Id).ToArray();
+            if (!JsonSerializer.SerializeToUtf8Bytes(recorded, JsonOptions).SequenceEqual(JsonSerializer.SerializeToUtf8Bytes(canonical, JsonOptions)))
+                throw new JsonException("Recovery root index differs from its canonical manifest.");
+        }
+        catch (Exception error) when (error is JsonException or ArgumentException)
+        {
+            throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                "Stack recovery evidence has invalid canonical project or root metadata. No repair was attempted.",
+                PendingSaveRecoveryRelativePath, recoverable: true, innerException: error);
+        }
     }
 
     private void DemandNoPendingSave()
