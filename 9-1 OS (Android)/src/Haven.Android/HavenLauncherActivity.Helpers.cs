@@ -42,9 +42,9 @@ public sealed partial class HavenLauncherActivity
     }
 
     private sealed class SwipeTouchListener(float swipeThresholdPixels, float tapSlopPixels,
-        Action<LauncherGesture> dispatch) : Java.Lang.Object, View.IOnTouchListener
+        Func<Func<bool>?> captureOriginal, Action<LauncherGesture> dispatch) : Java.Lang.Object, View.IOnTouchListener
     {
-        private readonly LauncherGestureRecognizer _input = new(swipeThresholdPixels, tapSlopPixels);
+        private readonly AndroidLauncherGestureInput _input = new(swipeThresholdPixels, tapSlopPixels, captureOriginal);
         public bool OnTouch(View? view, MotionEvent? e)
         {
             if (e is null) { _input.Cancel(); return false; }

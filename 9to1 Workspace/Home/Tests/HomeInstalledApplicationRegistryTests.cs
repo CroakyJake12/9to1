@@ -137,6 +137,44 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
         Assert.Equal(before, await File.ReadAllBytesAsync(_path));
     }
 
+    [Fact]
+    public async Task Original_refresh_mismatch_denies_before_provider_and_never_initializes_foreign_registry()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        actors.Current = original with { ProfileId = "foreign-profile", AuthenticationRevision = "foreign-session" };
+        var store = new FileHomeCoreStateStore(_path);
+        var registry = new HomeInstalledApplicationRegistry(store, actors, [provider]);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.RefreshForActorAsync(original, default).AsTask());
+        Assert.Equal(0, provider.Calls);
+        Assert.Empty((await store.ReadAsync()).State!.Records);
+    }
+
+    [Fact]
+    public async Task Original_refresh_provider_suspension_switch_preserves_actual_prior_registry_bytes()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        await registry.RefreshForActorAsync(original, default);
+        var before = await File.ReadAllBytesAsync(_path);
+        provider.Switch = () => actors.Current = original with { AuthenticationRevision = "changed" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.RefreshForActorAsync(original, default).AsTask());
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    [Fact]
+    public async Task Original_launch_resolution_preserves_actual_id_and_denies_switched_session()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        var app = (await registry.RefreshForActorAsync(original, default)).Single(item => item.PlatformProfileId == "personal");
+        Assert.Equal(app, await registry.ResolveLaunchForActorAsync(app.ApplicationId, app.Revision, original, default));
+        var beforeCalls = provider.Calls;
+        actors.Current = original with { AuthenticationRevision = "changed" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.ResolveLaunchForActorAsync(app.ApplicationId,
+            app.Revision, original, default).AsTask());
+        Assert.Equal(beforeCalls, provider.Calls);
+    }
+
     private static InstalledApplicationObservation Launch(string entrypoint, string? stable) =>
         new("example", entrypoint, "Example", "2", true) { StableLaunchIdentity = stable };
     private sealed class MutableProvider : IInstalledApplicationObservationProvider
@@ -179,9 +217,11 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
     private sealed class Provider : IInstalledApplicationObservationProvider
     {
         public string ProviderId => "android.launcherapps";
+        public int Calls;
         public bool Quiet; public bool Removed; public Action? Switch; public Haven.Core.AppOperability? Operability;
         public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct)
         {
+            Calls++;
             Switch?.Invoke();
             InstalledApplicationObservation app = new("android:example", "example/.Main", "Same label", null, true, Operability);
             return ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([

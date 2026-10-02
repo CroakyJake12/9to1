@@ -8,61 +8,76 @@ namespace Haven.Android;
 
 public sealed partial class HavenLauncherActivity
 {
-    private const int ExportLayoutRequest = 8103;
-    private const int ImportLayoutRequest = 8104;
-    private LauncherSessionSnapshot? _pendingLayoutDocumentSession;
-    private int _pendingLayoutDocumentRequest;
+    private readonly AndroidLauncherLayoutDocumentSelections _layoutDocuments = new();
+    private AlertDialog? _layoutDocumentDialog;
+    private void CloseLayoutDocumentDialogs()
+    {
+        _layoutDocuments.Cancel();
+        _layoutDocumentDialog?.Dismiss(); _layoutDocumentDialog = null;
+    }
 
     private void PickLayoutDocument(bool export, LauncherStoredLayout displayed)
     {
         try
         {
-            _pendingLayoutDocumentSession = DisplayedLayouts.Require(displayed);
-            _pendingLayoutDocumentRequest = export ? ExportLayoutRequest : ImportLayoutRequest;
+            if (!_activityStarted || _launcherLifetime.IsCancellationRequested) return;
+            CloseLayoutDocumentDialogs();
+            var selection = _layoutDocuments.Issue(DisplayedLayouts.Require(displayed), export);
             var intent = new Intent(export ? Intent.ActionCreateDocument : Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable); intent.SetType("application/json");
             if (export) intent.PutExtra(Intent.ExtraTitle, "9to1-launcher-layout.json");
-            StartActivityForResult(intent, export ? ExportLayoutRequest : ImportLayoutRequest);
+            StartActivityForResult(intent, selection.RequestCode);
         }
         catch (Exception error) when (error is ActivityNotFoundException or InvalidOperationException or UnauthorizedAccessException)
-        { _pendingLayoutDocumentSession = null; Toast.MakeText(this, error.Message, ToastLength.Long)?.Show(); }
+        { _layoutDocuments.Cancel(); Toast.MakeText(this, error.Message, ToastLength.Long)?.Show(); }
     }
 
     private async Task CompleteLayoutDocumentAsync(int request, Result result, global::Android.Net.Uri? uri)
     {
-        var expected = request == _pendingLayoutDocumentRequest ? _pendingLayoutDocumentSession : null;
-        _pendingLayoutDocumentSession = null; _pendingLayoutDocumentRequest = 0;
+        // Only the same process-issued picker identity consumes its retained original selection.
+        var selection = _layoutDocuments.Take(request);
+        if (selection is null) return;
+        var expected = selection.Original; var ct = _launcherLifetime.Token;
+        bool CurrentSelection() => !_launcherLifetime.IsCancellationRequested && !IsDestroyed && !IsFinishing && _layoutDocuments.IsCurrent(selection);
         if (result != Result.Ok || uri is null) return;
         try
         {
-            if (expected is null || !await WidgetSessions.IsCurrentAsync(expected, _launcherLifetime.Token))
+            if (expected is null || !CurrentSelection() || !await WidgetSessions.IsCurrentAsync(expected, ct) || !CurrentSelection())
                 throw new UnauthorizedAccessException("Home changed during document selection. Select the layout document again.");
             var snapshot = DisplayedLayouts.Bind(expected);
-            if (request == ExportLayoutRequest)
+            if (selection.Export)
             {
                 var bytes = Encoding.UTF8.GetBytes(LauncherLayoutExchange.Export(snapshot));
+                async Task RequireExportSelection()
+                {
+                    ct.ThrowIfCancellationRequested();
+                    if (!CurrentSelection() || !await WidgetSessions.IsCurrentAsync(expected, ct) || !CurrentSelection())
+                        throw new UnauthorizedAccessException("The original export selection changed. The document may contain a partial write; choose it again.");
+                }
+                await RequireExportSelection();
                 await using var output = ContentResolver?.OpenOutputStream(uri, "wt") ?? throw new IOException("The selected document cannot be written.");
-                await output.WriteAsync(bytes, _launcherLifetime.Token); await output.FlushAsync(_launcherLifetime.Token);
-                Toast.MakeText(this, "Launcher layout exported.", ToastLength.Short)?.Show();
+                await RequireExportSelection();
+                await output.WriteAsync(bytes, ct);
+                await RequireExportSelection();
+                await output.FlushAsync(ct);
+                await RequireExportSelection();
+                if (_activityStarted && CurrentSelection()) Toast.MakeText(this, "Launcher layout exported.", ToastLength.Short)?.Show();
                 return;
             }
             await using var input = ContentResolver?.OpenInputStream(uri) ?? throw new IOException("The selected document cannot be read.");
-            using var buffer = new MemoryStream(); var chunk = new byte[8192]; int count;
-            while ((count = await input.ReadAsync(chunk, _launcherLifetime.Token)) != 0)
-            {
-                if (buffer.Length + count > LauncherLayoutExchange.MaximumBytes) throw new InvalidDataException("Select a launcher backup of at most 4 MiB.");
-                await buffer.WriteAsync(chunk.AsMemory(0, count), _launcherLifetime.Token);
-            }
-            if (!await WidgetSessions.IsCurrentAsync(expected, _launcherLifetime.Token))
-                throw new UnauthorizedAccessException("Home changed while reading the layout document.");
-            var layout = LauncherLayoutExchange.Import(new UTF8Encoding(false, true).GetString(buffer.ToArray()), snapshot.AuthorityId);
+            var layout = await AndroidLauncherLayoutDocumentReader.ReadAsync(WidgetSessions, expected, input, CurrentSelection, ct);
+            if (!CurrentSelection() || !_activityStarted) throw new UnauthorizedAccessException("The original launcher backup view changed.");
             var dialog = new AlertDialog.Builder(this); dialog.SetTitle("Restore launcher layout?");
             dialog.SetMessage($"Replace the current layout with {layout.Pages.Count} pages and {LauncherLayoutEdits.Placements(layout).Count()} items, including {layout.Drawer?.Categories.Count ?? 0} drawer categories, hidden apps, appearance and gesture settings. The current layout remains available through Restore previous layout.");
-            dialog.SetPositiveButton("Restore", (_, _) => _ = EditLayoutAsync(_ => layout, snapshot));
-            dialog.SetNegativeButton("Cancel", (_, _) => { }); dialog.Show();
+            dialog.SetPositiveButton("Restore", (_, _) =>
+            {
+                if (CurrentSelection() && _activityStarted) _ = EditLayoutAsync(_ => layout, snapshot);
+            });
+            dialog.SetNegativeButton("Cancel", (_, _) => { });
+            _layoutDocumentDialog = dialog.Show();
         }
         catch (OperationCanceledException) when (_launcherLifetime.IsCancellationRequested) { }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or global::Java.Lang.SecurityException)
-        { Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show(); }
+        { if (CurrentSelection() && _activityStarted) Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show(); }
     }
 }
