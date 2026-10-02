@@ -116,7 +116,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "ShelfNativeWorkspaceTests",
-      "sha256": "4ce7ec11e4c128545c1d69d8957e4916564ef71b8bbd73cb4ed8074f0f285ce5"
+      "sha256": "4dfa6aa232f0effd1270dc99c391adbbeb29be4300c512859de1938d6c2f77fa"
     },
     {
       "class": "DataLocalStoreAuthorityTests",

@@ -5,6 +5,7 @@ using Avalonia.VisualTree;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Haven.Application;
+using Haven.Application.Shelf;
 using Haven.Core.Shelf;
 using Haven.Infrastructure;
 using Haven.Desktop.Views.Pages.Shelf;

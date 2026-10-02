@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "63ad5d95d07694be38ead3a267bb06b2684c47f3",
-  "programTree": "0e444fb399846bcfaeac7e067c7d2dec00727d1d",
-  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
+  "baselineCommit": "78299e6136c8a98306a683c5656089977aebd213",
+  "programTree": "2d1e8e492cbae6969793ab6dd61ad985b19d7e54",
+  "currentNormalCommit": "5f8fe5be2534e6e1efb8428b4c2a9ab15cd37a77",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "266dd06485ec96c50c60c3763d2e058db92ce34d",
+      "object": "617c57813a0abaea338de212982715b4bc40514f",
       "bytes": 15096,
-      "sha256": "8e49fa7eb0cc4d37498bd042407b9c6dcb4e029432b8a736b00779e175ef14df"
+      "sha256": "5beb266fedece776dcb22d47c267749dde08668510c711c2283c252135d6b9d1"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -39488,9 +39488,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "mode": "100644",
-      "object": "b3309d8b01f4829aedc85811c9972be2247502d2",
-      "bytes": 18676,
-      "sha256": "4ce7ec11e4c128545c1d69d8957e4916564ef71b8bbd73cb4ed8074f0f285ce5"
+      "object": "2813fa7a004b05e79fe5ee0b9cc627c030385f57",
+      "bytes": 18707,
+      "sha256": "4dfa6aa232f0effd1270dc99c391adbbeb29be4300c512859de1938d6c2f77fa"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -64759,7 +64759,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Actual63ad App namespacefailure fixed by whole34Browse/Haven.Browser producer family exactactualcompiledDataafc3/5fc byteidentity and sole additive Desktop\u2192Browse reference, all5sharedApplication prerequisites EXACTalreadyselected unchanged. No App/host/BrowserView/Home authority replacement. SharedHomeWebMcpBrowserLeaseTests is exactsame failedData19a source; includes W1peer-cleared privateissuer/generation controlleddocument-token fixture ABI correction only to satisfy newly supplied typedBrowser protocol, all5facts/assertions retained. SamefullMaps owning/resource classes/nativeold+16/source/producers/restore/compiled/zeroSkip guards retained; no productionnative/writemutationacceptance until actualwholegate. Root16CAS; unexecuted.",
+  "limits": "Sole using Haven.Application.Shelf import; complete original native fixture bodies/assertions/classes unchanged. Existing selected Haven.Application reference supplies real service, no project/source family replacement. Preserve all original four native facts/old+16 Maps coupled/full owning+resource source/producers/restore/compiled/zeroSkip. Root17CAS; no future owner20 joins.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-maps-owning-source-graph04/manifest.json",
@@ -64840,6 +64840,18 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-maps-native-cui-imports-corrector05/actual-capture-11222397425/root-capture.json",
       "sha256": "2514641d3a4e1c8a1a6eb9927ec4564f3e43eb96bd4de25fea876505b5e58bb1"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf-native-actual-maps06-service-import-corrective01/manifest.json",
+      "sha256": "50602682f9827c9e7cb4757fc8e8653ba6ec295014c3ccde42d48e96aa5c723e"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
+      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-run-37001816590-actual25/artifact-11223229824.json",
+      "sha256": "8a57a04a4d09818bcf28325328dc835e6d5ba57506d9c34bb31fc6d0699a01ec"
     }
   ],
   "sharedCakeIdContract": null
