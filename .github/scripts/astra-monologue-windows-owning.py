@@ -17,7 +17,27 @@ if not manifest.is_file() or digest(manifest)!=a.manifest_sha:raise SystemExit('
 cut=json.loads(manifest.read_text());files=cut.get('files');links=cut.get('gitlinks');materialized=cut.get('materializedGitlinks')
 if not isinstance(files,list) or not files or not isinstance(links,list) or not isinstance(materialized,list):raise SystemExit('cut schema missing files/gitlinks/materializedGitlinks')
 requiredMaterialized={'framework/CUI/vendor/Avalonia/external/XamlX': '009d4815470cf4bf71d1adbb633a5d81dcb2bb52', 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus': '864a05282841bf04006890f04d11d60d1a046aa9', '9to1 Workspace/Terminal/Source/libvterm': '934bc2fbf21800ac3458a499df8820ca5fb45fd3'}
+# Bind the maintained Git installation's own Bash, never PATH's WSL launcher.
+gitExecPath = pathlib.Path(subprocess.check_output(['git', '--exec-path'], text=True).strip()).resolve()
+if gitExecPath.name != 'git-core' or gitExecPath.parent.name != 'libexec' or gitExecPath.parent.parent.name != 'mingw64':
+ raise SystemExit('Actual Windows Git installation layout unavailable')
+gitRoot = gitExecPath.parent.parent.parent
+gitBash = gitRoot/'bin/bash.exe'
+if gitBash.is_symlink() or not gitBash.is_file():raise SystemExit('Actual maintained Git Bash executable unavailable')
+bashVersion = subprocess.run([str(gitBash), '--version'], capture_output=True, text=True)
+if bashVersion.returncode or 'GNU bash' not in bashVersion.stdout:raise SystemExit('Actual Git Bash version observation failed')
+insideGit = subprocess.run([str(gitBash), '-c', 'git --exec-path'], capture_output=True, text=True)
+gitCygpath = gitRoot/'usr/bin/cygpath.exe'
+if gitCygpath.is_symlink() or not gitCygpath.is_file():raise SystemExit('Actual Git path conversion executable unavailable')
+insideWindowsPath = subprocess.run([str(gitCygpath), '-w', insideGit.stdout.strip()], capture_output=True, text=True)
+if insideGit.returncode or insideWindowsPath.returncode or pathlib.Path(insideWindowsPath.stdout.strip()).resolve() != gitExecPath:
+ raise SystemExit('Git Bash does not resolve the same actual Git installation')
+gitBashSha256 = digest(gitBash)
+gitCygpathSha256 = digest(gitCygpath)
+(out/'git-bash-toolchain.json').write_text(json.dumps({'gitExecPath':str(gitExecPath), 'bashPath':str(gitBash),
+ 'bashSha256':gitBashSha256, 'version':bashVersion.stdout, 'insideGitExecPath':insideGit.stdout.strip(), 'cygpathSha256':gitCygpathSha256, 'insideWindowsGitExecPath':insideWindowsPath.stdout.strip()},indent=2)+'\n')
 def verify():
+ if digest(gitBash)!=gitBashSha256 or digest(gitCygpath)!=gitCygpathSha256:raise SystemExit('Original actual Git shell toolchain changed')
  # One batched immutable tree read, rather than9075 per-file Git subprocesses.
  actualFiles={};actualLinks={}
  for item in subprocess.check_output(['git','ls-tree','-rz','HEAD']).split(b'\0'):
@@ -66,7 +86,7 @@ def verify():
   if subprocess.check_output(['git','-C',path,'status','--porcelain','--untracked-files=no'],text=True).strip():raise SystemExit('tracked materialized dependency dirt')
  # Independent existing repository check validates all three trackedclean pins/header inputs;
  # --check never updates clones or rewrites tracked source.
- if subprocess.run(['bash','9to1 Workspace/shared/eng/prepare-cui-source.sh','--check'],check=False).returncode:raise SystemExit('independent clean pinned source check failed')
+ if subprocess.run([str(gitBash),'9to1 Workspace/shared/eng/prepare-cui-source.sh','--check'],check=False).returncode:raise SystemExit('independent clean pinned source check failed')
 verify();
 voiceProbe = root/'.github/scripts/astra-windows-installed-voice-preflight.ps1'
 if command(['powershell.exe','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',str(voiceProbe)],'actual-installed-windows-voices'):raise SystemExit('Actual WinRT installed voice preflight failed; no skip/fake voice permitted')
