@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e985382bc58e460f386273ea44313696e9594eff",
+  "baselineCommit": "39f14c9b2df44b32b9c4d0238afa85cecce2d17c",
   "programTree": "5122eb9dba6d9057d9853a2513b1fdd210654e5e",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -43,16 +43,16 @@
     {
       "path": ".github/scripts/astra-android14-sdk.py",
       "mode": "100644",
-      "object": "a197033e2b80cd0bcbe2e57cafa02ff71dc2e543",
-      "bytes": 17762,
-      "sha256": "6c36da31d9844deb82eb616568bc5d0e0bea23e2bdc3e8136fcd70682b5bcf2b"
+      "object": "ffec64a4964cdebe58792e408cb65eb2ce202602",
+      "bytes": 17914,
+      "sha256": "7916fd25843dd47596ec08f310f0680e153f149752dfc01baa14dcf9dffc3914"
     },
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
       "mode": "100644",
-      "object": "91f972826cc7724b0437b45e9afa084a5b603199",
-      "bytes": 10469,
-      "sha256": "e3a15b57c23284b0abd1bf5df75d59dfcb13946fdbd7ecb675d59da1b325828f"
+      "object": "7b7d06d181b8ef53b4af6db74a55ea3d2976d38f",
+      "bytes": 10610,
+      "sha256": "cf6f438ee44316f7108126f943829bf8c7314f8bd5af8d68b9a633c1aef7315c"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -65592,7 +65592,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-android14-cut.json",
-  "limits": "Fresh current20 ONLY two diagnosed production/whole-fixture source changes. All six unfiltered managed projects/current75 class files plus full regression/resource retained, all current source/restore/task/compiled/PDB/zeroSkip guards. Separate SDK matrix job installs maintained actual Android workload, restores actual Android app BEFORE host source tools, builds real net10.0-android Debug no-restore with actual source-built host task, verifies tracked evaluated Compile/defines/target/PDB/restores. No APK installation/device/default HOME/physical widget runtime claims. All ordinary startup/credentials/shared accepted current20 sources unchanged. Fresh all four jobs required before normal source correction. SDK-only restore helper context explicitly queries actual Debug/net10Android standardobj entry and authoritative dgspec child outputs; separate source-host task remains root14-host Release, analyzers root14-managed netstandard. Default managed owning/regression/resource queries/guards remain identical. SDK cohort admitted only explicit exact Android entry with sdk_context=True; no fake metadata copies. SDK evaluated Compile additionally requires exact actual failed consumer HavenLauncherActivity.Settings.cs uniquely tracked alongside phase producer; no source/runtime change.",
+  "limits": "Fresh current20 ONLY two diagnosed production/whole-fixture source changes. All six unfiltered managed projects/current75 class files plus full regression/resource retained, all current source/restore/task/compiled/PDB/zeroSkip guards. Separate SDK matrix job installs maintained actual Android workload, restores actual Android app BEFORE host source tools, builds real net10.0-android Debug no-restore with actual source-built host task, verifies tracked evaluated Compile/defines/target/PDB/restores. No APK installation/device/default HOME/physical widget runtime claims. All ordinary startup/credentials/shared accepted current20 sources unchanged. Fresh all four jobs required before normal source correction. SDK-only restore helper context explicitly queries actual Debug/net10Android standardobj entry and authoritative dgspec child outputs; separate source-host task remains root14-host Release, analyzers root14-managed netstandard. Default managed owning/regression/resource queries/guards remain identical. SDK cohort admitted only explicit exact Android entry with sdk_context=True; no fake metadata copies. SDK evaluated Compile additionally requires exact actual failed consumer HavenLauncherActivity.Settings.cs uniquely tracked alongside phase producer; no source/runtime change. Exact actual SDK10 projectPath guard failure: Den.csproj and Dulche.Runtime.csproj shared standardobj/project.assets.json. GENUINE actual SDK restore/build/evaluatedquery and SDK helper Debug context all use maintained UseArtifactsOutput/project-name isolation at root14-android-sdk-build. Existing strict assets sourceproject/path/framework/hash guards unchanged, no copiedassets/guard exemption/source rewrite. Ordinary managed/root14-managed and host/root14-host contexts unchanged. Both actual phase producer AND failed Settings consumer unique tracked Compile still mandatory; full4fresh jobs required.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-android-root20-widget-selection-phase-corrective01/manifest.json",
@@ -65613,6 +65613,10 @@
     {
       "path": "/workspace/astra-source/worker4-android-root20-widget-phase-full-managed-sdk-gate09/manifest.json",
       "sha256": "5f53255e5daa8690b0c220cffb4c25a4725ce80c1579de9387c548fcad0f4a9d"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-android-root20-widget-phase-full-managed-sdk-gate10/manifest.json",
+      "sha256": "f483e244103467e98f6eae97b1b5ef25da019e73efdd2e1db2f03146a26c90bc"
     }
   ],
   "sharedCakeIdContract": null

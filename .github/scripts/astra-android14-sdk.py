@@ -73,6 +73,7 @@ artifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artif
 base+=artifactsProps
 sdkProject='9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj'
 sdkBase=['--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:AndroidKeyStore=false']
+sdkBase+=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-android-sdk-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
 code=command(['dotnet','restore',sdkProject,*sdkBase,'-p:Configuration=Debug'],'android-sdk-restore');verify()
 if code:raise SystemExit(code)
 hostArtifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-host-build-tasks'),'-p:IncludeProjectNameInArtifactsPaths=true']

@@ -24,7 +24,7 @@ def snapshot_restore(root,entry,extra_projects=DEFAULT_TOOLS,*,sdk_context=False
   props=['-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/('artifacts/root14-host-build-tasks' if hostContext else 'artifacts/root14-managed-build')),'-p:IncludeProjectNameInArtifactsPaths=true']
   if sdkRestoreContext:
    if restoredSpec is not None and effectiveFramework not in restoredSpec.get('restore',{}).get('originalTargetFrameworks',[]):raise ValueError('SDK child framework ambiguous/not in authoritative restored spec')
-   props=['-p:Configuration=Debug','-p:TargetFramework='+effectiveFramework,'-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:AndroidKeyStore=false']
+   props=['-p:Configuration=Debug','-p:TargetFramework='+effectiveFramework,'-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false','-p:AndroidKeyStore=false','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-android-sdk-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
   taskLocation=os.environ.get('ASTRA_ACTUAL_AVALONIA_BUILD_TASKS')
   if taskLocation is None or not pathlib.Path(taskLocation).resolve().is_relative_to(root) or not pathlib.Path(taskLocation).is_file():raise ValueError('source-built actual build task admission missing')
   props.append('-p:AvaloniaBuildTasksLocation='+taskLocation)
