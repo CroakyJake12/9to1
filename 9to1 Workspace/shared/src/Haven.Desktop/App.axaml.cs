@@ -25,6 +25,19 @@ public sealed partial class App : Avalonia.Application
     private bool _exceptionHooksAttached;
     internal static IServiceProvider? Services { get; private set; }
 
+    internal static void AddOwnedBrowserTools(IServiceCollection collection)
+    {
+        collection.AddSingleton<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>();
+        collection.AddSingleton<ICanonicalResourceAccessResolver>(provider =>
+            provider.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>());
+        collection.AddHavenLocalWebMcpOwner();
+        collection.AddSingleton<HavenOS.Apps.Browse.BrowseOwnedWebMcpBinding>(provider => new(
+            provider.GetRequiredService<BrowserSessionService>(),
+            provider.GetRequiredService<IAuthenticatedResourceActorSource>(),
+            provider.GetRequiredService<IWebMcpOriginalActorApproval>(),
+            provider.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>()));
+    }
+
     internal static void AddAgentTaskRuntime(IServiceCollection collection)
     {
         collection.AddSingleton<AgentTaskRuntimeService>();
@@ -85,6 +98,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<ScheduledTaskScheduleCalculator>();
         collection.AddSingleton<ScheduledTaskRunner>();
         collection.AddSingleton<BrowserSessionService>();
+        AddOwnedBrowserTools(collection);
         collection.AddSingleton<BrowserDataService>();
         collection.AddSingleton<BrowserNavigationPolicy>();
         collection.AddSingleton<IBrowserNavigationPolicy>(provider => provider.GetRequiredService<BrowserNavigationPolicy>());
