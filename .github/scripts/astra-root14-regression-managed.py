@@ -71,6 +71,15 @@ env={'AVALONIA_TELEMETRY_OPTOUT':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1',
 base=['-c','Release','-r','linux-x64','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True']
 artifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
 base+=artifactsProps
+restoreEntries=['9to1 Workspace/shared/tests/Haven.Core.Tests/Haven.Core.Tests.csproj', '9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj', '9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj', '9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/HavenOS.AIStudio.Tests.csproj', 'framework/CUI/AI.Tests/NineToOne.Cui.AI.Tests.csproj', '9to1 Workspace/Home/Tests/HavenOS.Home.Tests.csproj', 'framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj']
+for project in restoreEntries:
+ code=command(['dotnet','restore',project,*base[2:],'-p:Configuration=Release','-p:TargetFramework=net10.0','-p:EnableWindowsTargeting=true'],'main-restore-'+pathlib.Path(project).stem);verify()
+ if code:raise SystemExit(code)
+hostTaskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
+hostTaskRestoreProps=['-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*artifactsProps]
+code=command(['dotnet','restore',hostTaskProject,'--disable-build-servers','-m:1','-nr:false',*hostTaskRestoreProps],'avalonia-build-tasks-restore');verify()
+if code:raise SystemExit(code)
+# These six netstandard assets are written LAST; no subsequent build may restore.
 toolProjects=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj']
 for tool in toolProjects:
  code=command(['dotnet','restore',tool,*base[2:],'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true'],'tool-restore-'+pathlib.Path(tool).stem);verify()
@@ -79,7 +88,7 @@ for tool in toolProjects:
 # Source-built genuine build-host task; its ProjectReference removes application RID.
 taskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
 taskProps=['-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*artifactsProps]
-code=command(['dotnet','build',taskProject,'-c','Release','-f','netstandard2.0','--disable-build-servers','-m:1','-nr:false',*taskProps],'avalonia-build-tasks-build');verify()
+code=command(['dotnet','build',taskProject,'--no-restore','-c','Release','-f','netstandard2.0','--disable-build-servers','-m:1','-nr:false',*taskProps],'avalonia-build-tasks-build');verify()
 if code:raise SystemExit(code)
 taskQuery=subprocess.run(['dotnet','msbuild',taskProject,'-nologo','-m:1','-nr:false',*taskProps,'-getProperty:TargetPath,OutputPath,TargetFramework,Configuration'],capture_output=True,text=True)
 (out/'avalonia-build-tasks-target.stdout').write_text(taskQuery.stdout);(out/'avalonia-build-tasks-target.stderr').write_text(taskQuery.stderr)
@@ -137,7 +146,7 @@ def assert_compiled_target_unchanged(name):
  (out/(name+'-restore-after.json')).write_text(json.dumps(after,indent=2)+'\n')
  if before!=after:raise SystemExit('actual restored graph/package payload changed during execution')
 def build_and_pin(name,project):
- code=command(['dotnet','build',project,*base,'-f','net10.0','-p:EnableWindowsTargeting=true'],name+'-build');verify()
+ code=command(['dotnet','build',project,*base,'--no-restore','-f','net10.0','-p:EnableWindowsTargeting=true'],name+'-build');verify()
  if code:raise SystemExit(code)
  props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']+artifactsProps
  query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath,OutputPath,RuntimeIdentifier,Configuration,AvaloniaBuildTasksLocation'],capture_output=True,text=True)

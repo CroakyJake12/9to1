@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "a0d92119ad122155a784b92896e85e9e5e761d02",
+  "baselineCommit": "af3ce8eeb498ab415ca8f9a2ff0cb96ff62e5040",
   "programTree": "c1b9318844df56135e396f5452df082b42f97c89",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
@@ -29,58 +29,58 @@
     {
       "path": ".github/scripts/astra-root14-accounts-managed.py",
       "mode": "100644",
-      "object": "01093bdacd621b20f0a2b0e422c3162142742f3b",
-      "bytes": 17765,
-      "sha256": "174027fa411808323c0feca5976d965069ceeb331716fa1306d73c2a5b0d9f46"
+      "object": "9cc3de4db2b286cfd343b1ddbf48b3d99977ab52",
+      "bytes": 18847,
+      "sha256": "617cb229bdce7a627cb46ab2135a11ac4dd273033c35bea174c523f6b60d6b28"
     },
     {
       "path": ".github/scripts/astra-root14-apps-managed.py",
       "mode": "100644",
-      "object": "f3ef484df0908bc1665204b16b84326f6a73bcef",
-      "bytes": 19024,
-      "sha256": "0ffb335948a3dd038a0c4ef6da0279855c55143fb76e0e2afb8ce0d6f25cee56"
+      "object": "9ed7c936e3ad3712fa9bbe1bf06130e86c61be47",
+      "bytes": 20110,
+      "sha256": "e4e65d735be266d904d5372e2629f425d4b9e286967a15522d97a30c9ac1ef8d"
     },
     {
       "path": ".github/scripts/astra-root14-automation-managed.py",
       "mode": "100644",
-      "object": "00bde90c5706e5c3db47e08428c96b4d7c131ba7",
-      "bytes": 18953,
-      "sha256": "62d522f06e80e6a93b9690ca30edd36bc81e4adf1f4bf5743bbc52ad2f3d9c80"
+      "object": "43f26a6d7411c4cdd6e3cfca162ee5bc69278548",
+      "bytes": 20053,
+      "sha256": "838ab2cdc09032a1ae651e02f21959859cca18fcde9319a99da32268c990b396"
     },
     {
       "path": ".github/scripts/astra-root14-go-managed.py",
       "mode": "100644",
-      "object": "1d9a596637569ecbc867abce25725c0b859c8bf5",
-      "bytes": 18441,
-      "sha256": "8f9f6f8079f8b2f5534894e9dffaebd79168030204fb4a1897d3ae9e6d97801a"
+      "object": "57e74d79daca6fa4e713fa49dc40fe8a93fe6b11",
+      "bytes": 19500,
+      "sha256": "e27d8a7e16a4c66a6eda3527d2c9dc8ae85a70b119eceb018f31fd5d174276d1"
     },
     {
       "path": ".github/scripts/astra-root14-models-managed.py",
       "mode": "100644",
-      "object": "4879e0d2b609540edfba34bea2c62289bb185a51",
-      "bytes": 19274,
-      "sha256": "1f6c44f4957eadb1740fe6aea321ed54b96d6201ba6045e9a5bf9f372b7b3335"
+      "object": "bdc2a2c3946fde05492aa480bf0f06c843dc33d6",
+      "bytes": 20429,
+      "sha256": "759bfb15b95eb68886188d9ef89578509d5491e2f91d28fabd5ce556c372b044"
     },
     {
       "path": ".github/scripts/astra-root14-regression-managed.py",
       "mode": "100644",
-      "object": "7d65766fbbc30f682bc807062ba68c93cd1791c8",
-      "bytes": 19142,
-      "sha256": "f6b7cadc490bff7dbce135b4a28f385a16cb1ece6e93cc9ee15615604c9007b1"
+      "object": "fda0f3981f0ef7e1e270ba40996d11e7640543d2",
+      "bytes": 20500,
+      "sha256": "7a9633d6ad17f1517daff51baaf6aafae5e2e1ff6fdb06569212807c04b8cb64"
     },
     {
       "path": ".github/scripts/astra-root14-rendered-managed.py",
       "mode": "100644",
-      "object": "cfd344c00e507a960eafe18afe648ddea0efb6d3",
-      "bytes": 18664,
-      "sha256": "272a4e13ed3bbb5003d64ecdd68ef1eef0a44f14317a50231c5aa166643c1bfb"
+      "object": "fdf9b625f49cb2b15840a29f85af3ef544655941",
+      "bytes": 19728,
+      "sha256": "bb538ee1cb85ea6b61868faff7ba7663ca528ce7578edb4ba24e235aea55ca9c"
     },
     {
       "path": ".github/scripts/astra-root14-resource-managed.py",
       "mode": "100644",
-      "object": "8e81b6de8db0d1312459d342ea97cac97ba39032",
-      "bytes": 21433,
-      "sha256": "8ef24ab8a7307b7df99dfe9bf6357a8b78d636a70a2127b11cdf96e177142167"
+      "object": "d1d33aa84d3f1431ae862f1645411c4e7761b1a9",
+      "bytes": 22737,
+      "sha256": "11d67becaff4e1f0c7886c32cadc3cd64c80c705279e671d522ff1c4cbc3d18b"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -64603,6 +64603,14 @@
     {
       "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol12/manifest.json",
       "sha256": "806505a2d005af708902e5933ed800f92a1b4beb300401cacea4649b087522ef"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol13/manifest.json",
+      "sha256": "1422e2ef2dee0b472175839b9fb8a7c92a582707a690d6c04344f11a1f0048a4"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol14/manifest.json",
+      "sha256": "a6b60dc4d195eca2f9ceae984665b625a2b012178f8ab5a736626e33f5637d19"
     }
   ],
   "sharedCakeIdContract": {
