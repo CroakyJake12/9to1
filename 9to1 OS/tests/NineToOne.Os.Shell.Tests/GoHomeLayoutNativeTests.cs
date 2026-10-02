@@ -26,7 +26,7 @@ public sealed class GoHomeLayoutNativeTests
             var candidate = DesktopPageEdits.PinApplication(original.Stored.Current, f.AppId, "Saved pin label");
             candidate = GoHomeEdits.Configure(candidate, candidate.EffectiveGoHome with { Layout = GoHomeLayout.Dashboard });
             var preview = await f.Configuration.PreviewAsync(original.Stored, candidate, TimeSpan.FromMinutes(1)); await f.Configuration.KeepAsync(preview.Preview!.Id);
-            using var model = new ShellViewModel(); var provider = new Provider(f.AppId);
+            using var model = new ShellViewModel(); var provider = new Provider(f.AppId, f.Actors);
             await model.StartAsync(f.Configuration, new GoService([provider]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
             using var loader = new CuiControlLoader(TaskbarLayerSurface.CreateRegistry(model)); loader.SetBindingContext(model); loader.SetActionDispatcher(model);
             using var stream = typeof(ShellConfiguration).Assembly.GetManifestResourceStream("NineToOne.Os.Shell.UI.Shell.cui"); using var reader = new StreamReader(stream!);
@@ -69,7 +69,7 @@ public sealed class GoHomeLayoutNativeTests
             candidate = GoHomeEdits.Present(candidate, GoHomeSectionKind.Suggested, false, GoHomeSectionSize.Standard, null);
             candidate = GoHomeEdits.Configure(candidate, candidate.EffectiveGoHome with { Layout = GoHomeLayout.Dashboard });
             var preview = await f.Configuration.PreviewAsync(original.Stored, candidate, TimeSpan.FromMinutes(1)); await f.Configuration.KeepAsync(preview.Preview!.Id);
-            using var model = new ShellViewModel(); var provider = new Provider(f.AppId);
+            using var model = new ShellViewModel(); var provider = new Provider(f.AppId, f.Actors);
             await model.StartAsync(f.Configuration, new GoService([provider]), new LinuxApplicationLauncher(new EmptyRegistry(), f.Resources, f.Actors), default);
             await WaitAsync(() => provider.Queries == 1 && Rows(model).Count == 2 && Groups(model).Any(g => g.Title == "Work · Pinned, All Apps"));
             var group = Groups(model).Single(g => g.Title == "Work · Pinned, All Apps"); Assert.Single(group.Results);
@@ -112,8 +112,27 @@ public sealed class GoHomeLayoutNativeTests
     private static IEnumerable<Control> Traverse(Control root)
     { yield return root; foreach (var child in root.GetLogicalChildren().OfType<Control>()) foreach (var nested in Traverse(child)) yield return nested; }
     // Controlled owner dispatch only, not installed transport/navigation admission proof.
-    private sealed class Provider(Guid appId) : IGoCanonicalResolver, IGoOriginalActorInvocation
+    private sealed class Provider(Guid appId, Actors actors) : IGoCanonicalResolver, IGoOriginalActorInvocation, IGoOriginalActorQuery, IGoOriginalActorCanonicalResolver
     {
+        // Controlled fixture actor seam; actual FileHome/installed owner proof is in GoPrivateOriginalReadNativeTests.
+        public async IAsyncEnumerable<GoResult> QueryForActorAsync(GoQuery query, AuthenticatedResourceActor expected,
+            [EnumeratorCancellation] CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            await foreach (var result in QueryAsync(query, ct))
+            {
+                if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+                yield return result;
+            }
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+        }
+        public async Task<GoResult?> ResolveForActorAsync(GoCanonicalLocator locator, AuthenticatedResourceActor expected, CancellationToken ct)
+        {
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            var result = await ResolveAsync(locator, ct);
+            if (actors.Current != expected) throw new UnauthorizedAccessException("Fixture original actor changed.");
+            return result;
+        }
         public string ProviderId => "os.installed-applications"; public int Queries;
         public bool SuspendQuery; public TaskCompletionSource QueryEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource QueryRelease { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -10,8 +10,19 @@ public sealed class ShellGoSearchOwner(ShellConfigurationService configuration)
     public ShellGoSearchRequest Begin(ShellStoredConfiguration original, GoQuery query)
     {
         ArgumentNullException.ThrowIfNull(original); ArgumentNullException.ThrowIfNull(query);
-        var scope = query.Scope is { } s ? new GoScope(s.ProviderIds?.ToFrozenSet(StringComparer.Ordinal),
-            s.Owners?.ToFrozenSet(StringComparer.Ordinal), s.Kinds?.ToFrozenSet(StringComparer.Ordinal), s.ActionIds?.ToFrozenSet(StringComparer.Ordinal)) : null;
+        static IReadOnlySet<string>? Copy(IReadOnlySet<string>? values)
+        {
+            if (values is null) return null;
+            var captured = new List<string>();
+            foreach (var value in values)
+            {
+                if (captured.Count == 256 || string.IsNullOrWhiteSpace(value) || value.Length > 4096)
+                    throw new ArgumentException("Displayed Go scope identifiers must be bounded and explicit.");
+                captured.Add(value);
+            }
+            return captured.ToFrozenSet(StringComparer.Ordinal);
+        }
+        var scope = query.Scope is { } s ? new GoScope(Copy(s.ProviderIds), Copy(s.Owners), Copy(s.Kinds), Copy(s.ActionIds)) : null;
         var request = new ShellGoSearchRequest(this, original, query with { Scope = scope });
         Interlocked.Exchange(ref _current, request);
         return request;
@@ -20,8 +31,12 @@ public sealed class ShellGoSearchOwner(ShellConfigurationService configuration)
     public async Task<bool> IsCurrentAsync(ShellGoSearchRequest request, CancellationToken ct)
     {
         if (!IsDisplayed(request)) return false;
-        var current = await configuration.IsCurrentSessionAsync(request.Original, ct);
-        return current && IsDisplayed(request) && !ct.IsCancellationRequested;
+        try
+        {
+            await configuration.GetForOriginalAsync(request.Original, ct);
+            return IsDisplayed(request) && !ct.IsCancellationRequested;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException) { return false; }
     }
     public void Invalidate() => Interlocked.Exchange(ref _current, null);
 }
