@@ -269,6 +269,24 @@ public sealed class PicturePinnedRasterSource : IDisposable
         }
     }
 
+    /// <summary>Original/current comparison of the same authorized decoded frame; never a stored revision.</summary>
+    public Bitmap RenderOriginal()
+    {
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed,this);
+            var frame=_decoded ?? throw new NotSupportedException("Original comparison requires the genuine native decoded source.");
+            var current=_snapshot.Document;
+            var originalView=new PictureDocument
+            {
+                DocumentId=current.DocumentId,SchemaVersion=current.SchemaVersion,DisplayName=current.DisplayName,
+                FileId=current.FileId,SourceRevision=current.SourceRevision,SourcePath=current.SourcePath,Revision=current.Revision,
+                CanvasWidth=checked((int)frame.Width),CanvasHeight=checked((int)frame.Height),Operations=[]
+            };
+            return RenderDecoded(frame,originalView);
+        }
+    }
+
     public void Dispose()
     {
         lock (_gate)

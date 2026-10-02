@@ -34,6 +34,8 @@ public sealed partial class MainWindow : Window
     private string? _nextPage;
     private PictureFilesArtifactBridge? _files;
     private PictureFilesSourceRenderer? _renderer;
+    private PictureHomeHistoryOperation? _history;
+    private PictureHomeSaveCopyOperation? _copy;
     private PictureHomeImportOperation? _import;
     private PictureHomePngExportOperation? _export;
     private PictureHomeEditOperation? _edits;
@@ -120,10 +122,12 @@ public sealed partial class MainWindow : Window
             authority.CaptureCommitAuthorityAsync(actor, provider, WriteAvailable, token);
         _files = new(actors, Provider, workspace.Directories, resources, WriteAvailable, Guard);
         var media = Get<NativeFilesMediaAssetSourceResolver>();
-        _renderer = new((source, token) => media.ResolveRetainedAsync(source.FileId.ToString(), new MediaAssetId(source.AssetId), source.RevisionId.ToString(), token), resources);
+        _renderer = new((source, token) => media.ResolveRetainedAsync(workspace.Configuration.StoreId, workspace.Actor, source.FileId.ToString(), new MediaAssetId(source.AssetId), source.RevisionId.ToString(), token), resources);
         _import = new(Get<HomeResourceOperationBroker>(), actors, Provider, workspace.Directories, resources, WriteAvailable, Guard);
         _export = new(_files, _renderer, new(), new(), Get<HomeResourceOperationBroker>(), actors, Provider, workspace.Directories, resources, WriteAvailable, Guard);
         _edits = new(_files, Get<HomeResourceOperationBroker>(), actors);
+        _history = new(_files, Get<HomeResourceOperationBroker>(), actors);
+        _copy = new(_files, Get<HomeResourceOperationBroker>(), actors, Provider, workspace.Directories, resources, WriteAvailable);
         if (!workspace.Configuration.AppFolders.TryGetValue("picture", out var folder)) throw new InvalidDataException("The Files workspace has no Pictures folder.");
         var listed = await workspace.Provider.ListAsync(folder, new("", Limit: 100), page, ct);
         var documents = new List<HostedItemMetadata>();
@@ -164,12 +168,12 @@ public sealed partial class MainWindow : Window
             "picture.file.open", _ => ValueTask.FromResult<IReadOnlyList<ResourceScope>>([new("files.item", captured.Artifact.BackingFileId.ToString("D"), captured.CasRevisionId.ToString(), ResourceAccess.Read)]));
         var surface = new PictureNativeCuiSurface(async token =>
         {
-            var current = await files.OpenAsync(new(captured.Artifact.BackingFileId), token);
+            var current = await files.OpenAsync(new(captured.Artifact.BackingFileId), captured.StoreId, token);
             if (current.CasRevisionId != captured.CasRevisionId) throw new InvalidOperationException("This Picture changed. Refresh and reopen it.");
             return current;
         }, _renderer!, new(), readiness, DispatchDocumentAsync,
             kind => !_busy && _pendingRequest is null && _pendingAudit is null && _pendingBeginAudit is null && WriteAvailable() && kind is PictureWorkspaceCommandKind.RotateClockwise or
-                PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export,
+                PictureWorkspaceCommandKind.FlipHorizontal or PictureWorkspaceCommandKind.FlipVertical or PictureWorkspaceCommandKind.Crop or PictureWorkspaceCommandKind.Resize or PictureWorkspaceCommandKind.Export or PictureWorkspaceCommandKind.SaveCopy or PictureWorkspaceCommandKind.Undo or PictureWorkspaceCommandKind.Redo,
             motionPreferences: Get<Haven.Application.IMotionPreferenceSource>());
         surface.SourceUnavailable += (_, _) =>
         {
@@ -205,17 +209,35 @@ public sealed partial class MainWindow : Window
         ? result : throw new ArgumentException("Enter a whole number for " + key + ".");
     private async ValueTask DispatchDocumentAsync(PictureWorkspaceCommand command, CancellationToken ct)
     {
-        if (_busy || _requestUncertain || _opened is not { } opened || command.DocumentId != opened.Artifact.Document.DocumentId || command.BaseRevision != opened.Artifact.Document.Revision ||
+        if (!IsVisible || _busy || _requestUncertain || _opened is not { } opened || command.DocumentId != opened.Artifact.Document.DocumentId || command.BaseRevision != opened.Artifact.Document.Revision ||
             command.BackingFileId != opened.Artifact.BackingFileId || !WriteAvailable() || _pendingRequest is not null || _pendingAudit is not null || _pendingBeginAudit is not null)
             throw new UnauthorizedAccessException("This Picture action is no longer available.");
         _busy = true; RefreshBindings();
         try
         {
+        if (command.Kind is PictureWorkspaceCommandKind.Undo or PictureWorkspaceCommandKind.Redo)
+        {
+            var intent = PictureHistoryIntent.Capture(opened, command.Kind == PictureWorkspaceCommandKind.Undo);
+            var history = _history!;
+            SetStatus(await RequestAsync(PictureHistoryIntent.ActionId, intent.Scopes, intent.Arguments,
+                command.Kind == PictureWorkspaceCommandKind.Undo ? "Undo this exact Picture document operation" : "Redo this exact Picture document operation",
+                async (cap, cancel) => { var result = await history.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, null, ct));
+            return;
+        }
+        if (command.Kind == PictureWorkspaceCommandKind.SaveCopy)
+        {
+            var originalActor = _workspace!.Actor; var owner = _copy!;
+            var intent = await owner.PrepareAsync(opened, originalActor, opened.Artifact.Document.DisplayName + " copy", ct);
+            SetStatus(await RequestAsync(PictureSaveCopyIntent.ActionId, intent.Scopes, intent.Arguments,
+                "Save this editable Picture revision as a new asset; retain its source image and leave the original unchanged",
+                async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, null, ct));
+            return;
+        }
         if (command.Kind == PictureWorkspaceCommandKind.Export)
         {
             var owner = _export!;
             var request = new PicturePngExportCuiRequest(owner, new(opened.Artifact.BackingFileId), opened.CasRevisionId,
-                opened.Artifact.Document.DocumentId, opened.Artifact.Document.Revision, WriteAvailable,
+                opened.Artifact.Document.DocumentId, opened.Artifact.Document.Revision, opened.StoreId, WriteAvailable,
                 (intent, token) => RequestAsync(PicturePngExportIntent.ActionId, intent.Scopes, intent.Arguments, "Create a new flattened first-frame PNG without source metadata",
                     async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(null, result.FileId); }, null, token));
             await ShowRequestAsync(PicturePngExportCuiRequest.LoadDocument(), request, request, null, ct); return;
@@ -224,12 +246,13 @@ public sealed partial class MainWindow : Window
         {
             PictureWorkspaceCommandKind.RotateClockwise => new RotateOperation(1),
             PictureWorkspaceCommandKind.FlipHorizontal => new FlipOperation(true),
+            PictureWorkspaceCommandKind.FlipVertical => new FlipOperation(false),
             PictureWorkspaceCommandKind.Crop => new CropOperation(Number("CropX"), Number("CropY"), Number("Width"), Number("Height")),
             PictureWorkspaceCommandKind.Resize => new ResizeOperation(Number("Width"), Number("Height")),
             _ => throw new NotSupportedException("This Picture action has no owning implementation.")
         };
         var edit = PictureEditIntent.Capture(opened, operation); var edits = _edits!;
-        SetStatus(await RequestAsync(PictureEditIntent.ActionId, edit.Scopes, edit.Arguments, "Apply " + operation + " non-destructively",
+        SetStatus(await RequestAsync(PictureEditIntent.ActionId, edit.Scopes, edit.Arguments, operation is FlipOperation { Horizontal:false } ? $"Flip vertically on Picture revision {opened.Artifact.Document.Revision}; original source retained, undoable through shared history." : "Apply " + operation + " non-destructively",
             async (cap, cancel) => { var result = await edits.ExecuteAsync(edit, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, null, ct));
         }
         finally { _busy = false; RefreshBindings(); }
@@ -400,7 +423,7 @@ public sealed partial class MainWindow : Window
                 {
                     // A rendered export creates a separate Files item. Restore the source editor from
                     // current owning authority instead of leaving its completed request form mounted.
-                    await OpenAsync(await _files!.OpenAsync(new(source.Artifact.BackingFileId), ct), ct);
+                    await OpenAsync(await _files!.OpenAsync(new(source.Artifact.BackingFileId), source.StoreId, ct), ct);
                 }
             }
             else if (_pendingRequest is not null || _pendingOwnership is not null || _pendingAudit is not null || _pendingBeginAudit is not null || _requestUncertain) throw new InvalidOperationException("Finish the captured Home request first.");
@@ -408,11 +431,11 @@ public sealed partial class MainWindow : Window
             else if (action == "picture.host.page") await RefreshAsync(_nextPage, ct);
             else if (action == "picture.host.previous" && _selected > 0) _selected--;
             else if (action == "picture.host.next" && _selected + 1 < _documents.Length) _selected++;
-            else if (action == "picture.host.open" && _documents.Length > 0) await OpenAsync(await _files!.OpenAsync(_documents[_selected].Id, ct), ct);
+            else if (action == "picture.host.open" && _documents.Length > 0) await OpenAsync(await _files!.OpenAsync(_documents[_selected].Id, _workspace!.Configuration.StoreId, ct), ct);
             else if (action == "picture.host.import" && WriteAvailable())
             {
                 var owner = _import!;
-                var request = new PictureImportCuiRequest(owner, NativePicker, new(), WriteAvailable,
+                var request = new PictureImportCuiRequest(owner, NativePicker, new(), _workspace!.Configuration.StoreId, WriteAvailable,
                     (intent, token) => RequestAsync(PictureImportIntent.ActionId, intent.Scopes, intent.Arguments, "Import original image bytes and a separate editable Picture document",
                         async (cap, cancel) => { var result = await owner.ExecuteAsync(intent, cap, cancel); return new OwnerCommit(result, new(result.Artifact.BackingFileId)); }, intent, token));
                 await ShowRequestAsync(PictureImportCuiRequest.LoadDocument(), request, request, request, ct);

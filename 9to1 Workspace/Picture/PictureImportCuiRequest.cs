@@ -7,7 +7,7 @@ namespace HavenOS.Images;
 
 /// <summary>Picker-backed import preparation; the host owns pending Home approval and the submitted intent lifetime.</summary>
 public sealed class PictureImportCuiRequest(PictureHomeImportOperation operation, IStorageProvider picker,
-    PictureGlycinDecoder decoder, Func<bool> isAvailable,
+    PictureGlycinDecoder decoder, Guid expectedStoreId, Func<bool> isAvailable,
     Func<PictureImportIntent, CancellationToken, Task<string>> requestApproval)
     : ICuiBindingContext, ICuiActionDispatcher, ICuiActionAvailability, INotifyPropertyChanged, IDisposable
 {
@@ -57,7 +57,7 @@ public sealed class PictureImportCuiRequest(PictureHomeImportOperation operation
                 _prepared?.Dispose(); _prepared = null;
                 using var picked = await PicturePickedImage.PickAsync(picker, decoder, cancellationToken);
                 if (picked is null) { _status = "No image selected."; return; }
-                var prepared = await operation.PrepareAsync(picked, cancellationToken);
+                var prepared = await operation.PrepareAsync(picked, expectedStoreId, cancellationToken);
                 if (_disposed || !isAvailable()) { prepared.Dispose(); throw new UnauthorizedAccessException("Import access changed."); }
                 _prepared = prepared;
                 _status = "Review the selected image in Home to approve its import.";
