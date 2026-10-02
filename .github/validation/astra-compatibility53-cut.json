@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "programTree": "a44bcfafea8fa68141f69d8f23edc48cfc3a5025",
-  "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
-  "kind": "new",
+  "baselineCommit": "14f8a88774ed1fc1066f4e7e3fa691b0200f26c6",
+  "programTree": "a37cf15c474440402d1ccedbcefaab3d675243d7",
+  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -3046,9 +3046,9 @@
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs",
       "mode": "100644",
-      "object": "10a18a97b56c5713a5eb45288607ebb127966017",
-      "bytes": 9412,
-      "sha256": "395c53128c422122f0e2aed11168b47070bb14c478f77a9803d443654665553b"
+      "object": "efbbb7a7b69f1b4778d4d6bb86ad4708203201c8",
+      "bytes": 9432,
+      "sha256": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44"
     },
     {
       "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
@@ -64052,7 +64052,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-compatibility53-cut.json",
-  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority.",
+  "limits": "Source-only preparation; isolated product programTree exactRoot13 plus only selected owner sources. Actual managed evidence pending; no default activation/deploy/provider authority. Exact minimal owning compile correction only; all inherited full regression/classes/native/source/tool/compiled closure guards unchanged; actual failed proof retained.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-go-query-state-action-completion-coherent42/manifest.json",
@@ -64069,6 +64069,10 @@
     {
       "path": "/workspace/astra-source/worker4-compatibility12-go42-hosted-plan-sol2/manifest.json",
       "sha256": "75efd8d5fc8d752eeecacebb5fecdebd3638f6e2810549894d7cea24565b5056"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-compatibility53-original-selection-signature-fix01/manifest.json",
+      "sha256": "172a285689f4458dca855ec9b8851221770cf824c8deadd187d81d50c9aa4193"
     }
   ],
   "sharedCakeIdContract": null

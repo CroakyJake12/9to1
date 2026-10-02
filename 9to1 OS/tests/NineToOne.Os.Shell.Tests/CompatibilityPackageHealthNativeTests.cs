@@ -114,7 +114,7 @@ public sealed class CompatibilityPackageHealthNativeTests
             var browser = Graph.GetRequiredService<FilesNativeBrowserService>();
             var page = await browser.ListAsync(workspace.Actor, parentID: folder.Id.Value, expectedStoreId: workspace.Configuration.StoreId);
             var selected = Assert.Single(page.Items, item => item.Id == id);
-            var result = await browser.ReadPackageSelectionAsync(page, selected, workspace.Actor, default);
+            var result = await browser.ReadPackageSelectionAsync(page, selected, workspace.Actor, 256L * 1024 * 1024, default);
             PreservedDriveBytes = await File.ReadAllBytesAsync(DrivePath); return result;
         }
         public void Dispose() { Graph.Dispose(); if (Directory.Exists(root)) Directory.Delete(root, true); }
