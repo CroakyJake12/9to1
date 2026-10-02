@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "8e30121f2f6c92b211e9293f42678dc71b45c6d9",
-  "programTree": "f6b46f3b98b403c9a846208c22d081f57dca371b",
-  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
+  "baselineCommit": "4482cd7134d07d4badea0e094e86c6c7312f2048",
+  "programTree": "9dcb318cd64616ad4a24fcd9b60c4f084e75f2c4",
+  "currentNormalCommit": "5f8fe5be2534e6e1efb8428b4c2a9ab15cd37a77",
   "kind": "corrective",
   "files": [
     {
@@ -33118,9 +33118,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsNotebookPicker.cs",
       "mode": "100644",
-      "object": "8d892e200bb43ec6504932894acfb29b65636b93",
-      "bytes": 3448,
-      "sha256": "32cbb5a6a4678fa50b23c97be698fb6b1611bc419b7ee8f438cfaf99e3a64a03"
+      "object": "74e35d4ec18b6611880a63c15f20dc5ece924c26",
+      "bytes": 3535,
+      "sha256": "f73021ec4679d69509cdc6f466cef81908698fc55a8d89c8d2ce6f4d2e2e7464"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Boards/BoardsPage.Attachments.cs",
@@ -64451,7 +64451,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "Product: only introduction paragraph order1, heading remains default0, complete original canonical notebook fields/IDs/title/body/validator/revision guards retained. Owning Write fixture: live preSave reference preserved; acknowledged payload now required detached but exact stable ID and complete serialized block equality, later live cell edit cannot alter captured saved payload. Full original141 owning/all existing whole classes and all three original gates/source/producers/restore/compiled/zeroSkip retained. Both owner source peers passed; no future26 joins. Root16 CAS unchanged.",
+  "limits": "Exact peer-cleared delta synchronous PropertyChanged filtered TextBox.TextProperty; original filtering/IDs/order/click/lifetime/error paths unchanged, all existing assertions/timeouts/nativephysical fixtures retained. Sole actual production source correction; all old141 cases/all existing class provenance and all three original full gates/source/producers/task/restore/compiled/zeroSkip unchanged. Actual4482 sourceCAS independently verified; Root17CAS. No timeout/assertion changes or future26 joins.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-desktop-visible-owning-source-graph01/manifest.json",
@@ -64520,6 +64520,18 @@
     {
       "path": "/workspace/astra-source/worker2-desktop-actual8e301-boards-write-corrective01/manifest.json",
       "sha256": "28fdd489aa07780d0f118f52caa4738635729f618765f023ed8ebe6d59cf5146"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-desktop-actual4482-picker-search-corrective06/manifest.json",
+      "sha256": "5252b6b7c039cd0bd85d058cb713e666795c2e94ca83af57cf7762e9c1130947"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
+      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-run-37003121029-actual25/artifact-11225440486.json",
+      "sha256": "450addd30985bed2bd1a70e4352449d0d750dc685c6fe8ed3fd1e0867c69c741"
     }
   ],
   "sharedCakeIdContract": null

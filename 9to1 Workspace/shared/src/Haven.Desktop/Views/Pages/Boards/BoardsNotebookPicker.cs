@@ -28,7 +28,10 @@ internal sealed class BoardsNotebookPicker : UserControl
         panel.Children.Add(new ScrollViewer { Content = _matches, MaxHeight = 360 });
         Content = panel;
         AttachedToVisualTree += (_, _) => Search.Focus();
-        Search.TextChanged += (_, _) => RefreshMatches();
+        Search.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == TextBox.TextProperty) RefreshMatches();
+        };
         RefreshMatches();
     }
 
