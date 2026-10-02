@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "667c6620ad70b392109e03cca479ccb02c5ebad9",
-  "programTree": "c9ebb98da9b1cab9884ea4bc8cb3a5e93091b8a0",
-  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
+  "baselineCommit": "e47183cea4532a02a31301ec6acb0be20991a69d",
+  "programTree": "2721a5d5aa462464c33594a88e778eb9fa65c494",
+  "currentNormalCommit": "5f8fe5be2534e6e1efb8428b4c2a9ab15cd37a77",
   "kind": "corrective",
   "files": [
     {
@@ -64,9 +64,9 @@
     {
       "path": ".github/validation/astra-picture19-test-classes.json",
       "mode": "100644",
-      "object": "10b4723880ae68d77fa0c0c17893f4ea61cb608b",
+      "object": "3502de19284a87a4cc50770cf6b7b230f94fd39f",
       "bytes": 4572,
-      "sha256": "5008b57b1330fc49a1166899b02f8f3ecad9b7dfcbb1f490082cad8a856c6cb0"
+      "sha256": "6eb1409cb3e1a8b58373f8a3d6981519e7bdaab1d96b5646d7331e993d35d0f4"
     },
     {
       "path": ".github/validation/picture-bwrap-upstream-abi4.profile",
@@ -24207,9 +24207,9 @@
     {
       "path": "9to1 Workspace/Picture/Tests/PictureNativeHostTests.cs",
       "mode": "100644",
-      "object": "551a489a862f7be48be7f6ea5075c807cb6b6b9e",
-      "bytes": 44232,
-      "sha256": "79d564ace5b70e27e60435c0b9aca300dc80399ab0bc506d9967f8cda716656b"
+      "object": "ff6419072756ecf5fa945cb3b3c3cfd852b5e121",
+      "bytes": 47314,
+      "sha256": "82dadb21d6f382c693b4e4c244a796452062734a5f95d87b8f8595ee4b3fc504"
     },
     {
       "path": "9to1 Workspace/Picture/Tests/PicturePickerFixture.cs",
@@ -64010,7 +64010,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Exactactual667c observer fix only: --proc /proc after rootrobind on diagnosticchild, sameunalteredtrueprobe/fullofficial2profile/strictoriginalPIDexactstacklabel/NoNewPrivs/zero4caps/globalrestriction1/fullnative101/allcohorts/finalcleanup guards retained. Originalobserver incorrectlyread hostproc for namespacePID2; no label/cap/assertion weakening, actual failedload/trueprobe/cleanup succeeded. Root16CAS preserved, no localpolicyload/native.",
+  "limits": "Diagnostic only: real read-only Prepare may warm caches; no first-click repair or acceptance claim. Sole native fixture plus whole-class source hash repin. Full101/full3, strict fresh managed map observer, exact full ABI4 profile and cleanup unchanged. Root17 CAS; no local build/policy action.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-picture-actual-fixture-fixes02/manifest.json",
@@ -64059,6 +64059,18 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-picture-abi4-profile-corrector07/actual-failed08/picture/root-capture.json",
       "sha256": "edc8782d9026c74282d459de2cdfd23c9cf50cefaf255a1d807926a4c27de568"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-picture08-save-copy-actual-diagnostic03/manifest.json",
+      "sha256": "ef17877dfa6858c91b50c06c9b3da78e16185a87519405a4b9ce51b0a0ff5caa"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
+      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-picture-abi4-procfs-corrector08/actual-failed09/picture/root-capture.json",
+      "sha256": "2ea1841734b3ec5eaca5e694c2cdcd0c5cb406e23071d40394c9dfb2d1da5eca"
     }
   ],
   "sharedCakeIdContract": null,

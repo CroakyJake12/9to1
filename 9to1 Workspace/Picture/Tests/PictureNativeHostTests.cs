@@ -1,3 +1,6 @@
+using System.Reflection;
+using System.Text.Json;
+using CakeOS.Cui.Runtime;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
@@ -119,9 +122,24 @@ public sealed class PictureNativeHostTests
                 Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
                 Button(sourceSurface,"Fit view").RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 await UntilAsync(()=>sourceSurface.PreviewScale==1 && sourceSurface.PreviewOffset==(0d,0d),ct);
+                // Read-only diagnostic of the ACTUAL host-owned port and original open capture.
+                // No replacement owner, minted capability, approval, claim or publication is introduced.
+                var capturedCopy=Assert.IsType<PictureHomeSaveCopyOperation>(typeof(MainWindow).GetField("_copy",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window));
+                var capturedOpened=Assert.IsType<PictureFilesOpenResult>(typeof(MainWindow).GetField("_opened",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window));
+                var homeBeforePreparation=await File.ReadAllBytesAsync(Path.Combine(root,"home.json"),ct);
+                var folderBeforePreparation=(await workspace.Provider.GetAsync(pictureFolder,ct)).Value!.CurrentRevisionId;
+                var prepared=await capturedCopy.PrepareAsync(capturedOpened,workspace.Actor,capturedOpened.Artifact.Document.DisplayName+" copy",ct);
+                Assert.Equal(original.Artifact.BackingFileId,prepared.SourceFileId.Value);
+                Assert.Equal(original.CasRevisionId,prepared.SourceFilesRevision);
+                Assert.Equal(homeBeforePreparation,await File.ReadAllBytesAsync(Path.Combine(root,"home.json"),ct));
+                Assert.Equal(folderBeforePreparation,(await workspace.Provider.GetAsync(pictureFolder,ct)).Value!.CurrentRevisionId);
+                Assert.Equal(originalBytes,PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId),workspace.Configuration.StoreId,ct)).Artifact));
+                Assert.Equal(bytes,await File.ReadAllBytesAsync(Path.Combine(directory,"native-source.gif"),ct));
+                Assert.Empty((await permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
+                Assert.Single((await workspace.Provider.ListAsync(pictureFolder,null,null,ct)).Items,item=>item.Kind==HostedItemKind.Artifact);
                 var saveCopy = Button(sourceSurface, "Save a Copy"); Assert.True(saveCopy.IsEnabled);
                 saveCopy.RaiseEvent(new RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
-                await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1, ct);
+                await UntilAsync(async () => (await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests.Count == 1, ct,()=>SaveCopyDiagnostics(window,sourceSurface,saveCopy));
                 var pending = Assert.Single((await permissions.GetSnapshotAsync(cancellationToken: ct)).PendingRequests);
                 Assert.Equal(PictureSaveCopyIntent.ActionId, pending.Scope.ActionName);
                 Assert.Equal(originalBytes, PictureArtifactCodec.Serialize((await bridge.OpenAsync(new(original.Artifact.BackingFileId), workspace.Configuration.StoreId, ct)).Artifact));
@@ -490,6 +508,15 @@ public sealed class PictureNativeHostTests
     }
     private static bool HasEnabledButton(Control root, string label) => Descendants(root).OfType<Button>().Any(button => Equals(button.Content, label) && button.IsEnabled);
     private static Button Button(Control root, string label) => Assert.Single(Descendants(root).OfType<Button>(), button => Equals(button.Content, label));
+    private static string SaveCopyDiagnostics(MainWindow window,PictureNativeCuiSurface surface,Button button)
+    {
+        var scene=Assert.Single(Descendants(surface).OfType<CuiSceneHost>());
+        var loader=Assert.IsType<CuiControlLoader>(typeof(CuiSceneHost).GetField("_loader",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(scene));
+        object? Field(string name)=>typeof(MainWindow).GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window);
+        return " Actual SaveCopy state: "+JsonSerializer.Serialize(new{button.IsEnabled,tag=button.Tag?.ToString(),control=loader.Inspect(button),scene.LastActionFailure,scene.Availability,
+            busy=Field("_busy"),closed=Field("_closed"),ready=Field("_ready"),requestUncertain=Field("_requestUncertain"),pendingRequest=Field("_pendingRequest"),
+            texts=Descendants(window).OfType<TextBlock>().Select(block=>block.Text).Where(text=>!string.IsNullOrEmpty(text)).Select(text=>text!.Length>512?text[..512]:text).Take(32).ToArray()});
+    }
     private static async Task UntilAsync(Func<bool> predicate, CancellationToken ct)
     {
         for (var attempt = 0; attempt < 300; attempt++) { if (predicate()) return; await Task.Delay(10, ct); }
