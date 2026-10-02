@@ -38,6 +38,9 @@ public sealed class FormDataHomeWriteOperation(DataHomeRecordUpdateOperation dat
         DataRecordMutationResult result, CancellationToken cancellationToken)
     {
         if (!result.OutcomeKnown) return new(result, null, "DataOutcomeUnconfirmed");
+        // No acknowledged target effect exists to reconcile after a known rejection.
+        // Leave the original source journal pending for explicit reconciliation.
+        if (!result.Committed) return new(result, null, "DataWriteRejected");
         if (intent.Origin is not { } source) return new(result, null, "NoFormSource");
         try
         {

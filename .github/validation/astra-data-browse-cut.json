@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e9c3543f156d75b23a7ba7cd21c0c550339647ca",
-  "programTree": "3c2bb450c0d39534be79d812cd4f45624bc7555c",
-  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "baselineCommit": "0eb6150acd378dd7aae6baa27b60d635fbfb50c5",
+  "programTree": "9c004b7381d9f4f8c3952453a04d1914c069adda",
+  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
     {
@@ -50,16 +50,16 @@
     {
       "path": ".github/validation/astra-data-browse-resource-classes.json",
       "mode": "100644",
-      "object": "ad3ff3eff2bcb682848414ad7e4c323aead0f72a",
+      "object": "6fb28146b6ad75d89e28a72f605c31134654b191",
       "bytes": 29801,
-      "sha256": "59645436eb9a19d1a692e6f005c0958796516d14ba82f08d8dc949175626ae44"
+      "sha256": "0ddb81c65ed3948854771a8302ab13df1ca549ff468806f8c09b7d3213e5472d"
     },
     {
       "path": ".github/validation/astra-data-browse-test-classes.json",
       "mode": "100644",
-      "object": "8f176f15efe25e6bd3e7e56cb9f474d8c2f9c35e",
+      "object": "74c4632595614cd464a43dbeea95f9b0395b4fe3",
       "bytes": 16447,
-      "sha256": "18ded5a5ddecfd225ef39f0cb31a9009477bb00e6a84f876a085d9dbf5bd627e"
+      "sha256": "73a119b78dafe60d99f7bffe91ed5964cb9a5ac34132fca5e73143d8579ab90c"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -35701,9 +35701,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Forms/FormDataHomeWriteOperation.cs",
       "mode": "100644",
-      "object": "169e33f504e58755dddf75abe34e812f6214270f",
-      "bytes": 3367,
-      "sha256": "0d3ec902824a5f25a6ac590f22639c32fb67be93c7eb4cad4692f8634b31d91e"
+      "object": "6c2df9be84e6005af354f88a7e52e11829872ba1",
+      "bytes": 3613,
+      "sha256": "d5c854f91eb5ba5641b7065bf8c761cd0df413b0d0ed7ecd2b122a2632c85745"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Forms/FormDataMutationSourceAuthority.cs",
@@ -39964,9 +39964,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
       "mode": "100644",
-      "object": "e89e89f69b0fb76f0e804f8dee6bf2af0f5af031",
-      "bytes": 64988,
-      "sha256": "74bd37b56c0937055f6a7a8c66038f7cbf880fce2a04b7b8701dfc099c1abe4f"
+      "object": "cbede950ebedac14a367018ef4a7959195067c3b",
+      "bytes": 65192,
+      "sha256": "41bdd502610227cc0bee81225d2f185be8e876a236eb0e10da5df0808515b563"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataProductionTests.cs",
@@ -40041,9 +40041,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
       "mode": "100644",
-      "object": "b4ff902224cddb95c8a27c5fc9098e789970d806",
-      "bytes": 21149,
-      "sha256": "a1fd063d1403e77566b72957973dc98280a63b1cfa3a4b875d9e2fbc2ee8c518"
+      "object": "7f54e76f74b0927d66ac788a2f7b6210d2146744",
+      "bytes": 21252,
+      "sha256": "83c4f59fe3cfa822bab5558af95e97d65b3d1063267df6b1477706ff2a03b7cd"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Actual receipt provenance-only correction: existing executed BrowserResearchCoordinatorTests exact source SHA and Haven.Core.Tests FQN added to owning table; prior34rows preserved,35rows total. Every selected existing filter clause independently resolves exactlyone pinned FQN; owning runner/filters/test source/count unchanged. Product semantic tree unchanged. Whole source/restore/compiled/TRXzeroSkip guards preserved; prior core21passed does not establish new fullgate acceptance.",
+  "limits": "Actual two owning failures exact3-source corrective: Forms known target rejection cannot mutate sourcejournal Pending\u2192Conflict absent ack; explicit reconcile remains. Data deterministic UpdateRecord validation before SaveAttempted restores original knownFailed/noeffect audit assertions plus exactphysicalbytes/Finish; actual postSave Unknown cases unchanged. Two changed owningtestSHA re-pins ONLY within identical35owning/35resource class lists; filters/counts/whole2gates/source22+3/restore/producers/hosttasks/compiled/TRX guards unchanged. W1 semanticpeer approvedsource, no execution/passclaim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64738,6 +64738,14 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective02/actualfailed-11216466938/root-capture.json",
       "sha256": "32e4b77a05134ee2640de2248d4e62f73440e59a18421f16d6220f9b78d359f9"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-data-forms-actual-owning-corrective08/manifest.json",
+      "sha256": "f414a9608434488a638059b5c01532dc809a4a9b6cc69e42f558de2f916009d3"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective04/actual-failed05-11218156232/root-capture.json",
+      "sha256": "8715df6c8c54f5ea4e20aae0a0e09ecbf8caaf015d91ca697666379e65c7637f"
     }
   ],
   "sharedCakeIdContract": null

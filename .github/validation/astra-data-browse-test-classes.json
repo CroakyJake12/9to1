@@ -122,7 +122,7 @@
       "class": "DataLocalStoreAuthorityTests",
       "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
-      "sha256": "74bd37b56c0937055f6a7a8c66038f7cbf880fce2a04b7b8701dfc099c1abe4f",
+      "sha256": "41bdd502610227cc0bee81225d2f185be8e876a236eb0e10da5df0808515b563",
       "capturedSha256": "58a081e83f7d5f107dd62d56961d3a3bbca2aca15e3651f53310137cdd8b19f9",
       "matchesCurrentCapture": true,
       "captureSource": "/workspace/astra-source/ready-20261001-1050/following-data-junction-owner10/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
@@ -140,7 +140,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
       "class": "FormDataPreparationTests",
       "namespace": "Haven.Infrastructure.Tests",
-      "sha256": "a1fd063d1403e77566b72957973dc98280a63b1cfa3a4b875d9e2fbc2ee8c518"
+      "sha256": "83c4f59fe3cfa822bab5558af95e97d65b3d1063267df6b1477706ff2a03b7cd"
     },
     {
       "class": "HomeDataConversationRegistrationTests",

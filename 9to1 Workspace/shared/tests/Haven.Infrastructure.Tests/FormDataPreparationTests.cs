@@ -148,6 +148,7 @@ public sealed class FormDataPreparationTests
         {
             var denied = await new FormDataHomeWriteOperation(operation, journal).ExecuteAsync(intent, capability);
             result = denied.Data;
+            Assert.Null(denied.Journal); Assert.Equal("DataWriteRejected", denied.ReconciliationCode);
             Assert.True(result.OutcomeKnown); Assert.False(result.Committed); Assert.Equal("PermissionDenied", result.Code);
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
         }
