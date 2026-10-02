@@ -36,18 +36,14 @@ public sealed partial class MainView
             return;
         }
 
-        _mobileLayoutApplied = true;
         if (Content is not Grid root)
             throw new InvalidOperationException("Haven's mobile shell requires the MainView root grid.");
-
-        var body = root.Children
-            .OfType<Grid>()
-            .FirstOrDefault(candidate => Grid.GetRow(candidate) == 1)
-            ?? throw new InvalidOperationException("Haven's main content grid was not found.");
-        var contentHost = body.Children
-            .OfType<Grid>()
-            .FirstOrDefault(candidate => Grid.GetColumn(candidate) == 1)
-            ?? throw new InvalidOperationException("Haven's content host was not found.");
+        // Use the real named shell host, not desktop row/column assumptions.
+        if (ContentArea.Parent is not Grid body || !root.Children.Contains(body))
+            throw new InvalidOperationException("Haven's named main content host is not attached to its root grid.");
+        var contentHost = ContentArea;
+        root.RowDefinitions = new RowDefinitions("Auto,*");
+        Grid.SetRow(body, 1);
 
         TopRail.IsVisible = false;
         SidebarControl.IsVisible = false;
@@ -93,6 +89,7 @@ public sealed partial class MainView
         Grid.SetRowSpan(_mobileDrawer, 2);
         _mobileDrawer.ZIndex = 100;
         root.Children.Add(_mobileDrawer);
+        _mobileLayoutApplied = true;
         SizeChanged += (_, _) => RefreshMobileLayout();
         RefreshMobileLayout();
 
