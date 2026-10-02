@@ -108,6 +108,12 @@ public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, 
                 (a.ProviderId, a.PlatformProfileId, a.OsApplicationId, a.StableLaunchIdentity)).Any(g => g.Count() != 1))
                 throw new InvalidDataException("Conflicting stable launch identities; preserve the registry for recovery.");
             if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) throw new UnauthorizedAccessException("Home profile changed during registry reconciliation.");
+            // Existing current-schema metadata is already canonical. Reconciliation and original
+            // actor checks still ran; an unchanged inventory needs no new Home publication.
+            // Missing records and historical schema still take the genuine guarded write path.
+            if (record is { SchemaVersion: 2 } && next.SequenceEqual(previous.Applications))
+                return next.OrderBy(a => a.ProviderId, StringComparer.Ordinal).ThenBy(a => a.PlatformProfileId, StringComparer.Ordinal)
+                    .ThenBy(a => a.ApplicationId).ToArray();
             var write = await store.WriteGuardedAsync(new(id, "home.installed-apps", 2, HomeDataScope.DeviceLocal,
                 HomeRecordAuthority.LocalCanonical, (record?.Revision ?? 0) + 1, JsonSerializer.SerializeToElement(new State(actor.ProfileId, next))), record?.Revision ?? 0, actor, commitGuard, ct).ConfigureAwait(false);
             if (write.IsSuccess)

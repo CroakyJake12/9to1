@@ -27,12 +27,26 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
     public const string ServiceId = "home.widgets";
     public const string RenderActionId = "home.widget.render";
     private sealed record Entry(HomeNativeObservedPeer Observed, HomeNativeInstalledPeer Owner,
-        AuthenticatedResourceActor Actor, IReadOnlyList<HomeNativeWidgetDefinition> Definitions);
+        AuthenticatedResourceActor Actor, IReadOnlyList<HomeNativeWidgetDefinition> Definitions,
+        IHomeNativeWidgetRuntimeEndpoint? Endpoint, RuntimeLifetime Lifetime);
     private readonly ConcurrentDictionary<Guid, Entry> _entries = new();
     private readonly object _registrationGate = new();
 
-    public async ValueTask<IDisposable?> RegisterAsync(HomeNativeObservedPeer observed,
-        IReadOnlyList<HomeNativeWidgetDefinition> definitions, CancellationToken ct = default)
+    public ValueTask<IDisposable?> RegisterAsync(HomeNativeObservedPeer observed,
+        IReadOnlyList<HomeNativeWidgetDefinition> definitions, CancellationToken ct = default) =>
+        RegisterCoreAsync(observed, definitions, null, ct);
+
+    public ValueTask<IDisposable?> RegisterRuntimeAsync(HomeNativeObservedPeer observed,
+        IReadOnlyList<HomeNativeWidgetDefinition> definitions, IHomeNativeWidgetRuntimeEndpoint endpoint,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return RegisterCoreAsync(observed, definitions, endpoint, ct);
+    }
+
+    private async ValueTask<IDisposable?> RegisterCoreAsync(HomeNativeObservedPeer observed,
+        IReadOnlyList<HomeNativeWidgetDefinition> definitions, IHomeNativeWidgetRuntimeEndpoint? endpoint,
+        CancellationToken ct)
     {
         if (observed is null || observed.ProcessId <= 0 || !Text(observed.OperatingSystemPrincipalId) || definitions is null)
             return null;
@@ -41,15 +55,25 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         if (actor is null || !Text(actor.ActorId) || !Text(actor.ProfileId) || !Text(actor.AuthenticationRevision)) return null;
         var owner = Copy(await verifier.VerifyAsync(observed, ct).ConfigureAwait(false));
         if (owner is null) return null;
-        var entry = new Entry(observed, owner, actor, snapshot);
-        if (!await CurrentAsync(entry, ct).ConfigureAwait(false)) return null;
-        var id = Guid.NewGuid();
-        lock (_registrationGate)
+        var entry = new Entry(observed, owner, actor, snapshot, endpoint, new());
+        var added = false;
+        try
         {
-            if (_entries.Count >= 128 || !_entries.TryAdd(id, entry)) return null;
+            if (!await CurrentAsync(entry, ct).ConfigureAwait(false)) return null;
+            var id = Guid.NewGuid();
+            lock (_registrationGate)
+            {
+                if (_entries.Count >= 128 || !_entries.TryAdd(id, entry)) return null;
+                added = true;
+            }
+            // The registration is nonserializable and only removes this admitted lifetime.
+            return new Registration(() =>
+            {
+                _entries.TryRemove(id, out _);
+                entry.Lifetime.Close();
+            });
         }
-        // The registration is nonserializable and only removes this admitted lifetime.
-        return new Registration(() => _entries.TryRemove(id, out _));
+        finally { if (!added) entry.Lifetime.Close(); }
     }
 
     public async ValueTask<IReadOnlyList<HomeNativeWidgetResolution>> ListAsync(CancellationToken ct = default)
@@ -92,6 +116,53 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         if (!await CanReadAsync(match.Entry, match.Definition, ct).ConfigureAwait(false) ||
             !_entries.TryGetValue(match.Key, out var current) || !ReferenceEquals(current, match.Entry)) return null;
         return new(reference, match.Definition);
+    }
+
+    /// <summary>Captures only through the unique original admitted owner. Returned authored data still
+    /// needs platform validation and the Launcher's original displayed-session/layout CAS checks.</summary>
+    public async ValueTask<HomeNativeWidgetSurface?> CaptureAsync(HomeNativeWidgetReference reference,
+        AuthenticatedResourceActor expectedActor, HomeNativeWidgetSize gridSize, double viewportWidth,
+        double viewportHeight, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (reference is null || !Size(gridSize) || !double.IsFinite(viewportWidth) ||
+            !double.IsFinite(viewportHeight) || viewportWidth <= 0 || viewportHeight <= 0 ||
+            viewportWidth > 16384 || viewportHeight > 16384) return null;
+        var matches = Matches(reference);
+        if (matches.Length != 1) return null;
+        var match = matches[0];
+        if (match.Entry.Actor != expectedActor || match.Entry.Endpoint is null ||
+            gridSize.Columns < match.Definition.MinimumSize.Columns || gridSize.Columns > match.Definition.MaximumSize.Columns ||
+            gridSize.Rows < match.Definition.MinimumSize.Rows || gridSize.Rows > match.Definition.MaximumSize.Rows) return null;
+        using var lease = match.Entry.Lifetime.TryRent();
+        if (lease is null) return null;
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, match.Entry.Lifetime.Token);
+        await match.Entry.Lifetime.Captures.WaitAsync(linked.Token).ConfigureAwait(false);
+        try
+        {
+            if (!StillUnique(reference, match.Key, match.Entry) ||
+                !await CanReadAsync(match.Entry, match.Definition, linked.Token).ConfigureAwait(false)) return null;
+            var request = new HomeNativeWidgetCaptureRequest(reference, match.Definition.SurfaceReference,
+                gridSize, viewportWidth, viewportHeight);
+            var surface = await match.Entry.Endpoint.CaptureAsync(request, linked.Token).ConfigureAwait(false);
+            linked.Token.ThrowIfCancellationRequested();
+            if (surface is null || surface.Schema != HomeNativeWidgetSurface.SchemaVersion ||
+                surface.Reference != reference || surface.SurfaceReference != match.Definition.SurfaceReference ||
+                !await CanReadAsync(match.Entry, match.Definition, linked.Token).ConfigureAwait(false) ||
+                !StillUnique(reference, match.Key, match.Entry)) return null;
+            return HomeNativeWidgetSurface.Capture(surface.Reference, surface.SurfaceReference, surface.AuthoredCui, surface.Data);
+        }
+        finally { match.Entry.Lifetime.Captures.Release(); }
+    }
+
+    private (Guid Key, Entry Entry, HomeNativeWidgetDefinition Definition)[] Matches(HomeNativeWidgetReference reference) =>
+        _entries.ToArray().SelectMany(pair => pair.Value.Definitions
+            .Where(definition => Reference(pair.Value.Owner, definition) == reference)
+            .Select(definition => (pair.Key, Entry: pair.Value, Definition: definition))).Take(2).ToArray();
+    private bool StillUnique(HomeNativeWidgetReference reference, Guid id, Entry entry)
+    {
+        var matches = Matches(reference);
+        return matches.Length == 1 && matches[0].Key == id && ReferenceEquals(matches[0].Entry, entry);
     }
 
     private async ValueTask<bool> CanReadAsync(Entry entry, HomeNativeWidgetDefinition definition, CancellationToken ct)
@@ -150,6 +221,48 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         if (textUnits > 262144) throw new InvalidDataException("Widget definition metadata exceeds the session bound.");
         return Array.AsReadOnly(values.Select(value => value!).ToArray());
     }
+    // Removed entries cancel immediately; waiters and captures hold short leases so cancellation
+    // sources/semaphores are disposed exactly when the last owned capture unwinds.
+    private sealed class RuntimeLifetime
+    {
+        private readonly object _gate = new();
+        private readonly CancellationTokenSource _cancellation = new();
+        private int _leases;
+        private bool _closed, _closing, _disposed;
+        public RuntimeLifetime() => Token = _cancellation.Token;
+        public CancellationToken Token { get; }
+        public SemaphoreSlim Captures { get; } = new(1, 1);
+        public IDisposable? TryRent()
+        {
+            lock (_gate)
+            {
+                if (_closed) return null;
+                _leases++;
+                return new Registration(Release);
+            }
+        }
+        public void Close()
+        {
+            lock (_gate)
+            {
+                if (_closed) return;
+                _closed = true; _closing = true;
+                try { _cancellation.Cancel(); }
+                catch (AggregateException) { /* An owner cancellation callback cannot retain this removed lifetime. */ }
+                finally { _closing = false; DisposeIfClosed(); }
+            }
+        }
+        private void Release()
+        {
+            lock (_gate) { _leases--; DisposeIfClosed(); }
+        }
+        private void DisposeIfClosed()
+        {
+            if (!_closed || _closing || _leases != 0 || _disposed) return;
+            _disposed = true; Captures.Dispose(); _cancellation.Dispose();
+        }
+    }
+
     private sealed class Registration(Action remove) : IDisposable
     {
         private int _disposed;

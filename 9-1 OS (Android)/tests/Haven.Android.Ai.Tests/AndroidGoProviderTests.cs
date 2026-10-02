@@ -124,6 +124,107 @@ public sealed class AndroidGoProviderTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.QueryAsync(app.ApplicationId, app.Revision, default));
         Assert.Empty(f.Platform.ShortcutQueries); Assert.Empty(f.Platform.ShortcutCalls);
     }
+    [Fact]
+    public async Task OriginalQueryAndResolveUseActualCanonicalRegistryAndOwningPlatformInvocation()
+    {
+        using var f = new Fixture(true); var original = f.Actors.Current;
+        var result = Assert.Single(await OriginalResults(f.Go, original));
+        var resolved = await f.Go.ResolveForActorAsync(new("Home", "os.installed-application", result.Reference.Id), original, default);
+        Assert.NotNull(resolved); Assert.Equal(result.Reference, resolved.Reference);
+        await f.Go.InvokeForActorAsync(result.Reference, "Open", original, default);
+        Assert.Equal(("personal", "app/main"), Assert.Single(f.Platform.Calls));
+    }
+    [Fact]
+    public async Task ReplacedOriginalActorCannotDiscoverResolveOrInvokeAndPreservesActualStoredRegistry()
+    {
+        using var f = new Fixture(true); var original = f.Actors.Current;
+        var result = Assert.Single(await OriginalResults(f.Go, original)); var bytes = await File.ReadAllBytesAsync(f.StatePath);
+        var calls = f.Observations.Calls;
+        f.Actors.Current = original with { AuthenticationRevision = "replacement" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => OriginalResults(f.Go, original));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Go.ResolveForActorAsync(new("Home", "os.installed-application", result.Reference.Id), original, default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Go.InvokeForActorAsync(result.Reference, "Open", original, default));
+        Assert.Equal(calls, f.Observations.Calls); Assert.Empty(f.Platform.Calls); Assert.Equal(bytes, await File.ReadAllBytesAsync(f.StatePath));
+    }
+    [Fact]
+    public async Task OriginalProviderObservationSessionChangeCannotPublishResultsOrCreateReplacementRegistry()
+    {
+        using var f = new Fixture(true); var original = f.Actors.Current;
+        f.Observations.DuringObservation = () => f.Actors.Current = original with { AuthenticationRevision = "replacement" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => OriginalResults(f.Go, original));
+        Assert.Equal(1, f.Observations.Calls); Assert.Empty(f.Platform.Calls);
+        Assert.DoesNotContain((await f.Home.ReadAsync()).State!.Records, r => r.RecordType == "home.installed-apps");
+    }
+    [Fact]
+    public async Task MissingOriginalRegistryPortDeniesQueryAndResolverWithoutAmbientFallback()
+    {
+        using var f = new Fixture(true); var original = f.Actors.Current; var ambient = new AmbientOnly(f.Registry);
+        var owner = new AndroidInstalledApplicationsGoProvider(ambient, f.Actors, f.Resources, f.Platform);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => OriginalResults(owner, original));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.ResolveForActorAsync(new("Home", "os.installed-application", Guid.NewGuid().ToString("D")), original, default));
+        var resolver = new AndroidInstalledApplicationResourceResolver(ambient);
+        var decision = await resolver.EvaluateAsync(original, "os.application.read", new("os.installed-application", Guid.NewGuid().ToString("D"), "1", ResourceAccess.Read), default);
+        Assert.False(decision.Allowed); Assert.Equal(0, ambient.Calls); Assert.Empty(f.Platform.Calls);
+    }
+    [Fact]
+    public async Task OriginalShortcutQueryIssuesExactPrivateSelectionAndInvokesActualOriginalPackageProfile()
+    {
+        using var f = new Fixture(true); var actor = f.Actors.Current; var app = Assert.Single(await f.Registry.RefreshForActorAsync(actor, default));
+        var selection = Assert.Single(await f.Shortcuts.QueryForActorAsync(app.ApplicationId, app.Revision, actor, default));
+        Assert.Equal("Compose", selection.Label); Assert.Equal(("personal", "app/main"), Assert.Single(f.Platform.ShortcutQueries));
+        await f.Shortcuts.InvokeOriginalAsync(selection, () => true, default);
+        Assert.Equal(("personal", "app/main", "compose"), Assert.Single(f.Platform.ShortcutCalls));
+    }
+    [Fact]
+    public async Task CopiedAndForeignShortcutSelectionsCannotInvokeOrObserveAnotherCanonicalOwner()
+    {
+        using var f = new Fixture(true); var actor = f.Actors.Current; var app = Assert.Single(await f.Registry.RefreshForActorAsync(actor, default));
+        var original = Assert.Single(await f.Shortcuts.QueryForActorAsync(app.ApplicationId, app.Revision, actor, default));
+        var copy = new AndroidOriginalShortcutSelection(f.Shortcuts, actor, original.Command);
+        var foreign = new AndroidInstalledApplicationShortcuts(f.Registry, f.Resources, f.Platform);
+        var calls = f.Observations.Calls; var bytes = await File.ReadAllBytesAsync(f.StatePath);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Shortcuts.InvokeOriginalAsync(copy, () => true, default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => foreign.InvokeOriginalAsync(original, () => true, default));
+        Assert.Equal(calls, f.Observations.Calls); Assert.Empty(f.Platform.ShortcutCalls); Assert.Equal(bytes, await File.ReadAllBytesAsync(f.StatePath));
+    }
+    [Fact]
+    public async Task ActualNativeShortcutQuerySessionRetirementCannotIssueSelectionsOrRebindOldActor()
+    {
+        using var f = new Fixture(true); var actor = f.Actors.Current; var app = Assert.Single(await f.Registry.RefreshForActorAsync(actor, default));
+        f.Platform.AfterShortcutQuery = () => f.Actors.Current = actor with { AuthenticationRevision = "replacement" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Shortcuts.QueryForActorAsync(app.ApplicationId, app.Revision, actor, default));
+        Assert.Single(f.Platform.ShortcutQueries); Assert.Empty(f.Platform.ShortcutCalls);
+    }
+    [Fact]
+    public async Task ValidReplacementActorCannotAdoptOldShortcutSelectionAndClosedHostCannotLaunchAfterOwnerRead()
+    {
+        using var f = new Fixture(true); var actor = f.Actors.Current; var app = Assert.Single(await f.Registry.RefreshForActorAsync(actor, default));
+        var original = Assert.Single(await f.Shortcuts.QueryForActorAsync(app.ApplicationId, app.Revision, actor, default));
+        f.Actors.Current = actor with { AuthenticationRevision = "replacement" };
+        var replacement = Assert.Single(await f.Shortcuts.QueryForActorAsync(app.ApplicationId, app.Revision, f.Actors.Current, default));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Shortcuts.InvokeOriginalAsync(original, () => true, default));
+        Assert.Empty(f.Platform.ShortcutCalls);
+        var live = true; f.Observations.DuringObservation = () => live = false;
+        var bytes = await File.ReadAllBytesAsync(f.StatePath);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Shortcuts.InvokeOriginalAsync(replacement, () => live, default));
+        Assert.Empty(f.Platform.ShortcutCalls); Assert.Equal(bytes, await File.ReadAllBytesAsync(f.StatePath));
+    }
+    [Fact]
+    public async Task MissingOriginalShortcutRegistryPortCannotFallBackToAmbientCanonicalAdmission()
+    {
+        using var f = new Fixture(true); var actor = f.Actors.Current; var app = Assert.Single(await f.Registry.RefreshForActorAsync(actor, default));
+        var ambient = new AmbientOnly(f.Registry); var owner = new AndroidInstalledApplicationShortcuts(ambient, f.Resources, f.Platform);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => owner.QueryForActorAsync(app.ApplicationId, app.Revision, actor, default));
+        Assert.Equal(0, ambient.Calls); Assert.Empty(f.Platform.ShortcutQueries); Assert.Empty(f.Platform.ShortcutCalls);
+    }
+    private static async Task<List<GoResult>> OriginalResults(AndroidInstalledApplicationsGoProvider provider, AuthenticatedResourceActor original)
+    { var results = new List<GoResult>(); await foreach (var result in provider.QueryForActorAsync(new("", "Apps"), original, default)) results.Add(result); return results; }
+    private sealed class AmbientOnly(IInstalledApplicationRegistry inner) : IInstalledApplicationRegistry
+    {
+        public int Calls;
+        public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct) { Calls++; return inner.RefreshAsync(ct); }
+        public ValueTask<InstalledApplicationReference?> ResolveLaunchAsync(Guid id, long revision, CancellationToken ct) { Calls++; return inner.ResolveLaunchAsync(id, revision, ct); }
+    }
     private sealed class ChangeAfterResolve(IInstalledApplicationRegistry inner, Action change) : IInstalledApplicationRegistry
     {
         public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct) => inner.RefreshAsync(ct);
@@ -143,12 +244,15 @@ public sealed class AndroidGoProviderTests
     {
         public string ProviderId => AndroidLauncherPlatformCatalog.ProviderId;
         public string Version = "1"; public string Label = "App"; public bool Accessible = true;
-        public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct) => ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>(
-            [new("personal", "Personal", false, Accessible, [new("app", "app/main", Label, Version, true)])]);
+        public int Calls; public Action? DuringObservation;
+        public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct)
+        { ct.ThrowIfCancellationRequested(); Calls++; DuringObservation?.Invoke(); return ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([new("personal", "Personal", false, Accessible, [new("app", "app/main", Label, Version, true)])]); }
     }
     private sealed class Fixture : IDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-android-go-" + Guid.NewGuid().ToString("N"));
+        public string StatePath => Path.Combine(_root, "home.json");
+        public FileHomeCoreStateStore Home { get; }
         public Actors Actors { get; } = new();
         public Observations Observations { get; } = new();
         public HomeInstalledApplicationRegistry Registry { get; }
@@ -158,7 +262,7 @@ public sealed class AndroidGoProviderTests
         public ResourceAuthorizationService Resources { get; }
         public Fixture(bool authorize)
         {
-            var actors = Actors; var home = new FileHomeCoreStateStore(Path.Combine(_root, "home.json"));
+            var actors = Actors; var home = Home = new FileHomeCoreStateStore(StatePath);
             Registry = new(home, actors, [Observations]);
             var resources = Resources = new ResourceAuthorizationService(actors, authorize ? [new AndroidInstalledApplicationResourceResolver(Registry)] : []);
             Go = new(Registry, actors, resources, Platform);

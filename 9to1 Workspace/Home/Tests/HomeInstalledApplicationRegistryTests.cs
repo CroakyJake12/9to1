@@ -137,6 +137,100 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
         Assert.Equal(before, await File.ReadAllBytesAsync(_path));
     }
 
+    [Fact]
+    public async Task Original_refresh_mismatch_denies_before_provider_and_never_initializes_foreign_registry()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        actors.Current = original with { ProfileId = "foreign-profile", AuthenticationRevision = "foreign-session" };
+        var store = new FileHomeCoreStateStore(_path);
+        var registry = new HomeInstalledApplicationRegistry(store, actors, [provider]);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.RefreshForActorAsync(original, default).AsTask());
+        Assert.Equal(0, provider.Calls);
+        Assert.Empty((await store.ReadAsync()).State!.Records);
+    }
+
+    [Fact]
+    public async Task Original_refresh_provider_suspension_switch_preserves_actual_prior_registry_bytes()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        await registry.RefreshForActorAsync(original, default);
+        var before = await File.ReadAllBytesAsync(_path);
+        provider.Switch = () => actors.Current = original with { AuthenticationRevision = "changed" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.RefreshForActorAsync(original, default).AsTask());
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    [Fact]
+    public async Task Original_launch_resolution_preserves_actual_id_and_denies_switched_session()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        var registry = new HomeInstalledApplicationRegistry(new FileHomeCoreStateStore(_path), actors, [provider]);
+        var app = (await registry.RefreshForActorAsync(original, default)).Single(item => item.PlatformProfileId == "personal");
+        Assert.Equal(app, await registry.ResolveLaunchForActorAsync(app.ApplicationId, app.Revision, original, default));
+        var beforeCalls = provider.Calls;
+        actors.Current = original with { AuthenticationRevision = "changed" };
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => registry.ResolveLaunchForActorAsync(app.ApplicationId,
+            app.Revision, original, default).AsTask());
+        Assert.Equal(beforeCalls, provider.Calls);
+    }
+
+    [Fact]
+    public async Task Same_actual_inventory_refresh_and_launch_resolution_preserve_Home_bytes_without_guarded_publication()
+    {
+        var actors = new Actors(); var provider = new Provider(); var original = actors.Current;
+        var store = new FileHomeCoreStateStore(_path); var registry = new HomeInstalledApplicationRegistry(store, actors, [provider]);
+        var first = await registry.RefreshForActorAsync(original, default);
+        var before = await File.ReadAllBytesAsync(_path); var checks = actors.CommitChecks; var observations = provider.Calls;
+        Assert.True(checks > 0);
+        var repeated = await registry.RefreshForActorAsync(original, default);
+        Assert.Equal(first, repeated); Assert.Equal(observations + 1, provider.Calls);
+        Assert.Equal(checks, actors.CommitChecks); Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+        var app = first.Single(value => value.PlatformProfileId == "personal");
+        Assert.Equal(app, await registry.ResolveLaunchForActorAsync(app.ApplicationId, app.Revision, original, default));
+        Assert.Equal(observations + 2, provider.Calls); Assert.Equal(checks, actors.CommitChecks);
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+        var detached = Assert.IsType<InstalledApplicationReference[]>(repeated);
+        detached[0] = detached[0] with { Label = "Caller-only metadata" };
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+        Assert.Equal(first, await registry.RefreshForActorAsync(original, default));
+        Assert.Equal(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    [Fact]
+    public async Task Changed_actual_platform_profile_still_publishes_guarded_revision_and_keeps_original_application_identity()
+    {
+        var actors = new Actors(); var provider = new Provider();
+        var store = new FileHomeCoreStateStore(_path); var registry = new HomeInstalledApplicationRegistry(store, actors, [provider]);
+        var first = await registry.RefreshForActorAsync(actors.Current, default);
+        var record = Assert.Single((await store.ReadAsync()).State!.Records);
+        var before = await File.ReadAllBytesAsync(_path); var checks = actors.CommitChecks;
+        provider.Quiet = true;
+        var changed = await registry.RefreshForActorAsync(actors.Current, default);
+        var oldWork = first.Single(value => value.PlatformProfileId == "work");
+        var work = changed.Single(value => value.PlatformProfileId == "work");
+        Assert.Equal(oldWork.ApplicationId, work.ApplicationId); Assert.False(work.ProfileAccessible);
+        Assert.Equal(oldWork.Revision + 1, work.Revision); Assert.True(actors.CommitChecks > checks);
+        var saved = Assert.Single((await store.ReadAsync()).State!.Records);
+        Assert.Equal(record.Revision + 1, saved.Revision); Assert.NotEqual(before, await File.ReadAllBytesAsync(_path));
+    }
+
+    [Fact]
+    public async Task Unchanged_historical_schema_still_migrates_through_actual_guarded_write()
+    {
+        var actors = new Actors(); var provider = new Provider();
+        var store = new FileHomeCoreStateStore(_path); var registry = new HomeInstalledApplicationRegistry(store, actors, [provider]);
+        var first = await registry.RefreshForActorAsync(actors.Current, default);
+        var record = Assert.Single((await store.ReadAsync()).State!.Records);
+        Assert.True((await store.WriteAsync(record with { SchemaVersion = 1, Revision = record.Revision + 1 }, record.Revision)).IsSuccess);
+        var historical = Assert.Single((await store.ReadAsync()).State!.Records);
+        var before = await File.ReadAllBytesAsync(_path); var checks = actors.CommitChecks;
+        Assert.Equal(first, await registry.RefreshForActorAsync(actors.Current, default));
+        var migrated = Assert.Single((await store.ReadAsync()).State!.Records);
+        Assert.Equal(2, migrated.SchemaVersion); Assert.Equal(historical.Revision + 1, migrated.Revision);
+        Assert.True(actors.CommitChecks > checks); Assert.NotEqual(before, await File.ReadAllBytesAsync(_path));
+    }
+
     private static InstalledApplicationObservation Launch(string entrypoint, string? stable) =>
         new("example", entrypoint, "Example", "2", true) { StableLaunchIdentity = stable };
     private sealed class MutableProvider : IInstalledApplicationObservationProvider
@@ -171,17 +265,21 @@ public sealed class HomeInstalledApplicationRegistryTests : IDisposable
 
     private sealed class Actors : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
     {
+        public int CommitChecks;
         public ValueTask<bool> CheckAsync(HomeCoreStoredState state, AuthenticatedResourceActor expected,
-            HomeStateCommitPhase phase, CancellationToken ct) => ValueTask.FromResult(Current == expected);
+            HomeStateCommitPhase phase, CancellationToken ct)
+        { CommitChecks++; return ValueTask.FromResult(Current == expected); }
         public AuthenticatedResourceActor Current = new("actor", "profile", null, null, "session");
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => ValueTask.FromResult<AuthenticatedResourceActor?>(Current);
     }
     private sealed class Provider : IInstalledApplicationObservationProvider
     {
         public string ProviderId => "android.launcherapps";
+        public int Calls;
         public bool Quiet; public bool Removed; public Action? Switch; public Haven.Core.AppOperability? Operability;
         public ValueTask<IReadOnlyList<InstalledApplicationProfileObservation>> ObserveAsync(CancellationToken ct)
         {
+            Calls++;
             Switch?.Invoke();
             InstalledApplicationObservation app = new("android:example", "example/.Main", "Same label", null, true, Operability);
             return ValueTask.FromResult<IReadOnlyList<InstalledApplicationProfileObservation>>([
