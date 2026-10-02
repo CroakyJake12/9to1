@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "5fc88a34c9e70601da62d52b840ffc4ff2d25498",
-  "programTree": "70020486a728b951de9fc5caae9f7354fa0509a4",
+  "baselineCommit": "afc3a421223ae74dfd6afd7da694123beaea5c94",
+  "programTree": "8c9dbeaadc6a68157d5999c16a10f00e9ed33ecf",
   "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-data-browse-test-classes.json",
       "mode": "100644",
-      "object": "fc193bc401e7b8d502e42ecfa3e169460da907d2",
+      "object": "87c61643438ef0898c49929f6d6ddd96f67b459f",
       "bytes": 16447,
-      "sha256": "9a78ebb1acddf93b48755a493563da7552e8eba8c93c9db93a4e37a291791bad"
+      "sha256": "66c033c074b722c4b850419dc8340c4aba8e6cad75f860a8de59b64150433329"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -23689,9 +23689,9 @@
     {
       "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
       "mode": "100644",
-      "object": "a1601ba4d8db055df9c88082fd2196997975a06a",
-      "bytes": 12845,
-      "sha256": "19a76b6750ebd80005a4d843ae6c17b3e84f6668b1e93098d6eae04dbea2e58a"
+      "object": "48ca0f94e56a018ae6ae3e41d2ed3f3f1403083a",
+      "bytes": 13985,
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "One actual selected owning fixture composition repair and sole class SHA repin; same full owning/resource gates and complete17Desktop/201resource/21Core/41Infrastructure assertions. Production, authority and routes unchanged. No future graphs; Root16 normal CAS verified independently.",
+  "limits": "Exactactualafc3 fixture ABI protocol correction only: host-issued issuer/generation/private document selection and typeddispatch rejects stale/foreign before observation, extraRequire afterAcquire. Alloriginalfivefacts/assertions/timeout/full2 source/restore/producers/compiled/zeroSkip guards preserved; controlledbrowser/OS fixture qualification, no native document/external effect proof or production fallback. Root16CAS reviewed; unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64774,6 +64774,10 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-browse-dispatcher-corrective06/actual-capture-11221221745/root-capture.json",
       "sha256": "8925188cfd58337ebb823cd5323d290fcd404a439387d4bc79dbe1fbdd9e3480"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-webmcp-actual-afc3-document-provenance-fixture02/manifest.json",
+      "sha256": "8febff6393df9be914b0a0244a2795482e4edcd99552759eca25aeec3b131934"
     }
   ],
   "sharedCakeIdContract": null

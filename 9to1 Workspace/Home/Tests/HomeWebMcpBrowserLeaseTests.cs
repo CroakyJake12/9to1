@@ -9,7 +9,9 @@ using Xunit;
 namespace HavenOS.Home.Tests;
 
 /// <summary>Actual FileHome/profile/permissions/resource registry/BrowserSession. Native host and OS principal are controlled;
-/// these tests establish local approval/lease protocol, not actual JS emission or an external tool effect.</summary>
+/// private fixture-issued document token/generation follows the maintained owning-host interface. Returned page metadata
+/// is controlled observation only. These tests establish local approval/lease protocol, not an actual browser document,
+/// JS emission, physical native admission or external tool effect.</summary>
 public sealed class HomeWebMcpBrowserLeaseTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), "astra-browser-home-" + Guid.NewGuid().ToString("N"));
@@ -144,17 +146,31 @@ public sealed class HomeWebMcpBrowserLeaseTests : IDisposable
     {
         public BrowserSnapshot State { get; } = new(null, "controlled", false, false, false, "controlled");
         public event EventHandler<BrowserSnapshot>? StateChanged { add { } remove { } }
-        public async Task<string?> ExecuteOwnedScriptAsync(string script, IBrowserOwnedScriptDispatchAdmission admission, CancellationToken ct)
+        private long _documentGeneration;
+        private sealed record NativeDocument(Host Issuer, long Generation) : IBrowserNativeDocumentSelection;
+        public IBrowserNativeDocumentSelection CaptureDocumentSelection() => new NativeDocument(this, _documentGeneration);
+        private void RequireDocument(IBrowserNativeDocumentSelection originalDocument)
         {
+            if (originalDocument is not NativeDocument selected || !ReferenceEquals(selected.Issuer, this) ||
+                selected.Generation != _documentGeneration)
+                throw new UnauthorizedAccessException("Original controlled native document changed.");
+        }
+        public async Task<string?> ExecuteOwnedScriptAsync(IBrowserNativeDocumentSelection originalDocument,
+            string script, IBrowserOwnedScriptDispatchAdmission admission, CancellationToken ct)
+        {
+            RequireDocument(originalDocument);
             await using var lease = await admission.AcquireAsync(this, ct) ?? throw new UnauthorizedAccessException();
+            RequireDocument(originalDocument);
             if (!await lease.CheckAsync(ct)) throw new UnauthorizedAccessException();
+            RequireDocument(originalDocument);
             var observed = JsonSerializer.Serialize(new { Document, ToolName = Tool().Name, InputSchema = Tool().InputSchema });
-            if (!await lease.CheckAsync(ct)) throw new UnauthorizedAccessException(); return observed;
+            if (!await lease.CheckAsync(ct)) throw new UnauthorizedAccessException();
+            RequireDocument(originalDocument); return observed;
         }
         public Task<string?> EvaluateObservationAsync(string script, CancellationToken ct) => throw new NotSupportedException("No nested native entry.");
         public Task<string?> ExecuteScriptGuardedAsync(string script, IBrowserScriptDispatchAdmission admission, CancellationToken ct) => throw new NotSupportedException();
         public Task<string?> ExecuteScriptAsync(string script, CancellationToken ct) => throw new InvalidOperationException("No legacy fallback or actual external tool.");
-        public Task NavigateAsync(Uri address, CancellationToken ct) => Task.CompletedTask;
+        public Task NavigateAsync(Uri address, CancellationToken ct) { _documentGeneration++; return Task.CompletedTask; }
         public Task GoBackAsync(CancellationToken ct) => Task.CompletedTask;
         public Task GoForwardAsync(CancellationToken ct) => Task.CompletedTask;
         public Task ReloadAsync(CancellationToken ct) => Task.CompletedTask;
