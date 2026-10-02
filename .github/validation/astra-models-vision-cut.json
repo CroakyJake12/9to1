@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "2ef5727715eb365647ce11165a1e5cc99d9cf231",
-  "programTree": "e3a6021aba887deaad448bf74559b3c18a5fb288",
+  "baselineCommit": "43e0afb245815c1e1b75a88005640829ff45aaca",
+  "programTree": "a9e0ef4cc17106e42df38b7ead4bd00f0fe4534c",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "58399a352097b98f1b298cc680ffc3492e8a5d3e",
+      "object": "de12f7e66dbe69f2a1ac1bcf200e5aebb5c8e4b4",
       "bytes": 12569,
-      "sha256": "6e50514e6eeabce033e2001e8b3725133f2b622c626285646c6bd62b964d648e"
+      "sha256": "026e3c790ef5d4f2d9432482ed1e72e2302b123accaca0a61ab1b16fb358f31b"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -37983,9 +37983,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
       "mode": "100644",
-      "object": "40a1989d55f8727ec56680d3243444aa4840dafc",
-      "bytes": 16569,
-      "sha256": "54b424e8e72235a46cd07b2bb42f7324575d380610e66dc48a4c44a5b5722ece"
+      "object": "8770e74711e8d448555cbf5b6dc1f1122d9977b2",
+      "bytes": 16816,
+      "sha256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
@@ -65676,7 +65676,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-models-vision-cut.json",
-  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Exact failed453b private field/constructor issuer type correction only; StartAsync already requires receipt issuer. Every body/public ABI/fixture unchanged, all24 owner sources and30/12/36 full classes/scripts/workflow retained. Historical failed compile supplies no runtime acceptance; fresh all3 required. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory.",
+  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Exact failed453b private field/constructor issuer type correction only; StartAsync already requires receipt issuer. Every body/public ABI/fixture unchanged, all24 owner sources and30/12/36 full classes/scripts/workflow retained. Historical failed compile supplies no runtime acceptance; fresh all3 required. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory. Actual Mono06 all48Desktop/core/home/infra passed; seven Application positive helpers still built paused metadata. SOLE whole Application fixture genuine activation CAS retains actual newrevision, allnegativeStart/assertions unchanged; whole30own/12reg/36resource and accepted4startup/ac2d retained. Dedicated Windows physicalfixture correction remains explicit separate future winner until actualWindows parent selection; no conditional Linux native execution inference.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-monologue-root18-full-owning-gate02/manifest.json",
@@ -65705,6 +65705,14 @@
     {
       "path": "/workspace/astra-source/worker4-monologue-call-actual-receipt-issuer-corrective-gate05/manifest.json",
       "sha256": "61a50934c8b25ca33137d8d72ca00a7305b5ffb698a2ff058d9b64990e189945"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-call-actual-startup-corrective-gate06/manifest.json",
+      "sha256": "ed7a7c3817714555542280b5c934255525b4a00641b83601342e9adc96057793"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue06-actual-positive-plan-corrective-source01/manifest.json",
+      "sha256": "96726d938c413d4cf06f4341efbc7eabef4599fd849d8436954b14805c3ac1df"
     }
   ],
   "sharedCakeIdContract": null

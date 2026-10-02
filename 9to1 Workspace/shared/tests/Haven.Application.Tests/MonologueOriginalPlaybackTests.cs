@@ -188,7 +188,10 @@ public sealed class MonologueOriginalPlaybackTests
         {
             var started = await Service.StartAsync(Guid.NewGuid(), null, VisionVoiceMode.Monologue, "local-only", true, cancellationToken: ct);
             var planned = await Service.PlanMonologueAsync(started.Value!.SessionId, started.Value.Revision, "Original objective", null, ["Original section"], [], ct);
-            Assert.True(planned.IsSuccess); return planned.Value!;
+            Assert.True(planned.IsSuccess);
+            var activated = await Service.RecordMonologueProgressAsync(planned.Value!.SessionId, planned.Value.Revision,
+                planned.Value.Monologue!.RunId, 0, TimeSpan.Zero, false, ct);
+            Assert.True(activated.IsSuccess); return activated.Value!;
         }
         public void Dispose() => Directory.Delete(_root, true);
     }
