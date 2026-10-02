@@ -159,6 +159,36 @@ async function currentDiscovery() {
   throw new Error("OpenID discovery was not returned at the issuer or auth path");
 }
 
+function admitOAuthRedirectURL(value) {
+  assert.equal(typeof value, "string");
+  assert.ok(value.length > 0 && value.length <= 16384, "OAuth redirect URL is bounded and nonempty");
+  const target = new URL(value, baseURL);
+  assert.ok([baseURL, "http://127.0.0.1:5096"].includes(target.origin), "OAuth redirect remains on exact issuer or registered callback");
+  assert.equal(target.username, "");
+  assert.equal(target.password, "");
+  return target.href;
+}
+
+async function readOAuthRedirect(result, required = true) {
+  const location = result.headers.get("location");
+  if ([302, 303].includes(result.status)) {
+    assert.ok(location, "OAuth HTTP redirect requires Location");
+    return admitOAuthRedirectURL(location);
+  }
+  assert.equal(location, null, "OAuth JSON or document response has no HTTP Location");
+  const mediaType = result.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+  if (result.status === 200 && mediaType === "application/json") {
+    const payload = await result.json();
+    assert.deepEqual(Object.keys(payload).sort(), ["redirect", "url"], "OAuth fetch redirect has the maintained exact JSON shape");
+    assert.equal(payload.redirect, true, "OAuth fetch response explicitly requests redirect");
+    return admitOAuthRedirectURL(payload.url);
+  }
+  assert.ok(!required, `OAuth endpoint requires an actual HTTP or maintained JSON redirect; received ${result.status}`);
+  assert.equal(result.status, 200, "optional continuation is a successful actual document");
+  assert.equal(mediaType, "text/html", "optional nonredirect continuation is actual HTML");
+  return null;
+}
+
 async function authorizationCode(discovery, clientId, scopes, useSessionCookie) {
   const verifier = randomBytes(48).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
@@ -179,7 +209,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
 
   if (!useSessionCookie) cookies.clear();
   const authorizeResponse = await globalThis.fetch(authorizeURL, { redirect: "manual" });
-  const redirectLocation = authorizeResponse.headers.get("location");
+  const redirectLocation = await readOAuthRedirect(authorizeResponse);
   assert.ok(redirectLocation, `authorization endpoint should redirect to login/consent, received ${authorizeResponse.status}`);
   activeURL = new URL(redirectLocation, baseURL);
 
@@ -198,7 +228,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
 
   if (activeURL.pathname !== "/consent") {
     const continuation = await globalThis.fetch(activeURL, { redirect: "manual" });
-    const next = continuation.headers.get("location");
+    const next = await readOAuthRedirect(continuation, false);
     if (next) activeURL = new URL(next, baseURL);
   }
   assert.equal(activeURL.pathname, "/consent", `authorization flow should arrive at the consent screen; got ${activeURL.pathname}`);
@@ -212,7 +242,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
   if (consent.data?.url) activeURL = new URL(consent.data.url, baseURL);
   else if (consent.data?.redirect && activeURL.pathname === "/consent") {
     const consentResponse = await globalThis.fetch(activeURL, { redirect: "manual" });
-    const location = consentResponse.headers.get("location");
+    const location = await readOAuthRedirect(consentResponse);
     if (location) activeURL = new URL(location, baseURL);
   }
 
@@ -428,7 +458,13 @@ try {
     code_challenge_method: "S256", resource: "https://wrong.example/api",
   }).toString();
   const wrongResource = await globalThis.fetch(wrongResourceURL, { redirect: "manual" });
-  assert.ok(!wrongResource.headers.get("location")?.startsWith("http://127.0.0.1:5096/callback?code="), "unregistered resource receives no authorization code");
+  const wrongResourceRedirect = new URL(await readOAuthRedirect(wrongResource), baseURL);
+  assert.equal(wrongResourceRedirect.origin, "http://127.0.0.1:5096");
+  assert.equal(wrongResourceRedirect.pathname, "/callback");
+  assert.equal(wrongResourceRedirect.searchParams.has("code"), false, "unregistered resource receives no authorization code");
+  assert.equal(wrongResourceRedirect.searchParams.get("error"), "invalid_target", "real authorization rejects the unregistered resource");
+  assert.equal(wrongResourceRedirect.searchParams.get("state"), wrongResourceURL.searchParams.get("state"));
+  assert.equal(wrongResourceRedirect.searchParams.get("iss"), discovery.issuer);
 
   const limited = await createSyntheticAccount("auth-limit", `limit_${runId}`, "Test-passphrase-9!NoSharedAccount");
   for (let attempt = 1; attempt <= 8; attempt++) {
