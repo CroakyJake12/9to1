@@ -82,8 +82,7 @@ public sealed class CanvasNativeEraserControlTests
                 await approvals.InitializeAsync(ct);await surface.InitializeAsync(ct);window.UpdateLayout();
                 await Click(surface,"Eraser");await Click(surface,partial ? "Partial stroke" : "Whole stroke");
                 var viewport=Assert.Single(surface.GetVisualDescendants().OfType<CanvasNativeViewport>());
-                var center=new Point(viewport.Bounds.Width/2,viewport.Bounds.Height/2);var origin=viewport.ToDocumentPoint(center)!.Value;
-                var local=center+new Vector(205-origin.X,100-origin.Y)*viewport.ViewZoom;
+                var local=LocalPointForDocument(viewport,new(205,100));
                 Assert.InRange(local.X,0,viewport.Bounds.Width);Assert.InRange(local.Y,0,viewport.Bounds.Height);
                 var point=viewport.TranslatePoint(local,window)!.Value;
                 window.MouseDown(point,MouseButton.Left);window.MouseUp(point,MouseButton.Left);
@@ -137,8 +136,7 @@ public sealed class CanvasNativeEraserControlTests
                 await approvals.InitializeAsync(ct);await surface.InitializeAsync(ct);window.UpdateLayout();
                 await Click(surface,"Eraser");await Click(surface,"Quick");
                 var viewport=Assert.Single(surface.GetVisualDescendants().OfType<CanvasNativeViewport>());
-                var center=new Point(viewport.Bounds.Width/2,viewport.Bounds.Height/2);var origin=viewport.ToDocumentPoint(center)!.Value;
-                var local=center+new Vector(205-origin.X,100-origin.Y)*viewport.ViewZoom;
+                var local=LocalPointForDocument(viewport,new(205,100));
                 Assert.InRange(local.X,0,viewport.Bounds.Width);Assert.InRange(local.Y,0,viewport.Bounds.Height);
                 var point=viewport.TranslatePoint(local,window)!.Value;
                 window.MouseDown(point,MouseButton.Left);window.MouseUp(point,MouseButton.Left);
@@ -298,6 +296,20 @@ public sealed class CanvasNativeEraserControlTests
         await Click(approvals,"Accept once");
         for(var i=0;i<300;i++){if((await f.Permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests.Count==0)return;await Task.Delay(10);}
         Assert.Empty((await f.Permissions.GetSnapshotAsync(cancellationToken:ct)).PendingRequests);
+    }
+    private static Point LocalPointForDocument(CanvasNativeViewport viewport,Point documentPoint)
+    {
+        // The real viewport maps the fitted raster, letterbox, zoom and pan to donor document coordinates.
+        // ViewZoom alone is not the full document-to-local scale.
+        var center=new Point(viewport.Bounds.Width/2,viewport.Bounds.Height/2);
+        var origin=viewport.ToDocumentPoint(center)!.Value;
+        var dx=viewport.ToDocumentPoint(center+new Vector(1,0))!.Value.X-origin.X;
+        var dy=viewport.ToDocumentPoint(center+new Vector(0,1))!.Value.Y-origin.Y;
+        Assert.True(double.IsFinite(dx)&&dx>0);Assert.True(double.IsFinite(dy)&&dy>0);
+        var local=center+new Vector((documentPoint.X-origin.X)/dx,(documentPoint.Y-origin.Y)/dy);
+        var mapped=viewport.ToDocumentPoint(local);Assert.NotNull(mapped);
+        Assert.Equal(documentPoint.X,mapped.Value.X,precision:6);Assert.Equal(documentPoint.Y,mapped.Value.Y,precision:6);
+        return local;
     }
     private sealed class Fixture : IAsyncDisposable
     {

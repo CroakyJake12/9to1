@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "d5fb65c222129588b2102016dbd4852c1f136b19",
-  "programTree": "5bd2994672e2b3a08b109ca6e01169cec49a71c7",
+  "baselineCommit": "1091f74d62448643b7ed63181b90e57c7a554354",
+  "programTree": "066df812f256fb172a4d96bad4071b12ef27412f",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "acc4111a693c4f9da965ea550dd9820558b9f030",
+      "object": "ae15700a53e41ffdc717186a5a14492dd1993992",
       "bytes": 5793,
-      "sha256": "5b2c4a3cdef6bca783b2d7228d733dcf0fd7ad410f69a5334dff2243755f8316"
+      "sha256": "0a72bbc27048ad82c806341d53101ee70c0eb68d29ae16b004fb304b326127be"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -4460,9 +4460,9 @@
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeEraserControlTests.cs",
       "mode": "100644",
-      "object": "104250ff8cb28fde0e0ed7d3ae1667afa061a468",
-      "bytes": 27968,
-      "sha256": "74c437a2500f493b2654793b5240ccfd7371afa5c3efb45c5a78a9e894baaf7d"
+      "object": "81d8f9f1f09afd9bcc93ebb16b0f8618dc07b84a",
+      "bytes": 28650,
+      "sha256": "c8e854ae2b3f78687b0d0d5b73d0350b2a5b9782a269be360cff3855f18d9329"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeHostTests.cs",
@@ -64143,7 +64143,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Actual selected NativeUI fixture HomeExecutionOutcome mandatory affectedObjects constructor parameter only; exact actual committed FilesId included at all4calls. Same seven owning cases/assertions and allclass rows/counts/filters retained, only changedsourceSHA re-pinned. Full Rust18/Core6/Canvas86/NativeUI closure preserved with all source/restore/compiled/native checks; no future96/fence04 join and no nativeUIpass claim. New normal startup5 CAS; isolated failedparent d5 unchanged.",
+  "limits": "Actual selected1091 fixture-only coordinate correction: genuine existing viewport forward transform center/unit axes solved to owning205,100 including actual uniform fit/letterbox; strict roundtrip before unchanged mouse/Home/CAS/history assertions. All13native cases/full original Rust/Core/Canvas/UI suites, same20class list onefixture SHA re-pin and full sandbox/source/restore/compiled/TRX guards preserved. No future insertion96/Game source join. Unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-canvas-host-namespace-fix02/manifest.json",
@@ -64164,6 +64164,14 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-canvas-actual-corrective02/actual-failed-latest03/canvas/root-capture.json",
       "sha256": "c34f5dddbfed609f3c6d10718c7e5272109c88c6d77ab5e697cfb485fa610bfc"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-native-coordinate-fixture-fix04/manifest.json",
+      "sha256": "62fb89e3f5b7fdce82f4466bd5b66cbf21dc250d307cf88c01be954bed259aef"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-canvas-outcome-actual-corrective04/actual-failed06/canvas/root-capture.json",
+      "sha256": "8556b409c6c41602497ad3fa72138828e66a2ca306eedf462edb972f0398ad76"
     }
   ],
   "sharedCakeIdContract": null,
