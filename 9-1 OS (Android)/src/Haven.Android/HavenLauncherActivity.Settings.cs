@@ -151,6 +151,8 @@ public sealed partial class HavenLauncherActivity
         {
             var failedWidgetId = _pendingWidgetId;
             _widgetSelectionPhase.Complete(failedWidgetId);
+            RetireOriginalWidgetSelection();
+            _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
             _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
             DeleteWidgetId(failedWidgetId);
             global::Android.Util.Log.Warn(
@@ -182,6 +184,11 @@ public sealed partial class HavenLauncherActivity
         if (_pendingWidgetId == AppWidgetManager.InvalidAppwidgetId) return;
         // Ignore a stale configure/pick phase without completing or deleting the current allocation.
         if (!_widgetSelectionPhase.IsExpected(_pendingWidgetId, requestCode == ConfigureWidgetRequest)) return;
+        if (!OriginalWidgetSelectionCurrent(_pendingWidgetGeneration))
+        {
+            CompletePendingWidget(_pendingWidgetId, keep: false);
+            return;
+        }
         if (widgetId != _pendingWidgetId)
         {
             CompletePendingWidget(_pendingWidgetId, keep: false);
@@ -230,20 +237,22 @@ public sealed partial class HavenLauncherActivity
         _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
         if (keep)
         {
-            var session = _pendingWidgetSession; var authority = _pendingWidgetAuthority; var epoch = _pendingWidgetEpoch;
-            _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetEpoch = 0;
-            _ = SaveConfiguredWidgetAsync(widgetId, session, authority, epoch);
+            var session = _pendingWidgetSession; var authority = _pendingWidgetAuthority; var generation = _pendingWidgetGeneration;
+            _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
+            _ = SaveConfiguredWidgetAsync(widgetId, session, authority, originalSelectionGeneration: generation);
             return;
         }
 
-        _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetEpoch = 0;
+        RetireOriginalWidgetSelection();
+        _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
         DeleteWidgetId(widgetId);
     }
 
     private void FailPendingWidget(int widgetId, string message, Exception exception)
     {
         _widgetSelectionPhase.Complete(widgetId);
-        _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetEpoch = 0;
+        RetireOriginalWidgetSelection();
+        _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
         _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
         DeleteWidgetId(widgetId);
         global::Android.Util.Log.Warn(

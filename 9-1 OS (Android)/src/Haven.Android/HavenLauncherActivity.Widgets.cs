@@ -12,6 +12,10 @@ public sealed partial class HavenLauncherActivity
 {
     private LauncherSessionSnapshot? _pendingWidgetSession;
     private string? _pendingWidgetAuthority;
+    private long _widgetSelectionGeneration;
+    private long _pendingWidgetGeneration;
+    private bool OriginalWidgetSelectionCurrent(long generation) => generation == Volatile.Read(ref _widgetSelectionGeneration) && !_launcherLifetime.IsCancellationRequested;
+    private void RetireOriginalWidgetSelection() => Interlocked.Increment(ref _widgetSelectionGeneration);
     private long _widgetRenderEpoch;
     private AndroidLauncherWidgetBindings? _widgetBindings;
     private readonly List<AppWidgetHostView> _mountedWidgetViews = [];
@@ -83,20 +87,26 @@ public sealed partial class HavenLauncherActivity
         try
         {
             if (!OperatingSystem.IsAndroidVersionAtLeast(26)) throw new InvalidOperationException("Android widget ownership verification requires Android 8 or later.");
+            if (_pendingWidgetId != AppWidgetManager.InvalidAppwidgetId) return;
+            var selectionGeneration = Interlocked.Increment(ref _widgetSelectionGeneration);
             var session = await WidgetSessions.ReadAsync(_launcherLifetime.Token);
-            if (session is null || _pendingWidgetId != AppWidgetManager.InvalidAppwidgetId) return;
+            if (session is null || !OriginalWidgetSelectionCurrent(selectionGeneration) || !_activityStarted ||
+                _pendingWidgetId != AppWidgetManager.InvalidAppwidgetId) return;
             _pendingWidgetSession = session; _pendingWidgetAuthority = session.Layout.AuthorityId;
+            _pendingWidgetGeneration = selectionGeneration;
             PickAndroidWidgetCore();
         }
         catch (Exception error) { Toast.MakeText(this, error.Message, ToastLength.Long)?.Show(); }
     }
 
-    private async Task SaveConfiguredWidgetAsync(int widgetId, LauncherSessionSnapshot? expected, string? authority, Guid? existingPlacement = null)
+    private async Task SaveConfiguredWidgetAsync(int widgetId, LauncherSessionSnapshot? expected, string? authority, Guid? existingPlacement = null, long? originalSelectionGeneration = null)
     {
         var entered = false;
         try
         {
             await _layoutEdits.WaitAsync(_launcherLifetime.Token); entered = true;
+            if (originalSelectionGeneration is { } issuedGeneration && !OriginalWidgetSelectionCurrent(issuedGeneration))
+                throw new UnauthorizedAccessException("The original widget picker operation retired; its binding is retained.");
             var provider = WidgetPlatform.ReadOwnedProvider(widgetId) ?? throw new InvalidOperationException("The Android widget owner is unavailable; its binding has been retained.");
             if (string.IsNullOrWhiteSpace(authority))
             { SaveWidgetId(widgetId); throw new InvalidOperationException("Choose a Home profile for this retained widget from Widgets → Associate retained widget."); }
@@ -111,6 +121,8 @@ public sealed partial class HavenLauncherActivity
             WidgetBindings.Associate(binding); // Recoverable if Home persistence cannot complete.
             if (expected is null || !await WidgetSessions.IsCurrentAsync(expected, _launcherLifetime.Token))
                 throw new InvalidOperationException("Home changed during widget selection. The configured widget is retained for its original profile.");
+            if (originalSelectionGeneration is { } currentGeneration && !OriginalWidgetSelectionCurrent(currentGeneration))
+                throw new UnauthorizedAccessException("The original widget picker operation retired; its binding is retained.");
             if (existingPlacement is { } target)
             {
                 var owned = await WidgetSessions.ReadWidgetAsync(expected, target, _launcherLifetime.Token);
@@ -129,7 +141,7 @@ public sealed partial class HavenLauncherActivity
             WidgetBindings.Associate(binding with { PlacementId = placement });
             var current = await WidgetSessions.ReadAsync(_launcherLifetime.Token);
             if (current is not null && current.Layout.AuthorityId == saved.AuthorityId && current.Layout.Revision == saved.Revision) _layout = DisplayedLayouts.Bind(current);
-            RenderPage();
+            if (_activityStarted && (originalSelectionGeneration is null || OriginalWidgetSelectionCurrent(originalSelectionGeneration.Value))) RenderPage();
         }
         catch (Exception error) { Toast.MakeText(this, error.Message, ToastLength.Long)?.Show(); }
         finally { if (entered) _layoutEdits.Release(); }

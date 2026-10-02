@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "39f14c9b2df44b32b9c4d0238afa85cecce2d17c",
-  "programTree": "5122eb9dba6d9057d9853a2513b1fdd210654e5e",
+  "baselineCommit": "986c31b5ab7ddce341df23a01207226353aebdb6",
+  "programTree": "a9b3673ef919a02a6ef77d5f83a8e54426cc3785",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
   "files": [
@@ -694,9 +694,9 @@
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Home.cs",
       "mode": "100644",
-      "object": "088716bb87ab14c66f00fa3a710e08b2d908f337",
-      "bytes": 1700,
-      "sha256": "c8e1fa2f8676c0f37314e631b44e4fa58c619c8b89abfbf7cd7ced7b58a7d16c"
+      "object": "6088a171abd92eb33431213ce3c0dbaee62e294c",
+      "bytes": 1741,
+      "sha256": "320ce639bfce30e918a5cd7135420ccb0105c232c67ae94e27b7e4ee2076bbeb"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Keyboard.cs",
@@ -722,9 +722,9 @@
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Settings.cs",
       "mode": "100644",
-      "object": "046dff46c3cdf96ac01da1ef57f1587a279a89f8",
-      "bytes": 15944,
-      "sha256": "8e33924cdf549fb79641697c4b96fccfcb06d9a2b53a4003821ad6f42a986090"
+      "object": "907b76c0867a3e2464f974dc475ff5cd3a2c1c93",
+      "bytes": 16411,
+      "sha256": "8836bc355613e0cb3d0083a5cf78863c227568e32a3678a4d51384c1c650ed43"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Shortcuts.cs",
@@ -736,16 +736,16 @@
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.Widgets.cs",
       "mode": "100644",
-      "object": "74399bc19750c62fddd1f62fce9344caf53551e1",
-      "bytes": 13553,
-      "sha256": "a41bdcdfac4d9ab448a556029a6d50a16e73138a696f0605461e10a79c38530d"
+      "object": "62d2f59a5dd0e90f2d4b6db5acdb4bb8420d534f",
+      "bytes": 14928,
+      "sha256": "cd09b5206e974f354344793dbfb390420b8d2981237a3d62b9e7292d3e468fa3"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenLauncherActivity.cs",
       "mode": "100644",
-      "object": "ff40555e2dda027957c89e04e9d1d719743e990d",
-      "bytes": 15498,
-      "sha256": "c16f625551b9ba6d54ad0287d75e9f2a3d5ee396f4883e9c32a4e8d984f1c093"
+      "object": "0ef80d26c549ef92629a6264b3f95f89f91d2272",
+      "bytes": 15539,
+      "sha256": "3771c943e28bb0b47ccbd4d4f58c282e888708a11c58f04480bcee90dce8cb9c"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenNativeUi.cs",
@@ -65592,7 +65592,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-android14-cut.json",
-  "limits": "Fresh current20 ONLY two diagnosed production/whole-fixture source changes. All six unfiltered managed projects/current75 class files plus full regression/resource retained, all current source/restore/task/compiled/PDB/zeroSkip guards. Separate SDK matrix job installs maintained actual Android workload, restores actual Android app BEFORE host source tools, builds real net10.0-android Debug no-restore with actual source-built host task, verifies tracked evaluated Compile/defines/target/PDB/restores. No APK installation/device/default HOME/physical widget runtime claims. All ordinary startup/credentials/shared accepted current20 sources unchanged. Fresh all four jobs required before normal source correction. SDK-only restore helper context explicitly queries actual Debug/net10Android standardobj entry and authoritative dgspec child outputs; separate source-host task remains root14-host Release, analyzers root14-managed netstandard. Default managed owning/regression/resource queries/guards remain identical. SDK cohort admitted only explicit exact Android entry with sdk_context=True; no fake metadata copies. SDK evaluated Compile additionally requires exact actual failed consumer HavenLauncherActivity.Settings.cs uniquely tracked alongside phase producer; no source/runtime change. Exact actual SDK10 projectPath guard failure: Den.csproj and Dulche.Runtime.csproj shared standardobj/project.assets.json. GENUINE actual SDK restore/build/evaluatedquery and SDK helper Debug context all use maintained UseArtifactsOutput/project-name isolation at root14-android-sdk-build. Existing strict assets sourceproject/path/framework/hash guards unchanged, no copiedassets/guard exemption/source rewrite. Ordinary managed/root14-managed and host/root14-host contexts unchanged. Both actual phase producer AND failed Settings consumer unique tracked Compile still mandatory; full4fresh jobs required.",
+  "limits": "Fresh current20 ONLY two diagnosed production/whole-fixture source changes. All six unfiltered managed projects/current75 class files plus full regression/resource retained, all current source/restore/task/compiled/PDB/zeroSkip guards. Separate SDK matrix job installs maintained actual Android workload, restores actual Android app BEFORE host source tools, builds real net10.0-android Debug no-restore with actual source-built host task, verifies tracked evaluated Compile/defines/target/PDB/restores. No APK installation/device/default HOME/physical widget runtime claims. All ordinary startup/credentials/shared accepted current20 sources unchanged. Fresh all four jobs required before normal source correction. SDK-only restore helper context explicitly queries actual Debug/net10Android standardobj entry and authoritative dgspec child outputs; separate source-host task remains root14-host Release, analyzers root14-managed netstandard. Default managed owning/regression/resource queries/guards remain identical. SDK cohort admitted only explicit exact Android entry with sdk_context=True; no fake metadata copies. SDK evaluated Compile additionally requires exact actual failed consumer HavenLauncherActivity.Settings.cs uniquely tracked alongside phase producer; no source/runtime change. Exact actual SDK10 projectPath guard failure: Den.csproj and Dulche.Runtime.csproj shared standardobj/project.assets.json. GENUINE actual SDK restore/build/evaluatedquery and SDK helper Debug context all use maintained UseArtifactsOutput/project-name isolation at root14-android-sdk-build. Existing strict assets sourceproject/path/framework/hash guards unchanged, no copiedassets/guard exemption/source rewrite. Ordinary managed/root14-managed and host/root14-host contexts unchanged. Both actual phase producer AND failed Settings consumer unique tracked Compile still mandatory; full4fresh jobs required. Actual SDK11 strictly restored/evaluated and compiled until missing _pendingWidgetEpoch; exact two production partials now capture epoch BEFORE actual owner read/pre-post current+semaphore admissions, declare/reset retained epoch, preserve existing fourth Guid association using explicit fifth named epoch. All old fixtures/full75own-six/12reg/36resource and actual SDK metadata/helper/project-named outputs untouched; no staleguard removal/physicalwidget acceptance. HELD12 renderEpoch guard would deny expectedpicker OnStop; superseded by private DISTINCT original pickeroperation generation, surviving expectedexternalpicker/config Stop/Start without activityStarted requiring resultowner save. Cancel/fail/newpick/destroy/genuineHOME retire originaloperation; renderEpoch/renderstarted guards remain unchanged for mounting. Four exactproductionpartials only, originalcanonical session/allocated native phase/Guid association retained. SDK11 actual project-named restore/context/producer+Settings Compile guards and all75own-six/12reg/36resource/source/test metadata untouched. No atomic throughI/O lease or nativewidget lifecycle acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-android-root20-widget-selection-phase-corrective01/manifest.json",
@@ -65617,6 +65617,22 @@
     {
       "path": "/workspace/astra-source/worker4-android-root20-widget-phase-full-managed-sdk-gate10/manifest.json",
       "sha256": "f483e244103467e98f6eae97b1b5ef25da019e73efdd2e1db2f03146a26c90bc"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-android-root20-widget-phase-full-managed-sdk-corrective11-project-outputs/manifest.json",
+      "sha256": "918a7daf032ab6658eba9880810d3229471a58e5199c608022ffa65ecb9b1ee4"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-android-actual-sdk11-pending-epoch-corrective01/manifest.json",
+      "sha256": "a45079ebd7bfb5a04564cb1f25bf670891b2adbbf6634028120cc02fabe1feb0"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-android-root20-actual-pending-widget-epoch-corrective12/manifest.json",
+      "sha256": "5747484bc21684da4a09edc19aeff8b7db8f4807f772177915df2ace015ab993"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-android-actual-sdk11-picker-operation-corrective02/manifest.json",
+      "sha256": "12032d7a3bf6d6524f1c403893e5a214f15497973bbc3e9dd0c1226f313c3692"
     }
   ],
   "sharedCakeIdContract": null
