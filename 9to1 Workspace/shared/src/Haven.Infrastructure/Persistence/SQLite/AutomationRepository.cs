@@ -18,7 +18,7 @@ namespace Haven.Infrastructure;
 /// <summary>
 /// Represents automation repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class AutomationRepository(ISqliteConnectionFactory factory, AutomationLocalStoreAuthority? ownerAuthority = null,
+public sealed partial class AutomationRepository(ISqliteConnectionFactory factory, AutomationLocalStoreAuthority? ownerAuthority = null,
     Func<AutomationLocalStoreAuthority>? ownerAuthorityAccessor = null) : IAutomationRepository, IAutomationOwnerRepository
 {
     /// <summary>
@@ -227,7 +227,7 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory, Autom
         // Resolve the actual same-graph issuer only on the owning commit path, before SQL admission.
         // Canonical reads and ordinary writers never resolve the broker/accessor.
         var actualAuthority = ownerAuthority ?? ownerAuthorityAccessor?.Invoke();
-        if (actualAuthority is null || !actualAuthority.Issued(admission, factory) ||
+        if (change.RequiresLinkedCommit || actualAuthority is null || !actualAuthority.Issued(admission, factory) ||
             change.EntityKind != AutomationOwnerEntityKind.Automation || change.Automation is not { } proposal ||
             proposal.Id != change.EntityID || proposal.IsEnabled || proposal.OperationalState == AutomationOperationalState.Ready ||
             change.ChangeKind == AutomationDefinitionChangeKind.PublishGraph || proposal.Name is not { Length: > 0 and <= 256 } ||
@@ -235,6 +235,37 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory, Autom
             return Denied("OwnerAdmissionUnavailable");
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var result = await ApplyOwnedDefinitionWithinTransactionAsync(change, admission, new SqlOwnerWriteTurn(this, actualAuthority, admission), connection, transaction, false, cancellationToken).ConfigureAwait(false);
+        if (result.Committed) await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return result;
+    }
+
+    private sealed record SqlOwnerWriteTurn(AutomationRepository Issuer, AutomationLocalStoreAuthority Authority,
+        IAutomationDefinitionCommitAdmission Admission) : IAutomationSqlOwnerWriteTurn;
+    internal IAutomationSqlOwnerWriteTurn? CaptureOwnerWriteTurn(IAutomationDefinitionCommitAdmission admission)
+    {
+        var authority = ownerAuthority ?? ownerAuthorityAccessor?.Invoke();
+        return authority is not null && authority.Issued(admission, factory)
+            ? new SqlOwnerWriteTurn(this, authority, admission) : null;
+    }
+    internal bool UsesConnectionFactory(ISqliteConnectionFactory expected) => ReferenceEquals(factory, expected);
+    internal async Task<AutomationDefinitionCommitResult> ApplyOwnedDefinitionWithinTransactionAsync(AutomationDefinitionChange change,
+        IAutomationDefinitionCommitAdmission admission, IAutomationSqlOwnerWriteTurn ownerTurn,
+        SqliteConnection connection, SqliteTransaction transaction, bool allowLinkedCommit, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(change); ArgumentNullException.ThrowIfNull(admission);
+        AutomationDefinitionCommitResult Denied(string code) => new(false, code, null, change.OperationID, change.PayloadSHA256);
+        // Resolve the actual same-graph issuer only on the owning commit path, before SQL admission.
+        // Canonical reads and ordinary writers never resolve the broker/accessor.
+        if (ownerTurn is not SqlOwnerWriteTurn issued || !ReferenceEquals(issued.Issuer, this) ||
+            !ReferenceEquals(issued.Admission, admission)) return Denied("OwnerAdmissionUnavailable");
+        var actualAuthority = issued.Authority; // Actual private turn captured BEFORE opening SQL; no DI under this lease.
+        if (change.RequiresLinkedCommit && !allowLinkedCommit || actualAuthority is null || !actualAuthority.Issued(admission, factory) ||
+            change.EntityKind != AutomationOwnerEntityKind.Automation || change.Automation is not { } proposal ||
+            proposal.Id != change.EntityID || proposal.IsEnabled || proposal.OperationalState == AutomationOperationalState.Ready ||
+            change.ChangeKind == AutomationDefinitionChangeKind.PublishGraph || proposal.Name is not { Length: > 0 and <= 256 } ||
+            change.ExpectedRevision == long.MaxValue)
+            return Denied("OwnerAdmissionUnavailable");
         var identity = await SqliteDatabase.ReadStoreIdentityAsync(connection, false, cancellationToken, transaction).ConfigureAwait(false);
         if (identity.StoreId != change.StoreID) return Denied("OriginalStoreChanged");
         AutomationOwnerRead<AutomationDefinition>? current;
@@ -304,7 +335,6 @@ public sealed class AutomationRepository(ISqliteConnectionFactory factory, Autom
         if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1) return Denied("RevisionConflict");
         // Only raw issuer receipts/actor observations under this SQL transaction; no repository/resource recursion.
         if (!await admission.CheckAsync(context, cancellationToken).ConfigureAwait(false)) return Denied("OwnerAdmissionChanged");
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return new(true, "DefinitionCommitted", revision, change.OperationID, change.PayloadSHA256);
     }
 

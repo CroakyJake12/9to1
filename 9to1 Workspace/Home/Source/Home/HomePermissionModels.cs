@@ -109,6 +109,11 @@ public sealed record HomePermissionScope(
     }
 }
 
+/// <summary>Descriptive original resource tuple only. Public metadata cannot mint resource/execution authority.</summary>
+public sealed record HomeCanonicalResourceBinding(int SchemaVersion,
+    Haven.Application.AuthenticatedResourceActor OriginalActor,
+    IReadOnlyList<Haven.Application.ResourceScope> Scopes);
+
 public sealed record HomePermissionImpactPreview(
     IReadOnlyList<string> AffectedObjectTypes,
     int? AffectedObjectCount,
@@ -116,7 +121,8 @@ public sealed record HomePermissionImpactPreview(
     bool IsUnknown,
     string? ChangePreview = null,
     string? BackupId = null,
-    string? ArgumentsDigest = null)
+    string? ArgumentsDigest = null,
+    HomeCanonicalResourceBinding? ResourceBinding = null)
 {
     public static HomePermissionImpactPreview Unknown { get; } = new([], null, [], true);
 }
