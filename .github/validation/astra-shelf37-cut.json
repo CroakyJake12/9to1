@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "c7b7a145eb90ee44f24fc84411405f9da8c3e5cc",
-  "programTree": "597bb01ce9eb6b9abbe7fb6fca4b6b84e7ec3e40",
-  "currentNormalCommit": "e1644a16b989255528fea449a32c0cc9b31fc7e8",
+  "baselineCommit": "79e14fce182539e6def932fb651abd7e63ef9848",
+  "programTree": "5e39d6eccd6132f23983834f73fb6d5afbbd1aa3",
+  "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
     {
@@ -71,16 +71,16 @@
     {
       "path": ".github/validation/astra-shelf37-resource-classes.json",
       "mode": "100644",
-      "object": "973944a5d6fd3f537539649178928633b13ac246",
+      "object": "1f7a30062df01e9856c00ceefc09a7d5801fb5ce",
       "bytes": 37291,
-      "sha256": "c8fec0e232bbfd8cd955ba950c169b7f234a06632bd8a9d2e7572d0286d637c6"
+      "sha256": "9f1d7ad2c3abaeffe8fa3d06cce30dfaa62256354e28cf29365206372b92f016"
     },
     {
       "path": ".github/validation/astra-shelf37-test-classes.json",
       "mode": "100644",
-      "object": "617ad5dd7bf3e0e8bd05d484633fad6fae216dea",
+      "object": "518f23d0b31d13f605c1d6bcee04f1a43d797670",
       "bytes": 22979,
-      "sha256": "c258296e50f51ae69df6b095f8797ca26ce9d2911ac9394ff042d68ffce76dc4"
+      "sha256": "a23b59c7b9b32978aac528b8c9c697996bcef8a4341a26369a1a66cecd1ef4d3"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -41238,9 +41238,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs",
       "mode": "100644",
-      "object": "d9747cfbb2f3df7d66062369eb5d76d463539930",
-      "bytes": 40331,
-      "sha256": "e604b2dabcf489f6107df4c17f5aa40e504b0b25fefbbff01e21258766d27715"
+      "object": "2a075d6728b4bf552301c69ad277ae51d70b36d8",
+      "bytes": 40332,
+      "sha256": "05fe5269d5ca1d5bebb084d2853d5977b7b138395985842b7025add61252cfda"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
@@ -65962,6 +65962,18 @@
     {
       "path": "/workspace/astra-source/root-shelf37-full3-original-failure-diagnosis297.json",
       "sha256": "92fc5ab5b21b70b021adbbdfe3d9c94560e1f40bc442ae125bb39c41b94c8b86"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf37-actual-c7b7-full3-corrective-package08/manifest.json",
+      "sha256": "74daf4c3d950791cb5088c94db1fa47bc4f34483d35eb6deb53ae964e4c742e7"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf37-actual79e-reference-nullflow-corrective01/manifest.json",
+      "sha256": "ab433fd9d810ab2fd822a4393e2ca56593f1f1eccdee6e4537b85f918bcd9439"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint22-publication-local.json",
+      "sha256": "b7ff7fc3baeac9dc86764c280bc689a01cd167849eea46b1434ca527ac9c92ba"
     }
   ],
   "sharedCakeIdContract": null

@@ -230,7 +230,7 @@ public sealed class FormDataReferenceLookupSourceTests
         var first = await lookup.ReadChoicesAsync("a", 0, 2);
         Assert.True(first.Success); Assert.True(first.HasMore);
         Assert.Equal(new[] { "Alpha", "Beta" }, first.Choices!.Select(choice => choice.Label).ToArray());
-        var beta = first.Choices[1];
+        var beta = first.Choices![1];
         Assert.Null(await lookup.SelectAsync(new(beta.RecordID, beta.Label))); // Locator values do not replace actual issued observation.
         var selected = (await lookup.SelectAsync(beta))!.Value;
         Assert.Equal(fixture.TableID, selected.GetProperty("tableID").GetGuid());
