@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>HavenOS.Stacks.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Stacks.NativeUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Stacks.csproj" />
+    <ProjectReference Include="../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/Stacks.cui" LogicalName="HavenOS.Apps.Stacks.NativeUI.UI.Stacks.cui" />
+  </ItemGroup>
+</Project>

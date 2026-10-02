@@ -17,6 +17,8 @@ public sealed class StackEngine
         _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
+    public string? LoadedRevisionToken => (_store as JsonFileStackProjectStore)?.LoadedRevisionToken;
+
     public async Task<StackDomainSnapshot> CreateProjectAsync(
         StackProjectConfiguration configuration,
         StackActor? actor = null,
@@ -240,6 +242,24 @@ public sealed class StackEngine
         {
             _gate.Release();
         }
+    }
+
+    /// <summary>Reads the recorded canonical domain projection without causing cascade, audit or storage writes.
+    /// A paused or pending propagation remains an owner operation rather than a permission granted by browsing.</summary>
+    // Persisted canonical working view without cascade/write. RevisionId identifies the
+    // domain head; working file bytes are not asserted to be immutable commit content.
+    public async Task<StackEffectiveTreeSnapshot> InspectRecordedTreeAsync(Guid domainId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            var domain = FindDomain(state, domainId);
+            return new(domain.Id, domain.HeadRevisionId ?? domain.BaseRevisionId, CloneTree(BuildEffectiveTree(state, domain.Id)));
+        }
+        finally { _gate.Release(); }
     }
 
     public async Task ApplyChangeAsync(Guid domainId, StackMutation mutation, StackActor actor, CancellationToken cancellationToken = default)
@@ -1037,6 +1057,36 @@ public sealed class StackEngine
         {
             _gate.Release();
         }
+    }
+
+    /// <summary>Canonical persisted project activity, not inferred from labels or UI navigation.</summary>
+    public async Task<IReadOnlyList<StackAuditEntry>> GetActivityAsync(StackActor actor, CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, "project.activity");
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            return Array.AsReadOnly(state.Audit.ToArray());
+        }
+        finally { _gate.Release(); }
+    }
+
+    /// <summary>Commits owned by this exact stable domain; ancestor commits are not relabelled as local commits.</summary>
+    public async Task<IReadOnlyList<StackRevision>> GetRevisionHistoryAsync(Guid domainId, StackActor actor,
+        CancellationToken cancellationToken = default)
+    {
+        Demand(actor, StackCapability.ViewSource, domainId.ToString("D"));
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StackManifest state = await GetStateAsync(cancellationToken).ConfigureAwait(false);
+            _ = FindDomain(state, domainId);
+            return Array.AsReadOnly(state.Revisions.Where(revision => revision.DomainId == domainId)
+                .OrderByDescending(revision => revision.Sequence)
+                .Select(revision => revision with { ChangedPaths = Array.AsReadOnly(revision.ChangedPaths.ToArray()) }).ToArray());
+        }
+        finally { _gate.Release(); }
     }
 
     private async Task<StackDomainSnapshot> CreateExpectedChildAsync(Guid parentId, StackDomainKind expectedParentKind, string name, StackActor actor, CancellationToken cancellationToken)
