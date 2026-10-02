@@ -1,6 +1,12 @@
 {
   "classes": [
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/BrowserResearchCoordinatorTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "BrowserResearchCoordinatorTests",
+      "sha256": "0a294fa2f1fdd1e5ee2beee383895b73199bc8b267c9f17c19c0a70d1a385dcf"
+    },
+    {
       "class": "CanvasDurableHistoryTests",
       "fullClass": "Haven.Core.Tests.CanvasDurableHistoryTests",
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/CanvasDurableHistoryTests.cs",

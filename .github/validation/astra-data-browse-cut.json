@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "2f420c90782bcfb8ec76c3bce3eca8c0da5b495d",
+  "baselineCommit": "e9c3543f156d75b23a7ba7cd21c0c550339647ca",
   "programTree": "3c2bb450c0d39534be79d812cd4f45624bc7555c",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
   "kind": "corrective",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-data-browse-test-classes.json",
       "mode": "100644",
-      "object": "49fc90aa8b0de6ec44e045565bae417b872e3386",
-      "bytes": 16165,
-      "sha256": "e5ac470c7349e8a35aed71ac3f61d796f4f03da22e2894a463a21048a930763d"
+      "object": "8f176f15efe25e6bd3e7e56cb9f474d8c2f9c35e",
+      "bytes": 16447,
+      "sha256": "18ded5a5ddecfd225ef39f0cb31a9009477bb00e6a84f876a085d9dbf5bd627e"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "Actual Avalonia CS1729 corrective only: default Button constructor with Content initializer; Name/events/Accept/ownership/lifetime unchanged. Whole prior owning and full resource suites, all exact classes/source22+3/restore/producers/hosttasks/compiled/artifact guards preserved. No omission or compilation/runtime claim.",
+  "limits": "Actual receipt provenance-only correction: existing executed BrowserResearchCoordinatorTests exact source SHA and Haven.Core.Tests FQN added to owning table; prior34rows preserved,35rows total. Every selected existing filter clause independently resolves exactlyone pinned FQN; owning runner/filters/test source/count unchanged. Product semantic tree unchanged. Whole source/restore/compiled/TRXzeroSkip guards preserved; prior core21passed does not establish new fullgate acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64730,6 +64730,10 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective02/actualfailed-11216417439/root-capture.json",
       "sha256": "fbbf7b596d40fa6711b4a3848d7f2e7e7ddc8e0ed716056f4a62ab91463449e5"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective02/actualfailed-11216466938/root-capture.json",
+      "sha256": "32e4b77a05134ee2640de2248d4e62f73440e59a18421f16d6220f9b78d359f9"
     },
     {
       "path": "/workspace/astra-source/ready-artifacts/root-data-actual-corrective02/actualfailed-11216466938/root-capture.json",
