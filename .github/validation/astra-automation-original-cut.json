@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "ca64e56d88670ca39ca9295f66b2eac7e9081b52",
-  "programTree": "780b95ec0c36739c780412640514df82ea2d230c",
-  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "baselineCommit": "c167d1e90fe8e9dd9d5d26f03786ca8bbb550c6a",
+  "programTree": "8b1be71c7fa59d2df70fa6225a5420f7f4df6768",
+  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
     {
@@ -35274,9 +35274,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationGraphPublicationPreparer.cs",
       "mode": "100644",
-      "object": "ce8e85c4e6dda7ba21733144e78ff39250444c1c",
-      "bytes": 6892,
-      "sha256": "501901f32f496f9f0da3c5c72b7d9c1b00b7d60c0eb70447749abdb93c00f9f1"
+      "object": "ca8cf7c99cce7d7e3391a6d7a14a261f876f0d63",
+      "bytes": 6917,
+      "sha256": "77800b2a7f30bf916392d252f94db24460670458512cc3e78b930e262040f32c"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Automations/AutomationHomeDefinitionOperation.cs",
@@ -35428,9 +35428,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/AutomationGraphOwnerServiceCollectionExtensions.cs",
       "mode": "100644",
-      "object": "5df02a570a007750d6f81a7639a1a28948668413",
-      "bytes": 5624,
-      "sha256": "7fefc2257a14faf4c2f15bc91c50d15d6ebfad3d0ea28ab80e94603aa113f000"
+      "object": "860ca2914dd9ad33c8a615703c3c44bef44a2c02",
+      "bytes": 5674,
+      "sha256": "f0d530bff3d3fe1dff34087d675bd2a60c89eb80b885559d2c30391f15138f0b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/AutomationLinkedDefinitionServiceCollectionExtensions.cs",
@@ -64703,7 +64703,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-automation-original-cut.json",
-  "limits": "Actual Home CS0246 missing full producer closure supplement only: exact11 existing Application WebMcp contract declarations from actual Home-compiling Data69 source; no interface stubs/consumer removals or changed semantics. Whole inherited Maps2/Automation3 owning/resource/regression/Automation cohorts and exact classes/source22+3/restore/producers/hosttasks/compiled/artifact guards unchanged; prior attestation alias and DI import retained. Uncompiled/unrun.",
+  "limits": "Actual compile corrective only: two existing actual namespace imports only, no producer/consumer/interface or new SQL/graph semantics. All full Maps2/Automation3 gates, filters/counts/source22+3/restore/producers/hosttasks/compiled/TRX guards unchanged; no runtime acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-automation-owning-source-graph02/manifest.json",
@@ -64736,6 +64736,22 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/automation-original-coherent-owning02/actualfailed-11216577806/root-capture.json",
       "sha256": "fcc3221761a32e46726bc9880bed60cf9ef5eaf9e2e3f02497509f1cdc5d08bb"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-automation-selected-c167-import-corrective01/manifest.json",
+      "sha256": "038c0be78b614007fd1617c5311a702216cd720e359b633530d662b1c36f11bb"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-automation-producer-actual-corrective01/actual-failed05-11217733339/root-capture.json",
+      "sha256": "e7b4d327301c3fbf063e2461ddc0ccfd882e653c59fdff3aa935add6f3c0a270"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-automation-producer-actual-corrective01/actual-failed05-11218326431/root-capture.json",
+      "sha256": "f4bbc9e025babbb81419ebde3b64e2c753cbbc0a1ecbd09044de40b274403c61"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-automation-producer-actual-corrective01/actual-failed05-11218450432/root-capture.json",
+      "sha256": "03c9927873ac98686010e57432a1cf9ce59a56504b7daeba8582f558f631f2b6"
     }
   ],
   "sharedCakeIdContract": null

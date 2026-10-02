@@ -1,3 +1,4 @@
+using HavenOS.Home.PermissionsTrustNotifications;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Application.NodeGraph;
