@@ -158,7 +158,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
       "namespace": "Haven.Infrastructure.Tests",
       "class": "ShelfMapsOwnedLibraryTests",
-      "sha256": "3ae33f9b8cb076dab006c4671284e0f13eed24157b300ef24b8fffce84ca4eb6"
+      "sha256": "04f3f759841a06bacefd6f05efbcc12e5938e012697fa67ddd87d76c1a30979b"
     },
     {
       "class": "StudioRegisteredToolEvidenceTests",

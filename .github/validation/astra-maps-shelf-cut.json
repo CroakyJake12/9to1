@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "10b2aa927c22e04ae410f4535aae67db6e6af569",
-  "programTree": "6a4dbc2c713f006ce6a9e1bbc60458c06207a7a2",
-  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "baselineCommit": "9a264e625ae6058e8fc8a7754285fc330802f3d6",
+  "programTree": "e3514a4ff9cd7754f05852ea6fc392735ffe2269",
+  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
     {
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "8d2acde4a5108ecc32f5c71cde23ab0d6db2bf28",
+      "object": "a51b28608bfdefb8940e10fb16b772d8279a75b4",
       "bytes": 15096,
-      "sha256": "410776c7f891e607f164d787fbbca2c0cd7dc90403ed157173d74c4afc3de705"
+      "sha256": "88451528ad1ec1a1bb11ddc7d92da8a78c525e3dd1bea08b3bd74915107addbf"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40559,9 +40559,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
       "mode": "100644",
-      "object": "3a190168e9cc9ed6944858d0da91d19e9da191a3",
-      "bytes": 29440,
-      "sha256": "3ae33f9b8cb076dab006c4671284e0f13eed24157b300ef24b8fffce84ca4eb6"
+      "object": "0c4d7fdd28b0f9992e65bba1f8f78a0e909c6209",
+      "bytes": 29458,
+      "sha256": "04f3f759841a06bacefd6f05efbcc12e5938e012697fa67ddd87d76c1a30979b"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/SqliteDatabaseTests.cs",
@@ -64696,7 +64696,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Exact selected owning fixture observer async ValueTask\u2192async Task matches actual selected W1 interface. All historical ShelfMaps fixture cases and16coupled final cases preserved; only changed fixtureSHA re-pinned sameclass table. Full Maps2 gates and source/restore/compiled/class/TRX guards unchanged; no future Source.IsFor preflight/helper/owner20case semantics.",
+  "limits": "Actual compile corrective only: selected owning fixture persisted Core.HomePermissionRequest type fully qualified, Task/all oldcases/16coupled retained; one changedfixtureSHA re-pin only in same30class table. All full Maps2/Automation3 gates, filters/counts/source22+3/restore/producers/hosttasks/compiled/TRX guards unchanged; no runtime acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-maps-owning-source-graph04/manifest.json",
@@ -64729,6 +64729,18 @@
     {
       "path": "/workspace/astra-source/worker3-shelf-maps-observer-task-compatibility01/manifest.json",
       "sha256": "b539e2429a931f2bb13a18e09e7388643b34c0a472de0bc0eb69b07ae1adcffd"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf-maps-actual-request-type-corrective02/manifest.json",
+      "sha256": "d865dbbf63c865e67d0e43ef9ad11186a1cb192b3988ea825e8b8f67ea711599"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-maps-observer-actual-corrective02/actual-failed05-11217328932/root-capture.json",
+      "sha256": "390b7b1a3aec59b6766da45a89147af491339d2198ba6b79ee21830b774a435f"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-maps-observer-actual-corrective02/actual-failed05-11218351356/root-capture.json",
+      "sha256": "bf2812a305b5dabd18cc2abd440f35bf0db853e21134c0acec76d3fa8f9cc328"
     }
   ],
   "sharedCakeIdContract": null

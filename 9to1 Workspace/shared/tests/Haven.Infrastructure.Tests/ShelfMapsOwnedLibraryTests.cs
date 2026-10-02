@@ -296,7 +296,7 @@ public sealed class ShelfMapsOwnedLibraryTests
             var state = (await Actual.ReadAsync(token)).State!;
             var record = Assert.Single(state.Records, item => item.RecordId == recordId);
             Assert.Equal(actualRecordRevision, record.Revision);
-            var requests = record.Payload.GetProperty("Requests").Deserialize<HomePermissionRequest[]>()!;
+            var requests = record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.Core.HomePermissionRequest[]>()!;
             if (requests.Any(request => request.State == HomePermissionRequestState.PendingApproval))
             {
                 PendingWrites++; var after = AfterPendingWrite; AfterPendingWrite = null;
