@@ -5,6 +5,10 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutDocumentReader.cs" Link="Production/AndroidLauncherLayoutDocumentReader.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherFolderNavigation.cs" Link="Production/AndroidLauncherFolderNavigation.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutDocumentSelections.cs" Link="Production/AndroidLauncherLayoutDocumentSelections.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherGestureInput.cs" Link="Production/AndroidLauncherGestureInput.cs" />
     <Compile Include="../../src/Haven.Android/AndroidLauncherPageNavigation.cs" Link="Production/AndroidLauncherPageNavigation.cs" />
     <Compile Include="../../src/Haven.Android/AndroidLauncherOriginalAppSelection.cs" Link="Production/AndroidLauncherOriginalAppSelection.cs" />
     <Compile Include="../../src/Haven.Android/AndroidInstalledApplicationsGoProvider.cs" Link="Production/AndroidInstalledApplicationsGoProvider.cs" />

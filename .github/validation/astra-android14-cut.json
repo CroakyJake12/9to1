@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "programTree": "337aa317608cf8662c5ad1c84e08f653deb809fa",
+  "baselineCommit": "a758aad628ae10f79240190f3e84bedefc1cc4b8",
+  "programTree": "0927823700db55f07218769698483953bc5c6fdb",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -22,9 +22,9 @@
     {
       "path": ".github/scripts/astra-android14-owning.py",
       "mode": "100644",
-      "object": "0e532ba5e12de00acfd4a7aebdfa27eeedf61136",
-      "bytes": 23433,
-      "sha256": "98046b4142d7d26f0c59e912a9bc43a8992d637ea0072ab4e5ae4acfeacb3abf"
+      "object": "e1c5e6c21efcc996543cdd02bb2e7f3cc7f6d1fc",
+      "bytes": 23729,
+      "sha256": "94bf0030627cf29e3383e27d9046491121fc74f5d94df7f876d9f8a2b411293a"
     },
     {
       "path": ".github/scripts/astra-android14-regression.py",
@@ -995,9 +995,9 @@
     {
       "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/Haven.Android.Ai.Tests.csproj",
       "mode": "100644",
-      "object": "da2af444c9ba7e65084213982803975d2f7b9483",
-      "bytes": 2055,
-      "sha256": "09af476562cafc5c0fab33d84f4fc836b4ba31f878663c8f75f0fb686aea8760"
+      "object": "0ca9274f243255fe2245726765d0460d159effb7",
+      "bytes": 2623,
+      "sha256": "8607a57253a955d5ddd27bd5cba0cbf919ff5f92577900c2f432922e673baa58"
     },
     {
       "path": "9-1 OS (Android)/tests/Haven.Android.Ai.Tests/RoutedKeyboardAiExecutorTests.cs",
@@ -64752,7 +64752,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-android14-cut.json",
-  "limits": "Whole six managed projects and unchanged full regression/resource. Lexical inventories are source observations only; actual Compile, discovery, TRX and zero skip are authoritative. Normal managed lane defines neither Android diagnostic symbol. No native role/input/widget/donor acceptance; separate actual SDK normal/R1/context gates remain required.",
+  "limits": "Exact actual a758 managed build CS0103/CS0246 repair: additive four existing selected production Compile links, plus fail-closed actual evaluated Compile unique/hash guards for those same files. Entire six unfiltered managed projects, 67 whole source classes, regression/resource and all original source/restore/task/compiled/defines/zero-skip guards retained. No production source changes or optional widget joins.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker5-android-coherent14-hosted-default-home-r1-gate-handoff06-whole-owning-source-count/manifest.json",

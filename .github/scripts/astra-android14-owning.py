@@ -167,7 +167,7 @@ def build_and_pin(name,project):
   compileEvidence.append({'path':relative,'bytes':path.stat().st_size,'sha256':digest(path)})
  required={e['path']:e['sha256'] for e in provenance['classes'] if e.get('project')==project}
  if name=='managed1':
-  for linked in ['9-1 OS (Android)/src/Haven.Android/AndroidLauncherOriginalAppSelection.cs','9-1 OS (Android)/src/Haven.Android/AndroidLauncherPageNavigation.cs']:required[linked]=cutPaths[linked]
+  for linked in ['9-1 OS (Android)/src/Haven.Android/AndroidLauncherOriginalAppSelection.cs','9-1 OS (Android)/src/Haven.Android/AndroidLauncherPageNavigation.cs','9-1 OS (Android)/src/Haven.Android/AndroidLauncherLayoutDocumentReader.cs','9-1 OS (Android)/src/Haven.Android/AndroidLauncherFolderNavigation.cs','9-1 OS (Android)/src/Haven.Android/AndroidLauncherLayoutDocumentSelections.cs','9-1 OS (Android)/src/Haven.Android/AndroidLauncherGestureInput.cs']:required[linked]=cutPaths[linked]
  for relative,pin in required.items():
   if actualCompile.get(relative)!=1 or digest(root/relative)!=pin:raise SystemExit('whole managed/linked production source absent or duplicated in actual Compile: '+relative)
  (out/(name+'-evaluated-compile.json')).write_text(json.dumps({'project':project,'defines':evaluated['DefineConstants'],'required':required,'files':compileEvidence},indent=2)+'\n')
