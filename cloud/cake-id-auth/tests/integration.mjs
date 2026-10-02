@@ -400,6 +400,17 @@ try {
   const startedExchange = performance.now();
   const profileToken = await exchangeCode(discovery, client.client_id, profileFlow.code, profileFlow.verifier);
   durationMs.passwordLoginAndTokenExchange = Math.round(performance.now() - startedExchange);
+  const knownTokenResponseKeys = new Set(["access_token", "id_token", "token_type", "scope", "expires_in", "expires_at", "refresh_token", "error", "error_description", "error_uri"]);
+  const tokenResponseKeys = Object.keys(profileToken);
+  console.log(JSON.stringify({
+    code: "TokenShapeProbe",
+    knownKeys: tokenResponseKeys.filter((key) => knownTokenResponseKeys.has(key)).sort(),
+    unknownKeyCount: tokenResponseKeys.filter((key) => !knownTokenResponseKeys.has(key)).length,
+    hasAccessToken: typeof profileToken.access_token === "string" && profileToken.access_token.length > 0,
+    hasIdToken: typeof profileToken.id_token === "string" && profileToken.id_token.length > 0,
+    hasOpenidScope: typeof profileToken.scope === "string" && profileToken.scope.split(" ").includes("openid"),
+    tokenType: profileToken.token_type === "Bearer" ? "Bearer" : profileToken.token_type === "DPoP" ? "DPoP" : "other-or-missing"
+  }));
   assert.ok(profileToken.access_token && profileToken.id_token, "authorization code produced OIDC and API tokens");
 
   const jwks = createRemoteJWKSet(new URL(discovery.jwks_uri));

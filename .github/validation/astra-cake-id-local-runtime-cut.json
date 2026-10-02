@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "bd1725245ba8c5d90fba66f909ed44ea4b96e753",
-  "programTree": "dd857108f035e1a146ba668d8af9248f0757416a",
+  "baselineCommit": "84927a8ad791826a3b3f2927efa007a5d98d288a",
+  "programTree": "fb2fc2c5db3781d31719cf2a441d0ed037e2cb8d",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
   "files": [
@@ -41721,9 +41721,9 @@
     {
       "path": "cloud/cake-id-auth/tests/integration.mjs",
       "mode": "100644",
-      "object": "2c23aca84473d6e06b341ac80e5879118ab80966",
-      "bytes": 33689,
-      "sha256": "5cd0a502e203386653677d85e2ba2fb27fd658037f465bded6bc109fdd83d24f"
+      "object": "a59aaa407661731cf6d4355667521f36580c7b27",
+      "bytes": 34625,
+      "sha256": "c4bc80f6a8ae8c82b35da8aa507725b0c8363cb9fc1fa7e1feca6dc66cbbf90c"
     },
     {
       "path": "cloud/cake-id-auth/tests/password-hash-worker.ts",
@@ -65587,6 +65587,14 @@
     {
       "path": "/workspace/astra-source/worker4-cake-consumed-pkce-explicit-consent-fixture-proposal09/manifest.json",
       "sha256": "609ec30209dad9c065ce20e1ac133429de554ba65090630779a2e380cf064f69"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-token-response-shape-diagnostic-fixture10/manifest.json",
+      "sha256": "1ebc40dd2182a5f5b9bdbd83be513b7e88a76807bd4b3907a4eb557c999e9c56"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-token-response-shape-diagnostic-fixture11/manifest.json",
+      "sha256": "7bf032b2fb654b8687289750adf8768a23a5ff326756bfcd5879e049c35d4536"
     }
   ],
   "sharedCakeIdContract": null
