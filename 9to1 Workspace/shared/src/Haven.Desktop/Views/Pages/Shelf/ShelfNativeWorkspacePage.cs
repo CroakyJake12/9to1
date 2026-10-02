@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using CakeOS.Cui;
 using CakeOS.Cui.Runtime;
 using Haven.Core.Shelf;
 using Haven.Infrastructure;

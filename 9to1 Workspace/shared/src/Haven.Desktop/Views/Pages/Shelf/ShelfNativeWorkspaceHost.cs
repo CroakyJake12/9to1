@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using CakeOS.Cui;
 using CakeOS.Cui.Language;
+using CakeOS.Cui.Runtime;
 using Haven.Application;
 using Haven.Infrastructure;
 namespace Haven.Desktop.Views.Pages.Shelf;

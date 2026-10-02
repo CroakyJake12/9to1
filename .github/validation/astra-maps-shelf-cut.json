@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "90447aefc253cb4fa329bac4b3b997ec559296d7",
-  "programTree": "c100fa6937b434a14e6b3efb3a694e586d74180f",
+  "baselineCommit": "9707ae52881744fc5a3f0d9fcea5d58f8608d8cb",
+  "programTree": "e67f475baa3b5aef1d8f5509410b949740ca4a22",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
@@ -34602,16 +34602,16 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Shelf/ShelfNativeWorkspaceHost.cs",
       "mode": "100644",
-      "object": "2436f7f6aa4d1ed6f6df0ff19e515bf4d54db5b3",
-      "bytes": 4382,
-      "sha256": "1cf6f1da81366eda448d7f0fbf52c022bbaced035230db61f9377c3718472d5e"
+      "object": "512920f0eab4831cd57d0a59f97eb88b75f86d1d",
+      "bytes": 4408,
+      "sha256": "90bb83ff15e7f8768a3e0d752af1da64325697366572eaf4d44efbadd1cbd304"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Shelf/ShelfNativeWorkspacePage.cs",
       "mode": "100644",
-      "object": "0c9f25cf2584d7df45c0032297153316b3cf8d1b",
-      "bytes": 5245,
-      "sha256": "59e7a3c13003dda8a933ef244c922e59415ffdddb76493407add9d48e5efa8b0"
+      "object": "425eb7f2c5cdcd01af42acb7a7b1c5ad5c50c6f5",
+      "bytes": 5263,
+      "sha256": "91e90a582bc5815847b4feed01d7e0a1c2041f634162960af483c6fde6ef6ca0"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
@@ -64696,7 +64696,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Actual persisted fixture model correction only: genuine writer PermissionsTrustNotifications.HomePermissionRequest retains State/default JSON options. All30class rows, Task observer, historical and16coupled cases, full2 gates and every source/restore/compiled/TRX guard unchanged. UNRUN.",
+  "limits": "Exact actual9707ae ShelfNativeWorkspaceHost/Page two production namespace imports only; every sourcebody/native route/originalactor/hostlifetime and unchanged full oldfixtures+16coupled ownership tests preserved. No fixture changes, allsame30class source pins/counts/filters/full2 owning/resource/source22+3/7producers/hosttasks/restore/compiled/TRX guards unchanged. No futurepreflight/sourcegraph07 features. Source-only unexecuted.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-maps-owning-source-graph04/manifest.json",
@@ -64753,6 +64753,14 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-maps-actual-compile-corrective03/actual-failed05-11218896396/root-capture.json",
       "sha256": "776afe5e3bd77caa69522f780d3ee9e380ae5f15dcd78f89a72a6711a872ae9f"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf-actual-native-cui-imports-corrective01/manifest.json",
+      "sha256": "003a04516bd7f496c07bbc78d6b941d6415233bb4ea09abb101f4129102d3cb7"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-maps-persisted-request-corrective04/actual-capture-11220796224/root-capture.json",
+      "sha256": "70390a87be2f31e24671d381df60dc7ace88277a62536292940350a6913d8e74"
     }
   ],
   "sharedCakeIdContract": null
