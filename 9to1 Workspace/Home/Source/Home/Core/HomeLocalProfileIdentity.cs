@@ -38,6 +38,8 @@ public sealed record HomeLocalProfile(Guid ProfileId, string PrincipalDigest, Da
 public sealed class HomeLocalProfileIdentity(IHomeCoreStateStore store, ITrustedHostPrincipalSource principals)
     : IAuthenticatedResourceActorSource, IHomeStateCommitActorGuard
 {
+    internal bool IsBoundToStore(IHomeCoreStateStore candidate) => ReferenceEquals(store, candidate);
+
     private const string RecordId = "home.local-profile";
     private const int SchemaVersion = 1;
     private readonly string _sessionRevision = Guid.NewGuid().ToString("N");

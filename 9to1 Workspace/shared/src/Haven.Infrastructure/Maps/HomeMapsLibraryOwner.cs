@@ -19,15 +19,24 @@ public sealed record MapsLibraryCommit(bool Committed, string Code, bool AuditRe
 /// <summary>Actual personal owning library. A display token is private issuer provenance, never a grant.
 /// This uses the same canonical library/settings and actual Home binding, not a second store.</summary>
 public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthenticatedResourceActorSource actors,
-    IResourceStoreOwnershipAuthority ownership, HomeResourceOperationBroker home, HomePermissionTrustService permissions)
+    IResourceStoreOwnershipAuthority ownership, HomeResourceOperationBroker home, HomePermissionTrustService permissions,
+    HomeOwnedLibraryCommitFenceSource? finalFence = null)
 {
     public const string ActionID = "maps.journey.save";
     public string ResourceKind => "maps.library";
     private sealed record Selection(HomeMapsLibraryOwner Issuer, Guid StoreID, AuthenticatedResourceActor Actor,
-        long Revision) : IMapsLibraryDisplay
+        long Revision, Func<bool>? OriginalLifetime = null) : IMapsLibraryDisplay
     {
         private int _revoked;
-        public bool Revoked => Volatile.Read(ref _revoked) != 0;
+        public bool Revoked
+        {
+            get
+            {
+                if (Volatile.Read(ref _revoked) != 0) return true;
+                try { return OriginalLifetime is not null && !OriginalLifetime(); }
+                catch { return true; } // A failed pure lifetime check can only deny admission.
+            }
+        }
         public void Dispose() => Interlocked.Exchange(ref _revoked, 1);
     }
     private sealed class Review(HomeMapsLibraryOwner issuer, Selection selection, MapSavedJourney proposed,
@@ -53,7 +62,8 @@ public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthentica
         public MapsOwnedMutationReceipt Receipt => new(1, Arguments.GetProperty("operationID").GetGuid(), Selection.StoreID,
             Revision, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Arguments.GetRawText()))));
     }
-    public async Task<MapsLibraryDisplay> LoadForDisplayAsync(AuthenticatedResourceActor expectedActor, CancellationToken token = default)
+    public async Task<MapsLibraryDisplay> LoadForDisplayAsync(AuthenticatedResourceActor expectedActor, CancellationToken token = default,
+        Func<bool>? originalLifetime = null)
     {
         ArgumentNullException.ThrowIfNull(expectedActor);
         if (await actors.GetCurrentAsync(token).ConfigureAwait(false) != expectedActor)
@@ -61,14 +71,29 @@ public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthentica
         var identity = await library.GetStoreIdentityAsync(token).ConfigureAwait(false);
         if (identity.SchemaVersion != 1 || identity.StoreId == Guid.Empty) throw new UnauthorizedAccessException("Actual Maps UUID required.");
         if (await actors.GetCurrentAsync(token).ConfigureAwait(false) != expectedActor) throw new UnauthorizedAccessException("Original actor changed during identity read.");
-        var provisional = new Selection(this, identity.StoreId, expectedActor, 0);
+        var provisional = new Selection(this, identity.StoreId, expectedActor, 0, originalLifetime);
         await CaptureAsync(provisional, token).ConfigureAwait(false);
         var snapshot = await library.ReadAsync(token).ConfigureAwait(false);
-        var selection = new Selection(this, identity.StoreId, expectedActor, snapshot.Revision);
+        var selection = new Selection(this, identity.StoreId, expectedActor, snapshot.Revision, originalLifetime);
         await RequireAsync(selection, token).ConfigureAwait(false);
         await CaptureAsync(selection, token).ConfigureAwait(false);
         await RequireAsync(selection, token).ConfigureAwait(false);
         return new(snapshot, selection);
+    }
+    public async Task<MapsLibraryDisplay> ReloadForOriginalDisplayAsync(IMapsLibraryDisplay originalDisplay,
+        CancellationToken token = default)
+    {
+        var original = await RequireAsync(originalDisplay, token).ConfigureAwait(false);
+        await CaptureAsync(original, token).ConfigureAwait(false);
+        var refreshed = await LoadForDisplayAsync(original.Actor, token, original.OriginalLifetime).ConfigureAwait(false);
+        try
+        {
+            await RequireAsync(original, token).ConfigureAwait(false);
+            if (refreshed.Selection is not Selection selection || selection.StoreID != original.StoreID)
+                throw new UnauthorizedAccessException("Reload cannot adopt a replacement Maps root.");
+            return refreshed;
+        }
+        catch { refreshed.Selection.Dispose(); throw; }
     }
     private async Task<Selection> RequireAsync(IMapsLibraryDisplay display, CancellationToken token)
     {
@@ -162,6 +187,8 @@ public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthentica
                 else
                 {
                     await RequireAsync(review.Selection, token).ConfigureAwait(false);
+                    if (finalFence is null || !finalFence.IsFor(home, ownership))
+                        return new(false, "FinalClaimFenceUnavailable", false); // No Begin/Claim; retain exact Home request.
                     var approval = await permissions.GetAuthorizationAsync(review.RequestID, token).ConfigureAwait(false);
                     if (!approval.IsAllowed) return new(false, "ApprovalRequired", false);
                     // Reserve the attempt before the first admission await. Repeated Finish cannot
@@ -180,8 +207,7 @@ public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthentica
                     try
                     {
                         if (claimed != review.Selection.Actor) throw new UnauthorizedAccessException("Original reviewed actor differs from actual claim.");
-                        var admission = await CaptureAsync(review.Selection, token).ConfigureAwait(false);
-                        var saved = await library.SaveJourneyAsync(review.Revision, review.Proposed, review.ExpectedObjectRevision, admission, review.Receipt, token).ConfigureAwait(false);
+                        var saved = await SaveFencedAsync(review, claimed, token).ConfigureAwait(false);
                         if (saved.ErrorCode == "CompletionUnknown")
                         {
                             review.CompletionUnknown = true;
@@ -208,6 +234,56 @@ public sealed class HomeMapsLibraryOwner(MapsJourneyService library, IAuthentica
         }
         finally { review.Gate.Release(); }
     }
+    /// <summary>Only observe an already attempted operation or retry its audit. Never Begin,
+    /// Claim or publish a Journey mutation, even if the user approved a pending request.</summary>
+    public async Task<MapsLibraryCommit> FinishAsync(IMapsLibraryReview issuedReview, CancellationToken token = default)
+    {
+        if (issuedReview is not Review review || !ReferenceEquals(review.Issuer, this))
+            throw new UnauthorizedAccessException("Private owning review required.");
+        await review.Gate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            if (review.Outcome is null && review.CompletionUnknown)
+            {
+                if (!await ObserveExactReceiptAsync(review, token).ConfigureAwait(false))
+                    return new(false, "CompletionUnknown", false, true);
+                review.Committed = true;
+                review.Outcome = new(HomePermissionRequestState.Succeeded, "MapsLibraryCommitted",
+                    "Exact durable Maps operation receipt observed.", []);
+            }
+            if (review.Outcome is null)
+                return review.AttemptReserved && !review.ClaimSucceeded
+                    ? await FinishRejectedAdmissionAsync(review).ConfigureAwait(false)
+                    : new(false, "NoAttemptedOutcome", false);
+            var recorded = false;
+            try { recorded = (await home.CompleteExecutionAsync(review.Capability!, review.Outcome,
+                CancellationToken.None).ConfigureAwait(false)).Succeeded; }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException) { }
+            return new(review.Committed, review.Outcome.Code, recorded);
+        }
+        finally { review.Gate.Release(); }
+    }
+    private async Task<MapsJourneyResult<MapSavedJourney>> SaveFencedAsync(Review review, AuthenticatedResourceActor claimed, CancellationToken token)
+    {
+        // Ordinary resource/ownership checks occur before Home is leased. The final wrapper never
+        // calls Capture/Require/receipts again while holding the raw same-Home claim fence.
+        await CaptureAsync(review.Selection, token).ConfigureAwait(false);
+        if (finalFence is null || !finalFence.IsFor(home, ownership))
+            throw new UnauthorizedAccessException("Actual same-composition final Home claim fence is unavailable.");
+        await using var fence = await finalFence.CaptureAsync("maps", review.Selection.StoreID,
+            review.Capability!, claimed, () => !review.Selection.Revoked, token).ConfigureAwait(false)
+            ?? throw new UnauthorizedAccessException("The original Home claim or ownership receipt is no longer current.");
+        var admission = new FinalAdmission(review.Selection, fence);
+        return await library.SaveJourneyAsync(review.Revision, review.Proposed, review.ExpectedObjectRevision, admission, review.Receipt, token).ConfigureAwait(false);
+        // await using disposes BEFORE caller observes receipts or records Home execution audit.
+    }
+    private sealed class FinalAdmission(Selection selection, HomeClaimedResourceCommitFence fence) : ISettingsCommitAdmission
+    {
+        public async ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken token) =>
+            !selection.Revoked && context.StoreIdentity.SchemaVersion == 1 && context.StoreIdentity.StoreId == selection.StoreID
+            && await fence.ValidateAsync(token).ConfigureAwait(false) && !selection.Revoked;
+    }
+
     private async Task<MapsLibraryCommit> FinishRejectedAdmissionAsync(Review review)
     {
         try

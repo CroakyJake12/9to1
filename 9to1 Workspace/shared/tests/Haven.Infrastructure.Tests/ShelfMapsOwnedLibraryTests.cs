@@ -37,7 +37,8 @@ public sealed class ShelfMapsOwnedLibraryTests
         var settingsBytes = await File.ReadAllBytesAsync(fixture.SettingsFile); var homeBytes = await File.ReadAllBytesAsync(fixture.HomeFile);
         fixture.Settings.HoldIdentity = true;
         var pending = fixture.LoadAsync(); await fixture.Settings.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        fixture.Actor.Override = fixture.Actor.Original with { AuthenticationRevision = "changed-while-actual-identity-read" };
+        await fixture.RevokeProfileAsync();
+        homeBytes = await File.ReadAllBytesAsync(fixture.HomeFile); // Deliberate actual profile change; no additional owner mutation.
         fixture.Settings.Release.TrySetResult(); await Assert.ThrowsAsync<UnauthorizedAccessException>(() => pending);
         Assert.Equal(settingsBytes, await File.ReadAllBytesAsync(fixture.SettingsFile));
         Assert.Equal(homeBytes, await File.ReadAllBytesAsync(fixture.HomeFile)); await fixture.AssertNoPendingAsync();
@@ -63,10 +64,11 @@ public sealed class ShelfMapsOwnedLibraryTests
         using var fixture = new Fixture(maps); await fixture.InitializeAsync(); var display = await fixture.LoadAsync();
         var review = await fixture.ReviewAsync(display);
         Assert.True((await fixture.Permissions.DecideAsync(fixture.RequestID(review), HomeApprovalChoice.Accept)).Succeeded);
-        var before = await File.ReadAllBytesAsync(fixture.SettingsFile); fixture.Settings.HoldPublication = true;
+        var before = await File.ReadAllBytesAsync(fixture.SettingsFile);
+        fixture.Settings.HoldPublication = dispose; fixture.Settings.HoldAdmission = !dispose;
         var pending = fixture.CommitAsync(review); await fixture.Settings.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
         if (dispose) ((IDisposable)display).Dispose();
-        else fixture.Actor.Override = fixture.Actor.Original with { AuthenticationRevision = "revoked-at-actual-publication" };
+        else Assert.True((await fixture.Permissions.BlockCallerAsync(fixture.Actor.Original.ActorId)).Succeeded);
         fixture.Settings.Release.TrySetResult(); var result = await pending;
         Assert.False(result.Committed); Assert.True(result.AuditRecorded);
         Assert.Equal(before, await File.ReadAllBytesAsync(fixture.SettingsFile)); await fixture.AssertNoPendingAsync();
@@ -150,8 +152,8 @@ public sealed class ShelfMapsOwnedLibraryTests
         Assert.True((await fixture.Permissions.DecideAsync(fixture.RequestID(review), HomeApprovalChoice.Accept)).Succeeded);
         var before = await File.ReadAllBytesAsync(fixture.SettingsFile);
         if (failure == 0) fixture.Home.LoseExecutingWriteReturn = true;
-        if (failure == 1) fixture.Home.AfterExecutingWrite = () => fixture.Actor.Override = fixture.Actor.Original with { AuthenticationRevision = "revoked-before-private-claim" };
-        if (failure == 2) fixture.Home.AfterExecutingWrite = () => fixture.Actor.ThrowOnce = true;
+        if (failure == 1) fixture.Home.AfterExecutingWrite = fixture.RevokeProfileAsync;
+        if (failure == 2) fixture.Home.AfterExecutingWrite = () => { fixture.Actor.ThrowOnce = true; return Task.CompletedTask; };
         var first = await fixture.CommitAsync(review); Assert.False(first.Committed);
         Assert.Equal(1, fixture.Home.ExecutingWrites); Assert.Equal(0, fixture.Settings.GuardedWriteCalls);
         var retry = await fixture.CommitAsync(review); Assert.False(retry.Committed);
@@ -165,10 +167,10 @@ public sealed class ShelfMapsOwnedLibraryTests
     {
         using var fixture = new Fixture(maps); await fixture.InitializeAsync(); var display = await fixture.LoadAsync();
         var settingsBytes = await File.ReadAllBytesAsync(fixture.SettingsFile);
-        fixture.Home.AfterPendingWrite = () =>
+        fixture.Home.AfterPendingWrite = async () =>
         {
             if (dispose) ((IDisposable)display).Dispose();
-            else fixture.Actor.Override = fixture.Actor.Original with { AuthenticationRevision = "changed-after-durable-pending" };
+            else await fixture.RevokeProfileAsync();
         };
         var review = await fixture.ReviewAsync(display);
         Assert.False(maps ? ((IMapsLibraryReview)review).OriginAvailable : ((IShelfLibraryReview)review).OriginAvailable);
@@ -199,25 +201,34 @@ public sealed class ShelfMapsOwnedLibraryTests
         private HomeMapsLibraryOwner? _journeys;
         public Fixture(bool maps)
         {
-            _maps = maps; Settings = new(new VersionedAtomicSettingsStore(Paths)); Home = new(new FileHomeCoreStateStore(HomeFile));
-            Profiles = new(Home, new OperatingSystemPrincipalSource());
+            _maps = maps; Settings = new(new VersionedAtomicSettingsStore(Paths)); Home = new(HomeFile);
+            Profiles = new(Home.Actual, new OperatingSystemPrincipalSource());
             var shelfPolicy = new ShelfOwnedLibraryActionPolicies(); var mapsPolicy = new MapsOwnedLibraryActionPolicies();
-            Permissions = new(Home, (app, action) => shelfPolicy.TryGet(app, action) ?? mapsPolicy.TryGet(app, action));
+            Permissions = new(Home.Actual, (app, action) => shelfPolicy.TryGet(app, action) ?? mapsPolicy.TryGet(app, action));
         }
         public async Task InitializeAsync()
         {
             Actor = new((await Profiles.GetCurrentAsync(default)) ?? throw new InvalidOperationException("Actual OS/Home actor required."), Profiles);
             SettingsID = (await Settings.GetStoreIdentityAsync(default)).StoreId;
             var evidence = _maps ? (IHomeLocalStoreEvidenceProvider)new MapsOwnedLibraryEvidence(Settings) : new ShelfOwnedLibraryEvidence(Settings);
-            var ownership = new HomeLocalStoreOwnership(Home, Profiles, new HomeLocalStoreEvidenceRegistry([evidence]), Permissions);
-            var authority = new HomeResourceStoreOwnershipAuthority(ownership, Actor);
+            var ownership = new HomeLocalStoreOwnership(Home.Actual, Profiles, new HomeLocalStoreEvidenceRegistry([evidence]), Permissions);
+            var authority = new HomeResourceStoreOwnershipAuthority(ownership, Profiles);
             var shelf = new ShelfLibraryService(Settings); var maps = new MapsJourneyService(Settings);
             ICanonicalResourceAccessResolver resolver = _maps ? new MapsOwnedLibraryAccessResolver(maps, Actor, authority)
                 : new ShelfOwnedLibraryAccessResolver(shelf, Actor, authority);
             var broker = new HomeResourceOperationBroker(new ResourceAuthorizationService(Actor, [resolver]), Permissions);
-            _shelf = new(shelf, Actor, authority, broker, Permissions); _journeys = new(maps, Actor, authority, broker, Permissions);
+            var final = new HomeOwnedLibraryCommitFenceSource(Home.Actual, Profiles, authority, broker);
+            _shelf = new(shelf, Actor, authority, broker, Permissions, final); _journeys = new(maps, Actor, authority, broker, Permissions, final);
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => LoadAsync()); // No implicit ownership.
             await ownership.BindNewEmptyAsync(_maps ? "maps" : "shelf", SettingsID.ToString("D"));
+        }
+        public async Task RevokeProfileAsync()
+        {
+            var state = (await Home.Actual.ReadAsync()).State!;
+            var record = Assert.Single(state.Records, item => item.RecordId == "home.local-profile");
+            var profile = record.Payload.Deserialize<HomeLocalProfile>()!;
+            Assert.True((await Home.Actual.WriteAsync(record with { Revision = record.Revision + 1,
+                Payload = JsonSerializer.SerializeToElement(profile with { ProfileId = Guid.NewGuid() }) }, record.Revision)).IsSuccess);
         }
         public async Task<object> LoadAsync() => _maps
             ? (object)(await _journeys!.LoadForDisplayAsync(Actor.Original)).Selection
@@ -265,47 +276,48 @@ public sealed class ShelfMapsOwnedLibraryTests
         }
         public void Dispose() { SqliteConnection.ClearAllPools(); Directory.Delete(Paths.DataDirectory, true); }
     }
-    private sealed class ObservedActualHome(FileHomeCoreStateStore actual) : IHomeCoreStateStore
+    // Actual FileHome composition, with a deny-only observer AFTER real physical persistence.
+    // It never implements a substitute Home authority or returns fabricated actor/grant state.
+    private sealed class ObservedActualHome : IHomePersistedWriteObserver
     {
-        public Action? AfterPendingWrite { get; set; }
-        public int PendingWrites { get; private set; }
+        public FileHomeCoreStateStore Actual { get; }
         public bool LoseExecutingWriteReturn { get; set; }
-        public Action? AfterExecutingWrite { get; set; }
+        public Func<Task>? AfterExecutingWrite { get; set; }
+        public Func<Task>? AfterPendingWrite { get; set; }
         public int ExecutingWrites { get; private set; }
-        public Task<HomeStateReadResult> ReadAsync(CancellationToken token = default) => actual.ReadAsync(token);
-        public async Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRevision, CancellationToken token = default)
+        public int PendingWrites { get; private set; }
+        public ObservedActualHome(string path) { Actual = new FileHomeCoreStateStore(path, this); }
+        public Task<HomeStateReadResult> ReadAsync(CancellationToken token = default) => Actual.ReadAsync(token);
+        public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRevision, CancellationToken token = default)
+            => Actual.WriteAsync(record, expectedRevision, token);
+        public async ValueTask OnPersistedWriteAsync(string recordId, long actualRecordRevision, CancellationToken token)
         {
-            var result = await actual.WriteAsync(record, expectedRevision, token);
-            if (result.IsSuccess && record.RecordId == "home.permissions-trust"
-                && record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()!
-                    .Any(request => request.State == HomePermissionRequestState.PendingApproval))
+            if (recordId != "home.permissions-trust") return;
+            var state = (await Actual.ReadAsync(token)).State!;
+            var record = Assert.Single(state.Records, item => item.RecordId == recordId);
+            Assert.Equal(actualRecordRevision, record.Revision);
+            var requests = record.Payload.GetProperty("Requests").Deserialize<HomePermissionRequest[]>()!;
+            if (requests.Any(request => request.State == HomePermissionRequestState.PendingApproval))
             {
-                PendingWrites++;
-                var afterPending = AfterPendingWrite; AfterPendingWrite = null; afterPending?.Invoke();
+                PendingWrites++; var after = AfterPendingWrite; AfterPendingWrite = null;
+                if (after is not null) await after();
             }
-            if (result.IsSuccess && record.RecordId == "home.permissions-trust"
-                && record.Payload.GetProperty("Requests").Deserialize<HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest[]>()!
-                    .Any(request => request.State == HomePermissionRequestState.Executing))
+            if (requests.Any(request => request.State == HomePermissionRequestState.Executing))
             {
-                ExecutingWrites++;
-                var after = AfterExecutingWrite; AfterExecutingWrite = null; after?.Invoke();
-                if (LoseExecutingWriteReturn) { LoseExecutingWriteReturn = false; throw new IOException("Lost return AFTER actual Home Begin publication."); }
+                ExecutingWrites++; var after = AfterExecutingWrite; AfterExecutingWrite = null;
+                if (after is not null) await after();
+                if (LoseExecutingWriteReturn) { LoseExecutingWriteReturn = false; throw new IOException("Lost return AFTER actual FileHome Begin publication."); }
             }
-            return result;
         }
-        public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRevision,
-            AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard, CancellationToken token = default)
-            => actual.WriteGuardedAsync(record, expectedRevision, expectedActor, guard, token);
     }
     private sealed class ActualActor(AuthenticatedResourceActor original, IAuthenticatedResourceActorSource actual) : IAuthenticatedResourceActorSource
     {
         public AuthenticatedResourceActor Original { get; } = original;
-        public AuthenticatedResourceActor? Override { get; set; }
         public bool ThrowOnce { get; set; }
         public async ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken token)
         {
             if (ThrowOnce) { ThrowOnce = false; throw new IOException("Held actual claim actor observation unavailable."); }
-            return Override ?? await actual.GetCurrentAsync(token);
+            return await actual.GetCurrentAsync(token);
         }
     }
     private sealed class HeldSettings(VersionedAtomicSettingsStore actual) : IVersionedSettingsStore,
@@ -317,6 +329,7 @@ public sealed class ShelfMapsOwnedLibraryTests
         public int GuardedWriteCalls { get; private set; }
         public bool HoldIdentity { get; set; }
         public bool HoldPublication { get; set; }
+        public bool HoldAdmission { get; set; }
         public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public async ValueTask<ResourceStoreIdentity> GetStoreIdentityAsync(CancellationToken token)
@@ -354,6 +367,8 @@ public sealed class ShelfMapsOwnedLibraryTests
         {
             public async ValueTask<bool> CheckAsync(SettingsCommitContext context, CancellationToken token)
             {
+                if (owner.HoldAdmission && context.Phase == SettingsCommitPhase.Admission)
+                { owner.HoldAdmission = false; owner.Entered.TrySetResult(); await owner.Release.Task.WaitAsync(token); }
                 if (owner.HoldPublication && context.Phase == SettingsCommitPhase.Publication)
                 { owner.HoldPublication = false; owner.Entered.TrySetResult(); await owner.Release.Task.WaitAsync(token); }
                 return await actual.CheckAsync(context, token);

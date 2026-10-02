@@ -9,7 +9,7 @@ namespace HavenOS.Home.Core;
 /// Crash-safe, revision-checked local Home state storage. A corrupt or newer file is reported
 /// without replacing it, so permission/device/package state can be repaired instead of erased.
 /// </summary>
-public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
+public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeLocalOperationLeaseSource
 {
     public const int CurrentSchemaVersion = 1;
 
@@ -22,12 +22,19 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
 
     private readonly string _path;
     private readonly SemaphoreSlim _gate;
+    private readonly IHomePersistedWriteObserver? _persistedWriteObserver;
 
     public FileHomeCoreStateStore(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("A state file path is required.", nameof(path));
         _path = Path.GetFullPath(path);
         _gate = PathLocks.GetOrAdd(_path, static _ => new SemaphoreSlim(1, 1));
+    }
+
+    // Owning fixture seam only; never a substitute store or production admission service.
+    internal FileHomeCoreStateStore(string path, IHomePersistedWriteObserver persistedWriteObserver) : this(path)
+    {
+        _persistedWriteObserver = persistedWriteObserver ?? throw new ArgumentNullException(nameof(persistedWriteObserver));
     }
 
     public static FileHomeCoreStateStore CreateDefault()
@@ -63,7 +70,23 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
     public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
         CancellationToken cancellationToken = default) => WriteCoreAsync(record, expectedRecordRevision, null, null, cancellationToken);
 
-    private async Task<HomeStateWriteResult> WriteCoreAsync(
+    private async Task<HomeStateWriteResult> WriteCoreAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        AuthenticatedResourceActor? expectedActor, IHomeStateCommitActorGuard? guard, CancellationToken cancellationToken)
+    {
+        var result = await WriteCoreUnobservedAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken).ConfigureAwait(false);
+        // The actual atomic write has succeeded and its process/per-path locks have been released.
+        // A callback exception now represents a lost acknowledgement; it cannot roll back known bytes,
+        // reconstruct an admission, or turn a retry into a new effect.
+        if (result.IsSuccess && _persistedWriteObserver is not null)
+        {
+            var persisted = result.State!.Records.Single(item => item.RecordId == record.RecordId);
+            await _persistedWriteObserver.OnPersistedWriteAsync(persisted.RecordId, persisted.Revision,
+                cancellationToken).ConfigureAwait(false);
+        }
+        return result;
+    }
+
+    private async Task<HomeStateWriteResult> WriteCoreUnobservedAsync(
         HomeCoreStateRecord record,
         long expectedRecordRevision,
         AuthenticatedResourceActor? expectedActor, IHomeStateCommitActorGuard? guard,
