@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "4a9bb6f4433b4c6687f0a89cd60dfc7f2bc6c127",
+  "baselineCommit": "6247653fc7ac1efa51e9f3b5871efeb480b7fef5",
   "programTree": "3aa887cd4ad7e51d4a736f5febdac2c1f13fd910",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
@@ -29,16 +29,16 @@
     {
       "path": ".github/scripts/astra-picture19-hosted-managed.py",
       "mode": "100644",
-      "object": "d2bcf9c8d42b49526eacf4e4ee263071bb7539c9",
-      "bytes": 25687,
-      "sha256": "daa0d5815b031a7907b7601f6cf859d9109d528f38e4be5a4af33c4bd45c0047"
+      "object": "b48b17a5329d92189c61a369d9a3972ab6e2fa94",
+      "bytes": 32403,
+      "sha256": "f8c7584b25805fd5892ac6b30fd867531403339dbe66ec522e965d40c00d8f49"
     },
     {
       "path": ".github/scripts/astra-picture19-restore-evidence.py",
       "mode": "100644",
-      "object": "37452d50e05b03e044cedd917777648f67e6e0c4",
-      "bytes": 5708,
-      "sha256": "f48524269c93f19720606d4b10ffc1179468c9dd3b59aa984b10e9e8377118ca"
+      "object": "5ffccf55f162dd9412d5632abbde7045873160fa",
+      "bytes": 9319,
+      "sha256": "9c33ee99d9e94c3d410c2576ad8fc6ae80f3e76f36baaa3014d87db575a1ecea"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -64010,6 +64010,26 @@
     {
       "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol5/manifest.json",
       "sha256": "07b5ea13ce0cb9c4eed54964a5916443c308f6ecf6c75671de03dd0cdd855a83"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol6/manifest.json",
+      "sha256": "a31f6425f1c80d8aaaef5f61836a46a19010d7779b6f177a6365e4b8e5a14222"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol8/manifest.json",
+      "sha256": "0c530bf3e9d59245b3baea2ba336d0c4f6dc6b3e793fc346f94e359b733f178b"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol9/manifest.json",
+      "sha256": "d2a8004f7add1c6f2ab4df1fb1407b090e18b7274e2f78fb2e797d001ff06ab8"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol10/manifest.json",
+      "sha256": "12bc7d8ff9b5417265a0282bc96aef22be196b60ddf57c558cb9b75c75bb2b58"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture19-hosted-plan-sol11/manifest.json",
+      "sha256": "062973833f5b98d5131ec6747bfe83c01dd92762721b40dcd3457767282dbf73"
     }
   ],
   "sharedCakeIdContract": null,

@@ -107,6 +107,7 @@ def verify():
 verify();command(['dotnet','--info'],'toolchain');command(['dotnet','workload','list'],'workloads')
 env={'AVALONIA_TELEMETRY_OPTOUT':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1','DOTNET_SKIP_FIRST_TIME_EXPERIENCE':'1','MSBUILDDISABLENODEREUSE':'1','DOTNET_CLI_TELEMETRY_OPTOUT':'1','DOTNET_CLI_USE_MSBUILD_SERVER':'0'};os.environ.update(env)
 base=['-c','Release','-r','linux-x64','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True']
+artifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
 checks=[('picture-full','9to1 Workspace/Picture/Tests/HavenOS.Images.Tests.csproj','')]
 # Root pins this exact evidence file in the cut; verify names exist in actual immutable source.
 provenance=json.loads((root/'.github/validation/astra-picture19-test-classes.json').read_text())
@@ -123,6 +124,7 @@ if subprocess.check_output(['git','-C',donor,'status','--porcelain','--untracked
 for tool in ('rustc','cargo'):
  version=subprocess.check_output([tool,'--version'],text=True);(out/(tool+'-version.txt')).write_text(version)
  if not version.startswith(tool+' 1.98.1 '):raise SystemExit('unqualified Rust toolchain')
+
 lock=root/donor/'Cargo.lock';lockSha=digest(lock)
 if lockSha!='e9d07e520c5159c92dc17842e9b35c4b955915b114a8e48fd0a8f17e31b6480f':raise SystemExit('Glycin Cargo.lock pin mismatch')
 os.environ['CARGO_TARGET_DIR']=str(pathlib.Path(os.environ['RUNNER_TEMP'])/'astra-picture19-fresh-glycin')
@@ -165,16 +167,34 @@ entries=[(name,project) for name,project,_ in checks]
 for name,project in entries:
  code=command(['dotnet','restore',project,*base[2:],'-p:Configuration=Release','-p:TargetFramework=net10.0','-p:EnableWindowsTargeting=true'],name+'-restore');verify()
  if code:raise SystemExit(code)
-toolProjects=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj']
+hostArtifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-host-build-tasks'),'-p:IncludeProjectNameInArtifactsPaths=true']
+hostTaskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
+hostTaskRestoreProps=['-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*hostArtifactsProps]
+code=command(['dotnet','restore',hostTaskProject,'--disable-build-servers','-m:1','-nr:false',*hostTaskRestoreProps],'avalonia-build-tasks-restore');verify()
+if code:raise SystemExit(code)
+# These six netstandard assets are written LAST; no subsequent build may restore.
+toolProjects=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj']
 for tool in toolProjects:
  code=command(['dotnet','restore',tool,*base[2:],'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true'],'tool-restore-'+pathlib.Path(tool).stem);verify()
  if code:raise SystemExit(code)
+ toolQuery=subprocess.run(['dotnet','msbuild',tool,'-nologo','-m:1','-nr:false','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*artifactsProps,'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true','-getProperty:TargetFramework,MSBuildProjectFullPath,ProjectAssetsFile'],capture_output=True,text=True)
+ (out/('tool-framework-'+pathlib.Path(tool).stem+'.stdout')).write_text(toolQuery.stdout);(out/('tool-framework-'+pathlib.Path(tool).stem+'.stderr')).write_text(toolQuery.stderr)
+ if toolQuery.returncode:raise SystemExit(toolQuery.returncode)
+ toolActual=json.loads(toolQuery.stdout)['Properties'];assetPath=pathlib.Path(toolActual['ProjectAssetsFile']);assetPath=assetPath if assetPath.is_absolute() else (root/tool).parent/assetPath
+ if toolActual['TargetFramework']!='netstandard2.0' or pathlib.Path(toolActual['MSBuildProjectFullPath']).resolve()!=(root/tool).resolve() or not assetPath.resolve().is_relative_to(root) or not assetPath.is_file():raise SystemExit('actual restored analyzer framework/path mismatch')
+ toolAssets=json.loads(assetPath.read_text())
+ if not any(key.split('/')[0]=='netstandard2.0' for key in toolAssets['targets']):raise SystemExit('actual analyzer assets missing declared netstandard2.0')
+taskProject=hostTaskProject
+toolProjects.append(taskProject)
 for name,project in entries:
- restoreBefore[name]=restore.snapshot_restore(root,project,toolProjects)
+ restoreBefore[name]=restore.snapshot_restore(root,project,toolProjects,bootstrap=True)
  (out/(name+'-restore-before.json')).write_text(json.dumps(restoreBefore[name],indent=2)+'\n')
  for item in restoreBefore[name]['projects']:
-  sourceProject=item['path'];effectiveFramework='netstandard2.0' if sourceProject in toolProjects else 'net10.0';key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
+  sourceProject=item['path'];effectiveFramework=item['effectiveFramework'];key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
   args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
+  if item.get('hostContext'):
+   args=[v for v in args if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained=','-p:ArtifactsPath='))]+['-p:ArtifactsPath='+str(root/'artifacts/picture19-host-build-tasks')]
+  key+=('-host' if item.get('hostContext') else '-consumer')
   if command(args,'evaluated-'+key):raise SystemExit('actual evaluated source/generator graph failed')
 
 # Bind actual evaluated source/generator paths to pinned source, exact materialized donors,
@@ -206,6 +226,41 @@ for log in out.glob('evaluated-*.log'):
    if not file.is_file() or admitted.get(str(file))!=digest(file):raise SystemExit('unknown or changed evaluated compiler/generator input: '+str(file))
 (out/'evaluated-input-admission.json').write_text(json.dumps({'admittedPaths':len(admitted),'actualQueries':len(list(out.glob('evaluated-*.log'))),'qualification':'Actual physical inputs hashed; no publisher certificate trust inferred'},indent=2)+'\n')
 
+# Source-built genuine build-host task; its ProjectReference removes application RID.
+taskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
+taskProps=['-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*hostArtifactsProps]
+code=command(['dotnet','build',taskProject,'--no-restore','-c','Release','-f','netstandard2.0','--disable-build-servers','-m:1','-nr:false',*taskProps],'avalonia-build-tasks-build');verify()
+if code:raise SystemExit(code)
+taskQuery=subprocess.run(['dotnet','msbuild',taskProject,'-nologo','-m:1','-nr:false',*taskProps,'-getProperty:TargetPath,OutputPath,TargetFramework,Configuration'],capture_output=True,text=True)
+(out/'avalonia-build-tasks-target.stdout').write_text(taskQuery.stdout);(out/'avalonia-build-tasks-target.stderr').write_text(taskQuery.stderr)
+if taskQuery.returncode:raise SystemExit(taskQuery.returncode)
+taskEvaluated=json.loads(taskQuery.stdout)['Properties'];taskTarget=pathlib.Path(taskEvaluated['TargetPath']).resolve()
+taskOutput=pathlib.Path(taskEvaluated['OutputPath']);taskOutput=taskOutput if taskOutput.is_absolute() else (root/taskProject).parent/taskOutput;taskOutput=taskOutput.resolve()
+if taskEvaluated['TargetFramework']!='netstandard2.0' or taskEvaluated['Configuration']!='Release' or not taskOutput.is_relative_to(root) or not taskTarget.is_relative_to(taskOutput) or not taskTarget.is_file():raise SystemExit('invalid actual source-built host task output')
+def task_snapshot():
+ result=[]
+ for file in sorted(taskTarget.parent.rglob('*')):
+  if file.is_symlink():raise SystemExit('build task output symlink')
+  if file.is_file():result.append({'path':str(file.relative_to(root)),'bytes':file.stat().st_size,'sha256':digest(file)})
+ return result
+taskBefore=task_snapshot();(out/'avalonia-build-tasks-compiled-before.json').write_text(json.dumps({'project':taskProject,'target':str(taskTarget.relative_to(root)),'files':taskBefore},indent=2)+'\n')
+retainedTasks=out/'compiled'/'avalonia-build-tasks';retainedTasks.mkdir(parents=True,exist_ok=True)
+for file in sorted(taskTarget.parent.rglob('*')):
+ if file.is_file():
+  destination=retainedTasks/file.relative_to(taskTarget.parent);destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(file,destination)
+  if digest(destination)!=digest(file):raise SystemExit('retained actual build task closure mismatch')
+actualTaskProperty='-p:AvaloniaBuildTasksLocation='+str(taskTarget)
+base.append(actualTaskProperty);artifactsProps.append(actualTaskProperty);os.environ['ASTRA_ACTUAL_AVALONIA_BUILD_TASKS']=str(taskTarget)
+def assert_task_unchanged():
+ after=task_snapshot();(out/'avalonia-build-tasks-compiled-after.json').write_text(json.dumps({'project':taskProject,'target':str(taskTarget.relative_to(root)),'files':after},indent=2)+'\n')
+ if after!=taskBefore:raise SystemExit('actual source-built task closure changed')
+
+# Admit the fresh host output only after bootstrap restored/input admission completed.
+for name,project in entries:
+ afterTaskRestore=restore.snapshot_restore(root,project,toolProjects)
+ (out/(name+'-restore-after-task-build.json')).write_text(json.dumps(afterTaskRestore,indent=2)+'\n')
+ if afterTaskRestore!=restoreBefore[name]:raise SystemExit('restored graph changed during isolated host compilation')
+
 compiledTargets={}
 def assert_compiled_target_unchanged(name):
  target,closure=compiledTargets[name]
@@ -214,14 +269,17 @@ def assert_compiled_target_unchanged(name):
   if path.is_symlink():raise SystemExit('compiled dependency output became symlink')
   if path.is_file():current.append({'path':str(path.relative_to(root)),'bytes':path.stat().st_size,'sha256':digest(path)})
  if current!=closure:raise SystemExit('compiled entire pinned output closure changed during execution')
+ assert_task_unchanged()
 def build_and_pin(name,project):
  code=command(['dotnet','build',project,*base,'-f','net10.0','-p:EnableWindowsTargeting=true','--no-restore','-bl:'+str(out/(name+'-build.binlog'))],name+'-build');verify()
  if code:raise SystemExit(code)
- props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']
- query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath,RuntimeIdentifier,Configuration,OutputPath'],capture_output=True,text=True)
+ props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']+[actualTaskProperty]
+ query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath,RuntimeIdentifier,Configuration,OutputPath,AvaloniaBuildTasksLocation'],capture_output=True,text=True)
  (out/(name+'-target-path.stdout')).write_text(query.stdout);(out/(name+'-target-path.stderr')).write_text(query.stderr)
  if query.returncode:raise SystemExit(query.returncode)
  actualProps=json.loads(query.stdout)['Properties'];target=pathlib.Path(actualProps['TargetPath']).resolve()
+ if pathlib.Path(actualProps['AvaloniaBuildTasksLocation']).resolve()!=taskTarget:raise SystemExit('consumer UsingTask property differs from pinned source-built task')
+ assert_task_unchanged()
  outputPath=pathlib.Path(actualProps['OutputPath']);outputPath=outputPath if outputPath.is_absolute() else (root/project).parent/outputPath;outputPath=outputPath.resolve()
  if actualProps['RuntimeIdentifier']!='linux-x64' or actualProps['Configuration']!='Release' or not target.is_relative_to(outputPath) or not target.is_relative_to(root.resolve()) or not target.is_file() or target.suffix!='.dll':raise SystemExit('missing/unexpected actual Release Linux TargetPath/OutputPath')
  closure=[]
@@ -261,15 +319,19 @@ verify()
 
 # Capture postbuild generated/compiler-source inputs separately; initial item query is not complete generated-input proof.
 generated={}
-for file in sorted((root/'artifacts/picture19-managed-build').rglob('*')):
- if file.is_symlink():raise SystemExit('generated input symlink')
- if file.is_file():generated[str(file.resolve())]={'bytes':file.stat().st_size,'sha256':digest(file)}
+for generatedRoot in (root/'artifacts/picture19-managed-build',root/'artifacts/picture19-host-build-tasks'):
+ for file in sorted(generatedRoot.rglob('*')):
+  if file.is_symlink():raise SystemExit('generated input symlink')
+  if file.is_file():generated[str(file.resolve())]={'bytes':file.stat().st_size,'sha256':digest(file)}
 (out/'actual-generated-output-pins.json').write_text(json.dumps(generated,indent=2)+'\n')
 for name,project in entries:
  graph=restoreBefore[name]
  for item in graph['projects']:
-  sourceProject=item['path'];effectiveFramework='netstandard2.0' if sourceProject in toolProjects else 'net10.0';key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
-  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']
+  sourceProject=item['path'];effectiveFramework=item['effectiveFramework'];key=hashlib.sha256(sourceProject.encode()).hexdigest()[:16]
+  args=['dotnet','msbuild',sourceProject,'-nologo','-m:1','-nr:false','-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:UseSharedCompilation=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-getItem:Compile,AdditionalFiles,Analyzer,EmbeddedResource','-getProperty:TargetPath,MSBuildProjectExtensionsPath']+[actualTaskProperty]
+  if item.get('hostContext'):
+   args=[v for v in args if not v.startswith(('-p:RuntimeIdentifier=','-p:RuntimeIdentifiers=','-p:SelfContained=','-p:ArtifactsPath='))]+['-p:ArtifactsPath='+str(root/'artifacts/picture19-host-build-tasks')]
+  key+=('-host' if item.get('hostContext') else '-consumer')
   if command(args,'postbuild-evaluated-'+key):raise SystemExit('postbuild compiler input query failed')
   data=json.loads((out/('postbuild-evaluated-'+key+'.log')).read_text())
   for items in data.get('Items',{}).values():
