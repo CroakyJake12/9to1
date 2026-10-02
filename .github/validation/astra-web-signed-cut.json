@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "f6f7c33a9b71993b5bcdc3e6e64005059dd9451e",
-  "programTree": "082ea86324c437d82e677c30021c47586b2921da",
-  "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
+  "baselineCommit": "9d169f9293397325e0afeef330219b523ee8f8bd",
+  "programTree": "2dea16df9901ce7ef93fcc4db40ac453d19cc59d",
+  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
     {
@@ -25621,9 +25621,9 @@
     {
       "path": "9to1 Workspace/Web/Tests/Web.Specs.csproj",
       "mode": "100644",
-      "object": "7c6d496ffba2954a62a7e464f3bcc626f1a03919",
-      "bytes": 245,
-      "sha256": "2ee5a7bc691f514da36a3e119d6772b4c659246d3237e0a738f9211552521457"
+      "object": "d87c4984e549000b62102dec81d35826179ab711",
+      "bytes": 301,
+      "sha256": "61d9cc6d21b711dde9b95ea41afcd3bd5e578789463742af4b094fac1731bd9f"
     },
     {
       "path": "9to1 Workspace/Web/WebOidcAssemblyInfo.cs",
@@ -64479,7 +64479,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-web-signed-cut.json",
-  "limits": "Actual fixture CS1061 correction only: ContentHttpResult.ResponseContent actual net10 property, no assertion removal or fake result. Actual full Web production build passed predecessor; complete owning Accountslegacy/FundedOrg/PublicClient/Remote/Node/signedWeb/authenticatedWeb/Chromium suites and all full source/restore/compiled/artifact guards preserved; uncompiled/unrun.",
+  "limits": "Actual CS8802 source ownership correction only: parent Web.Specs defaultCompile excludes nested Oidc/**/*.cs owned by separate Web.Oidc.Specs executable. Both entire console Program files, nested source, both original parentProjectReferences and every separate owning restore/build/run/check retained unchanged. No test/assertion/filter omission; full authenticatedWeb/Chrome/signedOIDC/Accounts/Remote/Node and source/restore/compiled guards preserved. Uncompiled/unrun.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-web-oidc-production-coherent36-plan02/joined-source36.json",
@@ -64524,6 +64524,10 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-web-actual-corrective02/actualfailed-11215898559/root-capture.json",
       "sha256": "2ca1daf079c737a22fef7dc8a3b1b82832e4acd8384acfda56b7c00f8d7c3894"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-web-actual-corrective03/actual-failed05-11217413013/root-capture.json",
+      "sha256": "416be0b2d797c6332cf4f04cf365255072f07dfef85b68186da72e943afc4e48"
     }
   ],
   "sharedCakeIdContract": null
