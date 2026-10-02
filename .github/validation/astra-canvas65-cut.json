@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "c916686bf0264b51388758c8471ebce22c272605",
-  "programTree": "f6399a869c598fe4313debfcbc6d0ce4f3b4d218",
+  "baselineCommit": "51512a8790d8b94dd45a7284faacd560bce76ef2",
+  "programTree": "a833979cf0f4c2060dc7ada8e1f766e4dae2083e",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "54ae33c493dfed8a09e307e55d0e6ea9f8012206",
+      "object": "607de21d98605f8701b870126601bb3901c6ee63",
       "bytes": 5793,
-      "sha256": "67d042d63e7fb39776f41a1487ddd7c67ca2ec14ba04fcd00a00f98e22b50fe1"
+      "sha256": "8ab4db0d2957aff47432021e7ca5ff3f2e7091b2d025f6ad5a717c73fc2c9329"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -4474,9 +4474,9 @@
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeInputTests.cs",
       "mode": "100644",
-      "object": "0147fcff40ee912f10cb5949ee81b9bac75431b9",
-      "bytes": 17466,
-      "sha256": "82576c5b73dcee9e95d851b2f4037ea7ad933ac63837239e08f69dbf74a68d3c"
+      "object": "b35a3578c26ed181a9163870c28675a81f2ec483",
+      "bytes": 17554,
+      "sha256": "c62a1d8d5a7d518c100e2bd10544cfb5394a89a0860e407eddc0626b1b6290c7"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/HavenOS.Canvas.NativeUI.Tests.csproj",
@@ -64172,6 +64172,14 @@
     {
       "path": "/workspace/astra-source/worker6-canvas-history-coverage-restore-01/root13-selection.json",
       "sha256": "1b60b5f4ff29b8eae110ea454d5030700756fbb1efb15583145e7936ba0cb59e"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas67-hosted-plan-sol2/manifest.json",
+      "sha256": "7cb492c91911fada0c062ced8d384b664b987074c6af608bd2d1b292a0f57508"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-native-input-await-fix-01/manifest.json",
+      "sha256": "ead7ecc054e3552005ea1c022ad52f5fe5e06c01bc28c68cba621cdbd6f62696"
     }
   ],
   "sharedCakeIdContract": null,

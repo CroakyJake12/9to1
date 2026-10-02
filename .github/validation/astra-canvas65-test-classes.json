@@ -16,7 +16,7 @@
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeInputTests.cs",
       "class": "CanvasNativeInputTests",
       "namespace": "HavenOS.Apps.Canvas.NativeUI.Tests",
-      "sha256": "82576c5b73dcee9e95d851b2f4037ea7ad933ac63837239e08f69dbf74a68d3c"
+      "sha256": "c62a1d8d5a7d518c100e2bd10544cfb5394a89a0860e407eddc0626b1b6290c7"
     },
     {
       "path": "9to1 Workspace/Canvas/Tests/CanvasHomeEraserOperationTests.cs",

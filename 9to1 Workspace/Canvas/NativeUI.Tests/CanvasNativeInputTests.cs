@@ -25,7 +25,7 @@ public sealed class CanvasNativeInputTests
     public async Task Native_view_navigation_preserves_document_coordinates_and_cancels_unsubmitted_ink()
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        Assert.True(await native.Dispatch<bool>(async () =>
         {
             var ct = CancellationToken.None;
             await using var fixture = await Fixture.Create(ct);
@@ -79,7 +79,8 @@ public sealed class CanvasNativeInputTests
                 Assert.Empty((await fixture.Bridge.OpenAsync(fixture.FileId, ct)).Artifact.Pages[0].Strokes);
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
 
     [Theory]
@@ -88,7 +89,7 @@ public sealed class CanvasNativeInputTests
     public async Task Routed_native_mouse_stroke_requires_real_Home_approval_and_exact_Files_revision(bool changeRevision)
     {
         await using var native = HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async () =>
+        Assert.True(await native.Dispatch<bool>(async () =>
         {
             var ct = CancellationToken.None;
             await using var fixture = await Fixture.Create(ct);
@@ -163,7 +164,8 @@ public sealed class CanvasNativeInputTests
                 }
             }
             finally { window.Close(); }
-        }, CancellationToken.None);
+            return true;
+        }, CancellationToken.None));
     }
 
     private static IEnumerable<Button> Buttons(Control value) { value.UpdateLayout(); return value.GetVisualDescendants().OfType<Button>(); }
