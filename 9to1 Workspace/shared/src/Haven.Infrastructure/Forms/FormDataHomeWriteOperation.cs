@@ -1,4 +1,5 @@
 using Haven.Application;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using HavenOS.Home.Core;
 
@@ -12,12 +13,31 @@ public sealed record FormDataHomeWriteResult(DataRecordMutationResult Data, Form
 /// through the retained operation receipt; this coordinator never repeats an owning mutation.</summary>
 public sealed class FormDataHomeWriteOperation(DataHomeRecordUpdateOperation data, FormDataResponseWriteService responses)
 {
+    private readonly ConditionalWeakTable<HomeResourceExecutionCapability, DataRecordUpdateIntent> _intents = new();
+
+    public async Task<FormDataHomeWriteResult> FinishAsync(
+        HomeResourceExecutionCapability capability, CancellationToken cancellationToken = default)
+    {
+        if (!_intents.TryGetValue(capability, out var intent))
+            throw new UnauthorizedAccessException("This Forms coordinator did not retain the original Data intent.");
+        var result = await data.FinishAsync(capability, cancellationToken).ConfigureAwait(false);
+        return await ReconcileKnownAsync(intent, result, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<FormDataHomeWriteResult> ExecuteAsync(DataRecordUpdateIntent intent,
         HomeResourceExecutionCapability capability, CancellationToken cancellationToken = default)
     {
         // Do not insert a Forms read before dispatch: revocation after approval must still reach
         // the canonical one-use claim/audit boundary rather than leave an unconsumed capability.
+        _intents.Add(capability, intent); // Retain exact original source before owner awaits; never replace it.
         var result = await data.ExecuteAsync(intent, capability, cancellationToken).ConfigureAwait(false);
+        return await ReconcileKnownAsync(intent, result, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<FormDataHomeWriteResult> ReconcileKnownAsync(DataRecordUpdateIntent intent,
+        DataRecordMutationResult result, CancellationToken cancellationToken)
+    {
+        if (!result.OutcomeKnown) return new(result, null, "DataOutcomeUnconfirmed");
         if (intent.Origin is not { } source) return new(result, null, "NoFormSource");
         try
         {

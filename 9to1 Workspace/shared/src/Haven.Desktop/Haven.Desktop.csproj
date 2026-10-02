@@ -89,4 +89,7 @@
     <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
     <Using Include="HavenOS.Files.NativeHost" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Browse/HavenOS.Apps.Browse.csproj" />
+  </ItemGroup>
 </Project>
