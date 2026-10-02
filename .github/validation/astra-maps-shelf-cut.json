@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "9a264e625ae6058e8fc8a7754285fc330802f3d6",
-  "programTree": "e3514a4ff9cd7754f05852ea6fc392735ffe2269",
+  "baselineCommit": "90447aefc253cb4fa329bac4b3b997ec559296d7",
+  "programTree": "c100fa6937b434a14e6b3efb3a694e586d74180f",
   "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "a51b28608bfdefb8940e10fb16b772d8279a75b4",
+      "object": "fb34e28fff96a6c365b2b5f3fd031a8d0e16756f",
       "bytes": 15096,
-      "sha256": "88451528ad1ec1a1bb11ddc7d92da8a78c525e3dd1bea08b3bd74915107addbf"
+      "sha256": "ed1ff2a9330006bce50ed915c02682b7982e9c4094568608ad32aedbb2839fe7"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40559,9 +40559,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
       "mode": "100644",
-      "object": "0c4d7fdd28b0f9992e65bba1f8f78a0e909c6209",
-      "bytes": 29458,
-      "sha256": "04f3f759841a06bacefd6f05efbcc12e5938e012697fa67ddd87d76c1a30979b"
+      "object": "d090ea81c61256ccfd84cf0ce27182f8b47c7dbc",
+      "bytes": 29483,
+      "sha256": "04012055dcbf783f59f945e7a9fec652dadd9b133ec2ce2e8edcb49e3f2d4e8d"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/SqliteDatabaseTests.cs",
@@ -64696,7 +64696,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Actual compile corrective only: selected owning fixture persisted Core.HomePermissionRequest type fully qualified, Task/all oldcases/16coupled retained; one changedfixtureSHA re-pin only in same30class table. All full Maps2/Automation3 gates, filters/counts/source22+3/restore/producers/hosttasks/compiled/TRX guards unchanged; no runtime acceptance.",
+  "limits": "Actual persisted fixture model correction only: genuine writer PermissionsTrustNotifications.HomePermissionRequest retains State/default JSON options. All30class rows, Task observer, historical and16coupled cases, full2 gates and every source/restore/compiled/TRX guard unchanged. UNRUN.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-maps-owning-source-graph04/manifest.json",
@@ -64741,6 +64741,18 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-maps-observer-actual-corrective02/actual-failed05-11218351356/root-capture.json",
       "sha256": "bf2812a305b5dabd18cc2abd440f35bf0db853e21134c0acec76d3fa8f9cc328"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shelf-maps-actual-persisted-request-type-corrective03/manifest.json",
+      "sha256": "89611d9f811b0750f5c84aee320b08c6ab0a2aa65835d4be42342657318cc7ba"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-maps-actual-compile-corrective03/actual-failed05-11219460693/root-capture.json",
+      "sha256": "01c934e5d5bc144b16196f8aaf056b090a78b6c4f73eff6ff40581ecdae1cb38"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-maps-actual-compile-corrective03/actual-failed05-11218896396/root-capture.json",
+      "sha256": "776afe5e3bd77caa69522f780d3ee9e380ae5f15dcd78f89a72a6711a872ae9f"
     }
   ],
   "sharedCakeIdContract": null
