@@ -16,6 +16,13 @@ public sealed class AutomationDefinitionReviewCaller(IAutomationOwnerRepository 
     private readonly AutomationHomeDefinitionOperation _operation = operation;
     private sealed record Selection(AutomationDefinitionReviewCaller Issuer, Guid StoreId,
         AuthenticatedResourceActor Actor) : IAutomationDefinitionCallerSelection;
+    // Only the private original issuer may attest the exact repository objects behind a selection.
+    // Equal StoreUUIDs are insufficient when a physical database/factory was copied or replaced.
+    internal bool HasRepositoryOrigin(IAutomationDefinitionCallerSelection original,
+        IAutomationOwnerRepository expectedDefinitions, IReusableTaskOwnerRepository expectedTasks) =>
+        original is Selection issued && ReferenceEquals(issued.Issuer, this) &&
+        ReferenceEquals(definitions, expectedDefinitions) && ReferenceEquals(tasks, expectedTasks);
+
     public async Task<IAutomationDefinitionCallerSelection> CaptureAsync(AuthenticatedResourceActor expectedActor, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(expectedActor);

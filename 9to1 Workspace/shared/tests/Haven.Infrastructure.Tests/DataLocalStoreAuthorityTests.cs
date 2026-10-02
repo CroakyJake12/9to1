@@ -355,7 +355,8 @@ public sealed class DataLocalStoreAuthorityTests
         DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
         if (invalid) workbook.Validations.Add(new() { SheetId = sheet.Id, Range = new() { StartRow = 1, EndRow = 1 },
             Kind = DataValidationKind.WholeNumber, Minimum = "0", Maximum = "10" });
-        await fixture.Repository.SaveAsync(workbook, "Canonical table", (await fixture.CaptureAsync(CancellationToken.None))!, CancellationToken.None);
+        var seededTable = await fixture.Repository.SaveAsync(workbook, "Canonical table", (await fixture.CaptureAsync(CancellationToken.None))!, CancellationToken.None);
+        var originalDataBytes = await File.ReadAllBytesAsync(seededTable.CurrentPath);
         var fieldID = table.Fields[0].FieldID; var recordID = table.Records[0].RecordID;
         using var source = JsonDocument.Parse("42");
         var values = new Dictionary<Guid, DataScalarRecordValue> { [fieldID] = new(DataCellKind.Number, source.RootElement) };
@@ -389,8 +390,16 @@ public sealed class DataLocalStoreAuthorityTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(changed, capability));
         var result = await operation.ExecuteAsync(intent, capability);
         var committed = !invalid && !fromForm;
-        Assert.Equal(committed, result.Committed); Assert.True(result.AuditRecorded);
+        if (!committed) Assert.Equal(originalDataBytes, await File.ReadAllBytesAsync(seededTable.CurrentPath));
+        Assert.Equal(committed, result.Committed);
+        Assert.True(result.OutcomeKnown); Assert.True(result.AuditRecorded);
         Assert.Equal(fromForm ? "SourceAuthorityUnavailable" : invalid ? "DataValidationFailed" : "DataRecordUpdated", result.Code);
+        if (invalid)
+        {
+            var originalFinish = await operation.FinishAsync(capability);
+            Assert.True(originalFinish.OutcomeKnown); Assert.True(originalFinish.AuditRecorded);
+            Assert.False(originalFinish.Committed); Assert.Equal("DataValidationFailed", originalFinish.Code);
+        }
         var reopened = (await fixture.Repository.LoadAsync(workbook.Id, CancellationToken.None))!;
         Assert.Equal(committed ? 3 : 2, reopened.Version);
         Assert.Equal(committed ? "42" : "1", DataTableIdentity.ReadCell(reopened, table.Id, recordID, fieldID)!.Value);
@@ -411,8 +420,9 @@ public sealed class DataLocalStoreAuthorityTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => operation.ExecuteAsync(intent, capability));
         Assert.Equal(committed ? HomePermissionRequestState.Succeeded : HomePermissionRequestState.Failed,
             (await fixture.Permissions.GetAuthorizationAsync(pending.RequestId)).State);
-        Assert.Single((await fixture.Permissions.GetSnapshotAsync()).RecentAuditEvents,
+        var completedAudits = (await fixture.Permissions.GetSnapshotAsync()).RecentAuditEvents.Where(
             item => item.RequestId == pending.RequestId && item.Kind == HomePermissionAuditKind.ExecutionCompleted);
+        Assert.Single(completedAudits);
     }
 
     [Theory]

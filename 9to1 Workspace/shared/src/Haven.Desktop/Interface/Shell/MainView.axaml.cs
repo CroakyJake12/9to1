@@ -1341,6 +1341,32 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         var page = new BrowserPage(_bus, _browser, _browserData, _ollama, _preferences,
             App.Services?.GetService<NotesReadAloudController>());
         AddOrSelectTab("browse", "Browse", page, true);
+        _ = MountOwnedBrowserToolsAsync(page);
+    }
+
+    private async Task MountOwnedBrowserToolsAsync(BrowserPage page)
+    {
+        try
+        {
+            var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable.");
+            var actors = services.GetRequiredService<IAuthenticatedResourceActorSource>();
+            // Canonical display origin is retained before discovery or queued owner work.
+            var originalActor = await actors.GetCurrentAsync(CancellationToken.None)
+                ?? throw new UnauthorizedAccessException("The original Home actor is unavailable.");
+            var documents = services.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>();
+            var owner = services.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedWebMcpBinding>();
+            if (IsDisposed || page.IsOwnedToolsClosed || !OpenTabs.Any(tab => ReferenceEquals(tab.Page, page))) return;
+            if (await actors.GetCurrentAsync(CancellationToken.None) != originalActor)
+                throw new UnauthorizedAccessException("The original Home actor changed before mounting page tools.");
+            if (IsDisposed || page.IsOwnedToolsClosed || !OpenTabs.Any(tab => ReferenceEquals(tab.Page, page))) return;
+            page.MountOwnedTools(new HavenOS.Apps.Browse.BrowseOwnedToolsScene(documents, owner, originalActor,
+                async update => await Dispatcher.UIThread.InvokeAsync(update),
+                requestID => ReviewHomeRequestAsync(requestID, CancellationToken.None)));
+        }
+        catch (Exception error)
+        {
+            if (!IsDisposed && !page.IsOwnedToolsClosed) page.ReportBrowserError(error);
+        }
     }
 
     private void OpenTraining()

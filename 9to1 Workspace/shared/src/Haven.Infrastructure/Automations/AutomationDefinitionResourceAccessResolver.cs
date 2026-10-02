@@ -16,8 +16,9 @@ public abstract class AutomationDefinitionResourceAccessResolver(IAutomationOwne
         ResourceScope scope, CancellationToken cancellationToken)
     {
         ResourceAccessDecision Deny() => new(false, "PermissionDenied", actor.ActorId, scope.Revision, actor.OrganisationId);
+        var graphPublication = actionId is "automations.graph.save-draft" or "automations.activate";
         if (scope.Kind != ResourceKind || scope.Access != ResourceAccess.Write ||
-            actionId is not ("automations.create" or "automations.update" or "automations.disable" or "automations.delete" or "automations.restore" or "automations.recover") ||
+            !(actionId is "automations.create" or "automations.update" or "automations.disable" or "automations.delete" or "automations.restore" or "automations.recover" || reusable && graphPublication) ||
             actor.AccountId is not null || actor.OrganisationId is not null ||
             string.IsNullOrWhiteSpace(actor.ProfileId) || string.IsNullOrWhiteSpace(actor.ActorId) ||
             string.IsNullOrWhiteSpace(actor.AuthenticationRevision) || ownership is not IResourceStoreOwnershipReceiptAuthority receipts)
@@ -36,10 +37,12 @@ public abstract class AutomationDefinitionResourceAccessResolver(IAutomationOwne
             var binding = await ownership.GetVerifiedAsync("automations", storeId.ToString("D"), cancellationToken).ConfigureAwait(false);
             if (binding?.Receipt is null || binding.ResourceKind != "automations" || binding.StoreId != storeId.ToString("D") ||
                 binding.ProfileId != actor.ProfileId || !await receipts.IsCurrentAsync(binding, actor, cancellationToken).ConfigureAwait(false)) return Deny();
+            var graphEligible = false;
             bool exists, recovery; string? recoveryCode; long currentRevision; AutomationOwnerBinding? owner;
             if (reusable)
             {
                 var row = await tasks.GetOwnedTaskAsync(entityId, cancellationToken).ConfigureAwait(false);
+                graphEligible = row is not null && !row.Value.IsEnabled && row.Value.ArchivedAt is null;
                 exists = row is not null; recovery = row?.RequiresRecovery ?? false; recoveryCode = row?.RecoveryCode;
                 currentRevision = row?.Value.Revision ?? 0; owner = row?.Value.OwnerBinding;
             }
@@ -49,6 +52,7 @@ public abstract class AutomationDefinitionResourceAccessResolver(IAutomationOwne
                 exists = row is not null; recovery = row?.RequiresRecovery ?? false; recoveryCode = row?.RecoveryCode;
                 currentRevision = row?.Value.Revision ?? 0; owner = row?.Value.OwnerBinding;
             }
+            if (graphPublication && (!reusable || !graphEligible)) return Deny();
             if (actionId == "automations.create")
             { if (exists || revision != 0) return Deny(); }
             else if (actionId == "automations.recover")

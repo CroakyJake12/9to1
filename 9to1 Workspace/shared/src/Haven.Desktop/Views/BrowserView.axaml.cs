@@ -459,12 +459,17 @@ public sealed partial class BrowserView : UserControl
 /// <summary>
 /// Represents native web view host and keeps its related state and behavior together.
 /// </summary>
-internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
+internal sealed class NativeWebViewHost : IOriginalSessionOwnedBrowserHost, IDisposable
 {
     /// <summary>
     /// Stores web view locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
+    private readonly SemaphoreSlim _ownedEntries = new(1, 1);
+    private long _ownedEntryGeneration;
+    private int _ownedEntryActive;
+
     private readonly NativeWebView _webView;
+    private readonly Func<string, Task<string?>> _evaluateOwnedScript;
     /// <summary>
     /// Stores permissions locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
@@ -497,8 +502,15 @@ internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
     private bool _disposed;
 
     public NativeWebViewHost(NativeWebView webView, BrowserSitePermissionStore permissions, Func<Uri, Task> openInNewTab)
+        : this(webView, permissions, openInNewTab, webView.InvokeScript) { }
+
+    // Internal controlled evaluation boundary for owning scheduling/lease tests. Actual host
+    // composition uses the three-argument ctor and SDK InvokeScript directly.
+    internal NativeWebViewHost(NativeWebView webView, BrowserSitePermissionStore permissions,
+        Func<Uri, Task> openInNewTab, Func<string, Task<string?>> evaluateOwnedScript)
     {
         _webView = webView ?? throw new ArgumentNullException(nameof(webView));
+        _evaluateOwnedScript = evaluateOwnedScript ?? throw new ArgumentNullException(nameof(evaluateOwnedScript));
         _permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
         _openInNewTab = openInNewTab ?? throw new ArgumentNullException(nameof(openInNewTab));
         _state = Snapshot("Native browser ready");
@@ -521,36 +533,155 @@ internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
     /// <summary>
     /// Performs navigate asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task NavigateAsync(Uri address, CancellationToken cancellationToken)
+    public Task NavigateAsync(Uri address, CancellationToken cancellationToken) =>
+        RunNativeLifecycleAsync(() =>
+        {
+            var assessment = BrowserNativeRequestPolicy.AssessTopLevel(address);
+            if (!assessment.IsAllowed) throw new InvalidOperationException(assessment.Reason);
+            Publish(_state with { Address = address, IsLoading = true, Status = "Loading…" });
+            _webView.Navigate(address);
+        }, cancellationToken);
+
+    private async Task RunNativeLifecycleAsync(Action nativeAction, CancellationToken token)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var assessment = BrowserNativeRequestPolicy.AssessTopLevel(address);
-        if (!assessment.IsAllowed) throw new InvalidOperationException(assessment.Reason);
-        Publish(_state with { Address = address, IsLoading = true, Status = "Loading…" });
-        _webView.Navigate(address);
-        return Task.CompletedTask;
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            var queued = await Dispatcher.UIThread.InvokeAsync<Task>(() => RunNativeLifecycleAsync(nativeAction, token));
+            await queued.ConfigureAwait(false);
+            return;
+        }
+        await _ownedEntries.WaitAsync(token);
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            if (_disposed) throw new ObjectDisposedException(nameof(NativeWebViewHost));
+            Interlocked.Increment(ref _ownedEntryGeneration);
+            nativeAction();
+        }
+        finally { _ownedEntries.Release(); }
     }
 
     /// <summary>
     /// Performs go back asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task GoBackAsync(CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); if (_webView.CanGoBack) _webView.GoBack(); return Task.CompletedTask; }
+    public Task GoBackAsync(CancellationToken cancellationToken) => RunNativeLifecycleAsync(() => { if (_webView.CanGoBack) _webView.GoBack(); }, cancellationToken);
     /// <summary>
     /// Performs go forward asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task GoForwardAsync(CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); if (_webView.CanGoForward) _webView.GoForward(); return Task.CompletedTask; }
+    public Task GoForwardAsync(CancellationToken cancellationToken) => RunNativeLifecycleAsync(() => { if (_webView.CanGoForward) _webView.GoForward(); }, cancellationToken);
     /// <summary>
     /// Performs reload asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task ReloadAsync(CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); _webView.Refresh(); return Task.CompletedTask; }
+    public Task ReloadAsync(CancellationToken cancellationToken) => RunNativeLifecycleAsync(() => _webView.Refresh(), cancellationToken);
     /// <summary>
     /// Performs stop asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public Task StopAsync(CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); _webView.Stop(); return Task.CompletedTask; }
+    public Task StopAsync(CancellationToken cancellationToken) => RunNativeLifecycleAsync(() => _webView.Stop(), cancellationToken);
     /// <summary>
     /// Runs execute script async while preserving the surrounding cancellation and error-handling contract.
     /// </summary>
     public Task<string?> ExecuteScriptAsync(string script, CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); return _webView.InvokeScript(script); }
+
+    // The boolean-only guarded port cannot carry the actual issuer lease through evaluation.
+    public Task<string?> ExecuteScriptGuardedAsync(string script, IBrowserScriptDispatchAdmission admission,
+        CancellationToken cancellationToken) => Task.FromException<string?>(
+            new NotSupportedException("Owned native dispatch lease required."));
+
+    public IBrowserNativeDocumentSelection? CaptureDocumentSelection()
+    {
+        if (_disposed) return null;
+        var generation = Interlocked.Read(ref _ownedEntryGeneration);
+        return _disposed ? null : new NativeDocumentSelection(this, generation);
+    }
+    private sealed record NativeDocumentSelection(NativeWebViewHost Issuer, long Generation)
+        : IBrowserNativeDocumentSelection;
+
+    // Missing original displayed native document never adopts a fresh generation.
+    public Task<string?> ExecuteOwnedScriptAsync(string script,
+        IBrowserOwnedScriptDispatchAdmission admission, CancellationToken cancellationToken) =>
+        Task.FromException<string?>(new UnauthorizedAccessException("Original native document selection required."));
+
+    public async Task<string?> ExecuteOwnedScriptAsync(IBrowserNativeDocumentSelection originalDocument, string script,
+        IBrowserOwnedScriptDispatchAdmission admission, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(admission);
+        ArgumentNullException.ThrowIfNull(script);
+        if (originalDocument is not NativeDocumentSelection selected || !ReferenceEquals(selected.Issuer, this))
+            throw new UnauthorizedAccessException("Actual original native document issuer required.");
+        var generation = selected.Generation;
+        RequireOwnedEntryCurrent(generation, cancellationToken); // Before dispatch/queue, not a fresh page adoption.
+        if (Dispatcher.UIThread.CheckAccess())
+            return await ExecuteOwnedEntryCoreAsync(script, admission, generation, cancellationToken);
+        var entry = await Dispatcher.UIThread.InvokeAsync<Task<string?>>(
+            () => ExecuteOwnedEntryCoreAsync(script, admission, generation, cancellationToken));
+        return await entry.ConfigureAwait(false);
+    }
+
+    private async Task<string?> ExecuteOwnedEntryCoreAsync(string script,
+        IBrowserOwnedScriptDispatchAdmission admission, long generation, CancellationToken token)
+    {
+        await _ownedEntries.WaitAsync(token);
+        try
+        {
+            RequireOwnedEntryCurrent(generation, token);
+            Interlocked.Exchange(ref _ownedEntryActive, 1);
+            // Admission performs fresh listTools/schema via this direct entry, never public requeue.
+            var entry = new NativeEntryObservation(this, generation);
+            IBrowserScriptDispatchLease? acquired;
+            try { acquired = await admission.AcquireAsync(entry, token); }
+            finally { entry.Close(); }
+            await using var lease = acquired
+                ?? throw new UnauthorizedAccessException("Original native owner lease unavailable.");
+            RequireOwnedEntryCurrent(generation, token);
+            if (!await lease.CheckAsync(token))
+                throw new UnauthorizedAccessException("Original native owner lease is no longer current.");
+            RequireOwnedEntryCurrent(generation, token);
+            // No WaitAsync(token): cancellation cannot release the lease while native evaluation
+            // still runs. SDK callback completion is evaluation only, not page tool-effect proof.
+            var evaluation = _evaluateOwnedScript(script);
+            var result = await evaluation;
+            // A late cancellation/principal/lifecycle change cannot classify a possibly emitted
+            // effect as denied or successful. Observe only; never release early or replay.
+            var ownerStillCurrent = await lease.CheckAsync(CancellationToken.None);
+            if (token.IsCancellationRequested || !ownerStillCurrent ||
+                _disposed || generation != Interlocked.Read(ref _ownedEntryGeneration))
+                throw new InvalidOperationException("Native evaluation outcome requires reconciliation after lifecycle change.");
+            return result;
+        }
+        finally { Interlocked.Exchange(ref _ownedEntryActive, 0); _ownedEntries.Release(); }
+    }
+
+    private void RequireOwnedEntryCurrent(long generation, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (_disposed || generation != Interlocked.Read(ref _ownedEntryGeneration))
+            throw new UnauthorizedAccessException("Original native browser entry changed.");
+    }
+
+    private sealed class NativeEntryObservation(NativeWebViewHost host, long generation)
+        : IBrowserNativeEntryObservation
+    {
+        private int _closed;
+        public void Close() => Interlocked.Exchange(ref _closed, 1);
+        public async Task<string?> EvaluateObservationAsync(string script, CancellationToken token)
+        {
+            if (!Dispatcher.UIThread.CheckAccess())
+            {
+                // Marshal ONLY direct native evaluation; owning turn is already held.
+                // Never recursively enqueue ExecuteOwnedScriptAsync or acquire its semaphore.
+                var evaluation = await Dispatcher.UIThread.InvokeAsync<Task<string?>>(() => EvaluateObservationAsync(script, token));
+                return await evaluation.ConfigureAwait(false);
+            }
+            if (Volatile.Read(ref _closed) != 0) throw new ObjectDisposedException(nameof(NativeEntryObservation));
+            host.RequireOwnedEntryCurrent(generation, token);
+            var actual = host._evaluateOwnedScript(script);
+            var result = await actual;
+            if (Volatile.Read(ref _closed) != 0) throw new ObjectDisposedException(nameof(NativeEntryObservation));
+            host.RequireOwnedEntryCurrent(generation, token);
+            return result;
+        }
+    }
+
 
     /// <summary>
     /// Performs open developer tools asynchronously so I/O does not block the caller's thread.
@@ -608,6 +739,16 @@ internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
     /// </summary>
     private void OnNavigationStarted(object? sender, WebViewNavigationStartingEventArgs args)
     {
+        if (Volatile.Read(ref _ownedEntryActive) != 0)
+        {
+            // Page-initiated navigation cannot substitute the selected document during
+            // asynchronous observation/admission/evaluation. The SDK exposes actual cancellation.
+            args.Cancel = true;
+            Interlocked.Increment(ref _ownedEntryGeneration);
+            return;
+        }
+
+        Interlocked.Increment(ref _ownedEntryGeneration);
         if (_disposed) return;
         var request = args.Request;
         var assessment = BrowserNativeRequestPolicy.AssessTopLevel(request);
@@ -721,6 +862,7 @@ internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
     /// </summary>
     private void OnAdapterDestroyed(object? sender, WebViewAdapterEventArgs args)
     {
+        Interlocked.Increment(ref _ownedEntryGeneration);
         if (_disposed) return;
         _adapterLost = true;
         Publish(_state with { IsLoading = false, Status = "Browser process stopped. Waiting for the native adapter to recover…" });
@@ -731,6 +873,7 @@ internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
     /// </summary>
     private void OnAdapterCreated(object? sender, WebViewAdapterEventArgs args)
     {
+        Interlocked.Increment(ref _ownedEntryGeneration);
         if (_disposed) return;
         if (!_adapterLost) { PublishSnapshot("Native browser ready"); return; }
         _adapterLost = false;
@@ -783,6 +926,7 @@ internal sealed class NativeWebViewHost : IEmbeddedBrowserHost, IDisposable
     /// </summary>
     public void Dispose()
     {
+        Interlocked.Increment(ref _ownedEntryGeneration);
         if (_disposed) return;
         _disposed = true;
         _webView.AdapterCreated -= OnAdapterCreated;

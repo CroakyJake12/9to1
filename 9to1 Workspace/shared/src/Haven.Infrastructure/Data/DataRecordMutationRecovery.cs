@@ -8,6 +8,9 @@ namespace Haven.Infrastructure;
 public sealed class DataRecordMutationRecovery(IDataWorkbookRepository workbooks,
     IDataWorkbookCommitAuthority authority, IAuthenticatedResourceActorSource actors) : IDataRecordMutationReceiptSource
 {
+    internal bool IsBoundTo(IDataWorkbookRepository actualWorkbooks, IDataWorkbookCommitAuthority actualAuthority) =>
+        ReferenceEquals(workbooks, actualWorkbooks) && ReferenceEquals(authority, actualAuthority);
+
     public async Task<DataRecordMutationReceipt?> ReadAsync(DataRecordUpdateIntent intent, CancellationToken cancellationToken = default) =>
         (await ReadCoreAsync(intent, null, cancellationToken).ConfigureAwait(false)).Receipt;
 
