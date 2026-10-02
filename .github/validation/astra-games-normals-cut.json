@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "64c8276c156c924037e62bf345e0adf9113a7b95",
-  "programTree": "9742ae798a36af6c3bb509542bae61684f51386b",
+  "baselineCommit": "24df6daf56ba3507df09899e33521fbaea7923ef",
+  "programTree": "a978d85a5dbb68634300cb7c9b7b679a72274285",
   "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
@@ -29,23 +29,23 @@
     {
       "path": ".github/scripts/astra-games-native-bundle.py",
       "mode": "100644",
-      "object": "93880bbc147e63441617bdbd75980c82da954921",
-      "bytes": 1433,
-      "sha256": "75f6b00c0818b15fddef84f582646f92aec3dc1569502db793e91b1af9edcf04"
+      "object": "ac6691616c3b17be0c9fecfc5eda194661447917",
+      "bytes": 1527,
+      "sha256": "e9f673e5f97e2d8f940aa748b4169d0d8036b01711c018ce97671af309997403"
     },
     {
       "path": ".github/scripts/astra-games-normals-native.py",
       "mode": "100644",
-      "object": "aa6278c8795331bbcadb5336ce5a64ee4c37a968",
-      "bytes": 17670,
-      "sha256": "56c617199f321f1c5a28e8ed6a41f96d5354c3919671d6af4f7ffad2d99c24c7"
+      "object": "7f9f590402f4adda58abf26dc89b7688539519e5",
+      "bytes": 18219,
+      "sha256": "9c205796277fb281b5808e13dfb4009aa1ff76d08fcbfe938e714ecd94f2b354"
     },
     {
       "path": ".github/scripts/astra-games-normals-owning.py",
       "mode": "100644",
-      "object": "3de1f5f05b78bc991bf8bca541552a5b57692cee",
-      "bytes": 22781,
-      "sha256": "92799b558f000d3d26b8b884836888c19012b5b9315679b0bb6c6cf77cf57822"
+      "object": "fedb549755ac88afa7ec719511b5a6cc9a6bc237",
+      "bytes": 24813,
+      "sha256": "0f07181e88186c1b008b493e7f1e991eab910b05300091dc2a3bce8470f412db"
     },
     {
       "path": ".github/scripts/astra-games-normals-regression.py",
@@ -246,9 +246,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "375d55f3d76310e6107a56d05689aa16b9341989",
-      "bytes": 17903,
-      "sha256": "fe04bf8f05b6da615132cbb46d3cc2250522bfd34245d0f548e78071133256cf"
+      "object": "cf269adf9692ed9ab7c243b71ff0b7ff95c0b2ae",
+      "bytes": 20314,
+      "sha256": "4fbd0c9b4592b09c517b3b39a4d4dc5ac41ca692acc944a193f8ea4f067753cd"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -22282,9 +22282,9 @@
     {
       "path": "9to1 Workspace/Games/Runtime/Tests/CanonicalMeshNormalsWitness.cs",
       "mode": "100644",
-      "object": "f228e5d8bd8b74a18030838a682bc263dee5a1c1",
-      "bytes": 2549,
-      "sha256": "189823a19750dced531c555501a0f8492ba0b2c0aeea4e833b442d01752a27c3"
+      "object": "15c088c00ad2b05e0e9a00b01620553bc88d2bd9",
+      "bytes": 3051,
+      "sha256": "d63de80b7df35efca965d29d46cc0773209afee12ae9aa4ccdd151caf7945a1c"
     },
     {
       "path": "9to1 Workspace/Games/Runtime/Tests/CanonicalMeshNormalsWitness.tscn",
@@ -64437,7 +64437,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-games-normals-cut.json",
-  "limits": "Actual recovered Runtime restore failure: required Godot mapped source environment was unset. Bind exact extracted official4.7.2 bundle directory without changing source mapping/product sources. Maintained actual SDK reader computes same-archive content identity separately from physical archive SHA512; no signer trust. Full four native/owning/regression/resource gates unchanged. Entire native original evidence CRC/SHA retained in independent24MiB parts. No local SDK/native run; normal CAS needs root coordinated review.",
+  "limits": "Actual24df native restore/fullRuntime/helper passed then true winding assertion failed; sole witness exception adds original/reverseXYZ/vertices/engine without assertion or driver/mesher change. Actualmanaged two NotExecuted fixtures require ASTRA_GODOT_RUNTIME+ASTRA_GAMES_MANAGED_MODULE; owning now prepares sameexact officialengine/fullRuntime/compiled/maintainedNuGet proof BEFORE7producers-last, sets exactactual env, verifiesmodule/engine/assets unchanged afterwards and preservesall14Desktop/fourrealgateszeroSkip. Complete native AND owning original evidence retainedseparately24MiBparts, boundedlogs. No inferrednormalsfix/conditionalacceptance or syntheticgrant, Root16CAS unchanged. Unexecuted. Successor08 independently recaptures sorted complete compiled and engine inventories after owning tests and requires exact path/bytes/SHA list equality, rejecting additions and removals as well as mutations.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-games-canonical-normal-draft-03/manifest.json",
@@ -64466,6 +64466,18 @@
     {
       "path": "/workspace/astra-source/worker1-games-original-recovery-capture01.json",
       "sha256": "342d5d065c93cf39510e712b41648a147e01788e94cc24dca2ab54b4ae3dcc0d"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-games-canonical-normal-actual-diagnostic04/manifest.json",
+      "sha256": "84fad955f7d6d3417260a725780ed3a1586f2af44dffcb6eedc9d33796f38bd0"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-games-normals-corrector06-small-actual01/root-capture.json",
+      "sha256": "286163de3a4a041fce9f7019f42c0a29d68efdaa8b8b3316c30a991fa90daaef"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-games-normals-corrector06-managed/actual-capture-11222104264/root-capture.json",
+      "sha256": "25a6584543d233aa5b7758b1c48d2d94d92ebdeb948a2bead6b75f00f5f4f5a4"
     }
   ],
   "sharedCakeIdContract": null

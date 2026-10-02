@@ -68,6 +68,13 @@ def verify():
  if subprocess.run(['bash','9to1 Workspace/shared/eng/prepare-cui-source.sh','--check'],check=False).returncode:raise SystemExit('independent clean pinned source check failed')
 verify();command(['dotnet','--info'],'toolchain');command(['dotnet','workload','list'],'workloads')
 env={'AVALONIA_TELEMETRY_OPTOUT':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1','DOTNET_SKIP_FIRST_TIME_EXPERIENCE':'1','MSBUILDDISABLENODEREUSE':'1','DOTNET_CLI_TELEMETRY_OPTOUT':'1','DOTNET_CLI_USE_MSBUILD_SERVER':'0'};os.environ.update(env)
+# Existing mandatory real native/managed owning fixtures need the exact official engine and full actual Runtime module.
+prepared=subprocess.run([sys.executable,'.github/scripts/astra-games-normals-native.py','--expected-commit',a.expected_commit,'--manifest',a.manifest,'--manifest-sha',a.manifest_sha,'--prepare-owning-only'])
+if prepared.returncode:raise SystemExit('actual matching owning runtime/module preparation failed')
+preparedPath=root/'artifacts/games-normals-owning/native-runtime/actual-owning-runtime-prepared.json';preparedRuntime=json.loads(preparedPath.read_text())
+os.environ['ASTRA_GODOT_RUNTIME']=preparedRuntime['engine'];os.environ['ASTRA_GAMES_MANAGED_MODULE']=preparedRuntime['module']
+assert pathlib.Path(preparedRuntime['engine']).is_file() and pathlib.Path(preparedRuntime['module']).is_dir()
+
 base=['-c','Release','-r','linux-x64','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True']
 artifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
 base+=artifactsProps
@@ -229,3 +236,14 @@ for name,project,filter_value in checks:
  (out/'receipt.json').write_text(json.dumps({'commit':commit,'manifestSha256':a.manifest_sha,'results':results,'qualification':'Bounded managed follow-up only; no GUI/provider/login/WPE/package/Android acceptance'},indent=2)+'\n')
  if record['acceptance']!='passed-zero-skips':sys.exit(code or 1)
 verify()
+
+# Real Home/Files owning fixtures may execute the module; require retained actual module/engine source outputs stable afterwards.
+compiledRoot=pathlib.Path(preparedRuntime['module'])/'.godot/mono/temp/bin/Debug'
+assert compiledRoot.is_dir()
+compiledAfter=[{'path':str(p.relative_to(root)),'bytes':p.stat().st_size,'sha256':digest(p)}for p in sorted(compiledRoot.rglob('*'))if p.is_file()]
+engineRoot=pathlib.Path(preparedRuntime['engineRoot'])
+engineAfter=[{'path':str(p.relative_to(engineRoot)),'bytes':p.stat().st_size,'sha256':digest(p)}for p in sorted(engineRoot.rglob('*'))if p.is_file()]
+assert compiledAfter==preparedRuntime['compiled'], 'actual owning compiled full file-set changed'
+assert engineAfter==preparedRuntime['engineFiles'], 'actual owning engine full file-set changed'
+assert digest(pathlib.Path(preparedRuntime['assets']))==preparedRuntime['assetsSha256']
+(out/'actual-owning-runtime-environment.json').write_text(json.dumps({'engine':preparedRuntime['engine'],'module':preparedRuntime['module'],'compiledAndEngineRetainedUnchanged':True,'qualification':'Mandatory actual fixtures require zero skips and full owning TRX; configured environment alone grants no acceptance'},indent=2)+'\n')

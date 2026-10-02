@@ -1,7 +1,7 @@
 """Branch-only managed follow-up. Root supplies the immutable cut manifest; no Git writes."""
 import argparse,hashlib,json,os,pathlib,re,subprocess,sys,shutil
-p=argparse.ArgumentParser();p.add_argument('--expected-commit',required=True);p.add_argument('--manifest',required=True);p.add_argument('--manifest-sha',required=True);a=p.parse_args()
-root=pathlib.Path.cwd();out=root/'artifacts/games-normals-native';out.mkdir(parents=True,exist_ok=True)
+p=argparse.ArgumentParser();p.add_argument('--expected-commit',required=True);p.add_argument('--manifest',required=True);p.add_argument('--manifest-sha',required=True);p.add_argument('--prepare-owning-only',action='store_true');a=p.parse_args()
+root=pathlib.Path.cwd();out=root/('artifacts/games-normals-owning/native-runtime' if a.prepare_owning_only else 'artifacts/games-normals-native');out.mkdir(parents=True,exist_ok=True)
 def digest(path):
  with path.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
 def command(args,name):
@@ -162,6 +162,10 @@ def compiledClosure():return[{'path':str(p.relative_to(root)),'bytes':p.stat().s
 before=compiledClosure();(out/'runtime-compiled-before.json').write_text(json.dumps(before,indent=2)+'\n');retained=out/'compiled';retained.mkdir()
 for f in target.parent.iterdir():
  if f.is_file():shutil.copyfile(f,retained/f.name)
+if a.prepare_owning_only:
+ verify()
+ (out/'actual-owning-runtime-prepared.json').write_text(json.dumps({'engine':str(engine),'module':str(module),'compiled':before,'engineFiles':engineClosure,'engineRoot':str(engineRoot),'assets':str(assets),'assetsSha256':assetsBefore,'qualification':'Exact official runtime/module prepared only; no normals witness or owning tests acceptance'},indent=2)+'\n')
+ sys.exit(0)
 with (out/'actual-canonical-normals.log').open('wb')as log:
  process=subprocess.run([str(engine),'--headless','--path',str(module),'res://Tests/CanonicalMeshNormalsWitness.tscn'],stdout=log,stderr=subprocess.STDOUT,timeout=180)
 code=process.returncode

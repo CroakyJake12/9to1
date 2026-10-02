@@ -1,5 +1,6 @@
-import pathlib,zipfile,hashlib,json
-src=pathlib.Path('artifacts/games-normals-native');dst=pathlib.Path('artifacts/games-normals-native-bounded');dst.mkdir(parents=True,exist_ok=True)
+import pathlib,zipfile,hashlib,json,sys
+assert len(sys.argv)==2 and sys.argv[1]in ('native','owning');cohort=sys.argv[1]
+src=pathlib.Path('artifacts/games-normals-'+cohort);dst=pathlib.Path('artifacts/games-normals-'+cohort+'-bounded');dst.mkdir(parents=True,exist_ok=True)
 archive=dst/'original-native-evidence.zip'
 with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED)as z:
  for p in sorted(src.rglob('*')):
@@ -17,7 +18,7 @@ with archive.open('rb')as f:
   assert len(parts)<32
   p=dst/('part-%03d.bin'%len(parts));p.write_bytes(b);parts.append({'path':p.name,'bytes':len(b),'sha256':sha(p)})
 (dst/'receipt.json').write_text(json.dumps({'originalSha256':sha(archive),'originalBytes':archive.stat().st_size,'entries':entries,'parts':parts},indent=2)+'\n')
-small=pathlib.Path('artifacts/games-normals-native-small');small.mkdir(parents=True,exist_ok=True)
+small=pathlib.Path('artifacts/games-normals-'+cohort+'-small');small.mkdir(parents=True,exist_ok=True)
 used=0
 for p in sorted(src.glob('*.log')):
  if p.stat().st_size<=4*1024*1024 and used+p.stat().st_size<=20*1024*1024:
