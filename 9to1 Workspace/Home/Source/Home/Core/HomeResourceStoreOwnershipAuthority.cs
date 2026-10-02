@@ -6,6 +6,8 @@ namespace HavenOS.Home.Core;
 public sealed class HomeResourceStoreOwnershipAuthority(HomeLocalStoreOwnership ownership,
     IAuthenticatedResourceActorSource actors) : IResourceStoreOwnershipReceiptAuthority
 {
+    internal bool IsBoundTo(IHomeCoreStateStore store, HomeLocalProfileIdentity profiles) =>
+        ownership.IsBoundTo(store, profiles) && ReferenceEquals(actors, profiles);
     public async ValueTask<VerifiedResourceStoreOwnership?> GetVerifiedAsync(string resourceKind, string storeId,
         CancellationToken cancellationToken)
     {

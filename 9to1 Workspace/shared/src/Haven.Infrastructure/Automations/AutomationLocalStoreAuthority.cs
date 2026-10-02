@@ -45,26 +45,50 @@ public sealed class AutomationLocalStoreAuthority(SqliteDatabase database,
             actor.AuthenticationRevision, actor.AccountId, actor.OrganisationId);
         return new Admission(this, change.StoreID, change.EntityID, change.EntityKind, change.ExpectedRevision,
             change.OperationID, change.PayloadSHA256, change.ActionID, actualOwner, binding, actor,
-            capability.RequestId, receipts, actors, permissions);
+            capability.RequestId, receipts, actors, permissions, capability);
     }
 
     /// <summary>SQL must call this in addition to CheckAsync; arbitrary implementations are never owner admission.</summary>
     internal bool Issued(IAutomationDefinitionCommitAdmission admission, ISqliteConnectionFactory factory) =>
         ReferenceEquals(factory, database) && admission is Admission owned && ReferenceEquals(owned.Issuer, this);
 
+    // Dedicated SQL association writers can retain this exact original private claim before acquiring Home.
+    // This remains definition admission only; it does not authorize protected graph/run changes.
+    internal HomeClaimedResourceAttestation? CaptureAssociationClaim(IAutomationDefinitionCommitAdmission admission,
+        ISqliteConnectionFactory actualFactory, AutomationDefinitionCommitContext context) =>
+        Issued(admission, actualFactory) && admission is Admission owned && owned.Matches(context)
+            ? broker.CaptureClaimedAttestation(owned.Capability) : null;
+
+    // Pure issuer/factory/context check while the SAME Home lease is held. Never calls Home/actor/resolver.
+    internal bool MatchesAssociationClaim(IAutomationDefinitionCommitAdmission admission,
+        ISqliteConnectionFactory actualFactory, AutomationDefinitionCommitContext context,
+        HomeClaimedResourceAttestation originalClaim) =>
+        originalClaim is not null && Issued(admission, actualFactory) && admission is Admission owned && owned.Matches(context) &&
+        ReferenceEquals(broker.CaptureClaimedAttestation(owned.Capability), originalClaim);
+
+    internal bool IsBoundToHome(HomeResourceOperationBroker originalBroker, IResourceStoreOwnershipAuthority originalOwnership) =>
+        ReferenceEquals(broker, originalBroker) && ReferenceEquals(ownership, originalOwnership);
+    internal HomeResourceExecutionCapability? CapturePreparedCapability(IAutomationDefinitionCommitAdmission admission,
+        ISqliteConnectionFactory actualFactory, AutomationDefinitionCommitContext context) =>
+        Issued(admission, actualFactory) && admission is Admission owned && owned.Matches(context) ? owned.Capability : null;
+
     private sealed class Admission(AutomationLocalStoreAuthority issuer, Guid storeID, Guid entityID,
         AutomationOwnerEntityKind entityKind, long expectedRevision, Guid operationID, string payloadHash,
         string actionID, AutomationOwnerBinding owner, VerifiedResourceStoreOwnership binding,
         AuthenticatedResourceActor originalActor, string requestID, IResourceStoreOwnershipReceiptAuthority receipts,
-        IAuthenticatedResourceActorSource actors, HomePermissionTrustService permissions) : IAutomationDefinitionCommitAdmission
+        IAuthenticatedResourceActorSource actors, HomePermissionTrustService permissions,
+        HomeResourceExecutionCapability capability) : IAutomationDefinitionCommitAdmission
     {
         internal AutomationLocalStoreAuthority Issuer => issuer;
+        internal HomeResourceExecutionCapability Capability => capability;
+        internal bool Matches(AutomationDefinitionCommitContext context) =>
+            context.StoreIdentity.SchemaVersion == 1 && context.StoreIdentity.StoreId == storeID &&
+            context.EntityID == entityID && context.EntityKind == entityKind && context.ExpectedRevision == expectedRevision &&
+            context.OperationID == operationID && context.PayloadSHA256 == payloadHash && context.ActionID == actionID &&
+            context.OwnerBinding == owner;
         public async ValueTask<bool> CheckAsync(AutomationDefinitionCommitContext context, CancellationToken cancellationToken)
         {
-            if (context.StoreIdentity.SchemaVersion != 1 || context.StoreIdentity.StoreId != storeID ||
-                context.EntityID != entityID || context.EntityKind != entityKind || context.ExpectedRevision != expectedRevision ||
-                context.OperationID != operationID || context.PayloadSHA256 != payloadHash || context.ActionID != actionID ||
-                context.OwnerBinding != owner || await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != originalActor)
+            if (!Matches(context) || await actors.GetCurrentAsync(cancellationToken).ConfigureAwait(false) != originalActor)
                 return false;
             // Only raw Home/actor observations while the SQL lease is held: no repository or resource resolver recursion.
             return await receipts.IsCurrentAsync(binding, originalActor, cancellationToken).ConfigureAwait(false) &&

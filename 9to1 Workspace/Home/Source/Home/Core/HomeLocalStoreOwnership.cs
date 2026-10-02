@@ -44,6 +44,8 @@ public sealed class HomeStoreImportAuditPendingException(string requestId, HomeL
 public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocalProfileIdentity profiles,
     IHomeLocalStoreEvidenceSource evidence, HomePermissionTrustService permissions)
 {
+    internal bool IsBoundTo(IHomeCoreStateStore candidate, HomeLocalProfileIdentity identity) =>
+        ReferenceEquals(store, candidate) && ReferenceEquals(profiles, identity);
     private sealed record Import(HomeLocalStoreEvidence Evidence, AuthenticatedResourceActor Actor);
     private readonly ConcurrentDictionary<string, Import> _imports = new();
     private sealed record ImportCompletion(AuthenticatedResourceActor Actor, HomeLocalStoreBinding Binding, HomeExecutionOutcome Outcome)
@@ -92,8 +94,18 @@ public sealed class HomeLocalStoreOwnership(IHomeCoreStateStore store, HomeLocal
         if (captured.Receipt is null) return false;
         var read = await store.ReadAsync(ct).ConfigureAwait(false);
         if (!read.IsSuccess) return false;
-        var record = read.State!.Records.SingleOrDefault(item => item.RecordId == Id(captured.ResourceKind, captured.StoreId));
-        if (record is null || record.SchemaVersion != 1 || record.RecordType != "home.local-store-ownership" ||
+        return IsReceiptCurrentInState(read.State!, captured);
+    }
+
+    // A trusted issuer captures ownership BEFORE acquiring Home's commit lease. Final checks
+    // inspect that same locked state and must never recursively call ReadAsync or an owning store.
+    internal static bool IsReceiptCurrentInState(HomeCoreStoredState state, VerifiedResourceStoreOwnership captured)
+    {
+        if (captured.Receipt is null) return false;
+        var records = state.Records.Where(item => item.RecordId == Id(captured.ResourceKind, captured.StoreId)).ToArray();
+        if (records.Length != 1) return false;
+        var record = records[0];
+        if (record.SchemaVersion != 1 || record.RecordType != "home.local-store-ownership" ||
             record.Scope != HomeDataScope.DeviceLocal || record.Authority != HomeRecordAuthority.LocalCanonical ||
             record.Revision != captured.Receipt.Revision) return false;
         try

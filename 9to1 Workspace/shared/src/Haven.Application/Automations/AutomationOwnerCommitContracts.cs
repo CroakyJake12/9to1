@@ -33,13 +33,15 @@ public sealed class AutomationDefinitionChange
     private readonly JsonElement _arguments;
     private AutomationDefinitionChange(Guid storeID, Guid entityID, long expectedRevision,
         AutomationOwnerEntityKind entityKind, AutomationDefinitionChangeKind changeKind, object proposal, Guid operationID,
-        AuthenticatedResourceActor originalActor, string? recoveryRowSHA256 = null)
+        AuthenticatedResourceActor originalActor, string? recoveryRowSHA256 = null,
+        JsonElement? linkedEffect = null, IReadOnlyList<ResourceScope>? linkedScopes = null)
     {
         ArgumentNullException.ThrowIfNull(originalActor);
         if (storeID == Guid.Empty || entityID == Guid.Empty || operationID == Guid.Empty || expectedRevision < 0)
             throw new ArgumentException("An exact canonical definition target is required.");
         _proposal = JsonSerializer.SerializeToUtf8Bytes(proposal);
         if (_proposal.Length > 2 * 1024 * 1024) throw new ArgumentException("The definition exceeds the bounded review payload.");
+        RequiresLinkedCommit = linkedEffect is not null;
         StoreID = storeID; EntityID = entityID; ExpectedRevision = expectedRevision; EntityKind = entityKind;
         ChangeKind = changeKind; OperationID = operationID; OriginalActor = originalActor;
         if ((changeKind == AutomationDefinitionChangeKind.RecoverLegacy) != (recoveryRowSHA256 is not null) ||
@@ -60,11 +62,16 @@ public sealed class AutomationDefinitionChange
         using var snapshot = JsonDocument.Parse(_proposal);
         _arguments = JsonSerializer.SerializeToElement(new { operationID, storeID, entityID, entityKind,
             changeKind, expectedRevision, originalActor, recoveryRowSHA256, proposal = snapshot.RootElement });
-        Scopes = Array.AsReadOnly(new[] { new ResourceScope(entityKind == AutomationOwnerEntityKind.Automation
+        if (linkedEffect is { } linked)
+            _arguments = JsonSerializer.SerializeToElement(new { operationID, storeID, entityID, entityKind,
+                changeKind, expectedRevision, originalActor, recoveryRowSHA256, proposal = snapshot.RootElement,
+                linkedEffect = linked.Clone() });
+        Scopes = linkedScopes is not null ? Array.AsReadOnly(linkedScopes.ToArray()) : Array.AsReadOnly(new[] { new ResourceScope(entityKind == AutomationOwnerEntityKind.Automation
             ? "automation.definition" : "automation.reusable-task", $"{storeID:D}/{entityID:D}",
             expectedRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Write) });
     }
     public const string TargetAppID = "automations";
+    public bool RequiresLinkedCommit { get; }
     public Guid StoreID { get; }
     public Guid EntityID { get; }
     public long ExpectedRevision { get; }
@@ -97,6 +104,40 @@ public sealed class AutomationDefinitionChange
         new(actualStoreID, observed.Value.Id, observed.Value.Revision, AutomationOwnerEntityKind.ReusableTask,
             AutomationDefinitionChangeKind.RecoverLegacy, observed.Value with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention },
             operationID ?? Guid.NewGuid(), originalActor, ComputeRawRowSHA256(observed.RetainedProtectedDescriptors));
+    /// <summary>Both individual approvals bind the entire exact pair effect. These descriptors are not admissions.
+    /// Only the same SQL owner may commit both rows in one transaction after both actual issuer checks.</summary>
+    public static AutomationLinkedDefinitionChange CaptureLinkedPair(Guid actualStoreID, AuthenticatedResourceActor originalActor,
+        ReusableTaskDefinition reusable, long expectedReusableRevision, AutomationDefinition schedule,
+        long expectedScheduleRevision, AutomationDefinitionChangeKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(reusable); ArgumentNullException.ThrowIfNull(schedule);
+        if (kind is not (AutomationDefinitionChangeKind.Disable or AutomationDefinitionChangeKind.Archive) ||
+            reusable.Id == Guid.Empty || schedule.Id != reusable.Id || reusable.ContainerId != schedule.ContainerId ||
+            expectedReusableRevision < 1 || expectedScheduleRevision < 1 || reusable.IsEnabled || schedule.IsEnabled)
+            throw new ArgumentException("Linked pair changes require exact disabled existing definitions and supported owning intent.");
+        var pairID = Guid.NewGuid(); var reusableOperation = Guid.NewGuid(); var scheduleOperation = Guid.NewGuid();
+        var payload = JsonSerializer.SerializeToUtf8Bytes(new { pairID, actualStoreID, originalActor, kind,
+            reusableOperation, scheduleOperation, expectedReusableRevision, expectedScheduleRevision, reusable, schedule });
+        if (payload.Length > 2 * 1024 * 1024) throw new ArgumentException("The linked pair exceeds its bounded review payload.");
+        using var document = JsonDocument.Parse(payload);
+        var scopes = Array.AsReadOnly(new[] {
+            new ResourceScope("automation.reusable-task", $"{actualStoreID:D}/{reusable.Id:D}",
+                expectedReusableRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Write),
+            new ResourceScope("automation.definition", $"{actualStoreID:D}/{schedule.Id:D}",
+                expectedScheduleRevision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Write) });
+        // Re-read ONLY the already-detached JSON, so neither individual change can adopt a later mutable proposal.
+        var root = document.RootElement;
+        var taskCopy = root.GetProperty("reusable").Deserialize<ReusableTaskDefinition>() ?? throw new JsonException();
+        var scheduleCopy = root.GetProperty("schedule").Deserialize<AutomationDefinition>() ?? throw new JsonException();
+        var taskChange = new AutomationDefinitionChange(actualStoreID, taskCopy.Id, expectedReusableRevision,
+            AutomationOwnerEntityKind.ReusableTask, kind, taskCopy, reusableOperation, originalActor,
+            linkedEffect: root, linkedScopes: scopes);
+        var scheduleChange = new AutomationDefinitionChange(actualStoreID, scheduleCopy.Id, expectedScheduleRevision,
+            AutomationOwnerEntityKind.Automation, kind, scheduleCopy, scheduleOperation, originalActor,
+            linkedEffect: root, linkedScopes: scopes);
+        return new(pairID, Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(root))), taskChange, scheduleChange);
+    }
+
     public static string ComputeRawRowSHA256(IReadOnlyDictionary<string, string?> row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -106,6 +147,12 @@ public sealed class AutomationDefinitionChange
         return Convert.ToHexString(SHA256.HashData(bytes));
     }
 }
+
+public sealed record AutomationLinkedDefinitionChange(Guid PairID, string PairPayloadSHA256,
+    AutomationDefinitionChange ReusableChange, AutomationDefinitionChange ScheduleChange);
+
+public sealed record AutomationLinkedDefinitionCommitResult(bool Committed, string Code, Guid PairID,
+    AutomationDefinitionCommitResult? ReusableCommit, AutomationDefinitionCommitResult? ScheduleCommit);
 
 public sealed record AutomationDefinitionCommitContext(ResourceStoreIdentity StoreIdentity, Guid EntityID,
     AutomationOwnerEntityKind EntityKind, long ExpectedRevision, Guid OperationID, string PayloadSHA256,

@@ -5,6 +5,8 @@ namespace Haven.Application.NodeGraph;
 public sealed record OwnedGraphDefinition(string OwnerAppId, string OwnerEntityId, GraphDocument Draft, GraphDocument? Active)
 {
     public IReadOnlyList<GraphDocument> ActivatedRevisions { get; init; } = [];
+    public GraphOwnerDescriptor? CanonicalOwner { get; init; }
+    public GraphPublicationReceipt? LastPublication { get; init; }
 }
 public interface IVersionedNodeGraphRepository
 {

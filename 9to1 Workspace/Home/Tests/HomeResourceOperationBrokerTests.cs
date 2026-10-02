@@ -187,6 +187,89 @@ public sealed class HomeResourceOperationBrokerTests : IDisposable
         Assert.Null(await _broker.ClaimExecutionAsync(capability!, "planner", "planner.attachJourney", Scopes, Arguments));
     }
 
+    [Fact]
+    public async Task Observed_wrong_input_does_not_consume_and_corrected_retry_claims_once()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        var mismatch = await _broker.ClaimExecutionObservedAsync(capability, "other-app", "planner.attachJourney", Scopes, Arguments);
+        Assert.Equal(HomeResourceClaimDisposition.InputNotConsumed, mismatch.Disposition);
+        Assert.Null(mismatch.Actor);
+        Assert.Equal(HomePermissionRequestState.Executing, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
+        var claim = await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments);
+        Assert.Equal(HomeResourceClaimDisposition.Claimed, claim.Disposition);
+        Assert.Equal(ActorSource.Initial, claim.Actor);
+        Assert.Equal(HomeResourceClaimDisposition.Unavailable,
+            (await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments)).Disposition);
+    }
+
+    [Fact]
+    public async Task Observed_actor_rejection_is_consumed_and_audit_retry_never_reclaims()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        _actors.Current = ActorSource.Initial with { AuthenticationRevision = "changed" };
+        var rejected = await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments);
+        Assert.Equal(HomeResourceClaimDisposition.ConsumedRejected, rejected.Disposition);
+        Assert.Null(rejected.Actor);
+        Assert.True((await _broker.RetryRejectedClaimAuditAsync(capability)).Succeeded);
+        _actors.Current = ActorSource.Initial;
+        Assert.Equal(HomeResourceClaimDisposition.Unavailable,
+            (await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments)).Disposition);
+        Assert.Equal(HomePermissionRequestState.Failed, (await _permissions.GetAuthorizationAsync(pending.RequestId)).State);
+    }
+
+    [Fact]
+    public async Task Concurrent_observed_claims_issue_exactly_one_owner_claim()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        using var start = new ManualResetEventSlim(false);
+        var attempts = Enumerable.Range(0, 2).Select(_ => Task.Run(async () =>
+        {
+            start.Wait();
+            return await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments);
+        })).ToArray();
+        start.Set();
+        var results = await Task.WhenAll(attempts);
+        Assert.Single(results, item => item.Disposition == HomeResourceClaimDisposition.Claimed && item.Actor == ActorSource.Initial);
+        Assert.Single(results, item => item.Disposition == HomeResourceClaimDisposition.Unavailable && item.Actor is null);
+    }
+
+    [Fact]
+    public async Task Observed_foreign_handle_is_unavailable_and_does_not_consume_original()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        var foreign = new HomeResourceOperationBroker(new ResourceAuthorizationService(_actors, [_owner]), _permissions);
+        Assert.Equal(HomeResourceClaimDisposition.Unavailable,
+            (await foreign.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments)).Disposition);
+        Assert.Equal(HomeResourceClaimDisposition.Claimed,
+            (await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments)).Disposition);
+    }
+
+    [Fact]
+    public async Task Observed_resolver_exception_preserves_exception_and_only_negative_audit_recovery()
+    {
+        var pending = await Request();
+        Assert.True((await _permissions.DecideAsync(pending.RequestId, HomeApprovalChoice.Accept)).Succeeded);
+        var capability = (await _broker.BeginExecutionCapabilityAsync(pending.RequestId, Arguments))!;
+        var failure = new IOException("Controlled owning resolver outage");
+        _owner.Failure = failure;
+        Assert.Same(failure, await Assert.ThrowsAsync<IOException>(() => _broker.ClaimExecutionObservedAsync(
+            capability, "planner", "planner.attachJourney", Scopes, Arguments)));
+        _owner.Failure = null;
+        Assert.True((await _broker.RetryRejectedClaimAuditAsync(capability)).Succeeded);
+        Assert.Equal(HomeResourceClaimDisposition.Unavailable,
+            (await _broker.ClaimExecutionObservedAsync(capability, "planner", "planner.attachJourney", Scopes, Arguments)).Disposition);
+        Assert.False((await _broker.CompleteExecutionAsync(capability,
+            new(HomePermissionRequestState.Succeeded, "FORGED", "No owning mutation occurred", []))).Succeeded);
+    }
+
     private sealed class ActorSource : IAuthenticatedResourceActorSource
     {
         public static AuthenticatedResourceActor Initial { get; } = new("verified-user", "profile-1", Guid.NewGuid(), null, "session-1");
@@ -199,8 +282,10 @@ public sealed class HomeResourceOperationBrokerTests : IDisposable
         public bool Allowed { get; set; } = true;
         public string Revision { get; set; } = "revision-1";
         public Guid? Organisation { get; set; }
+        public Exception? Failure { get; set; }
         public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope,
-            CancellationToken cancellationToken) => ValueTask.FromResult(new ResourceAccessDecision(
+            CancellationToken cancellationToken) => Failure is not null
+            ? ValueTask.FromException<ResourceAccessDecision>(Failure) : ValueTask.FromResult(new ResourceAccessDecision(
                 Allowed && scope.Id == "event-1" && actionId == "planner.attachJourney", "owner-policy", actor.ActorId, Revision, Organisation));
     }
     public void Dispose() { if (Directory.Exists(_root)) Directory.Delete(_root, true); }
