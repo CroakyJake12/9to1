@@ -10,7 +10,7 @@ internal static class MotionProjectCommands
     public static int Run(string[] args, TextReader input, TextWriter output, TextWriter error)
     {
         if (args.Length < 2 || !string.Equals(args[0], "project", StringComparison.OrdinalIgnoreCase))
-            return Fail(error, "InvalidArguments", "Usage: project create|open|insert|split|save ...");
+            return Fail(error, "InvalidArguments", "Usage: project create|open|insert|split|move|slip|trim|save ...");
 
         try
         {
@@ -42,6 +42,21 @@ internal static class MotionProjectCommands
                     store.Save(args[2], result, expectedRevision);
                     break;
                 }
+                case "move" or "slip" when args.Length == 7:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    var sequenceId = ParseGuid(args[4]); var elementId = ParseGuid(args[5]); var value = ParseLong(args[6]);
+                    result = args[1].Equals("move", StringComparison.OrdinalIgnoreCase)
+                        ? store.Move(current, expected, sequenceId, elementId, value)
+                        : store.Slip(current, expected, sequenceId, elementId, value);
+                    store.Save(args[2], result, expected); break;
+                }
+                case "trim" when args.Length == 8:
+                {
+                    var current = store.Load(args[2]); var expected = ParseLong(args[3]);
+                    result = store.Trim(current, expected, ParseGuid(args[4]), ParseGuid(args[5]), ParseLong(args[6]), ParseLong(args[7]));
+                    store.Save(args[2], result, expected); break;
+                }
                 case "save" when args.Length == 4:
                 {
                     var expectedRevision = ParseLong(args[3]);
@@ -51,7 +66,7 @@ internal static class MotionProjectCommands
                     break;
                 }
                 default:
-                    return Fail(error, "InvalidArguments", "Usage: project create <path> <file-id> <width> <height> <fps>; open <path>; insert <path> <revision> <sequence-id> <track-id> <asset-id> <start> <source-in> <source-out>; split <path> <revision> <sequence-id> <element-id> <time>; save <path> <expected-revision> (project JSON on stdin)");
+                    return Fail(error, "InvalidArguments", "Usage: project create <path> <file-id> <width> <height> <fps>; open <path>; insert <path> <revision> <sequence-id> <track-id> <asset-id> <start> <source-in> <source-out>; split <path> <revision> <sequence-id> <element-id> <time>; move|slip <path> <revision> <sequence-id> <element-id> <frame>; trim <path> <revision> <sequence-id> <element-id> <source-in> <source-out>; save <path> <expected-revision> (project JSON on stdin)");
             }
 
             output.WriteLine(JsonSerializer.Serialize(new { ok = true, result }));

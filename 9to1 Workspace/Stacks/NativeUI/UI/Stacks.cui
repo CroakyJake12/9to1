@@ -1,0 +1,70 @@
+<Cui id="9to1-stacks" version="1">
+  <Actions>
+    <Action name="SelectProject" command="SelectProject" parameter="{Binding ProjectID}" />
+    <Action name="SelectDomain" command="SelectDomain" parameter="{Binding DomainID}" />
+  </Actions>
+  <DefaultTheme value="Default">
+    <ScrollViewer>
+      <StackPanel padding="24" orientation="Vertical">
+        <TextBlock text="9to1 Stacks" font-size="28" font-weight="Bold" />
+        <StackPanel orientation="Horizontal" spacing="8">
+          <Button action="Back" content="←" accessible-name="Back in this tab" />
+          <Button action="Forward" content="→" accessible-name="Forward in this tab" />
+          <Button action="Home" content="Home" accessible-name="Stacks Home" />
+          <Button action="RefreshProjects" content="Refresh projects" />
+        </StackPanel>
+        <StackPanel items="{Binding Tabs}" item-template="tab-row" margin="0 8 0 8" />
+        <StackPanel id="tab-row" definition="true" orientation="Horizontal" spacing="8">
+          <Button action="SelectProject" content="{Binding Name}" />
+          <TextBlock text="{Binding ProjectID}" accessible-name="Project tab identity" />
+        </StackPanel>
+        <TextBlock text="{Binding Status}" text-wrapping="Wrap" accessible-name="Stacks status" />
+        <TextBlock text="{Binding Title}" font-size="22" font-weight="Bold" margin="0 12 0 8" />
+        <TextBlock text="{Binding Page}" accessible-name="Current Stack page" />
+        <StackPanel items="{Binding Projects}" item-template="project-row" empty-template="project-empty" />
+        <StackPanel id="project-row" definition="true" margin="0 8 0 8">
+          <Button action="SelectProject" content="{Binding Name}" />
+          <TextBlock text="{Binding ProjectID}" accessible-name="Authorized project identity" />
+          <TextBlock text="{Binding State}" />
+        </StackPanel>
+        <TextBlock id="project-empty" definition="true" text="No authorized projects are currently available. Select a Stack project through Home and Files." text-wrapping="Wrap" />
+        <TextBox text="{Binding ProjectID}" accessible-name="Project identity from your current authorized list" />
+        <Button action="OpenProject" content="Open project tab" />
+        <StackPanel items="{Binding Domains}" item-template="domain-row" />
+        <StackPanel id="domain-row" definition="true" margin="0 8 0 8">
+          <Button action="SelectDomain" content="{Binding Name}" />
+          <TextBlock text="{Binding DomainID}" accessible-name="Stable source domain identity" />
+          <TextBlock text="{Binding Kind}" />
+          <TextBlock text="{Binding Active}" />
+        </StackPanel>
+        <TextBox text="{Binding DomainID}" accessible-name="Domain identity from the current project" />
+        <StackPanel orientation="Horizontal" spacing="8">
+          <Button action="OpenDomain" content="Browse persisted source" />
+          <Button action="ShowHistory" content="Domain history" />
+          <Button action="ShowActivity" content="Project activity" />
+          <Button action="RefreshProject" content="Refresh project" />
+        </StackPanel>
+        <StackPanel items="{Binding Files}" item-template="file-row" />
+        <StackPanel id="file-row" definition="true" margin="0 8 0 8">
+          <TextBlock text="{Binding Path}" />
+          <TextBlock text="{Binding Size}" accessible-name="Source bytes" />
+          <TextBlock text="{Binding Visibility}" />
+          <TextBlock text="{Binding HeadRevisionID}" accessible-name="Domain head identity" />
+          <TextBlock text="{Binding ManifestRevision}" accessible-name="Canonical view revision" />
+        </StackPanel>
+        <StackPanel items="{Binding History}" item-template="revision-row" />
+        <StackPanel id="revision-row" definition="true" margin="0 8 0 8">
+          <TextBlock text="{Binding Message}" font-weight="Bold" />
+          <TextBlock text="{Binding RevisionID}" accessible-name="Canonical commit identity" />
+          <TextBlock text="{Binding Actor}" /><TextBlock text="{Binding Paths}" text-wrapping="Wrap" />
+        </StackPanel>
+        <StackPanel items="{Binding Activity}" item-template="activity-row" />
+        <StackPanel id="activity-row" definition="true" margin="0 8 0 8">
+          <TextBlock text="{Binding Action}" font-weight="Bold" />
+          <TextBlock text="{Binding ActivityID}" accessible-name="Canonical activity identity" />
+          <TextBlock text="{Binding Actor}" /><TextBlock text="{Binding Outcome}" /><TextBlock text="{Binding TargetID}" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </DefaultTheme>
+</Cui>

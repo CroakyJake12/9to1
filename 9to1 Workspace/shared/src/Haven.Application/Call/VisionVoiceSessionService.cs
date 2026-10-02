@@ -47,6 +47,8 @@ public sealed class VisionVoiceSessionService(MultimodalSessionStore store, Time
         if (!current.IsSuccess) return current;
         if (current.Value!.Revision != expectedRevision)
             return Failure(VisionVoiceErrorCode.Conflict, "The session changed; refresh before retrying.", "Revision", "TransitionSession");
+        if (expectedRevision == long.MaxValue)
+            return Failure(VisionVoiceErrorCode.Conflict, "The session revision is exhausted; metadata was preserved.", "Revision", "TransitionSession");
         if (!MultimodalSessionLifecycle.TryTransition(current.Value, next, out var updated, out var error))
             return Failure(VisionVoiceErrorCode.InvalidRequest, error!, "State", "TransitionSession");
         return await SaveAsync(current.Value, updated, "TransitionSession", cancellationToken).ConfigureAwait(false);
@@ -70,6 +72,8 @@ public sealed class VisionVoiceSessionService(MultimodalSessionStore store, Time
         if (!current.IsSuccess) return current;
         if (current.Value!.Revision != expectedRevision)
             return Failure(VisionVoiceErrorCode.Conflict, "The session changed; refresh before retrying.", "Revision", "SetMode");
+        if (expectedRevision == long.MaxValue)
+            return Failure(VisionVoiceErrorCode.Conflict, "The session revision is exhausted; metadata was preserved.", "Revision", "SetMode");
         var basis = current.Value with { LiveTranslateLanguages = mode == VisionVoiceMode.LiveTranslate ? languages ?? current.Value.LiveTranslateLanguages : null };
         if (!MultimodalSessionLifecycle.TrySetMode(basis, mode, out var changed, out var error))
             return Failure(VisionVoiceErrorCode.InvalidRequest, error!, "VoiceMode", "SetMode");
@@ -89,6 +93,8 @@ public sealed class VisionVoiceSessionService(MultimodalSessionStore store, Time
         if (!current.IsSuccess) return current;
         if (current.Value!.Revision != expectedRevision)
             return Failure(VisionVoiceErrorCode.Conflict, "The session changed; refresh before retrying.", "Revision", "SetRetention");
+        if (expectedRevision == long.MaxValue)
+            return Failure(VisionVoiceErrorCode.Conflict, "The session revision is exhausted; metadata was preserved.", "Revision", "SetRetention");
         if ((retainAudio || retainTranscript) && !userExplicitlyOptedIn)
             return Failure(VisionVoiceErrorCode.PermissionRequired, "Retention requires separate explicit user opt-in.", "Retention", "SetRetention");
         var updated = current.Value with

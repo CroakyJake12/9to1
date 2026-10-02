@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -75,6 +76,7 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
     public const string ManifestRelativePath = ".branches/stack.manifest.json";
     public const string RootsRelativePath = ".roots/roots.json";
     public const string CompanionRef = "stack/twigs-and-leaves-dependency";
+    public const string PendingSaveRecoveryRelativePath = ".branches/save.recovery.json";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -84,11 +86,14 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
     };
 
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private byte[]? _expectedManifestSha256;
+    private readonly Func<CancellationToken, Task>? _validateCurrentBinding;
 
-    public JsonFileStackProjectStore(string projectDirectory)
+    public JsonFileStackProjectStore(string projectDirectory, Func<CancellationToken, Task>? validateCurrentBinding = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectDirectory);
         ProjectDirectory = Path.GetFullPath(projectDirectory);
+        _validateCurrentBinding = validateCurrentBinding;
     }
 
     public string ProjectDirectory { get; }
@@ -118,7 +123,9 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
                     JsonSerializer.SerializeToUtf8Bytes(new StackRootsDocument { SchemaVersion = StackManifest.CurrentSchemaVersion }, JsonOptions), cancellationToken).ConfigureAwait(false);
                 await WriteAtomicallyAsync(Path.Combine(stagingDirectory, ".branches", "README.md"),
                     "# Stack-managed storage\n\nThis folder contains versioned Stack metadata. Do not edit or delete it through ordinary project editing.\n"u8.ToArray(), cancellationToken).ConfigureAwait(false);
+                await File.WriteAllBytesAsync(Path.Combine(stagingDirectory, ".branches", "storage.lock"), Array.Empty<byte>(), cancellationToken).ConfigureAwait(false);
                 Directory.Move(stagingDirectory, ProjectDirectory);
+                _expectedManifestSha256 = SHA256.HashData(await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false));
             }
             finally
             {
@@ -146,6 +153,8 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         try
         {
             ValidateManagedLayout();
+            await using var storageLock = await AcquireStorageLockAsync(createIfMissing: false, cancellationToken).ConfigureAwait(false);
+            DemandNoPendingSave();
             byte[] bytes = await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false);
             StackManifest manifest;
             try
@@ -167,6 +176,16 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
 
             ValidateManifest(manifest);
             await ValidateRootsDocumentAsync(manifest, cancellationToken).ConfigureAwait(false);
+            // Legacy projects need no metadata migration merely to open them. A concurrent
+            // writer that introduced a lock while this reader opened the legacy layout is
+            // detected by a second canonical manifest read; an unstable view is unavailable.
+            var observedSha = SHA256.HashData(bytes);
+            var finalSha = SHA256.HashData(await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false));
+            if (!CryptographicOperations.FixedTimeEquals(observedSha, finalSha))
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "The canonical Stack changed while it was being read. Reopen before using this view.",
+                    ManifestRelativePath, recoverable: true, retryable: true);
+            _expectedManifestSha256 = observedSha;
             return manifest;
         }
         catch (StackFailureException)
@@ -192,13 +211,36 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         try
         {
             ValidateManagedLayout();
+            // Reject a stale legacy writer before introducing its first coordination file.
+            if (_validateCurrentBinding is not null) await _validateCurrentBinding(cancellationToken).ConfigureAwait(false);
+            DemandExpectedRevision(SHA256.HashData(await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false)));
+            await using var storageLock = await AcquireStorageLockAsync(createIfMissing: true, cancellationToken).ConfigureAwait(false);
+            if (_validateCurrentBinding is not null) await _validateCurrentBinding(cancellationToken).ConfigureAwait(false);
+            DemandNoPendingSave();
+            var previousManifest = await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false);
+            var currentSha = SHA256.HashData(previousManifest);
+            DemandExpectedRevision(currentSha);
+            var previousRoots = await File.ReadAllBytesAsync(RootsPath, cancellationToken).ConfigureAwait(false);
+            var serialized = Serialize(manifest);
             var roots = new StackRootsDocument
             {
                 SchemaVersion = StackManifest.CurrentSchemaVersion,
                 Roots = manifest.Roots.ToList(),
             };
-            await WriteAtomicallyAsync(RootsPath, JsonSerializer.SerializeToUtf8Bytes(roots, JsonOptions), cancellationToken).ConfigureAwait(false);
-            await WriteAtomicallyAsync(ManifestPath, Serialize(manifest), cancellationToken).ConfigureAwait(false);
+            var nextRoots = JsonSerializer.SerializeToUtf8Bytes(roots, JsonOptions);
+            // Preserve BOTH sides before publishing either independently atomic metadata file.
+            // This record is recovery evidence, never a replay grant. An interrupted save
+            // requires explicit owner inspection instead of treating mixed roots as valid.
+            var recovery = new StackPendingSaveRecovery(1, manifest.ProjectId,
+                previousManifest, previousRoots, serialized, nextRoots,
+                Hash(previousManifest), Hash(previousRoots), Hash(serialized), Hash(nextRoots));
+            await WriteAtomicallyAsync(PendingSaveRecoveryPath,
+                JsonSerializer.SerializeToUtf8Bytes(recovery, JsonOptions), cancellationToken).ConfigureAwait(false);
+            await WriteAtomicallyAsync(RootsPath, nextRoots, cancellationToken).ConfigureAwait(false);
+            if (_validateCurrentBinding is not null) await _validateCurrentBinding(cancellationToken).ConfigureAwait(false);
+            await WriteAtomicallyAsync(ManifestPath, serialized, cancellationToken).ConfigureAwait(false);
+            File.Delete(PendingSaveRecoveryPath);
+            _expectedManifestSha256 = SHA256.HashData(serialized);
         }
         catch (StackFailureException)
         {
@@ -207,7 +249,7 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             throw new StackFailureException(StackFailureCode.MaterialisationFailed,
-                "The Stack manifest could not be saved. The previous manifest remains recoverable.", ManifestRelativePath, recoverable: true, retryable: true, exception);
+                "The Stack save did not acknowledge completion. Inspect preserved recovery evidence before any further edit; do not repeat the operation.", ManifestRelativePath, recoverable: true, retryable: true, exception);
         }
         finally
         {
@@ -215,8 +257,97 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
         }
     }
 
+    /// <summary>Token of this store's last successfully loaded/committed canonical manifest; not an action grant.</summary>
+    public string? LoadedRevisionToken => _expectedManifestSha256 is { } sha ? Convert.ToHexString(sha).ToLowerInvariant() : null;
+
+    private void DemandExpectedRevision(byte[] currentSha)
+    {
+        if (_expectedManifestSha256 is null || !CryptographicOperations.FixedTimeEquals(currentSha, _expectedManifestSha256))
+            throw new StackFailureException(StackFailureCode.RevisionConflict,
+                "The canonical Stack project changed after this engine opened it. Reload before proposing another edit.",
+                ManifestRelativePath, recoverable: true, retryable: true);
+    }
+
+    private async Task<FileStream?> AcquireStorageLockAsync(bool createIfMissing, CancellationToken cancellationToken)
+    {
+        var path = Path.Combine(ProjectDirectory, ".branches", "storage.lock");
+        for (var attempt = 0; ; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (new FileInfo(path).LinkTarget is not null || (File.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0))
+                throw new StackFailureException(StackFailureCode.SourceCorrupt, "The Stack storage lock cannot be a symbolic link.", path, recoverable: true);
+            try { return new FileStream(path, createIfMissing ? FileMode.OpenOrCreate : FileMode.Open,
+                createIfMissing ? FileAccess.ReadWrite : FileAccess.Read, FileShare.None); }
+            catch (FileNotFoundException) when (!createIfMissing) { return null; }
+            catch (IOException) when (attempt < 100) { await Task.Delay(20, cancellationToken).ConfigureAwait(false); }
+        }
+    }
+
     private string ManifestPath => Path.Combine(ProjectDirectory, ManifestRelativePath.Replace('/', Path.DirectorySeparatorChar));
     private string RootsPath => Path.Combine(ProjectDirectory, RootsRelativePath.Replace('/', Path.DirectorySeparatorChar));
+    private string PendingSaveRecoveryPath => Path.Combine(ProjectDirectory, PendingSaveRecoveryRelativePath.Replace('/', Path.DirectorySeparatorChar));
+
+    private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+
+    private sealed record StackPendingSaveRecovery(int SchemaVersion, Guid ProjectId,
+        byte[] PreviousManifest, byte[] PreviousRoots, byte[] NextManifest, byte[] NextRoots,
+        string PreviousManifestSha256, string PreviousRootsSha256,
+        string NextManifestSha256, string NextRootsSha256);
+
+    /// <summary>Read-only observed metadata evidence. This record never authorizes repair or replay.</summary>
+    public async Task<StackPendingSaveInspection?> InspectPendingSaveAsync(CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ValidateManagedLayout();
+            await using var storageLock = await AcquireStorageLockAsync(createIfMissing: false, cancellationToken).ConfigureAwait(false);
+            if (!File.Exists(PendingSaveRecoveryPath)) return null;
+            byte[] journalBytes = await File.ReadAllBytesAsync(PendingSaveRecoveryPath, cancellationToken).ConfigureAwait(false);
+            StackPendingSaveRecovery recovery;
+            try
+            {
+                recovery = JsonSerializer.Deserialize<StackPendingSaveRecovery>(journalBytes, JsonOptions)
+                    ?? throw new JsonException("Recovery evidence was empty.");
+            }
+            catch (JsonException error)
+            {
+                throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                    "Stack recovery evidence is not valid JSON. No repair was attempted.", PendingSaveRecoveryRelativePath,
+                    recoverable: true, innerException: error);
+            }
+            if (recovery.SchemaVersion != 1 || recovery.ProjectId == Guid.Empty ||
+                recovery.PreviousManifest is null || recovery.PreviousRoots is null || recovery.NextManifest is null || recovery.NextRoots is null ||
+                Hash(recovery.PreviousManifest) != recovery.PreviousManifestSha256 || Hash(recovery.PreviousRoots) != recovery.PreviousRootsSha256 ||
+                Hash(recovery.NextManifest) != recovery.NextManifestSha256 || Hash(recovery.NextRoots) != recovery.NextRootsSha256)
+                throw new StackFailureException(StackFailureCode.SourceCorrupt,
+                    "Stack recovery evidence has invalid identities or content hashes. No repair was attempted.",
+                    PendingSaveRecoveryRelativePath, recoverable: true);
+            byte[] manifestBytes = await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false);
+            byte[] rootsBytes = await File.ReadAllBytesAsync(RootsPath, cancellationToken).ConfigureAwait(false);
+            string manifestSha = Hash(manifestBytes), rootsSha = Hash(rootsBytes);
+            // Refuse an unstable actual read even when an external editor ignores storage.lock.
+            if (Hash(await File.ReadAllBytesAsync(ManifestPath, cancellationToken).ConfigureAwait(false)) != manifestSha ||
+                Hash(await File.ReadAllBytesAsync(RootsPath, cancellationToken).ConfigureAwait(false)) != rootsSha ||
+                Hash(await File.ReadAllBytesAsync(PendingSaveRecoveryPath, cancellationToken).ConfigureAwait(false)) != Hash(journalBytes))
+                throw new StackFailureException(StackFailureCode.RevisionConflict,
+                    "The Stack recovery evidence changed during inspection. No repair was attempted.",
+                    PendingSaveRecoveryRelativePath, recoverable: true, retryable: true);
+            return new(recovery.ProjectId, Hash(journalBytes), manifestSha, rootsSha,
+                manifestSha == recovery.PreviousManifestSha256, manifestSha == recovery.NextManifestSha256,
+                rootsSha == recovery.PreviousRootsSha256, rootsSha == recovery.NextRootsSha256);
+        }
+        finally { _gate.Release(); }
+    }
+
+    private void DemandNoPendingSave()
+    {
+        if (File.Exists(PendingSaveRecoveryPath))
+            throw new StackFailureException(StackFailureCode.RecoveryStateUncertain,
+                "A previous Stack save has preserved recovery evidence. Source and metadata remain untouched; explicit owner inspection is required before opening or editing this project.",
+                PendingSaveRecoveryRelativePath, recoverable: true);
+    }
+
 
     private void ValidateManagedLayout()
     {
@@ -228,12 +359,20 @@ public sealed class JsonFileStackProjectStore : IStackProjectStore
                 throw new StackFailureException(StackFailureCode.SourceCorrupt, "A managed Stack path resolves outside the project directory.", relative, recoverable: true);
             }
 
+            if (Directory.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                throw new StackFailureException(StackFailureCode.SourceCorrupt, "Managed Stack infrastructure cannot redirect through a symbolic link.", relative, recoverable: true);
+
             if (!Directory.Exists(path))
             {
                 throw new StackFailureException(StackFailureCode.ManagedMetadataMissing,
                     $"Required Stack-managed infrastructure is missing: {relative}.", relative, recoverable: true);
             }
         }
+
+        foreach (var metadataPath in new[] { ManifestPath, RootsPath, PendingSaveRecoveryPath })
+            if (new FileInfo(metadataPath).LinkTarget is not null ||
+                (File.Exists(metadataPath) && (File.GetAttributes(metadataPath) & FileAttributes.ReparsePoint) != 0))
+                throw new StackFailureException(StackFailureCode.SourceCorrupt, "Stack metadata cannot redirect through a symbolic link.", metadataPath, recoverable: true);
 
         if (!File.Exists(ManifestPath) || !File.Exists(RootsPath))
         {
@@ -357,3 +496,9 @@ public static class StackHierarchy
         _ => throw new StackFailureException(StackFailureCode.InvalidHierarchy, "Leaf domains cannot have children.", parent.ToString()),
     };
 }
+
+/// <summary>Observed actual file hashes only; not an action capability or a recovery plan.</summary>
+public sealed record StackPendingSaveInspection(Guid ProjectId, string RecoveryEvidenceSha256,
+    string ObservedManifestSha256, string ObservedRootsSha256,
+    bool ManifestMatchesPrevious, bool ManifestMatchesProposed,
+    bool RootsMatchPrevious, bool RootsMatchProposed);
