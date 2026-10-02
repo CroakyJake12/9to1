@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "1091f74d62448643b7ed63181b90e57c7a554354",
+  "baselineCommit": "d9f4cb8ef2ce7d89a755a00fbfdd119263d09af1",
   "programTree": "066df812f256fb172a4d96bad4071b12ef27412f",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
   "kind": "corrective",
   "files": [
     {
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-canvas65-hosted-managed.py",
       "mode": "100644",
-      "object": "21d1ea50e54a8482b3950e71ff9f2eb93307a0dd",
-      "bytes": 33901,
-      "sha256": "46add04f10e484e4259f35b08e8adb6e18d464eaa80fdcffae9658f0388305dd"
+      "object": "a76bee330d170fd890d8018ba9969872cda720cc",
+      "bytes": 36012,
+      "sha256": "f523774daa3281f81ac9a892afa52f6845bc17ba138fb7193e7b6e0a08677da5"
     },
     {
       "path": ".github/scripts/astra-canvas65-restore-evidence.py",
@@ -64143,7 +64143,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Actual selected1091 fixture-only coordinate correction: genuine existing viewport forward transform center/unit axes solved to owning205,100 including actual uniform fit/letterbox; strict roundtrip before unchanged mouse/Home/CAS/history assertions. All13native cases/full original Rust/Core/Canvas/UI suites, same20class list onefixture SHA re-pin and full sandbox/source/restore/compiled/TRX guards preserved. No future insertion96/Game source join. Unexecuted.",
+  "limits": "Metadata-only exact Avalonia.Native Interop.Generated.cs admission through actual evaluated soleMicroComIdl/avn.idl, maintained restored0.11.4 generator/targets/import/project hash lineage and actualCompile uniqueness. No wildcard/skip; all original suites Rust18/Core6/Canvas86/native13/Files and entire source/restore/compiled/zeroSkip guards retained, same selected productsemantic. No localSDK/build.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-canvas-host-namespace-fix02/manifest.json",
@@ -64172,6 +64172,18 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-canvas-outcome-actual-corrective04/actual-failed06/canvas/root-capture.json",
       "sha256": "8556b409c6c41602497ad3fa72138828e66a2ca306eedf462edb972f0398ad76"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-canvas-native-coordinate-corrective05/actual-failed07/canvas/root-capture.json",
+      "sha256": "e776dd8b2b73b89f934d3ab8728356e561ffeaee5172c0811b849019c4b24869"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/root-canvas-native-coordinate-corrective05/actual-job-110794793850.log",
+      "sha256": "f97e397cffcd15dad403bb23e3d3c7f9611b99face9a9b9a0dc6eca9698f1a1e"
     }
   ],
   "sharedCakeIdContract": null,
