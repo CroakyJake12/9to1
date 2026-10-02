@@ -67,10 +67,29 @@ jobs:
       MSBUILDDISABLENODEREUSE: '1'
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
     steps:
+      - name: Preserve exact Git source and cut bytes on this disposable Windows runner
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git config --global core.eol lf
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git config --global --get core.autocrlf
+          git config --global --get core.eol
       - uses: actions/checkout@v4
         with:
           submodules: false
           persist-credentials: false
+      - name: Retain actual checkout byte contract before immutable runner admission
+        shell: pwsh
+        env:
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/models-vision-windows-owning | Out-Null
+          $actual = (Get-FileHash -Algorithm SHA256 .github/validation/astra-models-vision-cut.json).Hash.ToLowerInvariant()
+          $blob = git rev-parse HEAD:.github/validation/astra-models-vision-cut.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @{ expectedSha256=$env:EXPECTED_MANIFEST_SHA; actualSha256=$actual; gitBlob=$blob; coreAutocrlf=(git config --get core.autocrlf); coreEol=(git config --get core.eol) } | ConvertTo-Json | Set-Content -Encoding utf8 artifacts/models-vision-windows-owning/checkout-byte-contract.json
       - name: Materialize exact three maintained source dependencies
         shell: bash
         run: |

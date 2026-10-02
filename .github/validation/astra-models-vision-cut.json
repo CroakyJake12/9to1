@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e985382bc58e460f386273ea44313696e9594eff",
-  "programTree": "f47916cdd5e0d880543feb80b6308db7e2a83973",
+  "baselineCommit": "840f568e765625f05ca544d2cf24e57f8adbb7e3",
+  "programTree": "8449652323297ea5b613f6894d94de88a21d43ab",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -85,9 +85,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "1b8c1ac5ebd9c899056f1eb0c2ac84658d26f347",
+      "object": "cd9fb491450e8e12e3c1ddfd66e288d051834e9d",
       "bytes": 13171,
-      "sha256": "c8e34c8b880ad6d8cfcfd2cc0567d3fbe41accbc6058b50e568f359b8e8167ed"
+      "sha256": "e66f08f342e4b6c0e9b5dd514c777a6cb7d497db9581683ef83b1f7e531125b3"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -239,9 +239,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "82c47ccd1ff4ded83860d2c855014ce6cfe393db",
-      "bytes": 9991,
-      "sha256": "ef73fc04cffe43597b52fd72787a7aca89f0f2ca0bad89c814080d62231a9cd6"
+      "object": "54dd63cc2033dae46eacaa45ce26024410eb943f",
+      "bytes": 11278,
+      "sha256": "e475a71a82a39d45d46a2a9b4cf0e4a85706527bd4a2eb8d2a51130aa71c299a"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -27931,9 +27931,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallCoordinator.OriginalNarration.cs",
       "mode": "100644",
-      "object": "179342ea46cc4e6771e6f3af1b383e5695122bac",
-      "bytes": 6128,
-      "sha256": "e50939d44576d44a060856e19327af3219652b7aaf821a2e2c11947f836772ae"
+      "object": "a606d35c54088d7c631f3cafa95147dae9a7e677",
+      "bytes": 6662,
+      "sha256": "b63e2f4d537ac6666879781fc59fe40b010f5b082d9727e7a56809064e8bb2d2"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallCoordinator.cs",
@@ -34252,9 +34252,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Call/CallPage.axaml.cs",
       "mode": "100644",
-      "object": "74bae0e6667fc70250dd17769fec8b2ab33f6cba",
-      "bytes": 34339,
-      "sha256": "3c85af5445acb6a8e01de9d50867a4774ecec8f27a5ff7e68822d7b5919327ad"
+      "object": "8a76f7a949d9613f0cac7d26636059bb199af752",
+      "bytes": 34474,
+      "sha256": "494a9704a898a019f78826f364173e21c2971e87400886c08bbf23c3e3f1bd82"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Call/MonologueOriginalPlaybackHost.cs",
@@ -39173,9 +39173,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallMonologueNarrationRouteTests.cs",
       "mode": "100644",
-      "object": "dcd481dd744f6961c5fedaecb62559de488bd6d6",
-      "bytes": 42447,
-      "sha256": "64f8f47df41a23ad44a140a77220b5d32cec179b33345234bd604d6bf91ad8f6"
+      "object": "78342a03c87eacc25b988dc1dd7ebfd11a8ad1ce",
+      "bytes": 42843,
+      "sha256": "2ef0852b7c41024aed57a0709c50d561b64047b2258e75b36be57ceec1f3ac9a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallSingletonIntegrationTests.cs",
@@ -39936,9 +39936,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MonologueOriginalPlaybackHostTests.cs",
       "mode": "100644",
-      "object": "307b19a9fe7ba2409be8f5e28c89fe33dc369fb1",
-      "bytes": 13516,
-      "sha256": "2841b935f230107c3c6c4a3fe9db9448876cf3ab15f065871ce1ccb6ca9a9705"
+      "object": "a49ffcb8c7440ee9946d6903f81eea9da86368f9",
+      "bytes": 13796,
+      "sha256": "29098c648163365456fea4780cf9732eb3e60afae4397a03b74ed4b108ec8473"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
@@ -65704,7 +65704,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-models-vision-cut.json",
-  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Dedicated actual Windows2025 win-x64 owning lane retains all five prior Core/Home/Infrastructure/Desktop/Application cohorts and adds both whole native classes/five exact Passed methods. Actual Windows target/symbol/sourcebuilt tasks/compiled DLL PDB/restore beforeafter/voice inventory mandatory. Linux portable05 and complete current regression/resource remain independently mandatory, tables preserved here without claiming execution. Exact corrected receipt issuer selected. No fake voice, skip, audio-output ACK or installed-user grant. Workflow branch admits exactly one Windows job; original Ubuntu models-prefix job unchanged. Exact maintained Files/Picture multipart splitter byte-identical, all original Windows evidence payloads retained in <=26MiB stored inner bundles and index, each outer upload below connector32MiB bound, bounded12parts; no payload/source/test change. Original01 preserved unselected.",
+  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Dedicated actual Windows2025 win-x64 owning lane retains all five prior Core/Home/Infrastructure/Desktop/Application cohorts and adds both whole native classes/five exact Passed methods. Actual Windows target/symbol/sourcebuilt tasks/compiled DLL PDB/restore beforeafter/voice inventory mandatory. Linux portable05 and complete current regression/resource remain independently mandatory, tables preserved here without claiming execution. Exact corrected receipt issuer selected. No fake voice, skip, audio-output ACK or installed-user grant. Workflow branch admits exactly one Windows job; original Ubuntu models-prefix job unchanged. Exact maintained Files/Picture multipart splitter byte-identical, all original Windows evidence payloads retained in <=26MiB stored inner bundles and index, each outer upload below connector32MiB bound, bounded12parts; no payload/source/test change. Original01 preserved unselected. Exact actual Windows02 failed before runtime at strict cut SHA admission. Disposable Windows runner Git core.autocrlf=false/core.eol=lf BEFORE checkout preserves exact immutable Git/cut bytes, no digest normalization or source guard relaxation. Postcheckout actual raw SHA/Gitblob/config diagnostics retained before unchanged runner. Products/32ownclasses/native5/script/helper/voice/multipart unchanged. Portable05 actual9Desktop failures remain separate source diagnosis; this metadata diagnostic does not infer native or broader runtime success. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-monologue-root18-full-owning-gate02/manifest.json",
@@ -65741,6 +65741,18 @@
     {
       "path": "/workspace/astra-source/worker4-monologue-call-current20-windows-full-owning-gate01/manifest.json",
       "sha256": "9b361d1f2c9532b20b9b78c358d0e1dd2fed58e1eb18e93e44421f9bd4e83603"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-call-current20-windows-full-owning-gate02-multipart-evidence/manifest.json",
+      "sha256": "8b271931015bcdb378090fdf3566a98730daa738b7b52f82f1d0d4069eaa2a65"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue05-actual-startup-corrective-source01/manifest.json",
+      "sha256": "69b1e7323cae3b56698f3392013a84b8ce4e7912c408da3ce278e0c2814f8614"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-windows-actual-checkout-byte-corrective03/manifest.json",
+      "sha256": "7a43dd539a53b74505dbe74c47501c560e0e4eea5d194ad871b593e69d29c887"
     }
   ],
   "sharedCakeIdContract": null

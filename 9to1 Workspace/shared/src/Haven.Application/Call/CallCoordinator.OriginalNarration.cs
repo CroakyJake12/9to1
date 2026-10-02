@@ -74,11 +74,17 @@ public sealed partial class CallCoordinator
                 "Narrate the original completed Call reply", null, ["Original completed reply"], [], token).ConfigureAwait(false);
             RequireCurrent();
             if (!planned.IsSuccess) throw new InvalidOperationException(planned.Error!.Message);
+            // Explicit requested metadata activation of this freshly planned exact run.
+            // This CAS is not a native Playing or audible output acknowledgement.
+            var activated = await sessions.RecordMonologueProgressAsync(planned.Value!.SessionId,
+                planned.Value.Revision, planned.Value.Monologue!.RunId, 0, TimeSpan.Zero, false, token).ConfigureAwait(false);
+            RequireCurrent();
+            if (!activated.IsSuccess) throw new InvalidOperationException(activated.Error!.Message);
             if (Interlocked.CompareExchange(ref original.Attempted, 1, 0) != 0)
                 throw new InvalidOperationException("Original narration was already attempted.");
             // Never release this attempt after native invocation: an uncertain Start is not retry permission.
-            var playback = await MonologueOriginalPlayback.StartAsync(sessions, speech, planned.Value!.SessionId,
-                planned.Value.Revision, planned.Value.Monologue!.RunId, 0, original.Text,
+            var playback = await MonologueOriginalPlayback.StartAsync(sessions, speech, activated.Value!.SessionId,
+                activated.Value.Revision, activated.Value.Monologue!.RunId, 0, original.Text,
                 original.Options.VoiceName!, original.Options.OutputDeviceId, Current, token).ConfigureAwait(false);
             _originalNarrationPlayback = playback; // Retain the original native outcome before the late lifetime check.
             if (!Current()) { await playback.StopOriginalAsync(CancellationToken.None).ConfigureAwait(false); return playback; }

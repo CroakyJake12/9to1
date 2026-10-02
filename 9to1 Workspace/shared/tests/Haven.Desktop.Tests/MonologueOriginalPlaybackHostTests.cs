@@ -23,9 +23,9 @@ public sealed class MonologueOriginalPlaybackHostTests
         var window = new Window { Content = host }; window.Show(); Exception? primary = null;
         try
         {
-            await Press(window, host, "Pause original narration");
+            await Press(window, host, "Pause original narration", ct);
             Assert.True(host.LastObservation!.IsSuccess); Assert.True(host.LastObservation.Value!.Monologue!.IsPaused);
-            await Press(window, host, "Resume original narration");
+            await Press(window, host, "Resume original narration", ct);
             Assert.False(host.LastObservation!.Value!.Monologue!.IsPaused);
             Assert.Equal(1, speech.Starts); Assert.Equal(1, speech.Handle.Pauses); Assert.Equal(1, speech.Handle.Resumes);
             var saved = await f.Reopen().GetSessionAsync(plan.SessionId, ct);
@@ -94,13 +94,13 @@ public sealed class MonologueOriginalPlaybackHostTests
         var window = new Window { Content = host }; window.Show(); Exception? primary = null;
         try
         {
-            var observed = await Assert.ThrowsAsync<IOException>(() => Press(window, host, "Pause original narration"));
+            var observed = await Assert.ThrowsAsync<IOException>(() => Press(window, host, "Pause original narration", ct));
             Assert.Same(lostReturn, observed); Assert.Same(lostReturn, host.LastActionFailure);
             Assert.NotNull(original.PendingCheckpoint); Assert.Null(original.CanonicalReceipt);
             var committed = await File.ReadAllBytesAsync(f.StatePath, ct);
             var saved = await f.Reopen().GetSessionAsync(plan.SessionId, ct);
             Assert.Equal(original.PlaybackId, saved.Value!.Monologue!.PlaybackReceipt!.PlaybackId);
-            await Press(window, host, "Retry saved playback checkpoint");
+            await Press(window, host, "Retry saved playback checkpoint", ct);
             Assert.True(host.LastObservation!.IsSuccess); Assert.Null(original.PendingCheckpoint);
             Assert.Equal(saved.Value.Monologue.PlaybackReceipt, original.CanonicalReceipt);
             Assert.Same(lostReturn, host.LastActionFailure);
@@ -119,11 +119,11 @@ public sealed class MonologueOriginalPlaybackHostTests
         window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
         window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
     }
-    private static async Task Press(Window window, MonologueOriginalPlaybackHost host, string label)
+    private static async Task Press(Window window, MonologueOriginalPlaybackHost host, string label, CancellationToken originalTestToken)
     {
         PressKeys(window, host, label);
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
-        await host.WhenActionIdleAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        await host.WhenActionIdleAsync().WaitAsync(TimeSpan.FromSeconds(10), originalTestToken);
     }
     private sealed class Speech : IContinuableSpeechOutputService, IOriginalSpeechPlaybackReceiptIssuer
     {
@@ -177,7 +177,10 @@ public sealed class MonologueOriginalPlaybackHostTests
         {
             var started = await Service.StartAsync(Guid.NewGuid(), null, VisionVoiceMode.Monologue, "local-only", true, cancellationToken: ct);
             var planned = await Service.PlanMonologueAsync(started.Value!.SessionId, started.Value.Revision, "Original objective", null, ["Original section"], [], ct);
-            Assert.True(planned.IsSuccess); return planned.Value!;
+            Assert.True(planned.IsSuccess);
+            var activated = await Service.RecordMonologueProgressAsync(planned.Value!.SessionId,
+                planned.Value.Revision, planned.Value.Monologue!.RunId, 0, TimeSpan.Zero, false, ct);
+            Assert.True(activated.IsSuccess); return activated.Value!;
         }
         public void Dispose() => Directory.Delete(_root, true);
     }

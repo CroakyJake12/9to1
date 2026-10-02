@@ -27,14 +27,14 @@ public sealed class CallMonologueNarrationRouteTests
         await owner.SubmitTextAsync("Produce the original reply", ct);
         return owner;
     }
-    private static async Task Press(Window window, StackPanel host, string label, Func<Task> idle)
+    private static async Task Press(Window window, StackPanel host, string label, Func<Task> idle, CancellationToken originalTestToken)
     {
         var button = Assert.Single(host.Children.OfType<Button>(), item => Equals(item.Content, label));
         Assert.True(button.IsEnabled); Assert.True(button.Focus());
         window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
         window.KeyRelease(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "Enter");
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
-        await idle().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        await idle().WaitAsync(TimeSpan.FromSeconds(10), originalTestToken);
     }
     [AvaloniaFact]
     public async Task Actual_Call_reply_native_admission_binds_same_conversation_and_exact_handle_until_owner_end()
@@ -52,15 +52,15 @@ public sealed class CallMonologueNarrationRouteTests
         var window = new Window { Content = host }; window.Show(); Exception? primary = null;
         try
         {
-            await Press(window, host, "Narrate this completed reply", host.WhenActionIdleAsync);
+            await Press(window, host, "Narrate this completed reply", host.WhenActionIdleAsync, ct);
             var original = Assert.IsType<MonologueOriginalPlayback>(host.OriginalPlayback);
             Assert.Equal(selection.Text, speech.NarrationText); Assert.Equal("original-voice", speech.NarrationVoice);
             var controls = Assert.Single(host.Children.OfType<MonologueOriginalPlaybackHost>());
-            await Press(window, controls, "Pause original narration", controls.WhenActionIdleAsync);
+            await Press(window, controls, "Pause original narration", controls.WhenActionIdleAsync, ct);
             var saved = controls.LastObservation!.Value!;
             Assert.Equal(selection.ConversationId, saved.ConversationId);
             Assert.Equal(original.CanonicalReceipt, (await f.Reopen().GetSessionAsync(saved.SessionId, ct)).Value!.Monologue!.PlaybackReceipt);
-            await Press(window, controls, "Resume original narration", controls.WhenActionIdleAsync);
+            await Press(window, controls, "Resume original narration", controls.WhenActionIdleAsync, ct);
             var bytes = await File.ReadAllBytesAsync(f.StatePath, ct);
             await owner.EndAsync(ct);
             Assert.False(owner.IsOriginalNarrationCurrent(selection));
@@ -83,7 +83,7 @@ public sealed class CallMonologueNarrationRouteTests
         var window = new Window { Content = host }; window.Show(); Task? pending = null; Exception? primary = null;
         try
         {
-            await Press(window, host, "Narrate this completed reply", host.WhenActionIdleAsync);
+            await Press(window, host, "Narrate this completed reply", host.WhenActionIdleAsync, ct);
             var original = host.OriginalPlayback!; var controls = Assert.Single(host.Children.OfType<MonologueOriginalPlaybackHost>());
             store.HoldNext = true;
             var button = Assert.Single(controls.Children.OfType<Button>(), item => Equals(item.Content, "Pause original narration"));
@@ -157,7 +157,7 @@ public sealed class CallMonologueNarrationRouteTests
             Assert.NotSame(original, replacement); Assert.NotEqual(original.ReplyId, replacement.ReplyId); Assert.Equal(original.Text, replacement.Text);
             Assert.Equal(original.CallId, replacement.CallId); Assert.Equal(original.ConversationId, replacement.ConversationId);
             Assert.False(owner.IsOriginalNarrationCurrent(original)); Assert.True(owner.IsOriginalNarrationCurrent(replacement));
-            await Press(window, host, "Narrate this completed reply", host.WhenActionIdleAsync);
+            await Press(window, host, "Narrate this completed reply", host.WhenActionIdleAsync, ct);
             Assert.Null(host.OriginalPlayback); Assert.Equal(0, speech.Starts);
             Assert.False(File.Exists(f.StatePath)); Assert.False(Assert.Single(host.Children.OfType<Button>()).IsEnabled);
             using var freshHost = Assert.IsType<CallMonologueNarrationHost>(route.CreateOriginalHost());
@@ -184,6 +184,10 @@ public sealed class CallMonologueNarrationRouteTests
             // selection, substitute an owner result or invoke the native callback directly.
             var delay = typeof(CallPage).GetField("_narrationPresentationDelay", BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.NotNull(delay); delay.SetValue(page, release.Task);
+            // Observe genuine loaded device setup before capturing the completed turn;
+            // setup can legitimately change the owning Call's original options.
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+            await page.WhenSetupIdleAsync().WaitAsync(TimeSpan.FromSeconds(10), ct);
             await owner.SubmitTextAsync("Produce the actual reply while the page is attached", ct);
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
             pending = page.WhenOriginalNarrationPresentationIdleAsync(); Assert.False(pending.IsCompleted);
@@ -581,10 +585,10 @@ public sealed class CallMonologueNarrationRouteTests
             var host = Assert.Single(widget.GetVisualDescendants().OfType<CallMonologueNarrationHost>());
             var selected = Assert.IsType<CallOriginalNarrationSelection>(owner.CaptureOriginalNarration());
             Assert.False(File.Exists(f.StatePath)); Assert.Equal(0, speech.Starts);
-            await Press(window, host, "Narrate this completed reply", widget.WhenOriginalNarrationIdleAsync);
+            await Press(window, host, "Narrate this completed reply", widget.WhenOriginalNarrationIdleAsync, ct);
             Assert.Equal(selected.Text, speech.NarrationText); Assert.Equal(1, speech.Starts);
             var controls = Assert.Single(host.Children.OfType<MonologueOriginalPlaybackHost>());
-            await Press(window, controls, "Pause original narration", widget.WhenOriginalNarrationIdleAsync);
+            await Press(window, controls, "Pause original narration", widget.WhenOriginalNarrationIdleAsync, ct);
             Assert.NotNull(host.OriginalPlayback!.CanonicalReceipt);
             var bytes = await File.ReadAllBytesAsync(f.StatePath, ct);
             window.Content = null; window.Content = widget;
@@ -651,7 +655,7 @@ public sealed class CallMonologueNarrationRouteTests
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
             await widget.WhenOriginalNarrationIdleAsync();
             var host = Assert.Single(widget.GetVisualDescendants().OfType<CallMonologueNarrationHost>());
-            await Press(window, host, "Narrate this completed reply", widget.WhenOriginalNarrationIdleAsync);
+            await Press(window, host, "Narrate this completed reply", widget.WhenOriginalNarrationIdleAsync, ct);
             var controls = Assert.Single(host.Children.OfType<MonologueOriginalPlaybackHost>());
             store.HoldNext = true;
             var button = Assert.Single(controls.Children.OfType<Button>(), item => Equals(item.Content, "Pause original narration"));
