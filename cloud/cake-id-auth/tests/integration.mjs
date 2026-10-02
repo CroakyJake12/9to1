@@ -283,7 +283,7 @@ try {
   const ordinaryClient = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
     client_name: "denied ordinary synthetic client",
     redirect_uris: ["http://127.0.0.1:5096/callback"],
-    token_endpoint_auth_method: "none", application_type: "web",
+    token_endpoint_auth_method: "none", application_type: "native",
     grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], scope: "openid profile email",
   });
   assert.equal(ordinaryClient.status, 401, "genuine ordinary session cannot provision OAuth clients");
@@ -339,7 +339,7 @@ try {
     client_name: "9to1 local integration test",
     redirect_uris: ["http://127.0.0.1:5096/callback"],
     token_endpoint_auth_method: "none",
-    application_type: "web",
+    application_type: "native",
     grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
     scope: "openid profile email cake:account:read cake:profile:read cake:profile:write cake:sessions:read cake:sessions:revoke",
@@ -350,6 +350,7 @@ try {
   const client = await clientResponse.json();
   assert.ok(client.client_id, "public client has a registration ID");
   assert.equal(client.token_endpoint_auth_method, "none", "client is public and holds no secret");
+  assert.equal(client.application_type, "native", "exact loopback redirect exercises a native public PKCE client, not web HTTPS integration");
 
   const discovery = await currentDiscovery();
   assert.ok(discovery.issuer && discovery.authorization_endpoint && discovery.token_endpoint && discovery.jwks_uri, "local discovery supplies actual issuer and endpoints");
@@ -454,6 +455,7 @@ try {
     tokenEndpoint: discovery.token_endpoint,
     jwksUri: discovery.jwks_uri,
     publicClientRegistration: "synthetic and local only; client id intentionally not printed",
+    publicClientApplicationType: "native (exact synthetic loopback PKCE protocol only; no web HTTPS or .NET integration claim)",
     redirectUri: "http://127.0.0.1:5096/callback (synthetic test only)",
     passwordResetAndLoginMs: durationMs.passwordResetAndLogin,
     passwordLoginAndTokenExchangeMs: durationMs.passwordLoginAndTokenExchange,
