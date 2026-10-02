@@ -215,7 +215,7 @@ public sealed class ShelfMapsFinalClaimFenceTests
             {
                 var other = new MapSavedJourney(Guid.NewGuid(), "Competing journey", [new(Guid.NewGuid(), MapJourneyStepKind.ManualInstruction, "Other")],
                     MapObjectVisibility.Private, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0);
-                Assert.True((await _journeys.SaveJourneyAsync(0, other)).Success);
+                Assert.True((await new MapsJourneyService(Settings).SaveJourneyAsync(0, other)).Success);
             }
             else Assert.True((await _library.AddItemAsync(0, new(Guid.NewGuid(), "Competing app", new(ShelfTargetKind.InstalledApplication, "other-app")))).Success);
         }

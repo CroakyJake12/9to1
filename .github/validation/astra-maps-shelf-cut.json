@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7d1906def16588ef65bed6f6c3868261ae663543",
-  "programTree": "582789d71ad773206c2748a4d36ad76365756ba9",
+  "baselineCommit": "1fe5c845a463318d86d84d1d2b303c6b1174ba4d",
+  "programTree": "e3e3c32d308893a3cfcfa18e3e773af2c40c8dc7",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "243eee0adea902b241a616829a739fd2491aa647",
+      "object": "1807630a308ba971914db1e1bd7fb5b42f237f48",
       "bytes": 15096,
-      "sha256": "0cbd393cf583f46b0eb90b12c69cd34ef820f0478785c0771d04f15e9f1abef3"
+      "sha256": "72f6ff0e6ed9fe453a2addb38d7d9d54aa161052951cdc9904df7ef3cbd7be71"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40615,9 +40615,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
       "mode": "100644",
-      "object": "3eedad76ad6092b37e0bc121ce4341947e05bac0",
-      "bytes": 19742,
-      "sha256": "a220c1869b19513186a80465fc2c75eb70ff16750d6f590d2968088819d7e2ff"
+      "object": "b3eb1726640bcaa60f01a4e6c7e5be4a622d957e",
+      "bytes": 19765,
+      "sha256": "c70d42bbdf51995ad080dc9f5b7d1aced4d420b4ccc8b0fb4aebe4b2d6e07b07"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
@@ -64759,7 +64759,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Sole using Haven.Application.Shelf import; complete original native fixture bodies/assertions/classes unchanged. Existing selected Haven.Application reference supplies real service, no project/source family replacement. Preserve all original four native facts/old+16 Maps coupled/full owning+resource source/producers/restore/compiled/zeroSkip. Root17CAS; no future owner20 joins. Full unchanged owning/resource diagnostic: 5m per-test blame-hang mini dumps, detailed logger and owned process/thread evidence, 20m cohort timeout FAIL124. Exact hung case unknown; sole fixture expected Unauthorized is independently evidenced and not claimed hang repair.",
+  "limits": "Exact actual failed-parent minimal correction only. Actual selected fixture-only correction; all original cases/assertions retained, production unchanged. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-shelf-workspace-actual-maps07-retirement-corrective01/manifest.json",
@@ -64776,6 +64776,10 @@
     {
       "path": "/workspace/astra-source/ready-artifacts/root-maps07-actual-cancelled38/root-capture.json",
       "sha256": "0037c27494b0192c7c2342df87379a82a3aa91f42c35266e123b94c2b1d784d0"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-maps-actual-competing-instance-corrective01/manifest.json",
+      "sha256": "4f4362b0f715126d78b22fb4614ef94870ba46de958bffed05ab730c0cfc7ede"
     }
   ],
   "sharedCakeIdContract": null
