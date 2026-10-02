@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Haven.Application;
 using HavenOS.Home.PermissionsTrustNotifications;
+using PermissionTrustLevel = HavenOS.Home.PermissionsTrustNotifications.HomeTrustLevel;
 using PermissionRequest = HavenOS.Home.PermissionsTrustNotifications.HomePermissionRequest;
 
 namespace HavenOS.Home.Core;
@@ -38,7 +39,7 @@ public sealed partial class HomeResourceOperationBroker
     private void RetainClaimedAttestation(HomeResourceExecutionCapability capability, Binding binding, PermissionRequest request)
     {
         if (!MatchesClaimedOriginal(binding, request) || !request.Policy.RequiresPerActionApproval ||
-            request.AppliedGrantId is not null || request.AppliedTrustLevel != HomeTrustLevel.Session) return;
+            request.AppliedGrantId is not null || request.AppliedTrustLevel != PermissionTrustLevel.Session) return;
         _claimedAttestations.Add(capability, new(this, capability, binding.Actor,
             binding.OriginalSubmission!, binding.OriginalPolicy!));
     }
@@ -112,7 +113,7 @@ public sealed partial class HomeResourceOperationBroker
             }
             return original is not null && original.State == HomePermissionRequestState.Executing &&
                 original.Policy == attestation.Policy && original.Policy.RequiresPerActionApproval &&
-                original.AppliedGrantId is null && original.AppliedTrustLevel == HomeTrustLevel.Session &&
+                original.AppliedGrantId is null && original.AppliedTrustLevel == PermissionTrustLevel.Session &&
                 MatchesPrepared(attestation.Submission, original) &&
                 attestation.Submission.Impact.ResourceBinding is { SchemaVersion: 1 } resource && resource.OriginalActor == originalActor &&
                 resource.Scopes.SequenceEqual(attestation.Capability.Scopes);

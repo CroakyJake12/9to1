@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
-  "programTree": "801901298dfc48865b216a2ff0c4bb8ef88fda62",
+  "baselineCommit": "a8d9f96453175efba3c22d068c01b4a1de527b87",
+  "programTree": "18a8287daf976974506a999decb96fb3a559a322",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -22884,9 +22884,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceAttestation.cs",
       "mode": "100644",
-      "object": "93564e56efc52071fd602b734f12e4a70383295a",
-      "bytes": 8259,
-      "sha256": "efeedc31c226379594f8c443b2b706397551e55671956a1c84b4b39e3d712b72"
+      "object": "dce537cc5bfc58dbd098f1168131a324e2da1552",
+      "bytes": 8359,
+      "sha256": "faab52617bb737de1c3aac016ae879d2511fad2c1c3718eb04d33ce48bf475b7"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreApi.cs",
@@ -64661,7 +64661,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-data-browse-cut.json",
-  "limits": "SOURCE_ONLY_UNRUN coherent Browse45+normalizedHomeGraph32+Data05; typedclaim03 broker final winner, full inherited regression plus complete Home Runtime AI Browse owning projects and explicit expanded Core/Infrastructure/Desktop classes. Fullsource22gitlinks/3materialized/7sourceproducers/hosttasks/restorepackage/compiled/TRXzeroSkip retained. No installed browser engine or external provider/device acceptance. Also reuses entire accepted Root14 resource cohort unchanged checks on same coherent program, including Data/schema/Forms full owning families; all resource classSHA repinned selected source. Exact dad4 owning guardedSave exception assertion now Unknown/notAudit/HomeExecuting/no ExecutionCompleted/FinishUnknown; no unrelated schema07 source. Both owning and resource classesSHA repinned. Exact restore diagnostic cohort whitelist/path matches actual new owning matrix; all package/dgspec/evaluated context checks unchanged.",
+  "limits": "Exact independently captured actual failed source correction: PermissionTrustLevel alias in attestation productionfile only; no claim/grant expansion or test change. All owning/regression/resource or Accountslegacy/FundedOrg/PublicClient/Remote/Node/signedWeb/authenticatedWeb/Chromium checks, source22+3/full restore/producers/host/compiled guards unchanged; no SDK/localbuild/runtimeclaim.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-browse-native-document-coherent45-recovery01/manifest.json",
@@ -64694,6 +64694,22 @@
     {
       "path": "/workspace/astra-source/worker4-data-browse-coherent-owning-gate03/manifest.json",
       "sha256": "ae0597bcbd1d521af7207e7d7d8c5f93c71b7497d97b9b173e3fcc0e25534d91"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-data-browse-coherent-owning-gate04/manifest.json",
+      "sha256": "db7794563b14e2f516d42d3bf30bcbd444cd9edded0b8d8b60a6ba8a0fb9efd8"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/data-browse-coherent-owning04/actual-failed-owning01/root-capture.json",
+      "sha256": "84776f86e34e63d397c83fbd8b90a071161ca53999fcd806fc4772d3e23aaba9"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/data-browse-coherent-owning04/actual-failed-resource01/root-capture.json",
+      "sha256": "af19e1f06d508bcdf538590371804f29e30ec8cb322f59714bd04120e653b744"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-attestation-permission-trust-alias02/manifest.json",
+      "sha256": "f80330baf0f4565d62a1d15b5e47b27fb32293baa98dc089d6b9e07283086a48"
     }
   ],
   "sharedCakeIdContract": null
