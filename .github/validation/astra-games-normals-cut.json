@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
+  "baselineCommit": "64c8276c156c924037e62bf345e0adf9113a7b95",
   "programTree": "9742ae798a36af6c3bb509542bae61684f51386b",
-  "currentNormalCommit": "8f25fe10eccfecf71e4ac4831da915caae1f93ca",
-  "kind": "new",
+  "currentNormalCommit": "9ac828e12a9ccb047694c2af3f531a78b901b382",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -27,11 +27,18 @@
       "sha256": "7e20ac12885e96c3a4732fe032610d366c7bf2b39c58108336498cb6fbd11743"
     },
     {
+      "path": ".github/scripts/astra-games-native-bundle.py",
+      "mode": "100644",
+      "object": "93880bbc147e63441617bdbd75980c82da954921",
+      "bytes": 1433,
+      "sha256": "75f6b00c0818b15fddef84f582646f92aec3dc1569502db793e91b1af9edcf04"
+    },
+    {
       "path": ".github/scripts/astra-games-normals-native.py",
       "mode": "100644",
-      "object": "5a5b8652d5c7b22f2cca85cd20f1d68159989369",
-      "bytes": 13480,
-      "sha256": "308f800d6346ce9064cfbdb028510248ea4630662fbcdccfa6529d70068dc7cb"
+      "object": "aa6278c8795331bbcadb5336ce5a64ee4c37a968",
+      "bytes": 17670,
+      "sha256": "56c617199f321f1c5a28e8ed6a41f96d5354c3919671d6af4f7ffad2d99c24c7"
     },
     {
       "path": ".github/scripts/astra-games-normals-owning.py",
@@ -60,6 +67,20 @@
       "object": "a17f0247da08a499ae2193bc1f3c288af7d883e0",
       "bytes": 6997,
       "sha256": "d9f51cf3093bdb0069d6730cc6318722649f026efd42cc5619f8eea7d15d8b7f"
+    },
+    {
+      "path": ".github/validation/NuGet.ContentHash.Validation/Astra.NuGet.ContentHash.Validation.csproj",
+      "mode": "100644",
+      "object": "7db291d1476d5f677dadd6b61a5fccea08c651d0",
+      "bytes": 1546,
+      "sha256": "26497fcc007a2191e365837e0af632f92e0f27208710494f414fff8a19aad0c8"
+    },
+    {
+      "path": ".github/validation/NuGet.ContentHash.Validation/Program.cs",
+      "mode": "100644",
+      "object": "16436b37a279265224c1b98ccc4e0b7e580e0b74",
+      "bytes": 1883,
+      "sha256": "50470f138a5ae23a6351cbeede1b1413faae5c30aa0134ba222631f9d3f28ae8"
     },
     {
       "path": ".github/validation/astra-games-normals-owning-classes.json",
@@ -225,9 +246,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "4e8a5bc44804d1bdc639ad64d7ef182eb795c19f",
-      "bytes": 2139,
-      "sha256": "8b3e70eb1d5ca3c29cc0fe57dab4c28f0881fd877da85a0c7326540461831d8d"
+      "object": "375d55f3d76310e6107a56d05689aa16b9341989",
+      "bytes": 17903,
+      "sha256": "fe04bf8f05b6da615132cbb46d3cc2250522bfd34245d0f548e78071133256cf"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -64416,7 +64437,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-games-normals-cut.json",
-  "limits": "Root15 isolated genuine official Godot4.7.2 source/engine/archive/SUMS pin matching Runtime SDK/net10, FULL actualRuntime import/build/compiledsource/package/SDK/closure guards then explicit actualnative3case normals witness; full existing Games Core/Infrastructure/Desktop/CUI managed owning regressions plus all current regression/resource retained. ProductionMain/project.godot/22donorpins unchanged. No future Games mount graph/native acceptance inheritance. Unexecuted.",
+  "limits": "Actual recovered Runtime restore failure: required Godot mapped source environment was unset. Bind exact extracted official4.7.2 bundle directory without changing source mapping/product sources. Maintained actual SDK reader computes same-archive content identity separately from physical archive SHA512; no signer trust. Full four native/owning/regression/resource gates unchanged. Entire native original evidence CRC/SHA retained in independent24MiB parts. No local SDK/native run; normal CAS needs root coordinated review.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker6-games-canonical-normal-draft-03/manifest.json",
@@ -64429,6 +64450,22 @@
     {
       "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol17/manifest.json",
       "sha256": "23ec78f5892c0b16f2616d2dd141fee9b55deec1d55882cb29d9acc69c851d33"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-games-maintained-nuget-hash-validator02/manifest.json",
+      "sha256": "01829a12323f29949080b1768584356e3ce334a04789f4272e148002c7794db0"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-games-normals-actual-restore-corrector06/original-recovery-receipt.json",
+      "sha256": "285b101a8fd413fe021918561ed95683f793d0898eafdd556d9e683a25b77981"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
+      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-games-original-recovery-capture01.json",
+      "sha256": "342d5d065c93cf39510e712b41648a147e01788e94cc24dca2ab54b4ae3dcc0d"
     }
   ],
   "sharedCakeIdContract": null

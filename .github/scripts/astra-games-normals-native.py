@@ -96,6 +96,14 @@ engineClosure=[{'path':str(p.relative_to(engineRoot)),'bytes':p.stat().st_size,'
 (out/'engine-full-closure.json').write_text(json.dumps({'sourceCommit':pin['officialSourceCommit'],'archiveSha256':digest(archive),'files':engineClosure},indent=2)+'\n')
 if command([str(engine),'--version'],'engine-version'):raise SystemExit('genuine engine version failed')
 module=root/'9to1 Workspace/Games/Runtime';project=module/'HavenOS.Games.Runtime.csproj'
+# Exact extracted official bundle supplies the source required by the retained package-source mapping.
+bundleArchives=list(engineRoot.rglob('Godot.NET.Sdk.4.7.2.nupkg'))
+if not bundleArchives:bundleArchives=list(engineRoot.rglob('godot.net.sdk.4.7.2.nupkg'))
+assert len(bundleArchives)==1
+bundleSource=bundleArchives[0].parent.resolve();assert bundleSource.is_relative_to(engineRoot.resolve())
+os.environ['ASTRA_GODOT_NUPKG_SOURCE']=str(bundleSource)
+(out/'actual-godot-package-source.json').write_text(json.dumps({'directory':str(bundleSource),'sdkArchiveSha256':digest(bundleArchives[0]),'packages':[{'name':p.name,'sha256':digest(p)}for p in sorted(bundleSource.glob('*.nupkg'))]},indent=2)+'\n')
+
 if command([str(engine),'--headless','--editor','--path',str(module),'--import','--quit'],'runtime-import'):raise SystemExit('full runtime import failed')
 verify()
 props=['-p:Configuration=Debug','-p:TargetFramework=net10.0','-p:UseSharedCompilation=false']
@@ -109,12 +117,14 @@ evaluated=json.loads(query.stdout);properties=evaluated['Properties'];target=pat
 assert properties['Configuration']=='Debug'and properties['TargetFramework']=='net10.0'and target.name=='HavenOS.Games.Runtime.dll'and target.is_file()and target.is_relative_to(module/'.godot/mono/temp/bin/Debug')
 compiledSources={pathlib.Path(i['FullPath']).resolve()for i in evaluated['Items']['Compile']}
 for required in ['CanonicalTriangleMesher.cs','CanonicalSceneDriver.cs','Tests/CanonicalMeshNormalsWitness.cs']:assert(module/required).resolve()in compiledSources
-assets=pathlib.Path(properties['ProjectAssetsFile']);assetsBefore=digest(assets);(out/'runtime-project.assets.json').write_bytes(assets.read_bytes());packages=json.loads(assets.read_text());packagePayload=[];(out/'official-packages').mkdir(exist_ok=True)
+assets=pathlib.Path(properties['ProjectAssetsFile']);assetsBefore=digest(assets);(out/'runtime-project.assets.json').write_bytes(assets.read_bytes());packages=json.loads(assets.read_text());packagePayload=[];hashInputs=[];hashExpected={};(out/'official-packages').mkdir(exist_ok=True)
 for package,library in packages['libraries'].items():
  if library['type']!='package':continue
  folder=next((pathlib.Path(f)/library['path']for f in packages['packageFolders']if(pathlib.Path(f)/library['path']).is_dir()),None);assert folder is not None
  originals=list(folder.glob('*.nupkg'));assert len(originals)==1
- raw=originals[0].read_bytes();actual512=base64.b64encode(hashlib.sha512(raw).digest()).decode();assert actual512==library['sha512'] and actual512==pathlib.Path(str(originals[0])+'.sha512').read_text().strip()
+ raw=originals[0].read_bytes();actual512=base64.b64encode(hashlib.sha512(raw).digest()).decode();assert actual512==pathlib.Path(str(originals[0])+'.sha512').read_text().strip()
+ metadata=json.loads((folder/'.nupkg.metadata').read_text());assert metadata['contentHash']==library['sha512']
+ packageId,packageVersion=package.rsplit('/',1);hashInputs.append({'Archive':str(originals[0]),'PackageId':packageId,'PackageVersion':packageVersion});hashExpected[str(originals[0])]=metadata['contentHash']
  packageArchive=out/'official-packages';packageArchive.mkdir(exist_ok=True);shutil.copyfile(originals[0],packageArchive/originals[0].name)
  for f in sorted(folder.rglob('*')):
   if f.is_file():packagePayload.append({'package':package,'path':str(f.relative_to(folder)),'bytes':f.stat().st_size,'sha256':digest(f)})
@@ -122,6 +132,29 @@ sdk=pathlib.Path.home()/'.nuget/packages/godot.net.sdk/4.7.2';assert sdk.is_dir(
 sdkArchives=list(sdk.glob('*.nupkg'));assert len(sdkArchives)==1
 assert base64.b64encode(hashlib.sha512(sdkArchives[0].read_bytes()).digest()).decode()==pathlib.Path(str(sdkArchives[0])+'.sha512').read_text().strip()
 shutil.copyfile(sdkArchives[0],out/'official-packages'/sdkArchives[0].name)
+hashInputs.append({'Archive':str(sdkArchives[0]),'PackageId':'Godot.NET.Sdk','PackageVersion':'4.7.2'});hashExpected[str(sdkArchives[0])]=json.loads((sdk/'.nupkg.metadata').read_text())['contentHash']
+helper=root/'.github/validation/NuGet.ContentHash.Validation/Astra.NuGet.ContentHash.Validation.csproj'
+helperProps=['-p:Configuration=Release','-p:UseSharedCompilation=false']
+if command(['dotnet','restore',str(helper),'--disable-build-servers','-m:1','-nr:false',*helperProps],'content-validator-restore'):raise SystemExit('maintained content validator restore failed')
+if command(['dotnet','build',str(helper),'--no-restore','--disable-build-servers','-m:1','-nr:false',*helperProps],'content-validator-build'):raise SystemExit('maintained content validator build failed')
+hq=subprocess.run(['dotnet','msbuild',str(helper),'-nologo','-m:1','-nr:false',*helperProps,'-getProperty:TargetPath,MSBuildBinPath,ProjectAssetsFile','-getItem:Compile,ReferencePath'],capture_output=True,text=True)
+(out/'content-validator-query.stdout').write_text(hq.stdout);(out/'content-validator-query.stderr').write_text(hq.stderr);assert hq.returncode==0
+he=json.loads(hq.stdout);ht=pathlib.Path(he['Properties']['TargetPath']);assert ht.is_file()
+assert (helper.parent/'Program.cs').resolve() in {pathlib.Path(i['FullPath']).resolve()for i in he['Items']['Compile']}
+hsdk=pathlib.Path(he['Properties']['MSBuildBinPath']);sdkReader=hsdk/'NuGet.Packaging.dll';assert sdkReader.is_file() and digest(ht.parent/'NuGet.Packaging.dll')==digest(sdkReader)
+sdkSupportNames=['NuGet.Packaging','NuGet.Frameworks','NuGet.Common','NuGet.Versioning','NuGet.Configuration','Newtonsoft.Json','System.Security.Cryptography.Pkcs','System.Security.Cryptography.ProtectedData']
+for n in sdkSupportNames:assert digest(ht.parent/(n+'.dll'))==digest(hsdk/(n+'.dll'))
+(out/'actual-sdk-dotnet.deps.json').write_bytes((hsdk/'dotnet.deps.json').read_bytes())
+helperBefore=[{'path':str(p),'sha256':digest(p)}for p in sorted(ht.parent.rglob('*'))if p.is_file()]
+(out/'content-validator-compiled.json').write_text(json.dumps({'compiled':helperBefore,'sdkNuGet':[{'path':str(hsdk/(n+'.dll')),'sha256':digest(hsdk/(n+'.dll'))}for n in sdkSupportNames],'helperAssetsSha256':digest(pathlib.Path(he['Properties']['ProjectAssetsFile']))},indent=2)+'\n')
+hi=out/'content-validator-input.json';hi.write_text(json.dumps(hashInputs,indent=2)+'\n')
+if command(['dotnet',str(ht),str(hi)],'maintained-content-hashes'):raise SystemExit('actual maintained content hash execution failed')
+hr=json.loads((out/'maintained-content-hashes.log').read_text());assert len(hr['Results'])==len(hashInputs)
+for r in hr['Results']:assert r['ContentHash']==hashExpected[r['Archive']]
+assert digest(pathlib.Path(hr['NuGetAssembly']))==digest(sdkReader)
+assert helperBefore==[{'path':str(p),'sha256':digest(p)}for p in sorted(ht.parent.rglob('*'))if p.is_file()]
+(out/'content-hash-qualification.json').write_text(json.dumps({'rawArchive':'independent physical SHA512 equals .nupkg.sha512','content':'same archive maintained NuGet GetContentHash equals restore metadata and assets content identity','signerTrust':'not established'},indent=2)+'\n')
+
 for f in sorted(sdk.rglob('*')):
  if f.is_file():packagePayload.append({'package':'Godot.NET.Sdk/4.7.2','path':str(f.relative_to(sdk)),'bytes':f.stat().st_size,'sha256':digest(f)})
 (out/'runtime-package-sdk-full-payload.json').write_text(json.dumps(packagePayload,indent=2)+'\n')

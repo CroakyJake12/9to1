@@ -45,11 +45,318 @@ jobs:
           EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
           COHORT: ${{ matrix.cohort }}
         run: python3 ".github/scripts/astra-games-normals-${COHORT}.py" --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-games-normals-cut.json --manifest-sha "$EXPECTED_MANIFEST_SHA"
+      - name: Bound complete original native evidence including failure
+        if: always() && matrix.cohort == 'native'
+        run: python3 .github/scripts/astra-games-native-bundle.py
       - name: Retain actual evidence including failure
-        if: always()
+        if: always() && matrix.cohort != 'native'
         uses: actions/upload-artifact@v4
         with:
           name: astra-games-normals-${{ matrix.cohort }}-${{ github.sha }}
           path: artifacts/games-normals-${{ matrix.cohort }}
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded native original manifest
+        if: always() && matrix.cohort == 'native'
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-receipt-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/receipt.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 000
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-000.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-000-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-000.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 001
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-001.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-001-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-001.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 002
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-002.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-002-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-002.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 003
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-003.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-003-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-003.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 004
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-004.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-004-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-004.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 005
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-005.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-005-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-005.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 006
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-006.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-006-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-006.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 007
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-007.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-007-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-007.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 008
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-008.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-008-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-008.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 009
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-009.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-009-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-009.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 010
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-010.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-010-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-010.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 011
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-011.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-011-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-011.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 012
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-012.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-012-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-012.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 013
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-013.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-013-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-013.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 014
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-014.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-014-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-014.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 015
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-015.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-015-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-015.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 016
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-016.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-016-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-016.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 017
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-017.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-017-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-017.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 018
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-018.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-018-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-018.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 019
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-019.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-019-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-019.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 020
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-020.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-020-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-020.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 021
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-021.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-021-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-021.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 022
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-022.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-022-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-022.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 023
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-023.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-023-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-023.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 024
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-024.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-024-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-024.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 025
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-025.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-025-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-025.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 026
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-026.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-026-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-026.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 027
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-027.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-027-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-027.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 028
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-028.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-028-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-028.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 029
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-029.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-029-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-029.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 030
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-030.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-030-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-030.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain exact native original part 031
+        if: always() && matrix.cohort == 'native' && hashFiles('artifacts/games-normals-native-bounded/part-031.bin') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-part-031-${{ github.sha }}
+          path: artifacts/games-normals-native-bounded/part-031.bin
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded original native logs
+        if: always() && matrix.cohort == 'native'
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-games-normals-native-small-${{ github.sha }}
+          path: artifacts/games-normals-native-small
           if-no-files-found: error
           retention-days: 14
