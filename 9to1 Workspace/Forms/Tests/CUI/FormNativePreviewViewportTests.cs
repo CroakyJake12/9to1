@@ -139,7 +139,11 @@ public sealed class FormNativePreviewViewportTests
                     foreach (var width in new[] { 800d, 360d, 800d })
                     {
                         // Genuine mounted window sizing and maintained layout manager; no direct Panel Measure/Arrange.
-                        window.Width = width; window.UpdateLayout();
+                        window.Width = width;
+                        // The maintained headless platform posts the real resize at Send priority.
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { }, Avalonia.Threading.DispatcherPriority.Background);
+                        window.UpdateLayout();
+                        Assert.Equal(width, window.ClientSize.Width);
                         var visible = columns.Children.Where(child => child.IsVisible).ToArray();
                         Assert.Equal(mode == FormModeKind.Quiz ? 1 : 3, visible.Length);
                         Assert.Equal(0, visible[0].Bounds.X); Assert.Equal(0, visible[0].Bounds.Y);

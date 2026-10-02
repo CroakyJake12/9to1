@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "programTree": "f872a96f87960f6ba4c5774a9162f49fbc23736f",
+  "baselineCommit": "5a33f9ac1123a7a142a21361ffef2f709133e25b",
+  "programTree": "97726a22941b735efb3ba98cfd6eaf0712519b01",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "506b757396a795fa9835121381a1be3f8d476b1a",
+      "object": "e4f504bd7b1961da3966b9631bc1f612566ec3d4",
       "bytes": 14864,
-      "sha256": "d005b95bb4b1db8440114e3c561c4557547d49c5b2f36c9b0bda24c00db26a73"
+      "sha256": "af33ab3f74f1461f90456aafd8e4222fc023e3589c33ab3a42c9d106348a5e4e"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -71,9 +71,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-resource-classes.json",
       "mode": "100644",
-      "object": "3cd2b5525b1bc4457afefa14c757a0b98812c770",
+      "object": "4e7aea9fa76ff3dcd5cc6f525a10506f25eb8087",
       "bytes": 30193,
-      "sha256": "82ea5081b09c638c31ecb2ca657b0fc7df78e801cf3035002a058f91f0726cac"
+      "sha256": "39061caa32443367dec9024b47ddfa3cebe476203674c9169646df1895a6c720"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -22205,9 +22205,9 @@
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewViewportTests.cs",
       "mode": "100644",
-      "object": "3f3a8157770781d8d6c857cc6d88b9c199f5194e",
-      "bytes": 11164,
-      "sha256": "642f1a9dc1de28ff19b8d8037f4dbc70de13fb0120e085ab4f6e8a5000ba5ce2"
+      "object": "625eaad6dc6acc84aef95e8b593c30df5ec4f31a",
+      "bytes": 11501,
+      "sha256": "b736d09401c2f8e2277f7906d8ef93e2a19090afb95596b639f54d32ab4bc95c"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs",
@@ -22226,9 +22226,9 @@
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
       "mode": "100644",
-      "object": "f9534e188f4c23c23b9b1b332b0fbc9dfa2b01c2",
-      "bytes": 29913,
-      "sha256": "060a6366bed86d28973c7405371216e874656eec8e372533b1ea775e356ebe24"
+      "object": "fd591cc827eb4e7003c75be1499db8459d409ffc",
+      "bytes": 30604,
+      "sha256": "a3c43495880cd9e61af22ec9e936dc913a295362749da3f599004f706351aeff"
     },
     {
       "path": "9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
@@ -64647,7 +64647,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-desktop-visible-cut.json",
-  "limits": "All seven whole Forms CUI families execute unfiltered owning project; full original regression and resource cohorts retained, including raw Home publication and physical response families. Ten owned source targets only; native Panel/preview/regex/error/help source retained. No predecessor acceptance/native device inference or unrelated Desktop future source joins.",
+  "limits": "Exact actual failed-parent minimal correction only. Actual selected fixture-only correction; all original cases/assertions retained, production unchanged. Full original owning/regression/resource workflows, class sets, guards and zero skip remain unchanged; no new features, cohort joins or test filtering. Maps retained detailed logger/process snapshots/blame-hang deadlines remain unchanged where present.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker3-forms-native-page-columns04/manifest.json",
@@ -64660,6 +64660,10 @@
     {
       "path": "/workspace/astra-source/checkpoint18-publication-local.json",
       "sha256": "c9e810f1d7d7d8b023391e1d2f39c0c86fe43e4e26f4f175bc0dfa04f7293559"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-actual-native-delivery-corrective01/manifest.json",
+      "sha256": "5137915ea98255e711da817317e14b1bcfbeb6dbf6f7a67d301cc2ae6367b7ca"
     }
   ],
   "sharedCakeIdContract": null

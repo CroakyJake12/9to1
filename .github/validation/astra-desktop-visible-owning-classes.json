@@ -45,7 +45,7 @@
       "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
       "class": "FormsCuiWorkspaceTests",
       "namespace": "HavenOS.Forms.Tests",
-      "sha256": "060a6366bed86d28973c7405371216e874656eec8e372533b1ea775e356ebe24",
+      "sha256": "a3c43495880cd9e61af22ec9e936dc913a295362749da3f599004f706351aeff",
       "origin": "joined95 selectedowner",
       "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspaceTests.cs"
     },
@@ -54,7 +54,7 @@
       "fullClass": "HavenOS.Forms.Tests.FormNativePreviewViewportTests",
       "namespace": "HavenOS.Forms.Tests",
       "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewViewportTests.cs",
-      "sha256": "642f1a9dc1de28ff19b8d8037f4dbc70de13fb0120e085ab4f6e8a5000ba5ce2",
+      "sha256": "b736d09401c2f8e2277f7906d8ef93e2a19090afb95596b639f54d32ab4bc95c",
       "origin": "Exact immutable Forms04 source"
     }
   ],
