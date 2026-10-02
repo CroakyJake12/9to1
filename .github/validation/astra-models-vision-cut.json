@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "453b98d323e0af37d29b1e86809959eef85e92aa",
-  "programTree": "c5f6648d91accf5a61c79a02f718ce37aa8f7a40",
+  "baselineCommit": "2ef5727715eb365647ce11165a1e5cc99d9cf231",
+  "programTree": "e3a6021aba887deaad448bf74559b3c18a5fb288",
   "currentNormalCommit": "e985382bc58e460f386273ea44313696e9594eff",
   "kind": "corrective",
   "files": [
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "7da4041f6757336b13b2a10130207e167fdfc319",
+      "object": "58399a352097b98f1b298cc680ffc3492e8a5d3e",
       "bytes": 12569,
-      "sha256": "b74ea4a7226661612d4d503414cd4aba8115258b612db6ea7d6f4fd803a98712"
+      "sha256": "6e50514e6eeabce033e2001e8b3725133f2b622c626285646c6bd62b964d648e"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -27903,9 +27903,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallCoordinator.OriginalNarration.cs",
       "mode": "100644",
-      "object": "179342ea46cc4e6771e6f3af1b383e5695122bac",
-      "bytes": 6128,
-      "sha256": "e50939d44576d44a060856e19327af3219652b7aaf821a2e2c11947f836772ae"
+      "object": "a606d35c54088d7c631f3cafa95147dae9a7e677",
+      "bytes": 6662,
+      "sha256": "b63e2f4d537ac6666879781fc59fe40b010f5b082d9727e7a56809064e8bb2d2"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Call/CallCoordinator.cs",
@@ -34224,9 +34224,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Call/CallPage.axaml.cs",
       "mode": "100644",
-      "object": "74bae0e6667fc70250dd17769fec8b2ab33f6cba",
-      "bytes": 34339,
-      "sha256": "3c85af5445acb6a8e01de9d50867a4774ecec8f27a5ff7e68822d7b5919327ad"
+      "object": "8a76f7a949d9613f0cac7d26636059bb199af752",
+      "bytes": 34474,
+      "sha256": "494a9704a898a019f78826f364173e21c2971e87400886c08bbf23c3e3f1bd82"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Call/MonologueOriginalPlaybackHost.cs",
@@ -39145,9 +39145,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallMonologueNarrationRouteTests.cs",
       "mode": "100644",
-      "object": "dcd481dd744f6961c5fedaecb62559de488bd6d6",
-      "bytes": 42447,
-      "sha256": "64f8f47df41a23ad44a140a77220b5d32cec179b33345234bd604d6bf91ad8f6"
+      "object": "78342a03c87eacc25b988dc1dd7ebfd11a8ad1ce",
+      "bytes": 42843,
+      "sha256": "2ef0852b7c41024aed57a0709c50d561b64047b2258e75b36be57ceec1f3ac9a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/CallSingletonIntegrationTests.cs",
@@ -39908,9 +39908,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MonologueOriginalPlaybackHostTests.cs",
       "mode": "100644",
-      "object": "307b19a9fe7ba2409be8f5e28c89fe33dc369fb1",
-      "bytes": 13516,
-      "sha256": "2841b935f230107c3c6c4a3fe9db9448876cf3ab15f065871ce1ccb6ca9a9705"
+      "object": "a49ffcb8c7440ee9946d6903f81eea9da86368f9",
+      "bytes": 13796,
+      "sha256": "29098c648163365456fea4780cf9732eb3e60afae4397a03b74ed4b108ec8473"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeAutomationDefinitionOwnerTests.cs",
@@ -65676,7 +65676,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-models-vision-cut.json",
-  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Exact failed453b private field/constructor issuer type correction only; StartAsync already requires receipt issuer. Every body/public ABI/fixture unchanged, all24 owner sources and30/12/36 full classes/scripts/workflow retained. Historical failed compile supplies no runtime acceptance; fresh all3 required.",
+  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Exact failed453b private field/constructor issuer type correction only; StartAsync already requires receipt issuer. Every body/public ABI/fixture unchanged, all24 owner sources and30/12/36 full classes/scripts/workflow retained. Historical failed compile supplies no runtime acceptance; fresh all3 required. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-monologue-root18-full-owning-gate02/manifest.json",
@@ -65697,6 +65697,14 @@
     {
       "path": "/workspace/astra-source/worker1-monologue04-actual-receipt-issuer-corrective01/manifest.json",
       "sha256": "8fdb9e0366d20863bb944dafa7f71790fc2f78922be849987175859004051e82"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-monologue05-actual-startup-corrective-source01/manifest.json",
+      "sha256": "69b1e7323cae3b56698f3392013a84b8ce4e7912c408da3ce278e0c2814f8614"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-call-actual-receipt-issuer-corrective-gate05/manifest.json",
+      "sha256": "61a50934c8b25ca33137d8d72ca00a7305b5ffb698a2ff058d9b64990e189945"
     }
   ],
   "sharedCakeIdContract": null

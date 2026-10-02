@@ -95,9 +95,12 @@ public sealed partial class CallPage : UserControl
             reactionSource.VoiceReactionChanged += OnVoiceReactionChanged;
     }
 
+    private Task _setupTask = Task.CompletedTask;
+    public Task WhenSetupIdleAsync() => _setupTask;
     private async void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        await InitializeAsync();
+        _setupTask = InitializeAsync();
+        await _setupTask;
     }
 
     private async Task InitializeAsync()
