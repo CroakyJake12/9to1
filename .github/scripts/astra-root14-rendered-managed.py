@@ -69,6 +69,42 @@ def verify():
 verify();command(['dotnet','--info'],'toolchain');command(['dotnet','workload','list'],'workloads')
 env={'AVALONIA_TELEMETRY_OPTOUT':'1','DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER':'1','DOTNET_SKIP_FIRST_TIME_EXPERIENCE':'1','MSBUILDDISABLENODEREUSE':'1','DOTNET_CLI_TELEMETRY_OPTOUT':'1','DOTNET_CLI_USE_MSBUILD_SERVER':'0'};os.environ.update(env)
 base=['-c','Release','-r','linux-x64','--disable-build-servers','-m:1','-nr:false','-p:UseSharedCompilation=false','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True']
+artifactsProps=['-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/root14-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true']
+base+=artifactsProps
+toolProjects=['framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj', 'framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj', 'framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj']
+for tool in toolProjects:
+ code=command(['dotnet','restore',tool,*base[2:],'-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:EnableWindowsTargeting=true'],'tool-restore-'+pathlib.Path(tool).stem);verify()
+ if code:raise SystemExit(code)
+
+# Source-built genuine build-host task; its ProjectReference removes application RID.
+taskProject='framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj'
+taskProps=['-p:Configuration=Release','-p:TargetFramework=netstandard2.0','-p:UseSharedCompilation=false','-p:AvsSkipBuildingLegacyTargetFrameworks=True',*artifactsProps]
+code=command(['dotnet','build',taskProject,'-c','Release','-f','netstandard2.0','--disable-build-servers','-m:1','-nr:false',*taskProps],'avalonia-build-tasks-build');verify()
+if code:raise SystemExit(code)
+taskQuery=subprocess.run(['dotnet','msbuild',taskProject,'-nologo','-m:1','-nr:false',*taskProps,'-getProperty:TargetPath,OutputPath,TargetFramework,Configuration'],capture_output=True,text=True)
+(out/'avalonia-build-tasks-target.stdout').write_text(taskQuery.stdout);(out/'avalonia-build-tasks-target.stderr').write_text(taskQuery.stderr)
+if taskQuery.returncode:raise SystemExit(taskQuery.returncode)
+taskEvaluated=json.loads(taskQuery.stdout)['Properties'];taskTarget=pathlib.Path(taskEvaluated['TargetPath']).resolve()
+taskOutput=pathlib.Path(taskEvaluated['OutputPath']);taskOutput=taskOutput if taskOutput.is_absolute() else (root/taskProject).parent/taskOutput;taskOutput=taskOutput.resolve()
+if taskEvaluated['TargetFramework']!='netstandard2.0' or taskEvaluated['Configuration']!='Release' or not taskOutput.is_relative_to(root) or not taskTarget.is_relative_to(taskOutput) or not taskTarget.is_file():raise SystemExit('invalid actual source-built host task output')
+def task_snapshot():
+ result=[]
+ for file in sorted(taskTarget.parent.rglob('*')):
+  if file.is_symlink():raise SystemExit('build task output symlink')
+  if file.is_file():result.append({'path':str(file.relative_to(root)),'bytes':file.stat().st_size,'sha256':digest(file)})
+ return result
+taskBefore=task_snapshot();(out/'avalonia-build-tasks-compiled-before.json').write_text(json.dumps({'project':taskProject,'target':str(taskTarget.relative_to(root)),'files':taskBefore},indent=2)+'\n')
+retainedTasks=out/'compiled'/'avalonia-build-tasks';retainedTasks.mkdir(parents=True,exist_ok=True)
+for file in sorted(taskTarget.parent.rglob('*')):
+ if file.is_file():
+  destination=retainedTasks/file.relative_to(taskTarget.parent);destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(file,destination)
+  if digest(destination)!=digest(file):raise SystemExit('retained actual build task closure mismatch')
+actualTaskProperty='-p:AvaloniaBuildTasksLocation='+str(taskTarget)
+base.append(actualTaskProperty);artifactsProps.append(actualTaskProperty);os.environ['ASTRA_ACTUAL_AVALONIA_BUILD_TASKS']=str(taskTarget)
+def assert_task_unchanged():
+ after=task_snapshot();(out/'avalonia-build-tasks-compiled-after.json').write_text(json.dumps({'project':taskProject,'target':str(taskTarget.relative_to(root)),'files':after},indent=2)+'\n')
+ if after!=taskBefore:raise SystemExit('actual source-built task closure changed')
+
 checks=[('cui', 'framework/CUI/Runtime.Tests/CakeOS.Cui.Runtime.Tests.csproj', 'FullyQualifiedName~CuiActionCompletionObservationTests|FullyQualifiedName~CuiDynamicActionLifetimeTests'), ('desktop', '9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj', 'FullyQualifiedName~FormsNativeRenderedRespondTests|FullyQualifiedName~FormsNativeWorkspaceHostTests'), ('forms-cui', '9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj', '')]
 # Root pins this exact evidence file in the cut; verify names exist in actual immutable source.
 provenance=json.loads((root/'.github/validation/astra-root14-rendered-classes.json').read_text())
@@ -91,18 +127,22 @@ def assert_compiled_target_unchanged(name):
   if path.is_symlink():raise SystemExit('compiled dependency output became symlink')
   if path.is_file():current.append({'path':str(path.relative_to(root)),'bytes':path.stat().st_size,'sha256':digest(path)})
  if current!=closure:raise SystemExit('compiled entire pinned output closure changed during execution')
+ assert_task_unchanged()
  project,before=restoredProjects[name];after=restore.snapshot_restore(root,project)
  (out/(name+'-restore-after.json')).write_text(json.dumps(after,indent=2)+'\n')
  if before!=after:raise SystemExit('actual restored graph/package payload changed during execution')
 def build_and_pin(name,project):
  code=command(['dotnet','build',project,*base,'-f','net10.0','-p:EnableWindowsTargeting=true'],name+'-build');verify()
  if code:raise SystemExit(code)
- props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']
- query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath'],capture_output=True,text=True)
+ props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']+artifactsProps
+ query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath,OutputPath,RuntimeIdentifier,Configuration,AvaloniaBuildTasksLocation'],capture_output=True,text=True)
  (out/(name+'-target-path.stdout')).write_text(query.stdout);(out/(name+'-target-path.stderr')).write_text(query.stderr)
  if query.returncode:raise SystemExit(query.returncode)
- target=pathlib.Path(query.stdout.strip()).resolve()
- if not target.is_relative_to(root.resolve()) or not target.is_file() or target.suffix!='.dll' or 'linux-x64' not in target.parts:raise SystemExit('missing/unexpected actual Linux TargetPath')
+ evaluated=json.loads(query.stdout)['Properties'];target=pathlib.Path(evaluated['TargetPath']).resolve()
+ if pathlib.Path(evaluated['AvaloniaBuildTasksLocation']).resolve()!=taskTarget:raise SystemExit('consumer UsingTask property differs from pinned source-built task')
+ assert_task_unchanged()
+ output=pathlib.Path(evaluated['OutputPath']);output=output if output.is_absolute() else (root/project).parent/output;output=output.resolve()
+ if evaluated['RuntimeIdentifier']!='linux-x64' or evaluated['Configuration']!='Release' or not output.is_relative_to(root.resolve()) or not target.is_relative_to(output) or not target.is_file() or target.suffix!='.dll':raise SystemExit('missing/unexpected SDK-evaluated Linux Release TargetPath/OutputPath')
  closure=[]
  for path in sorted(target.parent.rglob('*')):
   if path.is_symlink():raise SystemExit('unexpected compiled output symlink')

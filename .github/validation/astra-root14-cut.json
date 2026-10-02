@@ -1,6 +1,6 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "6871e456558001873d54fc217fbf3b5572d5d976",
+  "baselineCommit": "a0d92119ad122155a784b92896e85e9e5e761d02",
   "programTree": "c1b9318844df56135e396f5452df082b42f97c89",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
@@ -22,65 +22,65 @@
     {
       "path": ".github/scripts/astra-auth-restore-evidence.py",
       "mode": "100644",
-      "object": "1b9cdc11f5404241a0987a0fe91d31e2a922a125",
-      "bytes": 5568,
-      "sha256": "21c485ed840a89bb9085e25787ef0640ef2bdb8862494ad20e805ad78d258867"
+      "object": "da1f7e0926d2521c17468015f1a4bc77f61ce945",
+      "bytes": 9046,
+      "sha256": "b08207dcb8be00c1d353f4a50e2a8f02633be3e3c50800294997c8b9d570349a"
     },
     {
       "path": ".github/scripts/astra-root14-accounts-managed.py",
       "mode": "100644",
-      "object": "3533b4843706200a243bcec53f0cc120c71f9b1e",
-      "bytes": 13159,
-      "sha256": "30c5e04496431bb2ff4072afc292c0f092474e7f88c8bbd81fc1edd812807dce"
+      "object": "01093bdacd621b20f0a2b0e422c3162142742f3b",
+      "bytes": 17765,
+      "sha256": "174027fa411808323c0feca5976d965069ceeb331716fa1306d73c2a5b0d9f46"
     },
     {
       "path": ".github/scripts/astra-root14-apps-managed.py",
       "mode": "100644",
-      "object": "935d7d6b68c388c5fac314067f7aad6c7621038d",
-      "bytes": 14418,
-      "sha256": "8c800bedecd6318944067f7af705919f15b517f3448b742221f912aeeda9cd6d"
+      "object": "f3ef484df0908bc1665204b16b84326f6a73bcef",
+      "bytes": 19024,
+      "sha256": "0ffb335948a3dd038a0c4ef6da0279855c55143fb76e0e2afb8ce0d6f25cee56"
     },
     {
       "path": ".github/scripts/astra-root14-automation-managed.py",
       "mode": "100644",
-      "object": "5e6842f08443a88447c213c21ad45868cfdcc53a",
-      "bytes": 14347,
-      "sha256": "369ad3ce89572ecbe16864e2fad541375a8f0f890dc114c770e4b7350d5af7fc"
+      "object": "00bde90c5706e5c3db47e08428c96b4d7c131ba7",
+      "bytes": 18953,
+      "sha256": "62d522f06e80e6a93b9690ca30edd36bc81e4adf1f4bf5743bbc52ad2f3d9c80"
     },
     {
       "path": ".github/scripts/astra-root14-go-managed.py",
       "mode": "100644",
-      "object": "5c6e303ecc012925108e44430b16627d76f09604",
-      "bytes": 13835,
-      "sha256": "a94855d154be5ddea0cb8ac0a1f9a15fe38cd64fd18234e280efaad86ce699ed"
+      "object": "1d9a596637569ecbc867abce25725c0b859c8bf5",
+      "bytes": 18441,
+      "sha256": "8f9f6f8079f8b2f5534894e9dffaebd79168030204fb4a1897d3ae9e6d97801a"
     },
     {
       "path": ".github/scripts/astra-root14-models-managed.py",
       "mode": "100644",
-      "object": "f3fed6e4d22cfb1d7e852a3186ac1aa5747c79a7",
-      "bytes": 14668,
-      "sha256": "51d1b0f8ec27a993c227e592785be16636cf60bf46cbc6025ce8a686e0c5cde1"
+      "object": "4879e0d2b609540edfba34bea2c62289bb185a51",
+      "bytes": 19274,
+      "sha256": "1f6c44f4957eadb1740fe6aea321ed54b96d6201ba6045e9a5bf9f372b7b3335"
     },
     {
       "path": ".github/scripts/astra-root14-regression-managed.py",
       "mode": "100644",
-      "object": "750dde4388277c137f2b750896c385d8bf47f585",
-      "bytes": 14536,
-      "sha256": "d3d527bd62b36dc247af08514ddbccaffe7cb8b26f66405971d5c694bf39dbc0"
+      "object": "7d65766fbbc30f682bc807062ba68c93cd1791c8",
+      "bytes": 19142,
+      "sha256": "f6b7cadc490bff7dbce135b4a28f385a16cb1ece6e93cc9ee15615604c9007b1"
     },
     {
       "path": ".github/scripts/astra-root14-rendered-managed.py",
       "mode": "100644",
-      "object": "ee030b57ed109ab11374b55ceed20eac548077e5",
-      "bytes": 14058,
-      "sha256": "e925cc1967dfffbb9dfa4acbe1e46d6e43ae6a81e64aca9e7e7d3867087c3dab"
+      "object": "cfd344c00e507a960eafe18afe648ddea0efb6d3",
+      "bytes": 18664,
+      "sha256": "272a4e13ed3bbb5003d64ecdd68ef1eef0a44f14317a50231c5aa166643c1bfb"
     },
     {
       "path": ".github/scripts/astra-root14-resource-managed.py",
       "mode": "100644",
-      "object": "0dc5665e2fb6cb5d9940fda6e2f4d3995cffe74b",
-      "bytes": 16827,
-      "sha256": "f6a277e1a36ccc51f4da887549c1ffd660a4752d036870226be9ea1291b0584a"
+      "object": "8e81b6de8db0d1312459d342ea97cac97ba39032",
+      "bytes": 21433,
+      "sha256": "8ef24ab8a7307b7df99dfe9bf6357a8b78d636a70a2127b11cdf96e177142167"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -64591,6 +64591,18 @@
     {
       "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol9/manifest.json",
       "sha256": "4a07b572f14ae1b46a9987d6756804d7f685eb0d9d96d60a82485225893ed7e2"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-root14-restored-context-helper-sol10/manifest.json",
+      "sha256": "5db69ef3f9e03ad25d8ff32443e2c5776543d1c90950865178ca5c7c00e65ec6"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol11/manifest.json",
+      "sha256": "919fb88f68f047a0cab6ee84d6f897734cf7bc184246100a172a26f3acda0ce9"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol12/manifest.json",
+      "sha256": "806505a2d005af708902e5933ed800f92a1b4beb300401cacea4649b087522ef"
     }
   ],
   "sharedCakeIdContract": {
