@@ -1,8 +1,8 @@
 # Imported trusted branch runner helper; read-only restored graph/package receipts.
 import json,pathlib,hashlib,base64,subprocess
 
-def snapshot_restore(root,entry):
- root=root.resolve();entry=(root/entry).resolve();pending=[entry];seen=set();projects=[];packages={}
+def snapshot_restore(root,entry,extra_projects=()):
+ root=root.resolve();entry=(root/entry).resolve();pending=[entry]+[(root/p).resolve() for p in extra_projects];seen=set();projects=[];packages={}
  def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
  while pending:
   project=pending.pop()
@@ -10,7 +10,8 @@ def snapshot_restore(root,entry):
   if not project.is_relative_to(root) or not project.is_file():raise ValueError('restored source project not bound to root')
   seen.add(project)
   # Standalone entry and Accounts project use standard project-relative obj; actual graph dgspec validates every path.
-  props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/canvas65-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']
+  effectiveFramework='netstandard2.0' if str(project.relative_to(root)) in extra_projects else 'net10.0'
+  props=['-p:Configuration=Release','-p:TargetFramework='+effectiveFramework,'-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/canvas65-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']
   query=subprocess.run(['dotnet','msbuild',str(project),'-nologo','-m:1','-nr:false',*props,'-getProperty:MSBuildProjectExtensionsPath,ProjectAssetsFile'],capture_output=True,text=True,check=True)
   evaluated=json.loads(query.stdout)['Properties'];obj=pathlib.Path(evaluated['MSBuildProjectExtensionsPath']);obj=obj if obj.is_absolute() else project.parent/obj;obj=obj.resolve()
   if not obj.is_relative_to(root):raise ValueError('project extensions path escapes immutable source root')

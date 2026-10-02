@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "51512a8790d8b94dd45a7284faacd560bce76ef2",
-  "programTree": "a833979cf0f4c2060dc7ada8e1f766e4dae2083e",
+  "baselineCommit": "fb50ec5f8faeef62bea63060c5147d7d2cbcc541",
+  "programTree": "0f3c877f26a9caf3ca879ccbf40acec6f106da67",
   "currentNormalCommit": "977b8eed3495f41c8b9ffcdc3705f1e115b131cc",
   "kind": "corrective",
   "files": [
@@ -29,16 +29,16 @@
     {
       "path": ".github/scripts/astra-canvas65-hosted-managed.py",
       "mode": "100644",
-      "object": "482a02652f7da4c8b3297a70ea7174d516dc6687",
-      "bytes": 26114,
-      "sha256": "31709f7315161f9caa0f9910641c2c8a79853d0168410568a00a50118d7aedcc"
+      "object": "564ebc40d8f6159c624c6d81eb21008bd9dc9b87",
+      "bytes": 27190,
+      "sha256": "ae58faab20a69250714246f2c626b7babf425880daaf655d9bf826043553ee38"
     },
     {
       "path": ".github/scripts/astra-canvas65-restore-evidence.py",
       "mode": "100644",
-      "object": "4c82d07aa12d0a839c789a9f74075de49ccf9cd6",
-      "bytes": 5527,
-      "sha256": "127489b17862605e54e741a6bb8b1784bc2d2762ae4172bee813741c1ea27e3f"
+      "object": "eebd2e8001d97fd76cccedd5625ed1e758578ac1",
+      "bytes": 5707,
+      "sha256": "779331a867134d5cefd806a0cd4822e81741dadc67f58e4880e3176bce4f7eb6"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -50,9 +50,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "607de21d98605f8701b870126601bb3901c6ee63",
+      "object": "71869a626eeb9bff7235184d1c832581058780de",
       "bytes": 5793,
-      "sha256": "8ab4db0d2957aff47432021e7ca5ff3f2e7091b2d025f6ad5a717c73fc2c9329"
+      "sha256": "a7cd7a5b072f41ed2091e4ec2fbed57525d3d7bc0bf0795c6b571cbfe8732397"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -4460,9 +4460,9 @@
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeEraserControlTests.cs",
       "mode": "100644",
-      "object": "fb4a900ba787015e9330e2154f06540c1648fcb6",
-      "bytes": 27544,
-      "sha256": "4b00af20da58b640de8f275ccff6dd609e17ed134fc665ab0638a761300bf708"
+      "object": "e3c977e045f77aff235ed70a4cc052f212202f4b",
+      "bytes": 27808,
+      "sha256": "6256acf4a1929142d890721f7ded864b6ce7c76d357e7e72b1ee39746c2ba941"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeHostTests.cs",
@@ -64180,6 +64180,22 @@
     {
       "path": "/workspace/astra-source/worker6-canvas-native-input-await-fix-01/manifest.json",
       "sha256": "ead7ecc054e3552005ea1c022ad52f5fe5e06c01bc28c68cba621cdbd6f62696"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-native-eraser-await-fix-01/manifest.json",
+      "sha256": "c60ec54efc0e44880af5e90d825a644febeae5407b9aefac95576070fe0f7b7d"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas-native-eraser-await-fix-01/root13-selection.json",
+      "sha256": "3eb0275cb028d04befa7dd3ab618eeff574c00e55b1514f700c9b518aa2b47b1"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol1/manifest.json",
+      "sha256": "4dda870d1fbc001d3fae0a82a73fd95afc0da24b478da455d12bdafb1ec405c8"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas68-hosted-plan-sol2/manifest.json",
+      "sha256": "18b6be0e84d8df194196b861313605934c381c1f0df0a29d5cab3c49bd34fc0e"
     }
   ],
   "sharedCakeIdContract": null,

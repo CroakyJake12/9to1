@@ -21,7 +21,7 @@ public sealed class CanvasNativeEraserControlTests
     public async Task Accessible_chosen_stroke_requires_actual_Home_approval_and_commits_one_canonical_delete()
     {
         await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async()=>
+        Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
             CanvasStrokeEditIntent? chosen=null;HomePermissionAuthorization? pending=null;
@@ -56,7 +56,8 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.False(await surface.RefreshAsync(ct));
             }
             finally{window.Close();}
-        },CancellationToken.None);
+            return true;
+        },CancellationToken.None));
     }
     [Theory]
     [InlineData(false)]
@@ -64,7 +65,7 @@ public sealed class CanvasNativeEraserControlTests
     public async Task Real_natural_pointer_gesture_routes_exact_whole_or_partial_owner_and_has_no_write_before_approval(bool partial)
     {
         await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async()=>
+        Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
             CanvasEraserIntent? whole=null;CanvasSplitEraseIntent? split=null;HomePermissionAuthorization? pending=null;
@@ -111,13 +112,14 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.NotEmpty(document.Snapshot.SemanticHistory!.Undo);
             }
             finally{window.Close();}
-        },CancellationToken.None);
+            return true;
+        },CancellationToken.None));
     }
     [Fact]
     public async Task Real_Quick_pointer_capture_commits_only_after_actual_Home_review_and_retires_old_surface()
     {
         await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async()=>
+        Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
             CanvasQuickEraseIntent? captured=null;HomePermissionAuthorization? pending=null;
@@ -159,13 +161,14 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.False(await surface.RefreshAsync(ct));
             }
             finally{window.Close();}
-        },CancellationToken.None);
+            return true;
+        },CancellationToken.None));
     }
     [Fact]
     public async Task View_change_cancels_real_pointer_capture_and_stale_Files_revision_retires_surface_without_request()
     {
         await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async()=>
+        Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);var requests=0;
             var context=new CanvasNativeEraserContext(f.FileId,f.Opened,()=>true,
@@ -187,13 +190,14 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.False(await surface.RefreshAsync(ct));Assert.Null(surface.Content);Assert.Equal(0,requests);
             }
             finally{window.Close();}
-        },CancellationToken.None);
+            return true;
+        },CancellationToken.None));
     }
     [Fact]
     public async Task History_controls_request_fresh_exact_Home_operations_and_reopen_actual_donor_Undo_Redo()
     {
         await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async()=>
+        Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
             using var approvals=new HomeApprovalCuiSurface(f.Runtime,f.Profiles,f.Permissions);
@@ -236,13 +240,14 @@ public sealed class CanvasNativeEraserControlTests
                 }
             }
             finally{window.Close();}
-        },CancellationToken.None);
+            return true;
+        },CancellationToken.None));
     }
     [Fact]
     public async Task Original_store_draw_successor_denies_actual_foreign_store_substitution_before_adoption_or_write()
     {
         await using var native=HeadlessUnitTestSession.StartNew(typeof(CanvasInputTestApplication));
-        await native.Dispatch(async()=>
+        Assert.True(await native.Dispatch<bool>(async()=>
         {
             var ct=CancellationToken.None;await using var f=await Fixture.Create(ct);
             var opened=f.Opened;
@@ -268,7 +273,8 @@ public sealed class CanvasNativeEraserControlTests
                 Assert.Equal(foreign,await File.ReadAllBytesAsync(statePath,ct));
             }
             finally{window.Close();}
-        },CancellationToken.None);
+            return true;
+        },CancellationToken.None));
     }
     private static async Task KeyboardClick(Window window,Control surface,string text)
     {
