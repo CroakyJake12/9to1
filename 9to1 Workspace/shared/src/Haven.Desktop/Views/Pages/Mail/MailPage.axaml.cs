@@ -17,14 +17,22 @@ public sealed partial class MailPage : UserControl, IDisposable
     private bool _updatingComposeFromEditor;
     private bool _disposed;
 
-    public MailPage()
+    public MailPage() : this(RequireServices().GetRequiredService<IMailService>(),
+        RequireServices().GetRequiredService<IProviderModelClient>(),
+        RequireServices().GetRequiredService<IVersionedSettingsStore>()) { }
+
+    private static IServiceProvider RequireServices() => App.Services
+        ?? throw new InvalidOperationException("Haven services are not initialized.");
+
+    public MailPage(IMailService mail, IProviderModelClient models) : this(mail, models, null) { }
+
+    public MailPage(IMailService mail, IProviderModelClient models, IVersionedSettingsStore? preferences)
     {
         InitializeComponent();
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are not initialized.");
-        _viewModel = new MailPageViewModel(
-            services.GetRequiredService<IMailService>(),
-            services.GetRequiredService<IProviderModelClient>());
+        _viewModel = new MailPageViewModel(mail, models);
         DataContext = _viewModel;
+        _readingPreferences = preferences;
+        PendingReadingPreference = LoadReadingPreferenceAsync();
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         ComposeEditor.ContentChanged += OnComposeEditorContentChanged;
@@ -40,6 +48,7 @@ public sealed partial class MailPage : UserControl, IDisposable
     public void ApplyResponsiveLayout(double width)
     {
         if (width <= 0) return;
+        ResetReadingPaneGeometry();
         var columns = MailboxGrid.ColumnDefinitions;
         var mode = MailResponsiveLayoutPolicy.Resolve(width);
         if (mode == MailResponsiveMode.Narrow)
@@ -58,7 +67,7 @@ public sealed partial class MailPage : UserControl, IDisposable
             return;
         }
 
-        _showReadingOnNarrow = false;
+        if (ReadingPanePlacement != MailReadingPanePlacement.Off) _showReadingOnNarrow = false;
         BackToListButton.IsVisible = false;
         MessagePanel.IsVisible = true;
         ReadingPanel.IsVisible = true;
@@ -82,6 +91,7 @@ public sealed partial class MailPage : UserControl, IDisposable
             columns[1].Width = new GridLength(390);
             columns[2].Width = new GridLength(1, GridUnitType.Star);
         }
+        ApplyChosenReadingPlacement();
     }
 
     private void OnSizeChanged(object? sender, SizeChangedEventArgs e) => ApplyResponsiveLayout(e.NewSize.Width);
@@ -92,7 +102,8 @@ public sealed partial class MailPage : UserControl, IDisposable
         _viewModel.SetMessageSelection(selected);
         _viewModel.NotifyMessageSelectionChanged();
 
-        if (ResponsiveMode != "narrow" || selected.Length != 1 || _viewModel.SelectedSummary is null) return;
+        if ((ResponsiveMode != "narrow" && ReadingPanePlacement != MailReadingPanePlacement.Off)
+            || selected.Length != 1 || _viewModel.SelectedSummary is null) return;
         _showReadingOnNarrow = true;
         ApplyResponsiveLayout(Bounds.Width);
     }

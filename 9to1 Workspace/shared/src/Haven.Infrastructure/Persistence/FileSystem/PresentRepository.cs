@@ -45,7 +45,8 @@ public sealed class PresentRepository : IPresentRepository
                 document.UpdatedAt,
                 document.Version,
                 document.Slides.Count,
-                document.Recovery.RecoveredFromBackup));
+                document.Recovery.RecoveredFromBackup,
+                document.Metadata.TryGetValue("pinned", out var pinned) && bool.TryParse(pinned, out var parsedPinned) && parsedPinned));
         }
 
         return summaries
