@@ -1,13 +1,43 @@
 """Branch-only managed follow-up. Root supplies the immutable cut manifest; no Git writes."""
-import argparse,hashlib,json,os,pathlib,re,subprocess,sys,shutil
+import argparse,hashlib,json,os,pathlib,re,subprocess,sys,shutil,time,signal
 p=argparse.ArgumentParser();p.add_argument('--expected-commit',required=True);p.add_argument('--manifest',required=True);p.add_argument('--manifest-sha',required=True);a=p.parse_args()
 root=pathlib.Path.cwd();out=root/'artifacts/maps-shelf-owning';out.mkdir(parents=True,exist_ok=True)
 def digest(path):
  with path.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
 def command(args,name):
  with (out/(name+'.log')).open('wb') as log:
-  result=subprocess.run(args,stdout=log,stderr=subprocess.STDOUT,check=False)
- return result.returncode
+  if name not in {x[0] for x in globals().get('checks',[])}:
+   result=subprocess.run(args,stdout=log,stderr=subprocess.STDOUT,check=False)
+   return result.returncode
+  process=subprocess.Popen(args,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+  started=time.monotonic(); snapshots=[]
+  while process.poll() is None:
+   rows=[]
+   for p in pathlib.Path('/proc').iterdir():
+    if not p.name.isdigit():continue
+    try:
+     stat=(p/'stat').read_text();pgid=int(stat[stat.rfind(')')+2:].split()[2])
+     if pgid!=process.pid:continue
+     row={'pid':int(p.name),'stat':stat,'cmdline':(p/'cmdline').read_bytes().decode(errors='replace'),'status':(p/'status').read_text(),'threads':[]}
+     for thread in sorted((p/'task').iterdir()):
+      tr={'tid':int(thread.name)}
+      for field in ('stat','wchan','stack'):
+       try:tr[field]=(thread/field).read_text()[:16384]
+       except OSError as e:tr[field+'Error']=str(e)
+      row['threads'].append(tr)
+     rows.append(row)
+    except (OSError,ValueError):continue
+   snapshots.append({'elapsedSeconds':time.monotonic()-started,'processes':rows})
+   (out/(name+'-owned-process-snapshots.json')).write_text(json.dumps(snapshots,indent=2))
+   if time.monotonic()-started>1200:
+    os.killpg(process.pid,signal.SIGTERM)
+    try:process.wait(timeout=15)
+    except subprocess.TimeoutExpired:os.killpg(process.pid,signal.SIGKILL);process.wait()
+    (out/(name+'-external-timeout.txt')).write_text('FAILED: actual full cohort exceeded 1200 seconds; no success or source-cause inference.\n')
+    return 124
+   try:process.wait(timeout=30)
+   except subprocess.TimeoutExpired:pass
+  return process.returncode
 commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
 if len(a.expected_commit)!=40 or any(c not in '0123456789abcdef' for c in a.expected_commit) or commit!=a.expected_commit or os.environ.get('GITHUB_SHA',commit)!=commit:raise SystemExit('immutable commit mismatch')
 if a.manifest!='.github/validation/astra-maps-shelf-cut.json':raise SystemExit('unexpected self-manifest path')
@@ -175,7 +205,7 @@ def build_and_pin(name,project):
 results=[]
 for name,project,filter_value in checks:
  build_and_pin(name,project)
- args=['dotnet','test',project,*base,'--logger','trx;LogFileName='+name+'.trx','--results-directory',str(out/'trx')]
+ args=['dotnet','test',project,*base,'--blame-hang','--blame-hang-timeout','5m','--blame-hang-dump-type','mini','--logger','console;verbosity=detailed','--logger','trx;LogFileName='+name+'.trx','--results-directory',str(out/'trx')]
  if filter_value:args+=['--filter',filter_value]
  args+=['-f','net10.0','-p:EnableWindowsTargeting=true','--no-build','--no-restore']
  code=command(args,name);assert_compiled_target_unchanged(name);verify()

@@ -73,8 +73,7 @@ public sealed class ShelfLibraryWorkspaceTests
         var home = await File.ReadAllBytesAsync(fixture.HomeFile);
         current = false;
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => workspace.ReloadAsync());
-        var result = await workspace.ApplyOrRecoverAsync(id);
-        Assert.False(result.Committed);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => workspace.ApplyOrRecoverAsync(id));
         Assert.Equal("NoAttemptedOutcome", (await workspace.FinishAsync(id)).Code);
         Assert.Equal(id, Assert.Single(workspace.Reviews).RequestID);
         Assert.Equal(settings, await File.ReadAllBytesAsync(fixture.SettingsFile));

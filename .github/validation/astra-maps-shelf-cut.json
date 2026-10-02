@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "78299e6136c8a98306a683c5656089977aebd213",
-  "programTree": "2d1e8e492cbae6969793ab6dd61ad985b19d7e54",
-  "currentNormalCommit": "5f8fe5be2534e6e1efb8428b4c2a9ab15cd37a77",
+  "baselineCommit": "7d1906def16588ef65bed6f6c3868261ae663543",
+  "programTree": "582789d71ad773206c2748a4d36ad76365756ba9",
+  "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
   "kind": "corrective",
   "files": [
     {
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-maps-shelf-owning.py",
       "mode": "100644",
-      "object": "ff9b74cec18905240c5a1a40f9e04e68f32ab0d6",
-      "bytes": 22849,
-      "sha256": "040fc47b392f257685500b46ffeba2157451821b99172a856d7e2dd70391be90"
+      "object": "1fa1e3e847b2e088d8e018daa5ecec40ff8a8a19",
+      "bytes": 24538,
+      "sha256": "39cfb062db4b27ae8ed531dc55f5af5f885a41da5467f1984ac3a82d9a3d00fd"
     },
     {
       "path": ".github/scripts/astra-maps-shelf-resource.py",
@@ -57,9 +57,9 @@
     {
       "path": ".github/validation/astra-maps-shelf-test-classes.json",
       "mode": "100644",
-      "object": "617c57813a0abaea338de212982715b4bc40514f",
+      "object": "243eee0adea902b241a616829a739fd2491aa647",
       "bytes": 15096,
-      "sha256": "5beb266fedece776dcb22d47c267749dde08668510c711c2283c252135d6b9d1"
+      "sha256": "0cbd393cf583f46b0eb90b12c69cd34ef820f0478785c0771d04f15e9f1abef3"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40608,9 +40608,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfLibraryWorkspaceTests.cs",
       "mode": "100644",
-      "object": "af198061ced6cc485e22a97c0a427c2897f33b42",
-      "bytes": 9825,
-      "sha256": "2a1fc863d781ade9500dadc9d5b0dfa01f0440bb93f8e6759f3cfb47ce66a7ff"
+      "object": "164f8a2a33ea3581d669400b06cb3dd37e79a71b",
+      "bytes": 9827,
+      "sha256": "4eb48651aa8b40da242bd673e40c8028d9115ad2431f4f9af33e00b1a6c252bf"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
@@ -64759,99 +64759,23 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-maps-shelf-cut.json",
-  "limits": "Sole using Haven.Application.Shelf import; complete original native fixture bodies/assertions/classes unchanged. Existing selected Haven.Application reference supplies real service, no project/source family replacement. Preserve all original four native facts/old+16 Maps coupled/full owning+resource source/producers/restore/compiled/zeroSkip. Root17CAS; no future owner20 joins.",
+  "limits": "Sole using Haven.Application.Shelf import; complete original native fixture bodies/assertions/classes unchanged. Existing selected Haven.Application reference supplies real service, no project/source family replacement. Preserve all original four native facts/old+16 Maps coupled/full owning+resource source/producers/restore/compiled/zeroSkip. Root17CAS; no future owner20 joins. Full unchanged owning/resource diagnostic: 5m per-test blame-hang mini dumps, detailed logger and owned process/thread evidence, 20m cohort timeout FAIL124. Exact hung case unknown; sole fixture expected Unauthorized is independently evidenced and not claimed hang repair.",
   "inputManifests": [
     {
-      "path": "/workspace/astra-source/worker3-shelf-maps-owning-source-graph04/manifest.json",
-      "sha256": "07a5c047753cf3a39592f0d4109df3c6d0851492dd9d737c906098a705739159"
+      "path": "/workspace/astra-source/worker3-shelf-workspace-actual-maps07-retirement-corrective01/manifest.json",
+      "sha256": "041aa2b685a0f7797b361ac2838433b501727d85c0d684bbef936d03aa6d3ea8"
     },
     {
-      "path": "/workspace/astra-source/worker4-root14-joined-hosted-plan-sol17/manifest.json",
-      "sha256": "23ec78f5892c0b16f2616d2dd141fee9b55deec1d55882cb29d9acc69c851d33"
+      "path": "/workspace/astra-source/worker4-maps-root17-shelf-fixture-import-corrector07/manifest.json",
+      "sha256": "14b8fef54d4b0363b1d62b6a9998b86a831262d256ec4c762ea9e6e15730991b"
     },
     {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-staging-incident-repair01.json",
-      "sha256": "a979ef78cfdbef4ddc8554a19d3860fcf1f7b03ce253d11b30522b61f77c4306"
+      "path": "/workspace/astra-source/checkpoint18-publication-local.json",
+      "sha256": "c9e810f1d7d7d8b023391e1d2f39c0c86fe43e4e26f4f175bc0dfa04f7293559"
     },
     {
-      "path": "/workspace/astra-source/worker4-maps-shelf-coherent-owning-gate02/manifest.json",
-      "sha256": "884bf515895889e796ff609c96491ab0e270d6ec25b8a04012d7099b69f9efe5"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-webmcp-contract-closure04/manifest.json",
-      "sha256": "0cb6d988aa09648787c0ae3d71b05ba833171e2dacff90f102e586801dfe572a"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/maps-shelf-coherent-owning03/actualfailed-11216418989/root-capture.json",
-      "sha256": "34eb15a98505f351409af5e87681e757626419f8faa4def0e178a0a60d2ce429"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/maps-shelf-coherent-owning03/actualfailed-11216900155/root-capture.json",
-      "sha256": "2cdbcbcb01e6061809053dd6b28bc81f95a3a8c5dc6468d28788de1990094b79"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-shelf-maps-observer-task-compatibility01/manifest.json",
-      "sha256": "b539e2429a931f2bb13a18e09e7388643b34c0a472de0bc0eb69b07ae1adcffd"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-shelf-maps-actual-request-type-corrective02/manifest.json",
-      "sha256": "d865dbbf63c865e67d0e43ef9ad11186a1cb192b3988ea825e8b8f67ea711599"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-observer-actual-corrective02/actual-failed05-11217328932/root-capture.json",
-      "sha256": "390b7b1a3aec59b6766da45a89147af491339d2198ba6b79ee21830b774a435f"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-observer-actual-corrective02/actual-failed05-11218351356/root-capture.json",
-      "sha256": "bf2812a305b5dabd18cc2abd440f35bf0db853e21134c0acec76d3fa8f9cc328"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-shelf-maps-actual-persisted-request-type-corrective03/manifest.json",
-      "sha256": "89611d9f811b0750f5c84aee320b08c6ab0a2aa65835d4be42342657318cc7ba"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-actual-compile-corrective03/actual-failed05-11219460693/root-capture.json",
-      "sha256": "01c934e5d5bc144b16196f8aaf056b090a78b6c4f73eff6ff40581ecdae1cb38"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-actual-compile-corrective03/actual-failed05-11218896396/root-capture.json",
-      "sha256": "776afe5e3bd77caa69522f780d3ee9e380ae5f15dcd78f89a72a6711a872ae9f"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-shelf-actual-native-cui-imports-corrective01/manifest.json",
-      "sha256": "003a04516bd7f496c07bbc78d6b941d6415233bb4ea09abb101f4129102d3cb7"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-persisted-request-corrective04/actual-capture-11220796224/root-capture.json",
-      "sha256": "70390a87be2f31e24671d381df60dc7ace88277a62536292940350a6913d8e74"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-maps-actual-browse-producer-closure01/manifest.json",
-      "sha256": "20f6a12e388df47ae02b75eed6d4c32712e098a55fe7d22accac9bd1de767014"
-    },
-    {
-      "path": "/workspace/astra-source/worker1-home-webmcp-actual-afc3-document-provenance-fixture02/manifest.json",
-      "sha256": "8febff6393df9be914b0a0244a2795482e4edcd99552759eca25aeec3b131934"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint16-publication-local.json",
-      "sha256": "7155b2952f05a8d7a44e7782fdbb6edaa16a733aafb691ba710fe833d34f7a8e"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-maps-native-cui-imports-corrector05/actual-capture-11222397425/root-capture.json",
-      "sha256": "2514641d3a4e1c8a1a6eb9927ec4564f3e43eb96bd4de25fea876505b5e58bb1"
-    },
-    {
-      "path": "/workspace/astra-source/worker3-shelf-native-actual-maps06-service-import-corrective01/manifest.json",
-      "sha256": "50602682f9827c9e7cb4757fc8e8653ba6ec295014c3ccde42d48e96aa5c723e"
-    },
-    {
-      "path": "/workspace/astra-source/checkpoint17-publication-local.json",
-      "sha256": "367de31cc896b1697b029dd9fdee4ebb2e1a02d2294ea5d99efe982005b8603a"
-    },
-    {
-      "path": "/workspace/astra-source/ready-artifacts/root-run-37001816590-actual25/artifact-11223229824.json",
-      "sha256": "8a57a04a4d09818bcf28325328dc835e6d5ba57506d9c34bb31fc6d0699a01ec"
+      "path": "/workspace/astra-source/ready-artifacts/root-maps07-actual-cancelled38/root-capture.json",
+      "sha256": "0037c27494b0192c7c2342df87379a82a3aa91f42c35266e123b94c2b1d784d0"
     }
   ],
   "sharedCakeIdContract": null
