@@ -4,6 +4,39 @@ using NineToOne.Web;
 using HavenOS.Files;
 
 var builder = WebApplication.CreateBuilder(args);
+// Explicit sole-Worker CLIENT mode. This branch never constructs the legacy local identity/session issuer.
+// Missing/invalid remote configuration cannot fall through to the trusted-profile fixture authority.
+var remoteMode=RemoteWebOidcConfiguration.ReadMode(builder.Configuration);
+if (remoteMode!=RemoteCakeClientMode.Legacy)
+{
+    var options=remoteMode==RemoteCakeClientMode.Remote?RemoteWebOidcConfiguration.Read(builder.Configuration):null;
+    RemoteWebOidcHost? remoteHost=null;
+    if(options is not null)
+    {
+        try { builder.Services.AddRemoteWebOidcClient(options); }
+        catch(ArgumentException) { options=null; }
+    }
+    var remoteApp=builder.Build();
+    remoteApp.Use(async(context,next)=>
+    {
+        context.Response.Headers["X-Content-Type-Options"]="nosniff";
+        context.Response.Headers["Referrer-Policy"]="no-referrer";
+        context.Response.Headers["Cache-Control"]="no-store";
+        await next();
+    });
+    if(options is not null)
+    {
+        try { remoteHost=remoteApp.Services.GetRequiredService<RemoteWebOidcHost>(); }
+        catch(ArgumentException) { remoteHost=null; }
+    }
+    if(remoteHost is not null)remoteApp.MapRemoteWebOidc(remoteHost);
+    else foreach(var path in new[]{"/remote/signin","/remote/oidc/begin","/remote/oidc/callback","/remote/account","/remote/account/profile"})
+        remoteApp.MapMethods(path,new[]{"GET","POST"},(HttpContext context)=>{context.Response.Headers.CacheControl="no-store";return Results.Json(new{error="CapabilityUnavailable"},statusCode:503);});
+    remoteApp.MapGet("/health",()=>Results.Json(new{status=remoteHost is null?"client-unavailable":"client-configured",remoteIssuerHealth="unobserved"}));
+    remoteApp.Run();
+    return;
+}
+
 var stateRoot = builder.Configuration["StateRoot"] ?? Path.Combine(AppContext.BaseDirectory, "state");
 var clientRedirects = builder.Configuration.GetSection("Identity:Clients").GetChildren().ToDictionary(
     c => c.Key, c => (IReadOnlySet<string>)c.GetChildren().Select(r => r.Value!).Where(v => v is not null).ToHashSet(StringComparer.Ordinal));
