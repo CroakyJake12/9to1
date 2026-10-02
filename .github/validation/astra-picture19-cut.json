@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
+  "baselineCommit": "f1de28158c4310dcfdddce3f0d12db19948087e8",
   "programTree": "81aedb88221ebb76e61a255e887a96007288cd7e",
   "currentNormalCommit": "510b605698f172a9958e9283eb9da1c44ebfe740",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -64,9 +64,9 @@
     {
       "path": ".github/scripts/astra-picture19-hosted-managed.py",
       "mode": "100644",
-      "object": "1e341a198454fbd563f141d46c54b219a98e0d20",
-      "bytes": 34057,
-      "sha256": "dfd32b7133a4ce22f6d965061f333f4ac9cc3ec3d8ffd17ca07c84fdb705054a"
+      "object": "72fc2aec640d7d485d918c6e11219ec67119d5a0",
+      "bytes": 37421,
+      "sha256": "ed20307ebea13d45e38be90f8c946891834bb3bbba2bada9b602835e27b93dcf"
     },
     {
       "path": ".github/scripts/astra-picture19-restore-evidence.py",
@@ -64703,7 +64703,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-picture19-cut.json",
-  "limits": "Original19 owner targets restored exactly e471 including original nativeSaveCopy fixture, NO09 cachewarming preflight. Explicit Files copy resolver and whole new admission class. CurrentRoot18 CUI/Home/Files and unrelated source retained. Complete native101/17 classes, full regression/resource and strict fresh managed maps mandatory; additive bounded read-only topology provides diagnostics only. Full official ephemeral profile/global1/cleanup remains unchanged; no signer/native/device/default production inference or futurePNG/zoom/rectangle joins.",
+  "limits": "Metadata-only exact actual produced xUnit apphost admission. All21 current Root18 Picture/Files product sources and original native101 assertions remain byte-identical failed f1de; all17/13/35 classes and full3 suites/source/restore/producer/compiled/profile/global1/cleanup guards remain mandatory. Exact SDK-generated ELF host, bound mapped managed test DLL, startup metadata before/after entire closure and owned exact dotnet-testhost parent admit actual proven process topology; original dotnet witness remains. No generic executable admission, cachewarming preflight, native fixture/production change or future source join. New null-terminated managed DLL apphost binding and SDK properties are fresh fail-closed checks; original artifact did not retain apphost binary, so these are not claimed as prior independently observed bytes.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-picture-save-copy-diagnostic-corrector09/manifest.json",
@@ -64716,6 +64716,22 @@
     {
       "path": "/workspace/astra-source/checkpoint18-publication-local.json",
       "sha256": "c9e810f1d7d7d8b023391e1d2f39c0c86fe43e4e26f4f175bc0dfa04f7293559"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-picture-actual-xunit-apphost-admission01/manifest.json",
+      "sha256": "5221bf7683e1521588902420bc376a4ca6130fc8cd92e5b32fe243dbf10a5b19"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/worker6-picture11-actual-capture01/picture/root-capture.json",
+      "sha256": "dbe1bd67d8e57b2c8addfc5f997f7d351d0639773a7614d70b7fe9609a432fe3"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/picture-root18-copy-admission11/root-launch-receipt.json",
+      "sha256": "d0a11ced203f9616d305e60a36d89d2c68a19078bceb510fe26769bf96ec4542"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-picture-apphost-corrector12-source-peer01.json",
+      "sha256": "c84db077c4fa590d098735addd95e24110c6991dd1a77d6a65ce4b00d039a088"
     }
   ],
   "sharedCakeIdContract": null,

@@ -48,15 +48,25 @@ def command(args,name):
      dotnetExecutable=pathlib.Path(shutil.which('dotnet')).resolve()
      argvItems=(directory/'cmdline').read_bytes().split(b'\x00')
      expectedHost=(target.parent/'testhost.dll').resolve()
-     if executable!=dotnetExecutable or not any(pathlib.Path(x.decode(errors='replace')).resolve()==expectedHost for x in argvItems if x):continue
      if not expectedHost.is_file() or expectedHost.is_symlink():continue
+     legacyHost=executable==dotnetExecutable and any(pathlib.Path(x.decode(errors='replace')).resolve()==expectedHost for x in argvItems if x)
+     actualAppHost=False;appHostParent=None
+     if executable==pathlib.Path(appHostBinding['apphost']) and argvItems and pathlib.Path(argvItems[0].decode(errors='strict')).resolve()==executable and str(target.resolve()) in maps:
+      if digest(executable)!=appHostBinding['apphostSha256'] or digest(target)!=appHostBinding['managedDllSha256']:raise SystemExit('exact compiled test host or managed assembly changed during owned observation')
+      parentPid=observed[pid][0]
+      if parentPid in owned and parentPid in observed:
+       parentDirectory=pathlib.Path('/proc')/str(parentPid);parentStat=(parentDirectory/'stat').read_text();parentTail=parentStat[parentStat.rfind(')')+2:].split()
+       parentExe=pathlib.Path(os.readlink(parentDirectory/'exe')).resolve();parentArgv=(parentDirectory/'cmdline').read_bytes().split(b'\x00')
+       if parentTail[19]==observed[parentPid][1] and parentExe==dotnetExecutable and any(pathlib.Path(x.decode(errors='replace')).resolve()==expectedHost for x in parentArgv if x):
+        actualAppHost=True;appHostParent={'pid':parentPid,'startTimeTicks':parentTail[19],'exe':str(parentExe),'exeSha256':digest(parentExe),'rawArgv':[x.decode(errors='replace') for x in parentArgv],'testHostDll':str(expectedHost),'testHostSha256':digest(expectedHost)}
+     if not legacyHost and not actualAppHost:continue
      key=str(pid)+'-'+tail[19]
-     witnesses[key]={'pid':pid,'startTimeTicks':tail[19],'argv':argv,'ownedAncestorPid':process.pid,'dotnetExecutable':str(dotnetExecutable),'dotnetExecutableSha256':digest(dotnetExecutable),'testHostDll':str(expectedHost),'testHostSha256':digest(expectedHost),'mappedLibrary':str(library),'librarySha256':digest(library),'maps':maps}
+     witnesses[key]={'pid':pid,'startTimeTicks':tail[19],'argv':argv,'ownedAncestorPid':process.pid,'dotnetExecutable':str(dotnetExecutable),'dotnetExecutableSha256':digest(dotnetExecutable),'testHostDll':str(expectedHost),'testHostSha256':digest(expectedHost),'admission':'exact-sdk-produced-xunit-apphost' if actualAppHost else 'original-dotnet-testhost','apphostBinding':appHostBinding if actualAppHost else None,'apphostParent':appHostParent,'mappedLibrary':str(library),'librarySha256':digest(library),'maps':maps}
     except (OSError,ValueError,IndexError):continue
    time.sleep(0.05)
   code=process.wait()
   (out/'actual-managed-native-maps.json').write_text(json.dumps({'commit':commit,'run':os.environ.get('GITHUB_RUN_ID'),'owningProcessPid':process.pid,'processExit':code,'witnesses':list(witnesses.values())},indent=2)+'\n')
-  (out/'actual-owned-managed-process-topology.json').write_text(json.dumps({'commit':commit,'run':os.environ.get('GITHUB_RUN_ID'),'owningProcessPid':process.pid,'processExit':code,'strictWitnessPredicateUnchanged':True,'observed':list(observedTopology.values())},indent=2)+'\n')
+  (out/'actual-owned-managed-process-topology.json').write_text(json.dumps({'commit':commit,'run':os.environ.get('GITHUB_RUN_ID'),'owningProcessPid':process.pid,'processExit':code,'originalDotnetWitnessPreserved':True,'exactProducedXunitApphostAdmission':True,'observed':list(observedTopology.values())},indent=2)+'\n')
   if not witnesses:raise SystemExit('no actual owned managed test child fresh Glycin map observed')
  return code
 commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
@@ -292,7 +302,7 @@ def build_and_pin(name,project):
  code=command(['dotnet','build',project,*base,'-f','net10.0','-p:EnableWindowsTargeting=true','--no-restore','-bl:'+str(out/(name+'-build.binlog'))],name+'-build');verify()
  if code:raise SystemExit(code)
  props=['-p:Configuration=Release','-p:TargetFramework=net10.0','-p:RuntimeIdentifier=linux-x64','-p:RuntimeIdentifiers=linux-x64','-p:UseArtifactsOutput=true','-p:ArtifactsPath='+str(root/'artifacts/picture19-managed-build'),'-p:IncludeProjectNameInArtifactsPaths=true','-p:SelfContained=false','-p:EnableWindowsTargeting=true','-p:AvsSkipBuildingLegacyTargetFrameworks=True','-p:UseSharedCompilation=false']+[actualTaskProperty]
- query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath,RuntimeIdentifier,Configuration,OutputPath,AvaloniaBuildTasksLocation'],capture_output=True,text=True)
+ query=subprocess.run(['dotnet','msbuild',project,'-nologo','-m:1','-nr:false',*props,'-getProperty:TargetPath,RuntimeIdentifier,Configuration,OutputPath,AvaloniaBuildTasksLocation,AssemblyName,OutputType,UseAppHost,TargetExt'],capture_output=True,text=True)
  (out/(name+'-target-path.stdout')).write_text(query.stdout);(out/(name+'-target-path.stderr')).write_text(query.stderr)
  if query.returncode:raise SystemExit(query.returncode)
  actualProps=json.loads(query.stdout)['Properties'];target=pathlib.Path(actualProps['TargetPath']).resolve()
@@ -309,6 +319,20 @@ def build_and_pin(name,project):
  for extension in ('.dll','.pdb','.deps.json','.runtimeconfig.json'):
   candidate=target.with_name(target.stem+extension)
   if candidate.is_file():shutil.copyfile(candidate,retained/candidate.name)
+ global appHostBinding
+ expectedAppHost=target.parent/actualProps['AssemblyName']
+ if actualProps['OutputType']!='Exe' or actualProps['UseAppHost'].lower()!='true' or actualProps['TargetExt']!='.dll' or actualProps['AssemblyName']!=target.stem:raise SystemExit('actual test project is not the SDK-generated Linux apphost/managed assembly pair')
+ if expectedAppHost.is_symlink() or not expectedAppHost.is_file():raise SystemExit('exact SDK-produced test apphost missing')
+ hostBytes=expectedAppHost.read_bytes()
+ if hostBytes[:4]!=b'\x7fELF' or hostBytes.count(target.name.encode()+b'\0')!=1:raise SystemExit('actual ELF apphost does not bind exact compiled managed test assembly')
+ runtimeConfig=target.with_name(target.stem+'.runtimeconfig.json');deps=target.with_name(target.stem+'.deps.json')
+ if not runtimeConfig.is_file() or not deps.is_file() or json.loads(runtimeConfig.read_text())['runtimeOptions']['tfm']!='net10.0':raise SystemExit('actual managed test runtime metadata missing/mismatched')
+ pins={e['path']:e['sha256'] for e in closure}
+ for required in [expectedAppHost,target,runtimeConfig,deps]:
+  if pins.get(str(required.relative_to(root)))!=digest(required):raise SystemExit('actual apphost startup input absent from pinned compiled closure')
+ appHostBinding={'apphost':str(expectedAppHost.resolve()),'apphostSha256':digest(expectedAppHost),'managedDll':str(target.resolve()),'managedDllSha256':digest(target),'runtimeConfig':str(runtimeConfig),'runtimeConfigSha256':digest(runtimeConfig),'deps':str(deps),'depsSha256':digest(deps),'project':project,'sdkProperties':actualProps}
+ (out/(name+'-apphost-binding.json')).write_text(json.dumps(appHostBinding,indent=2)+'\n')
+ shutil.copyfile(expectedAppHost,retained/expectedAppHost.name)
  compiledTargets[name]=(target,closure)
  return target
 name,project,filter_value=checks[0];target=build_and_pin(name,project)
