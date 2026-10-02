@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
-  "programTree": "783405ca52f5278a0e219d2a9d7edf117957d50d",
+  "baselineCommit": "ca64e56d88670ca39ca9295f66b2eac7e9081b52",
+  "programTree": "780b95ec0c36739c780412640514df82ea2d230c",
   "currentNormalCommit": "dad4d24fd0f0ab9236629d5c634f5ae340b65576",
-  "kind": "new",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -27885,6 +27885,13 @@
       "object": "ef94158b6d11842b6571396beb71dfbc78e2e344",
       "bytes": 1532,
       "sha256": "d9f6eb2e848c0810cba15cddf7765b8b5dad0e29581858571767260fff60c316"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/ExternalConnections/WebMcpOriginalActorApproval.cs",
+      "mode": "100644",
+      "object": "7f5ad53edea6f821cab03ae4d9adeb26f11bbf86",
+      "bytes": 5096,
+      "sha256": "69ec15c47c4baae9918a8695da06b628b644ea0d295bc85c7cf791acc0924c75"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Floating/FloatingActivityAbstractions.cs",
@@ -64696,7 +64703,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-automation-original-cut.json",
-  "limits": "UNRUN exact source graph. Full inherited regression and full accepted resource checks preserved; expanded exact Maps/Shelf source-pinned classes. No installed or external effect acceptance.",
+  "limits": "Actual Home CS0246 missing full producer closure supplement only: exact11 existing Application WebMcp contract declarations from actual Home-compiling Data69 source; no interface stubs/consumer removals or changed semantics. Whole inherited Maps2/Automation3 owning/resource/regression/Automation cohorts and exact classes/source22+3/restore/producers/hosttasks/compiled/artifact guards unchanged; prior attestation alias and DI import retained. Uncompiled/unrun.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker2-automation-owning-source-graph02/manifest.json",
@@ -64713,6 +64720,22 @@
     {
       "path": "/workspace/astra-source/worker4-automation-original-coherent-owning-gate01/manifest.json",
       "sha256": "06184d814a9ca2bfd3385c9019c5476912eabc02495a7b4569051b43e2b99973"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-webmcp-contract-closure04/manifest.json",
+      "sha256": "0cb6d988aa09648787c0ae3d71b05ba833171e2dacff90f102e586801dfe572a"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/automation-original-coherent-owning02/actualfailed-11216488580/root-capture.json",
+      "sha256": "94961c674920de9b29a1d074bc75eddf8344727e79898c0e4ecf02a93762a4af"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/automation-original-coherent-owning02/actualfailed-11216538029/root-capture.json",
+      "sha256": "c15153d262041c232c8022eccf29f3f5264e247489a68f66c517af86028a3b4e"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/automation-original-coherent-owning02/actualfailed-11216577806/root-capture.json",
+      "sha256": "fcc3221761a32e46726bc9880bed60cf9ef5eaf9e2e3f02497509f1cdc5d08bb"
     }
   ],
   "sharedCakeIdContract": null
