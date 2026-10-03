@@ -1,0 +1,37 @@
+[
+  {
+    "bytes": 398336,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/NineToOne.Accounts.dll",
+    "sha256": "c6d6cc1851520f3991e6ef0557da17009f498d3db6b1f1395c711c7a871274d0"
+  },
+  {
+    "bytes": 77592,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/NineToOne.Accounts.pdb",
+    "sha256": "3964f3f77870e596a737faa9f50592b7e4d21fde4d941168bff52dd8de4a9d5e"
+  },
+  {
+    "bytes": 78256,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/OrgPools.Specs",
+    "sha256": "c1ec9957972f29a6ce9c84d33fa4e7cbeba03c46176939098171b97221b163ff"
+  },
+  {
+    "bytes": 866,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/OrgPools.Specs.deps.json",
+    "sha256": "517d497d93a3d5aad71e5925e6342274cf1ee63a0a0c36e0d1ab6aa101e05a4f"
+  },
+  {
+    "bytes": 37888,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/OrgPools.Specs.dll",
+    "sha256": "478d6a4abbee45dc3b3af89732b10fcd4931a711b4b5476e11c001454e7971c9"
+  },
+  {
+    "bytes": 15980,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/OrgPools.Specs.pdb",
+    "sha256": "db70418280f8405b62ab5e1233867e55d1a3ba8db85d98043562567ac8e8e7dd"
+  },
+  {
+    "bytes": 330,
+    "path": "artifacts/root14-managed-build/bin/OrgPools.Specs/release_linux-x64/OrgPools.Specs.runtimeconfig.json",
+    "sha256": "9950d4583cfc9a106857c0d5b8a75b53e8774852b57b80bc3823a74d44a4d87f"
+  }
+]

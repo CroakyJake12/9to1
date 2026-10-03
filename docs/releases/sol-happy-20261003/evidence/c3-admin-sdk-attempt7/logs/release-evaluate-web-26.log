@@ -1,0 +1,75 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
+    "MSBuildProjectName": "Avalonia.Desktop",
+    "AssemblyName": "Avalonia.Desktop",
+    "TargetPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/bin/Avalonia.Desktop/release_net10.0_linux-x64/Avalonia.Desktop.dll",
+    "OutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/bin/Avalonia.Desktop/release_net10.0_linux-x64/",
+    "Configuration": "Release",
+    "TargetFramework": "net10.0",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/project.assets.json",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/",
+    "AvaloniaBuildTasksLocation": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+    "EmitCompilerGeneratedFiles": "true",
+    "IntermediateOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/",
+    "CompilerGeneratedFilesOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64//generated",
+    "ArtifactsPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build",
+    "ArtifactsProjectName": "Avalonia.Desktop",
+    "BaseIntermediateOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/"
+  },
+  "Items": {
+    "Compile": [
+      {
+        "Identity": "AppBuilderDesktopExtensions.cs",
+        "FullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/AppBuilderDesktopExtensions.cs",
+        "RootDir": "/",
+        "Filename": "AppBuilderDesktopExtensions",
+        "Extension": ".cs",
+        "RelativeDir": "",
+        "Directory": "workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.DefaultItems.props",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.Sdk.DefaultItems",
+        "DefiningProjectExtension": ".props"
+      },
+      {
+        "Identity": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs",
+        "FullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs",
+        "RootDir": "/",
+        "Filename": ".NETCoreApp,Version=v10.0.AssemblyAttributes",
+        "Extension": ".cs",
+        "RelativeDir": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/",
+        "Directory": "workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-10-03 22:55:38.5821753",
+        "CreatedTime": "2026-10-03 22:55:38.5821753",
+        "AccessedTime": "2026-10-03 22:55:38.7120973",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Microsoft.Common.CurrentVersion.targets",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/",
+        "DefiningProjectName": "Microsoft.Common.CurrentVersion",
+        "DefiningProjectExtension": ".targets"
+      },
+      {
+        "Identity": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/Avalonia.Desktop.AssemblyInfo.cs",
+        "FullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/Avalonia.Desktop.AssemblyInfo.cs",
+        "RootDir": "/",
+        "Filename": "Avalonia.Desktop.AssemblyInfo",
+        "Extension": ".cs",
+        "RelativeDir": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/",
+        "Directory": "workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Desktop/release_net10.0_linux-x64/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-10-03 22:55:38.5842172",
+        "CreatedTime": "2026-10-03 22:55:38.5842172",
+        "AccessedTime": "2026-10-03 22:55:38.7120973",
+        "DefiningProjectFullPath": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.GenerateAssemblyInfo.targets",
+        "DefiningProjectDirectory": "/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/",
+        "DefiningProjectName": "Microsoft.NET.GenerateAssemblyInfo",
+        "DefiningProjectExtension": ".targets"
+      }
+    ]
+  }
+}

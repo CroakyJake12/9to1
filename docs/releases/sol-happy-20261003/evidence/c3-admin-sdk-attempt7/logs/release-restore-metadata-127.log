@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj",
+    "MSBuildProjectName": "Avalonia.Remote.Protocol",
+    "MSBuildProjectFile": "Avalonia.Remote.Protocol.csproj",
+    "Configuration": "Release",
+    "Platform": "AnyCPU",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Remote.Protocol/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Remote.Protocol/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/Avalonia.Remote.Protocol/"
+  }
+}

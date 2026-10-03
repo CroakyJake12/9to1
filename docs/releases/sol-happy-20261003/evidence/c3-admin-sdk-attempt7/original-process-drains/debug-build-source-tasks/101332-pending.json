@@ -1,0 +1,1 @@
+{"drained": true, "launcherPid": 101332, "launcherTuple": [101073, 101332, 101332, "2125891", "R"], "observedMembers": {"101332": [101073, 101332, 101332, "2125891", "R"], "101350": [101332, 101332, 101332, "2125970", "R"], "101369": [101332, 101332, 101332, "2126083", "Z"]}, "reapedOwnedChildren": {}, "subreaperOwnerPid": 101073, "subreaperOwnerStartTicks": "2124266"}
