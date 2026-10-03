@@ -1,0 +1,11 @@
+# C5 bounded subreaper proposal review
+
+C5 acknowledges tooling source proposal `fe96d5004a8a608967186000da1f5deda31df470` with no actionable bounded regression found. Reviewed every changed line across the helper, driver, catalog and Linux control script, the complete helper/catalog, and preserved driver assertions. This is not global adoption or full SDK acceptance.
+
+Enrollment occurs before launch. Reaping is limited to observed original-session zombies whose owner PID/birth and original group/session/birth remain bound, using a stable PIDFD and kernel `waitid(P_PIDFD)`. Creator remains owned by Popen; live and non-owned children are not reaped. Foreign/reused/escaped identities refuse custody. Zombies still count as present until successful owned-child reaping and subsequent observation prove disappearance. Existing signals, escape detection, timeouts, source/tree/dependency, physical PDB and authentication gates remain. All 17 product source rows and the suite inventory are unchanged; the helper catalog pin matches exact bytes and SHA256.
+
+Independently ran the immutable actual Linux control script once: **8/8 passed, exit 0**. The original orphan receipt records kernel wait status 23, followed by actual disappearance and a true seal. Birth mismatch, foreign session, live child, non-owned child, creator, unenrolled owner and escaped child controls exercise refusals or exclusion before eventual fixture cleanup. Durable escaped/foreign negative receipts preserve **drained false** before fixture-only cleanup; they are not accepted original custody. No old PID1 zombie was signalled or reaped.
+
+Command: `ASTRA_SUBREAPER_TEST_EVIDENCE=/workspace/team-c/evidence/c5/subreaper-fe96-review python3 .github/scripts/astra-original-session-subreaper-tests.py`, from the immutable proposal worktree. [Independent raw log](/workspace/team-c/evidence/c5/subreaper-fe96-review.log). Log SHA256: `43cd937b198f0114ae7d17ec83a39eb2ec6e73510edf09be7868f41422d93485`.
+
+Full SDK execution was not run. The existing cut is intentionally stale after source changes: root must issue a fresh external complete-cut pin before the full driver successor. Product/key-fix adoption stays separate. [Exact changed-source and retained-receipt hashes](C5-subreaper-proposal-peer-review.json).
