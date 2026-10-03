@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "83566d6a016f08a0322e404f8c6b48c43d7bdf30",
-  "programTree": "0882d52726884c248807c835b420f90f248fb01d",
+  "baselineCommit": "7fe75b961ecf4fd980df4097ff472980dbc412bc",
+  "programTree": "b74bfa25c512d096cb1f8cc1ec83d72d3d8cd96e",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -134,9 +134,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "b6c5be3bbd0847106eab357540945cff63615abf",
+      "object": "a0280b7e56efeb2e5f8323dcd5aabcda54c0f5e5",
       "bytes": 105913,
-      "sha256": "fc2bd627e0564b4663d3aae27a8be89354567a6f94aac4a36a4e441cacf42b6d"
+      "sha256": "a3e3ef3fe07e0d8a4259c21fecc1f38cf26e581a167c41a67a62374cbf3abdf8"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -40930,9 +40930,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SitesNativeAuthoringConsumerTests.cs",
       "mode": "100644",
-      "object": "4f099baba27fc65f6acbbef86a7eb0d0c7790ded",
-      "bytes": 29419,
-      "sha256": "bf74238c16fdc50152d5e2b961e2b1ef4111c4a1dab259c365f416a3fa2878c4"
+      "object": "b57222c99eae5ddc29b9cfaa59acb91dd0bddaff",
+      "bytes": 29422,
+      "sha256": "7f599cfc3257da3c60dac2965f2dca73ddeae623d490cc8e8f8f44586fe70435"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -66339,7 +66339,8 @@
     "All inherited limits above are predecessor history. Current30 refresh preserves the exact accepted Math23 sources, Android30 compile correction and current ledger; existing 211/12/44 membership and all caller filters remain unchanged. The four Math classes are outside these exact filters, and retain their separate accepted Math06 runtime proof.",
     "Only the original Sites fixture nullable Name and named fifth cancellationToken binding, plus the original Home host fixture Avalonia.Application namespace, change fixture behavior. Every assertion, nine Sites methods/fourteen outcomes and both Home host facts are preserved by whole inverses.",
     "The actual83566 Sites04 source fixture is byte-identical to actual685d Home07 and its two full failed original families bind the compiler errors. Actual Sites04 hosted jobs failed, but their bundle contents remain unreviewed; no specific owning failure, complete owning closure or native acceptance is inferred.",
-    "Every original process/session/native/TLS/Java/CRL/profile/source/PDB/task/restore/drain caller and workflow remains byte-identical to actual83566. This is an unexecuted corrective package; separate real NativeWebView/classic observer acceptance remains pending."
+    "Every original process/session/native/TLS/Java/CRL/profile/source/PDB/task/restore/drain caller and workflow remains byte-identical to actual83566. This is an unexecuted corrective package; separate real NativeWebView/classic observer acceptance remains pending.",
+    "Actual Sites05 complete125-member regression original proves the sole xUnit2029 predicate-absence compiler error. Resource and owning originals remain unreviewed; no complete prior-three-family or actual native DOM/profile acceptance is inferred. Sole assertion adapter and truthful owning211 SHA repin retain all211/12/44 class/case membership and every actual caller/filter/workflow/native/TLS/CRL/Java/task/PDB/restore/drain byte. Root alone constructs/launches after complete peer."
   ],
   "inputManifests": [
     {
@@ -66669,6 +66670,34 @@
     {
       "path": "/workspace/astra-source/worker2-sites211-current28-corrective04-full-preservation-peer01.json",
       "sha256": "ef6d6a02afa56eee779a13e37d5ba3f7f449f3474e594425a14cf7d597f3beb2"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites211-current30-observed-fixture-full-corrective-package05/manifest.json",
+      "sha256": "f82d7fce361f8e5121bb8f3601c7f39d9a8c65e42ac6d4dbe2c6b03fd438a953"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sites211-current30-corrective05-full-preservation-peer01.json",
+      "sha256": "3639a8c6f1e79d3eac1607fbffa2525ab302d0d3c020842af022197f4bee96c0"
+    },
+    {
+      "path": "/workspace/astra-source/ready-artifacts/worker4-sites211-current30-full-native05/root-launch-receipt.json",
+      "sha256": "b3f4905bf78dc2e58de0a658fda073e15833296e18cb06112a08ba8d6def5064"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites05-regression-full-original-xunit2029-failure-closure01.json",
+      "sha256": "d34b6d55849426b989b5053dd3c41ff0c36f7c23a0fe6e347a4147edfa760fba"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites05-actual-xunit2029-fixture-source10/manifest.json",
+      "sha256": "59967e6ef234ac74622a196c54c3e7f5980f3835500f4ec692c32d445ae6e0b6"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites10-actual-xunit2029-whole-source-api-peer01.json",
+      "sha256": "ec8e639bf48b51dc7128a753c16360e09a53a2761909071bdee13ebb04e11b07"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-sites10-actual-xunit2029-whole-predicate-api-peer01.json",
+      "sha256": "f67d5f17d6d826560fecdf91c592431aeadc18184c8eaec34a2718e5a5f55cc7"
     }
   ],
   "sharedCakeIdContract": null
