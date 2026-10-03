@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Haven.Application;
 using Haven.Application.Compatibility;
 using HavenOS.Files;
@@ -12,10 +13,51 @@ public sealed record FilesNativeBrowserPage(Guid StoreID, string StoreRevision, 
 
 /// <summary>Canonical metadata navigation bound to the actor captured at the original host click.
 /// Cursor revisions pin the real Files state, rather than inferring stability from names or timestamps.</summary>
-public sealed class FilesNativeBrowserService(NativeFilesWorkspaceAuthority workspaces,
+public sealed partial class FilesNativeBrowserService(NativeFilesWorkspaceAuthority workspaces,
     IAuthenticatedResourceActorSource actors, ResourceAuthorizationService resources,
     ICompatibilityPackageContentSource packages)
 {
+    private sealed record OriginalPage(NativeFilesWorkspace Workspace, AuthenticatedResourceActor Actor);
+    private readonly ConditionalWeakTable<FilesNativeBrowserPage, OriginalPage> _originalPages = new();
+    private readonly FilesOriginalChildFolderReadSource? _originalFolders;
+    private ResourceAuthorizationService OriginalMailResources => resources;
+
+    public FilesNativeBrowserService(NativeFilesWorkspaceAuthority workspaces, IAuthenticatedResourceActorSource actors,
+        ResourceAuthorizationService resources, ICompatibilityPackageContentSource packages,
+        FilesOriginalChildFolderReadSource originalFolders) : this(workspaces, actors, resources, packages)
+    { _originalFolders = originalFolders ?? throw new ArgumentNullException(nameof(originalFolders)); }
+
+    public bool HasOriginalStacksSelection(FilesNativeBrowserPage originalPage, HostedItemMetadata originalRow,
+        AuthenticatedResourceActor originalActor)
+        => _originalFolders is not null && _originalPages.TryGetValue(originalPage, out var retained) &&
+            retained.Actor == originalActor && retained.Workspace.Configuration.StoreId == originalPage.StoreID &&
+            retained.Workspace.Configuration.AppFolders.TryGetValue("stacks", out var root) && root.Value != Guid.Empty &&
+            originalRow.Kind == HostedItemKind.Folder && originalRow.Id != root && originalRow.CurrentRevisionId is not null &&
+            originalPage.Items.Any(row => ReferenceEquals(row, originalRow));
+
+    public async Task<FilesNativeFolderReadLease> ReadOriginalStacksSelectionAsync(FilesNativeBrowserPage originalPage,
+        HostedItemMetadata originalRow, AuthenticatedResourceActor originalActor, Func<bool> originalLifetime,
+        CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(originalLifetime);
+        if (!HasOriginalStacksSelection(originalPage, originalRow, originalActor) || !originalLifetime() ||
+            !_originalPages.TryGetValue(originalPage, out var retained))
+            throw new UnauthorizedAccessException("Select an original privately issued registered Stacks child.");
+        bool Current() => originalLifetime() && HasOriginalStacksSelection(originalPage, originalRow, originalActor);
+        var lease = await _originalFolders!.ReadConfiguredChildAsync(retained.Workspace, "stacks", originalRow.Id.Value,
+            originalRow.CurrentRevisionId!.Value.ToString(), Current, token).ConfigureAwait(false);
+        try
+        {
+            await lease.RevalidateAsync(token).ConfigureAwait(false);
+            var evidence = await retained.Workspace.Provider.GetStoreEvidenceAsync(originalPage.StoreID, token).ConfigureAwait(false);
+            await lease.RevalidateAsync(token).ConfigureAwait(false);
+            if (!Current() || evidence.StoreId != originalPage.StoreID || evidence.Revision != originalPage.StoreRevision)
+                throw new UnauthorizedAccessException("The original selected Stacks page retired or changed.");
+            return lease;
+        }
+        catch { lease.Dispose(); throw; }
+    }
+
     public async Task<FilesNativeBrowserPage> ListAsync(AuthenticatedResourceActor originalActor,
         Guid? parentID = null, string search = "", FilesNativeBrowserCursor? cursor = null,
         CancellationToken token = default, Guid? expectedStoreId = null)
@@ -45,8 +87,10 @@ public sealed class FilesNativeBrowserService(NativeFilesWorkspaceAuthority work
         if (before.StoreId != workspace.Configuration.StoreId || after != before ||
             !ReferenceEquals((await RequireWorkspaceAsync(originalActor, expectedStoreId, token).ConfigureAwait(false)).Provider, workspace.Provider))
             throw new InvalidOperationException("Files changed during navigation. Refresh this folder.");
-        return new(before.StoreId, before.Revision, parentID, Array.AsReadOnly(page.Items.ToArray()),
+        var issued = new FilesNativeBrowserPage(before.StoreId, before.Revision, parentID, Array.AsReadOnly(page.Items.ToArray()),
             page.NextPageToken is { } next ? new(before.StoreId, before.Revision, parentID, search, next, originalActor) : null);
+        _originalPages.Add(issued, new(workspace, originalActor));
+        return issued;
     }
 
     /// <summary>Resolve the canonical parent of the original current folder; names never determine identity.</summary>

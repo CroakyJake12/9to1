@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using CakeOS.Cui.Language;
 using HavenOS.Mail;
 using HavenOS.Mail.Services;
+using HavenOS.Mail.Providers;
 using HavenOS.Mail.Storage;
 using Xunit;
 
@@ -180,6 +181,41 @@ public sealed class MailFoundationTests
 
         Assert.Equal("Hello world", text);
         Assert.DoesNotContain("secret", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Unsupported_actual_adapter_attachment_is_not_queued_or_scheduled_and_keeps_encrypted_draft_bytes(bool scheduled)
+    {
+        using var temp = new TempDirectory();
+        var store = Store(temp.Path); var credentials = new NoTransportCredentials();
+        var adapter = new MailKitImapSmtpProvider(credentials);
+        var service = new MailDomainService(store, [adapter]); var account = Account();
+        Assert.True(account.Capabilities.HasFlag(MailCapability.Attachments));
+        Assert.True((await service.AddAccountAsync(account)).IsSuccess);
+        var actualAccount = Assert.Single(await service.ListAccountsAsync());
+        Assert.False(actualAccount.Capabilities.HasFlag(MailCapability.Attachments));
+        Assert.True(actualAccount.Capabilities.HasFlag(MailCapability.Folders));
+        var draft = Draft(account.AccountId) with { AttachmentIds = [Guid.NewGuid()] };
+        await store.TransactAsync(state => state with { Drafts = [draft] });
+        var path = Path.Combine(temp.Path, "mail-state.json"); var before = await File.ReadAllBytesAsync(path);
+        var now = DateTimeOffset.UtcNow;
+        // Caller metadata cannot remove the actual stored draft's attachment requirement.
+        var result = scheduled
+            ? await service.QueueScheduledSendAsync(draft.DraftId, now.AddMinutes(1), MailExecutionPolicy.DeviceOnly, now, "unsupported-attachment")
+            : await service.QueueSendAsync(draft with { AttachmentIds = [] }, true, now, "unsupported-attachment");
+        Assert.False(result.IsSuccess); Assert.Equal(MailErrorCode.AttachmentUnavailable, result.Error!.Code);
+        var reopened = await store.ReadAsync(); Assert.Empty(reopened.Outgoing); Assert.Empty(reopened.PendingOperations);
+        Assert.Equal(draft.AttachmentIds, Assert.Single(reopened.Drafts).AttachmentIds);
+        Assert.Equal(before, await File.ReadAllBytesAsync(path)); Assert.Equal(0, credentials.Calls);
+    }
+
+    private sealed class NoTransportCredentials : IMailCredentialResolver
+    {
+        public int Calls { get; private set; }
+        public ValueTask<MailProviderCredential> ResolveAsync(string reference, CancellationToken token = default)
+        { Calls++; throw new InvalidOperationException("Unsupported attachment refusal must not invoke transport."); }
     }
 
     private static EncryptedJsonMailStateStore Store(string directory) =>

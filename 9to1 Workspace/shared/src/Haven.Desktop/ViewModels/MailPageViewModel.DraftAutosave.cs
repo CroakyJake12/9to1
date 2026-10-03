@@ -100,7 +100,7 @@ public sealed partial class MailPageViewModel
                 ApplyComposeFailure(result);
                 return false;
             }
-            _composeLocalDraftId = result.LocalDraftId ?? _composeLocalDraftId;
+            SetOriginalComposeDraftId(result.LocalDraftId ?? _composeLocalDraftId);
             _composeDraftId = result.ProviderId ?? _composeDraftId;
             ComposeStatus = "Draft saved";
             return true;
@@ -131,12 +131,13 @@ public sealed partial class MailPageViewModel
         }
 
         var hasHtml = !string.IsNullOrWhiteSpace(ComposeHtmlBody);
-        _composeLocalDraftId ??= Guid.NewGuid();
+        var draftId = _composeLocalDraftId ?? Guid.NewGuid();
+        SetOriginalComposeDraftId(draftId);
         return new MailDraft(
             SelectedAccount.AccountId, _composeDraftId, _composeResponseKind, _composeSourceMessageId, _composeThreadId,
             ParseAddresses(ComposeTo), ParseAddresses(ComposeCc), ParseAddresses(ComposeBcc), ComposeSubject.Trim(), hasHtml ? ComposeHtmlBody : ComposeBody, hasHtml,
-            ComposeAttachments.Select(item => new MailDraftAttachment(item.FileName, item.ContentType, item.Content)).ToArray(),
-            LocalId: _composeLocalDraftId.Value, Provider: SelectedAccount.Provider);
+            ComposeAttachments.Select(item => new MailDraftAttachment(item.FileName, item.ContentType, item.Content, item.LocalId)).ToArray(),
+            LocalId: draftId, Provider: SelectedAccount.Provider);
     }
 
     private bool HasMeaningfulComposeContent() =>

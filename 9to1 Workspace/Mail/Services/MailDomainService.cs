@@ -10,6 +10,17 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
     private readonly IReadOnlyDictionary<MailProviderKind, IMailProviderAdapter> _providers = (providers ?? []).ToDictionary(provider => provider.Provider);
     private readonly IMailExternalActionAuthorizer? _authorizer = authorizer;
 
+    private static MailCapability ObserveCapabilities(MailCapability cached, MailCapability advertised) =>
+        (cached & ~MailCapability.Attachments) | advertised;
+    private void RequireAttachmentCapability(MailAccount account, MailDraft storedDraft)
+    {
+        if (storedDraft.AttachmentIds.Count != 0 && _providers.TryGetValue(account.Provider, out var provider) &&
+            !provider.Capabilities.HasFlag(MailCapability.Attachments))
+            throw new MailStoreException(MailErrorCode.AttachmentUnavailable,
+                "This connection cannot submit attachment content. Keep the draft and use an attachment-capable connection.");
+    }
+
+
     public async Task<IReadOnlyList<MailAccount>> ListAccountsAsync(CancellationToken cancellationToken = default) =>
         (await _store.ReadAsync(cancellationToken).ConfigureAwait(false)).Accounts;
 
@@ -21,6 +32,8 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             if (account.AccountId == Guid.Empty || string.IsNullOrWhiteSpace(account.ProviderAccountIdentity) || string.IsNullOrWhiteSpace(account.PrimaryAddress))
                 throw new MailStoreException(MailErrorCode.InvalidInput, "Account ID, provider account identity and primary address are required.");
             account.Connection?.Validate();
+            if (_providers.TryGetValue(account.Provider, out var actualProvider))
+                account = account with { Capabilities = ObserveCapabilities(account.Capabilities, actualProvider.Capabilities) };
             await _store.TransactAsync(state =>
             {
                 if (state.Accounts.Any(existing => existing.AccountId == account.AccountId))
@@ -78,7 +91,7 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                     LastSuccessfulContact = batch.ContactedAt,
                     LastSyncError = null,
                     ChangeCursor = batch.NewChangeCursor,
-                    Capabilities = state.Accounts.First(item => item.AccountId == accountId).Capabilities | provider.Capabilities,
+                    Capabilities = ObserveCapabilities(state.Accounts.First(item => item.AccountId == accountId).Capabilities, provider.Capabilities),
                 };
                 var threads = RebuildThreads(messages, accountId);
                 return state with
@@ -262,6 +275,8 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                     if (outgoing is not null) return state;
                 }
                 var account = state.Accounts.Single(item => item.AccountId == draft.AccountId);
+                var storedDraft = state.Drafts.Single(item => item.DraftId == draft.DraftId && item.AccountId == draft.AccountId);
+                RequireAttachmentCapability(account, storedDraft);
                 var sendAt = now + account.Sending.UndoSendDelay;
                 outgoing = new OutgoingMessage(Guid.NewGuid(), draft.DraftId, draft.AccountId,
                     isOnline ? MailMessageState.Queued : MailMessageState.Queued, now, sendAt, null, null, 0, null, null, true);
@@ -306,6 +321,7 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                 }
                 var account = state.Accounts.FirstOrDefault(item => item.AccountId == draft.AccountId)
                     ?? throw new MailStoreException(MailErrorCode.AccountNotFound, "The sending account was not found.");
+                RequireAttachmentCapability(account, draft);
                 // No current Mail adapter implements provider-side scheduling. ProviderPreferred therefore
                 // uses an explicitly disclosed device schedule instead of promising a server-side send.
                 var schedule = new MailScheduledSend(sendAt, ScheduledExecutionLocation.Device,
@@ -387,6 +403,9 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             return Fail<OutgoingMessage>(MailErrorCode.PermissionRequired, "Home authorization is unavailable; the message remains queued.", $"outgoing:{messageId}", "9to1.Mail.Send", recoverable: true);
         if (!_providers.TryGetValue(account.Provider, out var provider))
             return Fail<OutgoingMessage>(MailErrorCode.ProviderUnavailable, "The sending provider is unavailable; the message remains queued.", $"account:{account.AccountId}", "9to1.Mail.Send", recoverable: true);
+
+        if (draft.AttachmentIds.Count != 0 && !provider.Capabilities.HasFlag(MailCapability.Attachments))
+            return Fail<OutgoingMessage>(MailErrorCode.AttachmentUnavailable, "This connection cannot submit attachment content. Keep the draft and use an attachment-capable connection.", $"draft:{draft.DraftId}", "9to1.Mail.Send");
 
         var permission = await _authorizer.AuthorizeSendAsync(account, draft, cancellationToken).ConfigureAwait(false);
         if (!permission.IsSuccess) return MailResult<OutgoingMessage>.Failure(permission.Error!);
