@@ -97,6 +97,21 @@ this branch. Team A1 subsequently acknowledged the maintained CUI font/theme API
 and exact Runtime dependency. Incorporating provisional shared source, published
 WASM artifacts and actual mounted-browser/provider acceptance remain pending.
 
+Team B subsequently published runtime fixes `9697281` and `c74c73c`, retaining
+the earlier Skia startup and exited-runtime failures. Its coordination report
+`986fbb2c` records local startup/fragment/history passes, with Library pointer
+interaction, Dashboard layout and semantic-control accessibility still failing or
+unaccepted. These are owning-team reports; the full browser evidence package and
+independent runtime verification have not been delivered here. They do not change
+the bounded three-finding closure at `830f747` or establish full browser acceptance.
+
+C1's [new runtime source review](browser-review-update/runtime-source-review.md)
+corrects an earlier inference: the false native-input flags also disabled the
+transitive native packages. That inference in the preserved original review is
+withdrawn. The newer source restores actual SDK-selected inputs and uses its
+public `runMain` API. Source review found no actionable bounded regression;
+native ABI/runtime and the reported startup results remain independently unverified.
+
 Team A acknowledged narrowly scoped Home identity and provider-stream edits and
 ownership of configured OIDC resource/response-envelope repairs. Home's isolated
 rebase `b73a45b4` onto `a63d77f` preserves the existing service body outside the three

@@ -75,7 +75,8 @@
     "account-review.json": "76a0ed2c5a4b43b9a761301f15da12abe6d0640d585d4536176c543169fbc028",
     "account-tests.log": "627beb7a6462028ab2218d6066dbbf3ca40b768574f1aed3656949b544809aad",
     "account-original-probes.log": "6269183da236d0381fc3e4ad6c8962d9adbaa53978119a325439cd7cc609181e",
-    "account-original-probes.mjs": "3793625c42ad421589ccadd28c875ccacf4f38992f7a29a04bcae5f4a4fc1efd"
+    "account-original-probes.mjs": "3793625c42ad421589ccadd28c875ccacf4f38992f7a29a04bcae5f4a4fc1efd",
+    "runtime-source-review.md": "11bf239004c868362ea864731d90c5ac3ce8853d187285abf7fe051e24dedebb"
   },
   "preservedEvidenceAliases": {
     "route-tests.log": "bootstrap-tests.log",
@@ -89,5 +90,15 @@
     "coordinationCommit": "5f945e3c18657ab8da8dd3f301c7da16e8521d7e",
     "scope": "A1 ACK actuala63 CuiNativeHost.ConfigureFonts/InitialisePrimitiveTheme and exact Runtime dependency",
     "qualification": "Source API ownership only; no browser build/WASM/ABI/mounted/provider acceptance or installed Home readiness"
+  },
+  "laterRuntimeSourceReview": {
+    "head": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+    "commits": [
+      "9697281a71a0e32dc761c2c53fd06c72a98ccb43",
+      "c74c73c94a0d548653790a1e9d2a899df88e67b3"
+    ],
+    "review": "C1 reviewed every changed line, actual native targets and public .NET SDK API; no actionable bounded regression or runtime/vendor replacement. No runtime/test rerun.",
+    "correctionToPreservedOriginalReview": "bootstrap-review.md incorrectly inferred ShouldIncludeNativeSkiaSharp/HarfBuzzSharp=false only disabled manual adapter globs while preserving transitive native packages. Shared flags also gated those real transitive inputs. That inference is withdrawn; historical830f747 Skia startup failure retained. New source removes false flags, preserves SDK-selected actual inputs, and guards presence. ABI/runtime acceptance still unverified.",
+    "runtimeEvidence": "Owning B report only; full180-file publish/12 B1/9 B6 package not delivered here. Pointer/layout/accessibility and real provider/full-browser gates remain pending."
   }
 }
