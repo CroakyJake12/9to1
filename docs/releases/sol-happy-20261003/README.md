@@ -147,6 +147,13 @@ bundles remain unverified. This is evidence custody, with no runtime rerun or
 native acceptance. Large ZIPs remain outside git; bounded extracted originals,
 complete indexes, hashes and a credential-free replay are versioned.
 
+Additional [Linux18 original custody](c6/linux18-custody/) verifies both requested
+outer/inner archives, 435 pieces and 454 descriptors. The original receipt/TRX
+records Home 340/340 and OS 199/199; these results belong to `e6ee0cb3`, with no
+fresh execution here. Native16 qualifications, pending drains, source/PDB receipt
+limits and the absence of a proven full native cause remain explicit. Original
+byte custody does not establish installed, signed or physical-device acceptance.
+
 ## Specification and remaining gates
 
 The canonical document is `1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg`, revision
