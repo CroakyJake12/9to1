@@ -90,7 +90,8 @@
     "provider-independent-review.md": "f44319569f50c9db3d655c2995a6ce563b00c5c8f7c5bc82f84c48d4097892d1",
     "c2-current-owner-ack-review.json": "2b0bc58efec4a0a2a5174a80c651bffb50cacc5046b9c682bf42876774b6b728",
     "../C5-provider-source-equivalence-review.json": "19a31bef29a127840bb4e018b505566a143d7a5c63fd98bcf3c610dc8417d4ba",
-    "../C5-provider-source-equivalence-review.md": "644ad891550b88d16bad7850c90497ffd31aca581c79800c085bcd236ad24586"
+    "../C5-provider-source-equivalence-review.md": "644ad891550b88d16bad7850c90497ffd31aca581c79800c085bcd236ad24586",
+    "oidc-owner-ack-original.json": "f20246e8d1572b4a5c441a60a9b96633dc7402bd6425d8e629927dc40fdc3bf0"
   },
   "oidc": {
     "head": "542aca10f0bc93e77b5a70b0ced0d6d9ad68376a",
@@ -107,7 +108,15 @@
     },
     "negativeControls": "Actual Worker envelopes and required auth resource fail before production changes; same protocol controls pass after. Original logging-startup and new malformed-JSON expectation failures preserved. Expectation adjusted to unchanged parse-failure contract; all refuse success.",
     "independentReview": "C1 and root read entire8file122+/16- diff; C1 clean detached replay of both controlled harnesses exit0",
-    "hold": "Source proposal only; exact owner review/genuine configured HTTPS issuer, production signing/key compatibility and genuine auth_revision producer remain unresolved; selected normal30 body comparison unverified"
+    "hold": "Source proposal only; exact owner review/genuine configured HTTPS issuer, production signing/key compatibility and genuine auth_revision producer remain unresolved; selected normal30 body comparison unverified",
+    "exactOwnerAcknowledgement": {
+      "coordination": "dad3dde8",
+      "status": "EXACT_CURRENT_C3_SOURCE_OWNER_ACK_CLEAR_QUALIFIED; actualruntime/signing/revision/HTTPSintegrationOPEN",
+      "originalPeerBytes": 7537,
+      "originalPeerSha256": "f20246e8d1572b4a5c441a60a9b96633dc7402bd6425d8e629927dc40fdc3bf0",
+      "rootSourceHashVerification": "8 candidate entries/4 unchanged guard APIs verified against immutableGit; no runtime rerun",
+      "scope": "Source ownerACK only; no sourceadoption or issuer/signing/auth_revision/HTTPS runtimeacceptance"
+    }
   },
   "provider": {
     "head": "54766d2aa0716e6140293b3b4287a548fba9514b",

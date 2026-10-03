@@ -146,7 +146,11 @@ checks; these executable suites report no total discovery count. C1 independentl
 reviewed every changed line and reproduced both passes. Earlier protocol failures
 are retained. Authentication guards stay intact; genuine HTTPS issuer execution,
 approved signing/key compatibility and the authentication-revision producer
-contract remain unverified. The proposal is on its own remote branch.
+contract remain unverified. A3 now gives exact source-owner acknowledgement for
+`542aca10`, with its complete original peer record retained and all eight source
+hashes plus four unchanged guard APIs checked by root. That clears source-owner
+review only. The proposal remains on its own remote branch, with no adoption or
+new runtime acceptance.
 
 The strict .NET consumer and hosted issuer still have five concrete compatibility
 gaps described in [CONTRACT_COMPATIBILITY.md](../../../cloud/cake-id-auth/CONTRACT_COMPATIBILITY.md).
