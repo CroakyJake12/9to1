@@ -1,3 +1,4 @@
+import { installFixtureRelease } from './fixture-control.mjs';
 // Test-only process workload: actual production launch function; no auth/provider emulation.
 import { launchFixtureCustodian } from './fixture-launch.mjs';
 import { spawn, spawnSync } from 'node:child_process';
@@ -19,6 +20,7 @@ const exited = new Promise((resolve,reject) => {
 });
 if (mode === 'handled') {
   let stopping = false;
+  let closeCallerControl;
   const stop = async () => {
     if (stopping) return;
     stopping = true;
@@ -30,7 +32,8 @@ if (mode === 'handled') {
       writeFileSync(`${folder}/caller-finished.json`, JSON.stringify(proof), {flag:'wx',mode:0o600});
       process.exitCode = 0;
     } catch (error) { console.error(error.message); process.exitCode = 1; }
+    finally { closeCallerControl?.(); }
   };
-  for (const sig of ['SIGINT','SIGTERM','SIGHUP']) process.once(sig, stop);
+  closeCallerControl = installFixtureRelease(stop);
 }
 writeFileSync(ready, 'ready', {flag:'wx',mode:0o600});

@@ -65,6 +65,7 @@ class PtyControls(unittest.TestCase):
             self.assertTrue(ready.exists() and marker.exists(),'actual workload ready')
             worker=int(marker.read_text());c.observe(); self.assertIn(worker,c.records)
             if fault=='ctrl-c': os.write(master,b'\x03')
+            elif fault=='stop-command': os.write(master,b'stop\n')
             else: os.close(master);master=None # Genuine controlling-terminal hangup.
             for _ in range(250):
                 c.observe()
@@ -116,6 +117,7 @@ class PtyControls(unittest.TestCase):
             subprocess.Popen=original_spawn;pty.openpty=original_pty
     def test_original_shared_session_hangup_negative(self): self.exercise('baseline-loss','hangup')
     def test_detached_custodian_drains_after_unhandled_caller_loss(self): self.exercise('caller-loss','hangup')
+    def test_actual_stop_command_handler_and_strict_receipt(self): self.exercise('handled','stop-command')
     def test_actual_ctrl_c_handler_and_strict_receipt(self): self.exercise('handled','ctrl-c')
     def test_actual_hangup_handler_and_strict_receipt(self): self.exercise('handled','hangup')
 if __name__=='__main__': unittest.main(verbosity=2)
