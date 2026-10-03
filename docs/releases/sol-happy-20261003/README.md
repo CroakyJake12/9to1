@@ -196,8 +196,13 @@ saved by the original build. Supported compiler output retention now verifies al
 strict drains and executed the complete original Debug Accounts and OrgPools
 suites. Web source verification refused an empty pre-target Compile query despite
 a genuine generated source document in its PDB. Web execution and Release remain
-unrun. Post-target input collection is under separate review; no empty-input
-exemption, invented source or source-hash waiver was introduced.
+unrun. The independently reviewed post-target metadata proposal collects genuine
+SDK compiler inputs without invoking CoreCompile or changing any of the 2,480
+existing output files. Five controls pass, including the retained wrong-order
+negative. A fresh externally pinned full attempt 5 is running at `8189d31a`; its
+result is pending. No empty-input exemption, invented source or source-hash waiver
+was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
+and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
 Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
 Both requested outer ZIP hashes and all 159 included indexed pieces match. The
