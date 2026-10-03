@@ -1,0 +1,54 @@
+test_actual_ctrl_c_handler_and_strict_receipt (__main__.PtyControls.test_actual_ctrl_c_handler_and_strict_receipt) ... FAIL
+test_actual_hangup_handler_and_strict_receipt (__main__.PtyControls.test_actual_hangup_handler_and_strict_receipt) ... FAIL
+test_detached_custodian_drains_after_unhandled_caller_loss (__main__.PtyControls.test_detached_custodian_drains_after_unhandled_caller_loss) ... FAIL
+test_original_shared_session_hangup_negative (__main__.PtyControls.test_original_shared_session_hangup_negative) ... Baseline AEDC custodian SHA256 f078219ca4dbc6c0eedce942cdc1bcc71958db48a79d54d5b6825d3de30e2fa2
+FAIL
+
+======================================================================
+FAIL: test_actual_ctrl_c_handler_and_strict_receipt (__main__.PtyControls.test_actual_ctrl_c_handler_and_strict_receipt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 57, in test_actual_ctrl_c_handler_and_strict_receipt
+    def test_actual_ctrl_c_handler_and_strict_receipt(self): self.exercise('handled','ctrl-c')
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 30, in exercise
+    self.assertTrue(ready.exists() and marker.exists(),'actual workload ready')
+AssertionError: False is not true : actual workload ready
+
+======================================================================
+FAIL: test_actual_hangup_handler_and_strict_receipt (__main__.PtyControls.test_actual_hangup_handler_and_strict_receipt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 58, in test_actual_hangup_handler_and_strict_receipt
+    def test_actual_hangup_handler_and_strict_receipt(self): self.exercise('handled','hangup')
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 30, in exercise
+    self.assertTrue(ready.exists() and marker.exists(),'actual workload ready')
+AssertionError: False is not true : actual workload ready
+
+======================================================================
+FAIL: test_detached_custodian_drains_after_unhandled_caller_loss (__main__.PtyControls.test_detached_custodian_drains_after_unhandled_caller_loss)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 56, in test_detached_custodian_drains_after_unhandled_caller_loss
+    def test_detached_custodian_drains_after_unhandled_caller_loss(self): self.exercise('caller-loss','hangup')
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 30, in exercise
+    self.assertTrue(ready.exists() and marker.exists(),'actual workload ready')
+AssertionError: False is not true : actual workload ready
+
+======================================================================
+FAIL: test_original_shared_session_hangup_negative (__main__.PtyControls.test_original_shared_session_hangup_negative)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 55, in test_original_shared_session_hangup_negative
+    def test_original_shared_session_hangup_negative(self): self.exercise('baseline-loss','hangup')
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth/tests/fixture-pty.test.py", line 30, in exercise
+    self.assertTrue(ready.exists() and marker.exists(),'actual workload ready')
+AssertionError: False is not true : actual workload ready
+
+----------------------------------------------------------------------
+Ran 4 tests in 12.820s
+
+FAILED (failures=4)
