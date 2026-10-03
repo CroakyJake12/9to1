@@ -70,7 +70,11 @@ public sealed class SitesNativeAuthoringConsumerTests
             var component = project.Components.Single();
             Press(page, "Sites.Component." + component.ComponentId.ToString("N")); await page.PendingOperation.WaitAsync(token);
             Input(page, "Sites.Component.Properties").Text = "{\"href\":\"javascript:alert(1)\",\"text\":\"Invalid new edit\"}";
-            fixture.BeforeReview = (_, _) => { page.Deactivate(); return Task.CompletedTask; };
+            fixture.BeforeReview = async (_, _) =>
+            {
+                var originalNavigation = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(page.Deactivate);
+                await originalNavigation;
+            };
             Press(page, "Sites.Component.Save"); await page.PendingOperation.WaitAsync(token);
             Assert.Null(page.DisplayedDocument); Assert.Null(surface.Document);
             var saved = (await fixture.Projects.GetProjectAsync(project.SiteId, token)).Value!;
