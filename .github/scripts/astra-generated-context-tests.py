@@ -24,6 +24,9 @@ class ActualOwnerRoot(unittest.TestCase):
  def test_relative_generated_path_refused(self):self.refuse('CompilerGeneratedFilesOutputPath','GeneratedFiles')
  def test_emission_disabled_refused(self):self.refuse('EmitCompilerGeneratedFiles','false')
  def test_generated_symlink_refused(self):
-  with tempfile.TemporaryDirectory() as tmp:
-   p=pathlib.Path(tmp);(p/'real').mkdir();(p/'link').symlink_to(p/'real',target_is_directory=True);self.refuse('CompilerGeneratedFilesOutputPath',str(p/'link'))
+  owner=pathlib.Path(values()['MSBuildProjectExtensionsPath']).resolve()
+  with tempfile.TemporaryDirectory(dir=owner) as tmp:
+   link=pathlib.Path(tmp)/'link';link.symlink_to(pathlib.Path(values()['CompilerGeneratedFilesOutputPath']),target_is_directory=True)
+   # Resolution remains inside the valid owner root; only the raw symlink rule refuses this.
+   self.assertTrue(link.resolve().is_relative_to(owner));self.refuse('CompilerGeneratedFilesOutputPath',str(link))
 if __name__=='__main__':unittest.main(verbosity=2)
