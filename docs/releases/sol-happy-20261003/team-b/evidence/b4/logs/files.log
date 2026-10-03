@@ -1,0 +1,61 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "run",
+    "--project",
+    "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+    "--configuration",
+    "Release",
+    "--artifacts-path",
+    "/workspace/team-b-evidence/sol-happy-20261003/b4/artifacts-files"
+  ],
+  "cwd": "/workspace/team-b-worktree",
+  "start": "2026-10-03T17:13:24.017230+00:00",
+  "commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "environment": {
+    "DOTNET_CLI_HOME": "/workspace/team-b-evidence/sol-happy-20261003/b4/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/team-b-evidence/sol-happy-20261003/b4/nuget",
+    "TMPDIR": "/workspace/team-b-evidence/sol-happy-20261003/b4/tmp",
+    "AVALONIA_TELEMETRY_OPTOUT": "1"
+  }
+}
+
+Welcome to .NET 10.0!
+---------------------
+SDK Version: 10.0.401
+
+----------------
+Installed an ASP.NET Core HTTPS development certificate.
+To trust the certificate, run 'dotnet dev-certs https --trust'
+Learn about HTTPS: https://aka.ms/dotnet-https
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+Checking the state of installed workloads...
+Pack Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12...
+Pack Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12...
+----------------
+Files CUI domain contract checks passed.
+
+EXIT_STATUS=0

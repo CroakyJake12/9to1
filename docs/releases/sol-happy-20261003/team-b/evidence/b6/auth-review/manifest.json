@@ -1,0 +1,49 @@
+{
+  "reviewer": "B6 independent validation",
+  "wire_authority": "CAKE ID Worker 7cc52df0411e0e9e617918f6c5158283cc3199fc; acknowledgement supplied by root/B5. Live owner deployment was not tested.",
+  "source_hashes": {
+    "apps/Web/Auth/account-api-client.js": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+    "apps/Web/Auth/account-api-client.test.js": "fbf749f10c0e29ca13777779938f03129f7905e576fac700d60c7858c1124af0",
+    "apps/Web/Auth/README.md": "8bbc2ab4935579805cee52bbfa5b3f1af2ce2b664aa7db7be8b6828d0cf4fbec"
+  },
+  "commands": [
+    "node --test apps/Web/Auth/account-api-client.test.js",
+    "node /workspace/team-b-evidence/sol-happy-20261003/b6/auth-review/streaming-401-negative.mjs",
+    "node /workspace/team-b-evidence/sol-happy-20261003/b6/auth-review/body-phase-negative.mjs"
+  ],
+  "contract_tests": {
+    "discovered": 21,
+    "executed": 21,
+    "pass": 21,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "exit_status": 0,
+    "log": "independent-final-contract-tests.log"
+  },
+  "confirmed_initial_defects": [
+    "401 invalidation aborted its own streamed error body, hiding the server error as MalformedResponse.",
+    "Caller cancellation during 200 body parsing returned MalformedResponse instead of Cancelled."
+  ],
+  "final_reproduction": "Streamed 401 preserves authentication_required and clears private context; actual 200 body abort returns Cancelled. Initial failure logs are preserved.",
+  "additional_reviewed_controls": [
+    "Changed context drops late private results.",
+    "401 tolerates exactly its own invalidation generation; additional account switching is blocked.",
+    "Session mutation captures the original token before cleanup and cannot substitute another account token.",
+    "Cleanup failures remain distinct and prevent dispatch.",
+    "Redirect refusal, omitted cookies, no caching or referrer; actual HTTP redirect target receives zero requests.",
+    "Client owns no authentication, token-claim or entitlement authority; server wire bodies remain intact."
+  ],
+  "artifact_hashes": {
+    "streaming-401-negative.mjs": "60329a53acd4c078111baefc15ab74743d0ae471edc38a8653374375bef64db9",
+    "body-phase-initial.log": "594db6020653d63e671da9bae9e211365080b0eb18c72d64d4db5684c08d8e3a",
+    "streaming-401-initial.log": "7e06b0146aa3b0c727118fbb912bcf68ed8a9fadae281ac0637cad7400ad2880",
+    "independent-contract-tests.log": "7e48cff5f1c47151b353c9f8c2bad6c6061c6690ba70cf382f124af23d2512f6",
+    "body-phase-final.log": "8fab1ff0faf29226c5aedf19a59830c7b42bed38099917931cd189b0e3d57971",
+    "body-phase-negative.mjs": "fae0c8256b7ffda3f7d55fb584f024edca63d10e8206993d46837613f51732d3",
+    "independent-final-contract-tests.log": "bc7b99bf4d3ad8e1a82d1489646a633d8d382fd278122c066adf2c3aa6ad0cca",
+    "streaming-401-final.log": "cd4575f7863df1c2d019e4eca273cad0a01b1ec4e85dce8814cdad62c64086a2"
+  },
+  "product_acceptance": false,
+  "scope": "Client transport logic plus native Node Fetch against isolated loopback fixtures. No real OAuth issuer/API deployment, browser account UI/session, permissions, persistent cache separation, provider delivery or parity acceptance."
+}

@@ -1,0 +1,81 @@
+[
+  {
+    "id": "B4-GAP-TRANSFER-TRANSPORT",
+    "state": "BLOCKED",
+    "owners": ["Team A Files contracts", "C4 hosted Files implementation"],
+    "source": "Files Platform behaviour; Transfers; SH-07; TF-X02",
+    "existing_contract": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs:353",
+    "existing_operations": ["IFilesService.UploadAsync(parent, sourceReference, policy, actor, cancellation)", "DownloadAsync(item, destinationReference, cancellation)", "GetTransferAsync", "PauseTransferAsync", "ResumeTransferAsync", "CancelTransferAsync"],
+    "missing_acknowledgement": [
+      "Typed browser-authorised selection/reference registration, lifetime, origin, account/organisation binding and cancellation; an opaque string cannot imply arbitrary local file access.",
+      "Authenticated bounded/chunked byte transport: declared size/hash/expected revision, resumable chunk acknowledgement and validated committed offsets, durable transfer identity and replay-safe operation key.",
+      "Authoritative quota reservation/begin/commit/abort reconciliation, source revision and metadata commit proof; FilesTransfer.Completed alone cannot establish both durable bytes and authoritative FileID/revision metadata commit.",
+      "Protected download content or stream descriptor: exact canonical item/revision/hash/length, current permissions, expiry/revocation and progress; browser sink cancellation/denial distinct from provider transfer completion.",
+      "Actual authenticated HTTP/stream transport endpoint/schema and session/broker integration, without client-selected actor as authority.",
+      "Declared browser capability negotiation and actual staging identity; account/private-cache isolation; no public R2 object key or r2.dev route substitutes for protected download."
+    ],
+    "proposed_scope_after_acknowledgement": "Browser-owned transfer adapter only, consuming existing canonical service and authorised handles. Exact owned path to be agreed with B1 runtime before edits; no shared model or private replacement provider.",
+    "outcome": "NOT_IMPLEMENTED; root prohibits adapter before owning-team contract acknowledgement"
+  },
+  {
+    "id": "B4-GAP-FILES-ACTIONS",
+    "state": "MISSING",
+    "owners": ["Team A Files domains", "C4 services"],
+    "existing_contract": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs:332",
+    "gaps": [
+      "No concrete IFilesService or real IFilesProvider; only a StubProvider in local tests.",
+      "Canonical Sync.GetItemState and Sync.ResolveConflict are in specification/action metadata but absent from IFilesService.",
+      "Hosted transfer entry points do not declare operation/idempotency key or expected revision/create precondition; acceptance requires retry-safe consequential mutations.",
+      "No typed complete per-item bulk succeeded/failed/skipped/rolled-back result contract in observed FilesTransfer; exact structured partial behavior remains a domain gate.",
+      "No ten-type Files.Organisation model/actions, context membership schema, separately authorised Tree layout read, or source-reference shared contract in baseline.",
+      "Native Files project currently references legacy HUI Haven.UI; browser CUI parity is not established by its class-library name."
+    ]
+  },
+  {
+    "id": "B4-GAP-TERRA-DOMAINS",
+    "state": "MISSING",
+    "owners": ["Team A provider-neutral domains", "C4 authenticated transport", "B1 browser runtime", "B4 browser surfaces"],
+    "canonical_namespaces": ["9to1.Files.Organisation", "9to1.Link", "9to1.Prototype", "9to1.Paths", "9to1.Replay", "each owning-app.Variants"],
+    "gaps": ["No shared organisation/Link/Prototype/Paths/Replay/Variants model or authenticated action implementation found in baseline.", "No registered browser surface/rendering/editor routes for these apps.", "Shared Productivity Engine, Node Graph, contextual AI, permission broker and source/history contracts cannot be replaced privately."]
+  },
+  {
+    "id": "B4-GAP-SITES-MODEL-AND-TRANSPORT",
+    "state": "MISSING",
+    "owners": ["Team A Sites/shared models", "C4 Sites service/publishing", "B4 browser editor"],
+    "existing_contract": "/workspace/team-b-worktree/9to1 Workspace/Sites/Domain/SiteModels.cs:18",
+    "gaps": [
+      "Model has a limited SiteProject/Page/Component/CMS/asset/environment/domain representation; explicit NavigationModels, LogicGraphIDs, DataBindings, FormBindings, complete SEO, Analytics/Consent and ExtensionState contracts are not present as typed members.",
+      "Existing UpdateProjectAsync receives Func<SiteProject,SiteProject>; no acknowledged serializable typed browser semantic action catalogue for page/component/layout/CMS/source round-trip mutation.",
+      "No real ISiteCanonicalSourceResolver, ISiteBuildPipeline, ISiteHostingProvider/registry or ISiteArtifactArchive implementation found.",
+      "Existing store is local FileSiteWorkspaceStore; no hosted authoritative revision transport or push subscription.",
+      "Latest appropriate cakemods Page Editor donor source/parity inventory has not been provided to B4. Missing donor source is not an exemption.",
+      "Team C claims Sites source patches; no overlapping B4 modifications permitted."
+    ]
+  },
+  {
+    "id": "B4-GAP-SITES-ORIGIN-ISOLATION",
+    "state": "BLOCKED",
+    "owners": ["Team C architecture/security", "canonical decision owner"],
+    "source": "SH-08 / SH-13",
+    "decision": "Validated isolation for arbitrary active customer code under sites.9to1.uk/<site-slug>, or explicitly approved canonical namespace amendment. Paths on one hostname are not different origins.",
+    "blocked_scope": "Shipping arbitrary active customer content; independent source/editor/contract work remains possible.",
+    "exception": null
+  },
+  {
+    "id": "B4-GAP-SITES-REGRESSION-BUILD",
+    "state": "BLOCKED",
+    "owners": ["Team A/shared Canvas owner"],
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs:511",
+    "observed": "CS1593: Func<CanvasChangeEvent,bool> does not take 2 arguments; _events.Any((_, index) => index + 1 > nextCursor)",
+    "impact": "Sites test project cannot compile via shared Haven.Application reference; discovery not reached and zero test execution.",
+    "evidence": "logs/sites.log",
+    "action": "Reported to root for owning-team correction; no competing shared edit and no reduced build substitute."
+  },
+  {
+    "id": "B4-GAP-DECLARED-BROWSER-AND-RESOURCE-MATRIX",
+    "state": "BLOCKED",
+    "owners": ["canonical decision owner", "B1/B6/Team C"],
+    "source": "SH-13 operational launch parameters; TF-X03/X04",
+    "gaps": ["No approved supported browser versions supplied; all exact browser/runtime version gates remain unverified.", "No affected declared workload/capacity/recovery thresholds supplied to B4; measured data cannot be compared to invented targets.", "No authorised deployed Files/Sites/Terra-form frontend/backend identity or installed native second client supplied."]
+  }
+]

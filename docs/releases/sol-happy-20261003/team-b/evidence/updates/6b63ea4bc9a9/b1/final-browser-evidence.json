@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "run": "sol-happy-20261003",
+  "sourceCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+  "sourceRoot": "/workspace/team-b-astra-browser-validation",
+  "ownerSource": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "browserOwnedSourceFiles": [
+    {
+      "path": "apps/Web/BrowserApplication.cs",
+      "sha256": "3cf04f6ccc0c89a75c90de1012dded5252258bc83511537e5cd887eeb479823e"
+    },
+    {
+      "path": "apps/Web/BrowserHomeContext.cs",
+      "sha256": "58095e50ed08cc6708387e59bfada9cf07a819bfe132bf8b1d95701ac5c1b2d8"
+    },
+    {
+      "path": "apps/Web/BrowserPlatformAssembly.cs",
+      "sha256": "cf6bab5c599a74224119a90a987f4c801cb2dbe56384cef1184679efd828d75b"
+    },
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a"
+    },
+    {
+      "path": "apps/Web/BrowserRouteDispatcher.cs",
+      "sha256": "19ad2399168ee064fe1c4ec24ce0a5988ed6419ba478b73226fe378f6af134b7"
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "sha256": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c"
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "sha256": "47ebacd8fd15868818ed54eae64777e1b8e4f16cf3dba8c73951998c011c4c72"
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "sha256": "b3f3f77a5129c32d36bb35fcf26cb50b2e78511049741a57abc3aeaa28d992da"
+    },
+    {
+      "path": "apps/Web/README.md",
+      "sha256": "a5df825dbcddcfeba57d1159417e474e94ff9ccd67d5ef76cee55454a4bce3e6"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "sha256": "457563c63ff218ee0277f4b7db034205ab2202515b054786b0c56b444cf60140"
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "sha256": "0204b5dbae120b34cdd1cfd865842aab15852a35f05dbb3a46585d5b6b74bd7d"
+    },
+    {
+      "path": "apps/Web/Tests/browser-platform.browser.html",
+      "sha256": "5779ef0a87131202aeb80708a65df4b71a4453e264afa49e182fbdbb02e25a56"
+    },
+    {
+      "path": "apps/Web/Tests/browser-platform.test.mjs",
+      "sha256": "fc72e243d621a3ea5f737fb97a99066021265a667edf4f54eb7fa447037c2cf6"
+    },
+    {
+      "path": "apps/Web/Tests/run-browser-platform.cjs",
+      "sha256": "82af52964677a05287fb4baf4bd0106eefbe699443202c28245c3625defb23b7"
+    },
+    {
+      "path": "apps/Web/package.json",
+      "sha256": "29314346bb27cb4f6128f30e6532053f056c1aafcb3e8c61ef3ad77d0df45d7c"
+    },
+    {
+      "path": "apps/Web/wwwroot/browser-platform.js",
+      "sha256": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8"
+    },
+    {
+      "path": "apps/Web/wwwroot/index.html",
+      "sha256": "5aa3165f748c6f707a437cf81b3b422200cdd14531fd057dd759809f6f86f0af"
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "sha256": "08d6c3f45c0bbb2f63891b4c4f140343327951b29d590d04d95eaecfd799f1d0"
+    }
+  ],
+  "publishedArtifact": {
+    "root": "/workspace/team-b-artifacts/browser-83c24b2/wwwroot",
+    "manifest": "production-host/run-83c24b2/published-artifacts.json",
+    "files": 180,
+    "bytes": 35339902,
+    "immutableForRun": true
+  },
+  "actualProductionRun": {
+    "results": "production-host/run-83c24b2/production-host-results.json",
+    "executedRunner": "production-host/run-83c24b2/runner-executed.cjs",
+    "runnerSha256": "bc2203e2d14648bd796e06b95d9dcd344614e5494b0a23378934bc14de89c080",
+    "trace": "production-host/run-83c24b2/production-host-trace.zip",
+    "screen": "production-host/run-83c24b2/initial-home.png",
+    "browser": "151.0.7922.173",
+    "localChecksPassed": 14,
+    "localChecksExecuted": 14,
+    "scope": "Local SDK bootstrap, real enabled/disabled pointer behavior, typed live and cold route/error status, and history. Visual, accessibility, service, and deployed parity acceptance remain distinct.",
+    "runtimeErrors": 0,
+    "pageErrors": 0,
+    "requestFailures": 0,
+    "warnings": {
+      "error: Failed to load resource: the server responded with a status of 404 (Not Found)": 1,
+      "warning: WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled": 10
+    },
+    "realBfCacheObserved": false,
+    "privateOwnerRevalidation": "NOT-RUN. No authenticated owner adapter is registered, and native persisted BFCache restoration was not observed.",
+    "pointerChecks": "PASS in unmodified published source: disabled Studio preserves URL and status; enabled Library navigates; native down/up offsets agree.",
+    "independentPointerReplay": {
+      "path": "../b6/production-smoke/pointer-fix-independent-review.json",
+      "reportedPassed": 5,
+      "reportedTotal": 5,
+      "scope": "B6 unchanged real pointer runner confirms Library and Events routes/visible heads and disabled Studio; not full product parity."
+    },
+    "browserAndServerClosed": true
+  },
+  "productionFailuresPreserved": [
+    {
+      "source": "830f747b70df07797c586f6124890fa5028452b2",
+      "manifest": "production-host/run-830f747/published-artifacts.json",
+      "diagnosis": "production-host/run-830f747/bootstrap-diagnosis.json",
+      "outcome": "FAIL: no native Skia/Harf inputs; startup timeout and no rendered canvas. Original source, before hashes, trace, screenshot and native metadata retained. The old default publish folder was subsequently overwritten; no archived immutable old bundle claim."
+    },
+    {
+      "source": "9697281",
+      "manifest": "production-host/run-9697281/published-artifacts.json",
+      "diagnosis": "production-host/run-9697281/runtime-exit-diagnosis.json",
+      "outcome": "FAIL: dotnet.run exits the UI runtime; black canvas and unresponsive live navigation. Raw compressed trace retained locally. Console storm caused runner JSON serialization overflow, separately recorded; not relabelled as PASS."
+    },
+    {
+      "source": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+      "routeSubset": "production-host/run-c74c73c/production-host-results.json",
+      "independentPointerRed": "../b6/production-smoke/pointer-c74c73c",
+      "diagnosis": "production-host/pointer-container-review.json",
+      "outcome": "FAIL: live route/status subset passed, but pointer input overlay and painted canvas origins disagreed. Controlled CSS diagnosis is not shipped acceptance. Corrected owned CSS passed only in fresh 83c24b2 publication."
+    }
+  ],
+  "sourceLinkedUnitEvidence": {
+    "routeRegistryDispatch": "dispatch-owner-priority-green.log",
+    "passed": 22,
+    "negativeOldSelection": "dispatch-owner-priority-red.log",
+    "independentReview": "../b6/dispatch-owner-review.json",
+    "scope": "Unit handler fixtures with actual owner contracts; not service or browser acceptance."
+  },
+  "buildNativeEvidence": {
+    "correctedItems": "production-host/native-items-deduplicated.json",
+    "rootGuardEvidence": "../coordinator/native-browser-correction/guard-results.json",
+    "rootCleanPublishedEvidence": "../coordinator/pointer-container-correction/browser-publish.json",
+    "scope": "Actual pinned source inputs, no vendor replacements."
+  },
+  "blockedAcceptance": {
+    "visualLayout": "FAIL. Actual 83c24b2 screenshot still shows overlapping Dashboard sections. Owner Home/CUI source files remain unchanged from a63; see production-host/shared-render-owner-request.json.",
+    "accessibility": "FAIL / complete control semantics UNVERIFIED. The actual 83c24b2 accessibility tree exposes status and main only, despite painted controls.",
+    "fullServiceParity": "NOT-RUN: authenticated owner adapters and real service context absent.",
+    "deployedAcceptance": "NOT-RUN: local loopback publication is not a deployed release.",
+    "acceptedBaseline": "UNACCEPTED; sole release integrator owns acceptance."
+  },
+  "browserSourceFrozen": true,
+  "sharedSourcesMutated": false,
+  "fullParityAccepted": false,
+  "deployed": false,
+  "laterFindings": {
+    "c74EnabledPointer": "FAIL retained separately. Fixed by the owned container positioning change, then verified in an unmodified fresh bundle and independently replayed by B6.",
+    "sharedOwnerRequestPublished": "Root reports shared coordination 986fbb2 remotely verified; this is a request, not owner fix or release acceptance."
+  }
+}

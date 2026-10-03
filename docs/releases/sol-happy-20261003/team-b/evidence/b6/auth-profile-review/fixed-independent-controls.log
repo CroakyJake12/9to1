@@ -1,0 +1,15 @@
+{"control":"caller-mutation","sent":{"expectedRevision":7,"fields":{"name":"Initial"}},"resultCode":"ACCEPTED"}
+{"control":"revision-increment","expectedRevision":7,"returnedRevision":7,"resultCode":"MalformedResponse"}
+{"control":"revision-increment","expectedRevision":7,"returnedRevision":6,"resultCode":"MalformedResponse"}
+{"control":"revision-increment","expectedRevision":7,"returnedRevision":9,"resultCode":"MalformedResponse"}
+{"control":"revision-increment","expectedRevision":7,"returnedRevision":8,"resultCode":"ACCEPTED"}
+✔ validated caller profile fields are snapshotted before token await (26.993351ms)
+✔ profile PATCH success must advance expected revision by exactly one (1.9391ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 90.865212

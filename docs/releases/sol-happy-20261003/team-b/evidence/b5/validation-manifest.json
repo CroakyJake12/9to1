@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "protocol_commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
+  "candidate_HEAD_at_recording": "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
+  "source_state": "Auth files committed by root; exact tested source hashes unchanged",
+  "files": {
+    "apps/Web/Auth/account-api-client.js": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+    "apps/Web/Auth/account-api-client.test.js": "fbf749f10c0e29ca13777779938f03129f7905e576fac700d60c7858c1124af0",
+    "apps/Web/Auth/README.md": "8bbc2ab4935579805cee52bbfa5b3f1af2ce2b664aa7db7be8b6828d0cf4fbec"
+  },
+  "client_logic_test": {
+    "command": "node --test apps/Web/Auth/account-api-client.test.js",
+    "cwd": "/workspace/team-b-worktree",
+    "runtime": "v24.19.0",
+    "discovered": 21,
+    "executed": 21,
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0,
+    "exit_status": 0,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/b5/test-results/account-adapter.log",
+    "evidence_kind": "CLIENT_UNIT_AND_ISOLATED_LOOPBACK_TRANSPORT_ONLY"
+  },
+  "domain_suite": {
+    "command": "DOTNET_CLI_HOME=b5/dotnet-home NUGET_PACKAGES=b5/packages dotnet test 9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj --configuration Release --logger trx -p:UseArtifactsOutput=true -p:ArtifactsPath=b5/build-artifacts",
+    "runtime": ".NET 10 via /workspace/.tools/dotnet/dotnet",
+    "exit_status": 1,
+    "discovered": null,
+    "executed": 0,
+    "result": "BLOCKED_BEFORE_TEST_DISCOVERY: CanvasArtifactSession.cs511 CS1593",
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/b5/test-results/dotnet-application.log"
+  },
+  "browser_or_issuer_acceptance": "NOT_RUN/BLOCKED",
+  "independent_review": {
+    "result": "ACCEPTED_CLIENT_TRANSPORT_REGRESSION_ONLY",
+    "reviewer": "B6",
+    "manifest": "/workspace/team-b-evidence/sol-happy-20261003/b6/auth-review/manifest.json",
+    "discovered": 21,
+    "executed": 21,
+    "passed": 21,
+    "exit_status": 0,
+    "source_sha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+    "negative_controls": "Independent actual native Fetch streamed401 and 200-body-abort original failures retained; reruns correct."
+  },
+  "cross_chat_publication": "Root publishes B5 requests/evidence through acknowledged remote coordination; local files alone are not transport",
+  "candidate_commit": "4b6413a9d8b17b394daa7db74b05931cba8269f4"
+}

@@ -1,0 +1,8 @@
+{
+  "sourceCommit": "9697281a71a0e32dc761c2c53fd06c72a98ccb43",
+  "artifact": "/workspace/team-b-artifacts/browser-9697281/local-bootstrap-9697281.zip",
+  "bytes": 21689895,
+  "sha256": "cdfb0b0de083243b997aad00339294c348fb18fb098886798e889512bbad35ba",
+  "scope": "Compiled local browser bootstrap archive only; actualruntime checks pending; not completeproduct/deployedparity/acceptedrelease.",
+  "bundleManifest": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/native-browser-correction/browser-publish-clean.json"
+}

@@ -1,0 +1,99 @@
+{
+  "testedCodeCommit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "productParityVerified": false,
+  "deployed": false,
+  "checks": [
+    {
+      "id": "validator-unit",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "eng/browser/tests",
+        "-v"
+      ],
+      "cwd": "/workspace/team-b-worktree",
+      "startedAt": "2026-10-03T17:37:13.716546+00:00",
+      "completedAt": "2026-10-03T17:37:13.820072+00:00",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "expectationMet": true,
+      "log": "validator-unit.log",
+      "acceptanceClaim": false
+    },
+    {
+      "id": "navigation",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--no-restore"
+      ],
+      "cwd": "/workspace/team-b-worktree",
+      "startedAt": "2026-10-03T17:37:13.820131+00:00",
+      "completedAt": "2026-10-03T17:37:17.198314+00:00",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "expectationMet": true,
+      "log": "navigation.log",
+      "acceptanceClaim": false
+    },
+    {
+      "id": "browser-platform-node",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "apps/Web/Tests/browser-platform.test.mjs"
+      ],
+      "cwd": "/workspace/team-b-worktree",
+      "startedAt": "2026-10-03T17:37:17.198385+00:00",
+      "completedAt": "2026-10-03T17:37:17.267083+00:00",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "expectationMet": true,
+      "log": "browser-platform-node.log",
+      "acceptanceClaim": false
+    },
+    {
+      "id": "account-api-node",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "apps/Web/Auth/account-api-client.test.js"
+      ],
+      "cwd": "/workspace/team-b-worktree",
+      "startedAt": "2026-10-03T17:37:17.267135+00:00",
+      "completedAt": "2026-10-03T17:37:17.444387+00:00",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "expectationMet": true,
+      "log": "account-api-node.log",
+      "acceptanceClaim": false
+    },
+    {
+      "id": "browser-build",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "build",
+        "apps/Web/NineToOne.Web.csproj",
+        "--configuration",
+        "Release",
+        "--nologo"
+      ],
+      "cwd": "/workspace/team-b-worktree",
+      "startedAt": "2026-10-03T17:37:17.444440+00:00",
+      "completedAt": "2026-10-03T17:37:18.927511+00:00",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "expectationMet": true,
+      "log": "browser-build.log",
+      "acceptanceClaim": false
+    }
+  ]
+}

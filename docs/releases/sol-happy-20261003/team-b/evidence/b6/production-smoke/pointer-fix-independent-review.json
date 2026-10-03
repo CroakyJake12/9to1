@@ -1,0 +1,68 @@
+{
+  "reviewer": "B6 independent validation",
+  "source_commit": "83c24b2f0033fb2828169921fc905a327120143b",
+  "original_failed_source_commit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "unchanged_pointer_test_source_sha256": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf",
+  "exact_original_assertions_replayed": true,
+  "command": [
+    "node",
+    "/workspace/team-b-evidence/sol-happy-20261003/b6/production-smoke/run-independent-pointer-smoke.cjs",
+    "/workspace/team-b-artifacts/browser-83c24b2/wwwroot",
+    "/workspace/team-b-evidence/sol-happy-20261003/b6/production-smoke/pointer-83c24b2",
+    "83c24b2f0033fb2828169921fc905a327120143b"
+  ],
+  "exit_status": 0,
+  "counts": {
+    "executed": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "browser_version": "151.0.7922.173",
+  "fresh_profile": "/tmp/b6-actual-cui-vwBcQ3",
+  "port": 18764,
+  "bundle_files": 180,
+  "bundle_bytes": 35339902,
+  "bundle_inventory": "b6/production-smoke/frozen-83-bundle-inventory.json",
+  "source_diff": "diff --git a/apps/Web/wwwroot/index.html b/apps/Web/wwwroot/index.html\nindex 4a2ee0c..f8d7e69 100644\n--- a/apps/Web/wwwroot/index.html\n+++ b/apps/Web/wwwroot/index.html\n@@ -8,7 +8,7 @@\n     html, body { margin: 0; height: 100%; font-family: Montserrat, system-ui, sans-serif; }\n     body { display: flex; flex-direction: column; }\n     #browser-status { flex: none; padding: 12px 16px; color: CanvasText; background: Canvas; }\n-    #nine-to-one-root { flex: 1; min-height: 0; }\n+    #nine-to-one-root { flex: 1; min-height: 0; position: relative; }\n   </style>\n </head>\n <body>\n",
+  "observed": "Actual grey OpenStudio click447,62 leavesURL unchanged. Actual enabled Library click70,192 reaches#/home.library; actual enabled Events70,222 reaches#/home.events. Screenshots independently viewed show corresponding canonical headings and accurate unavailable services content.",
+  "visible_content_review": {
+    "outcome": "PARTIAL_BOOTSTRAP_ONLY;HOME_VISUAL_FAIL",
+    "screenshots_viewed": [
+      "cold-home.png",
+      "pointer-enabled-library.png",
+      "pointer-enabled-events.png"
+    ],
+    "home_overlap_still_present": true,
+    "library_events_readable_local_unavailable_views": true,
+    "full_visual_parity_accepted": false
+  },
+  "accessibility_outcome": "NOT_ACCEPTED: ARIA status/main only, no controls; no keyboard/screenreader acceptance",
+  "errors": {
+    "managed": 0,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": [],
+    "console_counts": {
+      "error:Failed to load resource: the server responded with a status of 404 (Not Found)": 1,
+      "warning:WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled": 2
+    }
+  },
+  "old_red_results_retained_unchanged": true,
+  "GUI_and_server_closed": true,
+  "artifact_sha256": {
+    "pointer-83c24b2/cold-home.html": "4ba7cac127a667029f258b651cd7db75eef52024e1e728810879e25e7cac7b05",
+    "pointer-83c24b2/cold-home.png": "624ed869664e5b78feeacdd471e2f7aae68c2d2c961a45faf98c448ddb5a0665",
+    "pointer-83c24b2/independent-production-trace.zip": "b3d8cf6a0e5418d4a7b75bbb20e195d8564b3e4810ffbf641591ff572ff51f35",
+    "pointer-83c24b2/pointer-disabled-open-studio.html": "4ba7cac127a667029f258b651cd7db75eef52024e1e728810879e25e7cac7b05",
+    "pointer-83c24b2/pointer-disabled-open-studio.png": "624ed869664e5b78feeacdd471e2f7aae68c2d2c961a45faf98c448ddb5a0665",
+    "pointer-83c24b2/pointer-enabled-events.html": "4ba7cac127a667029f258b651cd7db75eef52024e1e728810879e25e7cac7b05",
+    "pointer-83c24b2/pointer-enabled-events.png": "e085ae4c14cc688e55b1fdf3962fb591c9527146838565b140bf4823f34804f2",
+    "pointer-83c24b2/pointer-enabled-library.html": "4ba7cac127a667029f258b651cd7db75eef52024e1e728810879e25e7cac7b05",
+    "pointer-83c24b2/pointer-enabled-library.png": "fb80139d7de49bd3b1ef0cfa2673691fb7aa0e0cc3f061ea60b3dee808feb745",
+    "pointer-83c24b2/results.json": "7b70d94575ea81c3b4155a2aa87e349fd0744ce64a93ccaf8d89f1b34aab011a",
+    "pointer-83c24b2/runner-executed.cjs": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf"
+  },
+  "product_parity_verified": false,
+  "authenticated_provider_cross_client_gates": "NOT-RUN/BLOCKED",
+  "production_edits": false
+}

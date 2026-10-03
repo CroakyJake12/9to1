@@ -1,0 +1,29 @@
+✔ requires explicit secure origin and cleanup/token boundaries (1.577567ms)
+✔ current account preserves exact wire body and uses protected fetch policy (3.25893ms)
+✔ profile patch preserves omitted fields and explicit nullable clears; no client entitlement body (0.864888ms)
+✔ source conflict and error codes remain unchanged, with revision; no mutation retries (0.682364ms)
+✔ malformed success, invalid identity/schema and invented success are rejected (3.617478ms)
+✔ session list retains source fields and rejects mixed-account or duplicate identities (1.435644ms)
+✔ session mutations clear prior context and exactly use source routes/status (0.551638ms)
+✔ revoked/expired server session invalidates other pending requests and preserves source failure (0.743135ms)
+✔ explicit account/organisation switch drops late private result (0.407962ms)
+✔ cancelled token acquisition and fetch never become successful data (0.421883ms)
+✔ transport errors and missing authentication never log/expose tokens or retry writes (0.694371ms)
+✔ failed cleanup blocks mutation before any dispatch (0.243245ms)
+✔ session mutations bind original token before cleanup can replace/remove token context (0.474542ms)
+✔ concurrent context switch during asynchronous session cleanup prevents dispatch (0.186299ms)
+✔ invalid original token cannot be replaced by a new account token during cleanup (0.392279ms)
+✔ 401 from previous context cannot surface after an additional switch while reading its body (0.332238ms)
+✔ real-fetch successful body cancellation remains Cancelled instead of malformed JSON (32.327664ms)
+✔ 401 and missing token preserve cleanup failure distinctly (0.616935ms)
+✔ redirect responses and foreign response URL are rejected (0.298838ms)
+✔ streamed real-fetch 401 body survives invalidation; explicit body-phase abort is cancelled (10.792963ms)
+✔ real fetch loopback redirect does not transmit bearer to second origin (transport fixture, not issuer acceptance) (4.770597ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 175.476452

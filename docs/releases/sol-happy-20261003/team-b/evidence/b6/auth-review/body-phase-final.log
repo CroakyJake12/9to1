@@ -1,0 +1,1 @@
+{"scenario":"Real native Fetch200 body-phase external abort; isolated transport fixture","expected":"Cancelled","observed":{"ok":false,"status":null,"error":{"code":"Cancelled","action":"GetCurrent","body":null}},"source_sha256":"e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04"}

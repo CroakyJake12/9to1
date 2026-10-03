@@ -1,0 +1,137 @@
+[
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1261351",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1261351,
+    "canonical_text": "Sheet acceptance MUST combine a Write file, image, sticky note, labelled connection, freehand stroke, shape and nested Stash; arrange and group them; open and edit the same original from two contexts; close the preview and recover the prior canvas position; switch opening policy; and save/reopen with identical authored layout. Keyboard and touch users MUST be able to create, select, open and reposition items without precise pointer dragging.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "B2-WRITE-BROWSER-SEMANTIC-ROUNDTRIP"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1263238",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1263238,
+    "canonical_text": "Persist stable GroupID/NodeID/ConnectionID, memberships, hierarchy and authored layout. Removing a group or node MUST show whether children are being retained/reassigned or appearances removed and MUST never delete originals as an incidental graph operation. Tree acceptance MUST verify the Maths journey, one file in two Trees, rename/move stability, cycle rejection, editor/viewer mode differences, nested folders and no protected-layout leakage through APIs or Boards embeds.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1274571",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1274571,
+    "canonical_text": "Matrix acceptance MUST build Topic A/B/C rows and Writing/Data/Presentations columns, populate a cell with a nested folder, open cell/row/column groups, rename/reorder both axes, move an appearance, remove an axis safely and reopen without losing identity, classification or readable orientation.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1274923",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1274923,
+    "canonical_text": "Link connects work together through Flow and Binder. The launch screen and New menu MUST distinguish them by both name and preview: Flow is a continuous page; Binder is an explorable interconnected document. Creating a document asks for its type, name and Files destination. A document can itself be placed in any compatible Files organisation, opened from Spaces or included in Boards without changing its identity. Link MUST NOT offer Sheet as a third document type or use Boards as the name of Binder.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1275428",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1275428,
+    "canonical_text": "The editor MUST expose the current document type, outline/search, Insert, source management, preview/view mode, undo/redo, save/sync/history and sharing. Link-authored text, tables, images, media, drawings and other supported objects use the Shared Productivity Engine. Embedded originals use registered owning-app renderers/editors. A Sources panel lists authorised references, live/pinned policy, selected source section, availability and permission status, with Reveal placement, Change source/section and Open original actions.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1275960",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1275960,
+    "canonical_text": "Link owns its block/container structure, arrangement and directly authored information. Existing files stay independent originals. Authoring a note inside Binder does not require creating a new file; placing a Write document inside Binder does not silently import its text as Binder-owned content. The distinction MUST be visible in the inspector and destructive-action wording. Duplicate document copies its authored structure and preserves source references unless the user explicitly chooses independent source copies.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "B2-WRITE-BROWSER-SEMANTIC-ROUNDTRIP"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1279368",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1279368,
+    "canonical_text": "Flow acceptance MUST build the Annual report example; use the same Data source twice with stable section selectors; edit the original through a permitted route; revoke source access; delete a referenced section; reorder and undo; reopen and resume reading; and verify a continuous primary scroll on desktop and mobile. No source copy or widened permission may be introduced by composition.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1282420",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1282420,
+    "canonical_text": "Binder acceptance MUST author a folder with rich content, a tabbed binder, a stack, a referenced original and a connection; read them in a non-linear order; close back to the same overview; find an off-canvas item through the outline; follow a deep link after rename; and open the Binder from a Sheet and as a Boards page. Directly authored information, source references and all nested content MUST survive reopen without being flattened or split into unwanted files.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  },
+  {
+    "requirement_id": "B2-TF-DEPENDENCY-P1287824",
+    "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "source_start": 1287824,
+    "canonical_text": "Prototype integrates with Files, Spaces, Link, Boards and Paths through registered renderers, references and typed actions. A reader may adjust permitted local inputs without acquiring authoring rights. Native export/import preserves the model and declared dependencies; static output exports are labelled as non-interactive. Missing components keep their payload and show a repair state rather than disappearing.",
+    "interface_owner": "B4 Files/Link/Prototype browser surface plus Team A shared renderer/domain owner",
+    "B2_responsibility": "Owning productivity editor semantic effects; shared IDs/revisions/source permissions; no source copies or flattened substitutes",
+    "test_procedure_ids": [
+      "BP-ALL-INTEROP",
+      "BP-ALL-API"
+    ],
+    "state": "BLOCKED",
+    "outcome": "NOT_RUN",
+    "blocker": "B4 production surface/shared renderer/real authenticated source services not available"
+  }
+]

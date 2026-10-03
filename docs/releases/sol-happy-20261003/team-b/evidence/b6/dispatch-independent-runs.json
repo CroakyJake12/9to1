@@ -1,0 +1,60 @@
+[
+  {
+    "label": "red",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Dispatchred.csproj",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/artifacts-red"
+    ],
+    "cwd": "/workspace/team-b-astra-browser-validation",
+    "selector": "/workspace/team-b-evidence/sol-happy-20261003/b1/production-host/BrowserRouteDispatcher.before-priority-fix.cs",
+    "exit_status": 134,
+    "started_at": "2026-10-03T18:03:37.404941+00:00",
+    "completed_at": "2026-10-03T18:03:40.604006+00:00",
+    "log": "b6/dispatch-independent-red.log"
+  },
+  {
+    "label": "green-harness-initial",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Dispatchgreen.csproj",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/artifacts-green"
+    ],
+    "cwd": "/workspace/team-b-astra-browser-validation",
+    "selector": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+    "exit_status": 1,
+    "started_at": "2026-10-03T18:03:40.605157+00:00",
+    "completed_at": "2026-10-03T18:03:42.439774+00:00",
+    "log": "b6/dispatch-independent-green-harness-initial.log"
+  },
+  {
+    "label": "green",
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Dispatchgreen.csproj",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/artifacts-green"
+    ],
+    "cwd": "/workspace/team-b-astra-browser-validation",
+    "selector": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+    "exit_status": 0,
+    "started_at": "2026-10-03T18:04:27.281035+00:00",
+    "completed_at": "2026-10-03T18:04:29.429583+00:00",
+    "log": "b6/dispatch-independent-green.log",
+    "harness_correction": "Explicit unchanged Program.cs compile item replaces default directory glob to exclude prior red run generated assembly metadata; no assertions or production source changed."
+  }
+]

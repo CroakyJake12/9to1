@@ -1,0 +1,79 @@
+diff --git a/apps/Web/NineToOne.Web.csproj b/apps/Web/NineToOne.Web.csproj
+index 2f76680..cd84e67 100644
+--- a/apps/Web/NineToOne.Web.csproj
++++ b/apps/Web/NineToOne.Web.csproj
+@@ -10,13 +10,14 @@
+     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+     <WasmEnableThreads>false</WasmEnableThreads>
+     <PinnedBrowserProject>$(MSBuildProjectDirectory)/../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser</PinnedBrowserProject>
+-    <!-- The transitive native packages select the SDK's SIMD/thread variant themselves. -->
+-    <ShouldIncludeNativeSkiaSharp>false</ShouldIncludeNativeSkiaSharp>
+-    <ShouldIncludeNativeHarfBuzzSharp>false</ShouldIncludeNativeHarfBuzzSharp>
+   </PropertyGroup>
+   <!-- Source project references do not import the adapter's packaged build contract. -->
+   <Import Project="$(PinnedBrowserProject)/build/Avalonia.Browser.props" />
+   <Import Project="$(PinnedBrowserProject)/build/Avalonia.Browser.targets" />
++  <ItemGroup>
++    <!-- Replace only the adapter's fixed native variants with the later SDK-selected package inputs. -->
++    <NativeFileReference Remove="@(NativeFileReference->WithMetadataValue('DefiningProjectName', 'Avalonia.Browser'))" />
++  </ItemGroup>
+   <ItemGroup>
+     <Compile Remove="Tests/**/*.cs" />
+     <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+@@ -26,5 +27,11 @@
+   </ItemGroup>
+   <Target Name="RequirePinnedBrowserAssets" BeforeTargets="ResolveStaticWebAssetsInputs">
+     <Error Condition="!Exists('$(PinnedBrowserProject)/staticwebassets/avalonia.js') or !Exists('$(PinnedBrowserProject)/staticwebassets/storage.js')" Text="The pinned Avalonia browser runtime assets have not been built. Build the adapter's locked webapp sources before publishing this host." />
++    <ItemGroup>
++      <BrowserSkiaNativeInput Include="@(NativeFileReference)" Condition="'%(NativeFileReference.Filename)' == 'libSkiaSharp'" />
++      <BrowserHarfBuzzNativeInput Include="@(NativeFileReference)" Condition="'%(NativeFileReference.Filename)' == 'libHarfBuzzSharp'" />
++    </ItemGroup>
++    <Error Condition="'@(BrowserSkiaNativeInput)' == ''" Text="The browser host requires the pinned SkiaSharp native WebAssembly library input." />
++    <Error Condition="'@(BrowserHarfBuzzNativeInput)' == ''" Text="The browser host requires the pinned HarfBuzzSharp native WebAssembly library input." />
+   </Target>
+ </Project>
+diff --git a/apps/Web/Program.cs b/apps/Web/Program.cs
+index 1bc6d53..f85370f 100644
+--- a/apps/Web/Program.cs
++++ b/apps/Web/Program.cs
+@@ -13,12 +13,21 @@ public static partial class Program
+ 
+     public static async Task Main()
+     {
+-        await CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowserApplication>()).StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
++        try
+         {
+-            RegisterAvaloniaServiceWorker = false,
+-            RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
+-        });
+-        await Application!.OpenFragmentAsync(ReadFragment());
++            await CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowserApplication>()).StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
++            {
++                RegisterAvaloniaServiceWorker = false,
++                RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
++            });
++            await Application!.OpenFragmentAsync(ReadFragment());
++        }
++        catch (Exception exception)
++        {
++            Console.Error.WriteLine(exception);
++            ShowStatus("BrowserRuntimeUnavailable", "9to1 could not start. Reload to try again.");
++            throw;
++        }
+     }
+ 
+     internal static void Attach(BrowserApplication application) => Application = application;
+diff --git a/apps/Web/wwwroot/main.js b/apps/Web/wwwroot/main.js
+index 1f5005f..50ed31a 100644
+--- a/apps/Web/wwwroot/main.js
++++ b/apps/Web/wwwroot/main.js
+@@ -17,7 +17,8 @@ try {
+         () => { unsubscribe(); exports.NineToOne.Web.Program.CloseShell(); },
+         exports.NineToOne.Web.Program.PrivateContextInvalidated);
+     await dotnet.run();
+-} catch {
++} catch (error) {
++    console.error('9to1 browser startup failed.', error);
+     platform.showStatus(isCompatible ? 'BrowserRuntimeUnavailable' : 'BrowserCapabilityUnavailable',
+         isCompatible ? '9to1 could not start. Check your connection and reload the page.'
+             : 'This browser cannot run 9to1. Use a browser with WebAssembly and modern JavaScript support.');

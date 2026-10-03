@@ -1,0 +1,84 @@
+{
+  "reviewer": "B6 independent validation",
+  "reviewed_at": "2026-10-03T18:24:09.265374+00:00",
+  "commit": "9697281a71a0e32dc761c2c53fd06c72a98ccb43",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "msbuild",
+    "apps/Web/NineToOne.Web.csproj",
+    "-p:Configuration=Release",
+    "-nologo",
+    "-getProperty:ShouldIncludeNativeSkiaSharp,ShouldIncludeNativeHarfBuzzSharp",
+    "-getItem:NativeFileReference,EmccExportedRuntimeMethod"
+  ],
+  "exit_status": 0,
+  "scope": "Read-only MSBuild project evaluation only; no build/publish/runtime run by B6.",
+  "native_inputs": [
+    {
+      "Identity": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+      "FullPath": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+      "RootDir": "/",
+      "Filename": "libSkiaSharp",
+      "Extension": ".a",
+      "RelativeDir": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/",
+      "Directory": "workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/",
+      "RecursiveDir": "",
+      "ModifiedTime": "2026-02-07 16:15:38.0000000",
+      "CreatedTime": "2026-02-07 16:15:38.0000000",
+      "AccessedTime": "2026-10-03 17:49:04.6650801",
+      "DefiningProjectFullPath": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/SkiaSharp.NativeAssets.WebAssembly.targets",
+      "DefiningProjectDirectory": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/",
+      "DefiningProjectName": "SkiaSharp.NativeAssets.WebAssembly",
+      "DefiningProjectExtension": ".targets"
+    },
+    {
+      "Identity": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+      "FullPath": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+      "RootDir": "/",
+      "Filename": "libHarfBuzzSharp",
+      "Extension": ".a",
+      "RelativeDir": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/",
+      "Directory": "workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/",
+      "RecursiveDir": "",
+      "ModifiedTime": "2026-02-06 15:30:22.0000000",
+      "CreatedTime": "2026-02-06 15:30:22.0000000",
+      "AccessedTime": "2026-10-03 17:49:04.6650801",
+      "DefiningProjectFullPath": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/HarfBuzzSharp.NativeAssets.WebAssembly.targets",
+      "DefiningProjectDirectory": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/",
+      "DefiningProjectName": "HarfBuzzSharp.NativeAssets.WebAssembly",
+      "DefiningProjectExtension": ".targets"
+    }
+  ],
+  "native_input_count": 2,
+  "GL_export_count": 1,
+  "flags_true": true,
+  "dedup_review": "Remove transforms only existing NativeFileReference items defined by exact Avalonia.Browser owner import. Later unchanged NuGet native SDK inputs remain; no blanket native flag override. Both actual native files exist with selected st,simd variant.",
+  "source_sha256": {
+    "apps/Web/NineToOne.Web.csproj": "47ebacd8fd15868818ed54eae64777e1b8e4f16cf3dba8c73951998c011c4c72",
+    "apps/Web/Program.cs": "b3f3f77a5129c32d36bb35fcf26cb50b2e78511049741a57abc3aeaa28d992da",
+    "apps/Web/wwwroot/main.js": "429b0f2d3549799bf2eb0131f5005626043df20113413189f8cd295492ba25e8"
+  },
+  "native_libraries_sha256": {
+    "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a": "9d44db6960c0ab9c14323585dc6d552c12c3edf24a475614be74120a71f76d6c",
+    "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a": "865f1ac8e246bda1ad88ffbb499a71c56fb24557d6f23717cf34666fd9dbc24e"
+  },
+  "independent_metadata_sha256": "03a115c12fc1c5c3f59abed3a9d48a9363dd73e219b7078829462eb2394de03f",
+  "root_real_target_negative_controls_reviewed": {
+    "manifest": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/native-browser-correction/guard-results.json",
+    "manifest_sha256": "193f4351fb37589d6c20635ef31fb475068e5b3c8e3f3b81ba3ea20b1336a908",
+    "normal_exit_status": 0,
+    "missing_skia_exit_status": 1,
+    "missing_harfbuzz_exit_status": 1,
+    "error_log_sha256": {
+      "missing-skia": "18a4d1a03c533cabb0fb148b5a0447c3df06d250310c445e3fc43524eb80158e",
+      "missing-harfbuzz": "134fa5ccca69682bbcf452e3d202450b26d16f191f4ec54ace90e6a83db4932d"
+    },
+    "independently_reexecuted": false,
+    "scope": "Actual required native input guard failures reviewed; not product acceptance."
+  },
+  "startup_error_review": "Program logs exception, reports BrowserRuntimeUnavailable then rethrows; main.js logs caught cause and keeps truthful unavailable status. Exceptions not swallowed into success.",
+  "prior_failed_runtime": "b1/production-host/run-830f747 preserved startup failure with0canvas; no prior result relabelled.",
+  "product_parity_verified": false,
+  "browser_rendering_verified": false,
+  "production_edits": false
+}

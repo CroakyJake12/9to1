@@ -1,0 +1,6 @@
+Submodule 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus' (https://github.com/AvaloniaUI/Avalonia.DBus.git) registered for path 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus'
+Submodule 'framework/CUI/vendor/Avalonia/external/XamlX' (https://github.com/kekekeks/XamlX.git) registered for path 'framework/CUI/vendor/Avalonia/external/XamlX'
+Cloning into '/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/external/Avalonia.DBus'...
+Cloning into '/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/external/XamlX'...
+Submodule path 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus': checked out '864a05282841bf04006890f04d11d60d1a046aa9'
+Submodule path 'framework/CUI/vendor/Avalonia/external/XamlX': checked out '009d4815470cf4bf71d1adbb633a5d81dcb2bb52'

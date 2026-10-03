@@ -1,0 +1,87 @@
+{
+  "worker": "B1",
+  "prepatchCandidateHead": "c1173a1b6a6efda457c1830258d83283ba376ad9",
+  "reviewedCandidateHead": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "candidateWorktree": "/workspace/team-b-astra-browser-validation",
+  "headMovementDuringReview": "Root committed exact four-line patch as ebfa07b before this review finished; comparisons are pinned to prepatch c117 and actual reviewed ebfa.",
+  "reviewScope": "Independent read-only review of exact four-line conditional source-link harness fix; no owner sources/tests changed; no build or runtime validation performed by B1 in this review.",
+  "reviewDecision": "APPROVED-FOR-COMPILE-GRAPH-COMPATIBILITY",
+  "patch": "diff --git a/apps/Web/Tests/BrowserNavigation.Tests.csproj b/apps/Web/Tests/BrowserNavigation.Tests.csproj\nindex ba9ce73..38cfbb8 100644\n--- a/apps/Web/Tests/BrowserNavigation.Tests.csproj\n+++ b/apps/Web/Tests/BrowserNavigation.Tests.csproj\n@@ -14,4 +14,8 @@\n     <Compile Include=\"../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs\" Link=\"Owner/HomeDashboard.cs\" />\n     <ProjectReference Include=\"../../../framework/CUI/Core/CakeOS.Cui.Core.csproj\" />\n   </ItemGroup>\n+  <ItemGroup Condition=\"Exists('../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs')\">\n+    <Compile Include=\"../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs\" Link=\"Owner/HomeStateCommitActorGuard.cs\" />\n+    <Compile Include=\"../../../9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs\" Link=\"Owner/ResourceAuthorization.cs\" />\n+  </ItemGroup>\n </Project>",
+  "addedLines": 4,
+  "removedLines": 0,
+  "exactExpectedPatchVerified": true,
+  "compileFailureCause": {
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/astra-browser-validation/navigation.log",
+    "source": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs:177",
+    "diagnostics": [
+      "CS0246 Haven.Application.AuthenticatedResourceActor missing from original narrow harness source graph",
+      "CS0246 IHomeStateCommitActorGuard missing from original narrow harness source graph"
+    ],
+    "ownerChange": "IHomeCoreStateStore.WriteGuardedAsync now references authenticated actor and in-process commit guard; default body returns PermissionDenied rather than accepting unguarded writes."
+  },
+  "dependencyClosure": {
+    "HomeStateCommitActorGuard.cs": "Actual unchanged owning Home source declares IHomeStateCommitActorGuard and HomeStateCommitPhase, using existing HomeCoreStoredState and actual Haven.Application.AuthenticatedResourceActor.",
+    "ResourceAuthorization.cs": "Actual unchanged owning Haven.Application source declares AuthenticatedResourceActor and associated canonical resource authority contracts/service; dependencies are BCL/current implicit imports. No type stubs or duplicate declarations introduced."
+  },
+  "compatibility": {
+    "oldBaseline": "Guard file absent and old source contract lacks the guarded-write signature, so the condition preserves the previously verified98a harness graph.",
+    "newCandidate": "Guard exists, adding both actual owner files closes the missing compile dependencies. If authorization source is missing the build still fails rather than replacing/excluding that requirement.",
+    "assertions": "Program.cs, production route codec and registry byte-identical to prepatch candidate; no tests, assertions, thresholds or warning settings removed/changed."
+  },
+  "sourceIdentities": [
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+      "exists": true,
+      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3",
+      "gitBlob": "e96d5d09d8262e08cc0db9b43e1a9326015105a6",
+      "unmodifiedAgainstHead": true,
+      "unmodifiedAgainstPrepatchCandidate": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs",
+      "exists": true,
+      "sha256": "05d89400297f02174d01f89f1979eaa5bdea447d8ce2b9e435c1093de6523320",
+      "gitBlob": "c6a176077bdd4f9e1fa27ac3051e55ab0eea87f7",
+      "unmodifiedAgainstHead": true,
+      "unmodifiedAgainstPrepatchCandidate": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs",
+      "exists": true,
+      "sha256": "f7bf97f06b6a30a9a3788bc3663043ff54c5c982b2552b9e35756254ff10a23a",
+      "gitBlob": "7f384ca48aa1e1d971bef887d904951b475e605e",
+      "unmodifiedAgainstHead": true,
+      "unmodifiedAgainstPrepatchCandidate": true
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "exists": true,
+      "sha256": "9993185766573fe1bf44bf59cc700a789a149eeb0812d499d7f1d72e86d09bad",
+      "gitBlob": "e8fa18c3f63281964e09e9e1f733bedcb6ba9bfe",
+      "unmodifiedAgainstHead": true,
+      "unmodifiedAgainstPrepatchCandidate": true
+    },
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "exists": true,
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a",
+      "gitBlob": "21c174b9953bad2eb3b55372ebc5b846341d68f0",
+      "unmodifiedAgainstHead": true,
+      "unmodifiedAgainstPrepatchCandidate": true
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "exists": true,
+      "sha256": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c",
+      "gitBlob": "b09aad5ad0841de6a536e4ad7ee281f85e1b58cd",
+      "unmodifiedAgainstHead": true,
+      "unmodifiedAgainstPrepatchCandidate": true
+    }
+  ],
+  "testedOutcome": "NOT-RUN-BY-THIS-REVIEW; root will rerun exact candidate including patch",
+  "acceptanceLimits": [
+    "This necessary compilation graph change does not verify Home commit authority/security behaviour.",
+    "Earlier98a unit passes are not relabelled as ebfa candidate results.",
+    "No fullhost, provider, deployed browser, continuity or parity acceptance follows from this static review."
+  ]
+}

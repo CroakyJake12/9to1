@@ -1,0 +1,135 @@
+✖ profile update snapshots scalar fields before deferred token acquisition (26.880213ms)
+✖ post-call invalid fields and values cannot enter a validated profile patch (0.828454ms)
+✖ profile success must return exactly expected revision plus one (0.686831ms)
+✖ profile revision rejects unrepresentable next integer before token or network work (0.496104ms)
+✔ sequential server CAS success preserves wire body at normal and safe integer upper bounds (1.078649ms)
+✖ profile patch validates the same single scalar snapshot used for dispatch (0.750416ms)
+✖ caller serialization hooks cannot replace the validated profile fields (0.715694ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 1
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100.011388
+
+✖ failing tests:
+
+test at ../team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:14:1
+✖ profile update snapshots scalar fields before deferred token acquisition (26.880213ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      expectedRevision: 1,
+      fields: {
+  +     job: 'Unapproved addition',
+  +     name: 'Unapproved edit'
+  -     name: 'Approved edit',
+  -     pronouns: null
+      }
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:28:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { expectedRevision: 1, fields: { name: 'Unapproved edit', job: 'Unapproved addition' } },
+    expected: { expectedRevision: 1, fields: { name: 'Approved edit', pronouns: null } },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ../team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:31:1
+✖ post-call invalid fields and values cannot enter a validated profile patch (0.828454ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      expectedRevision: 1,
+      fields: {
+  +     entitlement: 'Business',
+        name: 'Approved edit'
+      }
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:44:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { expectedRevision: 1, fields: { name: 'Approved edit', entitlement: 'Business' } },
+    expected: { expectedRevision: 1, fields: { name: 'Approved edit' } },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ../team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:48:1
+✖ profile success must return exactly expected revision plus one (0.686831ms)
+  AssertionError [ERR_ASSERTION]: revision 1 must not acknowledge CAS success
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:53:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:59:1
+✖ profile revision rejects unrepresentable next integer before token or network work (0.496104ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:66:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:81:1
+✖ profile patch validates the same single scalar snapshot used for dispatch (0.750416ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:91:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:95:1
+✖ caller serialization hooks cannot replace the validated profile fields (0.715694ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js:108:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,4 @@
+PASS B2-DOM-WRITE-01-selection-format
+PASS B2-DOM-WRITE-02-existing-runs
+PASS B2-DOM-WRITE-03-range-comment
+PASS B2-DOM-WRITE-04-assertion-negative-control; assertions=22; cases=4; scope=domain-only

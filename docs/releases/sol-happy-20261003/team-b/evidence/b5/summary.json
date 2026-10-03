@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "source_sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23",
+  "candidate_base": "98a0882",
+  "requirements": 1715,
+  "canonical_action_occurrences": 251,
+  "procedures": 53,
+  "by_product": {
+    "general-and-agentic": 492,
+    "common-apps-and-web": 51,
+    "accounts-business": 110,
+    "admin": 33,
+    "connect": 74,
+    "Spaces": 159,
+    "VisionVoice": 132,
+    "AIStudio": 142,
+    "Play": 87,
+    "automations": 135,
+    "external-integrations": 116,
+    "terra-form-common": 26,
+    "terra-form-cross-app": 20,
+    "sol-happy": 138
+  },
+  "by_normative_level": {
+    "MANDATORY": 776,
+    "OPTIONAL_OR_CONDITIONAL": 49,
+    "PRODUCT_PROSE_OR_LIST_ITEM": 844,
+    "SHOULD_DEFAULT_REQUIRED": 44,
+    "OPEN": 2
+  },
+  "requirement_states": {
+    "BLOCKED": 1715
+  },
+  "test_outcomes": {
+    "NOT_RUN": 1715
+  },
+  "behavior_verified": 0,
+  "coverage_status": "SOURCE_PARAGRAPH_COVERAGE_ONLY; NOT CLAUSE-LEVEL OR DONOR-PARITY ACCEPTANCE",
+  "cross_chat_transport": "Root reports Team C coordination readback 41e0ccc acknowledging Team B claims and protocol source7cc52df; root alone publishes B5 requests. This local evidence is not itself transport.",
+  "execution": "No product acceptance tests executed by this evidence generator"
+}

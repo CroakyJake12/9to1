@@ -1,0 +1,26 @@
+✔ requires explicit secure origin and cleanup/token boundaries (1.709085ms)
+✔ current account preserves exact wire body and uses protected fetch policy (3.503016ms)
+✔ profile patch preserves omitted fields and explicit nullable clears; no client entitlement body (0.962024ms)
+✔ source conflict and error codes remain unchanged, with revision; no mutation retries (0.554332ms)
+✔ malformed success, invalid identity/schema and invented success are rejected (2.437778ms)
+✔ session list retains source fields and rejects mixed-account or duplicate identities (1.327522ms)
+✔ session mutations clear prior context and exactly use source routes/status (0.630045ms)
+✔ revoked/expired server session invalidates other pending requests and preserves source failure (0.481272ms)
+✔ explicit account/organisation switch drops late private result (0.395493ms)
+✔ cancelled token acquisition and fetch never become successful data (0.422905ms)
+✔ transport errors and missing authentication never log/expose tokens or retry writes (0.284928ms)
+✔ failed cleanup blocks mutation before any dispatch (0.207251ms)
+✔ session mutations bind original token before cleanup can replace/remove token context (0.305768ms)
+✔ concurrent context switch during asynchronous session cleanup prevents dispatch (0.147051ms)
+✔ 401 and missing token preserve cleanup failure distinctly (0.286911ms)
+✔ redirect responses and foreign response URL are rejected (0.549564ms)
+✔ streamed real-fetch 401 body survives invalidation; explicit body-phase abort is cancelled (27.780877ms)
+✔ real fetch loopback redirect does not transmit bearer to second origin (transport fixture, not issuer acceptance) (6.709859ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 158.59877

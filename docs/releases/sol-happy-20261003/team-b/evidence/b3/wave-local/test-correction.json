@@ -1,0 +1,9 @@
+{
+  "test": "B3-WAVE-CLI-02",
+  "initial_failure": "initial-hex-case-failure.log",
+  "original_assertion": "clip['SourceSha256']==source_hash",
+  "corrected_assertion": "bytes.fromhex(clip['SourceSha256'])==bytes.fromhex(source_hash)",
+  "reason": "Canonical stable identity/integrity obligations require fingerprint value equality and do not prescribe textual hex casing; unchanged production source uses Convert.ToHexString uppercase, Python hexdigest lowercase. Decode to bytes and compare exact SHA-256 digest, no content assertion removed.",
+  "independent_review": "Root coordinator explicitly approved correction in collaboration message before rerun.",
+  "production_source_changes": false
+}

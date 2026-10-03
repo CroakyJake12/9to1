@@ -1,0 +1,13 @@
+diff --git a/apps/Web/wwwroot/main.js b/apps/Web/wwwroot/main.js
+index 50ed31a..97f9b7e 100644
+--- a/apps/Web/wwwroot/main.js
++++ b/apps/Web/wwwroot/main.js
+@@ -16,7 +16,7 @@ try {
+     unsubscribe = platform.subscribe(exports.NineToOne.Web.Program.LocationChanged,
+         () => { unsubscribe(); exports.NineToOne.Web.Program.CloseShell(); },
+         exports.NineToOne.Web.Program.PrivateContextInvalidated);
+-    await dotnet.run();
++    await runtime.runMain(config.mainAssemblyName, []);
+ } catch (error) {
+     console.error('9to1 browser startup failed.', error);
+     platform.showStatus(isCompatible ? 'BrowserRuntimeUnavailable' : 'BrowserCapabilityUnavailable',

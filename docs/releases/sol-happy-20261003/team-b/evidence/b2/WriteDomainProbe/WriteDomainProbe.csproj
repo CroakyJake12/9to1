@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <Compile Include="/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs" Link="Production/WriteDocumentEditor.cs" />
+    <Compile Include="/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs" Link="Production/WriteDocumentEditor.DocumentEditing.cs" />
+    <Compile Include="/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs" Link="Production/NotesAbstractions.cs" />
+    <Compile Include="/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Documents/DocumentVectorShapeServices.cs" Link="Production/DocumentVectorShapeServices.cs" />
+  </ItemGroup>
+</Project>

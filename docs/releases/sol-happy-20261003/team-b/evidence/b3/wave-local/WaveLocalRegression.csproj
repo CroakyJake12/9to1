@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>B3.Wave.LocalSourceRegression</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="/workspace/team-b-worktree/9to1 Workspace/Wave/Program.cs" Link="Program.cs" />
+    <Compile Include="/workspace/team-b-worktree/9to1 Workspace/Wave/WaveProject.cs" Link="WaveProject.cs" />
+  </ItemGroup>
+</Project>

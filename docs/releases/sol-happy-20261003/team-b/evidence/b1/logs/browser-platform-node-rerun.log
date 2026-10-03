@@ -1,0 +1,8 @@
+PASS B1-HISTORY-01-duplicate-does-not-push
+PASS B1-HISTORY-02-context-address
+PASS B1-HISTORY-03-replace-is-explicit
+PASS B1-HISTORY-04-back-forward-location
+PASS B1-HISTORY-05-status-is-text
+PASS B1-HISTORY-06-bfcache-preserves-live-runtime
+PASS B1-HISTORY-07-release-subscriptions
+Discovered: 7; executed: 7; passed: 7; failed: 0. Real browser acceptance: NOT-RUN.

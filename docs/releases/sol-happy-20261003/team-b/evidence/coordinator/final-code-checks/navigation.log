@@ -1,0 +1,17 @@
+PASS B1-ROUTE-01-default-dashboard
+PASS B1-ROUTE-02-opaque-identities
+PASS B1-ROUTE-03-null-empty-distinct
+PASS B1-ROUTE-04-unambiguous-fields
+PASS B1-ROUTE-05-malformed-link-negative
+PASS B1-ROUTE-06-size-bounds
+PASS B1-ROUTE-07-unspecified-picker-preserved-as-error
+PASS B1-ROUTE-08-control-character-encoding
+PASS B1-ROUTE-09-route-case-preserved
+PASS B1-ROUTE-10-action-remains-data
+PASS B1-REGISTRY-01-unavailable-no-render
+PASS B1-REGISTRY-02-owner-result-required
+PASS B1-REGISTRY-03-mismatched-view-blocked
+PASS B1-REGISTRY-04-reset-rejects-late-private-view
+PASS B1-REGISTRY-05-cancelled-no-render
+PASS B1-REGISTRY-06-duplicate-owner-not-overwritten
+Discovered: 16; executed: 16; passed: 16; failed: 0. Backend/browser acceptance: NOT-RUN.

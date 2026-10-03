@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-03T18:58:42.061861+00:00",
+  "sourceCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+  "nativeGuardSourceContinuity": {
+    "apps/Web/NineToOne.Web.csproj": {
+      "sha256": "47ebacd8fd15868818ed54eae64777e1b8e4f16cf3dba8c73951998c011c4c72",
+      "unchangedFromNativeInputGuardCommit": "9697281a71a0e32dc761c2c53fd06c72a98ccb43"
+    },
+    "apps/Web/Program.cs": {
+      "sha256": "b3f3f77a5129c32d36bb35fcf26cb50b2e78511049741a57abc3aeaa28d992da",
+      "unchangedFromNativeInputGuardCommit": "9697281a71a0e32dc761c2c53fd06c72a98ccb43"
+    }
+  },
+  "bundleMatchesOriginalPublishManifest": true,
+  "files": 180,
+  "bytes": 35339902,
+  "scope": "Post-runtime immutable artifact rehash plus unchanged input-guard source only. Prior native-link controls preserve their recorded commit; no historical result relabelled.",
+  "productParityVerified": false
+}

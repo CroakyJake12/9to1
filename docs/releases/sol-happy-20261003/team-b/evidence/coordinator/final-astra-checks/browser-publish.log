@@ -1,0 +1,125 @@
+  Determining projects to restore...
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj (in 864 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj (in 865 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj (in 864 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj (in 865 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj (in 7 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj (in 10 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj (in 4 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/Avalonia.DesignerSupport.csproj (in 19 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj (in 19 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj (in 24 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj (in 19 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj (in 3 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj (in 4 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj (in 20 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj (in 15 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj (in 56 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj (in 6 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj (in 28 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj (in 13 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj (in 7 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj (in 14 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj (in 21 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj (in 5 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj (in 9 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj (in 33 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj (in 38 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj (in 3 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 2 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 2 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/Themes/CakeOS.Cui.Themes.csproj (in 5 ms).
+  Restored /workspace/team-b-astra-browser-validation/9to1 Workspace/Home/HavenOS.Home.csproj (in 4 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj (in 14 ms).
+  Restored /workspace/team-b-astra-browser-validation/framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj (in 27 ms).
+  Restored /workspace/team-b-astra-browser-validation/apps/Web/NineToOne.Web.csproj (in 52 ms).
+  9 of 43 projects are up-to-date for restore.
+  Haven.Core -> /workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  NineToOne.Cui.AI -> /workspace/team-b-astra-browser-validation/framework/CUI/AI/bin/Release/net10.0/NineToOne.Cui.AI.dll
+  Avalonia.Remote.Protocol -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/bin/Release/net10.0/Avalonia.Remote.Protocol.dll
+  DevAnalyzers -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/bin/Release/netstandard2.0/DevAnalyzers.dll
+  Avalonia.Analyzers.CSharp -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/bin/Release/netstandard2.0/Avalonia.Analyzers.CSharp.dll
+  CakeOS.Cui.Language -> /workspace/team-b-astra-browser-validation/framework/CUI/Language/bin/Release/net10.0/CakeOS.Cui.Language.dll
+  Avalonia.Analyzers.VisualBasic -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/bin/Release/netstandard2.0/Avalonia.Analyzers.VisualBasic.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/bin/Release/netstandard2.0/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  DevGenerators -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/bin/Release/netstandard2.0/DevGenerators.dll
+  Den -> /workspace/team-b-astra-browser-validation/9to1 Models/Dulche Alpha/bin/Release/net10.0/Den.dll
+  Haven.Application -> /workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.dll
+  Avalonia.DBus.Generators -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/bin/Release/netstandard2.0/Avalonia.DBus.Generators.dll
+  CakeOS.Cui.Core -> /workspace/team-b-astra-browser-validation/framework/CUI/Core/bin/Release/net10.0/CakeOS.Cui.Core.dll
+  Avalonia.Base -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/bin/Release/net10.0/Avalonia.Base.dll
+  Avalonia.Build.Tasks -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/bin/Release/netstandard2.0/Avalonia.Build.Tasks.dll
+  Avalonia.Controls -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/bin/Release/net10.0/Avalonia.Controls.dll
+  Avalonia.MicroCom -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/bin/Release/net10.0/Avalonia.MicroCom.dll
+  Avalonia.HarfBuzz -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/bin/Release/net10.0/Avalonia.HarfBuzz.dll
+  Dulche.Runtime -> /workspace/team-b-astra-browser-validation/9to1 Models/Dulche Alpha/bin/Release/net10.0/Dulche.Runtime.dll
+  Avalonia.Fonts.Inter -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/bin/Release/net10.0/Avalonia.Fonts.Inter.dll
+  Avalonia.Markup -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/bin/Release/net10.0/Avalonia.Markup.dll
+  Avalonia.Metal -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/bin/Release/net10.0/Avalonia.Metal.dll
+  Avalonia.Win32.Automation -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/bin/Release/net10.0/Avalonia.Win32.Automation.dll
+  Avalonia.Markup.Xaml -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/bin/Release/net10.0/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/bin/Release/net10.0/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/bin/Release/net10.0/Avalonia.Dialogs.dll
+  CakeOS.Cui.Themes -> /workspace/team-b-astra-browser-validation/framework/CUI/Themes/bin/Release/net10.0/CakeOS.Cui.Themes.dll
+  Avalonia.Vulkan -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/bin/Release/net10.0/Avalonia.Vulkan.dll
+  Avalonia.OpenGL -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/bin/Release/net10.0/Avalonia.OpenGL.dll
+  Avalonia.Generators -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/bin/Release/netstandard2.0/Avalonia.Generators.dll
+  Avalonia.FreeDesktop -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/bin/Release/net10.0/Avalonia.FreeDesktop.dll
+  Avalonia.Themes.Fluent -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/bin/Release/net10.0/Avalonia.Themes.Fluent.dll
+  Avalonia.Skia -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/bin/Release/net10.0/Avalonia.Skia.dll
+  Avalonia -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/packages/Avalonia/bin/Release/net10.0/Avalonia.dll
+  Avalonia.Headless -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/bin/Release/net10.0/Avalonia.Headless.dll
+  Avalonia.Native -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Native/bin/Release/net10.0/Avalonia.Native.dll
+  Avalonia.FreeDesktop.AtSpi -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll
+  HavenOS.Home -> /workspace/team-b-astra-browser-validation/9to1 Workspace/Home/bin/Release/net10.0/HavenOS.Home.dll
+  Avalonia.Win32 -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/bin/Release/net10.0/Avalonia.Win32.dll
+  Avalonia.X11 -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.X11/bin/Release/net10.0/Avalonia.X11.dll
+  Avalonia.Desktop -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/bin/Release/net10.0/Avalonia.Desktop.dll
+  CakeOS.Cui.Runtime -> /workspace/team-b-astra-browser-validation/framework/CUI/Runtime/bin/Release/net10.0/CakeOS.Cui.Runtime.dll
+  Avalonia.Browser -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/bin/Release/net10.0/Avalonia.Browser.dll
+  NineToOne.Web -> /workspace/team-b-astra-browser-validation/apps/Web/bin/Release/net10.0/NineToOne.Web.dll
+  Optimizing assemblies for size. This process might take a while.
+  CakeOS.Cui.Language -> /workspace/team-b-astra-browser-validation/framework/CUI/Language/bin/Release/net10.0/CakeOS.Cui.Language.dll
+  Haven.Core -> /workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Core/bin/Release/net10.0/Haven.Core.dll
+  Avalonia.Analyzers.VisualBasic -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/bin/Release/netstandard2.0/Avalonia.Analyzers.VisualBasic.dll
+  DevAnalyzers -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/bin/Release/netstandard2.0/DevAnalyzers.dll
+  Avalonia.Remote.Protocol -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/bin/Release/net10.0/Avalonia.Remote.Protocol.dll
+  Avalonia.DBus.Generators -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/bin/Release/netstandard2.0/Avalonia.DBus.Generators.dll
+  NineToOne.Cui.AI -> /workspace/team-b-astra-browser-validation/framework/CUI/AI/bin/Release/net10.0/NineToOne.Cui.AI.dll
+  DevGenerators -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/DevGenerators/bin/Release/netstandard2.0/DevGenerators.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/bin/Release/netstandard2.0/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  CakeOS.Cui.Core -> /workspace/team-b-astra-browser-validation/framework/CUI/Core/bin/Release/net10.0/CakeOS.Cui.Core.dll
+  Avalonia.Analyzers.CSharp -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/bin/Release/netstandard2.0/Avalonia.Analyzers.CSharp.dll
+  Haven.Application -> /workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Application/bin/Release/net10.0/Haven.Application.dll
+  Den -> /workspace/team-b-astra-browser-validation/9to1 Models/Dulche Alpha/bin/Release/net10.0/Den.dll
+  Dulche.Runtime -> /workspace/team-b-astra-browser-validation/9to1 Models/Dulche Alpha/bin/Release/net10.0/Dulche.Runtime.dll
+  Avalonia.Build.Tasks -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/bin/Release/netstandard2.0/Avalonia.Build.Tasks.dll
+  Avalonia.MicroCom -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/bin/Release/net10.0/Avalonia.MicroCom.dll
+  Avalonia.Base -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/bin/Release/net10.0/Avalonia.Base.dll
+  HavenOS.Home -> /workspace/team-b-astra-browser-validation/9to1 Workspace/Home/bin/Release/net10.0/HavenOS.Home.dll
+  Avalonia.Controls -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/bin/Release/net10.0/Avalonia.Controls.dll
+  Avalonia.Win32.Automation -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/bin/Release/net10.0/Avalonia.Win32.Automation.dll
+  CakeOS.Cui.Themes -> /workspace/team-b-astra-browser-validation/framework/CUI/Themes/bin/Release/net10.0/CakeOS.Cui.Themes.dll
+  Avalonia.Metal -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/bin/Release/net10.0/Avalonia.Metal.dll
+  Avalonia.Vulkan -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/bin/Release/net10.0/Avalonia.Vulkan.dll
+  Avalonia.OpenGL -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/bin/Release/net10.0/Avalonia.OpenGL.dll
+  Avalonia.Markup -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/bin/Release/net10.0/Avalonia.Markup.dll
+  Avalonia.HarfBuzz -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/bin/Release/net10.0/Avalonia.HarfBuzz.dll
+  Avalonia.Fonts.Inter -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/bin/Release/net10.0/Avalonia.Fonts.Inter.dll
+  Avalonia.Markup.Xaml -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/bin/Release/net10.0/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.DesignerSupport/bin/Release/net10.0/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/bin/Release/net10.0/Avalonia.Dialogs.dll
+  Avalonia.Generators -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/bin/Release/netstandard2.0/Avalonia.Generators.dll
+  Avalonia.FreeDesktop -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/bin/Release/net10.0/Avalonia.FreeDesktop.dll
+  Avalonia.Themes.Fluent -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/bin/Release/net10.0/Avalonia.Themes.Fluent.dll
+  Avalonia -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/packages/Avalonia/bin/Release/net10.0/Avalonia.dll
+  Avalonia.Native -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Native/bin/Release/net10.0/Avalonia.Native.dll
+  Avalonia.Skia -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/bin/Release/net10.0/Avalonia.Skia.dll
+  Avalonia.FreeDesktop.AtSpi -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/bin/Release/net10.0/Avalonia.FreeDesktop.AtSpi.dll
+  Avalonia.Win32 -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/bin/Release/net10.0/Avalonia.Win32.dll
+  Avalonia.X11 -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.X11/bin/Release/net10.0/Avalonia.X11.dll
+  Avalonia.Headless -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/bin/Release/net10.0/Avalonia.Headless.dll
+  Avalonia.Desktop -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/bin/Release/net10.0/Avalonia.Desktop.dll
+  CakeOS.Cui.Runtime -> /workspace/team-b-astra-browser-validation/framework/CUI/Runtime/bin/Release/net10.0/CakeOS.Cui.Runtime.dll
+  Avalonia.Browser -> /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/bin/Release/net10.0/Avalonia.Browser.dll
+  NineToOne.Web -> /workspace/team-b-astra-browser-validation/apps/Web/bin/Release/net10.0/publish/

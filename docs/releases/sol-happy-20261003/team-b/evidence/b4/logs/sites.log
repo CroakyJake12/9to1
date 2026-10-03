@@ -1,0 +1,39 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "test",
+    "9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj",
+    "--configuration",
+    "Release",
+    "--artifacts-path",
+    "/workspace/team-b-evidence/sol-happy-20261003/b4/artifacts-sites",
+    "--results-directory",
+    "/workspace/team-b-evidence/sol-happy-20261003/b4/results-sites",
+    "--logger",
+    "trx;LogFileName=sites.trx",
+    "--logger",
+    "console;verbosity=normal"
+  ],
+  "cwd": "/workspace/team-b-worktree",
+  "start": "2026-10-03T17:13:38.641637+00:00",
+  "commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "environment": {
+    "DOTNET_CLI_HOME": "/workspace/team-b-evidence/sol-happy-20261003/b4/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/team-b-evidence/sol-happy-20261003/b4/nuget",
+    "TMPDIR": "/workspace/team-b-evidence/sol-happy-20261003/b4/tmp",
+    "AVALONIA_TELEMETRY_OPTOUT": "1"
+  }
+}
+  Determining projects to restore...
+  Restored /workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 101 ms).
+  Restored /workspace/team-b-worktree/framework/CUI/Core/CakeOS.Cui.Core.csproj (in 101 ms).
+  Restored /workspace/team-b-worktree/9to1 Workspace/Sites/HavenOS.Sites.csproj (in 101 ms).
+  Restored /workspace/team-b-worktree/framework/CUI/Language/CakeOS.Cui.Language.csproj (in 1 ms).
+  Restored /workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 1 ms).
+  Restored /workspace/team-b-worktree/9to1 Workspace/Sites/Tests/HavenOS.Sites.Tests.csproj (in 3.59 sec).
+  CakeOS.Cui.Language -> /workspace/team-b-evidence/sol-happy-20261003/b4/artifacts-sites/bin/CakeOS.Cui.Language/release/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /workspace/team-b-evidence/sol-happy-20261003/b4/artifacts-sites/bin/CakeOS.Cui.Core/release/CakeOS.Cui.Core.dll
+  Haven.Core -> /workspace/team-b-evidence/sol-happy-20261003/b4/artifacts-sites/bin/Haven.Core/release/Haven.Core.dll
+/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs(511,50): error CS1593: Delegate 'Func<CanvasChangeEvent, bool>' does not take 2 arguments [/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj]
+
+EXIT_STATUS=1

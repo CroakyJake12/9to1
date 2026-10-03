@@ -1,0 +1,176 @@
+{
+  "commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "binary": "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+  "binary_sha256": "0ea4f96901262bb329db3e1ae4728b0e368ff571b75efc44dcb2a27e4ef55db9",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "runtime": "10.0.401",
+  "fixture": "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24",
+  "fixture_definition": "48000 Hz stereo PCM16; frame i: (i % 2000 - 1000, 1000 - i % 2000)",
+  "source_fixture_sha256": "077da5220c69b28c134f578508372681ad3c8b2c3a466edc9512eb67fda76b86",
+  "tests_discovered": 9,
+  "tests_executed": 9,
+  "outcomes": [
+    {
+      "test_id": "B3-WAVE-CLI-01",
+      "description": "Create persists nonempty project/track identities at revision 0",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-02",
+      "description": "Import retains project/track identity, increments revision and uses exact 24000-frame offset/48000 source range",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-03",
+      "description": "Export PCM exactly preserves stereo source after half-second silence and never mutates project/source",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-04",
+      "description": "Export refuses existing output and preserves bytes",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-05",
+      "description": "Trim outputs exact half-open 12000..36000 PCM frames",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-06",
+      "description": "In-place trim is denied and preserves original source",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-07",
+      "description": "Altered isolated source negative control is rejected with no partial output; project unchanged",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-08",
+      "description": "Missing isolated source is rejected explicitly, no fabricated audio, project unchanged",
+      "outcome": "PASS"
+    },
+    {
+      "test_id": "B3-WAVE-CLI-09",
+      "description": "Unknown project schema is refused and never rendered/rewritten",
+      "outcome": "PASS"
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-create",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json",
+        "Independent track"
+      ],
+      "exit_code": 0,
+      "stdout": "Created Wave project 51b12df0-d161-4859-bac6-50f01df40de5 with track d48acd9b-6141-4fb4-9b79-c3af5b1cb041: /workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-import",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/source.wav",
+        "0.5"
+      ],
+      "exit_code": 0,
+      "stdout": "Imported clip into project 51b12df0-d161-4859-bac6-50f01df40de5; revision 1.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-export",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/mix.wav"
+      ],
+      "exit_code": 0,
+      "stdout": "Exported project 51b12df0-d161-4859-bac6-50f01df40de5 (72000 frames) to /workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/mix.wav.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-export",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/mix.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Wave could not export the project: The file '/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/mix.wav' already exists.\n"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--trim",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/source.wav",
+        "0.25",
+        "0.75",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/trim.wav"
+      ],
+      "exit_code": 0,
+      "stdout": "Trimmed audio saved (0.5s). /workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/trim.wav\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--trim",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/source.wav",
+        "0",
+        "0.5",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/source.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Wave never trims over the source file. Choose a different output path.\n"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-export",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/changed-export.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Wave could not export the project: SourceChanged: source content for clip 721ea945-b84f-4664-9d40-75358e668b70 no longer matches the imported revision.\n"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-export",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/project.waveproject.json",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/missing-export.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Wave could not export the project: SourceUnavailable: source for clip 721ea945-b84f-4664-9d40-75358e668b70 is missing at its recorded path; relink is not available in this standalone slice.\n"
+    },
+    {
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/bin/Release/net10.0/B3.Wave.LocalSourceRegression.dll",
+        "--project-export",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/future.waveproject.json",
+        "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/fixtures-verified/d27301431a1449c29065db0ae6b98a24/future.wav"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Wave could not export the project: Unsupported Wave project schema version 99.\n"
+    }
+  ],
+  "browser_acceptance": false,
+  "production_project_build": false
+}

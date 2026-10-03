@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "run",
+    "--project",
+    "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+    "--configuration",
+    "Release",
+    "--artifacts-path",
+    "/workspace/team-b-evidence/sol-happy-20261003/b6/astra-navigation-runtime/artifacts"
+  ],
+  "cwd": "/workspace/team-b-astra-browser-validation",
+  "isolated_cli_home": "/workspace/team-b-evidence/sol-happy-20261003/b6/astra-navigation-runtime/dotnet-home",
+  "nuget_packages": "/workspace/team-b-tooling/nuget",
+  "started_at": "2026-10-03T17:49:28.944802+00:00",
+  "completed_at": "2026-10-03T17:49:31.269013+00:00",
+  "exit_status": 0,
+  "log": "b6/astra-navigation-review.log"
+}

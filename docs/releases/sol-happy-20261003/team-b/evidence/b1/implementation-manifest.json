@@ -1,0 +1,83 @@
+{
+  "baselineHead": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "candidateCommit": null,
+  "sourceRevision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "ownedSourcesSha256": {
+    "apps/Web/BrowserApplication.cs": "f4d540bd835ec0693c2352cd4539d02ccc87dae1e49eb7346f95e538a112be2a",
+    "apps/Web/BrowserHomeContext.cs": "58095e50ed08cc6708387e59bfada9cf07a819bfe132bf8b1d95701ac5c1b2d8",
+    "apps/Web/BrowserPlatformAssembly.cs": "cf6bab5c599a74224119a90a987f4c801cb2dbe56384cef1184679efd828d75b",
+    "apps/Web/BrowserRouteCodec.cs": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a",
+    "apps/Web/BrowserSurfaceRegistry.cs": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c",
+    "apps/Web/NineToOne.Web.csproj": "5bd9a20e64edea9bbac5946dae6c8e1800148ed7644a189422e50bdc3e435552",
+    "apps/Web/Program.cs": "a4c5885ae43472f9f3ef4033681a24a020829d08408fc173788182ab0075296e",
+    "apps/Web/README.md": "b6000cda7c8882e1011a7d26f97de98f913cb63cc8634aeebb0184fb023ea68f",
+    "apps/Web/Tests/BrowserNavigation.Tests.csproj": "07eb2992fcedff70c1d1a00e73033a1d3f24abd252735a5c12bd18a9abd66f93",
+    "apps/Web/Tests/Program.cs": "9993185766573fe1bf44bf59cc700a789a149eeb0812d499d7f1d72e86d09bad",
+    "apps/Web/Tests/browser-platform.browser.html": "5779ef0a87131202aeb80708a65df4b71a4453e264afa49e182fbdbb02e25a56",
+    "apps/Web/Tests/browser-platform.test.mjs": "fc72e243d621a3ea5f737fb97a99066021265a667edf4f54eb7fa447037c2cf6",
+    "apps/Web/Tests/run-browser-platform.cjs": "82af52964677a05287fb4baf4bd0106eefbe699443202c28245c3625defb23b7",
+    "apps/Web/package.json": "29314346bb27cb4f6128f30e6532053f056c1aafcb3e8c61ef3ad77d0df45d7c",
+    "apps/Web/wwwroot/browser-platform.js": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8",
+    "apps/Web/wwwroot/index.html": "4ea4ab60d0caff71acc80412a49a231c2c9e85ddee95a4e77f80cdaa1e54c5e1",
+    "apps/Web/wwwroot/main.js": "a1092d3a16abdbd2214843abbf809cbce164b430da7e2846637999e62c671b5e"
+  },
+  "aggregateSha256": "701755f3425bd670a4a07a63c65506ee295315b530bd07127ece8abaabd07944",
+  "validation": [
+    {
+      "id": "B1-NAVIGATION-UNIT",
+      "outcome": "PASS",
+      "discovered": 16,
+      "executed": 16,
+      "exitStatus": 0,
+      "log": "logs/navigation-tests-rerun.log",
+      "scope": "Actual production route codec/registry source-linked to unchanged owner Home/Core contracts; handler fixtures are unit tests, not backend acceptance."
+    },
+    {
+      "id": "B1-PLATFORM-NODE",
+      "outcome": "PASS",
+      "discovered": 7,
+      "executed": 7,
+      "exitStatus": 0,
+      "log": "logs/browser-platform-node-rerun.log",
+      "scope": "Mocked window/document unit tests only."
+    },
+    {
+      "id": "B1-PLATFORM-CHROMIUM-DOM",
+      "outcome": "PASS",
+      "discovered": 7,
+      "executed": 7,
+      "exitStatus": 0,
+      "log": "logs/chromium-dom.log",
+      "browser": "Chromium151.0.7922.173",
+      "scope": "Real DOM/history production module; BFCache is controlled PageTransitionEvent coverage, not authenticated restore."
+    },
+    {
+      "id": "B1-PLATFORM-NEGATIVE",
+      "outcome": "PASS",
+      "exitStatus": 0,
+      "artifact": "browser/chromium-dom-negative-results.json",
+      "scope": "Only isolated intercepted module response modified; removal of dedup guard causes unchanged real history assertions to fail."
+    },
+    {
+      "id": "B1-FULL-HOST-BUILD",
+      "outcome": "BLOCKED",
+      "exitStatus": 1,
+      "log": "logs/browser-build.log",
+      "scope": "Source-reference vendor GetAllRuntimeIdentifiers target cycles; current render code remains uncompiled/unrun."
+    },
+    {
+      "id": "B1-VENDOR-EVALUATION",
+      "outcome": "BLOCKED",
+      "exitStatus": 1,
+      "log": "logs/browser-import-evaluation.log",
+      "scope": "MSB4019 missing AvaloniaPublicKey.props."
+    }
+  ],
+  "preservedInitialFailures": [
+    "logs/navigation-tests.log: CS0246 missing source-linked HomeUpdate resolved by adding unchanged owning HomeDashboard.cs to unit graph.",
+    "logs/browser-platform-node.log: unsupported Node flag resolved by private ES module package metadata, not weakened tests."
+  ],
+  "renderAcceptance": "BLOCKED: no installed/running production CUI host; no staging URL/provider/cross-client evidence.",
+  "coordination": "Root reports shared coord branch readback/Team C acknowledgement41e0ccc; accepted head remains unset.",
+  "testsSourceIdentity": "Unit/DOM tested production codec/registry/platform files unchanged after their successful reruns; later changes affect unverified host render/build metadata/readme only."
+}

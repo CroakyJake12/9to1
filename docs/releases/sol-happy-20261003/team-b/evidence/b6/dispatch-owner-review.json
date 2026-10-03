@@ -1,0 +1,112 @@
+{
+  "reviewer": "B6 independent validation",
+  "baseline_candidate_commit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "reviewed_source_state": "UNCOMMITTED_B1_OWNED_FIX_ON_ISOLATED_ASTRA_CANDIDATE; root must pin final commit.",
+  "source_sha256": {
+    "apps/Web/BrowserRouteDispatcher.cs": "19ad2399168ee064fe1c4ec24ce0a5988ed6419ba478b73226fe378f6af134b7",
+    "apps/Web/BrowserApplication.cs": "3cf04f6ccc0c89a75c90de1012dded5252258bc83511537e5cd887eeb479823e",
+    "apps/Web/Program.cs": "9293da0040536b68803878a1d3f60770edc227b082495219b969f9455e9c84a1",
+    "apps/Web/NineToOne.Web.csproj": "a1333852cd9e18121427e417ce0cc3f75a57668c1b91d144fec95fc3081f6ace",
+    "apps/Web/Tests/Program.cs": "0204b5dbae120b34cdd1cfd865842aab15852a35f05dbb3a46585d5b6b74bd7d",
+    "apps/Web/Tests/BrowserNavigation.Tests.csproj": "457563c63ff218ee0277f4b7db034205ab2202515b054786b0c56b444cf60140"
+  },
+  "production_consumer_review": "BrowserApplication.OpenFragmentAsync directly calls production BrowserRouteDispatcher before unavailable Home callback. Registered routes return owner result/surface before fallback, including denied/unavailable/exception results. No parallel prior Home interception remains. Rendering/stale navigation checks remain in application.",
+  "test_quality": "22 source-linked fixture checks use actual owner HomeFeatureNavigationHost and actual production route/registry/dispatcher. Six dispatch tests include all three canonical Home routes, opaque full request, exact denied/required/unavailable codes and no fallback, exception mapping, absent Home fallback, absent non-Home unavailable and cancelled fallback. Existing reset/cancel registry checks retained. Controlled fixture handlers/renderers are not real authenticated owner adapters or browser CUI rendering.",
+  "unchanged_test_copy_sha256": "0204b5dbae120b34cdd1cfd865842aab15852a35f05dbb3a46585d5b6b74bd7d",
+  "copied_assertions_unchanged": true,
+  "independent_runs": [
+    {
+      "label": "red",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Dispatchred.csproj",
+        "--configuration",
+        "Release",
+        "--artifacts-path",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/artifacts-red"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "selector": "/workspace/team-b-evidence/sol-happy-20261003/b1/production-host/BrowserRouteDispatcher.before-priority-fix.cs",
+      "exit_status": 134,
+      "started_at": "2026-10-03T18:03:37.404941+00:00",
+      "completed_at": "2026-10-03T18:03:40.604006+00:00",
+      "log": "b6/dispatch-independent-red.log"
+    },
+    {
+      "label": "green-harness-initial",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Dispatchgreen.csproj",
+        "--configuration",
+        "Release",
+        "--artifacts-path",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/artifacts-green"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "selector": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+      "exit_status": 1,
+      "started_at": "2026-10-03T18:03:40.605157+00:00",
+      "completed_at": "2026-10-03T18:03:42.439774+00:00",
+      "log": "b6/dispatch-independent-green-harness-initial.log"
+    },
+    {
+      "label": "green",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Dispatchgreen.csproj",
+        "--configuration",
+        "Release",
+        "--artifacts-path",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/artifacts-green"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "selector": "/workspace/team-b-astra-browser-validation/apps/Web/BrowserRouteDispatcher.cs",
+      "exit_status": 0,
+      "started_at": "2026-10-03T18:04:27.281035+00:00",
+      "completed_at": "2026-10-03T18:04:29.429583+00:00",
+      "log": "b6/dispatch-independent-green.log",
+      "harness_correction": "Explicit unchanged Program.cs compile item replaces default directory glob to exclude prior red run generated assembly metadata; no assertions or production source changed."
+    }
+  ],
+  "negative_control": {
+    "selector": "b1/production-host/BrowserRouteDispatcher.before-priority-fix.cs",
+    "selector_sha256": "6cbba5eac169198e423f50c970c46848650e756d4779ae74c73b172a164d3f9a",
+    "original_extraction_patch": "b1/production-host/dispatch-extraction-red.patch",
+    "declared_cases": 22,
+    "passed_before_failure": 16,
+    "failed_case": "B1-DISPATCH-01-canonical-owner-before-fallback",
+    "remaining_cases_not_run": 5,
+    "exit_status": 134,
+    "log": "b6/dispatch-independent-red.log",
+    "log_sha256": "b986d6acfb2725ca8bceb03a2ecbfc56510c49f09fd5c5d713493351d16b3e32",
+    "meaning": "Exact extracted prior fallback-first selector fails unchanged owner-priority assertion, proving previous sixteen checks missed application selection."
+  },
+  "positive_control": {
+    "discovered": 22,
+    "executed": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "exit_status": 0,
+    "log": "b6/dispatch-independent-green.log",
+    "log_sha256": "6caa6f9e62efe4efbe380f0b760b5d5e94c804ca07156acb79078b46a4fa87e0"
+  },
+  "harness_setup_failure": {
+    "exit_status": 1,
+    "executed": 0,
+    "log": "b6/dispatch-independent-green-harness-initial.log",
+    "log_sha256": "b3d7d32a76ae9b5ec9665f0059687524e6dfda5ea0b30dd635461ea351840efc",
+    "reason": "B6 generated red assembly attributes were picked up by green default directory compile glob; fixed only scratch project to explicitly compile unchanged Program.cs. This was not a product failure or accepted test."
+  },
+  "SDK_bootstrap_review": "Uses exact vendored Avalonia.Browser props/targets and refuses absent locked adapter JS assets; imports/source theme/font initialization reviewed. Full host publish/browser execution belongs to root and was not independently exercised here.",
+  "full_host_build_independently_run": false,
+  "product_parity_verified": false,
+  "deployed_browser_acceptance": "NOT-RUN",
+  "production_edits": false
+}

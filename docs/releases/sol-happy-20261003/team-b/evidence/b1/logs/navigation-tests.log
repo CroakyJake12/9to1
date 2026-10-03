@@ -1,0 +1,3 @@
+/workspace/team-b-worktree/9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs(143,19): error CS0246: The type or namespace name 'HomeUpdate' could not be found (are you missing a using directive or an assembly reference?) [/workspace/team-b-worktree/apps/Web/Tests/BrowserNavigation.Tests.csproj]
+
+The build failed. Fix the build errors and run again.

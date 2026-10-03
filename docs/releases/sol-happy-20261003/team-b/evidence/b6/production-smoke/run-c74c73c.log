@@ -1,0 +1,8 @@
+cold-home HomeServiceUnavailable 
+live-invalid BrowserRouteInvalid #/app.write?entityId=%Q0
+live-typed-library HomeServiceUnavailable #/home.library?entityType=file&entityId=opaque%20artifact&action=Reveal
+live-events HomeServiceUnavailable #/home.events
+history-back-library HomeServiceUnavailable #/home.library?entityType=file&entityId=opaque%20artifact&action=Reveal
+history-forward-events HomeServiceUnavailable #/home.events
+cold-typed-library HomeServiceUnavailable #/home.library?entityType=file&entityId=cold%20opaque&action=Reveal
+cold-invalid BrowserRouteInvalid #/app.write?entityId=%Q0

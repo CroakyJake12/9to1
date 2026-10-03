@@ -1,0 +1,15 @@
+initial-home: HomeServiceUnavailable, canvases=1
+direct-library: HomeServiceUnavailable, canvases=1
+direct-unregistered-write: HomeServiceUnavailable, canvases=1
+direct-invalid: HomeServiceUnavailable, canvases=1
+return-home: HomeServiceUnavailable, canvases=1
+history-back-invalid: HomeServiceUnavailable, canvases=1
+history-forward-home: HomeServiceUnavailable, canvases=1
+cold-typed-library: HomeServiceUnavailable, canvases=1
+cold-invalid-route: BrowserRouteInvalid, canvases=1
+cold-return-home: HomeServiceUnavailable, canvases=1
+real-document-history-restoration: HomeServiceUnavailable, canvases=1
+RangeError: Invalid string length
+    at JSON.stringify (<anonymous>)
+    at /workspace/team-b-evidence/sol-happy-20261003/b1/production-host/run-production-host.cjs:118:82
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

@@ -1,0 +1,43 @@
+
+Welcome to .NET 10.0!
+---------------------
+SDK Version: 10.0.401
+
+----------------
+Installed an ASP.NET Core HTTPS development certificate.
+To trust the certificate, run 'dotnet dev-certs https --trust'
+Learn about HTTPS: https://aka.ms/dotnet-https
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+Checking the state of installed workloads...
+Pack Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12...
+Pack Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12...
+----------------
+  Determining projects to restore...
+  Restored /workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj (in 110 ms).
+  Restored /workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj (in 102 ms).
+  Restored /workspace/team-b-worktree/9to1 Workspace/shared/tests/Haven.Application.Tests/Haven.Application.Tests.csproj (in 6.6 sec).
+  Haven.Core -> /workspace/team-b-evidence/sol-happy-20261003/b5/build-artifacts/bin/Haven.Core/release/Haven.Core.dll
+/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Canvas/CanvasArtifactSession.cs(511,50): error CS1593: Delegate 'Func<CanvasChangeEvent, bool>' does not take 2 arguments [/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj]

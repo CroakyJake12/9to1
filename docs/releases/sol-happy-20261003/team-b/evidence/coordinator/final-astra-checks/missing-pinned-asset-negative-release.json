@@ -1,0 +1,17 @@
+{
+  "commit": "830f747b70df07797c586f6124890fa5028452b2",
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "msbuild",
+    "apps/Web/NineToOne.Web.csproj",
+    "-t:ResolveStaticWebAssetsInputs",
+    "-p:Configuration=Release",
+    "-nologo"
+  ],
+  "cwd": "/workspace/team-b-astra-browser-validation",
+  "at": "2026-10-03T18:11:00.078734+00:00",
+  "exitCode": 1,
+  "violationDetected": true,
+  "assetRestoredIdentically": true,
+  "previousFailure": "Original target-only Debug invocation failed before guard because no Debug root DLL. Corrected invocation uses actual recorded compiled Release configuration; no source/assertion/threshold changed."
+}

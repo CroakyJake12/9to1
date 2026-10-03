@@ -1,0 +1,204 @@
+{
+  "reviewer": "B6 independent validation",
+  "candidate_commit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "incoming_A_owner_candidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "original_B_production_code_commit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "scope": "Source-linked custom route/registry executable compiled with exact current A Home authority contracts plus CUI Core/Language sources. No actual owner service/backend/browser/CUI host workflow is exercised; registry handlers are controlled contract fixtures.",
+  "run": {
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "run",
+      "--project",
+      "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "--configuration",
+      "Release",
+      "--artifacts-path",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/astra-navigation-runtime/artifacts"
+    ],
+    "cwd": "/workspace/team-b-astra-browser-validation",
+    "isolated_cli_home": "/workspace/team-b-evidence/sol-happy-20261003/b6/astra-navigation-runtime/dotnet-home",
+    "nuget_packages": "/workspace/team-b-tooling/nuget",
+    "started_at": "2026-10-03T17:49:28.944802+00:00",
+    "completed_at": "2026-10-03T17:49:31.269013+00:00",
+    "exit_status": 0,
+    "log": "b6/astra-navigation-review.log"
+  },
+  "counts": {
+    "discovered": 16,
+    "executed": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0
+  },
+  "test_ids": [
+    "B1-ROUTE-01-default-dashboard",
+    "B1-ROUTE-02-opaque-identities",
+    "B1-ROUTE-03-null-empty-distinct",
+    "B1-ROUTE-04-unambiguous-fields",
+    "B1-ROUTE-05-malformed-link-negative",
+    "B1-ROUTE-06-size-bounds",
+    "B1-ROUTE-07-unspecified-picker-preserved-as-error",
+    "B1-ROUTE-08-control-character-encoding",
+    "B1-ROUTE-09-route-case-preserved",
+    "B1-ROUTE-10-action-remains-data",
+    "B1-REGISTRY-01-unavailable-no-render",
+    "B1-REGISTRY-02-owner-result-required",
+    "B1-REGISTRY-03-mismatched-view-blocked",
+    "B1-REGISTRY-04-reset-rejects-late-private-view",
+    "B1-REGISTRY-05-cancelled-no-render",
+    "B1-REGISTRY-06-duplicate-owner-not-overwritten"
+  ],
+  "test_program_sha256": "9993185766573fe1bf44bf59cc700a789a149eeb0812d499d7f1d72e86d09bad",
+  "original_test_assertions_unchanged": true,
+  "harness_addition": {
+    "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+    "sha256": "0713486e6f8eb822ca416f4ac33133094f6fb7ac7773238ceb552a9f23987b60",
+    "diff": "diff --git a/apps/Web/Tests/BrowserNavigation.Tests.csproj b/apps/Web/Tests/BrowserNavigation.Tests.csproj\nindex ba9ce73..38cfbb8 100644\n--- a/apps/Web/Tests/BrowserNavigation.Tests.csproj\n+++ b/apps/Web/Tests/BrowserNavigation.Tests.csproj\n@@ -14,4 +14,8 @@\n     <Compile Include=\"../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs\" Link=\"Owner/HomeDashboard.cs\" />\n     <ProjectReference Include=\"../../../framework/CUI/Core/CakeOS.Cui.Core.csproj\" />\n   </ItemGroup>\n+  <ItemGroup Condition=\"Exists('../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs')\">\n+    <Compile Include=\"../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs\" Link=\"Owner/HomeStateCommitActorGuard.cs\" />\n+    <Compile Include=\"../../../9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs\" Link=\"Owner/ResourceAuthorization.cs\" />\n+  </ItemGroup>\n </Project>\n",
+    "meaning": "Four harness lines link existing current HomeStateCommitActorGuard and ResourceAuthorization owner sources when present. No owner source or assertion edits."
+  },
+  "production_source_checks": [
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a",
+      "unchanged_from_original_B_source_commit": true
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "sha256": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c",
+      "unchanged_from_original_B_source_commit": true
+    }
+  ],
+  "compiled_source_identity_count": 16,
+  "compiled_source_identities": [
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
+      "sha256": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3",
+      "bytes": 7402,
+      "candidate_blob": "e96d5d09d8262e08cc0db9b43e1a9326015105a6",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs",
+      "sha256": "02def3189de0070dd6b33d8eea1d62a5c74ba9fd0699786ca1bcc934b28631ff",
+      "bytes": 17696,
+      "candidate_blob": "82c01099cf74c402fd2c967b1c0c0832a2b48413",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs",
+      "sha256": "05d89400297f02174d01f89f1979eaa5bdea447d8ce2b9e435c1093de6523320",
+      "bytes": 466,
+      "candidate_blob": "c6a176077bdd4f9e1fa27ac3051e55ab0eea87f7",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeDashboard.cs",
+      "sha256": "6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9",
+      "bytes": 14373,
+      "candidate_blob": "b33c7d6142006c964ad6932778464520b66cd0f3",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs",
+      "sha256": "f7bf97f06b6a30a9a3788bc3663043ff54c5c982b2552b9e35756254ff10a23a",
+      "bytes": 11982,
+      "candidate_blob": "7f384ca48aa1e1d971bef887d904951b475e605e",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "sha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a",
+      "bytes": 4164,
+      "candidate_blob": "21c174b9953bad2eb3b55372ebc5b846341d68f0"
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "sha256": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c",
+      "bytes": 2462,
+      "candidate_blob": "b09aad5ad0841de6a536e4ad7ee281f85e1b58cd"
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "sha256": "9993185766573fe1bf44bf59cc700a789a149eeb0812d499d7f1d72e86d09bad",
+      "bytes": 8281,
+      "candidate_blob": "e8fa18c3f63281964e09e9e1f733bedcb6ba9bfe"
+    },
+    {
+      "path": "framework/CUI/Core/CuiDocument.cs",
+      "sha256": "c00cddb41f64148b9b2d97cb51b9807eb4ac23a41a8076e6274d68e09bde3d8e",
+      "bytes": 8835,
+      "candidate_blob": "dc1770f1f02a631bc4463551358b138c1a80e294",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Core/CuiRichParser.cs",
+      "sha256": "03c3d3f24854a6711ae9157e0eb1f4d4017c03923b304ab77c1c06fe06ebed7a",
+      "bytes": 33607,
+      "candidate_blob": "f9ea2e372710df3e8e6ec01b296c97d445fb6af6",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Core/CuiRuntimeContracts.cs",
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4",
+      "bytes": 1441,
+      "candidate_blob": "591f564af0caabdfea8cf49cc4021fb195ba42de",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Core/CuiSyntaxNormalizer.cs",
+      "sha256": "90a41679379cfa6963808d30467ffcc5812a43dfe372d5d33ce83021fd4fdc6f",
+      "bytes": 16156,
+      "candidate_blob": "33fabaee9f470e9943caf42791df88275686646b",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Core/CuiValues.cs",
+      "sha256": "edba6d2b57d0bacc3b209b13433dde00305f12b792e0f4ac3ab768b0653791e4",
+      "bytes": 1543,
+      "candidate_blob": "5842b80d42d4a13682c48cbd47491444d0442aef",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Language/CuiDiagnostics.cs",
+      "sha256": "74b63012db821c8efdfaa62759c510db044e41f1a5e9788044a522bd258ccc05",
+      "bytes": 1281,
+      "candidate_blob": "610d7ba5b8055f0609343956e929894a2f9ef8b2",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Language/CuiProjectItems.cs",
+      "sha256": "72bdd52033abca9412f28b9686701b50eed70774cb60cde73b0a808e25465a67",
+      "bytes": 1042,
+      "candidate_blob": "410b648112a7fa3b8c022acc239b52eda79ae129",
+      "exact_incoming_A_owner_bytes": true
+    },
+    {
+      "path": "framework/CUI/Language/CuiSource.cs",
+      "sha256": "7ab733630e87da15789d38e266e88ab4fb8e48e12cd9f82d62b5848dacdb7b0f",
+      "bytes": 620,
+      "candidate_blob": "2fa255704588ebf429301d97f4a438e22305e6ad",
+      "exact_incoming_A_owner_bytes": true
+    }
+  ],
+  "project_identities": [
+    {
+      "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "sha256": "0713486e6f8eb822ca416f4ac33133094f6fb7ac7773238ceb552a9f23987b60"
+    },
+    {
+      "path": "framework/CUI/Core/CakeOS.Cui.Core.csproj",
+      "sha256": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
+    },
+    {
+      "path": "framework/CUI/Language/CakeOS.Cui.Language.csproj",
+      "sha256": "38bb6257791a2ca650635f1b75b0ab186c70c99504220d7ef49223dd14dfdd36"
+    }
+  ],
+  "log_sha256": "b4f5a446536afd215e7e03faefe8eb65420a6b92e43ffa61e9a08693f60e0fe8",
+  "initial_root_CS0246_failure_retained_at": "coordinator/astra-browser-validation/navigation.log",
+  "prior_baseline_results_relabelled": false,
+  "full_host_build_independently_run": false,
+  "product_parity_verified": false,
+  "deployed_browser_acceptance": "NOT-RUN",
+  "production_edits": false
+}

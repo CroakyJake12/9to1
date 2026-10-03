@@ -1,0 +1,4 @@
+cold-home HomeServiceUnavailable 
+pointer-disabled-open-studio HomeServiceUnavailable 
+pointer-enabled-library HomeServiceUnavailable #/home.library
+pointer-enabled-events HomeServiceUnavailable #/home.events

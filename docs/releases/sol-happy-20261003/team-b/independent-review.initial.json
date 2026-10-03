@@ -1,0 +1,1422 @@
+{
+  "reviewer": "B6 independent validation",
+  "reviewed_at": "2026-10-03T17:45:09.528993+00:00",
+  "audit_status": "INITIAL_PACKAGE_CONSISTENT_PENDING_CANDIDATE_FOLLOWUP",
+  "final_handoff_frozen": false,
+  "package_manifest_sha256": "b5f7b324374cb5b83fe44f56d0c10f1802f8b24ea09a3695ddbed190a64c097f",
+  "readme_sha256": "7f9ffa4c9c686f9909c9750da05a12f0e742f4e937adbd48e274efa88edc87c7",
+  "package_paths_total": 135,
+  "copied_evidence_artifacts": 132,
+  "copied_bytes_and_originals_verified": true,
+  "copied_evidence_checks": [
+    {
+      "path": "evidence/b1/astra-source-reconciliation.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/browser/chromium-dom-negative-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/browser/chromium-dom-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/browser/chromium-dom-tests.png",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/browser/chromium-dom-trace.zip",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/capabilities.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/implementation-manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/browser-build.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/browser-import-evaluation.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/browser-platform-node-rerun.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/browser-platform-node.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/chromium-dom.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/navigation-tests-rerun.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/logs/navigation-tests.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/requirements.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b1/requirements.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/WriteDomainProbe/Program.cs",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/WriteDomainProbe/WriteDomainProbe.csproj",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/acceptance-cases.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/browser-matrix.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/build_acceptance_cases.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/build_matrix.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/candidate-domain-tests.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/critical-browser-procedures.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/procedures.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/requirements.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/shared-requirements.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/terraform-interface-dependencies.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/write-domain-evidence.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/write-domain-rerun.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/write-domain-rerun.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/write-domain-run.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b2/write-domain-run.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/build_matrix.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/donor-inventory.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/integration-requests.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/manual-procedures.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/requirements.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/sandbox-discovery.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/summary.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/WaveLocalRegression.csproj",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/incremental-cli-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/independent-cli-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/independent-cli.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/independent_cli_checks.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/initial-hex-case-failure.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/initial-results-reconstruction.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/regression-summary.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/self-test.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/source-manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/test-correction.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b3/wave-local/unchanged-source-readback.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/README.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/api-operation-map.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/artifact-manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/build_api_map.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/build_mapping.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/capability-matrix.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/context-headings.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/coverage.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/files-nesting-matrix.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/files-result.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/integration-gaps.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/logs/files.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/logs/sites.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/requirements.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/run_regressions.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/sites-result.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/test-procedures.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/test-quality-audit.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b4/variants-matrix.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/build_evidence.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/build_procedures.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/canonical-actions.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/existing-domain-inventory.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/integration-requests.md",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/procedures.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/requirements.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/source-map-check.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/summary.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/test-results/account-adapter.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/test-results/dotnet-application.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b5/validation-manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/actual-evidence-rejection.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/body-phase-final.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/body-phase-initial.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/body-phase-negative.mjs",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/independent-contract-tests.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/independent-final-contract-tests.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/streaming-401-final.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/streaming-401-initial.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/auth-review/streaming-401-negative.mjs",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/b1-normalized-provisional-inventory.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/browser-host-independent-review.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/chromium-dom-negative-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/chromium-dom-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/chromium-dom-tests.png",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/chromium-dom-trace.zip",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/independent-run.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/chromium-dom/run-independent-browser-platform.cjs",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/current-source-evidence-rejection.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/current-source-validation-run.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/framework-source-coverage.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/live-source-recheck-review.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/native-test-quality-defect.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/observed-acceptance.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/observed-candidate.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/review-worker-maps.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/summary.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/validator-unit-tests.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/wave-independent-reproduction/incremental-cli-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/wave-independent-reproduction/independent-cli-results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/wave-independent-reproduction/independent_cli_checks.py",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/wave-independent-reproduction/reproduction.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/wave-independent-reproduction/source-manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/b6/worker-map-review.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/coordinator/final-code-checks/account-api-node.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/coordinator/final-code-checks/browser-build.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/coordinator/final-code-checks/browser-platform-node.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/coordinator/final-code-checks/navigation.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/coordinator/final-code-checks/results.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/coordinator/final-code-checks/validator-unit.log",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/canonical.txt",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/paragraphs.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/recheck/canonical.txt",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/recheck/changes.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/recheck/manifest.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    },
+    {
+      "path": "evidence/source/recheck/paragraphs.json",
+      "copy_present": true,
+      "original_present": true,
+      "bytes_match": true,
+      "manifest_hash_match": true,
+      "original_bytes_match": true
+    }
+  ],
+  "code_commit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "code_files_checked": 23,
+  "code_checks": [
+    {
+      "path": "apps/Web/Auth/README.md",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Auth/account-api-client.js",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Auth/account-api-client.test.js",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/BrowserApplication.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/BrowserHomeContext.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/BrowserPlatformAssembly.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/README.md",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Tests/browser-platform.browser.html",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Tests/browser-platform.test.mjs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/Tests/run-browser-platform.cjs",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/package.json",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/wwwroot/browser-platform.js",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/wwwroot/index.html",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "eng/browser/README.md",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "eng/browser/tests/test_acceptance_evidence.py",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    },
+    {
+      "path": "eng/browser/validate-acceptance-evidence.py",
+      "current_bytes_hash_match": true,
+      "pinned_commit_hash_match": true
+    }
+  ],
+  "missing_paths": [],
+  "extra_paths": [],
+  "exclusion_scan": {
+    "prohibited_paths": [],
+    "symlinks": [],
+    "secret_signature_findings": [],
+    "archive_details": [
+      {
+        "path": "evidence/b1/browser/chromium-dom-trace.zip",
+        "entries": 11,
+        "entry_names": [
+          "trace.trace",
+          "trace.network",
+          "resources/page@e0ea8db372d73d5a7ff668b9504554cd-1791047869390.jpeg",
+          "resources/page@e0ea8db372d73d5a7ff668b9504554cd-1791047869464.jpeg",
+          "resources/page@e0ea8db372d73d5a7ff668b9504554cd-1791047869620.jpeg",
+          "resources/page@e0ea8db372d73d5a7ff668b9504554cd-1791047869703.jpeg",
+          "resources/page@e0ea8db372d73d5a7ff668b9504554cd-1791047869780.jpeg",
+          "resources/page@e0ea8db372d73d5a7ff668b9504554cd-1791047869797.jpeg",
+          "resources/dc0a0af702a865502b54854ae008095df53bfded.html",
+          "trace.stacks",
+          "resources/src@401a2fd347e738e5719921d979fc03518f80e0b0.txt"
+        ]
+      },
+      {
+        "path": "evidence/b6/chromium-dom/chromium-dom-trace.zip",
+        "entries": 10,
+        "entry_names": [
+          "trace.trace",
+          "trace.network",
+          "resources/page@bb08ba4b6733222c485a2caa1fda23e7-1791048087938.jpeg",
+          "resources/page@bb08ba4b6733222c485a2caa1fda23e7-1791048087952.jpeg",
+          "resources/page@bb08ba4b6733222c485a2caa1fda23e7-1791048088111.jpeg",
+          "resources/page@bb08ba4b6733222c485a2caa1fda23e7-1791048088179.jpeg",
+          "resources/page@bb08ba4b6733222c485a2caa1fda23e7-1791048088253.jpeg",
+          "resources/dc0a0af702a865502b54854ae008095df53bfded.html",
+          "trace.stacks",
+          "resources/src@f028c782fb08b87a07695eb606b661c439d8baeb.txt"
+        ]
+      }
+    ],
+    "limitations": "Bounded path/type and concrete credential-signature scan including trace archive entries, plus read-only evidence scope review. It does not certify absence of every possible secret format."
+  },
+  "remote_coordination": {
+    "observed_refs": {
+      "refs/heads/coord/sol-happy-20261003": "93551da62b52c0e1fb88a8811424f6cfa5c0a47f",
+      "refs/heads/main": "98a08827c9fbc486fe987da73f4aee8398120d31"
+    },
+    "exact_index_commit": "93551da62b52c0e1fb88a8811424f6cfa5c0a47f",
+    "A": {
+      "registration": "REGISTERED_REMOTE_READBACK_VERIFIED",
+      "ownership": "native applications, shared product models/frameworks, OS/mobile",
+      "record": "team-a.json",
+      "thread": "Project Astra la Vista",
+      "handover": "EXPLICIT_EXISTING_INTEGRATOR_HANDOVER_ACKNOWLEDGED; Team C sole global release integrator"
+    },
+    "C": {
+      "registration": "ACTIVE",
+      "ownership": "hosted services/infrastructure, billing, sole global release integration",
+      "workers": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ]
+    },
+    "accepted_head": null,
+    "release_status": "BLOCKED",
+    "incoming_candidate": {
+      "team": "A",
+      "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "state": "PROVISIONAL_UNACCEPTED_SOURCE_REVIEW_PENDING",
+      "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
+      "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
+    }
+  },
+  "app_platform_inventory": {
+    "assigned_sections": 34,
+    "default_browser_required_sections": 33,
+    "canonical_mini_computer_exemption": 1,
+    "verified_complete_deployed_apps": 0,
+    "full_requirement_denominator": null,
+    "platform_coverage_complete": false,
+    "semantic_coverage_complete": false,
+    "heading_checks": [
+      {
+        "app": "Home",
+        "exact_source_heading": true
+      },
+      {
+        "app": "9to1 Admin",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Files",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Connect",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Mail",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Games",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Spaces",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Vision & Voice",
+        "exact_source_heading": true
+      },
+      {
+        "app": "AI Studio",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Play",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Write",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Present",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Canvas",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Boards",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Planner",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Automations",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Picture",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Wave",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Motion",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Data",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Forms",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Dev",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Stacks",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Sites",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Terminal",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Mini Computer",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Browse",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Maps",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Launcher",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Shelf",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Link",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Prototype",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Paths",
+        "exact_source_heading": true
+      },
+      {
+        "app": "Replay",
+        "exact_source_heading": true
+      }
+    ],
+    "limitation": "Assigned canonical sections only; neither native platform validation nor atomically complete clause/donor coverage."
+  },
+  "acceptance_wording": "README explicitly distinguishes local unit/source/DOM/transport checks from full app deployment and cross-client gates. Historical vendor/Canvas failures explicitly scoped to98a-based candidate, not incominga63. acceptedHead null and release BLOCKED. No false release acceptance found in reviewed root documents.",
+  "followup_required": [
+    "Root isolated a63 plus three Team B source commits build/owner-graph validation pending; final package wording and hashes must be refreshed/re-audited after its evidence is added.",
+    "README next prerequisite gate may need updating after reconciliation proves ten missing vendor inputs restored; this review does not assess incoming candidate build success."
+  ],
+  "defects": [],
+  "product_parity_verified": false,
+  "production_edits": false
+}

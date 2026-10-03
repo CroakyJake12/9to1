@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "run",
+    "--project",
+    "9to1 Workspace/Files/CUI.Tests/HavenOS.Files.CUI.Tests.csproj",
+    "--configuration",
+    "Release",
+    "--artifacts-path",
+    "/workspace/team-b-evidence/sol-happy-20261003/b4/artifacts-files"
+  ],
+  "cwd": "/workspace/team-b-worktree",
+  "start": "2026-10-03T17:13:24.017230+00:00",
+  "end": "2026-10-03T17:13:27.407202+00:00",
+  "tested_commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "platform": "Debian 13 Linux x64",
+  "sdk": "10.0.401",
+  "exit_status": 0,
+  "expected_count": 11,
+  "count_note": "custom executable; 11 declared checks, no VSTest discovery",
+  "discovered": "NOT_APPLICABLE_CUSTOM_MAIN",
+  "executed": 11,
+  "passed": 11,
+  "failed": 0,
+  "outcome": "PASS_LOCAL_REGRESSION_ONLY",
+  "runtime_browser_acceptance": "NOT_RUN",
+  "log": "/workspace/team-b-evidence/sol-happy-20261003/b4/logs/files.log",
+  "log_sha256": "947aba5a7e2648a9d75a681eeff0b4828af693567f88c2f6a2a59e0a9db3bba9",
+  "declared_check_count": 11
+}

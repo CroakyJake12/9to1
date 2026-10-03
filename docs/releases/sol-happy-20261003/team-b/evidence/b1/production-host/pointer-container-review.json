@@ -1,0 +1,166 @@
+{
+  "failedPublishedSource": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "correctedSource": "83c24b2f0033fb2828169921fc905a327120143b",
+  "independentRed": "../../b6/production-smoke/pointer-c74c73c",
+  "ownDiagnostic": "pointer-c74c73c-diagnostic/production-host-results.json",
+  "actualBefore": {
+    "elements": [
+      {
+        "id": "nine-to-one-root",
+        "box": {
+          "x": 0,
+          "y": 46,
+          "width": 1440,
+          "height": 954,
+          "top": 46,
+          "right": 1440,
+          "bottom": 1000,
+          "left": 0
+        },
+        "position": "static"
+      },
+      {
+        "id": "canvaswselo",
+        "box": {
+          "x": 0,
+          "y": 46,
+          "width": 1440,
+          "height": 1000,
+          "top": 46,
+          "right": 1440,
+          "bottom": 1046,
+          "left": 0
+        },
+        "position": "absolute"
+      },
+      {
+        "id": "nativeHostwselo",
+        "box": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000,
+          "top": 0,
+          "right": 1440,
+          "bottom": 1000,
+          "left": 0
+        },
+        "position": "absolute"
+      }
+    ],
+    "hit": "nativeHostwselo"
+  },
+  "controlledCssDiagnostic": {
+    "elements": [
+      {
+        "id": "nine-to-one-root",
+        "box": {
+          "x": 0,
+          "y": 46,
+          "width": 1440,
+          "height": 954,
+          "top": 46,
+          "right": 1440,
+          "bottom": 1000,
+          "left": 0
+        },
+        "position": "relative"
+      },
+      {
+        "id": "canvaswselo",
+        "box": {
+          "x": 0,
+          "y": 46,
+          "width": 1440,
+          "height": 954,
+          "top": 46,
+          "right": 1440,
+          "bottom": 1000,
+          "left": 0
+        },
+        "position": "absolute"
+      },
+      {
+        "id": "nativeHostwselo",
+        "box": {
+          "x": 0,
+          "y": 46,
+          "width": 1440,
+          "height": 954,
+          "top": 46,
+          "right": 1440,
+          "bottom": 1000,
+          "left": 0
+        },
+        "position": "absolute"
+      }
+    ],
+    "hit": "nativeHostwselo"
+  },
+  "trustedEvents": [
+    {
+      "type": "pointerdown",
+      "target": "nativeHostwselo",
+      "offsetX": 70,
+      "offsetY": 192,
+      "clientX": 70,
+      "clientY": 192,
+      "isTrusted": true
+    },
+    {
+      "type": "pointerup",
+      "target": "nine-to-one-root",
+      "offsetX": 70,
+      "offsetY": 146,
+      "clientX": 70,
+      "clientY": 192,
+      "isTrusted": true
+    },
+    {
+      "type": "pointerdown",
+      "target": "nativeHostwselo",
+      "offsetX": 70,
+      "offsetY": 146,
+      "clientX": 70,
+      "clientY": 192,
+      "isTrusted": true
+    },
+    {
+      "type": "pointerup",
+      "target": "nine-to-one-root",
+      "offsetX": 70,
+      "offsetY": 146,
+      "clientX": 70,
+      "clientY": 192,
+      "isTrusted": true
+    },
+    {
+      "type": "pointerdown",
+      "target": "nativeHostwselo",
+      "offsetX": 447,
+      "offsetY": 16,
+      "clientX": 447,
+      "clientY": 62,
+      "isTrusted": true
+    },
+    {
+      "type": "pointerup",
+      "target": "nine-to-one-root",
+      "offsetX": 447,
+      "offsetY": 16,
+      "clientX": 447,
+      "clientY": 62,
+      "isTrusted": true
+    }
+  ],
+  "beforeLibraryHash": "",
+  "diagnosticLibraryHash": "#/home.library",
+  "diagnosticDisabledHash": "#/home.library",
+  "cause": "Unpositioned browser root puts the native overlay at viewport origin while the canvas begins below the status bar. Target-relative pointer down/up coordinates disagree.",
+  "ownedFix": "Add position:relative to existing #nine-to-one-root in index.html. No shared source changes.",
+  "diagnosticNotAcceptance": true,
+  "actualCorrectedPublishedAcceptance": "PENDING fresh 83c24b2 publish and unmodified real pointer replay.",
+  "visualAndAccessibilityAcceptance": "Still blocked by separately recorded owner layout/accessibility findings.",
+  "deployed": false,
+  "fullParityAccepted": false
+}

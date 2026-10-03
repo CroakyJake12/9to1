@@ -1,0 +1,15 @@
+{
+  "baseHead": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "sourceState": "One B1-owned uncommitted MainJSline awaitingrootreview/commit/freshpublish",
+  "file": "apps/Web/wwwroot/main.js",
+  "sha256": "08d6c3f45c0bbb2f63891b4c4f140343327951b29d590d04d95eaecfd799f1d0",
+  "actualFailureEvidence": "run-9697281/runtime-exit-diagnosis.json",
+  "sdkContract": "run-9697281/sdk-runtime-lifetime-contract.txt",
+  "change": "runtime.runMain(config.mainAssemblyName,[]) keeps managed UI callbacks and dispatcher alive after C#Main completes; dotnet.run usesrunMainAndExit",
+  "checks": [
+    "gitdiff--checkPASS",
+    "Node--checkPASS"
+  ],
+  "actualNewRenderAndNavigation": "PENDINGfreshpublish",
+  "acceptanceClaim": "NoneuntildrawnUI/liveinteractionobserved; localonly,neverdeployed/fullparity"
+}

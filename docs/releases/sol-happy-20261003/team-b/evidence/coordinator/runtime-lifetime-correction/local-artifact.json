@@ -1,0 +1,14 @@
+{
+  "testedCodeCommit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "createdAt": "2026-10-03T18:45:05.193722+00:00",
+  "path": "/workspace/team-b-artifacts/browser-c74c73c/local-bootstrap-c74c73c.zip",
+  "bytes": 21686031,
+  "sha256": "5f69f67261ef7886636d5d6d8e5dc566221f8482d8b64e2fdfa34b2c75949040",
+  "format": "zip; actual dotnet publish wwwroot only",
+  "scope": "Compiled local bootstrap:12 local startup/route/status checks passed; actual Home overlapping layout and absent control semantics block visual/accessibility acceptance; no real service/deployed/full-product acceptance.",
+  "productParityVerified": false,
+  "deployed": false,
+  "acceptedReleaseHead": null,
+  "publishManifest": "browser-publish.json",
+  "runtimeEvidence": "../../b1/production-host/run-c74c73c/production-host-results.json"
+}

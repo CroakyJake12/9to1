@@ -1,0 +1,36 @@
+✔ profile update snapshots scalar fields before deferred token acquisition (24.629362ms)
+✔ post-call invalid fields and values cannot enter a validated profile patch (0.897377ms)
+✔ profile success must return exactly expected revision plus one (1.698068ms)
+✔ profile revision rejects unrepresentable next integer before token or network work (0.363666ms)
+✔ sequential server CAS success preserves wire body at normal and safe integer upper bounds (0.953801ms)
+✔ profile patch validates the same single scalar snapshot used for dispatch (0.592379ms)
+✔ caller serialization hooks cannot replace the validated profile fields (0.834217ms)
+✔ requires explicit secure origin and cleanup/token boundaries (2.404569ms)
+✔ current account preserves exact wire body and uses protected fetch policy (4.887044ms)
+✔ profile patch preserves omitted fields and explicit nullable clears; no client entitlement body (1.20623ms)
+✔ source conflict and error codes remain unchanged, with revision; no mutation retries (0.644297ms)
+✔ malformed success, invalid identity/schema and invented success are rejected (2.844059ms)
+✔ session list retains source fields and rejects mixed-account or duplicate identities (1.351358ms)
+✔ session mutations clear prior context and exactly use source routes/status (1.30607ms)
+✔ revoked/expired server session invalidates other pending requests and preserves source failure (0.478018ms)
+✔ explicit account/organisation switch drops late private result (0.462524ms)
+✔ cancelled token acquisition and fetch never become successful data (0.325979ms)
+✔ transport errors and missing authentication never log/expose tokens or retry writes (0.264086ms)
+✔ failed cleanup blocks mutation before any dispatch (0.164587ms)
+✔ session mutations bind original token before cleanup can replace/remove token context (0.275834ms)
+✔ concurrent context switch during asynchronous session cleanup prevents dispatch (0.148874ms)
+✔ invalid original token cannot be replaced by a new account token during cleanup (0.290836ms)
+✔ 401 from previous context cannot surface after an additional switch while reading its body (0.321132ms)
+✔ real-fetch successful body cancellation remains Cancelled instead of malformed JSON (28.118228ms)
+✔ 401 and missing token preserve cleanup failure distinctly (0.427892ms)
+✔ redirect responses and foreign response URL are rejected (0.315944ms)
+✔ streamed real-fetch 401 body survives invalidation; explicit body-phase abort is cancelled (7.684302ms)
+✔ real fetch loopback redirect does not transmit bearer to second origin (transport fixture, not issuer acceptance) (3.626583ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 175.363364

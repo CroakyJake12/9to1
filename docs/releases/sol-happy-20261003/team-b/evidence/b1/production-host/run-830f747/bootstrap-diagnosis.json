@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "830f747b70df07797c586f6124890fa5028452b2",
+  "actualProductionOutcome": "FAIL: bootstrap timed out90s;0CUIcanvas;statusLoading",
+  "runtimeError": "MONO_WASM TypeInitialization SkiaSharp.SKImageInfo",
+  "assetResolverObserved": "/_framework/avalonia.js200; all required fetched assets200; favicon404incidental",
+  "nativeCause": "B1 false legacy-import flags also suppressed transitive NuGet native library imports; actualfinalemcc-link.rsp has no Skia/Harf .a and pinvoke-table no library table",
+  "evidence": [
+    "emcc-link.rsp",
+    "pinvoke-table.h",
+    "../final-native-items.json",
+    "production-host-results.json",
+    "initial-home.png",
+    "production-host-trace.zip"
+  ],
+  "dependentChecks": "BLOCKED; no Home semantics/disabledactions/navigation/BFCache attempted",
+  "proposedFix": "Scope legacy exclusion flags to owner Browser.targets import then restore true before transitive NuGet target evaluation; preserve existing owner/native sources",
+  "parityAccepted": false,
+  "deployed": false
+}

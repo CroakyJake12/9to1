@@ -1,0 +1,145 @@
+{
+  "runId": "sol-happy-20261003",
+  "team": "B",
+  "thread": "Terra-Form",
+  "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
+  "branch": "team-b/sol-happy-browser-20261003",
+  "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "baselineAcceptance": "UNVERIFIED; verified remote main identity, acceptedHead remains null",
+  "specification": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+    "modifiedTime": "2026-10-03T17:00:26.970Z",
+    "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1"
+  },
+  "modelAssignments": {
+    "B1": "gpt-6.1-sol",
+    "B2": "gpt-6.1-sol",
+    "B3": "gpt-6.1-sol",
+    "B4": "gpt-6.1-sol",
+    "B5": "gpt-6.1-sol",
+    "B6": "gpt-6.1-sol",
+    "coordinator": "Inherited runtime model; coordinator model switching unavailable"
+  },
+  "claims": [
+    {
+      "worker": "B1",
+      "paths": [
+        "apps/Web/** except Auth/"
+      ],
+      "task": "Browser entry/bootstrap adapter using existing CUI/Avalonia.Browser; preserve canonical Home/domain",
+      "state": "PARTIAL_IMPLEMENTED_UNVERIFIED",
+      "restriction": "No shared contract/vendor edits without owning Team A acknowledgement",
+      "handover": "Auth subtree explicitly handed to B5; browser bootstrap/route/registry remain B1."
+    },
+    {
+      "worker": "B2",
+      "paths": [
+        "team-b evidence: b2 productivity requirement maps"
+      ],
+      "task": "Write/Present/Canvas/Boards/Data/Forms full browser operation and donor map",
+      "state": "MAPPED_BLOCKED_UNVERIFIED"
+    },
+    {
+      "worker": "B3",
+      "paths": [
+        "team-b evidence: b3 specialist requirement maps"
+      ],
+      "task": "Mail/Games/Planner/Picture/Wave/Motion/Dev/Stacks/Terminal/MiniComputer/Browse/Maps/Launcher/Shelf browser map",
+      "state": "MAPPED_BLOCKED_UNVERIFIED"
+    },
+    {
+      "worker": "B4",
+      "paths": [
+        "team-b evidence: b4 Files/Sites/Terra-form maps"
+      ],
+      "task": "Files/Sites/Link/Prototype/Paths/Replay/Variants browser operation and contract map",
+      "state": "MAPPED_BLOCKED_UNVERIFIED"
+    },
+    {
+      "worker": "B5",
+      "paths": [
+        "apps/Web/Auth/**",
+        "team-b evidence: b5 AI/account maps"
+      ],
+      "task": "Thin browser account/profile/session adapter over acknowledged existing CAKE ID Worker wire protocol; no identity/model/entitlement replacement. Full AI/account browser maps.",
+      "state": "PARTIAL_IMPLEMENTED_UNVERIFIED",
+      "protocolSource": "codex/cake-id-auth-backup-20261002@7cc52df0411e0e9e617918f6c5158283cc3199fc:cloud/cake-id-auth/{README.md,src/contract.ts,src/resource-api.ts}"
+    },
+    {
+      "worker": "B6",
+      "paths": [
+        "eng/browser/validate-acceptance-evidence.py",
+        "eng/browser/README.md",
+        "eng/browser/tests/test_acceptance_evidence.py"
+      ],
+      "task": "Independent strict requirement/evidence gate and negative controls; independent browser foundation review",
+      "state": "LOCAL_VALIDATOR_TESTED; FULL_PARITY_REJECTED"
+    }
+  ],
+  "requests": [
+    "Team C acknowledge B-owned claims and confirmed candidate baseline; Team C remains sole release integrator.",
+    "C4 publish acknowledged authenticated Files/Sites transport contracts, authoritative metadata/revision commit proofs and staging frontend/backend deployment identities; existing IFilesService lacks browser byte-reference transport.",
+    "Team C publish authenticated session/account/permission/tenant/AI/job/billing service protocols and isolated test accounts; no staging or provider credentials configured here.",
+    "Team A provide tested desktop candidate for required browser\u2192desktop\u2192browser continuity; no desktop build may be inferred correct.",
+    "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result.",
+    "Team A clarify/implement Write independent Continuous/Pages/Book viewing and Locked/Unlocked layout states: current Document.LayoutMode/SetLayout combines modes and cannot satisfy all six combinations; no browser-only schema fork.",
+    "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS.",
+    "C2/C owner: B5 consumes existing acknowledged account/profile/session wire protocol with injected configuration/token provider only. No issuer/client/redirect defaults or provider authority; real issuer/staging cross-client acceptance remains yours and blocked.",
+    "Team C review the three continuously published B source commits. Incoming Astra source independently reconciled; retain old98a compile failures ONLY as historical baseline evidence. Await isolated owner-graph browser attempt before claiming current build state."
+  ],
+  "testStatus": "Local only: validator32/32, actual source-linked route/registry16/16 custom, browser Node7 custom checks, account native Node21/21, independent real Chromium DOM7/7, unchanged Write4cases21assertions, unchanged Wave28selftest+9CLI, Files11 custom pass. Fullhost98a-based buildFAIL; Sites98a-based compileFAIL before discovery. Current-source acceptanceINCOMPLETE. No deployed browser or cross-client gate passed.",
+  "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003; candidate branch source, versioned evidence and reviewed commit IDs pending final browser adapter review.",
+  "deploymentStatus": "NOT_DEPLOYED",
+  "commercialStatus": "NOT_ENABLED",
+  "blockers": [
+    "Sandbox plugin/skill/Operating Contract unavailable after exhaustive capability discovery",
+    "Authenticated backend/staging/deployment identities absent",
+    "SH-13 browser/runtime/operational decisions OPEN",
+    "Accepted release head remains unset; final integrated acceptance pending",
+    "Incoming a63 owner graph/browser compatibility and exact pinned source build need execution; previous missing imports restored",
+    "Full mandatory/default-SHOULD/donor/platform decomposition incomplete; no semantic completion denominator"
+  ],
+  "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
+  "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
+  "updatedUTC": "2026-10-03T17:45:15.770276+00:00",
+  "reviewedSourceCommits": [
+    "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
+    "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
+    "4b6413a9d8b17b394daa7db74b05931cba8269f4"
+  ],
+  "candidateCommit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "candidateStatus": "PREPARATORY_UNACCEPTED; B browser source review complete, full product gates BLOCKED",
+  "originalMapSpecification": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "modifiedTime": "2026-10-03T16:54:11.626Z",
+    "sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23"
+  },
+  "sourceRecheck": {
+    "activeRecordsIdentical": 9996,
+    "textChanges": 1,
+    "fullRecordChanges": 9,
+    "change": "Future Study App placeholder and following index shifts only",
+    "oldRuntimeEvidenceRelabelled": false,
+    "currentAcceptanceValidator": "INCOMPLETE exit1;10558 defects including3 STALE_SOURCE; no product acceptance"
+  },
+  "coordinationState": "A REGISTERED and shared owner acknowledges apps/Web and eng/browser; explicit existing Astra integrator handover acknowledged by C; C sole release integrator; acceptedHead null",
+  "handoffEvidenceClaim": {
+    "owner": "Team B root",
+    "path": "docs/releases/sol-happy-20261003/team-b/**",
+    "state": "PACKAGING; no overlap with C6 evidence",
+    "code": "23 B-owned files reviewed; no shared/model/vendor source edits"
+  },
+  "incomingAstraValidation": {
+    "candidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "branch": "team-b/astra-browser-validation-20261003",
+    "status": "IN_PROGRESS isolated B validation only; no global integration or candidate acceptance",
+    "finding": "All10 direct missing vendor imports restored in incoming A source; old98a failures NOT attributed to a63",
+    "requests": [
+      "A1 acknowledge changed Runtime/Home graph and browser-compatible owner boundary (Runtime now directly references Avalonia.Desktop/Fluent/Inter)",
+      "Coordinate pinned gitlinks XamlX009d4815470cf4bf71d1adbb633a5d81dcb2bb52 and Avalonia.DBus864a05282841bf04006890f04d11d60d1a046aa9 materialization",
+      "Extend vendor provenance manifest beyond metadata-only SOURCE-MANIFEST while preserving pin fe2741d62a467c3efa4f0c5f68f7861bc338c99f"
+    ]
+  }
+}

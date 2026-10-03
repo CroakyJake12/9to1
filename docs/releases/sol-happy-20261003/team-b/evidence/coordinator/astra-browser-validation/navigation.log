@@ -1,0 +1,4 @@
+/workspace/team-b-astra-browser-validation/9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs(177,9): error CS0246: The type or namespace name 'Haven' could not be found (are you missing a using directive or an assembly reference?) [/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserNavigation.Tests.csproj]
+/workspace/team-b-astra-browser-validation/9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs(177,69): error CS0246: The type or namespace name 'IHomeStateCommitActorGuard' could not be found (are you missing a using directive or an assembly reference?) [/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserNavigation.Tests.csproj]
+
+The build failed. Fix the build errors and run again.

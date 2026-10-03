@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "baseHead": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "sourceState": "B1 owned uncommitted changes; B5 Auth changes excluded",
+  "files": [
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "sha256": "a1333852cd9e18121427e417ce0cc3f75a57668c1b91d144fec95fc3081f6ace"
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "sha256": "9293da0040536b68803878a1d3f60770edc227b082495219b969f9455e9c84a1"
+    },
+    {
+      "path": "apps/Web/BrowserApplication.cs",
+      "sha256": "3cf04f6ccc0c89a75c90de1012dded5252258bc83511537e5cd887eeb479823e"
+    },
+    {
+      "path": "apps/Web/BrowserRouteDispatcher.cs",
+      "sha256": "19ad2399168ee064fe1c4ec24ce0a5988ed6419ba478b73226fe378f6af134b7"
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "sha256": "457563c63ff218ee0277f4b7db034205ab2202515b054786b0c56b444cf60140"
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "sha256": "0204b5dbae120b34cdd1cfd865842aab15852a35f05dbb3a46585d5b6b74bd7d"
+    }
+  ],
+  "dispatchEvidence": {
+    "originalApplication": "Home fallback called before registry in base OpenFragmentAsync",
+    "extractedOldSelection": "BrowserRouteDispatcher.before-priority-fix.cs",
+    "redLog": "../dispatch-owner-priority-red.log",
+    "redExitCode": 134,
+    "redOutcome": "existing16tests passed; canonical owner priority assertion failed",
+    "greenLog": "../dispatch-owner-priority-green.log",
+    "greenExitCode": 0,
+    "greenTestCount": 22,
+    "testScope": "Source-linked production dispatch/codec/registry and actual Home contract host, UNIT delegates only; native rendering, auth,backend and deployed acceptance NOT-RUN",
+    "preservedHarnessCorrection": "../dispatch-owner-exception-test-correction.log"
+  },
+  "assetEvidence": {
+    "beforeProperties": "../bundle-properties.json",
+    "afterProperties": "../bundle-properties-corrected.json",
+    "modernBundle": "WasmGenerateAppBundle=false from installed WorkloadManifest.targets; StaticWebAssets publish path used",
+    "adapterAssets": "unchanged owner Avalonia.Browser.props/targets use _framework assets, GL export",
+    "nativeLibraries": "existing transitive NuGet3.1.56/st,simd Skia/Harf inputs retained; legacy owner duplicate st inputs excluded using existing documented flags",
+    "lock": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/webapp/bun.lock",
+    "lockSha256": "d3e2fdcddb04f3a92633bb9f56548d4d2c925c7034ded1b2d99b5a16108b734c",
+    "bunToolPin": "No version pin in owner source; root must record explicitly selected tool identity",
+    "heavyPublish": "PENDING root gate",
+    "runtimeAcceptance": "NOT-RUN"
+  }
+}

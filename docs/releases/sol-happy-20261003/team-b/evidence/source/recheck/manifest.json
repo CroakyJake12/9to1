@@ -1,0 +1,29 @@
+{
+  "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "title": "9to1 Development Specification",
+  "revisionId": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+  "metadata": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "title": "9to1 Development Specification",
+    "mime_type": "application/vnd.google-apps.document",
+    "size": null,
+    "url": null,
+    "file_or_folder": "file",
+    "created_time": null,
+    "modified_time": "2026-10-03T17:00:26.970Z",
+    "parent_ids": null,
+    "drive_id": null,
+    "current_user_can_share": null,
+    "has_augmented_permissions": null,
+    "shared": null,
+    "permissions": null,
+    "source_visibility_status": "access_not_verified"
+  },
+  "paragraphs": 10010,
+  "priorRevision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "activePassesUnchanged": true,
+  "change": "Pass 5 O Yes placeholder expanded to future Study App prose; following out-of-scope/Training Lab indices shifted. Active General Rules/CUI/apps/frameworks/Terra-form/Sol Happy text and indices unchanged.",
+  "acceptance": "No prior runtime result relabelled as current-source acceptance; original maps retain original source revision. All deployed browser gates remain NOT_RUN/BLOCKED.",
+  "paragraphs_sha256": "23b15530a4f453803303a141565277645007609033a9d4b24979e11d253ad477",
+  "canonical_text_sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1"
+}

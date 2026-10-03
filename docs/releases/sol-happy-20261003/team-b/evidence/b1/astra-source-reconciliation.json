@@ -1,0 +1,2702 @@
+{
+  "runId": "sol-happy-20261003",
+  "worker": "B1",
+  "activity": "Read-only static source reconciliation; no builds, source changes, submodule initialization or candidate acceptance.",
+  "baseline": {
+    "head": "98a08827c9fbc486fe987da73f4aee8398120d31",
+    "path": "/workspace/9to1",
+    "testedPreviously": "B1 browser host build FAILED MSB4006; direct vendor evaluation FAILED MSB4019 missing build/AvaloniaPublicKey.props",
+    "evidence": [
+      "logs/browser-build.log",
+      "logs/browser-import-evaluation.log"
+    ]
+  },
+  "incomingCandidate": {
+    "head": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "path": "/workspace/team-b-astra-inspection",
+    "dirtyStatus": "",
+    "accepted": false,
+    "buildOutcome": "NOT-RUN",
+    "runtimeOutcome": "NOT-RUN"
+  },
+  "history": {
+    "mergeBase": "98a08827c9fbc486fe987da73f4aee8398120d31",
+    "candidateContainsBaseline": true
+  },
+  "sourcePin": {
+    "baselineDeclaredAvaloniaCommit": "fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
+    "candidateDeclaredAvaloniaCommit": "fe2741d62a467c3efa4f0c5f68f7861bc338c99f",
+    "declaredTag": "12.0.1",
+    "upstream": "https://github.com/AvaloniaUI/Avalonia",
+    "upstreamByteIdentityIndependentlyVerified": false,
+    "provenanceFinding": "SOURCE.md and SOURCE-MANIFEST.txt remain byte-identical and describe the initial Metadata-only slice; candidate build/9to1-source-build.md adds broad source/restoration/modification and gitlink declarations. Pin unchanged does not itself verify every restored file against upstream.",
+    "manifestEntries": 20,
+    "manifestPathsAreMetadataOnly": true
+  },
+  "pathComparisons": [
+    {
+      "path": "9to1 Workspace/Home/HavenOS.Home.csproj",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e00ce8359c87909086738eea0fa9267939a3259bb2906f21ce5ba8af0b471521",
+        "gitBlob": "9dd0cfeb4c1c9b1aeb19d640c01ac2a705533098",
+        "lastChange": "98a08827c9fbc486fe987da73f4aee8398120d31 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "917d137c252bff1b5c0f7c38bf047ca166e0611f226195dce2ac61b16579a9a8",
+        "gitBlob": "5253f562466c16ec93933e620789a15d554a6207",
+        "lastChange": "80c5182869252eff154f0c5f4a44083450a8e70e Add canonical app authority and configurable subscription pricing"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "55811f5e952d6a39f51ff65f2442f86fd15230e53282903f0a5cdb953aeebf15",
+        "gitBlob": "9950f267fdd88ea3b3d0892e2711a404a4aecf6f",
+        "lastChange": "98a08827c9fbc486fe987da73f4aee8398120d31 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "02def3189de0070dd6b33d8eea1d62a5c74ba9fd0699786ca1bcc934b28631ff",
+        "gitBlob": "82c01099cf74c402fd2c967b1c0c0832a2b48413",
+        "lastChange": "4e682bb06c6ce6abd7bc1722b5e8c630b11eda19 Integrate canonical Data design and native action recovery"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/Core/CuiRuntimeContracts.cs",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4",
+        "gitBlob": "591f564af0caabdfea8cf49cc4021fb195ba42de",
+        "lastChange": "f54fb57257acbc06084d968673dac51d450367e1 commission"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4",
+        "gitBlob": "591f564af0caabdfea8cf49cc4021fb195ba42de",
+        "lastChange": "f54fb57257acbc06084d968673dac51d450367e1 commission"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "bcc6b9e3c7a78531b7c9dc12e8675830214531ed008fb5f56ed1c93072064d8f",
+        "gitBlob": "d0219c4bbeb3c5139121e3dea989277cab1c901b",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "7b38ee5f92368a5e47bd433594b3810157a0802c696905c116f82e47185d07c4",
+        "gitBlob": "23ff127016cb32a176eeb19b8d576000bf17c814",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "b88ed0c93dc3749a21e6eea0eff3db59a2a6958d3f762c0959b54c5788c8b00c",
+        "gitBlob": "c20e6b25bb1f70528b94a1b173cddbe03f22880d",
+        "lastChange": "98a08827c9fbc486fe987da73f4aee8398120d31 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3",
+        "gitBlob": "86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3",
+        "lastChange": "dad4d24fd0f0ab9236629d5c634f5ae340b65576 Integrate validated original-actor workflows and shared CAKE client"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/.revision",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e6a91327d8157fa4c2785d0cf80907a42fa5efe1d4b9f244ce109dfcd48f9c62",
+        "gitBlob": "87b461528269981133fb16d5faae5631b0e3b177",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e6a91327d8157fa4c2785d0cf80907a42fa5efe1d4b9f244ce109dfcd48f9c62",
+        "gitBlob": "87b461528269981133fb16d5faae5631b0e3b177",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/Directory.Build.props",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e3417886b5acf82051e39a84e890bd94c700b242c4bff6e91779843a30e48ef0",
+        "gitBlob": "400198daf9932d13cd2a063f8ad4e7579a815d02",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e3417886b5acf82051e39a84e890bd94c700b242c4bff6e91779843a30e48ef0",
+        "gitBlob": "400198daf9932d13cd2a063f8ad4e7579a815d02",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/NOTICE.md",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "dd6f80852d16320c865a2e403ffd1a8b07a0e34c5b37122c0bc2343639ff68e6",
+        "gitBlob": "365f5223feb580838ab6521996c4c6ce92d9f7c5",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/SOURCE-MANIFEST.txt",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "7258fa1b8e0742d61c4aacfa50171d194c477c1634817d58e2c13c147edd23bb",
+        "gitBlob": "01796355bd71410919eb000402e0ad664d03583b",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "7258fa1b8e0742d61c4aacfa50171d194c477c1634817d58e2c13c147edd23bb",
+        "gitBlob": "01796355bd71410919eb000402e0ad664d03583b",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/SOURCE.md",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "8c1c1e49bd964315477637ef2ba75e6d6d57e2ee01b467c328c53eee69c86b65",
+        "gitBlob": "47bbc7464e9cb37b01b98fed3c0fa39ae8679c0f",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "8c1c1e49bd964315477637ef2ba75e6d6d57e2ee01b467c328c53eee69c86b65",
+        "gitBlob": "47bbc7464e9cb37b01b98fed3c0fa39ae8679c0f",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/9to1-source-build.md",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "0b6fe6a10ccef3da40ee1de1a96db1559e95418705e8ff76969a8c073c076338",
+        "gitBlob": "84fc6c1da6c480074da9cf34b6fdaae0d3ac874b",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613",
+        "gitBlob": "5bf69d62d2bbfc01e6a1470fdef325475be8b4b9",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/ApiCompatAttributeExcludeList.txt",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "c6ee122c8aeba4c9526f83817a2be08d1232c4e059e1db2df275fd3c99ba1e1e",
+        "gitBlob": "1df5a30ec326a03f0f237d007f7c3d1f6b0fb645",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/Assets/Icon.png",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "1821e7bd48a6f407bddcbc1fd789132a3d5b6a5b787951114e3360b4bd650c96",
+        "gitBlob": "41a2a618fb02e4cb7f6a15caf572b693bfe1ebb1",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/AvaloniaPublicKey.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "16c2ef7444a49877714207879cd7ee26a3148babd9cfeda0318583970732e3fb",
+        "gitBlob": "89215635c0047dba2d9e4a58e42e0aefbd9b1d4a",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/Base.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "7cb8c96e4671a164bacbb940e56ef2b9cd241df5f183e65a107533e87b26e473",
+        "gitBlob": "cd0aa8196eeb092b4f82eec50e6f88e1f44c2f5e",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1",
+        "gitBlob": "110dfbbd91d5b564da32680d59511a272178dc66",
+        "lastChange": "3fca5cc1c049d1fd50a58bf1e91b4642482d2236 Integrate canonical native resource workflows and verified CUI runtime"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/CoreLibraries.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "a95ddfada4b0e4374f2b413365eb5ed1affa453fd08ba87a5e88471dbc829c48",
+        "gitBlob": "43ab0fbab2f8f33f3425a4747ea1a30dd3dccddd",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0",
+        "gitBlob": "ae5e7a6c424ec45888f3789f78aa6bbb7b4c0ff0",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/DevSingleProject.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "3677b4fed8da61c58fcaca33086dc50d772f22a638d86f68eca71eac8a20832b",
+        "gitBlob": "63871234294b0a841d471c6ba603a7ac62d890d5",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/EmbedXaml.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "88ebf61f7e3579e34f18858af5181f67ef3861110f32262407fca897479ce26d",
+        "gitBlob": "0bb8da4f47a79fd8b8a8f7c6317e2f9cad94396f",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/ExternalConsumers.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "47512f767500306f93e5e68b88b241cbb20ed1787d6182099e7ba9258c8362ed",
+        "gitBlob": "79df2f6be4617b540e6a870eeb795d0174a63252",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/HarfBuzzSharp.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "a8b93f9287853d0a8dbfbd0c36926b545d947952518e28f46a485020ca6478d5",
+        "gitBlob": "7e0b4e3e19ef2cf5d32a5f57cf54c8a80a5e1895",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/MicroCOM.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "7b6d07e2b94baf4484a3eabe46e12d1c129c0328c29a376867605b915c3da6b6",
+        "gitBlob": "1efa4b2ef371a5a3fe36470801dd03763ac344e9",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/NetAnalyzers.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "84bc1420b65ea71da02ce1669a4857d247338432202fd7c33cf3845af6bd265d",
+        "gitBlob": "dfca9ecf9e85de50869bf6694f663010df826eac",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62",
+        "gitBlob": "60b91b85a3c044badb19a2a6448470e500fc35ac",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/ReferenceCoreLibraries.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "cb1f82e0997bb1393767dce01379d1ddacfdcf4cd7cd675218e7db417f38abdf",
+        "gitBlob": "cffc2e0324f6eb0743bc028bd0f5fad700385979",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/SampleApp.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "ad9338fb3d7591035b6ad4f626742454a0ee4afb89a428389ad10e2313e75114",
+        "gitBlob": "6816a38cbe5cd8597b6bc3a00cfee429d534020b",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/SharedVersion.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "91b95e070c79d30ae8c6362b0903e86bf26954e6eb294587a7159522543d3c1c",
+        "gitBlob": "493781c168ac64fa1b08763deab502a7df256ff8",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/SkiaSharp.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "a94647b878151c51ba3aec7630ad63d17dfdf5b8316050f52c152edbc6131871",
+        "gitBlob": "c2b04d3026b8361aa22a88e09a6675546103fe9b",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471",
+        "gitBlob": "9b4d3d7cdc6fba1f11a86b66175b93888d96d430",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/SourceLink.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "68eeb307854d1138951ed0bf351aa35589158b23f5d6219e42d95d09462e538b",
+        "gitBlob": "62ad50e78d50b1b32a3d93d6e8559986b983de89",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/TargetFrameworks.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "db967489d6ac7f8693acd60b43d95dc1bfec2273d8c1654ab60011b7c819dd8a",
+        "gitBlob": "96541e7ecf5f0bcae61ef50ab4a1b96be3bd5b4f",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1",
+        "gitBlob": "cf84ae67b410e8a4ec4cabc49ac60fcd44dd9b8c",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/UnitTests.NetCore.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "0c3a39c7cc47f548d49cbf78e8edb54a5aff048a8ce49fb2d9ce1cd4581177bf",
+        "gitBlob": "19b2253f4ffd003d65f40c5d4f5d310652d47835",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/UnitTests.NetFX.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "69f635ebd4e152b9b2586a1780ed64ec8756c6493002c023bec95709f8c77907",
+        "gitBlob": "22c40ecbbb6a2c104227421d49083c3f24444ba6",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/XUnit.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "99918965f6bb49ad9c12eef6f54140118721dbcfa231bdfd30c10b7f8f899af8",
+        "gitBlob": "42b5cae7dc68647caf109e4431151d1fbe37e417",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/avalonia.snk",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "e11e9cc0585a0e0013a666be2c277b161179429f0ceb20bb4141768795ea8e91",
+        "gitBlob": "10b49deb317f66acbf94ac91c3fb4e1066b11943",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/readme.md",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "11310f5fc7049b1fa59c08b3079f9d8181b8380e49aa0bdcf604cf86a510363f",
+        "gitBlob": "46399914f4dec78ad0799caf2ac6fcc68ea0c021",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "608e065d1c1647fb16695f1f28a9963eded168bcd50ccf3bacf98fc96011b100",
+        "gitBlob": "c36f495ea5200bb3f1b45f10177e52274375a942",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "bc5d03223972e874d4324c5c1ad5a28d91e6ada792b4e6a72ef96795ba3d13aa",
+        "gitBlob": "a0c1c080d8c0d07c71e4fc9019708e5761d42f93",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaBuildTasks.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "77b0fcd09d996846d98c9acc4f84d6d87b37ebc9d96fe3ad9a59dc9694324445",
+        "gitBlob": "50dc7b615f5274806c7e91e092b9b03612565a35",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaBuildTasks.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "4d6d5afc11ca18fe16d07798eaefc74f5f41ba9db28b0ac0b8dafb532dcf3a5e",
+        "gitBlob": "d3750935f92c169ecb25539c96a206c0d5da6f26",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaPrivateApis.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "0f8b1f6b6cc24bc88d18d190218da3eb500d7d18a585d9d71d2c03e8d27c2f27",
+        "gitBlob": "47219535cc99262e555b925820c75d764f981937",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaSingleProject.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "ecae2ea568adea608770dd9cf78b5741022b34f70cedda8a1ec5bac9dbca15f0",
+        "gitBlob": "25125b26e445c4a23be20aea748f9b840988696a",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/build/xunit.runner.mono.json",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "ae28b5a57a79ee9043a6b2743fc8a6c0ad2f9f804a394a3e83ad17d6c42e6d90",
+        "gitBlob": "4fb88b54c6590e775f6987fb57f8b8f7c7019de1",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/licence.md",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "213814d306090074d234d760239ff0f67eb9b8d20eefb4d5631bb39dbe0b769b",
+        "gitBlob": "41951805ac6a5cdb91373db7725fbaa9c004d912",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "0372942009ed282a67525f7e3d86152c1a6a4cedb8e3929d08b503c4a5d46780",
+        "gitBlob": "7fe189601fd97838e82a40a4493e38cf839aea16",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "0372942009ed282a67525f7e3d86152c1a6a4cedb8e3929d08b503c4a5d46780",
+        "gitBlob": "7fe189601fd97838e82a40a4493e38cf839aea16",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/BrowserAppBuilder.cs",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "62df3d6f0ae88b8d714bf7b956a45a25e8d70a4ea45b2b2ebd73c72b0e394853",
+        "gitBlob": "4307e371b7227e9e51d2cf2436ef395afc775f0f",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "62df3d6f0ae88b8d714bf7b956a45a25e8d70a4ea45b2b2ebd73c72b0e394853",
+        "gitBlob": "4307e371b7227e9e51d2cf2436ef395afc775f0f",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb",
+        "gitBlob": "d8e74f437ff73468d35889e457b25dae8e04b027",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff",
+        "gitBlob": "88097cd16c671dee5cef67f87ccd1d5873011bc6",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+      "baseline": {
+        "exists": false,
+        "directoryExists": false,
+        "sha256": null,
+        "gitBlob": null,
+        "lastChange": null
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c",
+        "gitBlob": "55d33fd46c71d880d304aefe8244d9c1d805bf81",
+        "lastChange": "8078879e9048a72af4037c895fc99244e8f901b9 Integrate native CUI, resource pricing and canonical artifact foundations"
+      },
+      "sameBytes": false
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "baseline": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "1bf7806839ad3ee73d0f6fe52fa20fb2dc769d07056b891259f7691acea503ee",
+        "gitBlob": "51f6cc92e926b6547c2aa78f2b901ddce32c5dd4",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "candidate": {
+        "exists": true,
+        "directoryExists": false,
+        "sha256": "1bf7806839ad3ee73d0f6fe52fa20fb2dc769d07056b891259f7691acea503ee",
+        "gitBlob": "51f6cc92e926b6547c2aa78f2b901ddce32c5dd4",
+        "lastChange": "9b6e2a3ea867335ac8051133afe147c3dbf66bb9 push"
+      },
+      "sameBytes": true
+    }
+  ],
+  "literalImportComparison": [
+    {
+      "owner": "framework/CUI/vendor/Avalonia/Directory.Build.props",
+      "project": "$(MSBuildThisFileDirectory)/build/AvaloniaPublicKey.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AvaloniaPublicKey.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "16c2ef7444a49877714207879cd7ee26a3148babd9cfeda0318583970732e3fb"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/Directory.Build.props",
+      "project": "$(MSBuildThisFileDirectory)/build/TargetFrameworks.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TargetFrameworks.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "db967489d6ac7f8693acd60b43d95dc1bfec2273d8c1654ab60011b7c819dd8a"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "project": "..\\Directory.Build.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/Directory.Build.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "e3417886b5acf82051e39a84e890bd94c700b242c4bff6e91779843a30e48ef0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "project": "..\\build\\SharedVersion.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SharedVersion.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "91b95e070c79d30ae8c6362b0903e86bf26954e6eb294587a7159522543d3c1c"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "project": "..\\build\\SourceLink.props",
+      "condition": "'$(DisableSourceLink)' == ''",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceLink.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "68eeb307854d1138951ed0bf351aa35589158b23f5d6219e42d95d09462e538b"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "project": "..\\build\\NetAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NetAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "84bc1420b65ea71da02ce1669a4857d247338432202fd7c33cf3845af6bd265d"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "project": "..\\build\\ExternalConsumers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/ExternalConsumers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "47512f767500306f93e5e68b88b241cbb20ed1787d6182099e7ba9258c8362ed"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/DevSingleProject.targets",
+      "project": "$(MSBuildThisFileDirectory)\\..\\packages\\Avalonia\\AvaloniaSingleProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/AvaloniaSingleProject.targets",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "ecae2ea568adea608770dd9cf78b5741022b34f70cedda8a1ec5bac9dbca15f0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/DevSingleProject.targets",
+      "project": "$(MSBuildThisFileDirectory)\\..\\src\\Browser\\Avalonia.Browser\\build\\Avalonia.Browser.props",
+      "condition": "'$(_AvaloniaBrowserTarget)' == 'true'",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a18d78225cf8bbf1e8cba24dd20c22b3f2bde38c797ad87a959dae60e86edbdb"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/DevSingleProject.targets",
+      "project": "$(MSBuildThisFileDirectory)\\..\\src\\Browser\\Avalonia.Browser\\build\\Avalonia.Browser.targets",
+      "condition": "'$(_AvaloniaBrowserTarget)' == 'true'",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a289961a247e92d4668afe5b0b14e8a4e4f398c14f82e110420443d0cdbc22ff"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/MicroCOM.props",
+      "project": "$(LocalMicroComPath)/UseLocalBuild.targets",
+      "condition": "'$(UseLocalMicroComBuild)' == 'true'",
+      "resolution": "UNRESOLVED-STATIC-PROPERTY",
+      "resolvedPath": null
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "project": "$(MSBuildThisFileDirectory)/../src/tools/Avalonia.Generators/Avalonia.Generators.props",
+      "condition": "'$(IncludeDevGenerators)' == 'true'",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "57e87889077defad1bb1faf91f67ab5dadab84319bdf7a47c2d6e536736ffbd5"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "project": "$(MSBuildThisFileDirectory)\\DevSingleProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevSingleProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "3677b4fed8da61c58fcaca33086dc50d772f22a638d86f68eca71eac8a20832b"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "project": "$(MSBuildThisFileDirectory)\\upstream-resource-targets\\AvaloniaBuildTasks.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaBuildTasks.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "77b0fcd09d996846d98c9acc4f84d6d87b37ebc9d96fe3ad9a59dc9694324445"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "project": "$(MSBuildThisFileDirectory)\\upstream-resource-targets\\AvaloniaBuildTasks.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaBuildTasks.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "4d6d5afc11ca18fe16d07798eaefc74f5f41ba9db28b0ac0b8dafb532dcf3a5e"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj",
+      "project": "..\\..\\build\\SharedVersion.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SharedVersion.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "91b95e070c79d30ae8c6362b0903e86bf26954e6eb294587a7159522543d3c1c"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj",
+      "project": "..\\..\\build\\CoreLibraries.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/CoreLibraries.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a95ddfada4b0e4374f2b413365eb5ed1affa453fd08ba87a5e88471dbc829c48"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj",
+      "project": "..\\..\\build\\SourceLink.props",
+      "condition": "'$(DisableSourceLink)' == ''",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceLink.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "68eeb307854d1138951ed0bf351aa35589158b23f5d6219e42d95d09462e538b"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.props",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaBuildTasks.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/AvaloniaBuildTasks.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "7d44eb60dd87a15c35052340000bdf6d63cdaf23a4d09ed766357c85d5809a6c"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.props",
+      "project": "$(MSBuildThisFileDirectory)\\Avalonia.Generators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.Generators.props",
+      "baselineExists": false,
+      "candidateExists": false,
+      "candidateSha256": null
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.props",
+      "project": "$(MSBuildThisFileDirectory)..\\build\\AvaloniaVersion.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/build/AvaloniaVersion.props",
+      "baselineExists": false,
+      "candidateExists": false,
+      "candidateSha256": null
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.targets",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaBuildTasks.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/AvaloniaBuildTasks.targets",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "e7368e2ac0721a2d05022c11ab031fc221e11e0c6c1db90c4c921fed22d964cd"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.targets",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaPrivateApis.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/AvaloniaPrivateApis.targets",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "0f8b1f6b6cc24bc88d18d190218da3eb500d7d18a585d9d71d2c03e8d27c2f27"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.targets",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaSingleProject.targets",
+      "condition": "'$(AvaloniaSingleProject)' == 'true'",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/AvaloniaSingleProject.targets",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "ecae2ea568adea608770dd9cf78b5741022b34f70cedda8a1ec5bac9dbca15f0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Directory.Build.props",
+      "project": "..\\Directory.Build.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/Directory.Build.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "1bf7806839ad3ee73d0f6fe52fa20fb2dc769d07056b891259f7691acea503ee"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj",
+      "project": "..\\..\\build\\BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj",
+      "project": "..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.X11/Avalonia.X11.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls.ColorPicker/Avalonia.Controls.ColorPicker.csproj",
+      "project": "..\\..\\build\\EmbedXaml.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/EmbedXaml.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "88ebf61f7e3579e34f18858af5181f67ef3861110f32262407fca897479ce26d"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls.ColorPicker/Avalonia.Controls.ColorPicker.csproj",
+      "project": "..\\..\\build\\BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls.ColorPicker/Avalonia.Controls.ColorPicker.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls.ColorPicker/Avalonia.Controls.ColorPicker.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls.ColorPicker/Avalonia.Controls.ColorPicker.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
+      "project": "..\\..\\build\\BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Dialogs/Avalonia.Dialogs.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Remote.Protocol/Avalonia.Remote.Protocol.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
+      "project": "..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+      "project": "..\\..\\build\\MicroCOM.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/MicroCOM.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7b6d07e2b94baf4484a3eabe46e12d1c129c0328c29a376867605b915c3da6b6"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+      "project": "..\\..\\build\\BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.MicroCom/Avalonia.MicroCom.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Desktop/Avalonia.Desktop.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "project": "../../build/SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "project": "../../build/NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop/Avalonia.FreeDesktop.csproj",
+      "project": "../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+      "project": "../../build/NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+      "project": "../../build/DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+      "project": "../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.FreeDesktop.AtSpi/Avalonia.FreeDesktop.AtSpi.csproj",
+      "project": "../tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "0e32052a551802200f3be150941d81aed0adf04747f15106fcf2e69f8ec53a8e"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "project": "..\\..\\build\\Base.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/Base.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7cb8c96e4671a164bacbb940e56ef2b9cd241df5f183e65a107533e87b26e473"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "project": "..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Simple/Avalonia.Themes.Simple.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Simple/Avalonia.Themes.Simple.csproj",
+      "project": "..\\..\\build\\BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Simple/Avalonia.Themes.Simple.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Simple/Avalonia.Themes.Simple.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
+      "project": "..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
+      "project": "..\\..\\build\\MicroCOM.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/MicroCOM.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7b6d07e2b94baf4484a3eabe46e12d1c129c0328c29a376867605b915c3da6b6"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Native/Avalonia.Native.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
+      "project": "..\\..\\build\\BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Themes.Fluent/Avalonia.Themes.Fluent.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj",
+      "project": "..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj",
+      "project": "..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj",
+      "project": "..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Linux/Avalonia.LinuxFramebuffer/Avalonia.LinuxFramebuffer.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Linux/Avalonia.LinuxFramebuffer/Avalonia.LinuxFramebuffer.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Interoperability/Avalonia.Win32.Interoperability.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Interoperability/Avalonia.Win32.Interoperability.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Interoperability/Avalonia.Win32.Interoperability.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32.Automation/Avalonia.Win32.Automation.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "project": "..\\..\\..\\build\\MicroCOM.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/MicroCOM.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7b6d07e2b94baf4484a3eabe46e12d1c129c0328c29a376867605b915c3da6b6"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "project": "..\\..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Windows/Avalonia.Win32/Avalonia.Win32.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj",
+      "project": "../../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Generators/Avalonia.Generators.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.DBus.Generators/Avalonia.DBus.Generators.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/DevGenerators/DevGenerators.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj",
+      "project": "../../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj",
+      "project": "../../../build/NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CodeFixes.CSharp/Avalonia.Analyzers.CodeFixes.CSharp.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj",
+      "project": "../../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj",
+      "project": "../../../build/NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.VisualBasic/Avalonia.Analyzers.VisualBasic.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+      "project": "../../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+      "project": "../../../build/NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Designer.HostApp/Avalonia.Designer.HostApp.csproj",
+      "project": "..\\..\\..\\src\\Markup\\Avalonia.Markup.Xaml.Loader\\IncludeXamlIlSre.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/IncludeXamlIlSre.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "87156c9c0c35b5111521d13039e80a0778429d5dec27520a6fa76132c6cb0a33"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Designer.HostApp/Avalonia.Designer.HostApp.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Designer.HostApp/Avalonia.Designer.HostApp.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Designer.HostApp/Avalonia.Designer.HostApp.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/tools/DevAnalyzers/DevAnalyzers.csproj",
+      "project": "../../../build/AnalyzerProject.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/AnalyzerProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "49dd6926e6b8e8eed7045c53c8d27bae2bd05678ab4fa9290da9cad791a41613"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/iOS/Avalonia.iOS/Avalonia.iOS.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/iOS/Avalonia.iOS/Avalonia.iOS.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/iOS/Avalonia.iOS/Avalonia.iOS.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Android/Avalonia.Android/Avalonia.Android.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Android/Avalonia.Android/Avalonia.Android.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Android/Avalonia.Android/Avalonia.Android.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Android/Avalonia.Android/Avalonia.Android.csproj",
+      "project": "..\\..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.Vnc/Avalonia.Headless.Vnc.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.Vnc/Avalonia.Headless.Vnc.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.Vnc/Avalonia.Headless.Vnc.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.XUnit/Avalonia.Headless.XUnit.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.XUnit/Avalonia.Headless.XUnit.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.NUnit/Avalonia.Headless.NUnit.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless.NUnit/Avalonia.Headless.NUnit.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/Avalonia.Markup.Xaml.Loader.csproj",
+      "project": "IncludeXamlIlSre.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/IncludeXamlIlSre.props",
+      "baselineExists": true,
+      "candidateExists": true,
+      "candidateSha256": "87156c9c0c35b5111521d13039e80a0778429d5dec27520a6fa76132c6cb0a33"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/Avalonia.Markup.Xaml.Loader.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/Avalonia.Markup.Xaml.Loader.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/Avalonia.Markup.Xaml.Loader.csproj",
+      "project": "..\\..\\..\\build\\SourceGenerators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SourceGenerators.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "aebf121504205908f80058798f03708c4e42617132b84bc5d37c82e542d3b471"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml.Loader/Avalonia.Markup.Xaml.Loader.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup/Avalonia.Markup.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Markup/Avalonia.Markup.Xaml/Avalonia.Markup.Xaml.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "project": "..\\..\\..\\build\\SkiaSharp.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SkiaSharp.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a94647b878151c51ba3aec7630ad63d17dfdf5b8316050f52c152edbc6131871"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "project": "..\\..\\..\\build\\HarfBuzzSharp.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/HarfBuzzSharp.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a8b93f9287853d0a8dbfbd0c36926b545d947952518e28f46a485020ca6478d5"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+      "project": "..\\..\\..\\build\\HarfBuzzSharp.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/HarfBuzzSharp.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a8b93f9287853d0a8dbfbd0c36926b545d947952518e28f46a485020ca6478d5"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+      "project": "..\\..\\..\\build\\DevAnalyzers.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/DevAnalyzers.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "7260b41ff2762b38bc9d6561ac48af15fe279f2ae55764c9b7f4121351f515d0"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+      "project": "..\\..\\..\\build\\TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj",
+      "project": "..\\..\\..\\build\\NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj",
+      "project": "../../../build/BuildTargets.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/BuildTargets.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "170a2c25ef030109e5f5f1810b5c65cd16d7ef46f1ba527bbb7ec569aeaed9b1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj",
+      "project": "../../../build/SkiaSharp.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/SkiaSharp.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a94647b878151c51ba3aec7630ad63d17dfdf5b8316050f52c152edbc6131871"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj",
+      "project": "../../../build/HarfBuzzSharp.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/HarfBuzzSharp.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "a8b93f9287853d0a8dbfbd0c36926b545d947952518e28f46a485020ca6478d5"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj",
+      "project": "../../../build/NullableEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/NullableEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "bbe88de5d8fa11ca1257b8b1fe40f4e50692074605b64b272d97249e516e7a62"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj",
+      "project": "../../../build/TrimmingEnable.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/TrimmingEnable.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "e63abecbddd8c996890bf5daaef18df9c6f5cf7644506b487cbb05726dd328c1"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.props",
+      "project": "$(MSBuildThisFileDirectory)/../build/Microsoft.AspNetCore.StaticWebAssets.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Microsoft.AspNetCore.StaticWebAssets.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "2d428ddf7536447be38d4f47f44e7a53e1a0e2900eb6fd60602377d82251699c"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.props",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaBuildTasks.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaBuildTasks.props",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "77b0fcd09d996846d98c9acc4f84d6d87b37ebc9d96fe3ad9a59dc9694324445"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.props",
+      "project": "$(MSBuildThisFileDirectory)\\Avalonia.Generators.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.Generators.props",
+      "baselineExists": false,
+      "candidateExists": false,
+      "candidateSha256": null
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.props",
+      "project": "$(MSBuildThisFileDirectory)..\\build\\AvaloniaVersion.props",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/build/AvaloniaVersion.props",
+      "baselineExists": false,
+      "candidateExists": false,
+      "candidateSha256": null
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.targets",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaBuildTasks.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaBuildTasks.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "4d6d5afc11ca18fe16d07798eaefc74f5f41ba9db28b0ac0b8dafb532dcf3a5e"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.targets",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaPrivateApis.targets",
+      "condition": null,
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaPrivateApis.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "0f8b1f6b6cc24bc88d18d190218da3eb500d7d18a585d9d71d2c03e8d27c2f27"
+    },
+    {
+      "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.targets",
+      "project": "$(MSBuildThisFileDirectory)\\AvaloniaSingleProject.targets",
+      "condition": "'$(AvaloniaSingleProject)' == 'true'",
+      "resolution": "literal-path",
+      "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/AvaloniaSingleProject.targets",
+      "baselineExists": false,
+      "candidateExists": true,
+      "candidateSha256": "ecae2ea568adea608770dd9cf78b5741022b34f70cedda8a1ec5bac9dbca15f0"
+    }
+  ],
+  "sourceDependencies": [
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/XamlX",
+      "gitTreeEntry": "160000 commit 009d4815470cf4bf71d1adbb633a5d81dcb2bb52\tframework/CUI/vendor/Avalonia/external/XamlX",
+      "worktreeDirectoryExists": true,
+      "worktreeFileCount": 0,
+      "sampleFiles": [],
+      "status": "NOT-MATERIALIZED-IN-INSPECTION"
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "gitTreeEntry": "160000 commit 864a05282841bf04006890f04d11d60d1a046aa9\tframework/CUI/vendor/Avalonia/external/Avalonia.DBus",
+      "worktreeDirectoryExists": true,
+      "worktreeFileCount": 0,
+      "sampleFiles": [],
+      "status": "NOT-MATERIALIZED-IN-INSPECTION"
+    }
+  ],
+  "summary": {
+    "baselineMissingCandidateRestoredFiles": 41,
+    "candidateMissingLiteralImports": [
+      {
+        "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.props",
+        "project": "$(MSBuildThisFileDirectory)\\Avalonia.Generators.props",
+        "condition": null,
+        "resolution": "literal-path",
+        "resolvedPath": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.Generators.props",
+        "baselineExists": false,
+        "candidateExists": false,
+        "candidateSha256": null,
+        "status": "MISSING-PACKAGE-TEMPLATE-PATH; source-graph reachability NOT-EVALUATED"
+      },
+      {
+        "owner": "framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.props",
+        "project": "$(MSBuildThisFileDirectory)..\\build\\AvaloniaVersion.props",
+        "condition": null,
+        "resolution": "literal-path",
+        "resolvedPath": "framework/CUI/vendor/Avalonia/packages/build/AvaloniaVersion.props",
+        "baselineExists": false,
+        "candidateExists": false,
+        "candidateSha256": null,
+        "status": "MISSING-PACKAGE-TEMPLATE-PATH; source-graph reachability NOT-EVALUATED"
+      },
+      {
+        "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.props",
+        "project": "$(MSBuildThisFileDirectory)\\Avalonia.Generators.props",
+        "condition": null,
+        "resolution": "literal-path",
+        "resolvedPath": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.Generators.props",
+        "baselineExists": false,
+        "candidateExists": false,
+        "candidateSha256": null,
+        "status": "MISSING-PACKAGE-TEMPLATE-PATH; source-graph reachability NOT-EVALUATED"
+      },
+      {
+        "owner": "framework/CUI/vendor/Avalonia/build/upstream-resource-targets/Avalonia.props",
+        "project": "$(MSBuildThisFileDirectory)..\\build\\AvaloniaVersion.props",
+        "condition": null,
+        "resolution": "literal-path",
+        "resolvedPath": "framework/CUI/vendor/Avalonia/build/build/AvaloniaVersion.props",
+        "baselineExists": false,
+        "candidateExists": false,
+        "candidateSha256": null,
+        "status": "MISSING-PACKAGE-TEMPLATE-PATH; source-graph reachability NOT-EVALUATED"
+      }
+    ],
+    "candidateRestoresPreviouslyMissingDirectBrowserImports": true
+  },
+  "narrowTeamARequests": [
+    "Acknowledge CUI Runtime/Home contract revisions for a63 incoming source and provide final pinned candidate/head; B1 must reconcile changed Runtime and Home project graph before another full host build.",
+    "Confirm an approved browser-compatible CUI runtime build boundary: a63 Runtime now directly references Avalonia.Desktop/Fluent/Inter in addition to prior native/headless projects. B1 will not remove owner dependencies, fork runtime or substitute NuGet binaries to evade the graph.",
+    "Confirm the restored vendor build inputs, Browser props/targets and upstream-resource overrides are intended source graph at Avalonia12.0.1 fe2741d6; provide complete broadened donor/property/platform provenance/parity manifest replacing or supplementing Metadata-only source manifest.",
+    "Confirm/coordinate materialization of immutable XamlX009d4815 and Avalonia.DBus864a0528 gitlinks in browser build environments; empty inspection directories are not treated as restored source.",
+    "Coordinate exclusive browser build/native resource gate on exact candidate. Earlier98a target-cycle/missing-import failures remain baseline evidence and do not establish a63 failure; a63 build/runtime currently NOT-RUN."
+  ],
+  "staticInventoryLimits": "Literal path checks inventory all vendored project/props/targets imports, not an evaluated reachability graph. SDK/MSBuild property imports remain unresolved. Four missing generator/version props are package-layout templates and are not asserted to be active source-build blockers.",
+  "runtimeGraphChanges": [
+    "Candidate CakeOS.Cui.Runtime.csproj adds direct Avalonia.Desktop, Avalonia.Themes.Fluent and Avalonia.Fonts.Inter source references. Browser-compatible source graph remains unbuilt/unverified.",
+    "Candidate Home/HavenOS.Home.csproj now compiles Apps and Discover files and adds shared CUI AI project reference. No owner contracts were edited by B1.",
+    "Existing Browser/Avalonia.Browser.csproj and BrowserAppBuilder.cs remain byte-identical between98a and a63."
+  ]
+}

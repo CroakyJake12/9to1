@@ -1,0 +1,111 @@
+{
+  "reviewer": "B6 independent validation",
+  "source_commit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "published_bundle": "/workspace/team-b-artifacts/browser-c74c73c/wwwroot",
+  "bundle_inventory": "b6/production-smoke/frozen-c74-bundle-inventory.json",
+  "bundle_inventory_sha256": "0a7640bbf2ff5be5f6dd210bb1f5f0037c4982aaa368cf0914b165c2dac75a77",
+  "bundle_files": 180,
+  "bundle_bytes": 35340129,
+  "port": 18764,
+  "browser_version": "151.0.7922.173",
+  "startup_route_smoke": {
+    "command": [
+      "node",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/production-smoke/run-independent-production-smoke.cjs",
+      "/workspace/team-b-artifacts/browser-c74c73c/wwwroot",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/production-smoke/run-c74c73c",
+      "c74c73c94a0d548653790a1e9d2a899df88e67b3"
+    ],
+    "exit_status": 0,
+    "executed": 9,
+    "passed": 9,
+    "failed": 0,
+    "scope": "Fresh profile actual published CUI bootstrap; cold Home, live malformed/typed Library/Events, historyback/forward, reload-forced cold Library/malformed route and no managed/page/request errors. No substitutions or fake service/module used.",
+    "results": "b6/production-smoke/run-c74c73c/results.json",
+    "trace": "b6/production-smoke/run-c74c73c/independent-production-trace.zip",
+    "managed_runtime_errors": 0,
+    "page_errors": 0,
+    "failed_requests": 0,
+    "http_errors": 0
+  },
+  "visible_content_review": {
+    "outcome": "FAIL_FOR_HOME_VISUAL_ACCEPTANCE",
+    "screenshots_viewed": [
+      "cold-home.png",
+      "live-typed-library.png",
+      "live-events.png"
+    ],
+    "observed": "Canonical topbar/navigation visibly drawn. Library and Events separately show corresponding headings and accurate unavailable-services text. Home dashboard controls overlay/obscure welcome, hero and summary text; drawn canvas alone is not visual acceptance.",
+    "possible_owner_dependency": "Home conditional multi-child layout; no browser/private CUI transform approved or performed. Exact cause pending owner review.",
+    "library_events_full_visual_acceptance": "NOT-RUN: readable local unavailable views only, no populated content/donor/theme/zoom verification."
+  },
+  "accessibility_review": {
+    "outcome": "NOT_ACCEPTED",
+    "observed": "All captured ARIA snapshots contain status and main only; drawn navigation/search/actions have no exposed accessible controls in this Chromium snapshot. No screen-reader/keyboard workflow acceptance.",
+    "source": "b6/production-smoke/run-c74c73c/results.json"
+  },
+  "actual_pointer_followup": {
+    "command": [
+      "node",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/production-smoke/run-independent-pointer-smoke.cjs",
+      "/workspace/team-b-artifacts/browser-c74c73c/wwwroot",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/production-smoke/pointer-c74c73c",
+      "c74c73c94a0d548653790a1e9d2a899df88e67b3"
+    ],
+    "exit_status": 1,
+    "results": "b6/production-smoke/pointer-c74c73c/results.json",
+    "trace": "b6/production-smoke/pointer-c74c73c/independent-production-trace.zip",
+    "counts": {
+      "executed": 3,
+      "passed": 2,
+      "failed": 1
+    },
+    "disabled_control_observation": "OpenStudio grey disabled control at clear viewport coordinate447,62 did not navigate; this is an actual no-navigation observation, not proof of full permissions/service action behavior.",
+    "enabled_library": "FAIL: clear visually enabled Library center70,192 clicked through real pointer input; expected#/home.library not reached after10s. Raw final trace frame snapshot still URLhttp://127.0.0.1:18764/. No replacement DOM/module/handler injected.",
+    "events_pointer": "NOT-RUN after failed Library assertion",
+    "pointer_root_cause": "UNRESOLVED; B1 challenged for independent hit-test/coordinate/input diagnosis.",
+    "other_errors": {
+      "managed": 0,
+      "page_errors": 0,
+      "console_counts": {
+        "error:Failed to load resource: the server responded with a status of 404 (Not Found)": 1,
+        "warning:WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled": 2
+      },
+      "http_errors": []
+    }
+  },
+  "artifact_sha256": {
+    "run-c74c73c/cold-home.html": "7e99c37a96090c28342ac025025054df890f12c759438d0301197b5b6e551a72",
+    "run-c74c73c/cold-home.png": "51c7413aca3e3d0b55214390db5355ecafcbf6f5824b2361c4aa9b403d9a77b1",
+    "run-c74c73c/cold-invalid.html": "c33ce66739cfc8962ab894426d803721b30d1fc74dc5f685bc93a887a34587eb",
+    "run-c74c73c/cold-invalid.png": "190277f19529386a5a82871a56a6067e9e23637b6dd11b9f02900e2d0a785494",
+    "run-c74c73c/cold-typed-library.html": "b63b45852245bb5047a835505bf4b56131c11d31ebf3855b6fb3984958859ca4",
+    "run-c74c73c/cold-typed-library.png": "c9c8863370b44150122c39fdbde390cbdace9441e168140bf48685eb5e95497a",
+    "run-c74c73c/history-back-library.html": "7e99c37a96090c28342ac025025054df890f12c759438d0301197b5b6e551a72",
+    "run-c74c73c/history-back-library.png": "c9c8863370b44150122c39fdbde390cbdace9441e168140bf48685eb5e95497a",
+    "run-c74c73c/history-forward-events.html": "7e99c37a96090c28342ac025025054df890f12c759438d0301197b5b6e551a72",
+    "run-c74c73c/history-forward-events.png": "60d045f9af37d33cb60dd0fbfad09eeff3240ebc4c2b9cead6de8c4d63926125",
+    "run-c74c73c/independent-production-trace.zip": "65ad57fd8f68e83386ed4d2180624f28e1b15df610769802515000bf28f9b327",
+    "run-c74c73c/live-events.html": "7e99c37a96090c28342ac025025054df890f12c759438d0301197b5b6e551a72",
+    "run-c74c73c/live-events.png": "60d045f9af37d33cb60dd0fbfad09eeff3240ebc4c2b9cead6de8c4d63926125",
+    "run-c74c73c/live-invalid.html": "6cf55880f275008459bd82edec2e8ed244860518ef1208870ef6c57c58c8acff",
+    "run-c74c73c/live-invalid.png": "5c15750768d3bb813ae086e0d43a8dc6365b0c5599b816613df50d265da62259",
+    "run-c74c73c/live-typed-library.html": "7e99c37a96090c28342ac025025054df890f12c759438d0301197b5b6e551a72",
+    "run-c74c73c/live-typed-library.png": "c9c8863370b44150122c39fdbde390cbdace9441e168140bf48685eb5e95497a",
+    "run-c74c73c/results.json": "60f576bdc7ae184bee5ceac77afb17aeabfc4907a8ea09222f5769abdc4f46ac",
+    "run-c74c73c/runner-executed.cjs": "0d38bdbd482937decbf5b1a60f3b6b2fa107f628f757258f8e1478bd896890b6",
+    "pointer-c74c73c/cold-home.html": "3411c755d530f7ed356ce96262fd7589289e69e8078d0501fb7f60af1521820f",
+    "pointer-c74c73c/cold-home.png": "51c7413aca3e3d0b55214390db5355ecafcbf6f5824b2361c4aa9b403d9a77b1",
+    "pointer-c74c73c/independent-production-trace.zip": "54c251036cb034b4199d36d63568916cdbcece308a9b206fecc85a18aec62405",
+    "pointer-c74c73c/pointer-disabled-open-studio.html": "3411c755d530f7ed356ce96262fd7589289e69e8078d0501fb7f60af1521820f",
+    "pointer-c74c73c/pointer-disabled-open-studio.png": "51c7413aca3e3d0b55214390db5355ecafcbf6f5824b2361c4aa9b403d9a77b1",
+    "pointer-c74c73c/results.json": "bb687abb4cb93c2483f5ba6a2ce6fcefc02cc4397b6441a3a7980b5ea645dd80"
+  },
+  "prior_830_and_969_failures_preserved": true,
+  "prior_DOM_unit_results_relabelled": false,
+  "GUI_and_server_closed": true,
+  "product_parity_verified": false,
+  "full_app_verified": false,
+  "authenticated_provider_and_cross_client_gates": "NOT-RUN/BLOCKED",
+  "production_edits": false
+}

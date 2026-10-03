@@ -1,0 +1,1040 @@
+[
+  {
+    "product": "accounts-business",
+    "path": "/workspace/team-b-worktree/apps/Web/Auth/account-api-client.js",
+    "exists": true,
+    "sha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+    "public_methods": [
+      {
+        "name": "nullableString",
+        "line": 10
+      },
+      {
+        "name": "invalidatePrivateContext",
+        "line": 46
+      },
+      {
+        "name": "getCurrent",
+        "line": 58
+      },
+      {
+        "name": "getProfile",
+        "line": 63
+      },
+      {
+        "name": "updateProfile",
+        "line": 68
+      },
+      {
+        "name": "listSessions",
+        "line": 79
+      },
+      {
+        "name": "signOut",
+        "line": 86
+      },
+      {
+        "name": "revokeSession",
+        "line": 90
+      },
+      {
+        "name": "revokeAllOtherSessions",
+        "line": 95
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "external-integrations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/ExternalConnections/ExternalConnectionRegistryService.cs",
+    "exists": true,
+    "sha256": "59d2c4b54bc13dc1d9f84b26a0d99a295ee9bd0e72cad39ff8ac086bd827d261",
+    "public_methods": [
+      {
+        "name": "GetAllAsync",
+        "line": 10
+      },
+      {
+        "name": "ConnectUefnAsync",
+        "line": 11
+      },
+      {
+        "name": "AddMcpAsync",
+        "line": 29
+      },
+      {
+        "name": "RefreshMcpAsync",
+        "line": 39
+      },
+      {
+        "name": "RemoveAsync",
+        "line": 91
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "external-integrations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Infrastructure/ExternalConnections/McpConnectionClient.cs",
+    "exists": true,
+    "sha256": "3efc0fae7551dc2fe5108c2c353352044fd0327943065a2cb064f32303bd017c",
+    "public_methods": [
+      {
+        "name": "DiscoverAsync",
+        "line": 18
+      },
+      {
+        "name": "DiscoverCapabilitiesAsync",
+        "line": 24
+      },
+      {
+        "name": "InvokeAsync",
+        "line": 56
+      },
+      {
+        "name": "ReadResourceAsync",
+        "line": 79
+      },
+      {
+        "name": "GetPromptAsync",
+        "line": 99
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "external-integrations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Extensions/NativePluginRuntime.cs",
+    "exists": true,
+    "sha256": "092eb33b9ac514df2433ad23b5018b7f2e96bcaa44e408e2073224df05ade7f0",
+    "public_methods": [
+      {
+        "name": "LoadAsync",
+        "line": 22
+      },
+      {
+        "name": "ResolveSkillsForAsync",
+        "line": 50
+      },
+      {
+        "name": "InvokeAsync",
+        "line": 113
+      },
+      {
+        "name": "UnloadAsync",
+        "line": 170
+      },
+      {
+        "name": "DisposeAsync",
+        "line": 277
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "Spaces",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceRegistry.cs",
+    "exists": true,
+    "sha256": "2bd93994f21b5c77b4b280665a008e97aa535bad19b207342508918dadf46b90",
+    "public_methods": [
+      {
+        "name": "GetAllAsync",
+        "line": 30
+      },
+      {
+        "name": "GetAsync",
+        "line": 51
+      },
+      {
+        "name": "CreateAsync",
+        "line": 57
+      },
+      {
+        "name": "CreateAsync",
+        "line": 60
+      },
+      {
+        "name": "RenameAsync",
+        "line": 95
+      },
+      {
+        "name": "SetArchivedAsync",
+        "line": 106
+      },
+      {
+        "name": "RestoreAsync",
+        "line": 117
+      },
+      {
+        "name": "UpdateAsync",
+        "line": 120
+      },
+      {
+        "name": "UpdateAsync",
+        "line": 158
+      },
+      {
+        "name": "MoveAsync",
+        "line": 161
+      },
+      {
+        "name": "GetCurrentSpaceIdAsync",
+        "line": 210
+      },
+      {
+        "name": "SetCurrentSpaceIdAsync",
+        "line": 225
+      },
+      {
+        "name": "ForkAsync",
+        "line": 245
+      },
+      {
+        "name": "DeleteAsync",
+        "line": 272
+      },
+      {
+        "name": "SetLayoutAsync",
+        "line": 287
+      },
+      {
+        "name": "AddFileAsync",
+        "line": 297
+      },
+      {
+        "name": "RemoveFileAsync",
+        "line": 315
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "Spaces",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Spaces/SpaceConversationService.cs",
+    "exists": true,
+    "sha256": "f4d5bcaa2396f8789b64af38e56bfb33e247d17dddb544a575e9c0eb44bf976b",
+    "public_methods": [
+      {
+        "name": "GetConversationsAsync",
+        "line": 10
+      },
+      {
+        "name": "AssignAsync",
+        "line": 21
+      },
+      {
+        "name": "RemoveAsync",
+        "line": 45
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "Spaces",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/Spaces/Source/Chat/HavenChatSpaceBackend.cs",
+    "exists": true,
+    "sha256": "35313228a154063dac8bce2ecb0bd9581e160f6e821912274b2afb77b81e0966",
+    "public_methods": [
+      {
+        "name": "GetRecentChatsAsync",
+        "line": 19
+      },
+      {
+        "name": "GetModelInventoryAsync",
+        "line": 26
+      },
+      {
+        "name": "CreateChatAsync",
+        "line": 29
+      },
+      {
+        "name": "GetConversationAsync",
+        "line": 40
+      },
+      {
+        "name": "SaveDraftAsync",
+        "line": 58
+      },
+      {
+        "name": "ImportAttachmentAsync",
+        "line": 80
+      },
+      {
+        "name": "RemoveAttachmentAsync",
+        "line": 87
+      },
+      {
+        "name": "SendAsync",
+        "line": 90
+      },
+      {
+        "name": "CreateBranchAsync",
+        "line": 93
+      },
+      {
+        "name": "SwitchBranchAsync",
+        "line": 111
+      },
+      {
+        "name": "RegenerateAsync",
+        "line": 114
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "Spaces",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/Spaces/Source/Tasks/TasksSpaceStateMachine.cs",
+    "exists": true,
+    "sha256": "2b1cde5beb746e486f0b455cfc9cfb3240905cfd9731eefe836cf6b13f6ee655",
+    "public_methods": [],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "Spaces",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/Spaces/Source/Experiences/ExperienceStateRepository.cs",
+    "exists": true,
+    "sha256": "c555748717df145c8186270f6cb595dda753f225eb54687b67c9d7150616fedc",
+    "public_methods": [
+      {
+        "name": "CreateAsync",
+        "line": 29
+      },
+      {
+        "name": "GetAsync",
+        "line": 60
+      },
+      {
+        "name": "CommitStateAsync",
+        "line": 67
+      },
+      {
+        "name": "ForkBranchAsync",
+        "line": 105
+      },
+      {
+        "name": "SelectBranchAsync",
+        "line": 143
+      },
+      {
+        "name": "RecordExternalEffectAsync",
+        "line": 169
+      },
+      {
+        "name": "GetVisibleStateAsync",
+        "line": 209
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "AIStudio",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/Studio/HavenOS.Studio/AIStudio/AIStudioApi.cs",
+    "exists": true,
+    "sha256": "172efcecfd210f6a772c6f9d480cf38c8d0fb27385ad99dde582b3bb1a22a2d3",
+    "public_methods": [
+      {
+        "name": "ListProjectsAsync",
+        "line": 68
+      },
+      {
+        "name": "CreateProjectAsync",
+        "line": 87
+      },
+      {
+        "name": "CreateHarnessFromTemplateAsync",
+        "line": 106
+      },
+      {
+        "name": "CreateToolAsync",
+        "line": 110
+      },
+      {
+        "name": "OpenProjectAsync",
+        "line": 119
+      },
+      {
+        "name": "SaveProjectAsync",
+        "line": 128
+      },
+      {
+        "name": "RenameProjectAsync",
+        "line": 149
+      },
+      {
+        "name": "SetProjectPinnedAsync",
+        "line": 156
+      },
+      {
+        "name": "SetProjectFileAsync",
+        "line": 160
+      },
+      {
+        "name": "DuplicateProjectAsync",
+        "line": 184
+      },
+      {
+        "name": "ProjectHistoryAsync",
+        "line": 197
+      },
+      {
+        "name": "DeleteProjectAsync",
+        "line": 207
+      },
+      {
+        "name": "RecoverProjectAsync",
+        "line": 211
+      },
+      {
+        "name": "ValidateProjectAsync",
+        "line": 215
+      },
+      {
+        "name": "TestProjectAsync",
+        "line": 266
+      },
+      {
+        "name": "InstallToolAsync",
+        "line": 279
+      },
+      {
+        "name": "RunPlaygroundAsync",
+        "line": 296
+      },
+      {
+        "name": "CreateResourceAsync",
+        "line": 303
+      },
+      {
+        "name": "CreateEvaluationSuiteAsync",
+        "line": 320
+      },
+      {
+        "name": "CreateTestSuiteAsync",
+        "line": 324
+      },
+      {
+        "name": "CreateSchemaAsync",
+        "line": 328
+      },
+      {
+        "name": "CreateModelRouterAsync",
+        "line": 332
+      },
+      {
+        "name": "CreateGenerativeUiAsync",
+        "line": 336
+      },
+      {
+        "name": "CreateRunProfileAsync",
+        "line": 340
+      },
+      {
+        "name": "ListResourcesAsync",
+        "line": 344
+      },
+      {
+        "name": "OpenResourceAsync",
+        "line": 352
+      },
+      {
+        "name": "UpdateResourceAsync",
+        "line": 366
+      },
+      {
+        "name": "ResourceHistoryAsync",
+        "line": 384
+      },
+      {
+        "name": "RenameResourceAsync",
+        "line": 393
+      },
+      {
+        "name": "SaveResourceAsync",
+        "line": 409
+      },
+      {
+        "name": "DeleteResourceAsync",
+        "line": 429
+      },
+      {
+        "name": "RecoverResourceAsync",
+        "line": 444
+      },
+      {
+        "name": "InspectDependenciesAsync",
+        "line": 462
+      },
+      {
+        "name": "InspectContextAsync",
+        "line": 503
+      },
+      {
+        "name": "SimulatePermissionsAsync",
+        "line": 506
+      },
+      {
+        "name": "OpenReplayAsync",
+        "line": 513
+      },
+      {
+        "name": "RestartReplayAsync",
+        "line": 516
+      },
+      {
+        "name": "RunEvaluationAsync",
+        "line": 524
+      },
+      {
+        "name": "RunTestSuiteAsync",
+        "line": 575
+      },
+      {
+        "name": "ListEvaluationRunsAsync",
+        "line": 607
+      },
+      {
+        "name": "ListTestRunsAsync",
+        "line": 613
+      },
+      {
+        "name": "CompareAsync",
+        "line": 619
+      },
+      {
+        "name": "GenerateDocumentationAsync",
+        "line": 633
+      },
+      {
+        "name": "CreateAgentAsync",
+        "line": 836
+      },
+      {
+        "name": "OpenAgentAsync",
+        "line": 839
+      },
+      {
+        "name": "UpdateAgentDraftAsync",
+        "line": 840
+      },
+      {
+        "name": "ValidateAgentAsync",
+        "line": 842
+      },
+      {
+        "name": "PreviewAgentAsync",
+        "line": 843
+      },
+      {
+        "name": "ActivateAgentAsync",
+        "line": 845
+      },
+      {
+        "name": "ShareAgentAsync",
+        "line": 847
+      },
+      {
+        "name": "ExportProject",
+        "line": 849
+      },
+      {
+        "name": "ExportProjectAsync",
+        "line": 856
+      },
+      {
+        "name": "ImportProjectAsync",
+        "line": 865
+      },
+      {
+        "name": "RunHarnessAsync",
+        "line": 957
+      },
+      {
+        "name": "RunPlaygroundAsync",
+        "line": 959
+      },
+      {
+        "name": "InstallToolAsync",
+        "line": 961
+      },
+      {
+        "name": "CreateAsync",
+        "line": 969
+      },
+      {
+        "name": "OpenAsync",
+        "line": 970
+      },
+      {
+        "name": "UpdateDraftAsync",
+        "line": 971
+      },
+      {
+        "name": "ValidateAsync",
+        "line": 972
+      },
+      {
+        "name": "PreviewAsync",
+        "line": 973
+      },
+      {
+        "name": "ActivateAsync",
+        "line": 974
+      },
+      {
+        "name": "ShareAsync",
+        "line": 975
+      },
+      {
+        "name": "EvaluateAsync",
+        "line": 980
+      },
+      {
+        "name": "InspectAsync",
+        "line": 987
+      },
+      {
+        "name": "OpenAsync",
+        "line": 994
+      },
+      {
+        "name": "RestartFromAsync",
+        "line": 996
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "VisionVoice",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Call/VisionVoiceSessionService.cs",
+    "exists": true,
+    "sha256": "d1de9a1b520285a65578d7494b94af67c2a802cb5e20e19c50b15819ab41cc42",
+    "public_methods": [
+      {
+        "name": "StartAsync",
+        "line": 9
+      },
+      {
+        "name": "TransitionAsync",
+        "line": 39
+      },
+      {
+        "name": "SetModeAsync",
+        "line": 54
+      },
+      {
+        "name": "SetRetentionAsync",
+        "line": 72
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "VisionVoice",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Call/VisionVoiceActionCatalog.cs",
+    "exists": true,
+    "sha256": "7f4cfb4848ca977fe4ae7e8d1d90c958885f49cf24fc50f4c53a2c53a6639786",
+    "public_methods": [],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "Play",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Play/PlayMatchService.cs",
+    "exists": true,
+    "sha256": "b3734ade3826de3aaecf70b7b83e3ba3543ff2089d3907b821b1f99d17943163",
+    "public_methods": [
+      {
+        "name": "ListGamesAsync",
+        "line": 130
+      },
+      {
+        "name": "GetGameAsync",
+        "line": 136
+      },
+      {
+        "name": "CreateGameAsync",
+        "line": 145
+      },
+      {
+        "name": "GenerateGameAsync",
+        "line": 160
+      },
+      {
+        "name": "UpdateGameAsync",
+        "line": 178
+      },
+      {
+        "name": "ValidateGameAsync",
+        "line": 191
+      },
+      {
+        "name": "StartMatchAsync",
+        "line": 202
+      },
+      {
+        "name": "GetMatchAsync",
+        "line": 237
+      },
+      {
+        "name": "ListContestantsAsync",
+        "line": 244
+      },
+      {
+        "name": "CreateMatchLobbyAsync",
+        "line": 250
+      },
+      {
+        "name": "StartLobbyMatchAsync",
+        "line": 268
+      },
+      {
+        "name": "ListMatchesAsync",
+        "line": 282
+      },
+      {
+        "name": "SetTeamPrivateStateAsync",
+        "line": 289
+      },
+      {
+        "name": "AddContestantAsync",
+        "line": 300
+      },
+      {
+        "name": "RemoveContestantAsync",
+        "line": 312
+      },
+      {
+        "name": "FillAgentSlotsAsync",
+        "line": 320
+      },
+      {
+        "name": "GetContestantViewAsync",
+        "line": 330
+      },
+      {
+        "name": "GetSpectatorViewAsync",
+        "line": 340
+      },
+      {
+        "name": "ListActionsAsync",
+        "line": 348
+      },
+      {
+        "name": "SubmitAnswerAsync",
+        "line": 361
+      },
+      {
+        "name": "ResolveRoundAsync",
+        "line": 378
+      },
+      {
+        "name": "GetLeaderboardAsync",
+        "line": 381
+      },
+      {
+        "name": "PauseMatchAsync",
+        "line": 387
+      },
+      {
+        "name": "ResumeMatchAsync",
+        "line": 389
+      },
+      {
+        "name": "EndMatchAsync",
+        "line": 390
+      },
+      {
+        "name": "CreateCheckpointAsync",
+        "line": 398
+      },
+      {
+        "name": "GetReplayAsync",
+        "line": 407
+      },
+      {
+        "name": "GetRoundAsync",
+        "line": 416
+      },
+      {
+        "name": "PerformActionAsync",
+        "line": 433
+      },
+      {
+        "name": "RequestCapabilityAsync",
+        "line": 444
+      },
+      {
+        "name": "CreateExperiencesHandoffAsync",
+        "line": 455
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "automations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Automations/AutomationGraphRuntime.cs",
+    "exists": true,
+    "sha256": "f568d436a5bb36395e10061ab7b40b8e083403e565b626395cdd52a35d903a20",
+    "public_methods": [
+      {
+        "name": "Validate",
+        "line": 50
+      },
+      {
+        "name": "RunAsync",
+        "line": 119
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "automations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Automations/ScheduledTaskRuntime.cs",
+    "exists": true,
+    "sha256": "eec804f7b46168531173ef1d07d7f08e572741fbc3e7abbc5f680296679dd5dd",
+    "public_methods": [
+      {
+        "name": "GetNextRun",
+        "line": 102
+      },
+      {
+        "name": "GetInitialRun",
+        "line": 118
+      },
+      {
+        "name": "RunDueAsync",
+        "line": 190
+      },
+      {
+        "name": "RunOneAsync",
+        "line": 214
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "automations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/Tools/AutomationToolRuntime.cs",
+    "exists": true,
+    "sha256": "798123adadedb07dd255134f9dd83acca5f25938e8d0007d8aa3e68ab5c1469e",
+    "public_methods": [
+      {
+        "name": "GetDefinitions",
+        "line": 28
+      },
+      {
+        "name": "ExecuteAsync",
+        "line": 59
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "automations",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/AutomationRepository.cs",
+    "exists": true,
+    "sha256": "fbb177f24dd7cceff77220a7394d14d4f21387a4aa9c10e4a671b9f577030f62",
+    "public_methods": [
+      {
+        "name": "GetAllAsync",
+        "line": 23
+      },
+      {
+        "name": "GetDueAsync",
+        "line": 34
+      },
+      {
+        "name": "UpsertAsync",
+        "line": 51
+      },
+      {
+        "name": "DeleteAsync",
+        "line": 80
+      },
+      {
+        "name": "TryAcquireLeaseAsync",
+        "line": 92
+      },
+      {
+        "name": "CompleteRunAsync",
+        "line": 110
+      },
+      {
+        "name": "GetRunsAsync",
+        "line": 148
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "connect",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/CallAbstractions.cs",
+    "exists": true,
+    "sha256": "9c2c909f8aa83757068c3d41695200a1f2b60492d8e9d4ead6d9e3fbd2579f62",
+    "public_methods": [],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "connect",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/MailAbstractions.cs",
+    "exists": true,
+    "sha256": "4341fc1750443727f719eaed0a9e0bd8c5d55edb09bf50d0fc092b4ad2b1d84a",
+    "public_methods": [],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "connect",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/Mail/Services/MailDomainService.cs",
+    "exists": true,
+    "sha256": "7f0df74e121a5cd4804cf8f2ef741ab67d232418dfb0f652540f3e14e777bd48",
+    "public_methods": [
+      {
+        "name": "ListAccountsAsync",
+        "line": 12
+      },
+      {
+        "name": "AddAccountAsync",
+        "line": 15
+      },
+      {
+        "name": "ListFoldersAsync",
+        "line": 37
+      },
+      {
+        "name": "ListMessagesAsync",
+        "line": 40
+      },
+      {
+        "name": "GetMessageAsync",
+        "line": 43
+      },
+      {
+        "name": "GetThreadAsync",
+        "line": 49
+      },
+      {
+        "name": "SyncAccountAsync",
+        "line": 55
+      },
+      {
+        "name": "CreateDraftAsync",
+        "line": 101
+      },
+      {
+        "name": "DeleteDraftAsync",
+        "line": 118
+      },
+      {
+        "name": "CreateSmartViewAsync",
+        "line": 136
+      },
+      {
+        "name": "ListSmartViewsAsync",
+        "line": 150
+      },
+      {
+        "name": "UpdateSettingsAsync",
+        "line": 153
+      },
+      {
+        "name": "GetAccountAsync",
+        "line": 162
+      },
+      {
+        "name": "SearchAsync",
+        "line": 168
+      },
+      {
+        "name": "UpdateDraftAsync",
+        "line": 171
+      },
+      {
+        "name": "QueueOfflineOperationAsync",
+        "line": 207
+      },
+      {
+        "name": "QueueSendAsync",
+        "line": 239
+      },
+      {
+        "name": "QueueScheduledSendAsync",
+        "line": 282
+      },
+      {
+        "name": "CancelQueuedSendAsync",
+        "line": 338
+      },
+      {
+        "name": "MarkReadAsync",
+        "line": 364
+      },
+      {
+        "name": "StarAsync",
+        "line": 367
+      },
+      {
+        "name": "SnoozeAsync",
+        "line": 370
+      },
+      {
+        "name": "SendDueAsync",
+        "line": 375
+      },
+      {
+        "name": "RecoverInterruptedSendsAsync",
+        "line": 431
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  },
+  {
+    "product": "connect",
+    "path": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Application/ExternalConnections/ExternalConnectionRegistryService.cs",
+    "exists": true,
+    "sha256": "59d2c4b54bc13dc1d9f84b26a0d99a295ee9bd0e72cad39ff8ac086bd827d261",
+    "public_methods": [
+      {
+        "name": "GetAllAsync",
+        "line": 10
+      },
+      {
+        "name": "ConnectUefnAsync",
+        "line": 11
+      },
+      {
+        "name": "AddMcpAsync",
+        "line": 29
+      },
+      {
+        "name": "RefreshMcpAsync",
+        "line": 39
+      },
+      {
+        "name": "RemoveAsync",
+        "line": 91
+      }
+    ],
+    "evidence_kind": "STATIC_SOURCE_ONLY",
+    "hosted_protocol_verified": false
+  }
+]

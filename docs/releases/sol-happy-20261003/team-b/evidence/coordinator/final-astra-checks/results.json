@@ -1,0 +1,75 @@
+{
+  "testedCodeCommit": "830f747b70df07797c586f6124890fa5028452b2",
+  "incomingTeamACandidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "sourceRevision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+  "sourcePolicy": "Canonical source text rechecked identical active contracts; current browser acceptance not claimed. Original maps retain original revision.",
+  "productParityVerified": false,
+  "deployed": false,
+  "checks": [
+    {
+      "id": "validator-unit",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "eng/browser/tests",
+        "-v"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:08:17.139075+00:00",
+      "completedAt": "2026-10-03T18:08:17.275694+00:00",
+      "exitCode": 0,
+      "log": "validator-unit.log",
+      "acceptedProductGate": false
+    },
+    {
+      "id": "browser-platform-node",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "apps/Web/Tests/browser-platform.test.mjs"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:08:17.139557+00:00",
+      "completedAt": "2026-10-03T18:08:17.235248+00:00",
+      "exitCode": 0,
+      "log": "browser-platform-node.log",
+      "acceptedProductGate": false
+    },
+    {
+      "id": "account-api-node",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "apps/Web/Auth/account-api-client.test.js",
+        "apps/Web/Auth/account-api-client.profile-review.test.js"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:08:17.139952+00:00",
+      "completedAt": "2026-10-03T18:08:17.365838+00:00",
+      "exitCode": 0,
+      "log": "account-api-node.log",
+      "acceptedProductGate": false
+    },
+    {
+      "id": "navigation",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--no-restore"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:08:17.366132+00:00",
+      "completedAt": "2026-10-03T18:08:19.009811+00:00",
+      "exitCode": 0,
+      "log": "navigation.log",
+      "acceptedProductGate": false
+    }
+  ]
+}

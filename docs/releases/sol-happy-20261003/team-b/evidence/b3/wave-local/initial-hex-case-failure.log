@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/independent_cli_checks.py", line 30, in <module>
+    check('B3-WAVE-CLI-02','Import retains project/track identity, increments revision and uses exact 24000-frame offset/48000 source range',imported.returncode==0 and p1['ProjectId']==p0['ProjectId'] and p1['Tracks'][0]['TrackId']==p0['Tracks'][0]['TrackId'] and p1['Revision']==1 and clip['TimelineStartFrame']==24000 and clip['FrameCount']==48000 and clip['SourceSha256']==source_hash)
+  File "/workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/independent_cli_checks.py", line 17, in check
+    if not condition: raise AssertionError(i+': '+description)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: B3-WAVE-CLI-02: Import retains project/track identity, increments revision and uses exact 24000-frame offset/48000 source range

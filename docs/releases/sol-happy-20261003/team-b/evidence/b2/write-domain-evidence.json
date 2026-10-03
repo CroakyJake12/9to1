@@ -1,0 +1,504 @@
+{
+  "recorded_utc": "2026-10-03T17:13:43.033361+00:00",
+  "tested_commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "runtime": ".NET SDK 10.0.401, Debian 13 linux-x64",
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "production_sources": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Maps/MapsModels.cs",
+      "sha256": "9cd8fa5b3a6ba95df6213101451c39fab370c2696d9ae397b5e0bf52d294848c",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenUiSemanticValidator.cs",
+      "sha256": "73ac61fca32d6791cfd8fc484fa18b6f8849f4baac6ef90d115afd91a7cc16a8",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenerativeUiContractValidator.cs",
+      "sha256": "3fca62bfd0e01a0ad12669cb492e1c1f752c4e49ef99365218a3e4be2ac7ddd9",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenUiRenderingLayerSelector.cs",
+      "sha256": "3de952120ed7d30569127831d81cf1f0f13ba63f166c626922e69610c0d0b919",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenerativeUiContracts.cs",
+      "sha256": "ac710b4dd7007c2ff6058104dcca0dcafb92f844d871300f50dc217f01a9365b",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/TemplateRegistryCatalog.cs",
+      "sha256": "5f05d48bb50978f995d1767787749f10c7381de34fc375caea25dfa5df79c436",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/GenerativeUiAppContracts.cs",
+      "sha256": "83376cb3413fe3202258f2c8d3cf96fd826b76b2d90def30dea88f0b676cdafd",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/GenerativeUi/DeterministicCalculator.cs",
+      "sha256": "d0c1c62f238873cb289ac6f4537b13f77b5badc794fe0e7e1a3b552518aef78d",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notifications/NotificationModels.cs",
+      "sha256": "4b60f5dcc1ffcc8069043670d72476f6a191bc15f4dc31113edbaa63eb835a89",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Media/MediaContracts.cs",
+      "sha256": "1cac8a4e5cdbfc016b1a7872a3dbd0a7a50efc8e8cc4e006abccf86ade0865f0",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Workspace/WorkspaceSessionModels.cs",
+      "sha256": "9c3a40a20134295cf9f401038d44d752a79708bb64238345e296ab50dbe2c040",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataSpreadsheetOperations.cs",
+      "sha256": "fb2960bde96fa16dc6002108b2f7be77a48f9ce0c79990c9d30de919b3bcbb0a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataNamedRange.cs",
+      "sha256": "484406b984ea024bd668074dac9373bc3ca2da3a3d5152bf95739fc9c93b11ab",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataWorkbook.cs",
+      "sha256": "c234e15fab010bd19037769702c353255bfc1c9da0a496783dfa79993257670d",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Data/DataDrawingObject.cs",
+      "sha256": "a292f75afe30879a91aac93380bf374f51116d7c9229d9771427d01c612709ee",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Execution/RecoveryModels.cs",
+      "sha256": "07bac4242f8ef8ea6fd2ac15b12a54646eded6afe6b440ebc316d5f48e0b0edf",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Execution/TaskCoordinationModels.cs",
+      "sha256": "6af9c8005904b3ea4647a4d86b5dd6da048b5f38a1e1556b035f5acfaf4b7e9f",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Execution/ExecutionModels.cs",
+      "sha256": "fb158c0d948bfd6deda8711be724d17d3172815d4080115ef882d16f7278c5c6",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/AgentRunEntities.cs",
+      "sha256": "741ee8bafb6c459899759ba4b09abaa9902e2aeecfad946a2259bfc1bd1396c1",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ModelEntities.cs",
+      "sha256": "da82a310d0755dab74f436aa62ce39b5c5860e1043b45320589e6924aef53108",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CatalogEntities.cs",
+      "sha256": "0928747ba7e8cb76cfbf18cd16ce77b2f5dd0572ce904f5fd411640e681f939b",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ActivityEntities.cs",
+      "sha256": "9ffe7745ec8d07446b5442d25e95d081177f2a8ccc24545342fafb2df9a1236a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/TrainingEntities.cs",
+      "sha256": "29a7539eec6ff9e1716dad1d1d11bec2c4e19f7e4e786da9a575a47573ff38df",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/WorkspaceEntities.cs",
+      "sha256": "8b05b1eb6a0c98c6c28361dc6a1ae85f0616356abe5a7fd79dac147121926b83",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ContainerEntities.cs",
+      "sha256": "2359496a8af47a9f79b77e8f6fab797e97a3bd4de1193ffc4355c5300e04aef5",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/PlannerEntities.cs",
+      "sha256": "143d5ae8abe9c8636294ea7fee421a2b86237352fe4c2ed14d043f45a5cd13a5",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ConversationEntities.cs",
+      "sha256": "fe7557884dbb62342a84c56c430607c2393825d508f18d2f3108eb3bd15f0d72",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/AutomationEntities.cs",
+      "sha256": "f842a5b4654e4b9f5f619c87fc3f383f01ecb3eae6b5b5ce40ad53842cfa4fd5",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ModeEntities.cs",
+      "sha256": "7459362b9ca8375b84bffba7cb34cf00e0a8ed828aa9da22f660ee7f4d78fc5a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ProjectSourceControlEntities.cs",
+      "sha256": "8460374694ec0db07c92e65832a5e3387cdde590937afc8c9f504482aa93c8fc",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/CapabilityEntities.cs",
+      "sha256": "cba19b035f64a28842d4517862869b95da3f604544bf832604036ad221b49246",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ExternalConnectionEntities.cs",
+      "sha256": "2fa3a4c20c355e8240cc0ce21144ea8264a3d4f57d46e916669f32073ed4d958",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Tasks/ExternalAgentTaskModels.cs",
+      "sha256": "98c289a79bb7f4e1c0f473d64c40082baa288f2f477d6d9c76a1ca66c4c85664",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerDayTimeline.cs",
+      "sha256": "f6482d43892bf5db684b8fcfd900a89f8ee081629d4dd229fffb826e3088e98e",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/CapabilityRegistryCatalog.cs",
+      "sha256": "be7d25cb686c87b739128fe5447117df1fedc4cafa67bbca2611fb71ce993063",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerRecurrence.cs",
+      "sha256": "ae0cbfaa4933e4b492238a2880d86d532509ab84f56c6e373ff3fd7a97e5637f",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/BuiltinCatalogs.cs",
+      "sha256": "11c4fa43b333b9ca8f90981b8636737801ff9e1756fd200956b4e91f28af2ff0",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerCountdown.cs",
+      "sha256": "4ab556815bcd96d159c513584174695cc50715777629dcb6e35b52c46729c787",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ConversationRouter.cs",
+      "sha256": "71e6b3f3feb1f62772cda4c4ff39eef61984251b201f9d90afc2b71cfa4b2a26",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ProblemResolver.cs",
+      "sha256": "3d30c885f0cfd143ce47d9c5c688706930098da28de63b039ce59599130e5bd0",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ReasoningScale.cs",
+      "sha256": "32f3db171ec9b2d793b480d0daf4ed522a4d50edab4131c2bcdcf99be1b84885",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/HavenSurface.cs",
+      "sha256": "6eda38a124df80de63e794e9c402d0b28e5a9dc16c7c27a3d96ff7872d0cfb0a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/InferenceProfile.cs",
+      "sha256": "7d9afb8007f414af7737e93fda662c80fbb3e220965a522e1eb29d7039974589",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerAvailability.cs",
+      "sha256": "eddea134d78689e9a90dbf62943227f3f7763db9f6b86310a0d18fd717540841",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/PlannerStudyAssignment.cs",
+      "sha256": "2385cca42eedbec56599db10e7cb018a88f19d2f7b91ef775b8dfc81573a14d4",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/ChatExecutionTracker.cs",
+      "sha256": "03c587a03d945f9cfa715acc715654c2a4acad7e4b25c8d89525b9a737c0b0d1",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/GuidUtility.cs",
+      "sha256": "3b08d182595256e010c51f668f414c598b90956c4f1075045608fc090f993c32",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/CapabilitySelector.cs",
+      "sha256": "e5ad571e28e50556d6c1438e4dfb5ab23764a1b8f953c44b21f1aa9527f5872d",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/ModelGovernanceModels.cs",
+      "sha256": "5c3c57dac1fa32278ec71926779b9f857d2fef492e64295882f7ca6f9e82e33f",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/DeliveryModels.cs",
+      "sha256": "9493dec17d4af0e5998c563e4426319b1587aefa6d03fe3746478c340ec43709",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/ConversationBranchModels.cs",
+      "sha256": "c3a29209b57f3f9aa529a24683cbf2dda453e4703ef97364f1a1366933a1256e",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/GenerativeUiModels.cs",
+      "sha256": "bccd90e70bb3226b7f04e0f28487801c2bc164fab50cadce3b1fb7430eb4b42b",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/RetrievalModels.cs",
+      "sha256": "444d338e2bb5e742358202c58269f7059a1968e9d16bb6a793db52051f3d566d",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/FloatingActivityModels.cs",
+      "sha256": "33f283e5dbefe01279d74de042a8ff2d76a4ed1838585a050ea3c90a41b7afd7",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/CodeIntelligenceModels.cs",
+      "sha256": "7acfea89f12510eb45c236b4cd4b0296a6d61bc92f7a89074878d342ace0c604",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/HavenPersonalisationModels.cs",
+      "sha256": "d9b492d973265eb9e7d0ffbecad9b5609083170c8abe9a2c64d3d6c3667ae9dc",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/ActionConcepts.cs",
+      "sha256": "90abdbecf20d23eb8e53c9e7bc87d124d52b591db5a422b5d0874d0879b35fe1",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/ProviderModels.cs",
+      "sha256": "4f97b863861b440c4522a79efba5bc55a19043ef5faf3a005c3a3e5c1d9486c9",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/CallModels.cs",
+      "sha256": "3f046035939481d30332b4890e21225eb08523b0eed276abb784783a1a6a8a13",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/KnowledgeModels.cs",
+      "sha256": "d2ca61791b0feef5a9d8be13328c5ac06d5cd78b728bd20503c2a92d9c501469",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/UsageModels.cs",
+      "sha256": "73f94a02b11ea3d93e1e4b40098c7eeefee61d2ea1dedd67a2effa452f18cb04",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/DashboardModels.cs",
+      "sha256": "e9da07f89c67456fb9f3c79c8175da0ec1486e4a0518eef6a227c740b900c3f7",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/VoiceProfileModels.cs",
+      "sha256": "07140f7f31078224dbfdb12c16cebecba76bcb3ed32b4811a14d55826e78b00a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/BrowserModels.cs",
+      "sha256": "f9f0f34a483e60f6124f83c0030097b7b7167ef95d3909f278a390f4d703b7a7",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Models/ImagineModels.cs",
+      "sha256": "efc7402ccf0ac32a710aa5a2f1e82ade72360f54103456737bfad71c84eacacb",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Planner/PlannerStructuredEntities.cs",
+      "sha256": "2196f8060cfc1c3b25de57c68cc686c0bbc41d5c706d08a31ca3dbdb211d0413",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Safety/SafetyModels.cs",
+      "sha256": "d824ba312d7234a472b1154fc24efa51eff5a464521a9bc6146591e56a0ad289",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mesh/MeshSyncEngine.cs",
+      "sha256": "7c7be694760350ce859967b62f236eee8cbaa218ad0c30f092c7303517df8c89",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mesh/MeshWorkModels.cs",
+      "sha256": "c66b811f8d664cba6c8eedf5de0ea47477b238b151e880452b7cf0cb61cede46",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Mesh/MeshModels.cs",
+      "sha256": "6dd79fb8d37cb944f77c01e12e19d0295b56f9f563cf7546c3e03c40920474ce",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Shelf/ShelfModels.cs",
+      "sha256": "6c0e90fdfe084a8b51a91119f484d565e315bed5defdf9e5d6725981a02751ef",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesMetadata.cs",
+      "sha256": "3019980292b53b48727e775aa50786071f67c59e31f7cc59094a885df36417a4",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+      "sha256": "c8262c95be26c7319a241f16bdcf2197fa47020341e24369e03cd3e2853c16c6",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+      "sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesCollaboration.cs",
+      "sha256": "4473e1292f029a5e84aa1b7aaab16646b6687e0a57f6822d1390e9e53e466544",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesInkAndStudy.cs",
+      "sha256": "8b90aac61d2f05961c20b083deda0b8703908da510ebe98ab8ce94a00d8e4b3e",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesBlock.cs",
+      "sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/SurfaceEnums.cs",
+      "sha256": "2bec721d256c25d60cef58d1a556d977c53c2e33aa2d0207efe2f40d165bb1c3",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/PlannerEnums.cs",
+      "sha256": "58589a1b34a831d7a60d1aed42dbd176d446fcbb05d8ceddee49995a87590083",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/AutomationEnums.cs",
+      "sha256": "da7be9dcd41b3f5e51dcf15b91e5da7b249d9cafd13d9768de888bfb82caaa04",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/WorkspaceEnums.cs",
+      "sha256": "458371f1168163b713cbcf75186b267358ddf47f67a62d3baa9ab95627d6d39a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/CalendarEnums.cs",
+      "sha256": "e054111c99f3bd7101060c61da7e5bb387fca3c545c389fa10b9d34757c2fcf6",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/ModeEnums.cs",
+      "sha256": "46313627daf1f5ad01e437dc67ca110d7b604fd5c7bb7350bdeeabf75274f0d7",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/BrowserEnums.cs",
+      "sha256": "2148be987c1887778114ec6b13bcffc06b742486a3184c58d683faa7db127aaa",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/ConversationEnums.cs",
+      "sha256": "abb856f55e8dfce5debf8987db20659eed57372e4a8a4eadcfdf276c4c46d2f0",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Enums/ToolEnums.cs",
+      "sha256": "35d5923f5da53bd3bfa806eab6b5fdbfcbac748e79bc0a64a888a0669060eb86",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Extensions/ExtensionModels.cs",
+      "sha256": "2f56a153ac2c0fd2bdef673debdc5d3ef3adb157344aadb9010f736d7ea2b16a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Boards/BoardsLiveComponent.cs",
+      "sha256": "1535efc71a63ab4a7f7a08e03963d58daa53dfdb5940367c432b2674953353f4",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Documents/DocumentVectorShape.cs",
+      "sha256": "27d296dc8293b2f584c9486ac696abb428adc28004c540898899df8fbe548f8a",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentStructuredObjects.cs",
+      "sha256": "5c7b0047aa58d60f71de4c3cbbc49e1c5fd5657765f02e7fc64c42dda458dee1",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentDocument.cs",
+      "sha256": "debb6570efe7c653aa7d625ebe495350a20fa4ed62732f487a7e37341f109b75",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Present/PresentDesignModel.cs",
+      "sha256": "c01199d6c60ebcfe895bfbeffc1f4aaec56fd2f2f77f4c17991ffe7b60c252ed",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Updates/UpdateModels.cs",
+      "sha256": "66ef8b2a3dd5d1a2fa77695e5346af0eebadca182c0040a79f2e2b9cc6a27d8d",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+      "sha256": "cfd707a92dccae6f27b19f61ed961f02f9598945066b25db8b7f329888c152e7",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs",
+      "sha256": "72d70b50c9c6a09ecd53e1faf18c0069b8a6f7c7409ad0c78980b0d64868bd0b",
+      "matches_tested_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Documents/DocumentVectorShapeServices.cs",
+      "sha256": "2257ebfe55a2133780f732c399408d5fe046d34d242b8f4119a52efd3173ca62",
+      "matches_tested_commit": true
+    }
+  ],
+  "all_match_commit": true,
+  "executed_cases": 4,
+  "ordinary_behavior_assertions": 21,
+  "deliberate_failing_assertion_negative_control": 1,
+  "outcome": "PASS",
+  "scope": "focused unmodified Write domain regression only; no browser, persistence service, donor layout, PDF, collaboration or deployed acceptance",
+  "initial_build": "FAILED_CS0246_EVIDENCE_HARNESS_DEPENDENCY_OMISSION",
+  "rerun": "PASS",
+  "log_sha256": "80707ea7315641ee2c7a5161ecae5746410a251bfa6ae4635dd199c5d9ab6ed9",
+  "declared_cases": 4,
+  "discovery_note": "Explicit executable probe case list; no test-framework discovery. Four declared cases executed, including one caught-false assertion check."
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "candidateHead": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "ownerSourceIdentity": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "browser": "Chromium 151.0.7922.173, headless SwiftShader, 1440 × 1000",
+  "artifactRoot": "/workspace/team-b-artifacts/browser-c74c73c/wwwroot",
+  "productionEvidence": "run-c74c73c/production-host-results.json",
+  "artifactManifest": "run-c74c73c/published-artifacts.json",
+  "subsetChecks": {
+    "passed": 12,
+    "total": 12,
+    "scope": "Local SDK bootstrap, status, typed live and cold fragment routes, history, and absence of runtime errors. This does not establish full Home or product acceptance."
+  },
+  "layoutFinding": {
+    "status": "FAIL",
+    "observed": "Dashboard controls overlap the welcome, briefing, and hero text. Direct Dashboard siblings share their origin. Library wraps its content and visibly lays it out in sequence.",
+    "screenshots": [
+      "run-c74c73c/initial-home.png",
+      "run-c74c73c/direct-library.png"
+    ],
+    "narrowSourceEvidence": [
+      {
+        "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+        "line": 476,
+        "fact": "BuildConditionalBranch creates a Panel, then adds each direct branch child at lines 482–483. These direct siblings share a layout origin."
+      },
+      {
+        "path": "9to1 Workspace/Home/UI/Home.cui",
+        "line": 27,
+        "fact": "The IsDashboard If contains several direct heading, StackPanel, and Border siblings. They do not have one sequential container."
+      },
+      {
+        "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+        "line": 1088,
+        "fact": "Padding applies only to Decorator. The authored top bar StackPanel padding does not inset its content."
+      }
+    ],
+    "requestToOwner": "Team A owns canonical Home and CUI semantics: reconcile Dashboard branch grouping with declared layout semantics and unsupported StackPanel padding; supply the owner fix and cross-client layout regression evidence. B1 will not fork Home or its renderer to mask this."
+  },
+  "accessibilityFinding": {
+    "status": "FAIL / complete control semantics UNVERIFIED",
+    "observedAriaSnapshot": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\"",
+    "fact": "The actual accessibility tree exposes only status and main despite painted navigation, search, and action controls. Their semantic button/input/disabled states are unavailable. Screenshot appearance and source action availability do not establish accessibility acceptance.",
+    "requestToOwner": "Team A owns the pinned browser adapter and CUI accessibility semantics: provide the approved browser automation or semantic control projection and validation. B1 will not add an alternate DOM Home overlay."
+  },
+  "lifecycle": {
+    "realBfCacheObserved": false,
+    "privateAuthenticatedRestore": "NOT-RUN. No authenticated owner adapter is registered; the observed document restoration was a new load (pageshow.persisted=false)."
+  },
+  "warnings": {
+    "error: Failed to load resource: the server responded with a status of 404 (Not Found)": 1,
+    "warning: WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled": 10
+  },
+  "ownerFiles": [
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3",
+      "currentBlob": "86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3",
+      "ownerBlob": "86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3",
+      "unchangedFromOwner": true
+    },
+    {
+      "path": "9to1 Workspace/Home/UI/Home.cui",
+      "sha256": "13c80c592b71831a21cfe9bec065f901c6d7d3df35575ff77def6c079e0a59fc",
+      "currentBlob": "132c00e736139c3ea0a73d7d453d758298572e55",
+      "ownerBlob": "132c00e736139c3ea0a73d7d453d758298572e55",
+      "unchangedFromOwner": true
+    },
+    {
+      "path": "framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/webapp/modules/avalonia.ts",
+      "sha256": "aa195687fe1c103c0e5e10429334082bfb49fcd75a2c8d954405e81c585dc2e1",
+      "currentBlob": "1b2393f715c2cb9285bf616301234bdf49662514",
+      "ownerBlob": "1b2393f715c2cb9285bf616301234bdf49662514",
+      "unchangedFromOwner": true
+    }
+  ],
+  "sharedSourcesMutated": false,
+  "baselineAccepted": false,
+  "deployed": false,
+  "fullParityAccepted": false
+}

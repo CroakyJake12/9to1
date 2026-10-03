@@ -1,0 +1,968 @@
+[
+  {
+    "test_id": "B4-GOV",
+    "title": "Authority, donor and release evidence",
+    "kind": "review",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Read recorded canonical revision and recheck the live revision before release; compare requirement inventory to source and preserve unresolved decisions.",
+      "Verify canonical remote, accepted head, active claims, disjoint ownership, integrator and readback before integration.",
+      "Inspect donor source/license and enumerate every meaningful visible command/workflow/QoL capability; assign Preserve/Replace/Not applicable with canonical basis.",
+      "Review every changed line and downstream interaction independently; rerun affected suite and exact integrated candidate acceptance.",
+      "Inspect deliverable manifests, commit/hash/deployment identity, actual test discovery/execution/exit logs, screenshots/traces and measured workloads; retain every failed/not-run gate."
+    ],
+    "expected": "Subjective Test, Objective Test and Definition of Done all require real integrated behavior. No mock, build, shell, source presence or worker assertion promotes completion. No new production routing, billable services, live charges or destructive infrastructure actions without relevant explicit authorisation.",
+    "dependencies": "Root/B6/Team C release integration; donor source and licence evidence",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-IDENTITY",
+    "title": "Canonical state, schema and atomicity",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create named artifacts with duplicate permitted names, record canonical IDs, revisions and schema; rename, reorder and move while a second client has the artifact open.",
+      "Save meaningful content, restart both clients and compare authoritative content/IDs/history; use unsupported schema and interrupted save in isolated data.",
+      "Submit two incompatible operations against the same expected revision, then replay a committed operation with identical and changed arguments.",
+      "Exercise a multi-object action with one denied/missing target and inspect every succeeded, failed, skipped and rolled-back item."
+    ],
+    "expected": "Names/order/path never determine identity; schema unknowns preserved/rejected; user-visible operations atomic unless declared partial; conflicts recoverable without silent last-write-wins; replay does not duplicate effects.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-PERMISSION",
+    "title": "Broker, independent source permissions and privacy",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Run each mapped UI/API action as owner/editor/viewer/other-account, with container rights and source rights varied independently.",
+      "Exercise Decline, Block, Accept, 30-day Trust, temporary trust count/time and Always Trust warning using the shared authenticated broker; change caller identity, scope and risk, expire/revoke grants.",
+      "Switch account and organisation, logout, revoke/expire sessions and revisit cached routes, previews/search/AI/export; inspect access checks and audited results.",
+      "Select private content with cloud fallback configured; inspect actual requests, redacted logs and context source/revision. Disable AI and unavailable required privacy controls.",
+      "Exercise configured retention/deletion propagation, export/correction/withdrawal and encryption/metadata-state reporting under the active privacy profile."
+    ],
+    "expected": "IDs/host access/trust never grant forbidden object rights; required approvals fail closed; scope and impact known/unknown displayed honestly; access checked before future dispatch; caches separate; cloud access separate; secrets and prohibited source metadata not disclosed; all audit outcomes recorded.",
+    "dependencies": "Team C identity/auth/entitlement/broker/privacy services; B5 integration; A shared permissions",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-UI",
+    "title": "Mature desktop/narrow/touch and accessibility interactions",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "At equivalent desktop viewport compare populated product journeys to donor interaction models and native CUI information architecture.",
+      "Repeat with narrow/touch layout, 200% scaling, supported themes/high contrast/reduced motion; inspect normal/selected/loading/read-only/conflict/missing-source and all hover/focus/disabled/error states.",
+      "Complete each journey using keyboard and screen reader; inspect accessible names/outline, selection, menus, dialogs, visible focus and return focus.",
+      "Type text while canvas shortcuts are available; exercise pointer/tap/long-press/drag alternatives, multi-select/clipboard, undo/redo, Escape innermost surface, panel collapse/resize and Save/Close/Back with AI bar.",
+      "Open artifact deep links, refresh, Back/Forward, direct child links and restored account context; return from nested/embedded editors to identical selection/zoom/scroll."
+    ],
+    "expected": "Usable mature product semantics and faithful content across declared browsers; no pane blocks essential controls; meaningful compatibility/error states; no simulated saves, inaccessible drag-only controls, original-edit ambiguity or discarded draft.",
+    "dependencies": "B1 CUI browser runtime; B6 live browser/device/screen-reader access; supported browser/version policy remains OPEN",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-RESOURCE",
+    "title": "Populated workloads and bounded work",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Record declared thresholds/capability limits before execution; seed a large Files hierarchy, long Flow, nested Binder, branching Path, multi-source Replay, Sites page/CMS/asset lists and variant history.",
+      "Measure cold/warm startup, authoring latency, scrolling, incremental change propagation, CPU/memory/network, background work and subscription counts at recorded sizes.",
+      "Repeat open/close/navigation with embeds computing/media/capture; verify cancellation and no retained uncontrolled subscriptions.",
+      "Exceed a declared query/dependency/evaluation/export/import/merge limit and inspect preflight plus exact failure/partial result; create recursive references safely in isolated data."
+    ],
+    "expected": "Bounded paging/hydration/virtualisation and traversal; explicit limits; no silent truncation/full rescan per change/uncontrolled playback or computation; measured results compared only with approved declared thresholds.",
+    "dependencies": "Team C/A capacity and supported workload policy; real runtime resource instrumentation",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-RECOVERY",
+    "title": "Interrupted real operations and drafts",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Interrupt actual hydration, collection edit, native import/export, Prototype evaluation, Path progress write, Replay finalisation and variant merge at controlled isolated checkpoints.",
+      "Restart clients/backend test jobs; inspect persisted journal/revisions, original content, recoverable draft, actual pending/failed status and committed progress.",
+      "Retry with same operation identity then reconnect a second client; independently read authoritative state, side effects and quota reservations.",
+      "Run a controlled negative fixture that violates a persistence/permission guarantee and confirm the acceptance assertion fails; never inject faults into production."
+    ],
+    "expected": "Originals/only-unsynced copies retained; no fabricated captured interval/completion or duplicated actions/quota; exact recoverable state; negative controls demonstrate sensitivity.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-FILES-SHELL",
+    "title": "Files donor shell, providers and ordinary operations",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Open first-class Drive alongside accessible providers; exercise sidebar/tabs/history/breadcrumb/address, list/grid/details, selection/sort/group/columns, tags/favourites, context commands/properties/previews/search, archives and session restore.",
+      "Create/rename/move/copy/duplicate/trash/restore/colour an ordinary folder before and after adding organisation objects; open folder from Project/Tree/Matrix and return without moving it.",
+      "Disconnect a restored location; deny/remove a provider capability; check every affected UI and API command.",
+      "Use colour presets and full arbitrary colour picker/reset on local/hosted/connected compatible folders; move folder and reopen by ID.",
+      "Test clipboard/drag cross-provider intent and destination failure before cut-source deletion; registered context/open-with handlers, protected project metadata and explicit reference-versus-symlink semantics."
+    ],
+    "expected": "Donor workflows preserved where applicable; unsupported capabilities explicit; unavailable locations retained; folder presentation linked to ID; private credentials absent from config/logs; no hidden shell injection or source deletion before destination commit.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-FILES-CONTINUITY",
+    "title": "Drive, push sync, collaboration and diagnostics",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Browser create/upload populated artifact; desktop reopen/edit/save; browser reopen with backend content/revision readback.",
+      "Create/rename/move/share/change metadata while both clients are open and an owning app has the file open; measure actual live event propagation without manual refresh.",
+      "Disconnect, queue create/rename/move/delete/restore and local content changes, restart, reconnect from durable cursor and journal; replay events/operations.",
+      "Submit incompatible raw-byte writes and hierarchy edits; inspect preserved revisions or deterministic conflict and owning-app durable revision sink.",
+      "Use Sync now/item/folder/selection, pause/resume/retry/reconcile; inspect pending/conflict/errors, last contact, pinned/cache usage and local/base/cloud revisions."
+    ],
+    "expected": "Same canonical objects and meaningful content across clients; ordered immediate incremental push; no generic semantic merges/full rescan/duplicate effects/LWW/data loss; structured diagnostics and LocationChanged preserve owning-app attachment.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-FILES-TRANSFER",
+    "title": "Authorised transfer, hydration, quota and integrity",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Pick real browser-authorised files/folders and destination; reject selection permission, path traversal and unsupported operations; browser never claims arbitrary local filesystem access.",
+      "Start large resumable upload; record TransferID, authoritative reservation/chunks; interrupt and restart; pause/resume/cancel/retry and inspect progress from backend.",
+      "Run concurrent uploads near quota; induce checksum mismatch and metadata-commit failure in isolated test environment; inspect reservations/orphans and every result.",
+      "Download protected bytes as allowed/revoked/cross-account principals; browser save denial/cancellation must remain distinct from hosted transfer status.",
+      "Open CloudOnly, validate durable bytes before AvailableOffline; restart offline and test AlwaysAvailable cleanup protection; deny eviction of unsynced/stale/unverified revision."
+    ],
+    "expected": "No upload completion until content+authoritative metadata commit; exact integrity; durable resumable identity; no orphan/quota duplication; permissions on protected routes; pinned/only-unsynced copies retained. No public r2.dev substitute.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-FILES-HISTORY",
+    "title": "Versions, Trash, ACLs and owning-app creation",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create each Folder/Write/Present/Data/Board/Canvas/Stack entry through New menu and typed API; inspect owner-created artifact and Files destination, Create Stack from existing folder without nested duplication.",
+      "Edit durable revision, restore older revision then inspect newer history; trash/restore by same ID; purge with separate destructive approval and impact.",
+      "Grant direct/inherited viewer/editor to stable principal; preview move across differently permissioned folders; inspect explicit configured inheritance outcome.",
+      "Open Shared with Me as canonical reference; revoke while source remains open; test protected raw URL/link share expiry/revocation.",
+      "Search and preview with current grants, namespaced metadata and registered read-only owner renderers; undo actual inverse mutation with fresh revision and then stale revision."
+    ],
+    "expected": "Owner authority preserved; no cloned Shared with Me, unsupported document internals, semantic merge or implicit cascade purge; later history retained; direct/inherited policy explicit; source permissions rechecked; stale undo rejected.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-AUTHOR",
+    "title": "Source-backed editor, components, layouts and responsive tokens",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create template/framework project in canonical Sites Files directory; open existing Stack project in full/partial/preview-only capability and inspect real source mapping.",
+      "Create/select/move/nest/duplicate/hide/delete/configure each registered core component category through canvas/tree/Inspector and owning API; inspect canonical structured content.",
+      "Create linked reusable definition with exposed property/slot override; edit definition across pages then explicitly detach one instance.",
+      "Exercise flow/stack/grid/wrap/alignment/gaps/margins/sizing/aspect/container/sticky/fixed/overlay/freeform layouts with declared support; set/reset only changed desktop/tablet/phone/custom breakpoint properties.",
+      "Change semantic typography/colour/spacing/radius/shadow/breakpoint/container/variant/theme tokens; force component state in preview and verify saved runtime state unchanged."
+    ],
+    "expected": "Source/user-owned structured project remains authoritative; stable component identities and ordinary editing through shared domain; sparse overrides; tokens update consumers without rewriting content; no screenshot canvas or destructive theme switch.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-SOURCE",
+    "title": "Dev/Stack round-trip and unsupported constructs",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Open Main/Branch/Twig/Leaf exact ProjectID/DomainID/revision in Sites; change visual property and inspect normal reviewable source diff in same domain.",
+      "Open same selection in Dev, modify supported source and reconcile back to Sites; use Dev Code | Preview with Sites provider.",
+      "Introduce valid unsupported code and generated content with provenance; check Code-defined/partial capability and preservation.",
+      "Rename/move Files project directory and asset; reopen Sites/Dev without export/import or anonymous fork.",
+      "Run concurrent visual/source edits to same expected revision and inspect semantic conflict/history."
+    ],
+    "expected": "Canonical Files/Stack identity/source preserved; no export-to-code requirement, flattened unsupported code or silent overwrite; selected domain and exact source revision retained.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-PREVIEW",
+    "title": "Editor/public isolation, manifests and last-valid preview",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Seed homepage public header/footer/style and route-specific script, ordinary page and component/CMS preview; open all rendering contexts.",
+      "Inspect actual editor DOM/styles and isolated preview context; compare preview/live route asset manifests, fonts and rendering with same revision.",
+      "Switch interactive/full-screen/shareable preview; change valid source then invalid build, disconnect and pause; inspect Live/Building/Reloading/Failed/Disconnected/Paused status and retained last-valid render.",
+      "Attempt public preview script access to editor/admin/session/storage; include cross-site customer-origin tests under the approved isolation design."
+    ],
+    "expected": "Public chrome/scripts cannot leak to editor/unrelated route; preview faithful and revision-linked; failed render retains last valid content; customer/editor origin privilege separation independently tested. Shared paths alone do not isolate browser origins.",
+    "dependencies": "C4 real builds/preview deployment; A preview contracts; SH-08/SH-13 customer isolation design OPEN",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-GRAPH",
+    "title": "Real simple/node behavior and trusted boundaries",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Configure Button → Navigate in Inspector, open Node Editor and execute unchanged behavior; create click → permitted query → state update → show result.",
+      "Exercise registered event/condition/action classes, typed ports, validation, grouping/comments/copy/paste/undo/Draft/Published semantics and source mapping.",
+      "Debug actual runtime path with values/timing/errors/provider failures and supported breakpoints; configure runtime states and simple/advanced animation.",
+      "Attempt unsafe client↔server flow and credential/private Data operation; inspect pre-publish diagnostics, actual trusted API checks and browser bundle/log redaction."
+    ],
+    "expected": "Shared NodeGraph semantics; actual executed path inspectable; no duplicate automation product, width-node substitute for responsive layout, browser secret or client-only access control.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-CMS",
+    "title": "CMS, dynamic routes, rich content and bindings",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create BlogPost/Product collections, stable typed records and one-to-one/one-to-many/many-to-many supported relations; edit list/table and records through UI/API.",
+      "Bind /blog/:slug template to published records; conflict duplicate slug and missing record; choose representative preview record without changing template or record accidentally.",
+      "Insert supported rich headings/paragraphs/lists/links/media/tables/quotes/code/registered components; paste untrusted content and inspect sanitisation.",
+      "Bind stable Data IDs/fields/queries and Forms version; exercise validation/response/assessment/accessibility/anti-abuse events and denied/stale/loading/empty/unavailable state.",
+      "Use filtered/sorted/paged collection renderer and site search with draft/private content excluded; locale/fallback/language/alternate SEO where enabled."
+    ],
+    "expected": "Native structured content with stable identities; owning Data/Forms APIs and safeguards; no hidden raw database mutation or executable pasted privilege; record/template separated; published routes determine sitemap.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-QUALITY",
+    "title": "Assets, SEO, accessibility and measured diagnostics",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Use image/video/icon/document/font assets with provenance/licence; rename/move original, crop/focal point/responsive variants/format/lazy load/alt then inspect original and derivative provenance.",
+      "Delete asset used by two pages and inspect usage/recovery impact; test external embed privacy/performance disclosure.",
+      "Configure title/description/canonical/robots/social/schema/sitemap/defaults; seed missing/duplicate metadata and verify rendered routes and tied diagnostics.",
+      "Seed contrast/alt/label/heading/focus/colour-only/touch/motion faults and inspect structured PageID/ComponentID/source diagnostics; keyboard/screen-reader author the page.",
+      "Measure oversized media/bundle/fonts/render-blocking/payload/third-party costs; unsupported metrics remain unknown; inspect optimisation source diff."
+    ],
+    "expected": "Canonical originals and permissions preserved; no untracked duplicate originals, fabricated metrics/business claims or inaccessible design; actual live SEO and measurable diagnostic findings.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-PUBLISH",
+    "title": "Real revision-pinned deployment, failure and rollback",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Build canonical source to artifact with recorded hash/config revision/framework/provenance; exercise restore/build/validate/package/deploy/verify stage jobs and cancellation.",
+      "Deploy authorised preview with assets/routes and required Forms/CMS/auth/server dynamic behavior; independently verify content and exact source/config/deployment IDs.",
+      "Inspect production impact/env/domain/source/check warnings and authorised action; no production action is exercised without Team C-authorised target.",
+      "Fail build/provider/verification and confirm prior working deployment intact; rollback known successful revision without deleting later source history.",
+      "Simulate provider loss/drift and rebuild from canonical Files/Stack source onto authorised alternative test provider; inspect routing verification and deployment provenance.",
+      "Inspect customer build isolation, public/private secret references, redacted errors, env/runtime config and separate first-party site workload allocation."
+    ],
+    "expected": "Real provider results and dynamic runtime; external output not sole/canonical editable source; no success from static-only publishing, destructive rollback, credential leakage or customer privileges inherited from CAKE.",
+    "dependencies": "C4 hosting/build/archive/domain adapters and test deployments; C6 integration; production action approval where applicable",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-DOMAIN",
+    "title": "Namespace, name screening, ownership and scoped DNS",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Reserve cake slug concurrently; reject mixed case/digits/underscore/Unicode/hyphen edges/repeated path/invalid/reserved names; change slug explicitly and test retained ID/redirect policy.",
+      "Request safe/impersonation/ambiguous first-party name and IDN domain; inspect deterministic+AI rules/model/version/reason/review states and stable VerificationID.",
+      "Begin site/account-bound random DNS TXT challenge, expire/replay/rotate it and attempt duplicate domain claim/cross-account takeover; name screening and ownership remain separate.",
+      "Connect test provider to least-privilege authorised zone/hostname; configure exact required records and compare unrelated mail/verification records before/after.",
+      "Inspect Pending/Verified/Misconfigured/Conflict/failure, manual exact instructions, apex/www/canonical/redirect/TLS readiness; no live URL success before verified provider result.",
+      "Enforce configured hosting allocation/inactivity policy through server and verify offline site retains source."
+    ],
+    "expected": "Default sites.9to1.uk/<site-slug> remains path-based; atomic claim, safe review and separate ownership; no unrelated DNS mutation/unchecked takeover or invented expiry/inactivity policy.",
+    "dependencies": "C4 name review/DNS/hosting real test services; canonical policy values and isolation approval required",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SITES-EXTENSION",
+    "title": "Extensions, AI and account/consent integration",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Register representative component/inspector/CMS field/data/provider/template/node/preview contribution with API version/platform/scopes via shared host; crash and disable isolated extension.",
+      "Create/refactor normal editable source-backed page/layout/CMS/binding/graph/SEO through contextual AI with selected Site/Project/domain/revision/component/breakpoint/diagnostics.",
+      "Inspect available build and visual QA for overflow/clipping/contrast/responsive faults before claiming AI result correct; disable AI and verify manual core.",
+      "Enable configured member/analytics/locale providers explicitly; inspect trusted private-route authorisation and selected roles in preview without real private credentials.",
+      "Load donor template and verify no silent third-party tracking; apply consent category/withdrawal and inspect scripts/events in each environment."
+    ],
+    "expected": "Shared host/permissions and source model; typed AI actions with real scope; unavailable/denied honest; client visibility not authorisation; secrets absent; tracking not silently enabled.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-01",
+    "title": "Terminology and ownership",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Inspect catalogue/New menus/artifact types: Files ten types; Link Flow/Binder; Prototype; Paths; Replay; Variants integrated in seven owners.",
+      "Arrange, edit original, author contextual block and make independent copy; inspect distinct domain authority and shared engine/renderer/graph use."
+    ],
+    "expected": "No Sheet in Link, Models rename, Projects/Variants app or parallel model/broker/content-merge engine.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-02",
+    "title": "Launch, shell, author/read and navigation",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create/open/import real artifact; Recent/Pinned/Shared/search/empty templates and direct artifact route; return Home and reopen.",
+      "Perform B4-UI suite across launch/editor/view/run, spatial pan/zoom/fit/outline, nested pop-ups, text focus, touch and all specified status states."
+    ],
+    "expected": "Saved work/session preserved, no fictitious recent/templates, properties-only workflow or inaccessible hidden controls.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-03",
+    "title": "References, atomic state and native interchange",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create live and explicitly pinned stable section references; place same source twice with local labels/layout.",
+      "Rename/move/revoke/delete section and inspect safe exact placeholders; share host separately from source.",
+      "Remove appearance versus delete original; duplicate preserving references versus explicit independent owner-created copy.",
+      "Save/reopen/offline/concurrent edit/undo; export native manifest and portable bytes with distinct permission/disclosure; import unknown schema/identity collision/quota/missing dependencies."
+    ],
+    "expected": "Separate per-user viewport, canonical source identity and revision policy preserved; no widened access, substituted whole source, flattened native objects or lost only-unsynced draft.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F01",
+    "title": "Ten types and complete nesting",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "For all ten types create usable empty organisation with explicit name/type/backing location and provider metadata capability preflight.",
+      "Add existing/New item/Open/new tab/window/original location/properties/share/layout/remove appearance/original-delete plus bulk partial outcomes through UI/API.",
+      "Run every one of the 100 parent→nested target pairs with folder-style alternative, acyclic containment and reference recursion controls; test smart self-ingestion.",
+      "Create owner artifact at inspectable explicit backing destination, then add reference; external import commits before managed reference; check drop Add reference/Move/Copy/Reorder."
+    ],
+    "expected": "First-class versioned IDs/memberships; contextual membership no second filesystem parent; normal view retains authored metadata; Tree viewer exception enforced by actual permission.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F02",
+    "title": "Ordinary Folder regression",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create/rename/move/copy/trash/restore/colour/sort/navigate folder before/after organisations.",
+      "Open ordinary folder through Project/Tree/Matrix and return to restored context."
+    ],
+    "expected": "Existing folder semantics preserved, no mandatory organisation metadata or accidental physical move.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F03",
+    "title": "Homework Project",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create Maths/French sections containing named Present/Write homework plus nested Maths folder and another type.",
+      "Rename/reorder/colour sections, collapse/search outline, follow SectionID deep link, move appearance, independent section sort/project-wide sort.",
+      "Delete section with keep-Unsectioned and remove-appearance choices; reopen and inspect authored order/membership from second authorised client and viewer."
+    ],
+    "expected": "Sections not folders; originals unchanged; per-user collapse distinct; stable deep link and shared authored order; no viewer mutations.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F04",
+    "title": "Sheet canvas and original editor",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Add Write/image/sticky/rich text/labelled connector/ink/shape/nested Stash; Select/Pan/Pen/Eraser and geometry/layer/style inspector.",
+      "Multi-select align/distribute/group/ungroup/duplicate/remove, snap/grid/fit/outline; connector follows stable endpoint and delete impact.",
+      "Open same original from two contexts, edit permitted original, close with prior viewport/focus; default Pop-up and explicit alternate route/Owning app policy.",
+      "Save/reopen exact layout and perform keyboard/touch create/select/open/reposition."
+    ],
+    "expected": "Context geometry undo never source rollback; safe registered editor or read-only+Open original; authored strokes/groups/geometry persist, per-user viewport separate.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F05",
+    "title": "Tree roles and protected layout",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create Maths group with Maths/Maths2/Algebra presentations and nested folder; connect/disconnect/reparent/arrange/collapse/search/fit, open group pop-up.",
+      "Reference same file in two Trees, rename/move original; reject cycle; delete group retaining/reassigning/removing appearances.",
+      "Editor Tree/View switch; viewer direct route/API/embed/Boards request for protected visual layout; viewer logical View navigation."
+    ],
+    "expected": "No unmanaged copy/shortcut or incidental original deletion; viewer never obtains visual layout; source edit grants separate.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F06",
+    "title": "Smart rules and safe freshness",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Select locations and tags/type/status/date, All/Any operators; inspect matching rule via Why included.",
+      "Change tag/date to enter/exit, pin nonmatch/unpin, remove dynamic appearance, revoke location, disconnect source and observe unknown/partial/offline freshness.",
+      "Review inspectable AI rule/scope proposal and nested organisation pin/match; reject recursion/private search."
+    ],
+    "expected": "No inferred false/zero, opaque-only classifier, source move/copy/access widening or offline false nonmatch.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F07",
+    "title": "Timeline chronology and local assignment",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Select Created/Modified/Deadline/Assigned; add labelled periods, range/Undated/overlap/nested object and open period.",
+      "Pan/zoom/fit/date/filter; modify Assigned locally, attempt drag under source dates, explicit authorised source date edit.",
+      "Test timezone/date-only boundaries, live source modification, switch away/back and reopen."
+    ],
+    "expected": "All four sources truthful; assigned dates/periods retained; source dates not secretly rewritten; every overlapping/undated item discoverable.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F08",
+    "title": "Pipeline gating and local/global scope",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Personal Pipeline begins ungated; create/reorder/rename stages; move by pointer/keyboard/API.",
+      "Add checklist and authorised reviewer gate; reject unmet/pending, approve/revoke authority, submit simultaneous transitions.",
+      "Preview explicit mapping target/conversion/rights/conflict then fail its global update; delete stage with retained destination/removal choice.",
+      "Reference same file in another Pipeline and compare source metadata before/after."
+    ],
+    "expected": "Local stages/history/approval IDs; pending not completed; no implicit global mapping, bypassed reviewer or partial success misreport; originals retained.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F09",
+    "title": "Catalogue typed local fields",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Same canonical file in two Catalogues with different notes/rating; Cards/Table/Grouped and entry info in each.",
+      "Create/reorder/hide/resize typed text/person/status/tags/date/number/rating fields and card preview; actual source versus local/read-only global field scope.",
+      "Edit genuine global property through owner, invalid value, bulk compatible edit, incompatible type conversion preview and recoverable field removal.",
+      "Rename original and reopen stable entry source."
+    ],
+    "expected": "Filename cell not source reference; validation preserves rest of edit; values retained until explicit conversion; local notes do not affect other catalogue/source.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F10",
+    "title": "Stash ordered reader and comparison",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Save nonalphabetical sequence, read Previous/Next/overview via keyboard/touch, mark Reviewed, restart same EntryID.",
+      "Reorder via second client; remove current entry and inspect neighbour; explicit earlier/later commands.",
+      "Compare two entries with independent source IDs/slot navigation; narrow A/B retains slots without advancing main; denied/missing source.",
+      "Open Stash on Sheet and close to same viewport."
+    ],
+    "expected": "Files remain separate, per-user position/review not global work status; no expansion/cloning; reorder retains current surviving entry.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-F11",
+    "title": "Matrix classification and orientation",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Topic A/B/C rows × Writing/Data/Presentations columns; populate nested folder; open cell/row/column.",
+      "Rename/reorder axes, keyboard add/move/open with row/column announcement, move appearance, scroll/filter normal contents on large grid.",
+      "Remove axis with reassign/Unassigned/remove appearance; repeated canonical items coalesced or marked; inspect permission-safe displayed-unit counts; reopen."
+    ],
+    "expected": "Stable row/column/CellID independent coordinates; local classification only, no source deletion/private counts; readable orientation.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-L01",
+    "title": "Link source/authored content shell",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create Flow/Binder by distinct preview/name with Files destination; place in compatible organisation/Spaces/Boards.",
+      "Inspect outline/search/Insert/Sources/view/history/share; author supported shared text/table/media/drawing directly, reference independent original.",
+      "Reveal placement/change source/section/pin/Open original and duplicate document with references."
+    ],
+    "expected": "No Link Sheet/Boards alias; authored and original edits visibly distinct; normal shared semantic objects, no new file per note.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-L02",
+    "title": "Annual report continuous Flow",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Build Report.data → Report.write → image → authorised second stable section of Report.data → report-scoped assistant.",
+      "Use one primary vertical scroll on desktop/mobile, reorder outline/insertion, duplicate placement/remove/layout/source chrome; edit permitted original.",
+      "Revoke source, delete referenced section, unsupported/offline renderer, visible revision pin, live source update and AI unavailable.",
+      "Undo reorder; save/reopen reading position; open original/back; long populated Flow measured virtualisation."
+    ],
+    "expected": "Coherent inline content, no nested vertical panels/icon or pop-up list; source IDs/rights preserved, stable reading context, AI only authorised report sources.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-L03",
+    "title": "Binder authored containers and exploration",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Author rich folder, tabbed binder, ordered stack, note/card, nested content, original reference and connection; resize/group/layer/label.",
+      "Explore in nonlinear reader order, tabs/stack contents, close to same overview, reduced motion, outline locate off-canvas object and renamed stable deep link.",
+      "Delete authored container with descendant impact while original remains; explicit extract via owning create/export.",
+      "Open from Sheet and Boards page; save/reopen authored hierarchy/geometry and per-user open tabs."
+    ],
+    "expected": "Single rich interconnected document, real containers not decorated filesystem shortcuts; no fixed Paths route, flattened/split unwanted files or lost focus/context.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-P01",
+    "title": "Prototype actual controls and surfaces",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Create Prototype, use object library/hierarchy/Design/Logic/Run/diagnostics with selected contextual AI.",
+      "Place/group/size input/output/slider/switch/button/selector/table/chart/container; accessible label/type/limits/units/binding/action inspector.",
+      "Switch Design/Logic/Run while preserving same model, disable AI."
+    ],
+    "expected": "Controls real typed model behavior; no Models name or disconnected slider/copy; manual useful core.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-P02",
+    "title": "Prototype typed evaluation and session inputs",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Build two-input typed formula/output calculator; bind slider/switch/chart, reusable explicit component inputs/outputs.",
+      "Reject incompatible types/connections/circular dependency/division error/unavailable input; rename property, remove with dependency preview/repair.",
+      "Build bounded explicit timestep example; Run/Pause/Stop/Reset/cancel long evaluation; inspect diagnostics and repeat deterministic revision/inputs with declared seeds.",
+      "Viewer session changes input then restart; explicit apply-default author action distinct; saved authoring default and unintended external actions unchanged."
+    ],
+    "expected": "Stable IDs, validated dependencies/shared graph+formula editor; errors not plausible zero, time feedback explicit; no blocked navigation or shared-session corruption.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-P03",
+    "title": "Prototype sandbox, reuse and interoperability",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Run untrusted script attempting file/network/process/credential/device access in declared sandbox, inspect denied actual access and authorised owner action route.",
+      "Review measured/imported/assumption/calculated output labels/units/limitations and AI typed undo/validation.",
+      "Update reusable definition/version without silently breaking instance; missing component payload repaired.",
+      "Embed actual model in Files/Spaces/Link/Boards/Paths; native interchange dependencies and separately labelled static noninteractive export; save/reopen/API same behavior."
+    ],
+    "expected": "No implicit capability by opening/running/viewing; model inspectable if blocked; reader local inputs do not grant authoring; source/model preserved.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-H01",
+    "title": "Path authoring and validated routes",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Build information/choice/activity/checkpoint/outcome steps, two outcomes, starting step, stable choices/conditions/actions and shared embedded content.",
+      "Reorder outline independently graph positions; connect/disconnect, fallback/no eligible route, multiple eligible automatic priority.",
+      "Detect missing target, accidental automatic loop and unreachable required outcome; explicitly bounded retry loop.",
+      "Preview both routes at identified draft revision with disposable reset progress and actual transition cause inspection; deliberate validated authored commit."
+    ],
+    "expected": "Human choices stable, no random/storage-order routing or preview publishing/real-progress mutation.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-H02",
+    "title": "Path attempts, safe resume and revision binding",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Start real attempt, satisfy required activity via typed result, checkpoint/Continue and authorised Back without repeated side effect.",
+      "Save progress/response and restart/cross-device resume same AttemptID/StepID/RevisionID; guest/local scope labelled, responses private.",
+      "Complete twice via Restart with separate attempts retained; clear saved progress via separate confirmed delete.",
+      "Update Path, tell active reader newer revision; explicit validated mapping/fresh attempt, changed/deleted step, interrupted/duplicate transition request."
+    ],
+    "expected": "Durable separate progress/revision-bound attempts; no fake percentage, guessed pixel completion, duplicate completion or external action, silent route jump or leaked response.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-H03",
+    "title": "Path cross-app risk and accessible completion",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Embed interactive Prototype in required activity with explicit permitted typed result, source revoke and real reader rights.",
+      "Attempt author-embedded high-risk app/Automation action without reader rights; use AI explanation/typed author edits while reader follows committed route.",
+      "Complete identical route keyboard/screen-reader/narrow and inspect all previous H01/H02 acceptance results."
+    ],
+    "expected": "Shared graph/objects, owner permissions/risk; no author-granted reader rights, screenshot Prototype or AI replacement of committed routing.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-R01",
+    "title": "Replay scoped explicit capture",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Open Replay without recording; pick two supported sources/subobjects and exclude unrelated open file; inspect capabilities/destination/retention/export/media scope before Start.",
+      "Explicitly permit optional mic/camera/screen, deny each separately; show Recording/Paused/source/elapsed/checkpoint/annotation.",
+      "Pause/resume/change scope timestamp, revoke source and inspect stopped future capture; Stop and verify subscriptions/media released plus durable finalisation status."
+    ],
+    "expected": "Semantic capture distinct from images; no unrelated/private recording, implicit media permission or cached permission bypass.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-R02",
+    "title": "Replay historical inspection and independent continuation",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Capture events and annotated checkpoint; advance original; chronological tracks/filter/chapters/timeline/inspector, play/pause/seek/speed/prev-next.",
+      "Read checkpoint exact historical revision and read-only content with declared transcript/caption; restart from retained snapshots/bases.",
+      "Remove base dependency and inspect incomplete checkpoint; chapter order never rewrites underlying event provenance.",
+      "Continue from here via supported owner create with copy rights/destination/scope; open new artifact, verify original newer revision unchanged."
+    ],
+    "expected": "Stable sessions/events/checkpoints and pinned reconstructable history; no latest-source substitution, invented gaps or restoring over original.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-R03",
+    "title": "Replay review/redaction and interruption",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Review included sources/revisions/annotations/media/recipient implications; distinguish live access versus independent exported snapshot.",
+      "Exclude/redact content then scan thumbnails/search/transcripts/dependent snapshots; trim is not permanent redaction; view-only export denied.",
+      "Interrupt capture/finalisation, resume journal checkpoint and inspect missing interval; quota/owner/media failure states Not started/Recording/Paused/Finalising/Ready/Incomplete/Error.",
+      "Retain valid semantic checkpoints on media failure; delete/retention affects Replay assets only."
+    ],
+    "expected": "No removed-secret metadata leakage, capture fabrication/source deletion or improper source byte export; bounded visible recoverable failure.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-V01",
+    "title": "Seven-app branch identity and switch",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "In each Write/Data/Present/Canvas/Picture/Prototype/Sites open Variants near version controls; create/name/duplicate/archive/recover.",
+      "Edit alternative, switch with saved/recoverable unsaved decision; active title/save destination, autosave/undo/collaboration/search/deep link and restart remain branch-aware."
+    ],
+    "expected": "Stable VariantID/base/head, not filename copy/shortcut; starting revision retained; variant deep link never silently Main.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-V02",
+    "title": "Semantic compare, preview and safe merge",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Choose explicit base/source/target, navigate labelled addition/removal/edit/conflict in appropriate compare; inspect selected impact without colour-only distinction.",
+      "Combine independent changes, expose overlap Keep target/Use source/manual, invalidate preview on source/target change.",
+      "Commit selected semantic changes or clearly labelled safe whole-version fallback; stale revision conflict, interruption/cancel/retry idempotency and recover both branches."
+    ],
+    "expected": "Owner validates merge at explicit revisions; no generic byte safety claim, guessed conflict or erased target history/only-retained content.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-V03",
+    "title": "Per-owner content-family comparisons",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Write blocks/text/format/references; Data sheets/tables/stable rows-columns-cells/value/formula/schema/dependencies; Present slides/order/object/content/layout/dependencies.",
+      "Canvas geometry/ink/groups/connectors/references; Picture layer/mask/transform/adjustment/raster choose path; Prototype typed objects/formulas/bindings/definitions/relationships validated.",
+      "Sites page/component/route/content/asset/settings compare; switch/merge and inspect production deployment unchanged, no secrets/live provider state copied.",
+      "Run V01/V02 acceptance in all seven apps with each listed content family and stale/overlap/fallback/interruption case."
+    ],
+    "expected": "Real owner-specific comparison/merge required; shared button bar not coverage; Sites branch action never publishes.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-X01",
+    "title": "Canonical embeds and conversational editing",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Flow/Binder/Files Sheet as Boards pages; Open original and Back preserve host context, roles independent.",
+      "Sheet contains Binder/Flow/Stash under default/selected opening policy; interactive Prototype in Link/Boards/Path; Replay historical checkpoint.",
+      "Spaces/contextual AI typed create/edit/organise with explicit artifact/selection/source/active branch/permissions; review significant rule/dependency/route suggestions and undo; AI disabled."
+    ],
+    "expected": "Same IDs/actual content, no flatten/copy/screenshot; host doesn't grant source or cloud access; unsupported exact limitation.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-X02",
+    "title": "Exhaustive registered action schema and equivalent effects",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Enumerate UI menus/keyboard/editor actions and owning canonical namespaces; inspect typed schemas/permissions/risk/external effects/limits/partial results.",
+      "Execute every organisation type-specific CRUD/settings/membership/layout operation; Link blocks/containers/source/preview/interchange; Prototype property/formula/run/session/default actions.",
+      "Execute Paths author/attempt/progress/read-scoped actions; Replay capability/capture/history/copy/review/redact/export/delete; seven owners branch/compare/merge/recover actions.",
+      "Run same consequential UI/API requests and duplicate/stale/denied requests; inspect stable job/events/cursors/pages and all required errors without forbidden names."
+    ],
+    "expected": "Targets/payload/op key/revisions mandatory or declared create precondition; no unvalidated generic JSON, bypassed owner/broker or arbitrary-ID authority.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-X03",
+    "title": "Full web adaptation and bounded resources",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Repeat actual useful author/reader core in Windows/Linux/browser shared format/account/domain/permissions.",
+      "Run B4-UI and B4-RESOURCE for each mapped surface; browser file/process restrictions explicit, remote configured capability truthful.",
+      "Record Android/Go new-surface-only temporary incomplete-authoring exception separately; no inherited deadline/fallback in Sol Happy or web exemption."
+    ],
+    "expected": "Same models and faithful narrow core, no scaled screenshot/reduced app; complete declared browser support unresolved gate; bounded traversal/loading/compute with shown limits.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-X04",
+    "title": "Independent acceptance and exact candidate",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Run every numbered group and 100-pair Files matrix plus all named cross-app examples with backend IDs/content readback and second client.",
+      "Run ordinary/editor/viewer/source-denied/loading/empty/error/move-rename-delete/undo/reopen/offline/concurrent case dimensions.",
+      "Run B4-UI/B4-RESOURCE/B4-RECOVERY plus API equivalence; independent reviewer reproduces critical cases and rechecks exact final candidate/deployments."
+    ],
+    "expected": "All required groups in denominator, exact commit/runtime/evidence; no skipped/not-run/stale/environment-blocked PASS or test-count-based completion.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-TF-X05",
+    "title": "OPEN decisions and representation safety",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Preserve Playgrounds naming/product OPEN without adding overlapping app; inspect real data before schema changes.",
+      "Review narrow low-level format/adapter choice against specified controls/ownership/permissions/native structure; material changes require canonical decision."
+    ],
+    "expected": "No speculative product, dropped/deferred named feature, guessed public contract or silent unsupported platform.",
+    "dependencies": "B1 browser runtime; Team A canonical domains; C4 authenticated non-production services",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  },
+  {
+    "test_id": "B4-SH",
+    "title": "Online same-product and operational gates",
+    "kind": "runtime",
+    "preconditions": "Use authorised non-production deployment with recorded frontend/backend identities and actual declared browser versions. Seed dedicated B4 owner/editor/viewer/other-account principals and populated artifacts through real APIs. Record IDs, revisions, grants and content before each action. No production data or live charges.",
+    "steps": [
+      "Fresh clean browser account reaches eligible app and saves actual persistent artifact without local Home/dev tooling; complete cross-device and account/org cache isolation journey.",
+      "Validate frontend/backend exact revision-pinned identities, independent runtime without developer PC, configured auth/email delivery/revoke/recovery, real permission and entitlement services.",
+      "Run Drive/Sites real-provider procedures and actual dynamic website behavior, workload isolation, server-side allocations/inactivity rules and canonical backup restore.",
+      "Coordinate billing/AI/job/global operational gates with owning B5/Team C; no local entitlement/job authority, live charge or invented commercial/browser/capacity policy.",
+      "Keep code-complete, behavior-tested, deployed and commercially enabled distinct; record blocked production isolation/merchant/policy/cutover decisions while independent work continues."
+    ],
+    "expected": "Full Sol Happy remains active; staging not production, browser not reduced companion; no mocked online claim or developer-PC runtime dependency.",
+    "dependencies": "Team C real production architecture and authorised staging; B5 billing/account/AI; OPEN SH-13 affected decisions",
+    "outcome": "NOT_RUN",
+    "requirement_state": "BLOCKED",
+    "evidence": [],
+    "replay_rule": "Replay each consequential UI operation through the owning typed API with the same principal, payload, base revision and idempotency key. Compare content, IDs, revisions, permissions, events and side effects. Repeat denied/read-only requests and stale/duplicate requests; do not assert only message text."
+  }
+]

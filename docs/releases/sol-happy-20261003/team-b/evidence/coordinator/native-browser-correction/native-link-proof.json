@@ -1,0 +1,14 @@
+{
+  "testedCommit": "9697281a71a0e32dc761c2c53fd06c72a98ccb43",
+  "pinvokeTableSha256": "bafe99b4bcffc780dc01a1d3d2ddcb169512c9bb8126b70833e27f9ebe18ac5a",
+  "linkResponseSha256": "4bad37bed4e83c9f5ceee37aa705252d5a01d46431419105444ce6daad198f72",
+  "skiaLibraryLinked": true,
+  "harfbuzzLibraryLinked": true,
+  "skiaSymbolTablePresent": true,
+  "harfbuzzSymbolTablePresent": true,
+  "nativeLinks": [
+    "\"/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a\"",
+    "\"/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a\""
+  ],
+  "scope": "Actual SDK for-publish link and generated PInvoke table, not runtime acceptance."
+}

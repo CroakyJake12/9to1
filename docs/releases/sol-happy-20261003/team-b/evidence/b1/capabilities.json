@@ -1,0 +1,79 @@
+[
+  {
+    "capability": "Browser CUI rendering",
+    "ownerContract": "Pinned CUI/Avalonia Browser runtime",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "limitation": "Build/runtime dependencies missing; no replacement renderer.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Home navigation and route URLs",
+    "ownerContract": "HomeFeatureNavigationRequest/HomeRouteIds",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "limitation": "URL fragment codec planned; direct context preserved without invented HTTP endpoints.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Dashboard/Library/Events",
+    "ownerContract": "Canonical Home.cui and Home-owned providers",
+    "state": "BLOCKED",
+    "limitation": "Surface can render; server data and persistence unavailable, mutating commands disabled.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Apps/install/update/repair/rollback",
+    "ownerContract": "Home package authority",
+    "state": "BLOCKED",
+    "limitation": "Local package management is capability-negotiated native-only; browser app launch needs actual registered surface.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Discover/Model Picker",
+    "ownerContract": "Home/Dulche provider registry",
+    "state": "BLOCKED",
+    "limitation": "No browser catalogue/provider adapter; no local model success claimed.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Settings/Permissions/Notifications",
+    "ownerContract": "Home service owners",
+    "state": "BLOCKED",
+    "limitation": "Canonical shared surfaces/authenticated services absent.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Mesh/device/local model operations",
+    "ownerContract": "Enrolled device and Home providers",
+    "state": "BLOCKED",
+    "limitation": "No privileged browser device access or fake Mesh execution.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "CAKE ID/account/org restoration",
+    "ownerContract": "Team C authenticated services",
+    "state": "BLOCKED",
+    "limitation": "No invented auth endpoints or token storage.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Shared AI bar/compose/Action Graph",
+    "ownerContract": "Home/shared AI contracts",
+    "state": "BLOCKED",
+    "limitation": "No private compose or entitlement authority.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Desktop continuity/persistence/history",
+    "ownerContract": "Files and owning app services",
+    "state": "BLOCKED",
+    "limitation": "Requires real staging plus Team A clients.",
+    "validationOutcome": "NOT-RUN"
+  },
+  {
+    "capability": "Browser compatibility/accessibility/performance",
+    "ownerContract": "Declared browser/capacity matrix",
+    "state": "BLOCKED",
+    "limitation": "SH-13 launch decisions and real browser runtime evidence pending.",
+    "validationOutcome": "NOT-RUN"
+  }
+]

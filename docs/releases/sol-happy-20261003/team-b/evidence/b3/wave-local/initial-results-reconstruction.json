@@ -1,0 +1,57 @@
+{
+  "run": "Initial independent CLI attempt before correction",
+  "discovered": 9,
+  "executed": 2,
+  "exit": 1,
+  "outcomes": [
+    {
+      "test_id": "B3-WAVE-CLI-01",
+      "outcome": "PASS",
+      "basis": "Sequential check01 returned; execution reached check02 assertion."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-02",
+      "outcome": "FAIL",
+      "basis": "Recorded AssertionError in initial-hex-case-failure.log; hex text casing mismatch; root/B6 independently reviewed digest bytes."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-03",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-04",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-05",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-06",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-07",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-08",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    },
+    {
+      "test_id": "B3-WAVE-CLI-09",
+      "outcome": "NOT-RUN",
+      "basis": "Earlier assertion halted initial run."
+    }
+  ],
+  "command_results": "Initial harness did not persist per-process stdout/stderr; this deficiency fixed before final rerun. Do not reconstruct unavailable outputs.",
+  "source_fixture": "fixtures/source.wav",
+  "project_fixture": "fixtures/project.waveproject.json",
+  "failure_log": "initial-hex-case-failure.log"
+}

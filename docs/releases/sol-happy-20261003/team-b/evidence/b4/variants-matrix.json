@@ -1,0 +1,93 @@
+[
+  {
+    "app": "Write",
+    "owner_worker": "B2/B3 owning app worker",
+    "content_families": "stable text/blocks/format/references",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  },
+  {
+    "app": "Data",
+    "owner_worker": "B2/B3 owning app worker",
+    "content_families": "sheets/tables/stable rows-columns-cells/values/formulas/schema/named deps",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  },
+  {
+    "app": "Present",
+    "owner_worker": "B2/B3 owning app worker",
+    "content_families": "slides/order/objects/content/layout/dependencies",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  },
+  {
+    "app": "Canvas",
+    "owner_worker": "B2/B3 owning app worker",
+    "content_families": "objects/geometry/strokes/groups/connectors/references",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  },
+  {
+    "app": "Picture",
+    "owner_worker": "B2/B3 owning app worker",
+    "content_families": "layers/masks/transforms/adjustments/raster choose/manual",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  },
+  {
+    "app": "Prototype",
+    "owner_worker": "B4",
+    "content_families": "typed objects/properties/formulas/bindings/definitions/relationships",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  },
+  {
+    "app": "Sites",
+    "owner_worker": "B4",
+    "content_families": "pages/components/routes/content/assets/settings; no publish/secrets/live provider copy",
+    "test_ids": [
+      "B4-TF-V01",
+      "B4-TF-V02",
+      "B4-TF-V03"
+    ],
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null
+  }
+]

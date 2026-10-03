@@ -1,0 +1,36 @@
+{
+  "baseHead": "830f747b70df07797c586f6124890fa5028452b2",
+  "sourceState": "B1-owned3fileuncommittedcorrection; pendingrootreview/commit/publish",
+  "files": [
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "sha256": "47ebacd8fd15868818ed54eae64777e1b8e4f16cf3dba8c73951998c011c4c72"
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "sha256": "b3f3f77a5129c32d36bb35fcf26cb50b2e78511049741a57abc3aeaa28d992da"
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "sha256": "429b0f2d3549799bf2eb0131f5005626043df20113413189f8cd295492ba25e8"
+    }
+  ],
+  "originalFailure": "run-830f747/bootstrap-diagnosis.json",
+  "preservedFailedScopedPropertyAttempt": "native-items-corrected.json",
+  "preservedInvalidConditionAttempt": "native-item-condition-evaluation-failed.log",
+  "evaluatedNormalProperties": {
+    "ShouldIncludeNativeSkiaSharp": "true",
+    "ShouldIncludeNativeHarfBuzzSharp": "true"
+  },
+  "evaluatedNormalNativeInputs": [
+    "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+    "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a"
+  ],
+  "evaluatedNormalExports": [
+    "GL"
+  ],
+  "nativeGuardNegativeControl": "PENDINGroot",
+  "actualPublishedLinkAndSymbols": "PENDINGrootpublish",
+  "actualProductionBrowserRerun": "PENDINGpublishedfreeze",
+  "acceptanceClaim": "No renderedHome/browserparity/service/deployedacceptance fromsourceevaluation"
+}

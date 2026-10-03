@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "tool",
+    "install",
+    "Bun.Unofficial.Tool",
+    "--tool-path",
+    "/workspace/team-b-tooling/bun",
+    "--version",
+    "1.3.4",
+    "--add-source",
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "exitCode": 1,
+  "at": "2026-10-03T17:58:51.192684+00:00",
+  "pinStatus": "Explicit root-selected tooling version1.3.4; donor project does not pin tool. Dependency/source identities remain checked-in bun.lock, build.js and declared upstream source pin."
+}

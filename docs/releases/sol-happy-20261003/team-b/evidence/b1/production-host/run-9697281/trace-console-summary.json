@@ -1,0 +1,187 @@
+{
+  "counts": [
+    [
+      "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Asse",
+      3167
+    ],
+    [
+      "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      10
+    ],
+    [
+      "MONO_WASM: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.",
+      5
+    ],
+    [
+      "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exi",
+      5
+    ],
+    [
+      "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit th",
+      5
+    ],
+    [
+      "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runt",
+      5
+    ],
+    [
+      "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. ",
+      5
+    ],
+    [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      1
+    ]
+  ],
+  "samples": [
+    {
+      "type": "console",
+      "messageType": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "args": [],
+      "location": {
+        "url": "http://127.0.0.1:18763/favicon.ico",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "time": 1231.487,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "args": [],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.native.y6yn484qs1.js",
+        "lineNumber": 5803,
+        "columnNumber": 0
+      },
+      "time": 2217.131,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "args": [],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.native.y6yn484qs1.js",
+        "lineNumber": 5803,
+        "columnNumber": 0
+      },
+      "time": 2217.287,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "error",
+      "text": "MONO_WASM: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.",
+      "args": [
+        {
+          "preview": "MONO_WASM: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "MONO_WASM: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime."
+        },
+        {
+          "preview": "Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime."
+        }
+      ],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.js",
+        "lineNumber": 3,
+        "columnNumber": 1289
+      },
+      "time": 3113.718,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "error",
+      "text": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+      "args": [
+        {
+          "preview": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        },
+        {
+          "preview": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        }
+      ],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.js",
+        "lineNumber": 3,
+        "columnNumber": 1289
+      },
+      "time": 3114.292,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "error",
+      "text": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+      "args": [
+        {
+          "preview": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        },
+        {
+          "preview": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        }
+      ],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.js",
+        "lineNumber": 3,
+        "columnNumber": 1289
+      },
+      "time": 3114.479,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "error",
+      "text": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+      "args": [
+        {
+          "preview": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        },
+        {
+          "preview": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        }
+      ],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.js",
+        "lineNumber": 3,
+        "columnNumber": 1289
+      },
+      "time": 3116.838,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    },
+    {
+      "type": "console",
+      "messageType": "error",
+      "text": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime. Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+      "args": [
+        {
+          "preview": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "MONO_WASM: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        },
+        {
+          "preview": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.",
+          "value": "Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 Error: Assert failed: .NET runtime already exited with 0 undefined. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime.. You can use runtime.runMain() which doesn't exit the runtime."
+        }
+      ],
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.js",
+        "lineNumber": 3,
+        "columnNumber": 1289
+      },
+      "time": 3117.106,
+      "pageId": "page@28e09391e4de456673f54f4042f3839b"
+    }
+  ]
+}

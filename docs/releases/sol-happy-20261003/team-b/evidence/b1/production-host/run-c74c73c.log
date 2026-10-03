@@ -1,0 +1,11 @@
+initial-home: HomeServiceUnavailable, canvases=1
+direct-library: HomeServiceUnavailable, canvases=1
+direct-unregistered-write: HomeServiceUnavailable, canvases=1
+direct-invalid: BrowserRouteInvalid, canvases=1
+return-home: HomeServiceUnavailable, canvases=1
+history-back-invalid: BrowserRouteInvalid, canvases=1
+history-forward-home: HomeServiceUnavailable, canvases=1
+cold-typed-library: HomeServiceUnavailable, canvases=1
+cold-invalid-route: BrowserRouteInvalid, canvases=1
+cold-return-home: HomeServiceUnavailable, canvases=1
+real-document-history-restoration: HomeServiceUnavailable, canvases=1

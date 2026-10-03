@@ -1,0 +1,56 @@
+{
+  "testedCommit": "9697281a71a0e32dc761c2c53fd06c72a98ccb43",
+  "at": "2026-10-03T18:22:21.334959+00:00",
+  "checks": [
+    {
+      "id": "normal-required-inputs",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "msbuild",
+        "apps/Web/NineToOne.Web.csproj",
+        "-t:RequirePinnedBrowserAssets",
+        "-p:Configuration=Release",
+        "-nologo"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "exitCode": 0,
+      "expectationMet": true,
+      "scope": "Real build target guard; isolated global flag controlled fault only; not product runtime acceptance."
+    },
+    {
+      "id": "missing-skia",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "msbuild",
+        "apps/Web/NineToOne.Web.csproj",
+        "-t:RequirePinnedBrowserAssets",
+        "-p:Configuration=Release",
+        "-nologo",
+        "-p:ShouldIncludeNativeSkiaSharp=false"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "exitCode": 1,
+      "expectationMet": true,
+      "scope": "Real build target guard; isolated global flag controlled fault only; not product runtime acceptance."
+    },
+    {
+      "id": "missing-harfbuzz",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "msbuild",
+        "apps/Web/NineToOne.Web.csproj",
+        "-t:RequirePinnedBrowserAssets",
+        "-p:Configuration=Release",
+        "-nologo",
+        "-p:ShouldIncludeNativeHarfBuzzSharp=false"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "exitCode": 1,
+      "expectationMet": true,
+      "scope": "Real build target guard; isolated global flag controlled fault only; not product runtime acceptance."
+    }
+  ],
+  "nativeInputCount": 2,
+  "GLExportCount": 1,
+  "allExpectationsMet": true
+}

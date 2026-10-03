@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "9697281",
+  "bundle": "/workspace/team-b-artifacts/browser-9697281/wwwroot",
+  "runtimeOutcome": "FAIL: UI runtime exitedafterMain; blackcanvas and failedlivehash/history",
+  "coldRouteResults": "typedLibrary=>unavailable,invalid=>BrowserRouteInvalid frominitialstartup; doesnot establishliveUI",
+  "firstExactRuntimeError": "MONO_WASM: Assert failed: .NET runtime already exited with0... You can use runtime.runMain() which doesnot exit the runtime",
+  "evidence": [
+    "published-artifacts.json",
+    "initial-home.png",
+    "direct-invalid.html",
+    "production-host-trace.zip",
+    "trace-console-summary.json",
+    "../run-9697281.log"
+  ],
+  "harnessFailure": "JSON.stringify invalidstringlength fromrecursive runtimeexiterrorstorm; structured resultnotproduced; preserved rawtrace and screen/HTML/log instead",
+  "independentRenderReview": "Blackcanvas, noHomecontrols visible; status+canvas aloneNOTaccepted",
+  "requiredFix": "MainJS currentlydotnet.run callsrunMainAndExit; useSDKdocumentedruntime.runMain forpersistentUI",
+  "fullParityAccepted": false,
+  "deployed": false
+}

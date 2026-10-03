@@ -1,0 +1,1 @@
+{"scenario":"Real native Fetch delayed401 body; isolated fixture, not production authentication","expected":"authentication_required with private context cleared","observed":{"ok":false,"status":401,"error":{"code":"authentication_required","action":"GetCurrent","body":{"error":"authentication_required"}}},"clears":["session_invalidated"]}

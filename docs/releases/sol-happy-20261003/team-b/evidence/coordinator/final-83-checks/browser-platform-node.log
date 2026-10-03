@@ -1,0 +1,17 @@
+PASS B1-HISTORY-01-duplicate-does-not-push
+PASS B1-HISTORY-02-context-address
+PASS B1-HISTORY-03-replace-is-explicit
+PASS B1-HISTORY-04-back-forward-location
+PASS B1-HISTORY-05-status-is-text
+PASS B1-HISTORY-06-bfcache-preserves-live-runtime
+PASS B1-HISTORY-07-release-subscriptions
+Discovered: 7; executed: 7; passed: 7; failed: 0. Real browser acceptance: NOT-RUN.
+✔ apps/Web/Tests/browser-platform.test.mjs (54.015511ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 63.875732

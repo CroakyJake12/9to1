@@ -1,0 +1,86 @@
+{
+  "testedCodeCommit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "checks": [
+    {
+      "name": "validator-unit",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "eng/browser/tests",
+        "-v"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:43:40.742737+00:00",
+      "completedAt": "2026-10-03T18:43:40.904524+00:00",
+      "exitCode": 0,
+      "log": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/final-c74-checks/validator-unit.log",
+      "logSha256": "cf0168cdd5408fa76c16c297a57b37a24cd234c6f932e1186bbeff914cf97c04"
+    },
+    {
+      "name": "browser-platform-node",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "apps/Web/Tests/browser-platform.test.mjs"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:43:40.743149+00:00",
+      "completedAt": "2026-10-03T18:43:40.853455+00:00",
+      "exitCode": 0,
+      "log": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/final-c74-checks/browser-platform-node.log",
+      "logSha256": "21943463aad763263203bde90ad20ec349eb37153df84dfab911c807b7637988"
+    },
+    {
+      "name": "account-api-node",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--test",
+        "apps/Web/Auth/account-api-client.test.js",
+        "apps/Web/Auth/account-api-client.profile-review.test.js"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:43:40.743398+00:00",
+      "completedAt": "2026-10-03T18:43:40.979378+00:00",
+      "exitCode": 0,
+      "log": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/final-c74-checks/account-api-node.log",
+      "logSha256": "b2eb8f8055a3ccf2e7acd6f465eddc6364afb65bd2271993bff1c76b000e5da6"
+    },
+    {
+      "name": "navigation",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--no-restore"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:43:40.743690+00:00",
+      "completedAt": "2026-10-03T18:43:42.265350+00:00",
+      "exitCode": 0,
+      "log": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/final-c74-checks/navigation.log",
+      "logSha256": "6caa6f9e62efe4efbe380f0b760b5d5e94c804ca07156acb79078b46a4fa87e0"
+    },
+    {
+      "name": "startup-syntax",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--check",
+        "apps/Web/wwwroot/main.js"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T18:43:40.743962+00:00",
+      "completedAt": "2026-10-03T18:43:40.780768+00:00",
+      "exitCode": 0,
+      "log": "/workspace/team-b-evidence/sol-happy-20261003/coordinator/final-c74-checks/startup-syntax.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "productParityVerified": false,
+  "scope": "32 validator,22 actual source-linked route/dispatcher,28 account fixture cases,7 platform custom checks,JS syntax; actual UI runner separate"
+}

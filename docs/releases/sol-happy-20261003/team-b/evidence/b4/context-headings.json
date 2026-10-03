@@ -1,0 +1,1118 @@
+[
+  {
+    "product": "GENERAL",
+    "source_index": 1,
+    "source_end": 15,
+    "text": "General Rules"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 15,
+    "source_end": 39,
+    "text": "Specification authority"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 507,
+    "source_end": 540,
+    "text": "Technical specification contract"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 540,
+    "source_end": 571,
+    "text": "Normative requirement language"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 1919,
+    "source_end": 1975,
+    "text": "Required technical structure for product specifications"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 4190,
+    "source_end": 4216,
+    "text": "State and data invariants"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 5465,
+    "source_end": 5488,
+    "text": "API and error contract"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 6666,
+    "source_end": 6703,
+    "text": "Unspecified behaviour and exceptions"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 7684,
+    "source_end": 7722,
+    "text": "Definition of implementation-complete"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 8411,
+    "source_end": 8448,
+    "text": "Privacy and data-protection baseline"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 16617,
+    "source_end": 16653,
+    "text": "App APIs and automation permissions"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 16653,
+    "source_end": 16676,
+    "text": "API parity requirement"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 18459,
+    "source_end": 18482,
+    "text": "Home permission broker"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 19726,
+    "source_end": 19741,
+    "text": "Prompt actions"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 20315,
+    "source_end": 20332,
+    "text": "Accept and Trust"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 21002,
+    "source_end": 21026,
+    "text": "Accept and Always Trust"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 22470,
+    "source_end": 22504,
+    "text": "Caller identity and trust binding"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 23090,
+    "source_end": 23132,
+    "text": "Risk classification and sensitive actions"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 23925,
+    "source_end": 23966,
+    "text": "Revocation, expiry and failure behaviour"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 24563,
+    "source_end": 24586,
+    "text": "Audit and transparency"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 25199,
+    "source_end": 25219,
+    "text": "Implementation rule"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 25737,
+    "source_end": 25755,
+    "text": "Development Rules"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 25755,
+    "source_end": 25787,
+    "text": "Agentic Work Operating Contract"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 55165,
+    "source_end": 55193,
+    "text": "9to1-specific agentic rules"
+  },
+  {
+    "product": "GENERAL",
+    "source_index": 57079,
+    "source_end": 57099,
+    "text": "Source & Donor Apps"
+  },
+  {
+    "product": "FILES",
+    "source_index": 218588,
+    "source_end": 218594,
+    "text": "Files"
+  },
+  {
+    "product": "FILES",
+    "source_index": 218594,
+    "source_end": 218638,
+    "text": "Product role and donor-first implementation"
+  },
+  {
+    "product": "FILES",
+    "source_index": 220073,
+    "source_end": 220108,
+    "text": "Authority and ownership boundaries"
+  },
+  {
+    "product": "FILES",
+    "source_index": 221223,
+    "source_end": 221257,
+    "text": "Canonical identity and item model"
+  },
+  {
+    "product": "FILES",
+    "source_index": 222079,
+    "source_end": 222114,
+    "text": "Locations and provider abstraction"
+  },
+  {
+    "product": "FILES",
+    "source_index": 222914,
+    "source_end": 222944,
+    "text": "Desktop shell, tabs and views"
+  },
+  {
+    "product": "FILES",
+    "source_index": 223589,
+    "source_end": 223617,
+    "text": "Folder colour customisation"
+  },
+  {
+    "product": "FILES",
+    "source_index": 224603,
+    "source_end": 224648,
+    "text": "Native 9to1 creation and project integration"
+  },
+  {
+    "product": "FILES",
+    "source_index": 225985,
+    "source_end": 226008,
+    "text": "9to1 Drive integration"
+  },
+  {
+    "product": "FILES",
+    "source_index": 226746,
+    "source_end": 226781,
+    "text": "Rapid push-based sync architecture"
+  },
+  {
+    "product": "FILES",
+    "source_index": 228059,
+    "source_end": 228087,
+    "text": "Optimistic local operations"
+  },
+  {
+    "product": "FILES",
+    "source_index": 228679,
+    "source_end": 228707,
+    "text": "Sync and availability state"
+  },
+  {
+    "product": "FILES",
+    "source_index": 229750,
+    "source_end": 229781,
+    "text": "Manual sync and sync-on-demand"
+  },
+  {
+    "product": "FILES",
+    "source_index": 230389,
+    "source_end": 230413,
+    "text": "Offline-first behaviour"
+  },
+  {
+    "product": "FILES",
+    "source_index": 231275,
+    "source_end": 231310,
+    "text": "Real-time filesystem collaboration"
+  },
+  {
+    "product": "FILES",
+    "source_index": 232491,
+    "source_end": 232501,
+    "text": "Transfers"
+  },
+  {
+    "product": "FILES",
+    "source_index": 233407,
+    "source_end": 233445,
+    "text": "Version history and durable revisions"
+  },
+  {
+    "product": "FILES",
+    "source_index": 234090,
+    "source_end": 234117,
+    "text": "Trash, delete and recovery"
+  },
+  {
+    "product": "FILES",
+    "source_index": 234571,
+    "source_end": 234588,
+    "text": "Sharing and ACLs"
+  },
+  {
+    "product": "FILES",
+    "source_index": 235581,
+    "source_end": 235611,
+    "text": "Search, metadata and previews"
+  },
+  {
+    "product": "FILES",
+    "source_index": 236369,
+    "source_end": 236413,
+    "text": "Open routing, context actions and drag/drop"
+  },
+  {
+    "product": "FILES",
+    "source_index": 237242,
+    "source_end": 237261,
+    "text": "AI bar and privacy"
+  },
+  {
+    "product": "FILES",
+    "source_index": 237990,
+    "source_end": 238030,
+    "text": "Operation journal, undo and change feed"
+  },
+  {
+    "product": "FILES",
+    "source_index": 238859,
+    "source_end": 238891,
+    "text": "Properties and sync diagnostics"
+  },
+  {
+    "product": "FILES",
+    "source_index": 239501,
+    "source_end": 239534,
+    "text": "Safety and filesystem edge cases"
+  },
+  {
+    "product": "FILES",
+    "source_index": 240047,
+    "source_end": 240057,
+    "text": "Files API"
+  },
+  {
+    "product": "FILES",
+    "source_index": 241795,
+    "source_end": 241813,
+    "text": "Failure behaviour"
+  },
+  {
+    "product": "FILES",
+    "source_index": 242250,
+    "source_end": 242269,
+    "text": "Platform behaviour"
+  },
+  {
+    "product": "FILES",
+    "source_index": 242646,
+    "source_end": 242670,
+    "text": "Acceptance requirements"
+  },
+  {
+    "product": "SITES",
+    "source_index": 862474,
+    "source_end": 862480,
+    "text": "Sites"
+  },
+  {
+    "product": "SITES",
+    "source_index": 862480,
+    "source_end": 862517,
+    "text": "Product role and ownership principle"
+  },
+  {
+    "product": "SITES",
+    "source_index": 863451,
+    "source_end": 863487,
+    "text": "Primary donor: cakemods site plugin"
+  },
+  {
+    "product": "SITES",
+    "source_index": 864475,
+    "source_end": 864494,
+    "text": "Donor parity audit"
+  },
+  {
+    "product": "SITES",
+    "source_index": 865181,
+    "source_end": 865209,
+    "text": "Canonical SiteProject model"
+  },
+  {
+    "product": "SITES",
+    "source_index": 866049,
+    "source_end": 866089,
+    "text": "New Site and framework/project creation"
+  },
+  {
+    "product": "SITES",
+    "source_index": 866923,
+    "source_end": 866942,
+    "text": "Visual Page Editor"
+  },
+  {
+    "product": "SITES",
+    "source_index": 867604,
+    "source_end": 867632,
+    "text": "Component and section model"
+  },
+  {
+    "product": "SITES",
+    "source_index": 868451,
+    "source_end": 868484,
+    "text": "Reusable components and sections"
+  },
+  {
+    "product": "SITES",
+    "source_index": 869072,
+    "source_end": 869120,
+    "text": "Editor-shell and public-route context ownership"
+  },
+  {
+    "product": "SITES",
+    "source_index": 869778,
+    "source_end": 869806,
+    "text": "Layout and page composition"
+  },
+  {
+    "product": "SITES",
+    "source_index": 870431,
+    "source_end": 870465,
+    "text": "Responsive design and breakpoints"
+  },
+  {
+    "product": "SITES",
+    "source_index": 870976,
+    "source_end": 871001,
+    "text": "Design system and tokens"
+  },
+  {
+    "product": "SITES",
+    "source_index": 871557,
+    "source_end": 871587,
+    "text": "Themes and component variants"
+  },
+  {
+    "product": "SITES",
+    "source_index": 872009,
+    "source_end": 872062,
+    "text": "Visual source round-trip and code-defined constructs"
+  },
+  {
+    "product": "SITES",
+    "source_index": 872954,
+    "source_end": 872983,
+    "text": "Pages, routes and navigation"
+  },
+  {
+    "product": "SITES",
+    "source_index": 873541,
+    "source_end": 873577,
+    "text": "Preview fidelity and asset manifest"
+  },
+  {
+    "product": "SITES",
+    "source_index": 874214,
+    "source_end": 874249,
+    "text": "Live preview and last-valid render"
+  },
+  {
+    "product": "SITES",
+    "source_index": 874763,
+    "source_end": 874796,
+    "text": "Stack source-control integration"
+  },
+  {
+    "product": "SITES",
+    "source_index": 875357,
+    "source_end": 875373,
+    "text": "Dev integration"
+  },
+  {
+    "product": "SITES",
+    "source_index": 875952,
+    "source_end": 875985,
+    "text": "Full shared Node Graph Framework"
+  },
+  {
+    "product": "SITES",
+    "source_index": 876648,
+    "source_end": 876687,
+    "text": "Simple interaction UI and graph parity"
+  },
+  {
+    "product": "SITES",
+    "source_index": 877218,
+    "source_end": 877260,
+    "text": "Sites node events, conditions and actions"
+  },
+  {
+    "product": "SITES",
+    "source_index": 877988,
+    "source_end": 878033,
+    "text": "Node execution contexts and trust boundaries"
+  },
+  {
+    "product": "SITES",
+    "source_index": 878698,
+    "source_end": 878735,
+    "text": "Node debugger and runtime inspection"
+  },
+  {
+    "product": "SITES",
+    "source_index": 879186,
+    "source_end": 879228,
+    "text": "Component state and node-driven animation"
+  },
+  {
+    "product": "SITES",
+    "source_index": 879778,
+    "source_end": 879813,
+    "text": "Native CMS and content collections"
+  },
+  {
+    "product": "SITES",
+    "source_index": 880523,
+    "source_end": 880561,
+    "text": "CMS relationships and dynamic content"
+  },
+  {
+    "product": "SITES",
+    "source_index": 881130,
+    "source_end": 881164,
+    "text": "Dynamic routes and page templates"
+  },
+  {
+    "product": "SITES",
+    "source_index": 881610,
+    "source_end": 881633,
+    "text": "Rich content authoring"
+  },
+  {
+    "product": "SITES",
+    "source_index": 882020,
+    "source_end": 882037,
+    "text": "Data integration"
+  },
+  {
+    "product": "SITES",
+    "source_index": 882585,
+    "source_end": 882603,
+    "text": "Forms integration"
+  },
+  {
+    "product": "SITES",
+    "source_index": 883071,
+    "source_end": 883098,
+    "text": "Files and asset management"
+  },
+  {
+    "product": "SITES",
+    "source_index": 883657,
+    "source_end": 883682,
+    "text": "Image/media optimisation"
+  },
+  {
+    "product": "SITES",
+    "source_index": 884156,
+    "source_end": 884180,
+    "text": "SEO and discoverability"
+  },
+  {
+    "product": "SITES",
+    "source_index": 884766,
+    "source_end": 884807,
+    "text": "Accessibility diagnostics and guardrails"
+  },
+  {
+    "product": "SITES",
+    "source_index": 885402,
+    "source_end": 885442,
+    "text": "Performance and web-quality diagnostics"
+  },
+  {
+    "product": "SITES",
+    "source_index": 885910,
+    "source_end": 885939,
+    "text": "Domains, redirects and HTTPS"
+  },
+  {
+    "product": "SITES",
+    "source_index": 886538,
+    "source_end": 886562,
+    "text": "Deployment environments"
+  },
+  {
+    "product": "SITES",
+    "source_index": 887089,
+    "source_end": 887129,
+    "text": "Deployment providers and build pipeline"
+  },
+  {
+    "product": "SITES",
+    "source_index": 887783,
+    "source_end": 887838,
+    "text": "Deployment history, rollback and publishing safeguards"
+  },
+  {
+    "product": "SITES",
+    "source_index": 888463,
+    "source_end": 888505,
+    "text": "Custom code, scripts and server functions"
+  },
+  {
+    "product": "SITES",
+    "source_index": 889072,
+    "source_end": 889106,
+    "text": "Environment variables and secrets"
+  },
+  {
+    "product": "SITES",
+    "source_index": 889659,
+    "source_end": 889691,
+    "text": "Authentication and member areas"
+  },
+  {
+    "product": "SITES",
+    "source_index": 890180,
+    "source_end": 890209,
+    "text": "Localisation and site search"
+  },
+  {
+    "product": "SITES",
+    "source_index": 890612,
+    "source_end": 890643,
+    "text": "Analytics, scripts and consent"
+  },
+  {
+    "product": "SITES",
+    "source_index": 891167,
+    "source_end": 891195,
+    "text": "Collaboration and revisions"
+  },
+  {
+    "product": "SITES",
+    "source_index": 891635,
+    "source_end": 891669,
+    "text": "Dulche AI authoring and visual QA"
+  },
+  {
+    "product": "SITES",
+    "source_index": 892516,
+    "source_end": 892540,
+    "text": "Shared extension system"
+  },
+  {
+    "product": "SITES",
+    "source_index": 893172,
+    "source_end": 893204,
+    "text": "First-party Sites URL namespace"
+  },
+  {
+    "product": "SITES",
+    "source_index": 894362,
+    "source_end": 894394,
+    "text": "AI name and domain verification"
+  },
+  {
+    "product": "SITES",
+    "source_index": 895880,
+    "source_end": 895920,
+    "text": "Custom domains and provider connections"
+  },
+  {
+    "product": "SITES",
+    "source_index": 897709,
+    "source_end": 897744,
+    "text": "Canonical Sites directory in Files"
+  },
+  {
+    "product": "SITES",
+    "source_index": 898756,
+    "source_end": 898798,
+    "text": "External hosting and deployment authority"
+  },
+  {
+    "product": "SITES",
+    "source_index": 900200,
+    "source_end": 900238,
+    "text": "Hosting, URL and domain API additions"
+  },
+  {
+    "product": "SITES",
+    "source_index": 900983,
+    "source_end": 900993,
+    "text": "Sites API"
+  },
+  {
+    "product": "SITES",
+    "source_index": 902667,
+    "source_end": 902695,
+    "text": "Automation and typed events"
+  },
+  {
+    "product": "SITES",
+    "source_index": 903184,
+    "source_end": 903214,
+    "text": "Security and abuse boundaries"
+  },
+  {
+    "product": "SITES",
+    "source_index": 903719,
+    "source_end": 903756,
+    "text": "Performance and large-site behaviour"
+  },
+  {
+    "product": "SITES",
+    "source_index": 904300,
+    "source_end": 904331,
+    "text": "Recovery and failure behaviour"
+  },
+  {
+    "product": "SITES",
+    "source_index": 905112,
+    "source_end": 905142,
+    "text": "Platform capability behaviour"
+  },
+  {
+    "product": "SITES",
+    "source_index": 905712,
+    "source_end": 905736,
+    "text": "Acceptance requirements"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1238694,
+    "source_end": 1238713,
+    "text": "Pass 2: Terra-form"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1238714,
+    "source_end": 1238740,
+    "text": "Pass 2 operating contract"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1238740,
+    "source_end": 1238764,
+    "text": "Pass identity and model"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1239201,
+    "source_end": 1239227,
+    "text": "Hard deadline and outcome"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1239674,
+    "source_end": 1239718,
+    "text": "Pre-pass baseline, merge and user test drop"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1240633,
+    "source_end": 1240649,
+    "text": "Scope expansion"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1241129,
+    "source_end": 1241166,
+    "text": "Implementation and evidence contract"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1242117,
+    "source_end": 1242145,
+    "text": "Android and Go release rule"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1242663,
+    "source_end": 1242681,
+    "text": "Release exit gate"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1243384,
+    "source_end": 1243428,
+    "text": "Terra-form product and interaction contract"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1243428,
+    "source_end": 1243469,
+    "text": "TF-01 — Scope, terminology and ownership"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1245511,
+    "source_end": 1245565,
+    "text": "TF-02 — Shared UI, navigation and authoring behaviour"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1249499,
+    "source_end": 1249551,
+    "text": "TF-03 — Common data, source references and recovery"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1253145,
+    "source_end": 1253179,
+    "text": "Files — native organisation types"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1253179,
+    "source_end": 1253235,
+    "text": "TF-F01 — Shared Files organisation shell and operations"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1256356,
+    "source_end": 1256372,
+    "text": "TF-F02 — Folder"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1257177,
+    "source_end": 1257194,
+    "text": "TF-F03 — Project"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1259099,
+    "source_end": 1259114,
+    "text": "TF-F04 — Sheet"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1261797,
+    "source_end": 1261811,
+    "text": "TF-F05 — Tree"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1263717,
+    "source_end": 1263732,
+    "text": "TF-F06 — Smart"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1265678,
+    "source_end": 1265696,
+    "text": "TF-F07 — Timeline"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1267473,
+    "source_end": 1267491,
+    "text": "TF-F08 — Pipeline"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1269498,
+    "source_end": 1269517,
+    "text": "TF-F09 — Catalogue"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1271414,
+    "source_end": 1271429,
+    "text": "TF-F10 — Stash"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1273114,
+    "source_end": 1273130,
+    "text": "TF-F11 — Matrix"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1274868,
+    "source_end": 1274873,
+    "text": "Link"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1274873,
+    "source_end": 1274923,
+    "text": "TF-L01 — Link shell, documents and shared content"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1276482,
+    "source_end": 1276521,
+    "text": "TF-L02 — Flow reading and authoring UI"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1279758,
+    "source_end": 1279810,
+    "text": "TF-L03 — Binder overview, containers and navigation"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1282889,
+    "source_end": 1282899,
+    "text": "Prototype"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1282899,
+    "source_end": 1282943,
+    "text": "TF-P01 — Product boundary and editor layout"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1284451,
+    "source_end": 1284493,
+    "text": "TF-P02 — Typed model, logic and execution"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1286778,
+    "source_end": 1286816,
+    "text": "TF-P03 — Safety, reuse and acceptance"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1288758,
+    "source_end": 1288764,
+    "text": "Paths"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1288764,
+    "source_end": 1288803,
+    "text": "TF-H01 — Authoring, steps and route UI"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1290804,
+    "source_end": 1290852,
+    "text": "TF-H02 — Reader experience and durable progress"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1292843,
+    "source_end": 1292879,
+    "text": "TF-H03 — Integration and acceptance"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1293887,
+    "source_end": 1293894,
+    "text": "Replay"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1293894,
+    "source_end": 1293941,
+    "text": "TF-R01 — Explicit capture and source selection"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1295331,
+    "source_end": 1295374,
+    "text": "TF-R02 — Semantic timeline and playback UI"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1297418,
+    "source_end": 1297467,
+    "text": "TF-R03 — Review, sharing, failure and acceptance"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1299027,
+    "source_end": 1299036,
+    "text": "Variants"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1299036,
+    "source_end": 1299087,
+    "text": "TF-V01 — Integrated variant UI and branch identity"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1300486,
+    "source_end": 1300537,
+    "text": "TF-V02 — Comparison, selective merge and conflicts"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1302086,
+    "source_end": 1302136,
+    "text": "TF-V03 — Required owning-app comparison semantics"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1303935,
+    "source_end": 1303969,
+    "text": "Cross-app delivery and acceptance"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1303969,
+    "source_end": 1304026,
+    "text": "TF-X01 — Embeds, Boards pages and conversational editing"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1305623,
+    "source_end": 1305663,
+    "text": "TF-X02 — Canonical API action catalogue"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1309528,
+    "source_end": 1309589,
+    "text": "TF-X03 — Platforms, responsive behaviour and resource limits"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1311920,
+    "source_end": 1311968,
+    "text": "TF-X04 — Acceptance matrix and release evidence"
+  },
+  {
+    "product": "TERRA",
+    "source_index": 1314701,
+    "source_end": 1314759,
+    "text": "TF-X05 — Open naming decision and implementation defaults"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1315675,
+    "source_end": 1315693,
+    "text": "Pass 3: Sol Happy"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1315693,
+    "source_end": 1315730,
+    "text": "SH-01 — Purpose and required outcome"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1317132,
+    "source_end": 1317187,
+    "text": "SH-02 — Baseline, authority and deployment permissions"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1318797,
+    "source_end": 1318843,
+    "text": "SH-03 — Production architecture and ownership"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1321014,
+    "source_end": 1321064,
+    "text": "SH-04 — WordPress-to-Cloudflare website migration"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1323121,
+    "source_end": 1323165,
+    "text": "SH-05 — CAKE ID and account services online"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1324803,
+    "source_end": 1324853,
+    "text": "SH-06 — Full browser versions of the applications"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1327041,
+    "source_end": 1327089,
+    "text": "SH-07 — Files and 9to1 Drive production hosting"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1328996,
+    "source_end": 1329042,
+    "text": "SH-08 — Sites publishing and customer hosting"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1330892,
+    "source_end": 1330938,
+    "text": "SH-09 — Real Stripe subscriptions and billing"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1330938,
+    "source_end": 1330981,
+    "text": "Canonical plans and resource configuration"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1331617,
+    "source_end": 1331641,
+    "text": "Checkout and activation"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1332403,
+    "source_end": 1332431,
+    "text": "Webhooks and reconciliation"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1333220,
+    "source_end": 1333254,
+    "text": "Customer management and lifecycle"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1334479,
+    "source_end": 1334531,
+    "text": "SH-10 — Cloud AI and connected application services"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1336142,
+    "source_end": 1336192,
+    "text": "SH-11 — Operations, security and release delivery"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1337634,
+    "source_end": 1337664,
+    "text": "SH-12 — End-to-end acceptance"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1339691,
+    "source_end": 1339758,
+    "text": "SH-13 — Decisions required before affected functionality goes live"
+  },
+  {
+    "product": "SOLHAPPY",
+    "source_index": 1341499,
+    "source_end": 1341517,
+    "text": "Release exit gate"
+  }
+]

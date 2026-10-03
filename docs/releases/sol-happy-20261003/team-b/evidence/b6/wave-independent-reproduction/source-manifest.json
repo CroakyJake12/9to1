@@ -1,0 +1,17 @@
+{
+  "kind": "Unchanged production-source subset compiled in isolated evidence harness; NOT production project/package/browser acceptance",
+  "commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "sources": [
+    {
+      "path": "/workspace/team-b-worktree/9to1 Workspace/Wave/Program.cs",
+      "sha256": "e41337ab4f3b9346805f05cf1d67dde4359b510104c9d724c4bd695ccf480325"
+    },
+    {
+      "path": "/workspace/team-b-worktree/9to1 Workspace/Wave/WaveProject.cs",
+      "sha256": "cec6c96574781a5a7c61d3bdc2ecbcce623b874a64bccd3af19fb383a6ddf4b6"
+    }
+  ],
+  "harness_sha256": "8f9a0d354b120c312c7bfe609d8a8b4895ca0c7da529ec6f9b828af8cd5585df",
+  "self_test_assertions": 28,
+  "browser_acceptance": false
+}

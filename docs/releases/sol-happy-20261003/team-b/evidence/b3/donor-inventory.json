@@ -1,0 +1,128 @@
+[
+  {
+    "app": "Browse",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Browse/Source/DONOR-PROVENANCE.md",
+        "sha256": "12754b98da4111e2d9d6e4dd1074723c04ac620446d96debae5877660f91ba6d",
+        "text": "# Browse Firefox/Gecko source\n\nCanonical Mozilla repository: https://hg.mozilla.org/mozilla-central . Its GitHub Git-SHA mirror https://github.com/mozilla/gecko-dev (`master`) and controlled fork https://github.com/CroakyJake12/gecko-dev are both pinned to mirror commit `5836a062726f715fda621338a17b51aff30d0a8c` (selected 2026-09-24 UTC). Actual unmodified source is in `Source/FirefoxGecko/`, with MPL-2.0 in `Source/FirefoxGecko/LICENSE`. No patches. This does **not** provide a registered Gecko host or rendered-page evidence; `docs/architecture/browse.md` remains the integration boundary.\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Dev",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Dev/Source/DONOR-PROVENANCE.md",
+        "sha256": "490f94084c2fe34ba954b6f419fa69a630c08c1581558d215049eeacfe25f2c1",
+        "text": "# Dev editor-service donor sources\n\nSelected from live upstream default branches 2026-09-24 UTC. No donor source modifications or patches. The existing read-only Dev app does not yet run these editor services.\n\n| Donor | Upstream URL and commit | Controlled fork URL and commit | Source | Licence files retained |\n| --- | --- | --- | --- | --- |\n| VSCodium | https://github.com/VSCodium/vscodium @ `5a73682ca091082675b10c9dc3f348c1d824d94f` (tag `1.135.06055`) | https://github.com/CroakyJake12/vscodium @ `5a73682ca091082675b10c9dc3f348c1d824d94f` | `Source/VSCodium` | `LICENSE` (MIT) |\n| Code - OSS | https://github.com/microsoft/vscode @ `4212437dd11e9c7e728caa26a269540c87343930` | https://github.com/CroakyJake12/vscode @ `4212437dd11e9c7e728caa26a269540c87343930` | `Source/CodeOSS` | `LICENSE.txt` (MIT) |\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Mail",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Mail/DONOR-PARITY.md",
+        "sha256": "042dd2ed1ef0c2e70e4a8ca52cf781c98f38d501fcd85f5b02e7aa58af26b51f",
+        "text": "# Mail donor-parity manifest\n\n**Preferred technical donor:** Mozilla Thunderbird (`mozilla/releases-comm-central`, `comm-release`).\n\n**Revision status:** OPEN \u2014 exact source commit/tag was not available from the current checkout or external Git transport. A read-only Git source lookup failed with Windows Schannel `SEC_E_NO_CREDENTIALS`; no Thunderbird source was imported. Before claiming donor parity or shipping a derivative, the release owner must pin the exact Thunderbird revision and review that revision's MPL and third-party notices.\n\n| Capability | Mail disposition | Current evidence/state |\n|---|---|---|\n| IMAP/SMTP, STARTTLS/TLS, cancellable protocol calls | Replace with 9to1-native equivalent | MailKit 4.18.0 adapter uses secure transport options and Home-provided opaque credential resolution; live provider exercise is not run. |\n| MIME parsing and composing | Replace with 9to1-native equivalent | MimeKit is brought by MailKit; generic inbox MIME fields and text/HTML bodies are projected. |\n| Draft persistence and conflict preservation | Replace with 9to1-native equivalent | Encrypted local state, revisions, and two-version conflict field are implemented and covered by focused tests. |\n| Offline operations and queued sending | Replace with 9to1-native equivalent | Durable operation journal and queued-send/undo lifecycle are implemented; replay/reconciliation host is not wired. |\n| Folders, labels, threading and provider-specific behavior | Preserve where supported; OPEN for provider completeness | Generic IMAP folders and account-scoped local thread grouping are represented. Gmail labels, Outlook folders/categories and cross-folder sync need provider-specific validation. |\n| Search | Replace with 9to1-native equivalent | Local indexed-content scan covers sender, recipients, subject, body, attachment names, date/account/folder/read/star/category filters; smart views persist as queries. |\n| Junk/spam | Preserve via provider-aware operation | Junk capability is declared when provided by an adapter, but mark-junk/not-junk operations need full adapter and UI integration. |\n| OpenPGP and S/MIME signing/encryption | OPEN | MimeKit supports PGP/MIME and S/MIME, but platform key/certificate stores and user workflows are not wired. |\n| Message source, raw MIME, advanced headers | Replace with 9to1-native equivalent | Typed message metadata includes Internet Message-ID and authentication results; raw MIME/header inspection UI is not implemented. |\n| Thunderbird chrome, dialogs, pane styling and proprietary AI | Not applicable | Product requirement prohibits donor-native UI and donor AI/subscription features. |\n\nNo Thunderbird source code or artwork is included. The exact donor revision and resulting license/notice obligations remain release blockers.\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Motion",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Motion/Source/DONOR-PROVENANCE.md",
+        "sha256": "581ae72aa54cbf58480932fb8488778a1a1cd54ef24e9b8ba4c831eb4cab2f31",
+        "text": "# Motion GStreamer/GES donor source\n\nSelected from default branches 2026-09-24 UTC, unmodified and unpatched. The current Motion media inspector is first-party; playback, editing, rendering and export remain unavailable. Newer GES is in the GStreamer monorepo; standalone GES's latest default-branch HEAD is historical `1.19.2`.\n\nGStreamer's canonical monorepo is https://gitlab.freedesktop.org/gstreamer/gstreamer ; the listed GitHub mirror matched its HEAD at selection.\n\n| Donor | Upstream URL and commit | Controlled fork URL and commit | Source | Licence retained |\n| --- | --- | --- | --- | --- |\n| GStreamer | https://github.com/GStreamer/gstreamer @ `83e7df9168dd73f5dcd1caa60195a9d9dce558b4` | https://github.com/CroakyJake12/gstreamer @ `83e7df9168dd73f5dcd1caa60195a9d9dce558b4` | `Source/GStreamer` | `LICENSE` (LGPL-2.1-or-later; plugins vary) |\n| GES | https://github.com/GStreamer/gst-editing-services @ `fc34303569d2e522f261498f4351e4fc6f610302` (tag `1.19.2`) | https://github.com/CroakyJake12/gst-editing-services @ `fc34303569d2e522f261498f4351e4fc6f610302` | `Source/GES` | `COPYING`, `COPYING.LIB` (LGPL-2.0-or-later) |\n"
+      },
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Motion/PROVENANCE.md",
+        "sha256": "031be41092341e854cdae116d5df89d0305682b07a5287d63a62d1edd9935427",
+        "text": "# Motion capability provenance\n\nAuthoritative HavenOS base: `CroakyJake12/HavenAI` branch `havenos-main`, base commit `7b2acae6175e5c380a3812b531b90ca82dbf85c3`.\n\n## Capability boundary\n\nThe assigned baseline exposes the stable `motion` application route through the generic shell route contract, but the repository capability scan found no dedicated Motion editing, timeline, rendering, export, or Motion persistence engine that can be reused truthfully.\n\nThis standalone slice therefore adds only an independent `HavenOS Apps/Motion` capability surface. It preserves the route identity `motion` and fails closed: all engine-dependent capabilities remain explicitly unavailable.\n\nThe surface supports read-only header inspection for MP4, M4V, MOV, 3GP, WebM, Matroska, and AVI sources. It reports the recognized container and file size; it does not decode or play the media.\n\nThe slice does **not** claim or simulate timeline editing, keyframes, rendering, export, media encoding, or persistence. Those capabilities must remain disabled until a real implementation is present and validated.\n\n## Donor / licence status\n\nAt the time this first slice was implemented, no external donor was present. GStreamer and GES actual source is now materialised under `Source/GStreamer/` and `Source/GES/` at immutable revisions; see `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json`. The standalone GES latest default-branch HEAD is historical, while the GStreamer monorepo contains the newer GES implementation. Neither source is integrated with Motion's current read-only header inspector; playback, editing, rendering and export remain unavailable.\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Picture",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Picture/Source/DONOR-PROVENANCE.md",
+        "sha256": "499e70af293c401dac277c43ab63c8f0a48b359bfe52d4965c43c2e7ae00d27c",
+        "text": "# Pictures loader and viewer donors\n\nThe primary roadmap donor is **glycin/libglycin** (headless image loader); Loupe is the named GNOME viewer/interaction reference. The former `Picture/PROVENANCE.md` saying Loupe is *only* reference documentation is insufficient for the declared donor/parity obligation, so both actual sources are present here. Neither source is wired into the current C# viewer. Selected 2026-09-24 UTC; both trees are unmodified, with no patches.\n\nGNOME's canonical repositories are https://gitlab.gnome.org/GNOME/glycin and https://gitlab.gnome.org/GNOME/loupe ; their listed GitHub mirrors matched canonical HEADs at selection.\n\n| Donor | Upstream URL and commit | Controlled fork URL and commit | Source | Licence retained |\n| --- | --- | --- | --- | --- |\n| glycin | https://github.com/GNOME/glycin @ `84bed7782d1ae4486068a9ffbde691290c119909` | https://github.com/CroakyJake12/glycin @ `84bed7782d1ae4486068a9ffbde691290c119909` | `Source/glycin` | `LICENSE`, `LICENSE-MPL-2.0`, `LICENSE-LGPL-2.1` (MPL-2.0 OR LGPL-2.1-or-later) |\n| Loupe | https://github.com/GNOME/loupe @ `228003cb8755098bcb9859b3c8f2ded618633d47` | https://github.com/CroakyJake12/loupe @ `228003cb8755098bcb9859b3c8f2ded618633d47` | `Source/loupe` | `COPYING.md` (GPL-3.0-or-later) |\n"
+      },
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Picture/PROVENANCE.md",
+        "sha256": "b58f2a3e5877c874faff3588a624bff47a805317927b67da1f2cebf9e2b2cc8f",
+        "text": "# Images reference provenance\n\nObserved: 2026-08-30\n\n| Field | Record |\n| --- | --- |\n| Reference | GNOME Image Viewer (Loupe) |\n| Reference release | 50.0 (released 2026-03-13 according to the official Apps for GNOME listing) |\n| Official app page | https://apps.gnome.org/Loupe/ |\n| Official source repository | https://gitlab.gnome.org/GNOME/loupe |\n| Upstream license | GPL-3.0-or-later (SPDX identifier present in upstream source) |\n| Use in the historical first slice | Local file chooser \u2192 image view \u2192 browse adjacent images / inspect basic properties |\n| Current donor materialisation | Both glycin/libglycin and Loupe actual upstream source are pinned in `Source/`; see `Source/DONOR-PROVENANCE.md` |\n| Metadata reader | TagLib# `TagLibSharp` 2.3.0, package reference in `HavenOS.Images.csproj`; upstream https://github.com/mono/taglib-sharp; LGPL-2.1-or-later |\n\n## Boundary\n\nThe roadmap names glycin/libglycin as the image-loader donor; Loupe is the viewer/interaction donor. Both actual donor trees are now present separately from this app's original C#/Avalonia implementation, with upstream licences intact. This does not establish loader integration or Loupe UI parity. The historical reference-only classification above describes the *first implementation slice*, not an exemption from donor-source obligations.\n\nTagLib# is used only for supported image metadata reading and PNG metadata transfer/removal. Its format coverage is not treated as universal; unsupported metadata is reported as unavailable, and the location-removal export mode strips all metadata as a safer fallback.\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Planner",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Planner/Source/DONOR-PROVENANCE.md",
+        "sha256": "93417e0c7bb3d171331ce411bc06e3cef2efcb05149eeafd4750b21e8786ce8b",
+        "text": "# Planner external donors\n\nSelected 2026-09-24 UTC from current default branches. No upstream source files have been modified or patched. The existing 9-1 Planner is not yet an EDS/libical runtime proof.\n\nEvolution Data Server's canonical GitLab repository is https://gitlab.gnome.org/GNOME/evolution-data-server ; the listed GitHub mirror matched it at selection.\n\n| Donor | Upstream URL and commit | Controlled fork URL and commit | Source | Licence files retained |\n| --- | --- | --- | --- | --- |\n| Evolution Data Server | https://github.com/GNOME/evolution-data-server @ `ab6a103668edaf1d0e6ff999055a5be0982ee2a5` | https://github.com/CroakyJake12/evolution-data-server @ `ab6a103668edaf1d0e6ff999055a5be0982ee2a5` | `Source/EvolutionDataServer` | `COPYING` (LGPL family; inspect file-specific notices) |\n| libical | https://github.com/libical/libical @ `2d447a5fe8c0b2c406ad47d7a2e37406e53712bc` (`4.0` branch) | https://github.com/CroakyJake12/libical @ `2d447a5fe8c0b2c406ad47d7a2e37406e53712bc` | `Source/libical` | `LICENSE.txt`, `LICENSES/MPL-2.0.txt`, `LICENSES/LGPL-2.1-only.txt` (MPL-2.0 OR LGPL-2.1 for library; exceptions for tools) |\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Terminal",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Terminal/Source/DONOR-PROVENANCE.md",
+        "sha256": "debcaa7c1e0313b121b7451beb20d17ed0635e728dd9d617f6c0c46120aac32b",
+        "text": "# Terminal emulation donor\n\nUpstream https://github.com/neovim/libvterm (`nvim`) and controlled fork https://github.com/CroakyJake12/libvterm are both pinned to `934bc2fbf21800ac3458a499df8820ca5fb45fd3` (selected 2026-09-24 UTC). Actual unmodified source is in `Source/libvterm/`, with MIT `LICENSE` retained. No patches. ConPTY and OS PTY APIs are platform capabilities, not additional source donors; the libvterm adapter/runtime has not been validated.\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Wave",
+    "documents": [
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Wave/Source/DONOR-PROVENANCE.md",
+        "sha256": "ca6c863813f2597ca1e12f97ddb25d558d58b85054d3a79a00a01a26f2a69f8e",
+        "text": "# Wave GStreamer/GES donor source\n\nSelected from default branches 2026-09-24 UTC, unmodified and unpatched. The current Wave PCM reader/self-test is first-party; actual GStreamer/GES runtime integration remains outstanding. Current GES implementation also lives in the newer GStreamer monorepo; its separate upstream repository has latest default-branch HEAD at historical `1.19.2`.\n\nGStreamer's canonical monorepo is https://gitlab.freedesktop.org/gstreamer/gstreamer ; the listed GitHub mirror matched its HEAD at selection.\n\n| Donor | Upstream URL and commit | Controlled fork URL and commit | Source | Licence retained |\n| --- | --- | --- | --- | --- |\n| GStreamer | https://github.com/GStreamer/gstreamer @ `83e7df9168dd73f5dcd1caa60195a9d9dce558b4` | https://github.com/CroakyJake12/gstreamer @ `83e7df9168dd73f5dcd1caa60195a9d9dce558b4` | `Source/GStreamer` | `LICENSE` (LGPL-2.1-or-later; plugins vary) |\n| GES | https://github.com/GStreamer/gst-editing-services @ `fc34303569d2e522f261498f4351e4fc6f610302` (tag `1.19.2`) | https://github.com/CroakyJake12/gst-editing-services @ `fc34303569d2e522f261498f4351e4fc6f610302` | `Source/GES` | `COPYING`, `COPYING.LIB` (LGPL-2.0-or-later) |\n"
+      },
+      {
+        "path": "/workspace/team-b-worktree/9to1 Workspace/Wave/PROVENANCE.md",
+        "sha256": "f3db21f29960d38c6ea4c9ac7226e4cc3f4263e9581ffd86068470ed7964a52b",
+        "text": "# Wave donor / reference provenance\n\nAuthoritative HavenOS base: `CroakyJake12/HavenAI` branch `havenos-main`, base commit `7b2acae6175e5c380a3812b531b90ca82dbf85c3`.\n\n## Located reference\n\nThe first Wave slice is based on the repository's existing real-audio waveform journey rather than an invented external donor:\n\n- Introduction commit: `f7a3c051bdc0997860cd89f232689cf5ff4f93a3` (`int(PROJECT-CREATIVE): INT-008 add real audio waveforms`).\n- Current reference source: `src/Haven.Desktop/Views/Pages/Imagine/ImagineAudioWaveformCache.cs` on `havenos-main`.\n- Reference validation introduced with it: `tests/Haven.Desktop.Tests/ImagineAudioWaveformTests.cs`.\n- Behavioral anchors retained here: real local audio only, 512 bounded peak buckets, at most 1024 probed frames per bucket, and fail-closed decode behavior instead of fabricated waveform data.\n\nThis standalone slice uses the reference for behavior and migration provenance. It does not alter or delete the Imagine implementation.\n\n## Licence status\n\nThe donor/reference is first-party code in this same `CroakyJake12/HavenAI` repository. At the authoritative base commit, GitHub repository metadata reports `license: null`, and a root `LICENSE` file is not present. Therefore this slice does **not** assert an open-source licence that the repository has not declared.\n\nThe existing Imagine donor uses NAudio for decoding. This first Wave slice intentionally introduces no new package dependency and implements only a bounded 16-bit PCM WAV reader locally, so it does not copy or vendor NAudio code.\n\n## External pipeline donor (2026-09-24)\n\nThe declared GStreamer and GES backend source is now available under `Wave/Source/GStreamer/` and `Wave/Source/GES/` at exact fork/upstream revisions recorded in `Source/DONOR-PROVENANCE.md` and `eng/donor-sources.json`. This does not change the first-party PCM reader or claim a GStreamer runtime, editing pipeline, or plugin acceptance. The standalone GES repository's latest default-branch HEAD is historical; current GES code is also present within the pinned GStreamer monorepo.\n"
+      }
+    ],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  },
+  {
+    "app": "Stacks",
+    "documents": [],
+    "source_trees": [],
+    "behaviour_verified": false,
+    "warning": "Repository provenance statements are implementation evidence, not active canonical donor authority or runtime proof. Planner explicitly has no normative external donor at canonical556551."
+  }
+]

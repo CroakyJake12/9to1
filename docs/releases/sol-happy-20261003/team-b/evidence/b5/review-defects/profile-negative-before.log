@@ -1,0 +1,107 @@
+✖ profile update snapshots scalar fields before deferred token acquisition (23.149991ms)
+✖ post-call invalid fields and values cannot enter a validated profile patch (0.837578ms)
+✖ profile success must return exactly expected revision plus one (0.544357ms)
+✖ profile revision rejects unrepresentable next integer before token or network work (0.650087ms)
+✔ sequential server CAS success preserves wire body at normal and safe integer upper bounds (1.001704ms)
+✖ profile patch validates the same single scalar snapshot used for dispatch (0.471047ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 1
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83.209893
+
+✖ failing tests:
+
+test at apps/Web/Auth/account-api-client.profile-review.test.js:14:1
+✖ profile update snapshots scalar fields before deferred token acquisition (23.149991ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      expectedRevision: 1,
+      fields: {
+  +     job: 'Unapproved addition',
+  +     name: 'Unapproved edit'
+  -     name: 'Approved edit',
+  -     pronouns: null
+      }
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-astra-browser-validation/apps/Web/Auth/account-api-client.profile-review.test.js:28:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { expectedRevision: 1, fields: { name: 'Unapproved edit', job: 'Unapproved addition' } },
+    expected: { expectedRevision: 1, fields: { name: 'Approved edit', pronouns: null } },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at apps/Web/Auth/account-api-client.profile-review.test.js:31:1
+✖ post-call invalid fields and values cannot enter a validated profile patch (0.837578ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      expectedRevision: 1,
+      fields: {
+  +     entitlement: 'Business',
+        name: 'Approved edit'
+      }
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-astra-browser-validation/apps/Web/Auth/account-api-client.profile-review.test.js:44:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { expectedRevision: 1, fields: { name: 'Approved edit', entitlement: 'Business' } },
+    expected: { expectedRevision: 1, fields: { name: 'Approved edit' } },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at apps/Web/Auth/account-api-client.profile-review.test.js:48:1
+✖ profile success must return exactly expected revision plus one (0.544357ms)
+  AssertionError [ERR_ASSERTION]: revision 1 must not acknowledge CAS success
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-astra-browser-validation/apps/Web/Auth/account-api-client.profile-review.test.js:53:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at apps/Web/Auth/account-api-client.profile-review.test.js:59:1
+✖ profile revision rejects unrepresentable next integer before token or network work (0.650087ms)
+  TypeError: Cannot read properties of undefined (reading 'code')
+      at TestContext.<anonymous> (file:///workspace/team-b-astra-browser-validation/apps/Web/Auth/account-api-client.profile-review.test.js:66:31)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at apps/Web/Auth/account-api-client.profile-review.test.js:80:1
+✖ profile patch validates the same single scalar snapshot used for dispatch (0.471047ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file:///workspace/team-b-astra-browser-validation/apps/Web/Auth/account-api-client.profile-review.test.js:90:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,897 @@
+{
+  "runId": "sol-happy-20261003",
+  "scope": "30 explicit app sections plus four Terra-form standalone sections. This is an assigned section inventory, not full semantic or donor-operation decomposition.",
+  "sourceRevision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "currentSourceManifest": "evidence/source/recheck/manifest.json",
+  "platformCoverageComplete": false,
+  "semanticRequirementInventoryComplete": false,
+  "fullApplicableMandatoryRequirementTotal": null,
+  "verifiedCompleteDeployedApps": 0,
+  "assignedAppSections": 34,
+  "defaultBrowserRequiredAppSections": 33,
+  "documentedWebExemptAppSections": 1,
+  "apps": [
+    {
+      "app": "Home",
+      "owner": "B1",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 144391,
+        "end": 144396,
+        "heading": "HEADING_2",
+        "text": "Home\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "IMPLEMENTED-UNVERIFIED",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b1/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "9to1 Admin",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 199546,
+        "end": 199557,
+        "heading": "HEADING_2",
+        "text": "9to1 Admin\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Files",
+      "owner": "B4",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 218588,
+        "end": 218594,
+        "heading": "HEADING_2",
+        "text": "Files\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b4/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Connect",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 245455,
+        "end": 245463,
+        "heading": "HEADING_2",
+        "text": "Connect\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Mail",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 270648,
+        "end": 270653,
+        "heading": "HEADING_2",
+        "text": "Mail\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Games",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 290972,
+        "end": 290978,
+        "heading": "HEADING_2",
+        "text": "Games\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Spaces",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 320608,
+        "end": 320615,
+        "heading": "HEADING_2",
+        "text": "Spaces\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Vision & Voice",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 355446,
+        "end": 355461,
+        "heading": "HEADING_2",
+        "text": "Vision & Voice\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "AI Studio",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 383080,
+        "end": 383090,
+        "heading": "HEADING_2",
+        "text": "AI Studio\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Play",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 410681,
+        "end": 410686,
+        "heading": "HEADING_2",
+        "text": "Play\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Write",
+      "owner": "B2",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 426395,
+        "end": 426401,
+        "heading": "HEADING_2",
+        "text": "Write\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b2/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Present",
+      "owner": "B2",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 456068,
+        "end": 456076,
+        "heading": "HEADING_2",
+        "text": "Present\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b2/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Canvas",
+      "owner": "B2",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 488942,
+        "end": 488949,
+        "heading": "HEADING_2",
+        "text": "Canvas\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b2/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Boards",
+      "owner": "B2",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 526502,
+        "end": 526509,
+        "heading": "HEADING_2",
+        "text": "Boards\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b2/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Planner",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 555689,
+        "end": 555697,
+        "heading": "HEADING_2",
+        "text": "Planner\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Automations",
+      "owner": "B5",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 580796,
+        "end": 580808,
+        "heading": "HEADING_2",
+        "text": "Automations\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b5/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Picture",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 603735,
+        "end": 603743,
+        "heading": "HEADING_2",
+        "text": "Picture\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Wave",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 631740,
+        "end": 631745,
+        "heading": "HEADING_2",
+        "text": "Wave\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Motion",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 658708,
+        "end": 658715,
+        "heading": "HEADING_2",
+        "text": "Motion\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Data",
+      "owner": "B2",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 688672,
+        "end": 688677,
+        "heading": "HEADING_2",
+        "text": "Data\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b2/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Forms",
+      "owner": "B2",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 734947,
+        "end": 734953,
+        "heading": "HEADING_2",
+        "text": "Forms\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b2/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Dev",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 771113,
+        "end": 771117,
+        "heading": "HEADING_2",
+        "text": "Dev\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Stacks",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 812451,
+        "end": 812458,
+        "heading": "HEADING_2",
+        "text": "Stacks\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Sites",
+      "owner": "B4",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 862474,
+        "end": 862480,
+        "heading": "HEADING_2",
+        "text": "Sites\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b4/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Terminal",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 911016,
+        "end": 911025,
+        "heading": "HEADING_2",
+        "text": "Terminal\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Mini Computer",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 942216,
+        "end": 942230,
+        "heading": "HEADING_2",
+        "text": "Mini Computer\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "EXEMPT_WHILE_DOCUMENTED_HOSTED_COMPUTE_BLOCKER_PERSISTS",
+      "capabilityState": "BLOCKED",
+      "requiredAcceptanceOutcome": "NOT_APPLICABLE_EXEMPTION_WITH_REEVALUATION_REQUIRED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ],
+      "exceptionBasis": [
+        {
+          "start": 113413,
+          "end": 113765,
+          "text": "Web exemption is permitted only when the product’s core function requires infrastructure, privileged device access or hosted compute that CAKE does not currently provide. Each exemption MUST state the blocking capability/infrastructure. Exemptions MUST be re-evaluated when that blocker is removed; exemption is not a permanent product classification.\n"
+        },
+        {
+          "start": 113786,
+          "end": 113929,
+          "text": "Mini Computer — a useful web version would require hosted virtualisation/server compute that CAKE does not currently have capacity to provide.\n"
+        },
+        {
+          "start": 113930,
+          "end": 114170,
+          "text": "Mini Computer may gain a hosted web mode in the future as a 9to1 subscription capability if sufficient server compute is available. The same principle applies to future apps whose meaningful web implementation requires paid hosted compute.\n"
+        }
+      ]
+    },
+    {
+      "app": "Browse",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 979978,
+        "end": 979985,
+        "heading": "HEADING_2",
+        "text": "Browse\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Maps",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1000553,
+        "end": 1000558,
+        "heading": "HEADING_2",
+        "text": "Maps\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Launcher",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1020186,
+        "end": 1020195,
+        "heading": "HEADING_2",
+        "text": "Launcher\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ],
+      "scopeDecision": "OPEN: native Android/OS product purpose versus default web rule; retain required web status until explicit canonical resolution."
+    },
+    {
+      "app": "Shelf",
+      "owner": "B3",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1026640,
+        "end": 1026646,
+        "heading": "HEADING_2",
+        "text": "Shelf\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b3/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Link",
+      "owner": "B4",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1274868,
+        "end": 1274873,
+        "heading": "HEADING_1",
+        "text": "Link\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b4/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Prototype",
+      "owner": "B4",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1282889,
+        "end": 1282899,
+        "heading": "HEADING_1",
+        "text": "Prototype\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b4/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Paths",
+      "owner": "B4",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1288758,
+        "end": 1288764,
+        "heading": "HEADING_1",
+        "text": "Paths\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b4/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    },
+    {
+      "app": "Replay",
+      "owner": "B4",
+      "canonicalSection": {
+        "tab": "t.0",
+        "start": 1293887,
+        "end": 1293894,
+        "heading": "HEADING_1",
+        "text": "Replay\n"
+      },
+      "platform": "browser/web",
+      "browserApplicability": "REQUIRED",
+      "capabilityState": "MISSING",
+      "requiredAcceptanceOutcome": "NOT_RUN/BLOCKED",
+      "completeAppVerified": false,
+      "declaredBrowserMatrix": "OPEN: SH-13, no approved browser/version policy",
+      "operationMap": "evidence/b4/requirements.json",
+      "runtimeDependencies": [
+        "source CUI/owner app adapters",
+        "real canonical authenticated service protocols",
+        "identified non-production frontend/backend deployment",
+        "tested native client for cross-client continuity"
+      ]
+    }
+  ],
+  "additionalMandatoryCapabilityGroups": [
+    {
+      "name": "Variants",
+      "kind": "integrated owner capability",
+      "owners": [
+        "B4",
+        "B2",
+        "B3"
+      ],
+      "maps": [
+        "evidence/b4/variants-matrix.json",
+        "evidence/b3/requirements.json"
+      ],
+      "acceptance": "NOT_RUN/BLOCKED"
+    },
+    {
+      "name": "CAKE ID, profiles, subscriptions, entitlements, organisation, Admin, integrations",
+      "kind": "shared service and account obligations",
+      "owner": "B5",
+      "map": "evidence/b5/requirements.json",
+      "acceptance": "NOT_RUN/BLOCKED"
+    },
+    {
+      "name": "General Rules, CUI, Dulche, Voice, Translate, Agents, Action Graph, Runtime, Den, Generative UI, Background Learning and Go reusable contracts",
+      "kind": "inherited framework/embedded obligations; full applicability/decomposition incomplete",
+      "owner": "B1/B5/B6 with Team A shared owner",
+      "maps": [
+        "evidence/b1/requirements.json",
+        "evidence/b6/framework-source-coverage.json"
+      ],
+      "acceptance": "NOT_RUN/BLOCKED",
+      "goCanonicalRole": "OS primitive, not a separate heavyweight application; same Go framework may be embedded as scoped search. Full OS workflows remain Team A owned."
+    },
+    {
+      "name": "Terra-form common and cross-app API/navigation/source identity",
+      "kind": "inherited all-app obligations",
+      "owner": "B4 with all app owners",
+      "map": "evidence/b4/requirements.json",
+      "acceptance": "NOT_RUN/BLOCKED"
+    }
+  ],
+  "explicitDeferredScope": [
+    {
+      "start": 1342219,
+      "end": 1342620,
+      "text": "Training Lab is an explicitly deferred AI Studio project/surface and is OUT OF SCOPE for the release candidate. It is reserved for future model-training/fine-tuning and related dataset/training workflows, but its exact product scope, supported training methods/backends, dataset model, safety constraints, artifact formats, resource scheduling, APIs and acceptance requirements are not yet specified.\n"
+    }
+  ]
+}

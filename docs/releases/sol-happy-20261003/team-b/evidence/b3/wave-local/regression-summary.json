@@ -1,0 +1,45 @@
+{
+  "source_subset": "Unchanged Program.cs and WaveProject.cs source-linked .NET10 harness; original Wave csproj and its shared Infrastructure references NOT built",
+  "commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "source_hashes": [
+    {
+      "path": "/workspace/team-b-worktree/9to1 Workspace/Wave/Program.cs",
+      "sha256": "e41337ab4f3b9346805f05cf1d67dde4359b510104c9d724c4bd695ccf480325"
+    },
+    {
+      "path": "/workspace/team-b-worktree/9to1 Workspace/Wave/WaveProject.cs",
+      "sha256": "cec6c96574781a5a7c61d3bdc2ecbcce623b874a64bccd3af19fb383a6ddf4b6"
+    }
+  ],
+  "self_test": {
+    "command": "DOTNET_CLI_HOME=/workspace/team-b-evidence/sol-happy-20261003/b3/dotnet-home NUGET_PACKAGES=/workspace/team-b-evidence/sol-happy-20261003/b3/nuget TMPDIR=/workspace/team-b-evidence/sol-happy-20261003/b3/tmp DOTNET_NOLOGO=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 /workspace/.tools/dotnet/dotnet run --project /workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/WaveLocalRegression.csproj -c Release -- --self-test",
+    "test_cases": 1,
+    "inspected_sequential_assertions": 28,
+    "result": "PASS",
+    "exit": 0,
+    "log": "self-test.log"
+  },
+  "independent_cli": {
+    "command": "python /workspace/team-b-evidence/sol-happy-20261003/b3/wave-local/independent_cli_checks.py",
+    "discovered": 9,
+    "executed": 9,
+    "passed": 9,
+    "exit": 0,
+    "log": "independent-cli.log",
+    "structured_results": "independent-cli-results.json"
+  },
+  "initial_test_error": "Hex text casing assumption corrected with root and B6 independent approval; initial failure kept in initial-hex-case-failure.log and correction documented in test-correction.json",
+  "browser_requirement_outcomes_changed": false,
+  "full_app_build_verified": false,
+  "native_installed_app_verified": false,
+  "provider_runtime_verified": false,
+  "browser_verified": false,
+  "limits": [
+    "PCM16-only WAV local subset",
+    "Absolute source paths/app-local SourceReferenceID, not canonical Files identity",
+    "No multitrack/sequencer/native-generation browser UI",
+    "No CUI editor/AI/provider pipeline",
+    "No production/staging deployment"
+  ],
+  "manifest_sha256": "cdc77242fa900c49975d3eceeaf00888cda6c28a998bd2bbafa38d4b1dce3e9f"
+}

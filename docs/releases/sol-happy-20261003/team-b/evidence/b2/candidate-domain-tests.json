@@ -1,0 +1,413 @@
+{
+  "Write": [
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteDocxFidelityTests.cs",
+      "candidate_test_symbols": [
+        "Rich_docx_export_emits_word_formatting_and_round_trips_supported_features",
+        "Docx_import_reads_independent_wordprocessingml_formatting_and_external_link_metadata",
+        "Dispose",
+        "Dispose"
+      ],
+      "sha256": "0ff96df4fd4068bf9f4512d51b302e9fcad93699eb85d193bd8980f0fa3c4259",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteSelectionFormattingTests.cs",
+      "candidate_test_symbols": [
+        "Selection_formatting_only_changes_highlighted_text",
+        "Selection_formatting_spans_existing_runs_without_touching_outer_text",
+        "Comment_targets_selected_text_range"
+      ],
+      "sha256": "713f8415101f312b16868371a2520f2ed7567f1315950541f778795dc1ed60f4",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteWordProcessorTests.cs",
+      "candidate_test_symbols": [
+        "Editor_supports_word_processor_formatting_structure_layout_review_and_history",
+        "Text_editing_preserves_existing_run_formatting",
+        "Document_range_selection_replaces_text_across_paragraphs_as_one_edit",
+        "Document_enter_backspace_and_selection_formatting_follow_word_processor_boundaries"
+      ],
+      "sha256": "ff1cce599030a500b763b19de53dc6ebb7c8b3aff00fb6cee73ffa5ad5172ece",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteTableEditingTests.cs",
+      "candidate_test_symbols": [
+        "Insert_table_uses_requested_dimensions",
+        "Row_and_column_edits_follow_the_active_cell",
+        "Merge_and_split_preserve_persisted_column_spans_and_history"
+      ],
+      "sha256": "1251cc4a94b3fe99de47a91f3c321c0273ac763ab577fdb0ff462fb1bd831eb5",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteReviewedAiAndPageBreakTests.cs",
+      "candidate_test_symbols": [
+        "Insert_page_break_is_structural_and_round_trips_through_history",
+        "Applying_reviewed_ai_change_preserves_unaffected_rich_text_runs",
+        "Rejecting_ai_change_leaves_document_content_unchanged"
+      ],
+      "sha256": "0d73cc9a53dfb8645211d1aa75ede4c0f43bafb32d774f1c9131471a69160527",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/WriteNativeDocumentPackageStoreTests.cs",
+      "candidate_test_symbols": [
+        "Save_and_open_preserve_structured_document_identity_and_content",
+        "Open_rejects_changed_document_bytes_without_returning_a_partial_document",
+        "Open_rejects_unsupported_manifest_version",
+        "Failed_save_keeps_existing_destination_intact",
+        "Open_rejects_traversal_entries",
+        "Dispose"
+      ],
+      "sha256": "f1baa6a612ee8a7dbf77e94c18d528a5ed1b403fd13d8f9c4f2c3647bb281303",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    }
+  ],
+  "Present": [
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Core.Tests/PresentStructuredObjectTests.cs",
+      "candidate_test_symbols": [
+        "Table_has_exact_dimensions_and_structural_edits_are_undoable",
+        "Chart_preserves_type_data_and_style_through_editor_history"
+      ],
+      "sha256": "85bbc0daf3b6b7b081d75e3d40bf10e2790520874a8cb7548926da3e338baf2c",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/PresentAdvancedAuthoringTests.cs",
+      "candidate_test_symbols": [
+        "Present_editor_design_transition_animation_and_media_settings_are_real_undoable_state",
+        "Present_advanced_inspector_changes_theme_transition_hidden_state_and_adds_animation",
+        "Present_mode_opens_real_presenter_reveals_animation_then_advances_and_exits",
+        "DeleteAsync"
+      ],
+      "sha256": "bbe84fc9b0eb8097fab4e4748c8e78cf50f98bbfa4e9f205f098e5952ed890fd",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/PresentProductionTests.cs",
+      "candidate_test_symbols": [
+        "Infrastructure_registers_present_repository_and_exporter",
+        "Editor_transforms_multi_selection_atomically_and_undoes_the_direct_gesture",
+        "Repository_round_trip_preserves_slides_notes_and_haven_elements",
+        "Repository_rejects_stale_revision_without_overwriting_or_advancing_stale_copy",
+        "Saving_unreadable_current_requires_explicit_recovery_and_preserves_its_bytes",
+        "Recovered_editor_cannot_replace_a_newer_valid_current",
+        "Duplicating_slide_allocates_new_slide_and_notes_identities",
+        "Legacy_slide_without_notes_id_has_stable_identity_across_reopens",
+        "Repository_recovers_previous_valid_deck_and_preserves_backup_when_recommitted",
+        "Pptx_export_writes_real_parts_and_truthful_haven_fallbacks",
+        "Native_package_round_trips_presentation_state_and_embedded_assets",
+        "Native_package_refuses_to_omit_an_unavailable_asset",
+        "Dispose",
+        "Dispose"
+      ],
+      "sha256": "3dc8307ff4e4264ce6d17b44c6e208a0878c8b8d10e0500d8bdaa4657d15507f",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    }
+  ],
+  "Canvas": [
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CanvasBoardLifecycleTests.cs",
+      "candidate_test_symbols": [
+        "Multi_board_round_trip_preserves_identity_titles_and_content",
+        "Recovered_interactions_keep_history_lasso_and_chunk_eraser",
+        "Dispose",
+        "Dispose"
+      ],
+      "sha256": "3548f3d7f3e6c45055c870461ff1ef4ab238f9966c5d891d7d7425442e70bc35",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/CanvasProductionTests.cs",
+      "candidate_test_symbols": [
+        "Controller_supports_object_gestures_history_connections_grouping_and_locks",
+        "Ink_preserves_pressure_tilt_supports_undo_redo_and_eraser",
+        "Canvas_native_format_and_notes_repository_round_trip_and_recover_last_valid_board",
+        "Ghost_visibility_hides_unrevealed_layer_content_without_mutating_the_board",
+        "Diagonal_line_layout_is_centered_before_rotation",
+        "Multi_selection_supports_marquee_atomic_transform_clipboard_and_undo",
+        "Rotated_hit_testing_matches_visible_geometry",
+        "Hundreds_of_canvas_objects_transform_without_rebuilding_the_model",
+        "Dispose",
+        "Dispose"
+      ],
+      "sha256": "d63b6d2fc8030a205c7f6f759a48f40d7c3a81bdf84f823e640f2f5666576daf",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Canvas/Tests/CanvasAppSurfaceTests.cs",
+      "candidate_test_symbols": [
+        "CreateManipulateInkPanUndoRedoKeepsCanonicalCanvasDocument",
+        "AttachRejectsOrdinaryNotesDocument",
+        "Pan_does_not_append_its_endpoint_to_an_in_progress_pen_stroke",
+        "Invalid_stroke_batch_is_rejected_before_changing_an_active_gesture_or_document",
+        "Invalid_pan_coordinates_do_not_interrupt_an_active_ink_stroke"
+      ],
+      "sha256": "ebb98edf0f188332b53590e4816a9a7656819f1a2042767cb521ab9496c23ae5",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Canvas/Tests/CanvasArtifactCodecTests.cs",
+      "candidate_test_symbols": [
+        "Native_format_round_trip_preserves_stable_identity_mode_and_structured_ink",
+        "Unknown_optional_fields_survive_decode_and_reencode",
+        "Unsupported_format_and_schema_versions_are_rejected_without_guessing",
+        "Invalid_page_object_and_layer_references_are_reported_as_typed_validation_issues",
+        "Paged_mode_requires_explicit_positive_page_bounds",
+        "Malformed_json_has_a_stable_invalid_document_error"
+      ],
+      "sha256": "74d038a0c12e0f06e17fcee715e28fb6944d9abae66bbca273dde8eb17bb44d5",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Canvas/Tests/CanvasWorkspacePersistenceTests.cs",
+      "candidate_test_symbols": [
+        "Create_edit_save_and_reopen_preserves_canvas_identity_and_spatial_state",
+        "Open_returns_null_for_missing_documents_and_rejects_non_canvas_notes",
+        "DeleteAsync"
+      ],
+      "sha256": "46db8945815cc622ca676fdd08c9d7b0636ffd7a8a7e58d20f9a737964fd04ad",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    }
+  ],
+  "Boards": [
+    {
+      "file": "9to1 Workspace/Boards/tests/HavenBoardGroupCardCrudTests.cs",
+      "candidate_test_symbols": [
+        "Create_group_appends_with_stable_id_and_bumps_version",
+        "Create_group_supports_donor_insert_index_and_clamps_edges",
+        "Create_group_rejects_duplicate_blank_and_oversized_ids",
+        "Create_group_normalises_blank_title",
+        "Remove_group_drops_cards_frames_and_orphans_external_children",
+        "Remove_group_rejects_unknown_id",
+        "Remove_card_drops_frame_and_orphans_children_without_touching_siblings",
+        "Remove_card_rejects_unknown_id",
+        "Rename_card_updates_title_and_normalises_blank",
+        "Rename_card_rejects_unknown_id",
+        "Event_adapter_maps_donor_crud_shapes_to_typed_commands",
+        "Structural_collaboration_boundary_accepts_group_and_card_crud",
+        "Generative_planner_accepts_group_and_card_crud_with_preview",
+        "Generative_planner_rejects_generated_group_id_abuse"
+      ],
+      "sha256": "b434abbfe541ddf41caea12128809f95104b2c732387d931cc01a2c20521fd4b",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Boards/tests/HavenBoardCollaborationContractTests.cs",
+      "candidate_test_symbols": [
+        "Batch_factory_freezes_structural_commands_and_retains_identity",
+        "Batch_factory_rejects_attachment_smuggling_unsafe_ids_and_oversized_batches",
+        "Disabled_sync_adapter_never_claims_remote_delivery_or_returns_remote_data",
+        "Owner_only_permission_provider_allows_only_exact_configured_actor"
+      ],
+      "sha256": "bc6391e07dc6862dd618d30577160945f9425e72787de34b37fdbaf2ad4ab3fd",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Boards/tests/HavenRichBoardV3Tests.cs",
+      "candidate_test_symbols": [
+        "Subscript_superscript_and_mixed_baselines_survive_reopen",
+        "Run_font_size_colors_and_clear_formatting_survive_reopen",
+        "Paragraph_alignment_spacing_and_indent_survive_reopen",
+        "Built_in_styles_resolve_with_sensible_defaults",
+        "Heading_4_to_6_style_ids_round_trip_and_v2_migration_seeds_them",
+        "Custom_style_lifecycle_apply_persist_reopen_delete_fallback",
+        "Built_in_styles_cannot_be_deleted_and_direct_props_win",
+        "Checklist_items_add_remove_nest_format_and_reopen",
+        "Table_structure_style_and_formatted_cells_survive_reopen",
+        "Graph_expression_evaluator_is_deterministic_and_safe",
+        "Graph_block_full_lifecycle_survives_reopen_editable",
+        "Image_and_divider_blocks_survive_reopen",
+        "Ink_tools_pressure_eraser_selection_and_view_survive_reopen",
+        "RC1_native_ink_without_tool_fields_migrates_with_pen_defaults",
+        "Undo_redo_round_trip_and_reopen_shows_undone_state",
+        "Six_mb_attachment_embeds_and_round_trips",
+        "Large_attachment_uses_portable_sidecar_and_survives_move",
+        "V2_RC1_content_migrates_losslessly_to_v3",
+        "Failed_migration_preserves_original_bytes",
+        "Substantial_board_opens_saves_and_edits_within_generous_bounds",
+        "Canvas_objects_move_resize_retext_and_remove_with_reopen"
+      ],
+      "sha256": "06cfc3d4a602db0ef68def7bab6effd421b5374551015a9c35de8ade19abd7f2",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Boards/tests/HavenBoardContractTests.cs",
+      "candidate_test_symbols": [
+        "Move_within_group_matches_appflowy_remove_then_insert_semantics",
+        "Move_between_groups_inserts_at_requested_appflowy_index",
+        "Move_group_reorders_without_changing_card_identity",
+        "Duplicate_card_ids_are_rejected",
+        "Card_parent_can_be_set_across_groups_and_cleared",
+        "Missing_and_self_parent_assignments_are_rejected",
+        "Parent_cycle_is_rejected_without_publishing_mutated_snapshot",
+        "Moving_nested_card_between_groups_preserves_parent_identity",
+        "Snapshot_validator_rejects_missing_parent_existing_cycle_and_duplicate_ids",
+        "Attachment_metadata_is_added_and_removed_through_typed_commands",
+        "Round_trip_preserves_order_hierarchy_and_attachments",
+        "Corrupt_primary_recovers_previous_durable_backup",
+        "Unsafe_board_id_is_rejected_before_path_resolution",
+        "Physical_document_has_identity_version_metadata_and_complete_snapshot",
+        "Legacy_json_is_imported_without_deleting_source_and_written_as_physical_document",
+        "Unsupported_future_schema_fails_safely_instead_of_returning_empty_board",
+        "Invalid_save_leaves_previous_valid_physical_document_usable",
+        "Corrupt_primary_reports_backup_recovery_without_replacing_corrupt_bytes",
+        "Schema_zero_migration_is_in_memory_until_explicit_save_and_preserves_original_on_failure",
+        "Command_service_reduces_then_persists",
+        "Rename_preserves_stable_document_identity_and_content",
+        "Reordered_groups_survive_close_and_reopen",
+        "Copied_physical_document_opens_with_identical_content",
+        "Import_is_content_addressed_deduplicated_and_display_name_cannot_escape_storage",
+        "Import_over_size_limit_is_rejected_and_does_not_publish_blob",
+        "Unsafe_ids_and_malformed_local_references_are_rejected",
+        "Existing_deduplicated_blob_must_still_match_its_digest"
+      ],
+      "sha256": "237aa640ed588c2198d12262a3c06c298d38298897f5eee7c9c77d6dae8937e0",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    }
+  ],
+  "Data": [
+    {
+      "file": "9to1 Workspace/Data/Tests/test_workers.py",
+      "candidate_test_symbols": [],
+      "sha256": "a3210ff8818eb2fa320354af009cc8fc97200bcc023e7f9c80dd6a219ba21b9e",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/test_calc_sort.py",
+      "candidate_test_symbols": [],
+      "sha256": "ae57b3ab7d06427f341c1afd9f5337c26f05a24ce596efca8f1c098ddd81d2dd",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/test_calc_formula_corpus.py",
+      "candidate_test_symbols": [],
+      "sha256": "15af1a557ff3bc5bd2e2f03d225f354ffdfbd5912e7d80cca9930679e9cc36cf",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/Program.cs",
+      "candidate_test_symbols": [
+        "DeleteNamedRangeAsync",
+        "InsertRowsAsync",
+        "DeleteRowsAsync",
+        "InsertColumnsAsync",
+        "DeleteColumnsAsync",
+        "RecalculateAsync",
+        "SaveAsync",
+        "CloseAsync",
+        "DisposeAsync",
+        "OpenAsync",
+        "ReplaceTableAsync",
+        "CloseAsync",
+        "DisposeAsync"
+      ],
+      "sha256": "c08b044234236785a7a2aa970fc7e2fae1ba252028c08ec5592b6f0dcd818d3f",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/test_calc_filter.py",
+      "candidate_test_symbols": [],
+      "sha256": "ff0072229cebdad10632cf34c22d095193f1a173011c5291f0b4147f4ca0351c",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/RuntimeProgram.cs",
+      "candidate_test_symbols": [
+        "DeleteNamedRangeAsync",
+        "InsertRowsAsync",
+        "DeleteRowsAsync",
+        "InsertColumnsAsync",
+        "DeleteColumnsAsync",
+        "RecalculateAsync",
+        "SaveAsync",
+        "CloseAsync",
+        "DisposeAsync"
+      ],
+      "sha256": "499f15ae02e4bf96852546986e3d9da89e726fe54a18a07a1676b9291c0d35ce",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/test_calc_structure.py",
+      "candidate_test_symbols": [],
+      "sha256": "b03907d996742215db9a95bb7bf711acb55ee6ccc4859e6cac951a4b0b8cdfb4",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/Data/Tests/test_duckdb_publish.py",
+      "candidate_test_symbols": [],
+      "sha256": "40585a9dc4e80b484783c52a0f2dae781394a398bc4f3e3ba91d534fda1f7c36",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    }
+  ],
+  "Forms": [
+    {
+      "file": "9to1 Workspace/Data/Tests/FormsStorageRuntimeProgram.cs",
+      "candidate_test_symbols": [],
+      "sha256": "4c1f8da8f1769b4428935ce698e6add1bf71a43996f4a45d0ee536c34336ed93",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsFormsDonorTests.cs",
+      "candidate_test_symbols": [
+        "MapsSafetyDisclaimerRemainsVisibleAndAccessibleAlongsideTransientStatus",
+        "MapsStructuredResponseBecomesAPlaceWithoutLosingProviderCoordinates",
+        "MapsFormRequiresAnEditableSavedName",
+        "FormsSubmissionRequiresANameOrAnonymousChoiceAndMessage"
+      ],
+      "sha256": "9fa69dd3698399a13d35db3641b041068f3b153f6fbae2cd4ff6b9b13ba1bf76",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    },
+    {
+      "file": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs",
+      "candidate_test_symbols": [
+        "Forms_responses_round_trip_in_the_Data_app_workbook_with_backup_recovery",
+        "Identical_normalised_retry_across_store_restart_does_not_change_workbook_revision_or_bytes",
+        "Divergent_reuse_of_response_id_returns_stable_conflict_without_changing_workbook",
+        "Concurrent_store_instances_do_not_overwrite_each_others_responses",
+        "Forms_response_fields_are_bounded_and_normalised_before_workbook_storage",
+        "Forms_typed_answers_keep_values_references_version_and_provenance_in_the_Data_workbook",
+        "Legacy_forms_response_rows_migrate_without_overwriting_user_columns",
+        "Response_history_is_not_evicted_and_keyset_pages_have_no_duplicates",
+        "Maps_migrates_legacy_places_to_the_Data_workbook_and_keeps_recent_history_local",
+        "Maps_updates_keep_user_added_Data_workbook_columns_intact",
+        "Dispose"
+      ],
+      "sha256": "acf3c407dc8a090e625f4b2a47c86e3ad13e0eff61a1cb6407817723ad144c33",
+      "outcome": "NOT_RUN",
+      "scope": "native/domain regression; not browser acceptance"
+    }
+  ]
+}

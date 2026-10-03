@@ -1,0 +1,9 @@
+{
+  "Properties": {
+    "ShouldIncludeNativeSkiaSharp": "false",
+    "ShouldIncludeNativeHarfBuzzSharp": "false"
+  },
+  "Items": {
+    "NativeFileReference": []
+  }
+}

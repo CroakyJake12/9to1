@@ -1,0 +1,204 @@
+{
+  "reviewer": "B6 independent validation",
+  "old_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "current_revision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+  "document_identity_equal": true,
+  "snapshot_integrity": [
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/source/paragraphs.json",
+      "sha256": "02c14e4f1bb6994ea66cf0bb0ae1383db0d71a3d855d45fc6ae7c18c7bf4464c",
+      "matches_manifest": true
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/source/canonical.txt",
+      "sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23",
+      "matches_manifest": true
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/source/recheck/paragraphs.json",
+      "sha256": "23b15530a4f453803303a141565277645007609033a9d4b24979e11d253ad477",
+      "matches_manifest": true
+    },
+    {
+      "path": "/workspace/team-b-evidence/sol-happy-20261003/source/recheck/canonical.txt",
+      "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+      "matches_manifest": true
+    }
+  ],
+  "active_scope_end_exclusive": 1342106,
+  "active_paragraph_records_compared": 9996,
+  "active_full_records_identical": true,
+  "total_paragraph_records": 10010,
+  "changed_full_records": 9,
+  "changed_text_records": 1,
+  "changes": [
+    {
+      "ordinal": 10001,
+      "old": {
+        "tab": "t.0",
+        "index": 1342161,
+        "end": 1342164,
+        "heading": "NORMAL_TEXT",
+        "text": "//\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342161,
+        "end": 1342366,
+        "heading": "NORMAL_TEXT",
+        "text": "// Study App Pass - App dedicated to studying (separate to the study space - more for things like building papers, interactive practice questions, etc). Shares subjects/context, etc, with the study space.\n"
+      },
+      "text_changed": true
+    },
+    {
+      "ordinal": 10002,
+      "old": {
+        "tab": "t.0",
+        "index": 1342164,
+        "end": 1342165,
+        "heading": "NORMAL_TEXT",
+        "text": "\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342366,
+        "end": 1342367,
+        "heading": "NORMAL_TEXT",
+        "text": "\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10003,
+      "old": {
+        "tab": "t.0",
+        "index": 1342165,
+        "end": 1342166,
+        "heading": "NORMAL_TEXT",
+        "text": "\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342367,
+        "end": 1342368,
+        "heading": "NORMAL_TEXT",
+        "text": "\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10004,
+      "old": {
+        "tab": "t.0",
+        "index": 1342166,
+        "end": 1342205,
+        "heading": "TITLE",
+        "text": "Pass tan(90): (OUT OF SCOPE) Choo Choo\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342368,
+        "end": 1342407,
+        "heading": "TITLE",
+        "text": "Pass tan(90): (OUT OF SCOPE) Choo Choo\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10005,
+      "old": {
+        "tab": "t.0",
+        "index": 1342205,
+        "end": 1342206,
+        "heading": "HEADING_1",
+        "text": "\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342407,
+        "end": 1342408,
+        "heading": "HEADING_1",
+        "text": "\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10006,
+      "old": {
+        "tab": "t.0",
+        "index": 1342206,
+        "end": 1342219,
+        "heading": "HEADING_1",
+        "text": "Training Lab\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342408,
+        "end": 1342421,
+        "heading": "HEADING_1",
+        "text": "Training Lab\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10007,
+      "old": {
+        "tab": "t.0",
+        "index": 1342219,
+        "end": 1342620,
+        "heading": "NORMAL_TEXT",
+        "text": "Training Lab is an explicitly deferred AI Studio project/surface and is OUT OF SCOPE for the release candidate. It is reserved for future model-training/fine-tuning and related dataset/training workflows, but its exact product scope, supported training methods/backends, dataset model, safety constraints, artifact formats, resource scheduling, APIs and acceptance requirements are not yet specified.\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342421,
+        "end": 1342822,
+        "heading": "NORMAL_TEXT",
+        "text": "Training Lab is an explicitly deferred AI Studio project/surface and is OUT OF SCOPE for the release candidate. It is reserved for future model-training/fine-tuning and related dataset/training workflows, but its exact product scope, supported training methods/backends, dataset model, safety constraints, artifact formats, resource scheduling, APIs and acceptance requirements are not yet specified.\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10008,
+      "old": {
+        "tab": "t.0",
+        "index": 1342620,
+        "end": 1342621,
+        "heading": "NORMAL_TEXT",
+        "text": "\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342822,
+        "end": 1342823,
+        "heading": "NORMAL_TEXT",
+        "text": "\n"
+      },
+      "text_changed": false
+    },
+    {
+      "ordinal": 10009,
+      "old": {
+        "tab": "t.0",
+        "index": 1342621,
+        "end": 1342909,
+        "heading": "NORMAL_TEXT",
+        "text": "Release-candidate AI Studio implementations MUST NOT expose Training Lab as an in-scope project type, navigation/sidebar entry, New Project option or partially functional placeholder. Future implementation requires a separate canonical specification before Training Lab becomes in scope.\n"
+      },
+      "new": {
+        "tab": "t.0",
+        "index": 1342823,
+        "end": 1343111,
+        "heading": "NORMAL_TEXT",
+        "text": "Release-candidate AI Studio implementations MUST NOT expose Training Lab as an in-scope project type, navigation/sidebar entry, New Project option or partially functional placeholder. Future implementation requires a separate canonical specification before Training Lab becomes in scope.\n"
+      },
+      "text_changed": false
+    }
+  ],
+  "source_identity_stale_for_original_maps": true,
+  "original_runtime_evidence_relabelled": false,
+  "affected_contract_broad_test_repetition_required": false,
+  "product_parity_verified": false,
+  "interpretation_complete": false,
+  "scope": "Exact snapshot record comparison including text, indices, headings and tab. Complete requirement applicability and clause decomposition remain unresolved."
+}

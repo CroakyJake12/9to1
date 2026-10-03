@@ -1,0 +1,47 @@
+{
+  "reviewer": "B6 independent validation",
+  "commit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "sdk_contract_path": "/workspace/.tools/dotnet/packs/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/10.0.12/runtimes/browser-wasm/native/dotnet.d.ts",
+  "sdk_contract_sha256": "3ff0ce7f64189fe1836500173232fbb23483e6f213b60a620db005984f347ec1",
+  "sdk_version": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm10.0.12",
+  "contract_excerpts": {
+    "builder_run": [
+      "    create(): Promise<RuntimeAPI>;",
+      "    /**",
+      "     * Runs the Main() method of the application and exits the runtime.",
+      "     * You can provide \"command line\" arguments for the Main() method using",
+      "     * - dotnet.withApplicationArguments([\"A\", \"B\", \"C\"])",
+      "     * - dotnet.withApplicationArgumentsFromQuery()",
+      "     * Note: after the runtime exits, it would reject all further calls to the API.",
+      "     * You can use runMain() if you want to keep the runtime alive.",
+      "     */",
+      "    run(): Promise<number>;"
+    ],
+    "runtime_runMain": [
+      "type RunAPIType = {",
+      "    /**",
+      "     * Runs the Main() method of the application.",
+      "     * Note: this will keep the .NET runtime alive and the APIs will be available for further calls.",
+      "     * @param mainAssemblyName name of the assembly with the Main() method. Optional. Default is the same as the .csproj name.",
+      "     * @param args command line arguments for the Main() method. Optional.",
+      "     * @returns exit code of the Main() method.",
+      "     */",
+      "    runMain: (mainAssemblyName?: string, args?: string[]) => Promise<number>;",
+      "    /**",
+      "     * Runs the Main() method of the application and exits the runtime.",
+      "     * Note: after the runtime exits, it would reject all further calls to the API.",
+      "     * @param mainAssemblyName name of the assembly with the Main() method. Optional. Default is the same as the .csproj name.",
+      "     * @param args command line arguments for the Main() method. Optional.",
+      "     * @returns exit code of the Main() method.",
+      "     */",
+      "    runMainAndExit: (mainAssemblyName?: string, args?: string[]) => Promise<number>;"
+    ]
+  },
+  "main_js_sha256": "08d6c3f45c0bbb2f63891b4c4f140343327951b29d590d04d95eaecfd799f1d0",
+  "diff": "commit c74c73c94a0d548653790a1e9d2a899df88e67b3\nAuthor: Jacob Bailey <jcbailey008@gmail.com>\nDate:   Sat Oct 3 18:39:48 2026 +0000\n\n    Keep the browser UI runtime alive after entry point completion\n\ndiff --git a/apps/Web/wwwroot/main.js b/apps/Web/wwwroot/main.js\nindex 50ed31a..97f9b7e 100644\n--- a/apps/Web/wwwroot/main.js\n+++ b/apps/Web/wwwroot/main.js\n@@ -16,7 +16,7 @@ try {\n     unsubscribe = platform.subscribe(exports.NineToOne.Web.Program.LocationChanged,\n         () => { unsubscribe(); exports.NineToOne.Web.Program.CloseShell(); },\n         exports.NineToOne.Web.Program.PrivateContextInvalidated);\n-    await dotnet.run();\n+    await runtime.runMain(config.mainAssemblyName, []);\n } catch (error) {\n     console.error('9to1 browser startup failed.', error);\n     platform.showStatus(isCompatible ? 'BrowserRuntimeUnavailable' : 'BrowserCapabilityUnavailable',\n",
+  "review": "Use actual created runtime API runMain(mainAssemblyName,[]) that keeps runtime/API alive after managed Main completes. Previous builder dotnet.run exits runtime. Catch remains truthful unavailable status and cause logging.",
+  "runtime_verification": "PENDING_FROZEN_PUBLISH_AND_B6_BROWSER_SLOT",
+  "previous_969_runtime_failure_preserved": true,
+  "production_edits": false,
+  "product_parity_verified": false
+}

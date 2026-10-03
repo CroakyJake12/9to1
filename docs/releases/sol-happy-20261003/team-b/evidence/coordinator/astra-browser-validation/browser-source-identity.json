@@ -1,0 +1,159 @@
+{
+  "originalCodeCommit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "isolatedValidationCommit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "checkedAt": "2026-10-03T17:50:18.777782+00:00",
+  "scope": "Byte comparison, not behavioural acceptance on new shared graph",
+  "allBProductionCodeBytesUnchanged": true,
+  "onlyChangedBFile": [
+    "apps/Web/Tests/BrowserNavigation.Tests.csproj"
+  ],
+  "files": [
+    {
+      "path": "apps/Web/Auth/README.md",
+      "originalSha256": "8bbc2ab4935579805cee52bbfa5b3f1af2ce2b664aa7db7be8b6828d0cf4fbec",
+      "astraValidationSha256": "8bbc2ab4935579805cee52bbfa5b3f1af2ce2b664aa7db7be8b6828d0cf4fbec",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Auth/account-api-client.js",
+      "originalSha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+      "astraValidationSha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Auth/account-api-client.test.js",
+      "originalSha256": "fbf749f10c0e29ca13777779938f03129f7905e576fac700d60c7858c1124af0",
+      "astraValidationSha256": "fbf749f10c0e29ca13777779938f03129f7905e576fac700d60c7858c1124af0",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/BrowserApplication.cs",
+      "originalSha256": "f4d540bd835ec0693c2352cd4539d02ccc87dae1e49eb7346f95e538a112be2a",
+      "astraValidationSha256": "f4d540bd835ec0693c2352cd4539d02ccc87dae1e49eb7346f95e538a112be2a",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/BrowserHomeContext.cs",
+      "originalSha256": "58095e50ed08cc6708387e59bfada9cf07a819bfe132bf8b1d95701ac5c1b2d8",
+      "astraValidationSha256": "58095e50ed08cc6708387e59bfada9cf07a819bfe132bf8b1d95701ac5c1b2d8",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/BrowserPlatformAssembly.cs",
+      "originalSha256": "cf6bab5c599a74224119a90a987f4c801cb2dbe56384cef1184679efd828d75b",
+      "astraValidationSha256": "cf6bab5c599a74224119a90a987f4c801cb2dbe56384cef1184679efd828d75b",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/BrowserRouteCodec.cs",
+      "originalSha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a",
+      "astraValidationSha256": "ea5049804a70f8f6ab8f4681c384dfde1ff9b484410e23cdd36698213d92302a",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "originalSha256": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c",
+      "astraValidationSha256": "91931e8b60de93222a2a4538a4110f6c25f9b12f5ee2409b7b05f3ffee00501c",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/NineToOne.Web.csproj",
+      "originalSha256": "5bd9a20e64edea9bbac5946dae6c8e1800148ed7644a189422e50bdc3e435552",
+      "astraValidationSha256": "5bd9a20e64edea9bbac5946dae6c8e1800148ed7644a189422e50bdc3e435552",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Program.cs",
+      "originalSha256": "a4c5885ae43472f9f3ef4033681a24a020829d08408fc173788182ab0075296e",
+      "astraValidationSha256": "a4c5885ae43472f9f3ef4033681a24a020829d08408fc173788182ab0075296e",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/README.md",
+      "originalSha256": "b6000cda7c8882e1011a7d26f97de98f913cb63cc8634aeebb0184fb023ea68f",
+      "astraValidationSha256": "b6000cda7c8882e1011a7d26f97de98f913cb63cc8634aeebb0184fb023ea68f",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+      "originalSha256": "07eb2992fcedff70c1d1a00e73033a1d3f24abd252735a5c12bd18a9abd66f93",
+      "astraValidationSha256": "0713486e6f8eb822ca416f4ac33133094f6fb7ac7773238ceb552a9f23987b60",
+      "bytesIdentical": false
+    },
+    {
+      "path": "apps/Web/Tests/Program.cs",
+      "originalSha256": "9993185766573fe1bf44bf59cc700a789a149eeb0812d499d7f1d72e86d09bad",
+      "astraValidationSha256": "9993185766573fe1bf44bf59cc700a789a149eeb0812d499d7f1d72e86d09bad",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Tests/browser-platform.browser.html",
+      "originalSha256": "5779ef0a87131202aeb80708a65df4b71a4453e264afa49e182fbdbb02e25a56",
+      "astraValidationSha256": "5779ef0a87131202aeb80708a65df4b71a4453e264afa49e182fbdbb02e25a56",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Tests/browser-platform.test.mjs",
+      "originalSha256": "fc72e243d621a3ea5f737fb97a99066021265a667edf4f54eb7fa447037c2cf6",
+      "astraValidationSha256": "fc72e243d621a3ea5f737fb97a99066021265a667edf4f54eb7fa447037c2cf6",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/Tests/run-browser-platform.cjs",
+      "originalSha256": "82af52964677a05287fb4baf4bd0106eefbe699443202c28245c3625defb23b7",
+      "astraValidationSha256": "82af52964677a05287fb4baf4bd0106eefbe699443202c28245c3625defb23b7",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/package.json",
+      "originalSha256": "29314346bb27cb4f6128f30e6532053f056c1aafcb3e8c61ef3ad77d0df45d7c",
+      "astraValidationSha256": "29314346bb27cb4f6128f30e6532053f056c1aafcb3e8c61ef3ad77d0df45d7c",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/wwwroot/browser-platform.js",
+      "originalSha256": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8",
+      "astraValidationSha256": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/wwwroot/index.html",
+      "originalSha256": "4ea4ab60d0caff71acc80412a49a231c2c9e85ddee95a4e77f80cdaa1e54c5e1",
+      "astraValidationSha256": "4ea4ab60d0caff71acc80412a49a231c2c9e85ddee95a4e77f80cdaa1e54c5e1",
+      "bytesIdentical": true
+    },
+    {
+      "path": "apps/Web/wwwroot/main.js",
+      "originalSha256": "a1092d3a16abdbd2214843abbf809cbce164b430da7e2846637999e62c671b5e",
+      "astraValidationSha256": "a1092d3a16abdbd2214843abbf809cbce164b430da7e2846637999e62c671b5e",
+      "bytesIdentical": true
+    },
+    {
+      "path": "eng/browser/README.md",
+      "originalSha256": "29968bf8771f6c1435ddaf2a6a46c1b08a7ef2f58d0a6ce9ae16eef9f00b442b",
+      "astraValidationSha256": "29968bf8771f6c1435ddaf2a6a46c1b08a7ef2f58d0a6ce9ae16eef9f00b442b",
+      "bytesIdentical": true
+    },
+    {
+      "path": "eng/browser/tests/test_acceptance_evidence.py",
+      "originalSha256": "07517ce38b877f9185393f9c3ca69cfd99582a0e6b3cd43196b566afcbeb9c42",
+      "astraValidationSha256": "07517ce38b877f9185393f9c3ca69cfd99582a0e6b3cd43196b566afcbeb9c42",
+      "bytesIdentical": true
+    },
+    {
+      "path": "eng/browser/validate-acceptance-evidence.py",
+      "originalSha256": "0f41e8bd6bd287bb982edd86516aa1a4f2ff1a33f11e0ea944ddb2cc6ed311e1",
+      "astraValidationSha256": "0f41e8bd6bd287bb982edd86516aa1a4f2ff1a33f11e0ea944ddb2cc6ed311e1",
+      "bytesIdentical": true
+    }
+  ],
+  "currentOwnerSourceSha256": {
+    "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs": "e9f651a22a634b5b4e53bbf8c2f29a685fa3fbbb4360d4761a2eed3470b212e3",
+    "9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs": "05d89400297f02174d01f89f1979eaa5bdea447d8ce2b9e435c1093de6523320",
+    "9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs": "02def3189de0070dd6b33d8eea1d62a5c74ba9fd0699786ca1bcc934b28631ff",
+    "9to1 Workspace/Home/Source/Home/HomeDashboard.cs": "6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9",
+    "9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs": "f7bf97f06b6a30a9a3788bc3663043ff54c5c982b2552b9e35756254ff10a23a",
+    "framework/CUI/Core/CakeOS.Cui.Core.csproj": "6d3801be3eaef00e925ed7901de83b452486f4e51832cbdba796f1cb65b1d3b0"
+  },
+  "newHarnessSourceOnly": "Existing owner types are linked unchanged; original route/registry assertions unchanged."
+}

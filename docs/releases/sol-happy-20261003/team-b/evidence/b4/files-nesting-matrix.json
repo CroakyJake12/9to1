@@ -1,0 +1,1002 @@
+[
+  {
+    "test_id": "B4-NEST-Folder-Folder",
+    "parent": "Folder",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Project",
+    "parent": "Folder",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Sheet",
+    "parent": "Folder",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Tree",
+    "parent": "Folder",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Smart",
+    "parent": "Folder",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Timeline",
+    "parent": "Folder",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Pipeline",
+    "parent": "Folder",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Catalogue",
+    "parent": "Folder",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Stash",
+    "parent": "Folder",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Folder-Matrix",
+    "parent": "Folder",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Folder parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Folder",
+    "parent": "Project",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Project",
+    "parent": "Project",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Sheet",
+    "parent": "Project",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Tree",
+    "parent": "Project",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Smart",
+    "parent": "Project",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Timeline",
+    "parent": "Project",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Pipeline",
+    "parent": "Project",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Catalogue",
+    "parent": "Project",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Stash",
+    "parent": "Project",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Project-Matrix",
+    "parent": "Project",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Project parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Folder",
+    "parent": "Sheet",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Project",
+    "parent": "Sheet",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Sheet",
+    "parent": "Sheet",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Tree",
+    "parent": "Sheet",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Smart",
+    "parent": "Sheet",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Timeline",
+    "parent": "Sheet",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Pipeline",
+    "parent": "Sheet",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Catalogue",
+    "parent": "Sheet",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Stash",
+    "parent": "Sheet",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Sheet-Matrix",
+    "parent": "Sheet",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Sheet parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Folder",
+    "parent": "Tree",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Project",
+    "parent": "Tree",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Sheet",
+    "parent": "Tree",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Tree",
+    "parent": "Tree",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Smart",
+    "parent": "Tree",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Timeline",
+    "parent": "Tree",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Pipeline",
+    "parent": "Tree",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Catalogue",
+    "parent": "Tree",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Stash",
+    "parent": "Tree",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Tree-Matrix",
+    "parent": "Tree",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Tree parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Folder",
+    "parent": "Smart",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Project",
+    "parent": "Smart",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Sheet",
+    "parent": "Smart",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Tree",
+    "parent": "Smart",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Smart",
+    "parent": "Smart",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Timeline",
+    "parent": "Smart",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Pipeline",
+    "parent": "Smart",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Catalogue",
+    "parent": "Smart",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Stash",
+    "parent": "Smart",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Smart-Matrix",
+    "parent": "Smart",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Smart parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Folder",
+    "parent": "Timeline",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Project",
+    "parent": "Timeline",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Sheet",
+    "parent": "Timeline",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Tree",
+    "parent": "Timeline",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Smart",
+    "parent": "Timeline",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Timeline",
+    "parent": "Timeline",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Pipeline",
+    "parent": "Timeline",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Catalogue",
+    "parent": "Timeline",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Stash",
+    "parent": "Timeline",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Timeline-Matrix",
+    "parent": "Timeline",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Timeline parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Folder",
+    "parent": "Pipeline",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Project",
+    "parent": "Pipeline",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Sheet",
+    "parent": "Pipeline",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Tree",
+    "parent": "Pipeline",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Smart",
+    "parent": "Pipeline",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Timeline",
+    "parent": "Pipeline",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Pipeline",
+    "parent": "Pipeline",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Catalogue",
+    "parent": "Pipeline",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Stash",
+    "parent": "Pipeline",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Pipeline-Matrix",
+    "parent": "Pipeline",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Pipeline parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Folder",
+    "parent": "Catalogue",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Project",
+    "parent": "Catalogue",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Sheet",
+    "parent": "Catalogue",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Tree",
+    "parent": "Catalogue",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Smart",
+    "parent": "Catalogue",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Timeline",
+    "parent": "Catalogue",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Pipeline",
+    "parent": "Catalogue",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Catalogue",
+    "parent": "Catalogue",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Stash",
+    "parent": "Catalogue",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Catalogue-Matrix",
+    "parent": "Catalogue",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Catalogue parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Folder",
+    "parent": "Stash",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Project",
+    "parent": "Stash",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Sheet",
+    "parent": "Stash",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Tree",
+    "parent": "Stash",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Smart",
+    "parent": "Stash",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Timeline",
+    "parent": "Stash",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Pipeline",
+    "parent": "Stash",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Catalogue",
+    "parent": "Stash",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Stash",
+    "parent": "Stash",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Stash-Matrix",
+    "parent": "Stash",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Stash parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Folder",
+    "parent": "Matrix",
+    "nested_target": "Folder",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Folder target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Project",
+    "parent": "Matrix",
+    "nested_target": "Project",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Project target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Sheet",
+    "parent": "Matrix",
+    "nested_target": "Sheet",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Sheet target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Tree",
+    "parent": "Matrix",
+    "nested_target": "Tree",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Tree target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Smart",
+    "parent": "Matrix",
+    "nested_target": "Smart",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Smart target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Timeline",
+    "parent": "Matrix",
+    "nested_target": "Timeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Timeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Pipeline",
+    "parent": "Matrix",
+    "nested_target": "Pipeline",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Pipeline target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Catalogue",
+    "parent": "Matrix",
+    "nested_target": "Catalogue",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Catalogue target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Stash",
+    "parent": "Matrix",
+    "nested_target": "Stash",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Stash target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  },
+  {
+    "test_id": "B4-NEST-Matrix-Matrix",
+    "parent": "Matrix",
+    "nested_target": "Matrix",
+    "state": "MISSING",
+    "outcome": "NOT_RUN",
+    "exception": null,
+    "steps": "Create Matrix parent and Matrix target with stable IDs, nest/open/back via normal and specialised view; save/reopen/second-client readback; validate owned containment cycle rejection and reference recursion; viewer roles and source permissions separate.",
+    "expected": "Openable unit; canonical IDs/actual content preserved; normal view non-destructive; no originals moved/copied. Tree viewers cannot read protected Tree layout. Unsupported provider combination requires exact reason and alternative, not default exclusion."
+  }
+]

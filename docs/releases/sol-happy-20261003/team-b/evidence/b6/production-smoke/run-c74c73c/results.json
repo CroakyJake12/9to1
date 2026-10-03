@@ -1,0 +1,902 @@
+{
+  "reviewer": "B6 independent validation",
+  "commit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "bundle": "/workspace/team-b-artifacts/browser-c74c73c/wwwroot",
+  "port": 18764,
+  "runnerSha256": "0d38bdbd482937decbf5b1a60f3b6b2fa107f628f757258f8e1478bd896890b6",
+  "claims": "Actual published anonymous CUI Home bootstrap only; no hosted provider or app parity acceptance.",
+  "productParityVerified": false,
+  "assertions": [
+    {
+      "id": "cold-home-startup",
+      "passed": true,
+      "observed": {
+        "status": "HomeServiceUnavailable",
+        "canvasCount": 1,
+        "limitation": "Visible canonical content requires separate screenshot inspection."
+      }
+    },
+    {
+      "id": "live-invalid",
+      "passed": true,
+      "observed": {
+        "hash": "#/app.write?entityId=%Q0",
+        "status": "BrowserRouteInvalid"
+      }
+    },
+    {
+      "id": "live-typed-library",
+      "passed": true,
+      "observed": {
+        "hash": "#/home.library?entityType=file&entityId=opaque%20artifact&action=Reveal",
+        "status": "HomeServiceUnavailable"
+      }
+    },
+    {
+      "id": "live-events",
+      "passed": true,
+      "observed": {
+        "hash": "#/home.events",
+        "status": "HomeServiceUnavailable"
+      }
+    },
+    {
+      "id": "history-back-library",
+      "passed": true,
+      "observed": {
+        "hash": "#/home.library?entityType=file&entityId=opaque%20artifact&action=Reveal",
+        "status": "HomeServiceUnavailable"
+      }
+    },
+    {
+      "id": "history-forward-events",
+      "passed": true,
+      "observed": {
+        "hash": "#/home.events",
+        "status": "HomeServiceUnavailable"
+      }
+    },
+    {
+      "id": "cold-typed-library",
+      "passed": true,
+      "observed": {
+        "hash": "#/home.library?entityType=file&entityId=cold%20opaque&action=Reveal",
+        "status": "HomeServiceUnavailable"
+      }
+    },
+    {
+      "id": "cold-invalid",
+      "passed": true,
+      "observed": {
+        "hash": "#/app.write?entityId=%Q0",
+        "status": "BrowserRouteInvalid"
+      }
+    },
+    {
+      "id": "no-managed-or-page-runtime-errors",
+      "passed": true,
+      "observed": {
+        "managed": 0,
+        "pageErrors": 0,
+        "failedRequests": 0
+      }
+    }
+  ],
+  "observations": [
+    {
+      "id": "cold-home",
+      "hash": "",
+      "status": "HomeServiceUnavailable",
+      "message": "Account services are unavailable. Your files and activity have not been loaded.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"HomeServiceUnavailable\">Account services are unavailable. Your files and activity have not been loaded.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"itgbvfq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasitgbvfq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostitgbvfq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementitgbvfq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\""
+    },
+    {
+      "id": "live-invalid",
+      "hash": "#/app.write?entityId=%Q0",
+      "status": "BrowserRouteInvalid",
+      "message": "This link is invalid. Open a valid application link to continue.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"BrowserRouteInvalid\">This link is invalid. Open a valid application link to continue.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"itgbvfq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasitgbvfq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostitgbvfq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementitgbvfq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: This link is invalid. Open a valid application link to continue.\n- main \"9to1 application\""
+    },
+    {
+      "id": "live-typed-library",
+      "hash": "#/home.library?entityType=file&entityId=opaque%20artifact&action=Reveal",
+      "status": "HomeServiceUnavailable",
+      "message": "Account services are unavailable. Your files and activity have not been loaded.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"HomeServiceUnavailable\">Account services are unavailable. Your files and activity have not been loaded.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"itgbvfq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasitgbvfq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostitgbvfq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementitgbvfq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\""
+    },
+    {
+      "id": "live-events",
+      "hash": "#/home.events",
+      "status": "HomeServiceUnavailable",
+      "message": "Account services are unavailable. Your files and activity have not been loaded.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"HomeServiceUnavailable\">Account services are unavailable. Your files and activity have not been loaded.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"itgbvfq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasitgbvfq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostitgbvfq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementitgbvfq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\""
+    },
+    {
+      "id": "history-back-library",
+      "hash": "#/home.library?entityType=file&entityId=opaque%20artifact&action=Reveal",
+      "status": "HomeServiceUnavailable",
+      "message": "Account services are unavailable. Your files and activity have not been loaded.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"HomeServiceUnavailable\">Account services are unavailable. Your files and activity have not been loaded.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"itgbvfq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasitgbvfq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostitgbvfq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementitgbvfq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\""
+    },
+    {
+      "id": "history-forward-events",
+      "hash": "#/home.events",
+      "status": "HomeServiceUnavailable",
+      "message": "Account services are unavailable. Your files and activity have not been loaded.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"HomeServiceUnavailable\">Account services are unavailable. Your files and activity have not been loaded.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"itgbvfq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasitgbvfq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostitgbvfq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementitgbvfq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\""
+    },
+    {
+      "id": "cold-typed-library",
+      "hash": "#/home.library?entityType=file&entityId=cold%20opaque&action=Reveal",
+      "status": "HomeServiceUnavailable",
+      "message": "Account services are unavailable. Your files and activity have not been loaded.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"HomeServiceUnavailable\">Account services are unavailable. Your files and activity have not been loaded.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"bwvyuq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasbwvyuq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostbwvyuq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementbwvyuq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: Account services are unavailable. Your files and activity have not been loaded.\n- main \"9to1 application\""
+    },
+    {
+      "id": "cold-invalid",
+      "hash": "#/app.write?entityId=%Q0",
+      "status": "BrowserRouteInvalid",
+      "message": "This link is invalid. Open a valid application link to continue.",
+      "canvases": [
+        {
+          "width": 1440,
+          "height": 1000
+        }
+      ],
+      "body": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"BrowserRouteInvalid\">This link is invalid. Open a valid application link to continue.</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\" class=\"avalonia-container\" tabindex=\"0\" data-containerid=\"grvasaq\" style=\"overflow: hidden; touch-action: none;\"><canvas id=\"canvasgrvasaq\" class=\"avalonia-canvas\" width=\"1440\" height=\"1000\" style=\"width: 100%; height: 100%; position: absolute;\"></canvas><div id=\"nativeHostgrvasaq\" class=\"avalonia-native-host\" style=\"left: 0px; top: 0px; width: 100%; height: 100%; position: absolute;\"></div><input id=\"inputElementgrvasaq\" class=\"avalonia-input-element\" autocapitalize=\"none\" type=\"text\" spellcheck=\"false\" style=\"padding: 0px; margin: 0px; border-width: 0px; position: absolute; overflow: hidden; border-style: hidden; outline: none; background: transparent; color: transparent; display: none; height: 20px; z-index: -1;\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n",
+      "aria": "- status: This link is invalid. Open a valid application link to continue.\n- main \"9to1 application\""
+    }
+  ],
+  "consoleCounts": {
+    "error:Failed to load resource: the server responded with a status of 404 (Not Found)": 1,
+    "warning:WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled": 6
+  },
+  "consoleSamples": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "textSha256": "377ab8b4b5e86078109682c970bd4bbb24606becc5d12a775b80b84e922bbad6",
+      "originalLength": 78
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "textSha256": "a23dcecf1323e7d0e72e64b637cb51b82f5f6e51d1518b1d7786808b8b662afb",
+      "originalLength": 96
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "textSha256": "a23dcecf1323e7d0e72e64b637cb51b82f5f6e51d1518b1d7786808b8b662afb",
+      "originalLength": 96
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "textSha256": "a23dcecf1323e7d0e72e64b637cb51b82f5f6e51d1518b1d7786808b8b662afb",
+      "originalLength": 96
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "textSha256": "a23dcecf1323e7d0e72e64b637cb51b82f5f6e51d1518b1d7786808b8b662afb",
+      "originalLength": 96
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "textSha256": "a23dcecf1323e7d0e72e64b637cb51b82f5f6e51d1518b1d7786808b8b662afb",
+      "originalLength": 96
+    },
+    {
+      "type": "warning",
+      "text": "WebGL: INVALID_ENUM: getParameter: invalid parameter name, WEBGL_debug_renderer_info not enabled",
+      "textSha256": "a23dcecf1323e7d0e72e64b637cb51b82f5f6e51d1518b1d7786808b8b662afb",
+      "originalLength": 96
+    }
+  ],
+  "pageErrorCount": 0,
+  "managedRuntimeErrorCount": 0,
+  "pageErrors": [],
+  "failedRequests": [],
+  "httpErrors": [],
+  "serverRequests": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/main.js",
+      "status": 200
+    },
+    {
+      "path": "/browser-platform.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.js",
+      "status": 200
+    },
+    {
+      "path": "/favicon.ico",
+      "status": 404
+    },
+    {
+      "path": "/_framework/dotnet.runtime.v06hirbjsv.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.native.y6yn484qs1.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.native.yw7nt233hq.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.CoreLib.odcs04jitg.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Runtime.InteropServices.JavaScript.icq1pok562.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Base.la5ldbdwpk.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Browser.sqgkhfpl7b.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Controls.uh03yhq6rb.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Dialogs.nt7z08qwez.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Fonts.Inter.x3y58k01q8.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.HarfBuzz.pz35rswqu7.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Markup.Xaml.owyqmm2cj4.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Markup.7tt4nqvh9n.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Metal.d65j8ouuhq.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.OpenGL.jzsvn1xva9.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Skia.dchdqo1zlt.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Themes.Fluent.o8efkevk3c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Vulkan.9wz4uzobt6.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Core.esgieeaey8.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Language.1x85t4la2o.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Runtime.d5ml5bjezm.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Themes.ew4eetepfv.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/HavenOS.Home.p5psruvfp6.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/NineToOne.Web.zr4i61roz1.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/SkiaSharp.1e662vxtca.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.Concurrent.jpbabs89if.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.NonGeneric.jxvca7ph71.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.Specialized.73385nbd17.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.snnj8lgg4c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.Primitives.6yxf9l3s35.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.TypeConverter.fmd4mzc5fn.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.vi0jqinrst.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Console.wrlezzx7ro.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Diagnostics.DiagnosticSource.hxmlk1cyok.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Linq.Expressions.mr78h9j7m3.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Linq.9h79dwht3b.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Net.Http.05umy1f34c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Net.Primitives.llz1zzlk2t.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ObjectModel.rz1eirptfa.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Uri.6kre1ka1xt.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Xml.g3baq6tv6v.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Xml.Linq.tcmkifd61y.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Security.Cryptography.bfws0fk7mo.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Text.RegularExpressions.g1qvjj1fzm.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Xml.Linq.pzw688hdq1.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.400l3mulw9.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/icudt_EFIGS.tptq2av103.dat",
+      "status": 200
+    },
+    {
+      "path": "/_framework/avalonia.js",
+      "status": 200
+    },
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/main.js",
+      "status": 200
+    },
+    {
+      "path": "/browser-platform.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.runtime.v06hirbjsv.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.native.y6yn484qs1.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.native.yw7nt233hq.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.CoreLib.odcs04jitg.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Runtime.InteropServices.JavaScript.icq1pok562.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Base.la5ldbdwpk.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Browser.sqgkhfpl7b.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Controls.uh03yhq6rb.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Dialogs.nt7z08qwez.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Fonts.Inter.x3y58k01q8.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.HarfBuzz.pz35rswqu7.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Markup.Xaml.owyqmm2cj4.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Markup.7tt4nqvh9n.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Metal.d65j8ouuhq.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.OpenGL.jzsvn1xva9.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Skia.dchdqo1zlt.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Themes.Fluent.o8efkevk3c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Vulkan.9wz4uzobt6.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Core.esgieeaey8.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Language.1x85t4la2o.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Runtime.d5ml5bjezm.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Themes.ew4eetepfv.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/HavenOS.Home.p5psruvfp6.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/NineToOne.Web.zr4i61roz1.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/SkiaSharp.1e662vxtca.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.Concurrent.jpbabs89if.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.NonGeneric.jxvca7ph71.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.Specialized.73385nbd17.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.snnj8lgg4c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.Primitives.6yxf9l3s35.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.TypeConverter.fmd4mzc5fn.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.vi0jqinrst.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Console.wrlezzx7ro.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Diagnostics.DiagnosticSource.hxmlk1cyok.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Linq.Expressions.mr78h9j7m3.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Linq.9h79dwht3b.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Net.Http.05umy1f34c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Net.Primitives.llz1zzlk2t.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ObjectModel.rz1eirptfa.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Uri.6kre1ka1xt.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Xml.g3baq6tv6v.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Xml.Linq.tcmkifd61y.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Security.Cryptography.bfws0fk7mo.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Text.RegularExpressions.g1qvjj1fzm.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Xml.Linq.pzw688hdq1.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.400l3mulw9.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/icudt_EFIGS.tptq2av103.dat",
+      "status": 200
+    },
+    {
+      "path": "/_framework/avalonia.js",
+      "status": 200
+    },
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/main.js",
+      "status": 200
+    },
+    {
+      "path": "/browser-platform.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.runtime.v06hirbjsv.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.native.y6yn484qs1.js",
+      "status": 200
+    },
+    {
+      "path": "/_framework/dotnet.native.yw7nt233hq.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.CoreLib.odcs04jitg.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Runtime.InteropServices.JavaScript.icq1pok562.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Base.la5ldbdwpk.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Browser.sqgkhfpl7b.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Controls.uh03yhq6rb.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Dialogs.nt7z08qwez.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Fonts.Inter.x3y58k01q8.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.HarfBuzz.pz35rswqu7.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Markup.Xaml.owyqmm2cj4.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Markup.7tt4nqvh9n.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Metal.d65j8ouuhq.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.OpenGL.jzsvn1xva9.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Skia.dchdqo1zlt.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Themes.Fluent.o8efkevk3c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/Avalonia.Vulkan.9wz4uzobt6.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Core.esgieeaey8.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Language.1x85t4la2o.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Runtime.d5ml5bjezm.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/CakeOS.Cui.Themes.ew4eetepfv.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/HavenOS.Home.p5psruvfp6.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/NineToOne.Web.zr4i61roz1.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/SkiaSharp.1e662vxtca.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.Concurrent.jpbabs89if.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.NonGeneric.jxvca7ph71.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.Specialized.73385nbd17.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Collections.snnj8lgg4c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.Primitives.6yxf9l3s35.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.TypeConverter.fmd4mzc5fn.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ComponentModel.vi0jqinrst.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Console.wrlezzx7ro.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Diagnostics.DiagnosticSource.hxmlk1cyok.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Linq.Expressions.mr78h9j7m3.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Linq.9h79dwht3b.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Net.Http.05umy1f34c.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Net.Primitives.llz1zzlk2t.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.ObjectModel.rz1eirptfa.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Uri.6kre1ka1xt.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Xml.g3baq6tv6v.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Private.Xml.Linq.tcmkifd61y.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Security.Cryptography.bfws0fk7mo.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Text.RegularExpressions.g1qvjj1fzm.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.Xml.Linq.pzw688hdq1.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/System.400l3mulw9.wasm",
+      "status": 200
+    },
+    {
+      "path": "/_framework/icudt_EFIGS.tptq2av103.dat",
+      "status": 200
+    },
+    {
+      "path": "/_framework/avalonia.js",
+      "status": 200
+    }
+  ],
+  "visibleContentReview": "PENDING_B6_SCREENSHOT_INSPECTION",
+  "freshProfile": "/tmp/b6-actual-cui-AVYlAv",
+  "browserVersion": "151.0.7922.173",
+  "counts": {
+    "executed": 9,
+    "passed": 9,
+    "failed": 0
+  }
+}

@@ -1,0 +1,87 @@
+diff --git a/apps/Web/BrowserApplication.cs b/apps/Web/BrowserApplication.cs
+index 7693781..ec54a61 100644
+--- a/apps/Web/BrowserApplication.cs
++++ b/apps/Web/BrowserApplication.cs
+@@ -27,6 +27,8 @@ public sealed class BrowserApplication : Application, IDisposable
+     /// <summary>Registration is supplied by the composition root after obtaining real authenticated owner adapters.</summary>
+     public BrowserSurfaceRegistry Surfaces => _surfaces;
+ 
++    public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
++
+     public override void OnFrameworkInitializationCompleted()
+     {
+         if (ApplicationLifetime is not ISingleViewApplicationLifetime lifetime)
+@@ -64,16 +66,13 @@ public sealed class BrowserApplication : Application, IDisposable
+             return;
+         }
+ 
+-        EnsureHome();
+-        if (_home!.Open(request!))
+-        {
+-            if (!Render(new(_homeDocument!, _home, _home), BrowserRouteCodec.Encode(request!))) return;
+-            Program.ShowStatus("HomeServiceUnavailable", "Account services are unavailable. Your files and activity have not been loaded.");
+-            return;
+-        }
+-
+         Program.ShowStatus("Loading", "Opening your destination…");
+-        var (result, surface) = await _surfaces.OpenAsync(request!, cancellation);
++        var dispatch = await BrowserRouteDispatcher.OpenAsync(_surfaces, request!, target =>
++        {
++            EnsureHome();
++            return _home!.Open(target) ? new(_homeDocument!, _home, _home) : null;
++        }, cancellation);
++        var (result, surface, isUnavailableHome) = dispatch;
+         if (_disposed || version != _navigationVersion || cancellation.IsCancellationRequested)
+         {
+             surface?.Lifetime?.Dispose();
+@@ -89,7 +88,9 @@ public sealed class BrowserApplication : Application, IDisposable
+         {
+             if (_disposed || version != _navigationVersion || cancellation.IsCancellationRequested)
+                 surface.Lifetime?.Dispose();
+-            else if (Render(surface, BrowserRouteCodec.Encode(request!))) Program.ShowStatus("Ready", "");
++            else if (Render(surface, BrowserRouteCodec.Encode(request!)))
++                Program.ShowStatus(isUnavailableHome ? "HomeServiceUnavailable" : "Ready",
++                    isUnavailableHome ? "Account services are unavailable. Your files and activity have not been loaded." : "");
+         });
+     }
+ 
+diff --git a/apps/Web/Tests/BrowserNavigation.Tests.csproj b/apps/Web/Tests/BrowserNavigation.Tests.csproj
+index 38cfbb8..a42824e 100644
+--- a/apps/Web/Tests/BrowserNavigation.Tests.csproj
++++ b/apps/Web/Tests/BrowserNavigation.Tests.csproj
+@@ -9,6 +9,7 @@
+   <ItemGroup>
+     <Compile Include="../BrowserRouteCodec.cs" Link="Production/BrowserRouteCodec.cs" />
+     <Compile Include="../BrowserSurfaceRegistry.cs" Link="Production/BrowserSurfaceRegistry.cs" />
++    <Compile Include="../BrowserRouteDispatcher.cs" Link="Production/BrowserRouteDispatcher.cs" />
+     <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs" Link="Owner/HomeCoreContracts.cs" />
+     <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs" Link="Owner/HomeFeatureContracts.cs" />
+     <Compile Include="../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/HomeDashboard.cs" />
+diff --git a/apps/Web/Tests/Program.cs b/apps/Web/Tests/Program.cs
+index e8fa18c..3d9b9ec 100644
+--- a/apps/Web/Tests/Program.cs
++++ b/apps/Web/Tests/Program.cs
+@@ -111,8 +111,21 @@ await Run("B1-REGISTRY-06-duplicate-owner-not-overwritten", () =>
+     var duplicate = registry.Register(handler, _ => FixtureSurface());
+     Check(!duplicate.Succeeded && duplicate.Code == "HomeFeatureRouteConflict" && registry.AvailableRoutes.Count == 1);
+ });
+-Console.WriteLine($"Discovered: 16; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
+-return executed == 16 ? 0 : 1;
++await RunAsync("B1-DISPATCH-01-canonical-owner-before-fallback", async () =>
++{
++    foreach (var route in new[] { HomeFeatureRouteIds.Dashboard, HomeFeatureRouteIds.Library, HomeFeatureRouteIds.Events })
++    {
++        var registry = new BrowserSurfaceRegistry();
++        var ownerCalls = 0;
++        var fallbackCalls = 0;
++        var request = new HomeFeatureNavigationRequest(route, EntityType: "file", EntityId: "opaque / artifact", Action: "Reveal", DeepLink: "cake://opaque");
++        registry.Register(new Handler(route, target => { ownerCalls++; Check(target == request); return Task.FromResult(Success(target)); }), _ => FixtureSurface());
++        var dispatch = await BrowserRouteDispatcher.OpenAsync(registry, request, _ => { fallbackCalls++; return FixtureSurface(); }, default);
++        Check(ownerCalls == 1 && fallbackCalls == 0 && dispatch.Result.Succeeded && !dispatch.IsUnavailableHome && dispatch.Surface is not null);
++    }
++});
++Console.WriteLine($"Discovered: 17; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
++return executed == 17 ? 0 : 1;
+ 
+ async Task Run(string id, Action test)
+ {

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "document_id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "requirements_sha256": "2641680a49dd6f195abc1cc37a447fed30af4cafab5cd7a53b109e35d6bbd00d",
+  "release_id": "sol-happy-20261003",
+  "commit": null,
+  "deployments": {},
+  "environment": "UNIDENTIFIED",
+  "browser_policy_status": "OPEN",
+  "browsers": []
+}

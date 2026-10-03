@@ -1,0 +1,39 @@
+{
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "snapshot_sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23",
+  "rows": 2743,
+  "per_scope": {
+    "General Rules": 492,
+    "Common apps/Web": 51,
+    "Authentication": 4,
+    "Mail": 111,
+    "Games": 103,
+    "Planner": 131,
+    "Picture": 156,
+    "Wave": 171,
+    "Motion": 141,
+    "Dev": 214,
+    "Stacks": 343,
+    "Terminal": 186,
+    "Mini Computer": 233,
+    "Browse": 77,
+    "Maps": 74,
+    "Launcher": 33,
+    "Shelf": 29,
+    "Terra-form shared": 26,
+    "Variants": 10,
+    "Terra-form cross-app": 20,
+    "Sol Happy": 138
+  },
+  "requirement_states": {
+    "MISSING": 2379,
+    "BLOCKED": 364
+  },
+  "test_outcomes": {
+    "NOT-RUN": 2743
+  },
+  "browser_exempt_rows": 233,
+  "verified_browser_requirements": 0,
+  "coverage_warning": "Source-preserving paragraph coverage is NOT fully reviewed atomic requirement coverage or behavioural acceptance. Compound assertions remain attached to exact clause and require all subcases. Default SHOULD and prose/list/example obligations retained. Independent B6 review required. No actual UI/API route/endpoint is fabricated.",
+  "native_home_scope_basis": 103827
+}

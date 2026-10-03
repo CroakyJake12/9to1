@@ -1,0 +1,130 @@
+{
+  "worker": "B6 independent validation",
+  "actual_model": "GPT-6.1 Sol requested/configured by root; host metadata not independently available in B6 tools",
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "product_parity_verified": false,
+  "atomic_inventory_complete": false,
+  "tooling": {
+    "paths": [
+      "eng/browser/validate-acceptance-evidence.py",
+      "eng/browser/README.md",
+      "eng/browser/tests/test_acceptance_evidence.py"
+    ],
+    "unit_tests": {
+      "discovered": 32,
+      "executed": 32,
+      "passed": 32,
+      "exit_status": 0,
+      "log": "b6/validator-unit-tests.log",
+      "scope": "Validator integrity negative controls, not product acceptance"
+    },
+    "independent_reviewer": "Root independently reproduced32/32",
+    "actual_worker_evidence_run": {
+      "exit_status": 1,
+      "status": "INCOMPLETE",
+      "report": "b6/actual-evidence-rejection.json",
+      "scope": "Normalized original B1 records retained without fabricated UI/domain/deployment/tests"
+    }
+  },
+  "independent_runtime_subsets": [
+    {
+      "id": "B6-CHROMIUM-DOM",
+      "discovered": 7,
+      "executed": 7,
+      "passed": 7,
+      "exit_status": 0,
+      "manifest": "b6/chromium-dom/manifest.json",
+      "scope": "Actual production JS/history adapter; controlled BFCache events, no authenticated app runtime/deployment"
+    },
+    {
+      "id": "B6-WAVE-CLI",
+      "discovered": 9,
+      "executed": 9,
+      "passed": 9,
+      "exit_status": 0,
+      "report": "b6/wave-independent-reproduction/independent-cli-results.json",
+      "scope": "Unchanged source-linked local Wave regression; no browser/whole-production-project validation"
+    },
+    {
+      "id": "B6-ACCOUNT-TRANSPORT",
+      "discovered": 21,
+      "executed": 21,
+      "passed": 21,
+      "exit_status": 0,
+      "manifest": "b6/auth-review/manifest.json",
+      "scope": "Transport fixtures only; not OAuth, hosted service, browser or account UI acceptance."
+    }
+  ],
+  "findings": [
+    {
+      "id": "B6-NATIVE-SECURITY-TEST",
+      "state": "OPEN",
+      "file": "b6/native-test-quality-defect.json",
+      "owner": "Team A acknowledgement needed before native-test edit"
+    },
+    {
+      "id": "B6-RENDER-LIFETIME",
+      "state": "IMPLEMENTED-UNVERIFIED",
+      "detail": "B1 exception-safe loader/lifetime transfer inspected; host resource/runtime behavior cannot execute due full CUI build gate"
+    },
+    {
+      "id": "B6-AUTH-TRANSPORT",
+      "state": "IMPLEMENTED-UNVERIFIED",
+      "manifest": "b6/auth-review/manifest.json",
+      "detail": "Both independently reproduced defects were fixed. 21 contract checks and separate native Fetch 401/200 body controls pass. Hosted authentication and browser service gates remain BLOCKED.",
+      "defect_status": "FIXED",
+      "local_transport_regression_outcome": "PASS"
+    }
+  ],
+  "coverage_evidence": [
+    "b6/worker-map-review.json",
+    "b6/framework-source-coverage.json"
+  ],
+  "outstanding": [
+    "Full canonical applicability/atomic criterion and donor operation decomposition remains incomplete; source paragraph counts are not conformance denominator",
+    "Exact staging frontend/backend config identities, real OAuth/client/session services and clean-browser app journeys",
+    "CUI WebAssembly full host build/render; no weakening vendor source gate",
+    "Declared supported browser/version policy and full browser matrix",
+    "Backend+second-client+native cross-client content/IDs/revisions/permissions/history",
+    "Actual BFCache authenticated expiry/revocation, account switching/cache separation",
+    "Visual/keyboard/screen-reader/themes/200percent/reduced-motion/performance for real populated apps",
+    "Final integrated candidate reruns; live canonical source rechecked, original candidate remains stale"
+  ],
+  "live_source_recheck": {
+    "reviewer": "B6 independent validation",
+    "original_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "current_revision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+    "review": "b6/live-source-recheck-review.json",
+    "active_full_records_identical": true,
+    "active_paragraph_records_compared": 9996,
+    "changed_text_records": 1,
+    "changed_full_records": 9,
+    "original_maps_and_runtime_evidence_retained": true,
+    "current_source_validation": {
+      "exit_status": 1,
+      "status": "INCOMPLETE",
+      "report": "b6/current-source-evidence-rejection.json",
+      "defects_total": 10558,
+      "defect_counts": {
+        "STALE_SOURCE": 3,
+        "COMMIT_IDENTITY_MISSING": 1,
+        "NOT_DEPLOYED_ENVIRONMENT": 1,
+        "BROWSER_POLICY_UNRESOLVED": 1,
+        "BROWSER_MATRIX_EMPTY": 1,
+        "DEPLOYMENT_IDENTITY_MISSING": 2,
+        "DEPLOYMENT_COMMIT_INVALID": 2,
+        "DEPLOYMENT_URL_INVALID": 2,
+        "OPERATION_MAPPING_MISSING": 550,
+        "REQUIREMENT_NOT_VERIFIED": 550,
+        "INDEPENDENT_REVIEW_MISSING": 550,
+        "SOURCE_DISPOSITION_UNREVIEWED": 550,
+        "CANONICAL_SOURCE_UNMAPPED": 7794,
+        "ZERO_DISCOVERED_TESTS": 1,
+        "MAPPED_TEST_MISSING": 550
+      },
+      "scope": "Current source manifest and exact snapshot bytes against preserved original B1 provisional inventory/candidate/acceptance documents; no invented deployment or tests."
+    },
+    "product_parity_verified": false,
+    "interpretation_complete": false
+  }
+}

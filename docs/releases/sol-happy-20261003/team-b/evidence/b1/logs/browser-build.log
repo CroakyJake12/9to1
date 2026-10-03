@@ -1,0 +1,73 @@
+
+Welcome to .NET 10.0!
+---------------------
+SDK Version: 10.0.401
+
+Telemetry
+---------
+The .NET tools collect usage data in order to help us improve your experience. It is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+
+Read more about .NET CLI Tools telemetry: https://aka.ms/dotnet-cli-telemetry
+
+----------------
+Installed an ASP.NET Core HTTPS development certificate.
+To trust the certificate, run 'dotnet dev-certs https --trust'
+Learn about HTTPS: https://aka.ms/dotnet-https
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+Checking the state of installed workloads...
+Pack Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12...
+Pack Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12...
+----------------
+  Determining projects to restore...
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj]
+
+Build FAILED.
+
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/packages/Avalonia/Avalonia.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Fonts.Inter/Avalonia.Fonts.Inter.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/Avalonia.Controls.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Skia/Avalonia.Skia/Avalonia.Skia.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Vulkan/Avalonia.Vulkan.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/Avalonia.Headless.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.OpenGL/Avalonia.OpenGL.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/Avalonia.Metal/Avalonia.Metal.csproj]
+/workspace/.tools/dotnet/sdk/10.0.401/Sdks/Microsoft.NET.Sdk/targets/Microsoft.NET.Sdk.CrossTargeting.targets(69,5): error MSB4006: There is a circular dependency in the target dependency graph involving target "GetAllRuntimeIdentifiers". [/workspace/team-b-worktree/framework/CUI/vendor/Avalonia/src/HarfBuzz/Avalonia.HarfBuzz/Avalonia.HarfBuzz.csproj]
+    0 Warning(s)
+    11 Error(s)
+
+Time Elapsed 00:00:01.61

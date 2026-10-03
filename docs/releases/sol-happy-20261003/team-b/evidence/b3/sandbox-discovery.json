@@ -1,0 +1,71 @@
+{
+  "observed_utc": "2026-10-03 17:13:30 UTC",
+  "active_tools_matching_sandbox_haven": [],
+  "search_results": [
+    {
+      "query": "Sandbox",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"plugins\":[]}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": {
+            "plugins": []
+          },
+          "isError": false
+        },
+        "isError": false
+      }
+    },
+    {
+      "query": "GPTRemote Haven Sandbox",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"plugins\":[]}",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": {
+            "plugins": []
+          },
+          "isError": false
+        },
+        "isError": false
+      }
+    }
+  ],
+  "executor_skills": {
+    "skills": [],
+    "warnings": [],
+    "next_cursor": null
+  },
+  "cloud_skill_discovery": "Exhaustive 5-page traversal earlier in this B3 turn: no Sandbox/Haven skill; only incidental macOS signing sandbox terminology.",
+  "skill_used": "skill://plugin_connector_1p_b3438d6beb9081918fba3625bc988128/plugin-management/SKILL.md",
+  "local_source": "/workspace/team-b-worktree/9to1 Workspace/shared/src/Haven.Connector/SandboxCompatibilityMcpTools.cs",
+  "source_contract": "Source declares sandbox_preflight, sandbox_project_contexts and read-only compatibility operations /health,/api/preflight,/api/workspace/files/read,/api/workspace/files/search. Unsupported calls return404 and ask for native haven_* tools. No callable Sandbox/Haven connector established.",
+  "operating_contract": "Sandbox plugin Operating Contract not found or accessible in this session. Canonical Agentic Work Operating Contract in live document indices25755–55165 read separately; it is not a fabricated Sandbox plugin contract.",
+  "interpretation": "Capability absence in this session, not assertion of global plugin-directory completeness."
+}

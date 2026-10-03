@@ -1,0 +1,29 @@
+{
+  "Files": {
+    "actual_entry": "Program.Main calls FilesDomainContractTests.RunAllAsync; success marker emitted after all 11 serial checks return; exceptions produce exit 1.",
+    "count": 11,
+    "result": "PASS_LOCAL_CONTRACT_ONLY",
+    "negative_stimuli": ["checksum mismatch", "outside-root lookup", "unknown schema", "replayed operation ID with different operation/payload", "illegal terminal state transition", "unsynced/pinned eviction eligibility", "unsupported provider capability", "duplicate provider location"],
+    "meaningful_real_paths": ["actual JSON disk writes/reopen", "parallel journal writes across store instances", "actual content SHA-256 validation", "persisted canonical ID mappings", "cursor monotonicity", "folder presentation persistence"],
+    "limits": [
+      "HostedIdentitySurvivesRenameAndMoveProjections uses record with-expression, not actual provider Rename/Move.",
+      "StubProvider returns empty/unsupported results; no real provider/HTTP/feed path is exercised.",
+      "Eviction check tests eligibility metadata, not actual provider-verified durable remote revision or deleted local bytes.",
+      "Journal/store tests cannot establish process-crash/device restart/distributed ownership or hosted cursor reconciliation.",
+      "No individual check start/end logging; the full-count inference is valid only when post-suite success marker and exit 0 both exist.",
+      "Negative inputs exercise guard branches but are not independent fault injection proving that a deliberately broken hosted guarantee is detected."
+    ]
+  },
+  "Sites": {
+    "expected_cases_from_source": 15,
+    "discovered": null,
+    "discovery_reached": false,
+    "executed": 0,
+    "passed": 0,
+    "result": "BUILD_FAILED_BEFORE_DISCOVERY",
+    "existing_tests": "Address validation, IDN, concurrent local slug reservation, unchanged schema-rejection bytes; no browser/editor/live domain/provider behavior.",
+    "negative_stimuli_unexecuted": ["invalid/reserved slugs", "overlong slug", "single-label hostname", "concurrent duplicate claim", "schema 999 must retain original bytes"],
+    "required_follow_up": "Owning shared Canvas fix, rerun unchanged complete Sites suite and independently validate hosted/editor workflows. No failed requirement removed from denominator."
+  },
+  "runtime": {"browser": "NOT_RUN", "cross_client": "NOT_RUN", "visual_accessibility": "NOT_RUN", "real_provider": "NOT_RUN", "negative_control_hosted": "NOT_RUN", "final_candidate": "NOT_RUN"}
+}

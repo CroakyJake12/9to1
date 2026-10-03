@@ -1,0 +1,97 @@
+{
+  "Properties": {
+    "ShouldIncludeNativeSkiaSharp": "true",
+    "ShouldIncludeNativeHarfBuzzSharp": "true"
+  },
+  "Items": {
+    "NativeFileReference": [
+      {
+        "Identity": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st/libSkiaSharp.a",
+        "FullPath": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st/libSkiaSharp.a",
+        "RootDir": "/",
+        "Filename": "libSkiaSharp",
+        "Extension": ".a",
+        "RelativeDir": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st/",
+        "Directory": "workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-02-07 16:15:34.0000000",
+        "CreatedTime": "2026-02-07 16:15:34.0000000",
+        "AccessedTime": "2026-10-03 18:16:43.3238434",
+        "DefiningProjectFullPath": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+        "DefiningProjectDirectory": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/",
+        "DefiningProjectName": "Avalonia.Browser",
+        "DefiningProjectExtension": ".targets"
+      },
+      {
+        "Identity": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st/libHarfBuzzSharp.a",
+        "FullPath": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st/libHarfBuzzSharp.a",
+        "RootDir": "/",
+        "Filename": "libHarfBuzzSharp",
+        "Extension": ".a",
+        "RelativeDir": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st/",
+        "Directory": "workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-02-06 15:30:24.0000000",
+        "CreatedTime": "2026-02-06 15:30:24.0000000",
+        "AccessedTime": "2026-10-03 17:44:29.3316447",
+        "DefiningProjectFullPath": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+        "DefiningProjectDirectory": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/",
+        "DefiningProjectName": "Avalonia.Browser",
+        "DefiningProjectExtension": ".targets"
+      },
+      {
+        "Identity": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+        "FullPath": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/libSkiaSharp.a",
+        "RootDir": "/",
+        "Filename": "libSkiaSharp",
+        "Extension": ".a",
+        "RelativeDir": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/",
+        "Directory": "workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.56/st,simd/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-02-07 16:15:38.0000000",
+        "CreatedTime": "2026-02-07 16:15:38.0000000",
+        "AccessedTime": "2026-10-03 17:49:04.6650801",
+        "DefiningProjectFullPath": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/SkiaSharp.NativeAssets.WebAssembly.targets",
+        "DefiningProjectDirectory": "/workspace/team-b-tooling/nuget/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/buildTransitive/netstandard1.0/",
+        "DefiningProjectName": "SkiaSharp.NativeAssets.WebAssembly",
+        "DefiningProjectExtension": ".targets"
+      },
+      {
+        "Identity": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+        "FullPath": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/libHarfBuzzSharp.a",
+        "RootDir": "/",
+        "Filename": "libHarfBuzzSharp",
+        "Extension": ".a",
+        "RelativeDir": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/",
+        "Directory": "workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/libHarfBuzzSharp.a/3.1.56/st,simd/",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-02-06 15:30:22.0000000",
+        "CreatedTime": "2026-02-06 15:30:22.0000000",
+        "AccessedTime": "2026-10-03 17:49:04.6650801",
+        "DefiningProjectFullPath": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/HarfBuzzSharp.NativeAssets.WebAssembly.targets",
+        "DefiningProjectDirectory": "/workspace/team-b-tooling/nuget/harfbuzzsharp.nativeassets.webassembly/8.3.1.3/buildTransitive/netstandard1.0/",
+        "DefiningProjectName": "HarfBuzzSharp.NativeAssets.WebAssembly",
+        "DefiningProjectExtension": ".targets"
+      }
+    ],
+    "EmccExportedRuntimeMethod": [
+      {
+        "Identity": "GL",
+        "FullPath": "/workspace/team-b-astra-browser-validation/apps/Web/GL",
+        "RootDir": "/",
+        "Filename": "GL",
+        "Extension": "",
+        "RelativeDir": "",
+        "Directory": "workspace/team-b-astra-browser-validation/apps/Web/",
+        "RecursiveDir": "",
+        "ModifiedTime": "",
+        "CreatedTime": "",
+        "AccessedTime": "",
+        "DefiningProjectFullPath": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/Avalonia.Browser.targets",
+        "DefiningProjectDirectory": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/",
+        "DefiningProjectName": "Avalonia.Browser",
+        "DefiningProjectExtension": ".targets"
+      }
+    ]
+  }
+}

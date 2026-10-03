@@ -1,0 +1,43 @@
+{
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "repository_baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "source_sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23",
+  "app_clause_counts": {
+    "Write": 136,
+    "Present": 312,
+    "Canvas": 320,
+    "Boards": 135,
+    "Data": 210,
+    "Forms": 185
+  },
+  "shared_clause_count": 769,
+  "procedure_count": 2151,
+  "verified_browser_requirements": 0,
+  "browser_outcome": "NOT_RUN",
+  "scope_note": "All nonempty source clauses/schema/API lines retained conservatively, not claimed atomic requirements. Compound clauses need assertion expansion; optional/conditional prose explicitly labelled for review.",
+  "production_changes": [],
+  "domain_regression_runs": [
+    "write-domain-evidence.json"
+  ],
+  "terraform_interface_clauses": 9,
+  "acceptance_decomposition": "PARTIAL_NEEDS_REVIEW",
+  "minimum_acceptance_cases": 154,
+  "browser_tests_passed": 0,
+  "evidence_files": {
+    "terraform-interface-dependencies.json": "2082624d4541c6ff15a6030f633eac59f68d222504e381178cec44ae3e5035b0",
+    "acceptance-cases.json": "3e57c5803211a8c924973f9439ce340025b3c3343a6e577f5a8500d5392a2e31",
+    "browser-matrix.md": "d5f9c27f9b52f333ee77e3c24b75d29a970b6dab99e11c8a0bb0e767e2bd4af3",
+    "shared-requirements.json": "e35e46d34af71b423b524025a2687e694651a6ac37ec25ab262f6111e7fb9f72",
+    "write-domain-run.log": "976f1673157fa347431239398d52f3b22325f902f45142d121ff5ec6a28aacab",
+    "build_matrix.py": "5005190e7d98713c30299143a3f49aea8058105a4c062204960a1752344ccb87",
+    "write-domain-rerun.log": "80707ea7315641ee2c7a5161ecae5746410a251bfa6ae4635dd199c5d9ab6ed9",
+    "write-domain-rerun.json": "6599539fc4c5b4caa1880f3575f14a4fc5f0d12e24cdf53e669ab082c62eb683",
+    "candidate-domain-tests.json": "62db7e54ad444ce492d2e19a7ad2e2bade9dc478a1282d7c59fa53a16dc618f0",
+    "write-domain-evidence.json": "a2b24a597a47be08a42e33280eae9f474f2081efc20b8bc245dd05c85ac5dc7f",
+    "requirements.json": "6fcee258ce6508bdba7d004bb634fe4bd02ee97b3bf2a92512812a829d1b164c",
+    "critical-browser-procedures.md": "1d7763a62e395355fd9929988a248cb37a963c6de5c1bf2f10a9574bc2f13b99",
+    "procedures.json": "0f734892e193cb6459fcbd9fa00558a78297657fd2ca047984da61fe95907548",
+    "write-domain-run.json": "1a5f8b38ef421be50e7a7efbb1052db678a0d5411bedc49123d3724d08c42dd2",
+    "build_acceptance_cases.py": "891d6c4ec6b9e32d47c45ba5bc50f2c3619b04936fe1d1784d198f9dbe2363b4"
+  }
+}

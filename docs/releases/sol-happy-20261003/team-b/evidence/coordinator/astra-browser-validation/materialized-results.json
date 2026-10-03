@@ -1,0 +1,53 @@
+{
+  "testedValidationCommit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "incomingTeamACandidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "branch": "team-b/astra-browser-validation-20261003",
+  "integrationAuthority": "B-owned isolated validation only; Team C sole global release integrator; incoming A candidate remains unaccepted.",
+  "browserProductionCodeUnchangedFrom": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "testHarnessChange": "Link exact current Home guard and shared ResourceAuthorization sources; original assertions unchanged; original failure retained.",
+  "materializedPins": {
+    "XamlX": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52",
+    "Avalonia.DBus": "864a05282841bf04006890f04d11d60d1a046aa9"
+  },
+  "productParityVerified": false,
+  "deployed": false,
+  "checks": [
+    {
+      "id": "navigation-rerun",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+        "--configuration",
+        "Release",
+        "--no-restore"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T17:47:47.210345+00:00",
+      "completedAt": "2026-10-03T17:47:48.918965+00:00",
+      "exitCode": 0,
+      "log": "navigation-rerun.log",
+      "outcome": "PASS_LOCAL_SUBSET_ONLY",
+      "acceptanceClaim": false
+    },
+    {
+      "id": "browser-build-materialized",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "build",
+        "apps/Web/NineToOne.Web.csproj",
+        "--configuration",
+        "Release",
+        "--nologo"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T17:47:48.919037+00:00",
+      "completedAt": "2026-10-03T17:49:28.237909+00:00",
+      "exitCode": 0,
+      "log": "browser-build-materialized.log",
+      "outcome": "PASS_LOCAL_SUBSET_ONLY",
+      "acceptanceClaim": false
+    }
+  ]
+}

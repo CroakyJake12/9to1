@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "msbuild",
+    "apps/Web/NineToOne.Web.csproj",
+    "-t:ResolveStaticWebAssetsInputs",
+    "-nologo"
+  ],
+  "cwd": "/workspace/team-b-astra-browser-validation",
+  "commit": "830f747b70df07797c586f6124890fa5028452b2",
+  "exitCode": 1,
+  "violationDetected": false,
+  "scope": "Controlled removal only of generated AvaloniaJS in isolated checkout, restored before publish; no production fault injection.",
+  "assetSha256Before": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84",
+  "assetSha256After": "e8782504d89cc1c41add8d99460369b2c04b4e486d43ff77bced979056791e84"
+}

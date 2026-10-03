@@ -1,0 +1,47 @@
+{
+  "testedValidationCommit": "c1173a1b6a6efda457c1830258d83283ba376ad9",
+  "incomingTeamACandidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "branch": "team-b/astra-browser-validation-20261003",
+  "integrationAuthority": "B-owned isolated validation only; Team C sole global release integrator; incoming A candidate remains unaccepted.",
+  "canonicalBrowserCodeUnchangedFrom": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "productParityVerified": false,
+  "deployed": false,
+  "checks": [
+    {
+      "id": "navigation",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "run",
+        "--project",
+        "apps/Web/Tests/BrowserNavigation.Tests.csproj",
+        "--configuration",
+        "Release"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T17:44:19.165443+00:00",
+      "completedAt": "2026-10-03T17:44:21.538269+00:00",
+      "exitCode": 1,
+      "log": "navigation.log",
+      "outcome": "FAIL_OR_BLOCKED",
+      "acceptanceClaim": false
+    },
+    {
+      "id": "browser-build",
+      "command": [
+        "/workspace/.tools/dotnet/dotnet",
+        "build",
+        "apps/Web/NineToOne.Web.csproj",
+        "--configuration",
+        "Release",
+        "--nologo"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "startedAt": "2026-10-03T17:44:21.538355+00:00",
+      "completedAt": "2026-10-03T17:45:34.011470+00:00",
+      "exitCode": 1,
+      "log": "browser-build.log",
+      "outcome": "FAIL_OR_BLOCKED",
+      "acceptanceClaim": false
+    }
+  ]
+}

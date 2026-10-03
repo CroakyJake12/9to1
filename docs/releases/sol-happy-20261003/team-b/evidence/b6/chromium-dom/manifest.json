@@ -1,0 +1,31 @@
+{
+  "run_id": "sol-happy-20261003",
+  "reviewer": "B6 independent validation",
+  "tested_baseline_commit": "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
+  "source_state": "B1 uncommitted browser adapter source; exact files pinned below, not final integrated candidate",
+  "source_hashes": {
+    "apps/Web/wwwroot/browser-platform.js": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8",
+    "apps/Web/Tests/browser-platform.browser.html": "5779ef0a87131202aeb80708a65df4b71a4453e264afa49e182fbdbb02e25a56",
+    "apps/Web/Tests/run-browser-platform.cjs": "82af52964677a05287fb4baf4bd0106eefbe699443202c28245c3625defb23b7",
+    "apps/Web/BrowserApplication.cs": "15de9a79893a05f46c4657c8136e13757e67981bfb0a8c733365961f72934154"
+  },
+  "command": "B1_BROWSER_EVIDENCE=/workspace/team-b-evidence/sol-happy-20261003/b6/chromium-dom node /workspace/team-b-evidence/sol-happy-20261003/b6/chromium-dom/run-independent-browser-platform.cjs",
+  "exit_status": 0,
+  "browser": "Chromium151.0.7922.173",
+  "environment": "local isolated HTTP adapter harness at127.0.0.1:18762; fresh two browser contexts",
+  "discovered": 7,
+  "executed": 7,
+  "passed": 7,
+  "negative_control": "Removed production fragment dedup guard only in isolated served response; unchanged back-forward/hashchange assertions produced2FAIL, detector expected PASS",
+  "screenshots_inspected": true,
+  "scope": "Production JS browser/history/text-status/disposal adapter only. BFCache dispatch controlled; no actual account restore. Not deployed CUI app, authenticated service, full browser parity or support matrix acceptance.",
+  "production_browser_acceptance": false,
+  "artifact_hashes": {
+    "chromium-dom-negative-results.json": "acbaea27fda067d9f779f2d43ba784a1de1f823350af132d905d2d3d4b9b23b7",
+    "independent-run.log": "943f878241e6591f6f5cf304f72dec5fb8ac7428b2919279cbbf4fc26b1d7d2e",
+    "chromium-dom-trace.zip": "fe0f7e02a689453a1c14e9df998078194d2957286acaf3a674c4e3d67fe2a770",
+    "chromium-dom-results.json": "a9515557719cb5140ecef01e5bd3032f9c784c5e99c6f5441ccf39b793b5e8c8",
+    "run-independent-browser-platform.cjs": "2e2251d3d1123c41a7c0c4f0f5a5e01b7ee4d2c317fb0f04832fe4157967d501",
+    "chromium-dom-tests.png": "2da74d83f680697b66410654696d897bf25859872500a18800c20d006642e505"
+  }
+}

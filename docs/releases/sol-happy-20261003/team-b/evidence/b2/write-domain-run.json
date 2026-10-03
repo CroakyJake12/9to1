@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "run",
+    "--project",
+    "/workspace/team-b-evidence/sol-happy-20261003/b2/WriteDomainProbe/WriteDomainProbe.csproj",
+    "-c",
+    "Release",
+    "-p:UseArtifactsOutput=true",
+    "-p:ArtifactsPath=/workspace/team-b-evidence/sol-happy-20261003/b2/build"
+  ],
+  "cwd": "/workspace/team-b-worktree",
+  "exit_status": 1,
+  "elapsed_seconds": 3.641,
+  "scope": "unmodified production Write domain sources; not browser/storage/donor layout acceptance",
+  "log": "/workspace/team-b-evidence/sol-happy-20261003/b2/write-domain-run.log"
+}

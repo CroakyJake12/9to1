@@ -1,0 +1,44 @@
+Checking the state of installed workloads...
+Pack Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.WebAssembly.Sdk version 10.0.12...
+Pack Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Sdk.WebAssembly.Pack version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.Mono.browser-wasm version 10.0.12...
+Pack Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NETCore.App.Runtime.AOT.linux-x64.Cross.browser-wasm version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoAOTCompiler.Task version 10.0.12...
+Pack Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.MonoTargets.Sdk version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Node.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.linux-x64 version 10.0.12...
+Pack Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12 is already installed.
+Writing workload pack installation record for Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.linux-x64 version 10.0.12...
+----------------
+PASS B1-ROUTE-01-default-dashboard
+PASS B1-ROUTE-02-opaque-identities
+PASS B1-ROUTE-03-null-empty-distinct
+PASS B1-ROUTE-04-unambiguous-fields
+PASS B1-ROUTE-05-malformed-link-negative
+PASS B1-ROUTE-06-size-bounds
+PASS B1-ROUTE-07-unspecified-picker-preserved-as-error
+PASS B1-ROUTE-08-control-character-encoding
+PASS B1-ROUTE-09-route-case-preserved
+PASS B1-ROUTE-10-action-remains-data
+PASS B1-REGISTRY-01-unavailable-no-render
+PASS B1-REGISTRY-02-owner-result-required
+PASS B1-REGISTRY-03-mismatched-view-blocked
+PASS B1-REGISTRY-04-reset-rejects-late-private-view
+PASS B1-REGISTRY-05-cancelled-no-render
+PASS B1-REGISTRY-06-duplicate-owner-not-overwritten
+Unhandled exception. System.Exception: Required outcome was not observed.
+   at Program.<<Main>$>g__Check|0_24(Boolean condition) in /workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Program.cs:line 189
+   at Program.<>c.<<<Main>$>b__0_16>d.MoveNext() in /workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Program.cs:line 124
+--- End of stack trace from previous location ---
+   at Program.<>c__DisplayClass0_0.<<<Main>$>g__RunAsync|23>d.MoveNext() in /workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Program.cs:line 187
+--- End of stack trace from previous location ---
+   at Program.<Main>$(String[] args) in /workspace/team-b-evidence/sol-happy-20261003/b6/dispatch-review-runtime/Program.cs:line 114
+   at Program.<Main>(String[] args)

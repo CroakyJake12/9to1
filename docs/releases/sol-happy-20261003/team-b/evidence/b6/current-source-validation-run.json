@@ -1,0 +1,26 @@
+{
+  "command": "python eng/browser/validate-acceptance-evidence.py --source-manifest source/recheck/manifest.json --paragraphs source/recheck/paragraphs.json --requirements b6/b1-normalized-provisional-inventory.json --candidate b6/observed-candidate.json --evidence b6/observed-acceptance.json --evidence-root /workspace/team-b-evidence/sol-happy-20261003 --report b6/current-source-evidence-rejection.json",
+  "working_directory": "/workspace/team-b-worktree",
+  "path_basis": "Evidence paths in command are relative to /workspace/team-b-evidence/sol-happy-20261003; execution used full absolute paths.",
+  "exit_status": 1,
+  "status": "INCOMPLETE",
+  "defects_total": 10558,
+  "defect_counts": {
+    "STALE_SOURCE": 3,
+    "COMMIT_IDENTITY_MISSING": 1,
+    "NOT_DEPLOYED_ENVIRONMENT": 1,
+    "BROWSER_POLICY_UNRESOLVED": 1,
+    "BROWSER_MATRIX_EMPTY": 1,
+    "DEPLOYMENT_IDENTITY_MISSING": 2,
+    "DEPLOYMENT_COMMIT_INVALID": 2,
+    "DEPLOYMENT_URL_INVALID": 2,
+    "OPERATION_MAPPING_MISSING": 550,
+    "REQUIREMENT_NOT_VERIFIED": 550,
+    "INDEPENDENT_REVIEW_MISSING": 550,
+    "SOURCE_DISPOSITION_UNREVIEWED": 550,
+    "CANONICAL_SOURCE_UNMAPPED": 7794,
+    "ZERO_DISCOVERED_TESTS": 1,
+    "MAPPED_TEST_MISSING": 550
+  },
+  "product_parity_verified": false
+}

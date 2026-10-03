@@ -1,0 +1,13 @@
+{
+  "id": "B6-TEST-QUALITY-001",
+  "status": "OPEN",
+  "owner": "Team A/shared native tests; no edit without acknowledgement",
+  "baseline_commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "file": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/BrowserPrivateProfileManagerTests.cs",
+  "file_sha256": "ac5e9c9b896d3c3f8f9b888ae93001555fe644061dbfc78f5cdfccddcad0b391",
+  "line": 146,
+  "test": "ReparsePointProfileIsRemovedWithoutDeletingItsTarget",
+  "defect": "Catches UnauthorizedAccessException/IOException/PlatformNotSupportedException while creating symbolic-link fixture and returns from xUnit Fact before cleanup assertions. Unsupported environment can be counted green without security outcome.",
+  "required_correction": "Retain explicit environment-blocked/not-run result or meaningful platform-aware skip and keep the required security gate blocked; independently run real controlled symlink fixture in supported environment. Do not silently return PASS.",
+  "verification": "Read-only source audit; not executed; no production/native code modified."
+}

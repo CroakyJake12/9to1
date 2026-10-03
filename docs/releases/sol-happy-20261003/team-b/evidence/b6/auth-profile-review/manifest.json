@@ -1,0 +1,87 @@
+{
+  "reviewer": "B6 independent validation",
+  "original_source_commit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "original_B_source_commit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
+  "original_client_sha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+  "control_source_sha256": "d881891254237f9302bb7bff7aefbca2c8b62d34b42af655c7bcf289f641826e",
+  "scope": "Independent deferred-token and response-CAS transport fixtures; no hosted service/browser/account UI acceptance.",
+  "initial_run": {
+    "command": [
+      "node",
+      "--test",
+      "/workspace/team-b-evidence/sol-happy-20261003/b6/auth-profile-review/profile-defect-negative.test.mjs"
+    ],
+    "exit_status": 1,
+    "discovered": 2,
+    "executed": 2,
+    "passed": 0,
+    "failed": 2,
+    "skipped": 0,
+    "log": "b6/auth-profile-review/initial-red.log",
+    "log_sha256": "af0d97fad52e551e5864a170796866aca0fe99c8bb7d9a1cd18a98d2a277ede6"
+  },
+  "confirmed_findings": [
+    {
+      "id": "B6-PROFILE-CALLER-MUTATION",
+      "defect_status": "FIXED",
+      "observed": "Original validated name changes and newly forbidden accountId both reach fetch body after caller mutates object during token await.",
+      "local_regression_outcome": "PASS",
+      "canonical_product_requirement_state": "IMPLEMENTED-UNVERIFIED"
+    },
+    {
+      "id": "B6-PROFILE-CAS-SUCCESSOR",
+      "defect_status": "FIXED",
+      "observed": "Expected revision7 and returned revision7 accepted rather than requiring exact successor8.",
+      "local_regression_outcome": "PASS",
+      "canonical_product_requirement_state": "IMPLEMENTED-UNVERIFIED"
+    }
+  ],
+  "prior_21_green_transport_evidence_relabelled": false,
+  "product_parity_verified": false,
+  "production_edits": false,
+  "fixed_run": {
+    "source_commit": "UNCOMMITTED_B5_OWNED_FIX_ON_ISOLATED_ASTRA_CANDIDATE",
+    "baseline_commit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+    "client_sha256": "1269f332a4a5f833d934189c8396ecafce53c9cfba04801f0c843b4d6fe6ff58",
+    "original_control_assertions_unchanged": true,
+    "independent_controls": {
+      "command": [
+        "node",
+        "--test",
+        "/workspace/team-b-evidence/sol-happy-20261003/b6/auth-profile-review/profile-defect-negative.test.mjs"
+      ],
+      "environment": {
+        "B6_ACCOUNT_CLIENT": "/workspace/team-b-astra-browser-validation/apps/Web/Auth/account-api-client.js"
+      },
+      "exit_status": 0,
+      "discovered": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "log": "b6/auth-profile-review/fixed-independent-controls.log",
+      "log_sha256": "1988642b9d02c0ae167e53ab9a3e7b9d7cb7c4a3d462545fcc9978f846b208f5"
+    },
+    "independent_suite": {
+      "command": [
+        "node",
+        "--test",
+        "apps/Web/Auth/account-api-client.test.js",
+        "apps/Web/Auth/account-api-client.profile-review.test.js"
+      ],
+      "cwd": "/workspace/team-b-astra-browser-validation",
+      "exit_status": 0,
+      "discovered": 28,
+      "passed": 28,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "log": "b6/auth-profile-review/fixed-independent-suite.log",
+      "log_sha256": "7ac027efa52ab5c96cee2b559ef6a5d3ea2c71471c0aca2b3cdca2d6efa0ae15"
+    },
+    "test_sources_sha256": {
+      "account-api-client.test.js": "71808f781a6ade29163884985512a7b245cba58f1bdc26eaa97175ae758a6e23",
+      "account-api-client.profile-review.test.js": "7e6fac43d38cea9b498fdeb9441a24d102376f390febc18a97264c7bc4bb6af8"
+    },
+    "review": "Single own-entries read validates then copies string/null fields into own plain object before asynchronous request. Exact expected+1 response revision; unrepresentable successor rejected before token/network. Original nullable-field fixture corrected from unchanged revision1 to wire-correct successor2; red original retained. No retries/entitlement fields added."
+  }
+}

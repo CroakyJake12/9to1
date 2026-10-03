@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "publish",
+    "apps/Web/NineToOne.Web.csproj",
+    "--configuration",
+    "Release",
+    "--nologo"
+  ],
+  "cwd": "/workspace/team-b-astra-browser-validation",
+  "startedAt": "2026-10-03T18:02:51.272101+00:00",
+  "completedAt": "2026-10-03T18:03:39.394948+00:00",
+  "exitCode": 0,
+  "trackedBaseCommit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "sourceState": "B1+ B5 owned repairs uncommitted; final source hashes/commit will be checked after freeze. No relabelled release acceptance.",
+  "productParityVerified": false,
+  "deployed": false
+}

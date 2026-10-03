@@ -1,0 +1,571 @@
+{
+  "schema_version": 1,
+  "execution_status": "NOT_RUN",
+  "prerequisites": [
+    "Team C publishes acknowledged authenticated service protocol, staging URLs, canonical action bindings and deployment identities; no paths may be guessed.",
+    "Team C/owning teams provision isolated verified users, organisation/role/ledger/provider fixtures and supported endpoint clients. No production fault injection, paid endpoint provisioning or live charge.",
+    "Fixture names: B5-owner-A, B5-member-B, B5-outsider-C, B5-O1/B5-O2; these are labels only, never canonical production IDs. Record actual provisioned IDs privately/redacted in evidence.",
+    "Record exact supported browser versions and OS/client versions from declared support policy; support policy and undefined capacity/performance targets remain OPEN.",
+    "Use deterministic canaries and fixture seed sol-happy-20261003-B5, real permitted content, ledger and service side effects. Mocks allowed only as unit-test support, never end-to-end acceptance."
+  ],
+  "evidence_fields": [
+    "test_id",
+    "source_requirement_ids",
+    "source_revision",
+    "tested_commit",
+    "frontend_deployment",
+    "backend_deployment",
+    "configuration_revision",
+    "browser_version",
+    "platform",
+    "fixture_seed",
+    "canonical_ids_redacted",
+    "base_resulting_revisions",
+    "steps",
+    "expected",
+    "observed",
+    "discovered_count",
+    "executed_count",
+    "exit_status",
+    "screenshots",
+    "trace",
+    "owner_service_readback",
+    "second_client_readback",
+    "negative_control",
+    "durable_log_path",
+    "artifact_sha256"
+  ],
+  "run_instructions": "Each procedure is a parameterised manual runtime test. Use the linked requirement quote as additional conjunctive assertions: every MUST/SHOULD/prose criterion must be checked, not one example. Do not mark a whole family PASS from one journey. Record a separate result per requirement and per supported browser/platform; if fixture/service is unavailable record BLOCKED/NOT_RUN. The source ledger is a discovery map awaiting independent clause/donor review, not proof of exhaustive executable assertions.",
+  "procedures": [
+    {
+      "id": "B5-INTEGRATIONS-CONNECTION",
+      "title": "Shared connections, remote identity and revocation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Using owner-approved real provider test accounts connect two accounts of the same provider once through shared integration management. Reuse one Connection in Files/Mail/Planner/Agents with independent provider and 9to1 scope grants; request missing scope visibly. Inspect provider/Connection/remote-ID/version identity; separately Open remote, Link, Import and Keep synchronised. Exercise webhook/incremental cursor, provider limit/retry-after, expired token, offline queue and uncertain write; revoke and inspect caches/background work and preserved imported artifacts.",
+      "expected": "No duplicate hidden OAuth or consumer raw secrets; both permission gates enforced; canonical remote identity scoped to Connection; live/cached/imported/mirrored state and freshness truthful; ETags/revision conflict not clocks alone; queued not remotely saved; cursor/dedup/bounded retry/cancel centrally owned; reconnect/disconnect explicit and no duplicate effect or imported-data deletion.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-INTEGRATIONS-PACKAGE",
+      "title": "MCP, WebMCP, Skills and Plugins lifecycle",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use owner-approved real local/remote MCP and separately a supported WebMCP page; inspect actual browser origin/ServerID/protocol/tools/resources/prompts. Invoke denied/allowed typed capabilities, cancel/reconnect/revoke and change schemas. Create/import Skill/Plugin packages with versioned dependencies, integrity, declared scopes/CUI/sidebar; enable/update with wider scopes, corrupt test integrity, introduce required unknown/cycle, rollback and uninstall. Activate Persistent Skill and steer durable root request across checkpoints/blockers without widening permissions.",
+      "expected": "WebMCP page and site-hosted MCP distinct, page URL never assumed endpoint; unsupported protocol explicit; descriptions/results not authority; best-effort cancellation truthful; package inspect/install not execution/trust; secure references only; manifests/schema/dependency lifecycle deterministic, quarantined invalid package, transactional update preserves known-good state; no orphan contributions/unrelated-data deletion; Persistent root continues independent work and SteeringMessage preserves root/action evidence.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-COMMON-API",
+      "title": "UI and typed API parity",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "For the referenced requirement, enumerate every visible operation including overflow/context menus, keyboard commands and lifecycle controls. Execute each operation once in the owning UI on fixture f1; read canonical target IDs, content and revisions through the owner service. Repeat the same operation through its published canonical action on independently created equivalent fixture f2. Compare state, permissions, risk, reversibility, errors and side effects. Try denied scope, stale expected revision, invalid typed input and repeated idempotency key. Enumerate two cursor pages and cancel any long-running operation through its real JobID.",
+      "expected": "UI and API produce equivalent canonical state transitions; denied/invalid/stale operations do not mutate state; retries do not duplicate effects; bounded pagination has no duplicate/missing items; failures include stable code/message/target/recoverability; every user operation has an action, including operations not in minimum API lists.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-COMMON-CONTINUITY",
+      "title": "Cross-client canonical persistence and conflicts",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "In clean browser A create a populated artifact containing text, nested objects and a source reference. Save and record canonical ID/revision/content hash/ACL/history. Close all app tabs and reopen by direct URL. Open the same ID in a supported desktop client, make a semantic edit, save, and reopen in browser B. Move/rename the original while A is open. Make incompatible edits from A and B using the same base revision. Interrupt one save and reconnect; inspect real owner metadata, revisions and recoverable drafts.",
+      "expected": "Identity and meaningful content persist across clients/restart; move/rename does not detach references; history retains both accepted revisions; conflict is explicit/recoverable; failed or queued writes remain unsynced rather than remotely saved; no unmanaged duplicate or last-write-wins.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-COMMON-PERMISSIONS",
+      "title": "Broker grants, identity, revocation and privacy",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use owner A, viewer B and a separate stable caller C. Request a scoped low-risk mutation and exercise Decline, Decline and Block, Accept, 30-day Trust, temporary trust by action count/time and Always Trust warning paths in isolated fixtures. Request a broader/high-risk scope and change caller code/signing identity. Revoke while the browser is open; retry direct API and nested Agent/Plugin dispatch. Test an unavailable approval UI, local-only context with a configured cloud fallback, and host View/Locked mode with AI Write mode. Inspect redacted decision/execution audits.",
+      "expected": "Only exact verified caller/scope is trusted; temporary/30-day expiry returns to PendingApproval; blocked/changed callers cannot inherit grants; revocation applies before next dispatch; parent/object/provider/OS/2FA/privacy limits still apply; read-only AI never mutates; no private local-only content reaches cloud; request and execution outcomes remain distinct.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-COMMON-ACCESSIBILITY",
+      "title": "Populated browser interaction and accessibility",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Repeat the owning journey in every owner-declared supported browser/version at desktop-equivalent width, narrow/touch layout and 200% scaling. Use keyboard only, then screen reader; exercise menus, dialogs, overflow, selection, node/connector operations, focus return, live status and errors. Switch light/dark/high contrast/reduced motion. Capture real screenshots, accessibility trees and interaction traces for normal/selected/loading/empty/read-only/denied/offline/conflict/missing-source states.",
+      "expected": "Every required action remains reachable, labelled and operable; no colour-only state or voice-only action; visible focus and correct modal/inert/Escape behavior; draft/selection survives popovers; AI bar never covers Save/Close/Back; touch alternatives preserve semantics; mature interaction standards pass alongside source-defined layout.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-COMMON-RESOURCE",
+      "title": "Realistic bounded workloads and resource cleanup",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Obtain supported workload limits and performance thresholds from the owning service/platform contract. Populate realistic large libraries, graphs, conversations and multi-source artifacts up to declared sizes. Measure startup, first meaningful content, edit latency, scrolling, search, retained memory/subscriptions/network traffic. Repeat open/close and route navigation twenty times. Inspect page/stream boundaries and interrupt/cancel long retrieval/export/run operations.",
+      "expected": "No silent truncation or invented size limits; expensive work does not block policy checks/editing; bounded incremental loading/caches/subscriptions; closed/off-screen surfaces release work; observed workloads and raw measurements are recorded against actual thresholds; unspecified thresholds remain OPEN/unverified.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-COMMON-QUALITY",
+      "title": "Subjective/objective and operating-contract review",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "An independent reviewer executes the referenced paragraph on the actual populated production code path, compares requested behavior with canonical source and the relevant mature donor workflow, and inspects neighboring interactions. Review changed lines, dependencies, licence obligations, test discovery/assertions, negative controls, security/privacy and real failure recovery. Verify repository/worker ownership and exact integrated release/deployment evidence.",
+      "expected": "Both requested behavior and mature product standards pass; no mock/screenshot/source-presence substitute; unavailable/skipped/stale tests are not PASS; accepted work/data/history is preserved; reviewer is not sole implementer; all blockers remain in the denominator.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ACCOUNT-AUTH",
+      "title": "Fresh public-client sign-in and session separation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "From a fresh supported browser without local Home or WordPress, register or sign in through the published code+PKCE flow. Verify state/nonce and rejected mismatched/replayed code/verifier using the real isolated identity service. Read current canonical account/profile and inspect active sessions/devices. Open two tabs, sign out, switch accounts/organisations, reload/direct-link/back/forward and inspect app caches/network. Expire and revoke the session from another client; exercise recovery-email delivery success/failure in the configured test delivery service.",
+      "expected": "Only correct user/session can access protected data; short-lived user tokens and no provider/billing/signing secrets in bundles/logs; previous private data does not appear after switching; revocation/expiry blocks further access; truthful reauthentication/delivery errors; normal web use requires neither WordPress nor local Home.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ACCOUNT-PROFILE",
+      "title": "Profile semantics and reserved account protection",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "As personal A and Business B, save valid Name/Username with Icon/Pronouns/Job unset; add, update and clear each optional field. Submit whitespace-only required values. Partially update one field and reread omitted fields. Rename and inspect unchanged UserID, artifact ownership/history/ACL/entitlements in another client. Attempt @CroakyJake and case variants from an unprivileged account. Use only Team C-provisioned verified staging counterpart of Jacob for the reserved grant; never guess a production ID.",
+      "expected": "Name/Username show required asterisks and validation; optional fields remain optional/uninferred including Job on personal accounts; partial patch preserves omitted fields; reserved handle cannot be claimed; free Business grant belongs only to verified provisioned account, persists rename, and grants no spending/permission bypass; privileged provisioning is audited.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ACCOUNT-PLAN",
+      "title": "Server-authoritative plans and resource configuration",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Read ListPresets/GetPlan/GetEntitlements and usage for one identity from web and desktop. Check stable PlanLevel 0..6 and versioned presets at canonical £0/£7.99/£19.99/£34.99/£69.99/£99.99/£149.99 thresholds; inspect cumulative band grants. Request an authorised custom configuration preview crossing a threshold; compare returned actual resource fields, preset provenance and unknown typed-resource round-trip. Test Personal API eligibility below/at 80,000 allocated Dust. Modify displayed plan/local counters and replay requests with client-supplied price/entitlement claims.",
+      "expected": "Backend alone evaluates grants/quotas; custom quantities distinct from preset identity; Plus/Boost site caps are 3+5 and 1+3 respectively; higher undefined allocations are not invented or sold; known £10 examples are 250GB/35000,25GB/65000,500GB/15000 Dust; model bands are versioned cost/capability bands; local/core work is not cloud charged; Personal API shares applicable balance; UI spoofing grants nothing.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-BILLING-LIFECYCLE",
+      "title": "Trusted quote, checkout and billing reconciliation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use authorised deployed Stripe test mode and provisioned isolated accounts; do not enable services or incur live charges. Obtain a current server quote; verify canonical account/OrgID, itemised currency/cadence/effective time and fixed Business USD5/Business+ USD15 organisation add-ons with no seat fee. Open trusted checkout/manage without client card capture. Return via success URL before verified settlement. Deliver approved duplicate/out-of-order/signed-test webhook events, provisioning delay, renewal/authentication failure and cancellation. Change a quote after approval and retry unknown outcomes only after reconciliation.",
+      "expected": "Return URL never activates resources; verified payment and entitlement/provisioning are distinct; retries do not repeat charge/allocation; expired/changed quote needs approval; catalogue/currency/grace/proration OPEN rules block affected purchase; add-on and resource costs remain separate; >50-member downgrade is pending/remediation, not deletion; invoices/reports reconcile; authorised recovery/export remains available; test mode is not live-billing proof.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-USAGE-CONCURRENCY",
+      "title": "Funded pools, ceilings and credit lifecycle",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Ask service owner to provision a small funded test pool and eligible credit lots under its approved versioned policy. Submit parallel cloud requests from two members through browser and Personal API with total/role/member ceilings. Interrupt one provider completion; reconcile before retry. Switch shared/individual allocation with active reservations and transfer only eligible unspent funds. Apply allow/disallow/inherit rollover by role at an owner-controlled staging period boundary. Compare member/Admin reports and ledger.",
+      "expected": "Reserve→run→settle prevents overspend/double spend; allocated/available/reserved/consumed/rolled-over/expired are distinct; unknown provider outcome is reconciled; no automatic top-up/paid overage; provenance/expiry/policy retained; no unfunded credits minted, personal sweep or settled-charge rewrite; ceiling checked before admission; undefined periods/caps remain OPEN.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ORG-ISOLATION",
+      "title": "Organisation boundaries and cross-app revocation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Create isolated organisations O1/O2 with shared Team Space/Drive, personal canary file/chat/memory and organisation canary artifacts. Switch each context; inspect search, preview, AI sources, exports and invoices as member/viewer/outsider. Link/edit one organisation artifact in two apps using canonical references. Revoke membership/share from another client while first browser remains open and dispatch direct/nested actions.",
+      "expected": "Explicit verified OrgID/membership travels with operations; personal and other-organisation material stays separate; canonical shared content stored once; denied data absent from search/preview/AI/export; revocation blocks future server access and funded jobs; membership does not grant private communication/memory or device authority; artifact identity/history preserved.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ADMIN-LIFECYCLE",
+      "title": "Standalone Admin navigation and organisation lifecycle",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Attempt Admin as non-Business user, Business member without management capability, delegated admin and owner. Inspect organisation switcher and every specified navigation destination using populated counts/status/freshness. Create/edit organisation; request ownership transfer and obtain authenticated recipient acceptance. Attempt suspension/removal of last owner. Archive/restore and preview export/deletion without deleting production data.",
+      "expected": "Business access and role permissions are independently enforced in UI/API; all required destinations exist; unknown/stale never zero/healthy; last owner protected; transfer transactional and accepted; archival recoverable; deletion impact/confirmation/retention explicit and personal accounts untouched; no duplicate payment/Agent/content authority.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ADMIN-MEMBERS",
+      "title": "Invitations, seat transactions and delegated roles",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Provision Business organisation with 49 active seats, then concurrently accept two valid test invitations via separate identities. Repeat expired/replayed/wrong-recipient invitations. On approved Business+ fixture exceed 50 without acquiring unlimited resources. Create scoped custom roles, inspect effective permissions and attempt self-elevation/out-of-delegation grants through direct API. Suspend/reinstate/remove a member with owned shared assets, reservations and scheduled work; inspect transfer preview and offline acknowledgement.",
+      "expected": "At most 50 active Business seats, no hidden seat invoice; invitation single-use/time/recipient/capacity bound; Business+ no subscription seat cap; pending/suspended counting follows explicitly approved policy or gate remains OPEN; delegated role cannot elevate; immediate server revocation, personal scope intact, offline enforcement pending; per-item bulk outcomes accurate.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ADMIN-POLICY",
+      "title": "Draft policy validation and acknowledged enforcement",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Draft organisation/role restrictions on model/app/action/Plugin/Agent/Automation plus required Plugins, typed forced settings/editable defaults and default model. Preview member/device/Agent effective intersection; introduce required-versus-blocked Plugin and conflicting forced defaults. Validate/publish, inspect per-target acknowledgement, then call blocked operation through modified client and nested Agent/Plugin. Update required Plugin to request wider scopes; test offline endpoint and authorised security disable.",
+      "expected": "Conflict prevents publication; grants intersect entitlement/role/policy/object/trust/device/privacy; service dispatch enforces all paths; published is not applied; unsupported typed settings diagnosed; personal settings intact; Plugin integrity/version/scopes validate; update does not silently widen trust; last safe policy retained and bounded rollback available; no prohibited/local-only-to-cloud default fallback.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ADMIN-DEVICES",
+      "title": "Opt-in Mesh and truthful endpoint capabilities",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use two real compatible isolated enrolled member devices advertised by Team A/C. Inspect stable DeviceID/owner/OrgID/trust/key-reference/capabilities/limits and last contact. Explicitly approve enrolment and a workload/resource/data-location-scoped Mesh grant. Run bounded test work, revoke from browser, disconnect one device and publish endpoint policy. Try unenrolled/personal device and unsupported privileged browser action.",
+      "expected": "Membership alone pairs nothing; requester and contributor admission both enforced; bounded CPU/GPU/memory/storage/concurrency; browser manages/observes rather than impersonating privileged resource provider; offline is Pending/Unknown not executing; cancellation/revocation outcome observed, completed actions not undone; no implicit wipe/surveillance/remote shell; policy origin/revision enforced by endpoint.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ADMIN-AUDIT",
+      "title": "Bulk jobs, immutable audits and portable configuration",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Execute authorised role/policy/resource management through UI/API with recorded revision/idempotency. Cause one target-level staging failure using owner-controlled isolated fault; inspect JobID and each Succeeded/Failed/Pending/Skipped/RolledBack outcome. Cancel where permitted, retry eligible target and reject stale update. Export policy/configuration and redacted audit, dry-run compatible/incompatible imports and inspect impact before commit.",
+      "expected": "Audits bind verified actor/delegation/OrgID/action/target/revision/approval/outcome, immutable history and no secrets/unnecessary personal content; exact partial states and cancellation limits; stale mutation conflicts, retries bounded/replay-safe; import does not silently overwrite; async pagination/export and ledger reconciliation; unknown external outcomes require reconciliation.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-TEAM-AGENT",
+      "title": "One canonical Agent across Admin/Studio/Spaces/Connect",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Create a Den-backed team Agent with approved knowledge, scoped member discovery/invocation/authoring, model/tools/Plugins/budget/concurrency. Open same AgentID/revision in Admin, AI Studio, Spaces and configured Connect route. Put different private canaries in two members conversations/memories; run Agent as each. Schedule canonical Automation, record service principal/scope/funding, revoke member or pause/archive Agent and inspect queued/running/new dispatch.",
+      "expected": "No private copies or permission expansion; caller-private context never leaks; schedules use canonical Automations; normal broker/model/privacy/budget checks apply; stable definition provenance per run; revocation re-evaluated before dispatch; history remains; credentials are secure handles; publication conveys neither owner authority nor secret access.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-MESSAGING",
+      "title": "Mature conversations and organisational hierarchy",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "With three isolated accounts and two organisations exercise direct/group/room conversations, threaded reply, reaction, edit, policy deletion, mention, attachment, search, typing/read/presence settings and offline unsent-message reconnect. Build nested teams with role membership rather than names. Open Mail mode and independently deep-link it. Repeat corresponding typed actions and inspect stable Message/Thread/Room/Conversation IDs and events.",
+      "expected": "Actual content reaches intended authorised recipients; complete mature semantics and lifecycle; no duplicate send on reconnect; organisation and personal scopes separate; Mail remains full manual protocol-backed subsystem when AI unavailable; mutable contact text is not identity; hierarchy/policy cannot bypass private content protections.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-ENCRYPTION",
+      "title": "E2EE devices, key recovery and metadata",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "On deployed native Connect transport create encrypted direct/group conversations. Add/verify/rotate/revoke a second endpoint, simulate isolated lost-device/recovery flow, and inspect sanctioned service storage/packet/audit evidence with owner. Test untrusted endpoint access, notification previews, local encrypted search and cloud AI fallback with no disclosure consent.",
+      "expected": "Content decryptable only by intended trusted endpoints; no universal server key/backdoor or plaintext native-chat downgrade/index; recovery preserves declared trust model; device/key unavailable fails closed; minimised metadata and push contents; encryption badges truthful; local decryption alone authorises neither AI nor cloud export.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-DONOR",
+      "title": "Element/Matrix and Thunderbird donor parity",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Obtain exact selected Element/Matrix and Thunderbird revisions, local source/build inclusion and licence/modification manifests from owning workers. Build per-command/menu/protocol/edge-case parity inventory from real donor sources and execute against Connect/Mail browser surfaces, including encrypted multi-device threads/calls and MIME/auth/offline/attachment/draft/folder/certificate cases. Record each donor feature adaptation/exclusion with canonical basis.",
+      "expected": "Mature donor functions/QoL/keyboard workflows included, not visual imitation; CUI chrome retains behavior; no reduced chat-derived Mail; proprietary donor AI replaced with 9to1 equivalent; actual selected source traceable and licence compliant; unavailable donor inspection is a validation blocker.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-CALLS",
+      "title": "Real one-to-one/group media and reconnection",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use two/three supported browser clients with real authorised call infrastructure. Start/join/leave/miss/reconnect calls; inspect history, roster/grid/speaker/pin/spotlight, mic/camera defaults and switching, input/output choice, screen/window/application share, supported system audio, reactions/hand/text/PiP/fullscreen. Deny/revoke browser permissions and disconnect media devices. Apply supported blur/noise/filters locally and inspect routing.",
+      "expected": "Real encrypted-media capability and actual TURN/direct/relay privacy accurately documented; no silent mic/camera activation; visible capture indicator reflects delivery; refusal/disconnection is structured/recoverable; local effects do not secretly upload raw media; accessible controls persist canonical CallID; unsupported browser system audio/device control diagnosed.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-CONSENT",
+      "title": "Recording, late joiners and distinct AI permissions",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Start group call with recording default off; Request Recording and collect all participant decisions. Repeat with declined/pending participant and late joiner. When allowed, record to canonical permissioned artifact, stop and inspect approvals/timestamps/owner/retention. Try transcription or Dulche/Agent participation using only recording grant.",
+      "expected": "Unanimous explicit session approval required before recording; indicator persistent; late joiner media excluded until approved or recording paused/stopped if isolation impossible; missing/refused consent blocks; audit and canonical recording identity retained; recording grants neither transcription nor AI/cloud processing; nonhuman participation visible.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-TRANSPORT",
+      "title": "Agent email/call/text routing and transport honesty",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Only use owner-provisioned real supported test email/native-text/SMS/RCS/voice channels; do not acquire paid numbers. Address one canonical Agent through each route, verify inbound identity/access and correlated Conversation/Call/AgentRun IDs, observe actual reply on same route. Retry an interrupted send, revoke caller and disconnect provider. Attempt RCS-to-SMS fallback and inspect negotiated security indicators.",
+      "expected": "Responses truly delivered once to right channel/Agent, no cloned identity/owner-authority inheritance; disconnected/unsupported route explicitly remains gap; Mail APIs own email; SMS never E2EE badge and RCS only negotiated actual E2EE; fallback security change visible; paid provisioning separate approval.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-PRIVACY",
+      "title": "Block/mute/disappearing-message reconciliation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Mute then block an isolated sender and test direct contact through all applicable enabled channels, new-contact/group invites, receipt/presence/profile settings. Set canonical expiry in test conversation, quote/reply to message, leave second device offline past expiry then reconnect. Inspect permitted caches/indexes/export and separate report retention record.",
+      "expected": "Mute only attention, block enforced beyond hiding; contacts controls usable without AI; expiry reconciles history/index/cache/quotes without indefinite full-content retention; evidence retention separately governed; no claim screenshot/copy prevention; profile/read/presence policy respected by service.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CONNECT-SAFETY",
+      "title": "Structured reports, appeals and ban-evasion safeguards",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Through isolated owner-approved safety test facilities submit selected E2EE evidence with explicit disclosure scope, duplicate/coordinated false allegations, prompt-injection evidence and ambiguous/low-level incidents. Inspect Report versus Incident versus EnforcementAction and evaluator structured provenance/confidence/human-review data. Appeal a significant test restriction using independent evidence review, overturn and test future severity. Evaluate shared-IP/device versus owner-verified high-confidence evasion fixture through separately privileged service.",
+      "expected": "No universal decryption/moderation prompt access/arbitrary user enforcement; allegation count not verified offence; proportionate protective restrictions and severe-evidence-only global bans; overturned signals removed from active escalation; low confidence not permanent inheritance; BanEvasionCase has policy/evidence/review IDs and purpose-limited privacy-preserving signals; no unrelated fingerprinting.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-SPACES-STRUCTURE",
+      "title": "Protected Spaces and scoped navigation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Inspect eight distinct built-in types and selected-Space switcher/overflow, New Chat, deterministic relevant destinations, New Space/Edit Spaces divider. Create user Space, reorder/nest/unnest/rename/icon/share/duplicate/archive/recover and inspect stable SpaceID/ParentID/revisions. New Chat must create conversation in selected Space. Test inherited capability exclusions and permission-denied parent, separate recent histories and Plugin sidebar selected visibility.",
+      "expected": "BuiltIn/UserCreated protected distinction, no ninth Custom type; identity survives structure changes; inherited denies cannot be regained; New Chat never new Space; shared sidebar IDs/ownership no duplicates; protected navigation never replaced; state survives client restart.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-SPACES-RUNS",
+      "title": "Branches, stop/resume and durable execution",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Run real Dulche request with one low-risk typed action and second controllable wait. Stop after first commit; inspect Stopping/Stopped, Play/Resume and persisted RequestID/context/model/actions/graph/checkpoint/budget. Resume then verify completed action not repeated. Retry failure and regenerate/edit earlier message; inspect distinct branch and original immutable descendants/actions. Close/navigate tabs during explicitly background run, reconnect and inspect actual runtime/Action Graph and notifications.",
+      "expected": "Resume same visible run, regenerate new branch, retry idempotent; all queued/running/stopped/completed/failed/cancelled/blocked states accurate; background-capable execution survives UI; real graph not duplicate invented history; historical side effects remain; Home/Dulche restart does not corrupt conversation.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-SPACES-CONTEXT",
+      "title": "Typed sources, retrieval provenance and Den isolation",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Attach files/folder filters, app artifacts, Mail/Planner/Maps/Stack/Sites/connected entities to a Space; inspect IDs/revisions/permissions/ingestion states. Change/move/revoke source from second client. Supply source set exceeding model context and inspect selected/retrieved/summarised/omitted items and citations. Enable source-only/Web Disabled and request external retrieval; put private Den/context canary in one member and invoke shared Agent from another.",
+      "expected": "Explicit inspectable typed references, on-demand folder retrieval without copies; revision/staleness/denial distinct; citations reflect actually used evidence; no claim entire corpus when omitted; disabled web really blocked; current authorisation rechecked; no private memory/credential disclosure into shared scope.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-SPACES-GRAPHS",
+      "title": "Plugin sidebar and protected/full graph semantics",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Install only owner-approved test Plugin with URL/page/AppSurface/CUI/GenerativeUI/Automation sidebar contributions and selected Space visibility. Inspect ordinary icon-label row beneath New Chat; persist/restart, disable/detach and test safe combined graph route. In built-in Study extension add DND activation/deactivation through typed Home NodeGraph; try deleting protected sidebar/core behavior. In user Space validate/activate graph, incompatible ports, unbounded loop, missing/revoked package and stale draft; request graph AI edit/undo and rollback prior active revision.",
+      "expected": "One stable SidebarItem identity/lifecycle, selected visibility not permission grant, no orphan executable action; safe origin/code rules and accessible rows; built-in limited hooks protected, user full graph still broker-limited; invalid draft not active; typed AI actions inspectable; shared Home editor/registry rather than new private graph runtime.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-SPACES-TYPES",
+      "title": "Distinct study/tasks/research/translation/experience behavior",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Perform Study source-backed topic practice/quiz/flashcard answer and scheduled review; inspect learning evidence. Create Task objective/steps/dependencies/blocker/approval/output and transition lifecycle without becoming Agent/Automation. Save Shopping candidates/provenance and Research source plan/findings. Translate one request to French/Spanish/German, retry one labelled sibling bubble while retaining TranslationSetID. Advance Experience with hidden character state, checkpoint/branch/rewind and explicit Play handoff.",
+      "expected": "Study proficiency from recorded answers not mere exposure; Task canonical typed state; generated shopping/research claims distinguished from evidence; language chips above standard composer and separate sibling bubbles; Experience state committed before narrative relies on it, private views filtered; branch couples state/conversation and cannot undo real effects; Play handoff explicit and distinct entities.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-CROSSAPP-SEMANTIC",
+      "title": "Spaces and AI bar own-app typed editing",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Open canonical Write artifact and live Board/Canvas object in Spaces; create authorised changes through owning typed APIs using Artifact/Object IDs and revision, verify from owning apps and second client. Include offscreen selection/source state and transferable rich table/code/image/graph objects. Compare AI Read-only, Write plus host View/Suggest/Locked, denied source, and Data Write mutation with per-action approval/live-database preview/checkpoint. Disable AI and repeat manual core workflow.",
+      "expected": "Same IDs/format/content/permissions/history, no flatten/copy/UI input simulation; semantic context preferred over pixels; every permitted target-app mutation connected; read-only has no mutation; host restrictions narrow Write; Data always specific approval and real backup before live mutation, no Trust bypass; manual workflow works without AI.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-STUDIO-PROJECTS",
+      "title": "Structured authoring, templates and durable project metadata",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Navigate Home/Projects/Build/Test & Debug/Resources/Templates and create Harness/Skill/Plugin/MCP from real versioned type template. Inspect stable ProjectID/type/files/owner/version/dependency/permission metadata. Search/recent/pin/open/save/rename/duplicate/history/delete/recover/import/export, close/reopen, stale two-client save and unsupported schema import. Open project with runtime disconnected.",
+      "expected": "Functional real metadata, duplicate independent ID/template provenance, Agents not project copies; opening does not execute; version conflicts preserve draft; project/source/history durable independently of runtime; import/export native structure/dependencies intact; launch surface includes required real entries and correct distinction of lifecycle actions.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-STUDIO-AGENT",
+      "title": "Canonical Agent Builder, preview and animated avatar",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Create/open canonical Den Agent directly; inspect structured header save/Automations/Preview/Share/overflow, prominent avatar/name, Plugins/Connectors/Skills/Knowledge, collapsed More Options and editable Instructions. Edit capability references, availability/default model/effort/QuickActions and scoped Den sources. Add advanced Home graph, validate/preview test-scoped draft, activate revision and run elsewhere. Visually author coding animation and joke/laugh reaction, save/reopen/assign, preview events and reduced-motion/static fallback.",
+      "expected": "Same Den AgentID/revision across consumers, not wizard/private registry; QuickActions distinct from Automations and propagate allowed contexts; schedule uses real Automation; preview/avatar reactions do not execute real tasks or widen permission; asset/revision conflicts structured; running Agent provenance pinned; Studio closure does not stop/delete Agent.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-STUDIO-RUNTIME",
+      "title": "Real Harness/Tool/Playground execution contracts",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Author Harness model/context/tool/Agent/Subagent/budget/checkpoint/output settings and preview through actual Dulche. Test Skill declarative workflow, Plugin typed manifest/permissions/CUI/sidebar and MCP client/server tools/resources/prompts via real owner-approved connections. Explicit build/package/install/enable/activate; inspect permission decisions separately. In Playground combine model/Agent/Skills/Plugins/context/RunProfile and inspect output, generated UI, provenance, timing/usage/errors/action graph.",
+      "expected": "Real canonical runtime/installer results, no hardcoded demo; persistent Agents distinct from runtime Subagents; missing adapter returns structured unavailable; packages neither auto-trust nor expose plaintext secrets/arbitrary Skill code; source/configuration inspectable; graph optional for basic Harness; run/effective dependencies precise.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-STUDIO-EVALUATIONS",
+      "title": "Reproducible cases, graders, suites and comparisons",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Save Playground result as Evaluation case and deterministic Test; author structured input/provenance/expected schema/state/required-forbidden actions/cost-latency limits and target revision. Run real configured targets with approved repetitions/seeds, deterministic graders and separately labelled model/human/custom graders; induce isolated denied action and wrong schema. Compare baseline, revisions/models/RunProfiles and reopen failed results with pinned graph/profile/dependencies.",
+      "expected": "Failures detectable and preserved; deterministic facts distinct from judgments; multiple runs not overgeneralised; tests/manual/CI APIs equivalent; no unavailable target falsely passes; exact failing revision and graph reproducible; resource/profile changes cannot masquerade as same evidence.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-STUDIO-RESOURCES",
+      "title": "Versioned schemas, routers, UI and dependency-aware resources",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Create/edit/save/reopen/history/rename/recover real Schema/ModelRouter/GenerativeUI/RunProfile resources. Change shared schema incompatibly and inspect reverse dependants before activation. Configure deterministic router precedence/local-only fallback; test model mismatch. Preview approved CUI hierarchy/bindings/actions at desktop/narrow/light/dark/reduced motion with keyboard semantics. Inspect missing/disabled/revoked/cyclic dependency and open canonical entity. Generate documentation, alter canonical source, then update with hand-authored material present.",
+      "expected": "Stable resource identity/version; activation blocks incompatible dependant impact; router shares Universal Model Picker not parallel system; UI cannot inject arbitrary trusted code; profile overlays do not mutate definition; templates instantiate independent IDs; docs canonical and explicit merge/overwrite; unsupported dependencies explicit.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-STUDIO-DEBUG",
+      "title": "Canonical context, permission simulation and safe replay",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Open a real previous Dulche run with retrieved/omitted/context/memory/tool canaries and inspect Context Inspector against runtime input records. Evaluate Allowed/Ask/Denied permissions without dispatch and compare actual broker result. Replay from valid node with controlled model/context/definition/profile override before and after a committed consequential action; record new branch/run plus immutable original.",
+      "expected": "Actual included/summarised/retrieved/omitted provenance truthful, not all-sources claim; simulation uses canonical resolution and grants nothing; no consequential execution while evaluating; replay uses owner restart/fork and idempotency, no blind repeated side effect; old history immutable and structured unsafe/missing replay errors.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-VOICE-SESSION",
+      "title": "Four modes, shared conversation and natural interruption",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Using real supported Dulche Voice route start Conversational/Monologue/LiveListener/LiveTranslate from Spaces/AI bar, preserving supplied Conversation/Space/session context. Submit text during audio session; interrupt naturally, pause/resume/mute/end and inspect state. For Monologue preserve objective/sections/current position after interruption. Change Voice and VoiceModel separately, hot-switch input/output, lose device/runtime and reconnect; compare floating pill/full app same SessionID.",
+      "expected": "No separate voice database/session; truthful Starting/Listening/Processing/Speaking/Paused/Reconnecting/Ended states; resumable work not repeated; capability-checked picker distinct named Voice/VoiceModel; device failure recoverable; no active-microphone claim while disconnected; required actions available without voice.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-VOICE-CAPTURE",
+      "title": "Browser permissioned capture and ephemeral privacy",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Grant then refuse/revoke mic/camera/browser screen-share individually. Add explicit image/screenshot and supported screen/window/region/camera sources with IDs; switch/pause/stop. Count runtime frames before and after source stop and inspect retained assets/logs. With local-only policy request unavailable capture/model fallback. Try OS-global Overlay outside browser and lock/background transitions only where platform advertises.",
+      "expected": "Capture never model-activated; visible source/active/cloud/privacy indicators match actual delivery; stopped source sends no new frames; continuous frames ephemeral and deliberately attached source retained only per policy; no silent local-to-cloud; browser cannot claim OS-global capture/Overlay; exact denied/unsupported errors.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-VOICE-LISTENER",
+      "title": "Useful ambient extraction without permanent recording",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use consented synthetic/actor lesson audio through real input containing topic/key date/homework/decision, irrelevant background chatter, uncertain instruction and correction. Choose temporary notes then real Write/Board/Study destination; inspect typed edits and permissions. Verify ephemeral rolling buffer/transcript defaults and explicit recording/transcription opt-in state. Pause/stop, inspect actual retained data and action graph.",
+      "expected": "Useful structured results/current context, not indiscriminate transcript; uncertainty represented and corrections coherent; no permanent raw audio/transcript by default; low-risk trusted app/Planner action possible, consequential action still confirmation; destination canonical revisions and no unrelated context; disclosure/retention state explicit.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-VOICE-TRANSLATE",
+      "title": "Realtime multilingual translation with independent outputs",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Start one-way, bidirectional and three-language LiveTranslate with supported model; add/remove language, choose original/translated captions and speech independently, apply glossary/protected terms. Speak partial correction/date/pronoun/noisy ambiguous segment; inspect stabilised result and uncertainty. Add semantic app text versus screenshot, request approved translated note/message typed action. Inspect retained audio/transcript and per-client output where declared supported.",
+      "expected": "Dulche Translate owns language/glossary/variants, Voice owns streaming and app session controls; multiple target outputs where actual capability supports; no premature contradictory durable statement; ephemeral ordinary audio/transcript default; captures semantic preference; no extra authority; unsupported language/output reported, no silent Listener switch.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-VOICE-DICTATION",
+      "title": "Shared nonconversational editing and semantic commands",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "In Write/Spaces/Mail and every other specified supported editable CUI surface start Raw/Clean/Polished dictation using authorised editor context. Speak filler/self-correction, terminology, new paragraph/list/heading/delete/replace commands; review actual owning artifact changes and undo. Deny write or unrelated private context and repeat. Stop and reopen content.",
+      "expected": "No conversational AI speech-back; Raw literal, Clean cleanup, Polished bounded restructuring preserves intent; commands typed through host/shared engine rather than inserted as prose; scope/permission/revision honored; durable canonical text, no unrelated memory; unsupported surfaces remain visible gaps.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-VOICE-OVERLAY",
+      "title": "Browser-scoped Overlay and typed Automation handoff",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Invoke browser-supported contextual overlay with selected text/artifact/object metadata, explicit capture and existing Send to my Boss Automation test fixture configured only to authorised test recipient. Inspect declared typed inputs, ask missing required data, approval and canonical run/graph. Close overlay then Continue in Spaces; augment existing Voice session instead of spawning duplicate.",
+      "expected": "Overlay contextual and lightweight, no OS-global claim; canonical Automation invoked with normal permission/idempotency, no independent action emulation; missing input not guessed; transient closure discards ephemeral capture, durable context/session preserved; no accidental external send in validation.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-PLAY-MATCH",
+      "title": "Structured game lifecycle, deterministic scoring and recovery",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Request 15-question A-Level Maths quiz against ten AI contestants using real Dulche generation; inspect GameDefinition and pinned revision/typed actions/scoring/capability profile. Add persistent Den Agent plus filled SessionAgents, team and spectator-only variants. Submit/seal/reveal simultaneous round, verify authoritative timestamps/deterministic maths score. Pause/reconnect/checkpoint/replay and explicit Continue in Experiences mapping.",
+      "expected": "Game structured state authoritative, legal typed actions only; definition edits do not change live match; no private Agent copies/permanent SessionAgents without save; deterministic truth/score not LLM impression; resolved submissions/scores survive recovery; spectator no required human slot; history immutable, handoff distinct entities.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-PLAY-ISOLATION",
+      "title": "Runtime-enforced hidden state and capability limits",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Provision known hidden reference answer/role/team canaries. Inspect each contestant model input, allowed-action catalogue and spectator view before/after reveal. Attempt competitors answers, other team private state, judge internals, illegal/out-of-turn/duplicate locked action and no-web/no-code/no-calculator action. Inspect unchanged MatchState and actual tool dispatch.",
+      "expected": "Runtime/data-filtered view not merely prompt instruction; sealed/hidden state inaccessible until rules reveal; illegal actions rejected without mutation; external consequences denied by default and broker required if explicitly allowed; judge blind policy respected; public narrative follows committed state.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-AUTOMATION-GRAPH",
+      "title": "Home NodeGraph editor and immutable active revisions",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Open persisted Home/Library dashboard with canonical runs/last-next triggers/health. Create simple/template/NL workflow and inspect same GraphID in full Home editor. Right-click empty space/search ranked live nodes, connect valid ports, reject mismatch, Ctrl-click/remove context-menu/keyboard connector without deleting nodes, group/copy/undo/redo. Validate/activate draft then edit while old run active; rollback previous valid active revision. Inspect graph semantic AI Read-only/Write actions.",
+      "expected": "Real editable graph, no hidden alternate format; shared editor/catalogue; accessible typed ports/search, missing integration explicit; Draft/Active atomic, running revision pinned; AI typed edits inspectable/highlighted/undoable, read-only no mutations; no stale hardcoded action catalogue.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-AUTOMATION-DURABLE",
+      "title": "Triggers, persisted Wait/Approval and retry safety",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Run manual/timezone-DST schedule/app event/watch/provider event/call-trigger workflows with stable dedup IDs. Commit test action, enter durable Wait then owner-controlled staging runtime restart/tab close; resume and verify single action. Exercise Approval accept/reject/timeout/cancel distinct from broker. Disable with active runs, pause/cancel/retry, recursive self/cross cascade, and unknown external outcome. Inspect pinned run timeline, ancestry/cursors and resources while waiting.",
+      "expected": "Wait releases execution resources, no sleeping-tab authority; durable continuation and background/cloud jobs survive UI/redeploy; no action replay; trigger dedup and bounded causal loops; configured run-as/service/funding re-evaluated; uncertain side effects NeedsAttention not blind retry; actual statuses/per-node results and history immutable; Validate/Test/Real distinguished and unsimulatable Test requires explicit consent.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-AUTOMATION-CAPABILITIES",
+      "title": "Real device/provider action discovery and locality",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Query actual Home/Mesh/Plugin/MCP/provider registered capabilities and display available Wi-Fi/Bluetooth/AOD/clock/media and third-party actions with identity/version/schema/connection/risk. Validate required DeviceID versus compatible-target policy on another device. Run approved staging 16:00 media playback schedule on real compatible endpoint. Disconnect all devices, revoke credentials/capability, share graph to another member and inspect run-as and grants.",
+      "expected": "Only actually advertised actions available, portability warning/capability mismatch explicit; cloud versus device execution distinct; offline no fictitious execution; missing provider NeedsAttention/wait/failure; no arbitrary remote code/input simulation; secure ConnectionID handles not node plaintext; graph sharing transfers no secret/trust/device permission; incompatible schema requires migration review.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-TERRAFORM-INTEROP",
+      "title": "Canonical Terra-form sources and shared AI editing",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Use B4 real Homework Project/file placements/Sheet-Stash-Binder, Flow/Binder/Sheet Board pages, interactive Prototype in Path, source-changed Replay checkpoint and each required owning-app Variant fixture. Open/edit from Spaces and contextual AI bar through owning typed APIs with current artifact/selection/source scope/active variant/revision. Move/rename/revoke/delete source; inspect missing section, source grant independent of host, native versus static export and undo/conflict. Repeat manual reader/author workflows with AI off.",
+      "expected": "Files ten types, Link Flow/Binder, Prototype/Paths/Replay ownership and names preserved; same IDs/content effects, source references not copies; Replay checkpoint historical, variant owner-specific compare/merge; inaccessible preview/search/AI/export redacted; unsupported combo explicit, no flattened demo; semantic suggestions inspectable/undoable; import/recovery state safe.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    },
+    {
+      "id": "B5-ONLINE-RELEASE",
+      "title": "Exact deployed online system and release gates",
+      "kind": "REAL_RUNTIME_MANUAL",
+      "steps": "Record acknowledged frontend/backend deployment IDs, source revision, environment bindings and canonical spec revision. Open real authorised staging URLs from fresh clean browsers; execute account, artifact continuity, storage, subscription/provider/job/organisation journeys above and B4 publishing/recovery gates. Verify independence from developer PC/tunnel, owner-controlled failure/redeploy/backups/restore and older still-supported open clients. Recheck live spec before final acceptance.",
+      "expected": "All applicable app/source/donor/browser/platform gates retained; actual deployed production paths not dev shell/mock; staging not production or commercially enabled; functional services independent from PC; unchanged prior outputs not relabelled new revision; explicit OPEN catalogue/currency/runtime/browser/performance/isolation/cutover decisions gate affected release; no unauthorised live routing/charges.",
+      "outcome": "NOT_RUN",
+      "source_assertions": "Every linked paragraph criterion is additional expected behavior; forbidden actions require observed no-side-effect evidence.",
+      "negative_control": "Repeat relevant denied/revoked/invalid/stale/disconnected case on isolated fixture and verify this test detects a violation; do not inject faults in production."
+    }
+  ]
+}

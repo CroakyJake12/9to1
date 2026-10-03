@@ -1,0 +1,48 @@
+# Team B5 requests to Team C and shared owners
+
+Run: `sol-happy-20261003`. Canonical product source: current live document snapshot revision in `../source/manifest.json`. Accepted baseline: `98a0882`; browser candidate branch: `team-b/sol-happy-browser-20261003`. Root coordinates publication/readback through Team C's remote coordination branch. Root reports acknowledgement at `41e0ccc`; this local document is not cross-chat transport.
+
+## Acknowledged account transport
+
+Team C acknowledged `origin/codex/cake-id-auth-backup-20261002@7cc52df0411e0e9e617918f6c5158283cc3199fc`. Inspected `cloud/cake-id-auth/README.md`, `src/contract.ts`, `src/resource-api.ts`, and `src/browser.ts`. Native `WorkerAccountApiClient` source is not present on accepted main; its typed DTO authority has not been independently established. The browser adapter therefore preserves the acknowledged server wire records and does not create parallel product models.
+
+| Action | Acknowledged route | Scope | Success |
+| --- | --- | --- | --- |
+| Current account | GET `/api/account/current` | `cake:account:read` | 200 `{accountId,displayName}` |
+| Profile read | GET `/api/account/profile` | `cake:profile:read` | 200 `{profile:{accountId,name,username,icon,pronouns,job,revision}}` |
+| Profile partial write | PATCH `/api/account/profile` | `cake:profile:write` | Body `{expectedRevision,fields}`; same 200 profile wrapper |
+| Sessions | GET `/api/account/sessions` | `cake:sessions:read` | 200 `{sessions:[{sessionId,accountId,deviceName,createdAt,expiresAt,revokedAt,registeredClientId}]}` |
+| Sign out | POST `/api/account/signout` | `cake:sessions:revoke` | 204 |
+| Revoke session | DELETE `/api/account/sessions/{id}` | `cake:sessions:revoke` | 204 |
+| Revoke others | POST `/api/account/revoke-other-sessions` | `cake:sessions:revoke` | 204 |
+
+Server errors are lowercase `{error}` with optional positive conflict `revision`; preserve codes such as `unauthorized`, `session_revoked_or_expired`, `profile_conflict`, `username_unavailable`, `invalid_profile`, `invalid_request`, `account_not_found`, `session_not_found`, `origin_not_allowed`, `service_unavailable`. No invented entitlement/job authority or additional endpoint was added. The server checks resource audience, issuer, canonical UUID subject/session, route scope and active session, and profile writes use database compare-and-swap.
+
+Needed from C2 before real integration: actual isolated staging deployment identity/URL and exact API origin, approved public-client registration, issuer/discovery/client/redirect configuration and browser origin/CORS contract, session renewal and user-initiated switching lifecycle, configured verification/recovery delivery and error evidence. No values exist in the preserved source and none were guessed. C2 owns issuer validation; B5 supplies only client behavior checks. Root/B1 must bind invalidation to real private-surface cleanup and revalidate before rehydration.
+
+Profile gaps needing owning-service clarification: username availability action, icon asset/upload/delete API (current wire accepts HTTPS icon URL only), verified reserved-account provisioning and auditable account-bound Business grant; no production ID should be guessed. Source also needs full structured error metadata and bounded session enumeration semantics to meet canonical general rules. Fixed commercial quantities, rollover periods, currency/discount/tax/cadence entitlement-price rules and grace/proration remain canonical OPEN launch gates.
+
+## Remaining contract requests (names are canonical APIs or existing seams, not proposed HTTP paths)
+
+| Owner | Required contract | Exact browser integration need |
+| --- | --- | --- |
+| C account/billing | `9to1.Account.GetEntitlements`, `9to1.Subscription.*` | Server plan/preset/version/actual resource fields, effective model-cost bands, Dust/storage/site quotas, Personal API eligibility, trusted quote/checkout/manage and invoice lifecycle; no local tier/credit authority. |
+| C identity/org/Admin | `9to1.Admin.*` | Typed OrgID/revision/idempotency management, capability intersection, membership/seat transactions, policy Draft/Validated/Published and per-target acknowledgements, pool/credit-lot accounting, quote approvals, paginated audit/jobs and scoped bulk outcomes. |
+| A Home/C browser services | Permission broker, compose dispatcher, Universal Model Picker, `9to1.NodeGraph.*`, Shared Productivity Engine | Same stable action/graph/schema/resource identities, grant expiry/revocation and privacy decisions; browser negotiation and approval/audit transport, semantic snapshots, graph authoring and shared-object round-trip. |
+| A Spaces/C persistence | `9to1.Spaces.*`; existing `SpaceRegistry`, conversation production/versioning contracts | Authenticated shared canonical persistence with revision CAS, source/context/Den isolation, eight protected Space types, Plugin sidebar identity/visibility, graph revisions, semantic cross-app edits and search/sharing/recovery. |
+| A Dulche/Den/C runtime | `IStudioRuntimeAdapter`, `ICanonicalAgentBuilderAdapter`, `IStudioPermissionSimulationAdapter`, `IStudioContextInspectorAdapter`, `IStudioReplayAdapter` | Real run/install/Agent-definition operations, Home permission simulation, actual model input/provenance and replay/fork safety. Current AI Studio default host explicitly registers unavailable implementations. Preserve canonical AgentID/DefinitionRevision across Admin/Studio/Spaces/Connect. |
+| A Dulche/C jobs | Runtime RequestID/RootRequestID/AgentRun/ActionGraph contracts | Streaming/cancellation, Stop vs Resume vs Retry vs Regenerate, durable checkpoints and completed effect records, background continuation across tab close, progress/approval/blockers, idempotent reconnect, caller/scope/funding; reserve→run→settle and unknown-provider reconciliation. |
+| A Automations/C executors | `9to1.Automations.*`, existing graph/runtime/repository seams | Durable Wait/Approval, trigger cursors/dedup/causal loop limits, revision pinning, cloud-vs-device execution policy, versioned real action discovery, run controls/history/pagination, explicit run-as and secure connection references. No browser timers as server authority. |
+| A/C integrations | External App Integrations; `Dulche.MCP.*`, `Dulche.Skill.*`, `Dulche.Plugin.*` | Browser-safe shared provider OAuth/credentials/scopes, typed provider capability dispatch, multi-account identity, push/cursor/retry/health/conflicts, WebMCP and site-hosted MCP separately, connection revocation and package/sidebar lifecycle. Existing native MCP OAuth listener/process launch cannot run in browser. |
+| A Connect/C communication | `9to1.Connect` typed families and canonical `9to1.Mail.*` | Actual selected Element/Matrix and Thunderbird source/revision/license manifests, E2EE key/device/recovery and transport state, real call/media/signalling, recording/transcription/AI separate approvals, Agent contact routing, scoped report/appeal/safety contracts; no provider provisioning/spending without approval. B3 surface ownership must be confirmed. |
+| A Dulche Voice/Translate/C realtime | `9to1.VisionVoice.*`, `9to1.Dictation.*`, Dulche Voice/Translate | Session/model/language/output/capture/capability negotiation and retention, real realtime streaming, provider/privacy enforcement; web browser capture permissions and no OS-global Overlay claim. B3 surface ownership must be confirmed. |
+| A Play/C shared runtime | `9to1.Play.*` and GameDefinition/Match contracts | Real isolated contestant context/capability dispatch, deterministic scoring, pinned revisions, durable sealed submissions/recovery and explicit Experiences handoff. Existing local domain source does not prove actual ten-Agent execution. B3 surface ownership must be confirmed. |
+| C4/A/B4 storage/semantic owners | Canonical Files/Drive, owning-app APIs, Terra-form namespaces | Stable file/artifact/subobject revisions and protected resolution, push sync, browser→desktop→browser continuity, denied search/preview/AI/export, source move/rename/recovery, semantic variants and source-aware embeds; staging fixture IDs and second-client evidence. |
+
+Each owner should publish versioned request/result schemas, exact service binding/deployment identity, auth/permission scopes, canonical error codes, idempotency/cancellation/uncertain-outcome semantics, pagination/change cursor limits and isolated fixture provision steps. Owner acknowledgement is required before changing shared schemas. Unsupported/missing contracts remain BLOCKED rather than fabricated endpoint success.
+
+## Evidence and limits
+
+`requirements.json` retains every nonempty source paragraph in B5's declared ranges, `canonical-actions.json` includes explicit calls and Admin action-family expansions, and `procedures.json` supplies 53 runtime recipes and expected assertions. The map is discovery evidence awaiting B6 clause and donor decomposition. Paragraph counts are not verified capability counts. Every required paragraph and browser outcome currently remains BLOCKED/NOT_RUN; native and framework gates retained in B6's additional source coverage are not implicitly exempt.
+
+The new account transport has fake-response and real isolated loopback Fetch checks only. It is not connected to an issuer or browser shell auth surface yet and cannot establish a session or any entitlement. `Haven.Application.Tests` full production project attempt failed before test discovery on the pre-existing Canvas `CS1593` compiler error; source was not altered to obtain green. Preserve this gate independently from account transport's local green.

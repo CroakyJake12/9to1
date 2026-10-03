@@ -1,0 +1,347 @@
+{
+  "bundle": "/workspace/team-b-astra-browser-validation/apps/Web/bin/Release/net10.0/publish/wwwroot",
+  "browserExecutable": "/usr/bin/chromium",
+  "port": 18763,
+  "profile": "/workspace/team-b-evidence/sol-happy-20261003/b1/production-host/run-830f747/chromium-profile-R269bJ",
+  "args": [
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--use-gl=angle",
+    "--use-angle=swiftshader",
+    "--enable-unsafe-swiftshader"
+  ],
+  "commands": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "/workspace/team-b-evidence/sol-happy-20261003/b1/production-host/run-production-host.cjs",
+    "/workspace/team-b-astra-browser-validation/apps/Web/bin/Release/net10.0/publish/wwwroot",
+    "/workspace/team-b-evidence/sol-happy-20261003/b1/production-host/run-830f747"
+  ],
+  "claims": "Local published production CUI host only; no deployed, backend, authenticated or full parity acceptance.",
+  "console": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "location": {
+        "url": "http://127.0.0.1:18763/favicon.ico",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "error",
+      "text": "MONO_WASM: AggregateException_ctor_DefaultMessage (TypeInitialization_Type, SkiaSharp.SKImageInfo)\nError: AggregateException_ctor_DefaultMessage (TypeInitialization_Type, SkiaSharp.SKImageInfo)\n    at un (http://127.0.0.1:18763/_framework/dotnet.runtime.v06hirbjsv.js:3:27548)\n    at rn.resolve_or_reject (http://127.0.0.1:18763/_framework/dotnet.runtime.v06hirbjsv.js:3:27103)\n    at http://127.0.0.1:18763/_framework/dotnet.runtime.v06hirbjsv.js:3:176216\n    at http://127.0.0.1:18763/_framework/dotnet.runtime.v06hirbjsv.js:3:176280\n    at gr (http://127.0.0.1:18763/_framework/dotnet.runtime.v06hirbjsv.js:3:35754)\n    at Mc (http://127.0.0.1:18763/_framework/dotnet.runtime.v06hirbjsv.js:3:175855)\n    at http://127.0.0.1:18763/_framework/dotnet.native.v7joxoujm3.wasm:wasm-function[184]:0x18d17\n    at http://127.0.0.1:18763/_framework/dotnet.native.v7joxoujm3.wasm:wasm-function[96]:0x159f3\n    at http://127.0.0.1:18763/_framework/dotnet.native.v7joxoujm3.wasm:wasm-function[86]:0x94e6\n    at http://127.0.0.1:18763/_framework/dotnet.native.v7joxoujm3.wasm:wasm-function[173]:0x18594",
+      "location": {
+        "url": "http://127.0.0.1:18763/_framework/dotnet.js",
+        "line": 3,
+        "column": 1324,
+        "lineNumber": 3,
+        "columnNumber": 1324
+      }
+    }
+  ],
+  "pageErrors": [],
+  "requestFailures": [],
+  "httpErrors": [],
+  "observations": [
+    {
+      "name": "initial-home",
+      "state": {
+        "url": "http://127.0.0.1:18763/",
+        "title": "9to1",
+        "status": "Loading",
+        "message": "Opening 9to1…",
+        "nativeLifecycle": [
+          {
+            "name": "pageshow",
+            "persisted": false
+          }
+        ],
+        "canvases": [],
+        "html": "\n  <div id=\"browser-status\" role=\"status\" aria-live=\"polite\" data-code=\"Loading\">Opening 9to1…</div>\n  <main id=\"nine-to-one-root\" aria-label=\"9to1 application\"></main>\n  <noscript>JavaScript is required to run 9to1 in this browser.</noscript>\n  <script type=\"module\" src=\"./main.js\"></script>\n\n\n"
+      },
+      "accessibility": "- status: Opening 9to1…\n- main \"9to1 application\""
+    }
+  ],
+  "assertions": [
+    {
+      "name": "actual-cui-bootstrap",
+      "passed": false,
+      "observed": {
+        "status": "Loading",
+        "canvasCount": 0
+      }
+    }
+  ],
+  "browserVersion": "151.0.7922.173",
+  "startupTimeout": "page.waitForFunction: Timeout 90000ms exceeded.",
+  "dependentChecks": "BLOCKED by actual production startup/render state; no mock or alternate page substituted.",
+  "serverRequests": [
+    {
+      "method": "GET",
+      "url": "/",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/main.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/browser-platform.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/dotnet.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/favicon.ico",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/dotnet.runtime.v06hirbjsv.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/dotnet.native.ywej5hq050.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/dotnet.native.v7joxoujm3.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Private.CoreLib.40wlgy5bpj.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Runtime.InteropServices.JavaScript.icq1pok562.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Base.01y2tr3tjw.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Browser.4fky4502d9.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Controls.xhu51d1gdo.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Dialogs.wwf9o87ncp.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Fonts.Inter.794qmitx9k.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.HarfBuzz.vwgi71f8ds.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Markup.Xaml.87xp37pdje.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Markup.zzp4yfy0w4.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Metal.tm608fln0r.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.OpenGL.nlpaio4bgp.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Skia.o8xoxhu7on.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Themes.Fluent.qsinyroyr9.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/Avalonia.Vulkan.o1l1rh1rpm.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/CakeOS.Cui.Core.bb96imc0t7.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/CakeOS.Cui.Language.v2hg4vw48v.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/CakeOS.Cui.Runtime.n1ug0u30p4.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/CakeOS.Cui.Themes.d5fspgdfpj.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/HarfBuzzSharp.xkpmfbx1dh.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/HavenOS.Home.mt6dt314wz.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/NineToOne.Web.64g92o0k6f.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/SkiaSharp.1e662vxtca.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Collections.Concurrent.jpbabs89if.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Collections.NonGeneric.jxvca7ph71.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Collections.Specialized.73385nbd17.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Collections.snnj8lgg4c.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.ComponentModel.Primitives.6yxf9l3s35.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.ComponentModel.TypeConverter.fmd4mzc5fn.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.ComponentModel.vi0jqinrst.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Diagnostics.DiagnosticSource.hxmlk1cyok.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Linq.Expressions.mr78h9j7m3.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Linq.9h79dwht3b.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Net.Http.05umy1f34c.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Net.Primitives.llz1zzlk2t.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.ObjectModel.rz1eirptfa.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Private.Uri.6kre1ka1xt.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Private.Xml.g3baq6tv6v.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Private.Xml.Linq.tcmkifd61y.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Security.Cryptography.bfws0fk7mo.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Text.RegularExpressions.g1qvjj1fzm.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.Xml.Linq.pzw688hdq1.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/System.400l3mulw9.wasm",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/icudt_EFIGS.tptq2av103.dat",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "url": "/_framework/avalonia.js",
+      "status": 200
+    }
+  ]
+}

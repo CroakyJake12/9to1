@@ -1,0 +1,9 @@
+{
+  "initial_reviewed_render_sha256": "15de9a79893a05f46c4657c8136e13757e67981bfb0a8c733365961f72934154",
+  "final_reviewed_render_sha256": "f4d540bd835ec0693c2352cd4539d02ccc87dae1e49eb7346f95e538a112be2a",
+  "runtime_reverified": false,
+  "source_review": "B1 final Render retains loader/lifetime ownership in try/finally until transfer, caches full encoded artifact address with bounded256entries and clears cache on private context change. No new action authority/model/schema forks.",
+  "tested_js_source_sha256": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8",
+  "current_js_sha256": "bc4bcb1a4b8990565734f201cd7a71ccf6e5f4a05d755098627006ac747de1e8",
+  "scope": "Independent DOM evidence valid for unchangedJSadapter; compiled CUI rendering/focus/resource behavior remainsBLOCKED by authoritative vendor build prerequisites."
+}

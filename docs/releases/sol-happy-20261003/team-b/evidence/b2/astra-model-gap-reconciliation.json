@@ -1,0 +1,156 @@
+{
+  "recorded_utc": "2026-10-03T17:51:23.022005+00:00",
+  "candidate_commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "candidate_status": "PROVISIONAL_READ_ONLY_INSPECTION_NOT_ACCEPTED_BASELINE",
+  "inspection_workspace": "/workspace/team-b-astra-inspection",
+  "historical_runtime_test_commit": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "historical_runtime_evidence": "write-domain-evidence.json",
+  "source_revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "inspection_kind": "BOUNDED_STATIC_SOURCE_COMPARE",
+  "candidate_runtime_tests_run": false,
+  "production_sources_modified": false,
+  "inspected_source_hashes": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+      "sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8",
+      "baseline_sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8",
+      "matches_98a_file": true,
+      "matches_candidate_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+      "sha256": "6aaf49f88b08b77ae98c3efdef067f7af3741c52df51e89e3aee4815e9947bc4",
+      "baseline_sha256": "c8262c95be26c7319a241f16bdcf2197fa47020341e24369e03cd3e2853c16c6",
+      "matches_98a_file": false,
+      "matches_candidate_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+      "sha256": "98beb6356609b19abddfee2a5c08357b82278be26377767a176450405246ac89",
+      "baseline_sha256": "cfd707a92dccae6f27b19f61ed961f02f9598945066b25db8b7f329888c152e7",
+      "matches_98a_file": false,
+      "matches_candidate_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "baseline_sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "matches_98a_file": true,
+      "matches_candidate_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteNamedStyleOperations.cs",
+      "sha256": "34e5549b08eabf422342ed67eb163986568874008c7a31f4f971ff1bef84184d",
+      "baseline_sha256": null,
+      "matches_98a_file": false,
+      "matches_candidate_commit": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesBlock.cs",
+      "sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916",
+      "baseline_sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916",
+      "matches_98a_file": true,
+      "matches_candidate_commit": true
+    }
+  ],
+  "gap_requests": [
+    {
+      "request_id": "B2-A-WRITE-VIEW-LAYOUT",
+      "canonical_source_paragraphs": [
+        435275,
+        436780,
+        437012
+      ],
+      "current_fields": [
+        "NotesDocument.LayoutMode : NotesLayoutMode = NotesLayoutMode.Continuous"
+      ],
+      "current_enums": [
+        "NotesLayoutMode { Paginated=0, Continuous=1, Freeform=2, InfiniteCanvas=3 }"
+      ],
+      "current_methods": [
+        "WriteDocumentEditor.SetLayout(NotesLayoutMode value): writes Document.LayoutMode through Mutate",
+        "WriteDocumentEditor.Restore(NotesDocument source): restores source.LayoutMode to Document.LayoutMode"
+      ],
+      "current_locations": [
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+          "line": 10
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+          "line": 43
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+          "line": 393
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+          "line": 491
+        }
+      ],
+      "status": "MISSING_IN_INSPECTED_OWNER_MODEL",
+      "browser_requirement_state": "BLOCKED",
+      "resolved_by_candidate": false,
+      "observed_change": "NotesEnums.cs unchanged from98a; NotesDocument.cs changed only NotesSaveResult postcommit/history metadata in bounded diff; WriteDocumentEditor.cs changed named-style reuse but observed mode contract unchanged.",
+      "scope_limit": "Bounded static inspection of Core Notes model, Application Write, Desktop Write, Workspace Write and apps; not a claim about private external services or unretrieved Team A work. Boards has distinct BoardsPageLayoutMode and operations, but those do not prove Write support.",
+      "owner_request": "Team A: publish/acknowledge the owning Write contract and compatible migration separating per-user Continuous/Pages/Book presentation from independent Locked/Unlocked authoring layout, with all six combinations preserving canonical content/IDs/selection and history. Expose typed owning actions for each state; do not ask browser to extend NotesLayoutMode privately.",
+      "required_evidence": "Approved contract, native format/migration/restore tests, six-combination behavior, per-user view isolation, actual Book geometry; all runtime evidence currently NOT_RUN."
+    },
+    {
+      "request_id": "B2-A-WRITE-SECTION-HIERARCHY",
+      "canonical_source_paragraphs": [
+        433382,
+        433713
+      ],
+      "current_fields": [
+        "NotesDocument.Sections : List<NotesSection>",
+        "NotesSection.Id : Guid",
+        "NotesSection.Title : string",
+        "NotesSection.Header : string",
+        "NotesSection.Footer : string",
+        "NotesSection.StartOnNewPage : bool",
+        "NotesSection.Pages : List<NotesPage>"
+      ],
+      "current_methods": [
+        "NotesSection.CreateDefault()",
+        "WriteDocumentEditor.Blocks(): Document.Sections.SelectMany(section=>section.Pages).SelectMany(page=>page.Blocks)",
+        "WriteDocumentEditor.PageForSelection()/PageFor(): flat Document.Sections lookup"
+      ],
+      "current_locations": [
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+          "line": 51
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+          "line": 161
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+          "line": 166
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+          "line": 186
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+          "line": 38
+        },
+        {
+          "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+          "line": 467
+        }
+      ],
+      "status": "MISSING_IN_INSPECTED_OWNER_MODEL",
+      "browser_requirement_state": "BLOCKED",
+      "resolved_by_candidate": false,
+      "observed_change": "NotesSection body is unchanged in candidate versus98a; no ParentSectionID/ParentSectionId or equivalent section parent/hierarchy field/action located in inspected Write/Notes source paths.",
+      "scope_limit": "Absence is scoped to inspected in-repository owning models/Write APIs; stable section IDs already exist. Metadata extensions elsewhere may require owner confirmation, so no incompatible browser hierarchy is invented.",
+      "owner_request": "Team A: publish/acknowledge versioned section hierarchy and typed create-subsection/move-before-after-into operations with optional stable parent relationship; preserve SectionID on rename/reorder/nesting, reject cycles, preserve canonical content and compatibility on save/reopen/undo. Confirm any existing approved metadata-backed representation before adding a field.",
+      "required_evidence": "Owner contract/schema migration plus nested Sections identity/content/link/outline/undo/reopen and cycle-rejection tests; runtime evidence NOT_RUN."
+    }
+  ],
+  "conclusion": "Both inspected owner-model gaps remain present at a63; no earlier98a runtime evidence is relabelled for this candidate. Candidate named-style changes invalidate reuse of earlier full source identity for a63 runtime claims."
+}

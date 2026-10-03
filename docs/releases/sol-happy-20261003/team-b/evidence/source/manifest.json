@@ -1,0 +1,28 @@
+{
+  "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "title": "9to1 Development Specification",
+  "revisionId": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+  "metadata": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "title": "9to1 Development Specification",
+    "mime_type": "application/vnd.google-apps.document",
+    "size": null,
+    "url": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg/edit?usp=drivesdk",
+    "display_url": "https://docs.google.com/document/d/1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg/edit?usp=drivesdk",
+    "file_or_folder": "file",
+    "created_time": null,
+    "modified_time": "2026-10-03T16:54:11.626Z",
+    "parent_ids": null,
+    "drive_id": null,
+    "current_user_can_share": null,
+    "has_augmented_permissions": null,
+    "shared": null,
+    "permissions": null,
+    "source_visibility_status": "access_not_verified"
+  },
+  "paragraphs": 10010,
+  "paragraphs_sha256": "02c14e4f1bb6994ea66cf0bb0ae1383db0d71a3d855d45fc6ae7c18c7bf4464c",
+  "canonical_text_sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23",
+  "characters": 1342853,
+  "authority": "Current live canonical document fetched with connected Google Drive; local snapshot is evidence, not a replacement specification."
+}

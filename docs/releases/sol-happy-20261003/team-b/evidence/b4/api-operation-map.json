@@ -1,0 +1,1404 @@
+[
+  {
+    "canonical_action": "9to1.Files.ListLocations",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P240058-C1",
+    "source_index": 240058,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ListLocationsAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.GetProviderCapabilities",
+    "canonical_arguments": "locationID",
+    "source_requirement": "B4-FILES-P240086-C1",
+    "source_index": 240086,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetProviderCapabilitiesAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.List",
+    "canonical_arguments": "locationID, parentID?, query?",
+    "source_requirement": "B4-FILES-P240134-C1",
+    "source_index": 240134,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ListAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Get",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P240182-C1",
+    "source_index": 240182,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.CreateFolder",
+    "canonical_arguments": "parentID, name",
+    "source_requirement": "B4-FILES-P240206-C1",
+    "source_index": 240206,
+    "browser_ui": "MISSING",
+    "domain_candidate": "CreateFolderAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.CreateArtifact",
+    "canonical_arguments": "parentID, artifactType, config?",
+    "source_requirement": "B4-FILES-P240247-C1",
+    "source_index": 240247,
+    "browser_ui": "MISSING",
+    "domain_candidate": "CreateArtifactAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Rename",
+    "canonical_arguments": "itemID, name, expectedRevision?",
+    "source_requirement": "B4-FILES-P240307-C1",
+    "source_index": 240307,
+    "browser_ui": "MISSING",
+    "domain_candidate": "RenameAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Move",
+    "canonical_arguments": "itemID, destinationFolderID, expectedRevision?",
+    "source_requirement": "B4-FILES-P240359-C1",
+    "source_index": 240359,
+    "browser_ui": "MISSING",
+    "domain_candidate": "MoveAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Copy",
+    "canonical_arguments": "itemID, destinationFolderID, policy?",
+    "source_requirement": "B4-FILES-P240424-C1",
+    "source_index": 240424,
+    "browser_ui": "MISSING",
+    "domain_candidate": "CopyAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-SHELL",
+      "B4-IDENTITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Delete",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P240479-C1",
+    "source_index": 240479,
+    "browser_ui": "MISSING",
+    "domain_candidate": "DeleteAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Restore",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P240506-C1",
+    "source_index": 240506,
+    "browser_ui": "MISSING",
+    "domain_candidate": "RestoreAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Purge",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P240534-C1",
+    "source_index": 240534,
+    "browser_ui": "MISSING",
+    "domain_candidate": "PurgeAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Upload",
+    "canonical_arguments": "destinationFolderID, source, options?",
+    "source_requirement": "B4-FILES-P240560-C1",
+    "source_index": 240560,
+    "browser_ui": "MISSING",
+    "domain_candidate": "UploadAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Download",
+    "canonical_arguments": "itemID, destination, options?",
+    "source_requirement": "B4-FILES-P240618-C1",
+    "source_index": 240618,
+    "browser_ui": "MISSING",
+    "domain_candidate": "DownloadAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Transfer.Get",
+    "canonical_arguments": "transferID",
+    "source_requirement": "B4-FILES-P240670-C1",
+    "source_index": 240670,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetTransferAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Transfer.Pause",
+    "canonical_arguments": "transferID",
+    "source_requirement": "B4-FILES-P240707-C1",
+    "source_index": 240707,
+    "browser_ui": "MISSING",
+    "domain_candidate": "PauseTransferAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Transfer.Resume",
+    "canonical_arguments": "transferID",
+    "source_requirement": "B4-FILES-P240746-C1",
+    "source_index": 240746,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ResumeTransferAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Transfer.Cancel",
+    "canonical_arguments": "transferID",
+    "source_requirement": "B4-FILES-P240786-C1",
+    "source_index": 240786,
+    "browser_ui": "MISSING",
+    "domain_candidate": "CancelTransferAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.GetState",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P240826-C1",
+    "source_index": 240826,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetSyncStateAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.GetItemState",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P240854-C1",
+    "source_index": 240854,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.Now",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P240892-C1",
+    "source_index": 240892,
+    "browser_ui": "MISSING",
+    "domain_candidate": "SyncNowAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.Item",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P240915-C1",
+    "source_index": 240915,
+    "browser_ui": "MISSING",
+    "domain_candidate": "SyncItemAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.Folder",
+    "canonical_arguments": "folderID",
+    "source_requirement": "B4-FILES-P240945-C1",
+    "source_index": 240945,
+    "browser_ui": "MISSING",
+    "domain_candidate": "SyncFolderAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.Pause",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P240979-C1",
+    "source_index": 240979,
+    "browser_ui": "MISSING",
+    "domain_candidate": "PauseSyncAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.Resume",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P241004-C1",
+    "source_index": 241004,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ResumeSyncAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.SetAvailability",
+    "canonical_arguments": "itemID, CloudOnly | AvailableOffline | AlwaysAvailable",
+    "source_requirement": "B4-FILES-P241030-C1",
+    "source_index": 241030,
+    "browser_ui": "MISSING",
+    "domain_candidate": "SetAvailabilityAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-TRANSFER"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.ListPending",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P241119-C1",
+    "source_index": 241119,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ListPendingOperationsAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.ListConflicts",
+    "canonical_arguments": "",
+    "source_requirement": "B4-FILES-P241150-C1",
+    "source_index": 241150,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ListConflictsAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Sync.ResolveConflict",
+    "canonical_arguments": "conflictID, resolution",
+    "source_requirement": "B4-FILES-P241183-C1",
+    "source_index": 241183,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.GetVersions",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P241240-C1",
+    "source_index": 241240,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetVersionsAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.RestoreVersion",
+    "canonical_arguments": "itemID, versionID",
+    "source_requirement": "B4-FILES-P241272-C1",
+    "source_index": 241272,
+    "browser_ui": "MISSING",
+    "domain_candidate": "RestoreVersionAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Share.Get",
+    "canonical_arguments": "itemID",
+    "source_requirement": "B4-FILES-P241318-C1",
+    "source_index": 241318,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetGrantsAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Share.Grant",
+    "canonical_arguments": "itemID, principalID, role",
+    "source_requirement": "B4-FILES-P241348-C1",
+    "source_index": 241348,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GrantAccessAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Share.Revoke",
+    "canonical_arguments": "itemID, principalID",
+    "source_requirement": "B4-FILES-P241399-C1",
+    "source_index": 241399,
+    "browser_ui": "MISSING",
+    "domain_candidate": "RevokeAccessAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Search",
+    "canonical_arguments": "query",
+    "source_requirement": "B4-FILES-P241445-C1",
+    "source_index": 241445,
+    "browser_ui": "MISSING",
+    "domain_candidate": "SearchAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Changes.Subscribe",
+    "canonical_arguments": "cursor?",
+    "source_requirement": "B4-FILES-P241471-C1",
+    "source_index": 241471,
+    "browser_ui": "MISSING",
+    "domain_candidate": "SubscribeChangesAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.Changes.GetSince",
+    "canonical_arguments": "cursor",
+    "source_requirement": "B4-FILES-P241510-C1",
+    "source_index": 241510,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetChangesAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-CONTINUITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Files.CreateStack",
+    "canonical_arguments": "folderID, options?",
+    "source_requirement": "B4-FILES-P241547-C1",
+    "source_index": 241547,
+    "browser_ui": "MISSING",
+    "domain_candidate": "CreateStackAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Files/CUI/Contracts/HostedFilesContracts.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-FILES-HISTORY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Contract declaration only; no concrete IFilesService/hosted provider or real browser entry point."
+  },
+  {
+    "canonical_action": "9to1.Sites.ReserveSlug",
+    "canonical_arguments": "siteID, slug",
+    "source_requirement": "B4-SITES-P900297-C1",
+    "source_index": 900297,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ReserveSlugAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.ChangeSlug",
+    "canonical_arguments": "siteID, slug, options?",
+    "source_requirement": "B4-SITES-P900335-C1",
+    "source_index": 900335,
+    "browser_ui": "MISSING",
+    "domain_candidate": "ChangeSlugAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.VerifyPublicName",
+    "canonical_arguments": "target, options?",
+    "source_requirement": "B4-SITES-P900382-C1",
+    "source_index": 900382,
+    "browser_ui": "MISSING",
+    "domain_candidate": "VerifyAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SiteNameVerificationService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.GetPublicNameVerification",
+    "canonical_arguments": "verificationID",
+    "source_requirement": "B4-SITES-P900429-C1",
+    "source_index": 900429,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetVerificationAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SiteNameVerificationService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.BeginDomainVerification",
+    "canonical_arguments": "siteID, domain, options?",
+    "source_requirement": "B4-SITES-P900483-C1",
+    "source_index": 900483,
+    "browser_ui": "MISSING",
+    "domain_candidate": "BeginDomainVerificationAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established. Canonical signature uses siteID/domain; existing method uses domainBindingID after AttachDomain; adapter contract needs owning-team review."
+  },
+  {
+    "canonical_action": "9to1.Sites.VerifyDomain",
+    "canonical_arguments": "domainBindingID, options?",
+    "source_requirement": "B4-SITES-P900545-C1",
+    "source_index": 900545,
+    "browser_ui": "MISSING",
+    "domain_candidate": "VerifyDomainAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.ConnectDomainProvider",
+    "canonical_arguments": "provider, scopes, options?",
+    "source_requirement": "B4-SITES-P900597-C1",
+    "source_index": 900597,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.ConfigureDomainRecords",
+    "canonical_arguments": "domainBindingID, options?",
+    "source_requirement": "B4-SITES-P900659-C1",
+    "source_index": 900659,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.GetHostingState",
+    "canonical_arguments": "siteID, environmentID?",
+    "source_requirement": "B4-SITES-P900721-C1",
+    "source_index": 900721,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.ChangeHostingProvider",
+    "canonical_arguments": "siteID, providerID, options?",
+    "source_requirement": "B4-SITES-P900773-C1",
+    "source_index": 900773,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreateProject",
+    "canonical_arguments": "config",
+    "source_requirement": "B4-SITES-P901114-C1",
+    "source_index": 901114,
+    "browser_ui": "MISSING",
+    "domain_candidate": "CreateProjectAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SiteProjectService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.OpenProject",
+    "canonical_arguments": "siteOrProjectID",
+    "source_requirement": "B4-SITES-P901148-C1",
+    "source_index": 901148,
+    "browser_ui": "MISSING",
+    "domain_candidate": "GetProjectAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SiteProjectService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established. GetProjectAsync retrieves data; it does not implement browser launch/navigation."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreatePage",
+    "canonical_arguments": "siteID, config",
+    "source_requirement": "B4-SITES-P901189-C1",
+    "source_index": 901189,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.UpdatePage",
+    "canonical_arguments": "pageID, patch",
+    "source_requirement": "B4-SITES-P901228-C1",
+    "source_index": 901228,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreateRoute",
+    "canonical_arguments": "siteID, config",
+    "source_requirement": "B4-SITES-P901266-C1",
+    "source_index": 901266,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.UpdateRoute",
+    "canonical_arguments": "routeID, patch",
+    "source_requirement": "B4-SITES-P901306-C1",
+    "source_index": 901306,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.AddComponent",
+    "canonical_arguments": "parentID, componentType, config",
+    "source_requirement": "B4-SITES-P901346-C1",
+    "source_index": 901346,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.UpdateComponent",
+    "canonical_arguments": "componentID, patch",
+    "source_requirement": "B4-SITES-P901404-C1",
+    "source_index": 901404,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.MoveComponent",
+    "canonical_arguments": "componentID, destination, options?",
+    "source_requirement": "B4-SITES-P901452-C1",
+    "source_index": 901452,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreateReusableComponent",
+    "canonical_arguments": "siteID, sourceComponentID, config?",
+    "source_requirement": "B4-SITES-P901514-C1",
+    "source_index": 901514,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.DetachComponentInstance",
+    "canonical_arguments": "instanceID",
+    "source_requirement": "B4-SITES-P901586-C1",
+    "source_index": 901586,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.SetLayout",
+    "canonical_arguments": "targetID, layout",
+    "source_requirement": "B4-SITES-P901634-C1",
+    "source_index": 901634,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.SetResponsiveOverride",
+    "canonical_arguments": "targetID, breakpointID, patch",
+    "source_requirement": "B4-SITES-P901674-C1",
+    "source_index": 901674,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.UpdateDesignSystem",
+    "canonical_arguments": "siteID, patch",
+    "source_requirement": "B4-SITES-P901739-C1",
+    "source_index": 901739,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreateCollection",
+    "canonical_arguments": "siteID, schema",
+    "source_requirement": "B4-SITES-P901785-C1",
+    "source_index": 901785,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-CMS"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.UpdateCollectionSchema",
+    "canonical_arguments": "collectionID, change, options?",
+    "source_requirement": "B4-SITES-P901830-C1",
+    "source_index": 901830,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-CMS"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreateContent",
+    "canonical_arguments": "collectionID, record",
+    "source_requirement": "B4-SITES-P901897-C1",
+    "source_index": 901897,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-CMS"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.UpdateContent",
+    "canonical_arguments": "recordID, patch",
+    "source_requirement": "B4-SITES-P901945-C1",
+    "source_index": 901945,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-CMS"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.BindData",
+    "canonical_arguments": "targetID, dataBinding",
+    "source_requirement": "B4-SITES-P901988-C1",
+    "source_index": 901988,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-CMS"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.BindForm",
+    "canonical_arguments": "targetID, formBinding",
+    "source_requirement": "B4-SITES-P902032-C1",
+    "source_index": 902032,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-CMS"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.SetSEO",
+    "canonical_arguments": "targetID, config",
+    "source_requirement": "B4-SITES-P902076-C1",
+    "source_index": 902076,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-QUALITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.CreatePreview",
+    "canonical_arguments": "siteID, sourceRevision, config?",
+    "source_requirement": "B4-SITES-P902113-C1",
+    "source_index": 902113,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-PREVIEW"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.Build",
+    "canonical_arguments": "siteID, sourceRevision, config?",
+    "source_requirement": "B4-SITES-P902172-C1",
+    "source_index": 902172,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.Deploy",
+    "canonical_arguments": "siteID, sourceRevision, environmentID, options?",
+    "source_requirement": "B4-SITES-P902223-C1",
+    "source_index": 902223,
+    "browser_ui": "MISSING",
+    "domain_candidate": "BuildAndDeployAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.RollbackDeployment",
+    "canonical_arguments": "deploymentID, options?",
+    "source_requirement": "B4-SITES-P902291-C1",
+    "source_index": 902291,
+    "browser_ui": "MISSING",
+    "domain_candidate": "RollbackDeploymentAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.AttachDomain",
+    "canonical_arguments": "siteID, domainConfig",
+    "source_requirement": "B4-SITES-P902346-C1",
+    "source_index": 902346,
+    "browser_ui": "MISSING",
+    "domain_candidate": "AttachDomainAsync",
+    "domain_source": "/workspace/team-b-worktree/9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+    "domain_member_found": true,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-DOMAIN",
+      "B4-SITES-PUBLISH"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "IMPLEMENTED-UNVERIFIED",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.ConfigureRedirect",
+    "canonical_arguments": "siteID, redirectConfig",
+    "source_requirement": "B4-SITES-P902393-C1",
+    "source_index": 902393,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-AUTHOR",
+      "B4-SITES-SOURCE"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  },
+  {
+    "canonical_action": "9to1.Sites.GetDiagnostics",
+    "canonical_arguments": "scope, options?",
+    "source_requirement": "B4-SITES-P902447-C1",
+    "source_index": 902447,
+    "browser_ui": "MISSING",
+    "domain_candidate": null,
+    "domain_source": null,
+    "domain_member_found": false,
+    "typed_http_transport": "NOT_DEFINED/NOT_ACKNOWLEDGED",
+    "owning_team": "A shared domain; C4 hosted service; B4 browser surface",
+    "tests": [
+      "B4-SITES-QUALITY"
+    ],
+    "outcome": "NOT_RUN",
+    "state": "MISSING",
+    "notes": "Local service method candidate only; semantic UI/action schema and authenticated hosted route not established."
+  }
+]

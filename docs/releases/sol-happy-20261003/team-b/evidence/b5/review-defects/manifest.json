@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "candidate_worktree": "/workspace/team-b-astra-browser-validation",
+  "base_commit": "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+  "commit_state": "UNCOMMITTED; root controls integration; only Auth subtree edited",
+  "protocol": {
+    "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
+    "path": "cloud/cake-id-auth/src/resource-api.ts",
+    "sha256": "781c4de51014020bae9b377e03eb294a644910ab51c6c271421b15bb275ecf06",
+    "basis": "updateProfile SQL matches expectedRevision using COALESCE(profileRevision,1), increments revision by1, returns updated revision; success must be expectedRevision+1. Server input accepts safe integer including MAX_SAFE_INTEGER, but client requires successor also safe and rejects MAX_SAFE before dispatch."
+  },
+  "original_source_sha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+  "fixed_files": {
+    "account-api-client.profile-review.test.js": "7e6fac43d38cea9b498fdeb9441a24d102376f390febc18a97264c7bc4bb6af8",
+    "account-api-client.js": "1269f332a4a5f833d934189c8396ecafce53c9cfba04801f0c843b4d6fe6ff58",
+    "README.md": "d5d35d668f754ce9f01e554f491c84edcbc4e427d0f7b54d451870cdc09b341b",
+    "account-api-client.test.js": "71808f781a6ade29163884985512a7b245cba58f1bdc26eaa97175ae758a6e23"
+  },
+  "original_unit": {
+    "command": "node --test apps/Web/Auth/account-api-client.test.js",
+    "discovered": 21,
+    "executed": 21,
+    "passed": 21,
+    "failed": 0,
+    "exit_status": 0,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original-unit.log"
+  },
+  "initial_negative": {
+    "discovered": 6,
+    "executed": 6,
+    "passed": 1,
+    "failed": 5,
+    "exit_status": 1,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/profile-negative-before.log",
+    "initial_fixture_sha256": "5c28aa690f1a4712ecaec32950cc24ce0933dfd68f987ec0e17aaeb80d014993"
+  },
+  "expanded_negative": {
+    "command": "node --test /workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/original/account-api-client.profile-review.test.js",
+    "discovered": 7,
+    "executed": 7,
+    "passed": 1,
+    "failed": 6,
+    "exit_status": 1,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/expanded-negative-before.log",
+    "fixture_sha256": "7e6fac43d38cea9b498fdeb9441a24d102376f390febc18a97264c7bc4bb6af8"
+  },
+  "fixed_unit": {
+    "command": "node --test apps/Web/Auth/account-api-client.test.js apps/Web/Auth/account-api-client.profile-review.test.js",
+    "cwd": "/workspace/team-b-astra-browser-validation",
+    "discovered": 28,
+    "executed": 28,
+    "passed": 28,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "exit_status": 0,
+    "log": "/workspace/team-b-evidence/sol-happy-20261003/b5/review-defects/profile-fixed-unit.log"
+  },
+  "independent_review": {
+    "reviewer": "B6",
+    "state": "APPROVED_LOCAL_TRANSPORT_REGRESSION_ONLY",
+    "manifest": "/workspace/team-b-evidence/sol-happy-20261003/b6/auth-profile-review/manifest.json",
+    "initial_controls": "2 discovered /0PASS /2FAIL; original source SHA matches and red log retained",
+    "fixed_same_controls": "2 discovered /2PASS /0FAIL; assertions unchanged",
+    "full_fixed_suite": "28 discovered /28PASS /0FAIL; exit0, no skip",
+    "client_sha256": "1269f332a4a5f833d934189c8396ecafce53c9cfba04801f0c843b4d6fe6ff58"
+  },
+  "defects": [
+    {
+      "id": "B5-PROFILE-MUTABLE-PATCH",
+      "original": "Caller mutation during awaited token acquisition changes dispatched fields after validation; read-again getters and nonenumerable toJSON can also alter serialized patch.",
+      "fix": "Read Object.entries exactly once before await, validate allowed string/null values, dispatch independent plain Object.fromEntries snapshot."
+    },
+    {
+      "id": "B5-PROFILE-CAS-ACK",
+      "original": "Any positive safe returned revision was accepted, including stale unchanged and nonsequential revisions. Prior profile success fixture itself returned unchanged1.",
+      "fix": "Require exact expectedRevision+1, safely representable input and successor; original success fixture corrected to2."
+    }
+  ],
+  "evidence_scope": "CLIENT_TRANSPORT_REGRESSION_ONLY; no staging issuer, real Worker, browser UI/cache/session or full parity acceptance",
+  "original_branch_check": {
+    "worktree": "/workspace/team-b-worktree",
+    "client_sha256": "e46cef2458919892881f0fbbd55e7204dfd7700107c257f2147f18d81f771c04",
+    "source_unchanged": true
+  }
+}
