@@ -82,8 +82,10 @@ public sealed class ContextualAiCuiSurfaceTests
         try
         {
             var fault = new AuditFaultStore(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
+            var prompt = new ManuallyAcknowledgedPrompt();
             var home = new HomeAppAiServices(new ModelProviderRegistry([]), fault,
-                new("profile", "Owning profile", "os", "session", true), new AuditGraph(), new AuditInvocations());
+                new("profile", "Owning profile", "os", "session", true), new AuditGraph(), new AuditInvocations(),
+                promptPresenter: prompt);
             var owner = new DurableAuditOwner(Path.Combine(root, "owner.txt"));
             using var state = home.Create(owner, owner);
             state.SetWriteMode();
@@ -91,10 +93,13 @@ public sealed class ContextualAiCuiSurfaceTests
             using var surface = new ContextualAiCuiSurface(state, readiness);
             Assert.Equal(CuiSceneAvailabilityState.Ready, (await surface.InitializeAsync("files", "Files", bounded.Token)).State);
             var window = new Window { Content = surface, Width = 800, Height = 600 }; window.Show();
+            Task<AppAiActionResult>? execution = null;
+            Exception? primary = null;
+            var cleanup = new List<Exception>();
             try
             {
                 fault.FailCompletion = true;
-                var execution = state.ExecuteActionAsync(new("files", "files.save",
+                execution = state.ExecuteActionAsync(new("files", "files.save",
                     JsonSerializer.SerializeToElement(new { exact = "committed" }), null, "original-operation", AppAiAccessMode.Write), bounded.Token).AsTask();
                 string? requestID = null;
                 for (var attempt = 0; attempt < 200 && requestID is null; attempt++)
@@ -103,7 +108,10 @@ public sealed class ContextualAiCuiSurfaceTests
                     if (requestID is null) await Task.Delay(10, bounded.Token);
                 }
                 Assert.NotNull(requestID);
+                Assert.Equal(requestID, await prompt.Displayed.Task.WaitAsync(bounded.Token));
+                Assert.False(execution.IsCompleted);
                 Assert.True((await home.Permissions.DecideAsync(requestID!, HomeApprovalChoice.Accept, cancellationToken: bounded.Token)).Succeeded);
+                prompt.ReleaseReview(); // Display acknowledgment never makes the durable decision.
                 var result = await execution;
                 Assert.True(result.Succeeded);
                 Assert.True(state.HasPendingActionAudit);
@@ -126,9 +134,38 @@ public sealed class ContextualAiCuiSurfaceTests
                 await Assert.ThrowsAsync<InvalidOperationException>(async () => await state.FinishActionAuditAsync(bounded.Token));
                 Assert.Equal(1, owner.Executions);
             }
-            finally { window.Close(); }
+            catch (Exception error) { primary = error; }
+            finally
+            {
+                // Release the SAME pending review and await the SAME original action on every refusal path.
+                try { prompt.ReleaseReview(); }
+                catch (Exception error) { cleanup.Add(error); }
+                try { if (execution is not null) await execution; }
+                catch (Exception error)
+                { if (!ReferenceEquals(error, primary) && !cleanup.Any(item => ReferenceEquals(item, error))) cleanup.Add(error); }
+                try { window.Close(); }
+                catch (Exception error)
+                { if (!ReferenceEquals(error, primary) && !cleanup.Any(item => ReferenceEquals(item, error))) cleanup.Add(error); }
+            }
+            if (cleanup.Count != 0) throw new AggregateException("Original finish-audit test and cleanup failures retained.",
+                primary is null ? cleanup : new[] { primary }.Concat(cleanup));
+            if (primary is not null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(primary).Throw();
         }
         finally { Directory.Delete(root, true); }
+    }
+
+    // Controlled display-only port for this audit test. The real broker decision remains the explicit call above.
+    private sealed class ManuallyAcknowledgedPrompt : IHomeApprovalPromptPresenter
+    {
+        public TaskCompletionSource<string> Displayed { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _released = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<bool> ShowPendingRequestAsync(string requestId, CancellationToken cancellationToken)
+        {
+            if (!Displayed.TrySetResult(requestId)) throw new InvalidOperationException("The original review cannot be replayed.");
+            await _released.Task.WaitAsync(cancellationToken);
+            return true;
+        }
+        public void ReleaseReview() => _released.TrySetResult();
     }
 
     private sealed class DurableAuditOwner(string path) : IAppAiContext, IAppAiActions

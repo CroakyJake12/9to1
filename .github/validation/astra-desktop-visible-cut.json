@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "1132f792ba9fdea820ce3e32a01c64be6435260b",
-  "programTree": "74aa865f390736e1aacff660064fe7e3d02ec266",
+  "baselineCommit": "f939f6a6036be0d123731ddb1dfcd1880ece3018",
+  "programTree": "cc140fbd54b123b3c45eb6648cdcfda2f2857371",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -162,16 +162,16 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "d8ab1ca4cb78bec655c40ad9073eb080d285ca32",
+      "object": "fdcc46f33505ce682cfc210ba3d7a5a4ef65c45b",
       "bytes": 108417,
-      "sha256": "c9c961c091cdc4e5bc677aaa84f3ffa9948b863a911368bf6743710ac5221b83"
+      "sha256": "18930c31b3a4d12bfdb113e2c561bdf8b0f2d46486be0cbc311f9b344f8cc6d1"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
       "mode": "100644",
-      "object": "cefbc82378140918c3bddf9a36fa9a8847c2c32e",
-      "bytes": 12717,
-      "sha256": "79b468bcdebfa86d415beeee19227fd1c9bde59e5af8a3bfe9fd7c4a4cadf685"
+      "object": "aa085dc37b702f957af1da4a744c3f5bbb785fd2",
+      "bytes": 12718,
+      "sha256": "666e7ad40777d33a7169538878c782ea540a2df92a752a934b8b983b3587b782"
     },
     {
       "path": ".github/validation/astra-desktop-visible-resource-classes.json",
@@ -39859,9 +39859,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
       "mode": "100644",
-      "object": "6a7ea5443b551ebc078179eed9199e05c2d301ec",
-      "bytes": 12094,
-      "sha256": "567147d1f29ca59bc75281c88aa1721afb9f0d692cefa93c6b6812e312f21141"
+      "object": "60f0065e9073431df533db4f58e0faf80d99acff",
+      "bytes": 14512,
+      "sha256": "7f4f19d3a393cbadc3f1e6e8aa05486e3519f5850e802cd68ea70a7eec6c21a4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ConvergenceQolTests.cs",
@@ -66398,7 +66398,8 @@
     "Exact actual Sites03 presenter CS0234 corrected solely with Avalonia.Application.Current. Two same namespace Home macro-on references proactively qualified; these are preventive/unreached and not observed native errors. Entire original presenter/probe bodies invert exactly, all App/profile/shutdown/permission/approval/cancellation/finally/drain actions unchanged. Corrected distinct-unrequested token tiny12 proof source08/W5 is pinned. Actual full3 Sites originals owned by Worker4, actual wholeHome native acceptance still mandatory.",
     "Current28 accepted IMAP four products are exact original d657/normal28 bytes overlaid onto the unchanged actual eabc corrective seed; entire owning210 class rows and all old method/TRX entries retained plus actual Inbox class/two required Passed methods (211/44/12). Resource/regression and all caller/helper/native/TLS/CRL/Java/task/restore/profile/session/shutdown/drain bodies unchanged. Current28 runtime ledger is selected exactly as validation-only; historical semantic-base ledger remains disclosed. Sites Reachable visibility is the exact one-modifier pure traversal correction for two observed CS0117 errors, with no mutation/permission body change. No constructor/ref/build/run or native acceptance inferred.",
     "Actual Home07 owning original remains unreviewed; two complete failed regression/resource families independently closed. This corrective retains every original caller/native/PDB/restore/task/TLS/profile/session/shutdown/drain body and every old class/method/TRX mapping. Only observed two Desktop fixtures change; accepted Math23/Android30/ledger source inherited exactly, four math classes appended to owning215/resource48 with all15 methods/22 actual Passed-case minima. No evolving CoreApi, new Agent, forwarding or Sites observer source selected. No compiler/native/full-cohort acceptance inferred.",
-    "This successor changes only the exact observed Sites fixture predicate assertion and its owning-class SHA. Complete admitted Home09 regression125 demonstrates xUnit2029; resource/owning originals remain held and no native/full cohort acceptance is inferred. All existing215/12/48 classes,22 Math minima, original method/TRX/caller/source/PDB/task/restore/TLS/CRL/Java/profile/shutdown/session/drain guards remain unchanged."
+    "This successor changes only the exact observed Sites fixture predicate assertion and its owning-class SHA. Complete admitted Home09 regression125 demonstrates xUnit2029; resource/owning originals remain held and no native/full cohort acceptance is inferred. All existing215/12/48 classes,22 Math minima, original method/TRX/caller/source/PDB/task/restore/TLS/CRL/Java/profile/shutdown/session/drain guards remain unchanged.",
+    "Actual Home11 regression151 now compiles and demonstrates a finish-audit test composed without a prompt presenter. The test-only presenter acknowledges the exact request and waits for the SAME explicit manual broker Accept; production unavailable-display HOME_PERMISSION_REQUIRED remains unchanged. Every prior assertion/method and full215/12/48/Math22/native/TLS/source/PDB/task/restore/profile/shutdown/drain guard remains required. Test display acknowledgement is synthetic; no real mounted prompt, grant, owner execution replay or native acceptance is inferred. Owning/resource originals remain held."
   ],
   "inputManifests": [
     {
@@ -66822,6 +66823,26 @@
     {
       "path": "/workspace/astra-source/worker1-home07-current30-full-corrective-package09-accurate-executable-metadata/manifest.json",
       "sha256": "c51bfc224ef2841f8030e69db644b7a8c6426385a8c77a2ba3bc81ee307fd292"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home09-current30-full-corrective-package11-complete-inherited-guard-provenance/manifest.json",
+      "sha256": "4c28a89adbac6803913be0a3b9dad214522245614e2959046557501384399d20"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home11-contextual-finish-original-prompt-fixture-source01/manifest.json",
+      "sha256": "2f9f11512aedf13867676d17b9d2197c4fc75eaf7622a56e8d786a7318b09ee7"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home11-regression-full-original-failure-closure01.json",
+      "sha256": "f4707b2041bea670858c34613839e635a4756a7435129936949675c6e27059ed"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-home11-original-prompt-fixture-source01-peer01.json",
+      "sha256": "06407c0c4f039d275a37f05e2c164cdd3cfa1a5232ac5030143c97ad87eea4df"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home11-current30-full-corrective-package12-original-acknowledged-finish-fixture/manifest.json",
+      "sha256": "5d7d75e5f37a88ea5d4ca10d41dd8759dc3ae818ef54b533e8044557d970b9d2"
     }
   ],
   "sharedCakeIdContract": null
