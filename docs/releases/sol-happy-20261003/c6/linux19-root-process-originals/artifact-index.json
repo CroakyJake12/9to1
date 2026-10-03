@@ -1,0 +1,62 @@
+[
+  {
+    "path": "root-process/23591-pending.json",
+    "bytes": 915,
+    "sha256": "06430f64319576580e1bbb5f1b6ca7cf668fd4b5d7ebc2aac86eba38db01e311",
+    "pieces": [
+      {
+        "artifactPart": 1,
+        "piece": "piece-000416.part",
+        "path": "root-process/23591-pending.json",
+        "offset": 0,
+        "bytes": 915,
+        "sha256": "06430f64319576580e1bbb5f1b6ca7cf668fd4b5d7ebc2aac86eba38db01e311"
+      }
+    ]
+  },
+  {
+    "path": "root-process/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "aa30ee431f6742eadf025d659d9496955728ef10640be5e85e36e81ad0923af1",
+    "pieces": [
+      {
+        "artifactPart": 1,
+        "piece": "piece-000417.part",
+        "path": "root-process/expected-managed-launch.json",
+        "offset": 0,
+        "bytes": 103,
+        "sha256": "aa30ee431f6742eadf025d659d9496955728ef10640be5e85e36e81ad0923af1"
+      }
+    ]
+  },
+  {
+    "path": "root-process/root-process-receipt.json",
+    "bytes": 1373,
+    "sha256": "63abd28cc64cb081b3ffe77215aa94545d98ddf4ff1a2cdd00537417a39b06a0",
+    "pieces": [
+      {
+        "artifactPart": 1,
+        "piece": "piece-000418.part",
+        "path": "root-process/root-process-receipt.json",
+        "offset": 0,
+        "bytes": 1373,
+        "sha256": "63abd28cc64cb081b3ffe77215aa94545d98ddf4ff1a2cdd00537417a39b06a0"
+      }
+    ]
+  },
+  {
+    "path": "root-process/root-test.log",
+    "bytes": 34137,
+    "sha256": "3bc806db746dd1d89824e13fedbd3d86bcc017e2d7f6d946ae9eae6d9d3cb46e",
+    "pieces": [
+      {
+        "artifactPart": 1,
+        "piece": "piece-000419.part",
+        "path": "root-process/root-test.log",
+        "offset": 0,
+        "bytes": 34137,
+        "sha256": "3bc806db746dd1d89824e13fedbd3d86bcc017e2d7f6d946ae9eae6d9d3cb46e"
+      }
+    ]
+  }
+]
