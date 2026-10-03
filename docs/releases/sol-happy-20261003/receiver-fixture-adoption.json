@@ -5,7 +5,7 @@
   "scope": "Exact11C-owned fixture tests/helpers only; no branch merge or service/package/schema/config/index change.",
   "sourceOwner": "C2",
   "peerReview": "715e9098",
-  "independentSourceAudit": "C6 complete11file source-bound unchanged service check, publication audit pending",
+  "independentSourceAudit": "03924a94e9cb807b11986116726da00d1c5e6141",
   "reviewedRuntimeAndFreshSmokeSource": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
   "selectedFiles": [
     {
@@ -107,5 +107,10 @@
     "secretsRemoved": true,
     "portReleased": true
   },
-  "qualification": "Local maintained Workerd/D1 bootstrap and actual owned process/PTY/stop/EOF/listener controls only. Old B fixture state/authority unresolved and preserved. No full browser/provider/native/global acceptance."
+  "qualification": "Local maintained Workerd/D1 bootstrap and actual owned process/PTY/stop/EOF/listener controls only. Old B fixture state/authority unresolved and preserved. No full browser/provider/native/global acceptance.",
+  "finalPublicDelivery": "457dbe9e8d397765e81b3c801517bad7d0d3dee6",
+  "publicSourceAuditPath": "c6/fixture-recovery-457dbe-publication-audit.json",
+  "protectedFilesVerified": 15,
+  "rawHashesVerified": 28,
+  "auditErrors": 0
 }

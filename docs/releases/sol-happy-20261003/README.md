@@ -439,7 +439,11 @@ handles/reap authority are unavailable. A detached custodian with private EOF st
 durable receipts and a separate loopback port has passed independent review and
 a fresh actual Workerd/D1 smoke on port 8799. Five owned processes were strictly
 reaped, local secrets removed and the port released. No old receiver recovery or
-configured browser journey is inferred from these local checks.
+configured browser journey is inferred from these local checks. The
+[portable startup and evidence](../../../handoff/team-c/browser-fixture-recovery/README.md)
+pins exact EF source and the caller’s explicit stop/EOF transport. Independent
+publication audit verifies every raw/source/protected hash; earlier OAuth journey
+evidence retains its recorded immutable driver source.
 
 Four complete requested Linux19 root-process records are in
 [c6/linux19-root-process-originals](c6/linux19-root-process-originals/README.md).

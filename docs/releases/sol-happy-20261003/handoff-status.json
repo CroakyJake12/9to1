@@ -1,5 +1,5 @@
 {
-  "recordedUTC": "2026-10-03T23:37:50.389812+00:00",
+  "recordedUTC": "2026-10-03T23:45:49.852795+00:00",
   "releaseStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
@@ -20,7 +20,10 @@
       0
     ],
     "peerIssuerOriginAssertions": 27,
-    "qualification": "Actual local Workerd/D1/maintained library, Node transport; reviewed separate Linux custody adapter. Package/schema/provider/session code and original integration assertions unchanged. B browser journeys remain separate."
+    "qualification": "Actual local Workerd/D1/maintained library, Node transport; reviewed separate Linux custody adapter. Package/schema/provider/session code and original integration assertions unchanged. B browser journeys remain separate.",
+    "fixtureSuccessorSource": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "assertionModulesUnchangedByFixtureSuccessor": true,
+    "validationQualification": "117/27/222 execution stays bound to recorded immutable04ff/maintained driver evidence. Current production index and public/issuer/maintained assertion modules are unchanged; EF new fixture lifecycle has independent actual bootstrap/process controls, no new complete OAuth journey claim."
   },
   "isolatedSDK7": {
     "head": "d30253dd94c1d9978367adb80acfd4c4f74c2931",
@@ -183,7 +186,7 @@
     "originalToolSession": 63118,
     "originalState": "HELD: B8798/private state retained without strict receipt; original kernel handles/reap authority unavailable. No foreign numeric-ID recovery or state deletion. Exact cause of tool loss unknown.",
     "candidate": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
-    "candidateStatus": "REVIEWED exact11 fixture test/helper files adopted; independent finalEF fresh8799 Workerd/D1 smoke exit0, strict5 reaps/originals disappeared, owned secrets removed/portreleased. Known original-session stop newline/EOF/SIGINT/TERM/HUP and disposal controls pass. Public evidence publication/audit pending. No oldBfixture recovery/fullbrowser/provider acceptance.",
+    "candidateStatus": "REVIEWED/ADOPTED exact11C-owned test/helper files; final independent fresh8799 Workerd/D1 smoke exit0/strict5reaps/secretsremoved/portreleased,10actualPTY+listener/EOF/stop controls pass. Final immutable457 publication/raw/source/protected hashes verify. OldBfixture HELD/retained; no new complete OAuth/browser/provider acceptance.",
     "reviewedRuntimeSource": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
     "independentReview": "715e9098",
     "freshLocalSmoke": {
@@ -205,7 +208,22 @@
       },
       "scope": "Actual local Workerd/D1 bootstrap with two fictional accounts/exact client; no browser callback or external services.",
       "source": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
-      "qualification": "Final smoke completed before transient root exec transport loss; original tool exit0/strict receipt and secret-absence readback preserved. Root transport then recovered; no cause inferred."
+      "qualification": "Final smoke completed before transient root exec transport loss; original tool exit0/strict receipt and secret-absence readback preserved. Root transport then recovered; no cause inferred.",
+      "cwd": "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth",
+      "originalToolSession": 43999
+    },
+    "publicationCommit": "457dbe9e8d397765e81b3c801517bad7d0d3dee6",
+    "publicationEvidenceSha256": "cdebb4b9f845156e2f814deb24764b41a623c1ef890acd5ea565f95ff010aff7",
+    "sourceAdoptionCommit": "21cdc40f37e4fbe466d47c9a396821e487893635",
+    "publicationAudit": {
+      "commit": "03924a94e9cb807b11986116726da00d1c5e6141",
+      "path": "c6/fixture-recovery-457dbe-publication-audit.json",
+      "publicHandoffFilesVerified": 32,
+      "rawHashesVerified": 28,
+      "sourceFilesVerified": 11,
+      "protectedUnchangedFilesVerified": 15,
+      "errors": 0,
+      "payloadRerun": false
     }
   }
 }
