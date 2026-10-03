@@ -22,7 +22,7 @@
       "worker": "C2",
       "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
       "task": "Identity-version binding for session approvals",
-      "state": "OWNER_NARROW_ACK_RECEIVED; ISOLATED_A63_RECONCILIATION_PROPOSED; SELECTED_NORMAL30_BODY_NOT_DELIVERED"
+      "state": "QUALIFIED_SOURCE_OWNER_ACK_CURRENT_EEC_BODY_VERIFIED; ISOLATED_RECONCILED_PROPOSAL_UNADOPTED; genuine runtime/provider/fullacceptance separate"
     },
     {
       "worker": "C3",
@@ -39,7 +39,7 @@
       "worker": "C5",
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
       "task": "Detect truncated provider streams",
-      "state": "OWNER_NARROW_ACK_RECEIVED; ISOLATED_A63_RECONCILIATION_PROPOSED; SELECTED_NORMAL30_BODY_NOT_DELIVERED"
+      "state": "QUALIFIED_SOURCE_OWNER_ACK_CURRENT_EEC_BODY_VERIFIED; ISOLATED_RECONCILED_PROPOSAL_UNADOPTED; genuine runtime/provider/fullacceptance separate"
     },
     {
       "worker": "C6",
@@ -180,7 +180,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T23:46:57.354235+00:00",
+  "updatedUTC": "2026-10-03T23:48:21.261055+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -500,6 +500,7 @@
       "SH13 commercial/architecture/isolation/capacity/retention/budget decisions",
       "Verified exact tested artifacts delivered to Jacob PC"
     ],
-    "qualification": "All local successes source-bound, originals preserved; no global native/browser/shared adoption, deployment/commercialactivation/DNS/WordPress retirement/mainmerge/PCdelivery. Provider/account capabilities remain unavailable/unverified. No background completion claim."
+    "qualification": "All local successes source-bound, originals preserved; no global native/browser/shared adoption, deployment/commercialactivation/DNS/WordPress retirement/mainmerge/PCdelivery. Provider/account capabilities remain unavailable/unverified. No background completion claim.",
+    "handoffStatus": "PUBLISHED_READBACK_VERIFIED; remaining required owner/provider/platform/PC decisions keep goal blocked."
   }
 }
