@@ -1,20 +1,91 @@
 {
- "runId": "sol-happy-20261003",
- "team": "C",
- "branch": "release/sol-happy-20261003",
- "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
- "modelAssignments": {"C1":"gpt-6.1-sol","C2":"gpt-6.1-sol","C3":"gpt-6.1-sol","C4":"gpt-6.1-sol","C5":"gpt-6.1-sol","C6":"gpt-6.1-sol","coordinator":"Inherited model; runtime model change unavailable"},
- "claims": [
-  {"worker":"C1","path":"9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs","task":"Repair existing deployment rollback identity/capability handling; no contract change"},
-  {"worker":"C2","path":"9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs","task":"Identity-version binding for session approvals","state":"AWAITING_TEAM_A_ACKNOWLEDGEMENT"},
-  {"worker":"C3","path":"services/Billing/**","task":"Trusted Stripe raw-body signature verification and durable retry-safe event inbox; no prices or balance models","state":"PROPOSED"},
-  {"worker":"C4","path":"9to1 Workspace/Sites/Application/SitePublicIdentityService.cs","task":"Repair domain attachment compile defect and stale verification race; no shared-contract change"},
-  {"worker":"C5","path":"9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs","task":"Detect truncated provider streams","state":"AWAITING_TEAM_A_ACKNOWLEDGEMENT"},
-  {"worker":"C6","path":"docs/releases/sol-happy-20261003/c6/**; eng/c6-spec-index.py","task":"Independent complete-source coverage index and validation evidence"}
- ],
- "requests": ["Team A acknowledge C2/C5 narrow existing shared/native service patches or take ownership and supply tested commits", "Teams confirm existing integrator and accepted baseline; handover required before global acceptance", "Team B reserve browser surfaces only and coordinate Sites/Files shared contracts; C1/C4 patch existing Sites service internals"],
- "testStatus":"NOT_RUN at this coordination publication; individual baseline runs underway",
- "evidenceLocation":"Worker commits and docs/releases/sol-happy-20261003; forthcoming exact logs",
- "deploymentStatus":"NOT_DEPLOYED",
- "commercialStatus":"NOT_ENABLED"
+  "runId": "sol-happy-20261003",
+  "team": "C",
+  "branch": "release/sol-happy-20261003",
+  "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "modelAssignments": {
+    "C1": "gpt-6.1-sol",
+    "C2": "gpt-6.1-sol",
+    "C3": "gpt-6.1-sol",
+    "C4": "gpt-6.1-sol",
+    "C5": "gpt-6.1-sol",
+    "C6": "gpt-6.1-sol",
+    "coordinator": "Inherited model; runtime model change unavailable"
+  },
+  "claims": [
+    {
+      "worker": "C1",
+      "path": "9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+      "task": "Repair existing deployment rollback identity/capability handling; no contract change"
+    },
+    {
+      "worker": "C2",
+      "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+      "task": "Identity-version binding for session approvals",
+      "state": "AWAITING_TEAM_A_ACKNOWLEDGEMENT"
+    },
+    {
+      "worker": "C3",
+      "path": "cloud/billing/**",
+      "task": "Trusted Stripe raw-body signature verification and durable retry-safe event inbox; no prices or balance models",
+      "state": "TESTED_LOCAL_FOUNDATION_NO_DEPLOYMENT_OR_CONSUMER"
+    },
+    {
+      "worker": "C4",
+      "path": "9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+      "task": "Repair domain attachment compile defect and stale verification race; no shared-contract change"
+    },
+    {
+      "worker": "C5",
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+      "task": "Detect truncated provider streams",
+      "state": "AWAITING_TEAM_A_ACKNOWLEDGEMENT"
+    },
+    {
+      "worker": "C6",
+      "path": "docs/releases/sol-happy-20261003/c6/**; eng/c6-spec-index.py",
+      "task": "Independent complete-source coverage index and validation evidence"
+    }
+  ],
+  "requests": [
+    "Team A acknowledge C2/C5 narrow existing shared/native service patches or take ownership and supply tested commits",
+    "Teams confirm existing integrator and accepted baseline; handover required before global acceptance",
+    "Team B reserve browser surfaces only and coordinate Sites/Files shared contracts; C1/C4 patch existing Sites service internals",
+    "Team B claims acknowledged: apps/Web and eng/browser remain B owned. No hosted Files transport exists yet; no staged backend or synthetic remote accounts available. Existing auth backup recovered and being validated; do not build parallel identity.",
+    "Team A resolve existing CanvasArtifactSession.cs:511 CS1593 and Dulche.Runtime missing project references; full Home/Sites acceptance blocked before discovery.",
+    "Team A session trust identity binding patch proposed at 297f3616d89c6249636e245e0005d05ee9bb0fe5; review/ownership acknowledgement required before integration. C5 stream truncation/cancellation fix proposed separately.",
+    "Full requirement/platform interpretation remains incomplete: lossless 8344 source-clause inventory is not a semantic requirement count or completion percentage."
+  ],
+  "testStatus": "CUI baseline 31/31 PASS; full Home/Sites fail compilation; Spaces not run by fail-fast core runner. Local unit/provider-double evidence is not SH-12 acceptance.",
+  "evidenceLocation": "Worker commits and docs/releases/sol-happy-20261003; forthcoming exact logs",
+  "deploymentStatus": "NOT_DEPLOYED",
+  "commercialStatus": "NOT_ENABLED",
+  "candidateCommit": "2e10ca9",
+  "existingAuthSource": {
+    "branch": "codex/cake-id-auth-backup-20261002",
+    "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
+    "path": "cloud/cake-id-auth",
+    "state": "PRESERVED_EXISTING_SOURCE_UNDER_NATIVE_LINUX_WORKERD_VALIDATION",
+    "protocol": "Existing issuer PKCE/OIDC and scopes/account/profile/sessions in cloud/cake-id-auth/README.md; not deployed or cross-client verified"
+  },
+  "reviewedProvisionalChanges": [
+    {
+      "worker": "C1",
+      "sourceCommit": "f3d507e62507cc67b7218949f9fb057042c00d3e",
+      "localTests": "30/30 PASS, independent C6 reproduction",
+      "integration": "PREPARATORY_ONLY"
+    },
+    {
+      "worker": "C3",
+      "sourceCommit": "cb4e1149f58f899c7f16c7f819a095cdb71af802",
+      "localTests": "12/12 PASS, independent C6 reproduction",
+      "integration": "PREPARATORY_ONLY"
+    },
+    {
+      "worker": "C4",
+      "sourceCommit": "f08c218cdd23767e81e0b58cb45d021368182a0f",
+      "localTests": "9/9 PASS, independent C6 reproduction",
+      "integration": "PREPARATORY_ONLY"
+    }
+  ]
 }

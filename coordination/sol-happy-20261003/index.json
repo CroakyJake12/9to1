@@ -9,10 +9,43 @@
   "acceptedHead": null,
   "releaseStatus": "BLOCKED",
   "teams": {
-    "A": {"registration": "NOT_REGISTERED", "ownership": "native applications, shared product models/frameworks, OS/mobile"},
-    "B": {"registration": "ACTIVE_THREAD_OBSERVED", "thread": "Terra-Form", "ownership": "browser runtime adapters and application surfaces", "request": "Publish disjoint team-b.json and requests here; confirm claims and baseline. Do not update combined index or accepted-head."},
-    "C": {"registration": "ACTIVE", "ownership": "hosted services/infrastructure, billing, sole global release integration", "workers": ["C1", "C2", "C3", "C4", "C5", "C6"]}
+    "A": {
+      "registration": "NOT_REGISTERED",
+      "ownership": "native applications, shared product models/frameworks, OS/mobile"
+    },
+    "B": {
+      "registration": "REGISTERED_REMOTE_READBACK_VERIFIED",
+      "thread": "Terra-Form",
+      "ownership": "browser runtime adapters and application surfaces",
+      "request": "Publish disjoint team-b.json and requests here; confirm claims and baseline. Do not update combined index or accepted-head.",
+      "record": "team-b.json"
+    },
+    "C": {
+      "registration": "ACTIVE",
+      "ownership": "hosted services/infrastructure, billing, sole global release integration",
+      "workers": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ]
+    }
   },
   "transportProtocol": "Fetch current coord branch before each update; each team edits only its own records; commit and non-force push. On non-fast-forward fetch and rebase disjoint records; verify remote readback. Team C alone edits index.json and accepted-head.json.",
-  "blockers": ["No configured Cloudflare, Stripe, transactional-email or AI provider credentials/deployment identities", "Sandbox plugin and skill unavailable in discovered tools/catalogue", "Team A registration/ownership acknowledgement and existing-integrator handover unverified", "Full specification, platform and installed artifact acceptance not yet passed", "SH-13 commercial, architecture, browser isolation and operational decisions OPEN", "Jacob local delivery destination/tooling unverified"]
+  "blockers": [
+    "No configured Cloudflare, Stripe, transactional-email or AI provider credentials/deployment identities",
+    "Sandbox plugin and skill unavailable in discovered tools/catalogue",
+    "Team A registration/ownership acknowledgement and existing-integrator handover unverified",
+    "Full specification, platform and installed artifact acceptance not yet passed",
+    "SH-13 commercial, architecture, browser isolation and operational decisions OPEN",
+    "Jacob local delivery destination/tooling unverified"
+  ],
+  "specification": {
+    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
+    "sha256": "ed70da594d6123cec24442a3b6319b929113df0ffae48821ac90fc7df9e07a23"
+  },
+  "candidateStatus": "PREPARATORY_UNACCEPTED; no accepted-head publication without final acceptance and integrator handover"
 }
