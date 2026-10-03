@@ -1,0 +1,173 @@
+{
+  "reviewer": "C5",
+  "proposal": "f5476552cf0b84133e8f6cc6d735a366cc6479dd",
+  "comparison_base": "8d51ead744baabe33949987f55d0b474f62aa9f1",
+  "parent": "23f64e5428d006d38c8d23377d67669f1be692d6",
+  "ack": "No actionable bounded regression found; tooling proposal source acknowledgement only",
+  "scope_review": [
+    "Every new diff line reviewed against previously reviewed complete driver/helper/catalog",
+    "EmitCompilerGeneratedFiles=true is supported actual producer invocation plus restore metadata-query adapter; queried generated/intermediate context must be inside isolated output",
+    "No source synthesis, PathMap, source-document skip, product source or suite inventory change",
+    "Extraction retention refuses symlink/ancestor/nonregular/changed existing and exhausted budget; exclusive fresh writes flush/fsync and exact readback, identical retained bytes verified",
+    "Existing same-PE identity, symbol decompression bounds, complete source-document checks and original creator/session/pidfd/disappearance gates preserved"
+  ],
+  "independent_controls": {
+    "command": "ASTRA_SYMBOL_RECEIVING_ROOT=/workspace/team-c/c3-admin-subreaper-validation ASTRA_PRODUCER_RECEIVING_ROOT=/workspace/team-c/c3-admin-embedded-symbol-proposal python3 .github/scripts/astra-embedded-symbol-tests.py",
+    "cwd": "/workspace/team-c/c3-admin-embedded-symbol-proposal",
+    "exit": 0,
+    "discovered": 18,
+    "passed": 18,
+    "failed": 0,
+    "rawlog": "/workspace/team-c/evidence/c5/generated-producer-f547-review.log",
+    "sha256": "f4f56613b72dfd5f72335f6436697cbd11a3c368b11f9200d8fdf395cf32a4de",
+    "scope": "Retained actual producer/symbol controls plus file-retention negative controls; no full SDK suite rerun"
+  },
+  "independently_reverified_producer": {
+    "before": {
+      "metadata": {
+        "TargetPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+        "TargetFramework": "netstandard2.0",
+        "Configuration": "Debug",
+        "DebugType": "embedded",
+        "EmitCompilerGeneratedFiles": "false",
+        "IntermediateOutputPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/",
+        "CompilerGeneratedFilesOutputPath": ""
+      },
+      "physical_symbol_identity": {
+        "kind": "embedded-portable-pdb",
+        "origin": {
+          "physicalPeSha256": "a5a5ec3d920b1c342462100cb9c79edc6870f7645aabf4df5b4a4d648f7e607e",
+          "debugRecordOffset": 687268,
+          "debugRecordBytes": 137271,
+          "debugRecordSha256": "2c57f5f9cdb844aebc374e2dde1a70e5ec217df83adfcd6609431d9641daa3aa",
+          "declaredSymbolBytes": 293896
+        },
+        "bytes": 293896,
+        "sha256": "c4788df646ff8445a77dc37efa0e45c0c97a3749047a3d5b0f7e47d02ea75e05",
+        "identity": {
+          "portablePdbId": "f56490e72bf1a943b81ec4b2319b58bb4eeb3ef9",
+          "codeViewGuid": "e79064f5-f12b-43a9-b81e-c4b2319b58bb",
+          "codeViewStamp": 4181650254
+        }
+      },
+      "documents": 221,
+      "verified": 219,
+      "missing": [
+        "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/DevGenerators/DevGenerators.CompilerDynamicDependenciesGenerator/CompilerDynamicDependenciesAttribute.generated.cs",
+        "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-before/obj/Avalonia.Build.Tasks/debug/DevGenerators/DevGenerators.EnumMemberDictionaryGenerator/globalAvalonia.Media.KnownColors.cs"
+      ],
+      "build_metadata_commands": 2,
+      "all_exit0": true,
+      "all_original_session_drains_true": true
+    },
+    "fixed": {
+      "metadata": {
+        "TargetPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-fixed/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+        "TargetFramework": "netstandard2.0",
+        "Configuration": "Debug",
+        "DebugType": "embedded",
+        "EmitCompilerGeneratedFiles": "true",
+        "IntermediateOutputPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-fixed/obj/Avalonia.Build.Tasks/debug/",
+        "CompilerGeneratedFilesOutputPath": "/workspace/team-c/c3-admin-embedded-symbol-proposal/artifacts/task-producer-fixed/obj/Avalonia.Build.Tasks/debug//generated"
+      },
+      "physical_symbol_identity": {
+        "kind": "embedded-portable-pdb",
+        "origin": {
+          "physicalPeSha256": "ce5cb883ec638f8663ca2a3328f4b8e8e309f900a6d30a7c972757d39335bc77",
+          "debugRecordOffset": 687268,
+          "debugRecordBytes": 137276,
+          "debugRecordSha256": "94c6d515d4e0575f8cf8c90ab8ffc172400bf52d40722c72054059a843c8d5fb",
+          "declaredSymbolBytes": 293916
+        },
+        "bytes": 293916,
+        "sha256": "107aa103dc9be3493c60b3e16c3b66a0a5706820473a4becd74aa0e64db4559a",
+        "identity": {
+          "portablePdbId": "130d9d99b61b1547b9dc3c8e1325fd988675def3",
+          "codeViewGuid": "999d0d13-1bb6-4715-b9dc-3c8e1325fd98",
+          "codeViewStamp": 4091442566
+        }
+      },
+      "documents": 221,
+      "verified": 221,
+      "missing": [],
+      "build_metadata_commands": 2,
+      "all_exit0": true,
+      "all_original_session_drains_true": true
+    }
+  },
+  "cleared_gate": "Only fixed actual task producer documents:221/221 available/hash verified; prior baseline two-document absence remains retained",
+  "holds": [
+    "Full owning Accounts/OrgPools/Web Debug+Release suite acceptance remains unverified",
+    "Fresh root external source/cut pin before full successor",
+    "No global/source adoption or production/provider acceptance",
+    "Admin key-fix adoption remains separate"
+  ],
+  "changed_source_hashes": [
+    {
+      "path": ".github/scripts/astra-embedded-symbol-tests.py",
+      "bytes": 6823,
+      "sha256": "2aa9aa59ba8728d7a85e80d5df8383e93c31fbe04e11579ee612013663bdc998"
+    },
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 7571,
+      "sha256": "ec5248af05db98dc7b255be95d5656055cc4ec4c75fcae1300efb4b3f0577f17"
+    },
+    {
+      "path": ".github/scripts/astra-organisation-full-owning.py",
+      "bytes": 30359,
+      "sha256": "cdb3728370aacd06d23d039922f105ff92f9fa05e7110fd549d143285d041fe2"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "f0dbc59748d19eb63fdab066946de721e05e23ecf88e0520f06ea45cf0436683"
+    }
+  ],
+  "evidence_hashes": [
+    {
+      "path": "/workspace/team-c/evidence/c5/generated-producer-f547-review.log",
+      "sha256": "f4f56613b72dfd5f72335f6436697cbd11a3c368b11f9200d8fdf395cf32a4de"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/embedded-symbol-controls-attempt4.log",
+      "sha256": "778fcb4063008aceaeded0b9fd08e04dc3227c873e2da4db4a18f9b921140cab"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/run-task-producer-partial.py",
+      "sha256": "ed0c0e91fee7c749e2c25fba0eb4561a980c4715c45244a7aa31d259604c473f"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-before/source-symbol-proof.json",
+      "sha256": "4581ea8ab3b663ebe064ef6364b26a49840337710bd8742236888787cd7721dc"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-before/commands.json",
+      "sha256": "16ecc9a7a219fbdcae596946a1ce1fa206beaea9c22f1fb15702c52d1a43e180"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-before/build.log",
+      "sha256": "600b6ca34e5bf47a75063723995e081147bfabcb24b1ef63f827c516b784a522"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-before/metadata.log",
+      "sha256": "2e595518a888cbe5ef28ea204c846174aec85df0e0197b63902f6641fc585f59"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-fixed/source-symbol-proof.json",
+      "sha256": "496632ce3f6730386a43c4185ce8153db614d19c5c14e737969611de22241385"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-fixed/commands.json",
+      "sha256": "df68b4f15c605e526e90eae54aab440e7cac92e374b9559fb833d1010c991437"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-fixed/build.log",
+      "sha256": "8e31e832922520c65eae95f740ce9dac9ea63c49c73ecf727348523852282e19"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/task-producer-fixed/metadata.log",
+      "sha256": "6422fee6c6342957e7bef2ec120d03be3ff4804a3520a79577920424608f0b75"
+    }
+  ]
+}
