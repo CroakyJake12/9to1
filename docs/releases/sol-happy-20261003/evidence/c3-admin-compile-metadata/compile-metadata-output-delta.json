@@ -1,0 +1,11 @@
+[
+  {
+    "path": "artifacts/root14-managed-build/obj/Avalonia/debug_net10.0_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs",
+    "before": null,
+    "after": {
+      "path": "artifacts/root14-managed-build/obj/Avalonia/debug_net10.0_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs",
+      "bytes": 196,
+      "sha256": "f79c1ad9a9fc76110b3655f5bfb5ff4e3168e9addceff05b937c0796f0ec34eb"
+    }
+  }
+]
