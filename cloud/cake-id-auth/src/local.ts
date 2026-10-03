@@ -91,6 +91,17 @@ async function testEndpoint(request: Request, env: Env): Promise<Response | null
       .run();
     return json({ promoted: result.meta.changes === 1 });
   }
+  if (request.method === "POST" && url.pathname === "/__test/reserve-synthetic-username") {
+    const body = await request.json().catch(() => null) as { ownerUserId?: unknown; username?: unknown } | null;
+    if (typeof body?.ownerUserId !== "string" || typeof body.username !== "string"
+        || !/^fixture_[a-f0-9]{16}$/.test(body.username)) return json({ error: "invalid_test_reservation" }, 400);
+    const owner = await env.DB.prepare("SELECT email FROM user WHERE id = ? AND emailVerified = 1 LIMIT 1")
+      .bind(body.ownerUserId).first<{ email: string }>();
+    if (!owner || !/^[^@]+@example\.test$/.test(owner.email)) return json({ error: "invalid_test_owner" }, 400);
+    await env.DB.prepare("INSERT INTO cake_reserved_usernames (username, ownerUserId, reason, createdAt) VALUES (?, ?, ?, ?)")
+      .bind(body.username, body.ownerUserId, "Isolated synthetic owner-binding fixture only", Date.now()).run();
+    return json({ reserved: true });
+  }
   return json({ error: "not_found" }, 404);
 }
 

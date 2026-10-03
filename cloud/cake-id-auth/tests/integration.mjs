@@ -472,6 +472,29 @@ try {
   assert.equal(otherSession.user.id, otherAccount.id, "new cookie context belongs to the second account");
   const otherCurrent = await (await response("/api/account/current")).json();
   assert.equal(otherCurrent.accountId, otherAccount.id, "account lookup never exposes previous cookie context");
+  const fixtureHandle = `fixture_${runId}`;
+  const fixtureBody = { ownerUserId: otherAccount.id, username: fixtureHandle };
+  const noFixtureAuthority = await jsonRequest("/__test/reserve-synthetic-username", "POST", fixtureBody);
+  assert.equal(noFixtureAuthority.status, 404, "reservation fixture requires its isolated privileged key");
+  const realHandleFixture = await jsonRequest("/__test/reserve-synthetic-username", "POST", { ownerUserId: otherAccount.id, username: "CroakyJake" }, { "x-local-test-key": testKey });
+  assert.equal(realHandleFixture.status, 400, "synthetic fixture cannot provision the real reserved identity");
+  const fixtureReservation = await jsonRequest("/__test/reserve-synthetic-username", "POST", fixtureBody, { "x-local-test-key": testKey });
+  assert.equal(fixtureReservation.status, 200, "guarded fixture binds only its synthetic canonical account");
+  assert.equal((await fixtureReservation.json()).reserved, true);
+  const wrongReservedOwner = await writeProfile(6, { username: fixtureHandle.toUpperCase() });
+  assert.equal(wrongReservedOwner.status, 409, "another canonical account cannot claim a trusted synthetic reservation");
+  const acceptedReservedOwner = await jsonRequest("/api/account/profile", "PATCH", { expectedRevision: 1, fields: { username: fixtureHandle.toUpperCase() } });
+  assert.equal(acceptedReservedOwner.status, 200, "only the canonical account bound by the reservation may rename to it");
+  const reservedProfile = (await acceptedReservedOwner.json()).profile;
+  assert.equal(reservedProfile.accountId, otherAccount.id, "trusted-owner reserved rename preserves canonical account identity");
+  assert.equal(reservedProfile.username, fixtureHandle, "reserved handle normalizes without bypassing owner binding");
+  assert.equal(reservedProfile.revision, 2, "trusted-owner rename commits one authoritative revision");
+  const ownRealReservation = await jsonRequest("/api/account/profile", "PATCH", { expectedRevision: 2, fields: { username: "CroakyJake" } });
+  assert.equal(ownRealReservation.status, 409, "synthetic trusted owner receives no authority over real CroakyJake reservation");
+  const reservedRead = (await (await response("/api/account/profile")).json()).profile;
+  assert.equal(reservedRead.username, fixtureHandle, "denied real reservation leaves synthetic reserved username intact");
+  assert.equal(reservedRead.revision, 2, "denied real reservation preserves revision");
+
   const deniedRegistration = await jsonRequest(`${authPath}/oauth2/create-client`, "POST", {
     client_name: "unauthorized synthetic client", redirect_uris: ["https://client.example.test/callback"],
     token_endpoint_auth_method: "none", application_type: "web",
