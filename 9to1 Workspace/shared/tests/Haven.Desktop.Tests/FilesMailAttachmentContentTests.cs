@@ -8,6 +8,8 @@ using HavenOS.Home.Core;
 using HavenOS.Home.PermissionsTrustNotifications;
 using HavenOS.Mail;
 using HavenOS.Mail.Providers;
+using MailDraft = HavenOS.Mail.MailDraft;
+using MailAccount = HavenOS.Mail.MailAccount;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;

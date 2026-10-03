@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Haven.Application;
 using HavenOS.Mail;
 using HavenOS.Mail.Providers;
+using MailDraft = HavenOS.Mail.MailDraft;
 
 namespace HavenOS.Files.NativeHost;
 

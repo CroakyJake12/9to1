@@ -253,7 +253,7 @@
       "class": "FilesMailAttachmentContentTests",
       "fullClass": "Haven.Desktop.Tests.FilesMailAttachmentContentTests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMailAttachmentContentTests.cs",
-      "sha256": "e6621fc7df2ab5fdeb86d42cedb16369ba9e6d462972c0a41a0c017eae918040",
+      "sha256": "36d634b1b1633be66fe7a6c82337ea29991153a36d238d014cbcfc1bc598ce33",
       "namespace": "Haven.Desktop.Tests",
       "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
     },
