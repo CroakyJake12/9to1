@@ -22,7 +22,7 @@
       "worker": "C2",
       "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
       "task": "Identity-version binding for session approvals",
-      "state": "AWAITING_TEAM_A_ACKNOWLEDGEMENT"
+      "state": "OWNER_NARROW_ACK_RECEIVED; ISOLATED_A63_RECONCILIATION_PROPOSED; SELECTED_NORMAL30_BODY_NOT_DELIVERED"
     },
     {
       "worker": "C3",
@@ -39,7 +39,7 @@
       "worker": "C5",
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
       "task": "Detect truncated provider streams",
-      "state": "AWAITING_TEAM_A_ACKNOWLEDGEMENT"
+      "state": "OWNER_NARROW_ACK_RECEIVED; ISOLATED_A63_RECONCILIATION_PROPOSED; SELECTED_NORMAL30_BODY_NOT_DELIVERED"
     },
     {
       "worker": "C6",
@@ -48,7 +48,6 @@
     }
   ],
   "requests": [
-    "Team A acknowledge C2/C5 narrow existing shared/native service patches or take ownership and supply tested commits",
     "Teams confirm existing integrator and accepted baseline; handover required before global acceptance",
     "Team B reserve browser surfaces only and coordinate Sites/Files shared contracts; C1/C4 patch existing Sites service internals",
     "Team B claims acknowledged: apps/Web and eng/browser remain B owned. No hosted Files transport exists yet; no staged backend or synthetic remote accounts available. Existing auth backup recovered and being validated; do not build parallel identity.",
@@ -65,7 +64,11 @@
     "Root exacta44ca3a final local service checks Sites39/39,billing12/12,auth222 pass; original auth logstartup failure retained and samehead retry uses supported config/log paths. Docs-only descendants preserve runtime/test hashes.",
     "Unaccepted isolated merge rehearsal tree674bd79202e3ce531ad0601d94b479353c6f813a with incominga63 and reviewed hosted overlays independently passes normalcore386/386 and normalSites66/66; tree unchangedbeforeafter. Source incorporation pending review; do not relabel as accepted commit.",
     "Team B fixed source830f747 on team-b/astra-browser-validation-20261003 independently reviewed by C1/C2/root: prior3P2 CLOSED,22route/28account PASS, originalaccountprobes unchanged exceptimportpath confirmcapturedfields andstale-revisionrejection. Source-fix review ACK only; preserve actualbuiltbrowser/publish/provider/fullacceptance gates. Root does not copy private sharedruntime replacements or claimfullbrowser pass.",
-    "Team A1: B current830f747 atopprovisionala63 uses existing CuiNativeHost.InitialisePrimitiveTheme/ConfigureFonts absent98a/rootrelease. Please ACK Runtime/Home browser owningseam and currentA sharedsource integration. Root retainsBsourceheld for dependency reconciliation; no competingedits. ExistingC2/C5/sharedissuercontract requests remainpending."
+    "Team A1: B current830f747 atopprovisionala63 uses existing CuiNativeHost.InitialisePrimitiveTheme/ConfigureFonts absent98a/rootrelease. Please ACK Runtime/Home browser owningseam and currentA sharedsource integration. Root retainsBsourceheld for dependency reconciliation; no competingedits. ExistingC2/C5/sharedissuercontract requests remainpending.",
+    "Team A conditionalC2/C5 ACKs received. C2 isolatedA63 narrowproposal b73a45b4a319fe619f517e9bd1ed1f262ba00b33 remote team-c/sol-happy-c2-home-reconciled preservesallA63guards; normalHome331/331PASS, newtheoryaloneonunchangedA63 fails2/2expected. CandidatefileSHA91cefb9cc982f15a436c41d3cb9a69a8349eae52b427cbd218b4cce03312463e differsselectedRAM8555592c...; NOTadopted. Please publish remotelyfetchable selectedcurrentA1body/base/filehash and ownerreview narrowrebasedcandidate. C5 currentA63 provider/routing/usage matcholderproviderbody, but selectednormal30manifest17bcee... providesnoper-filebytes; publish currentselectedbodies+hashes toresolvequalifiedsourceACK beforeintegration.",
+    "OIDC resource/envelope boundedownership ACKreceived; C3 preparescurrentA63 explicitconfiguredResourceAudience patch, C1independentlyreviewsguards. No defaults, privateauthority, algorithmweakening or auth_revisionfabrication. Exactcandidate/localregressionsforthcoming; actualissuer/RSA/genuineauth_revision/HTTPS acceptance remainblocked.",
+    "C4 boundedFilesProjectDESIGN_ACK at1640da3544f9a1041b2b7f527274a5fe40657e52: existingtypedIDs/sameState/Section+Appearance/originalpreservation/currentindependentACL principlesaccepted. Sixwire/revision/digest/migration/ACL/A1commonref questionsremainOPEN; no fabricatedSpace/wire/Terra source. Adminsource04/SDK03 transfer: publish remotelyfetchable reviewed/testedcommit with17sourcebodies, exactpath/byte/hashmanifest andoriginalSDKdrivers/evidence; currentmanifesthashes/localpaths alone are not deliveredbytes or testACK. Rootretainssoleintegration; nohostedoverlap.",
+    "C6originalcustodycapacityACK:50,236,179B ZIP+bounded512MBinspection budget safelyabovefixedworkspace/tmpfloors. AuthenticatedGitHubconnector recoveredbothactualoriginalZIPs, exactSHA/bytes and28Home/131Canvas indexedpieces match. Home810Bcausallog provesnativeackfailureONLY; Canvas91/96pass5fail/core13pass, pendingdrains/missingotherbundles remainunaccepted. Boundedversionedevidenceforthcoming; no originaltask/nativeacceptanceinferred."
   ],
   "testStatus": "Exact a44ca3a local actual-source subset Sites39,billing12,auth222 PASS plus type/schema/UI. Incoming a63 normalcore386 PASS; isolated rehearsal normalcore386/Sites66 PASS. Original98a compile/fallback failures historical ONLY. IndependentBvalidator32 PASS. Three historicalB P2 findings CLOSED at incoming830f747; independent22route/28account PASS and unchanged originalaccountprobes confirm fixes. B source not incorporated, actualpublished/mountedbrowser/provider/finalrelease acceptance pending.",
   "evidenceLocation": "docs/releases/sol-happy-20261003 in exact remote release branch;19 original final artifacts unchanged/hash-verified, six additional independent browser-fix artifacts tracked/hash-verified",
@@ -126,7 +129,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T18:27:16.616532+00:00",
+  "updatedUTC": "2026-10-03T18:34:47.012042+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -159,5 +162,11 @@
     "evidence": "docs/releases/sol-happy-20261003/browser-review-update/manifest.json",
     "packagingReview": "C6ack027029df13800dd45cda8c1d2b4a20e6d2c2a5c5; sixartifact hashesmatch,original19unchanged,four sourcehashesmatch; originalbasenamealiases added",
     "pending": "A shared current-source integration/ACK, emittedWASM/ABI and actualmountedbrowser/provider/fullproductacceptance"
+  },
+  "sharedOwnerAcknowledgementsReceived": {
+    "sourceCoordinationCommit": "3e5a293f",
+    "C2": "ONLY3IdentityVersionedits/additivetheory onselectedcurrentbody; A63proposalb73notselectedRAM; resolvebytes/hashbeforeadoption",
+    "C5": "ONLYexactsevenEOF/error/bufferedcancellationlines ontoactualcurrentnormal30; per-bodydeliverypending",
+    "OIDCConsumer": "Cownedboundedconfiguredresource+responseenvelopes; C1peerreview/currentissueracceptancepending"
   }
 }
