@@ -93,9 +93,25 @@ public sealed class InstalledApplicationResourceResolver(IInstalledApplicationRe
     public async ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken ct)
     {
         var denied = new ResourceAccessDecision(false, "ApplicationUnavailable", actor.ActorId, scope.Revision, actor.OrganisationId);
-        if (!((actionId == "os.application.launch" && scope.Access == ResourceAccess.Execute) || (actionId == "os.application.read" && scope.Access == ResourceAccess.Read)) || !Guid.TryParse(scope.Id, out var id) || !long.TryParse(scope.Revision, out var revision)) return denied;
-        if (registry is not IInstalledApplicationOriginalActorRegistry originalRegistry) return denied;
-        var app = await originalRegistry.ResolveLaunchForActorAsync(id, revision, actor, ct);
+        var read = (actionId == "os.application.read" || actionId == HomeNativeWidgetRegistry.RenderActionId)
+            && scope.Access == ResourceAccess.Read;
+        var launch = actionId == "os.application.launch" && scope.Access == ResourceAccess.Execute;
+        if ((!read && !launch) || !Guid.TryParse(scope.Id, out var id) || id == Guid.Empty ||
+            !long.TryParse(scope.Revision, out var revision) || revision < 1) return denied;
+        InstalledApplicationReference? app;
+        if (read)
+        {
+            // Existing canonical read only: never refresh providers or initialize missing records.
+            if (registry is not IInstalledApplicationOriginalReadRegistry originalRead) return denied;
+            var snapshot = await originalRead.ReadExistingForActorAsync(actor, ct);
+            app = snapshot?.Applications.SingleOrDefault(a => a.ApplicationId == id && a.Revision == revision &&
+                a.Enabled && a.ProfileAccessible);
+        }
+        else
+        {
+            if (registry is not IInstalledApplicationOriginalActorRegistry originalRegistry) return denied;
+            app = await originalRegistry.ResolveLaunchForActorAsync(id, revision, actor, ct);
+        }
         return denied with { Allowed = app is not null && app.HomeProfileId == actor.ProfileId && app.ProviderId == "linux.xdg-desktop" && actor.OrganisationId is null, Code = "CurrentInstalledApplication" };
     }
 }
@@ -105,13 +121,9 @@ public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry regis
     public async Task<InstalledApplicationReference> ResolveForReadAsync(Guid id, long revision, CancellationToken ct)
     {
         var scope = new ResourceScope("os.installed-application", id.ToString("D"), revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Read);
-        var actor = await resources.AuthorizeAsync("os.application.read", [scope], ct);
-        if (actor is null) throw new UnauthorizedAccessException("This installed application is not visible to the current profile.");
-        var app = await registry.ResolveLaunchAsync(id, revision, ct);
-        if (app is null || app.HomeProfileId != actor.ProfileId || app.ProviderId != "linux.xdg-desktop" ||
-            actor != await resources.AuthorizeAsync("os.application.read", [scope], ct))
-            throw new UnauthorizedAccessException("The installed application or profile changed during discovery.");
-        return app;
+        var original = await resources.AuthorizeAsync("os.application.read", [scope], ct);
+        if (original is null) throw new UnauthorizedAccessException("This installed application is not visible to the current profile.");
+        return await ResolveForReadForActorAsync(id, revision, original, ct);
     }
     internal ValueTask RequireOriginalReadActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
         => RequireOriginalAsync(expectedActor, null, ct);
@@ -119,14 +131,16 @@ public sealed class LinuxApplicationLauncher(IInstalledApplicationRegistry regis
         AuthenticatedResourceActor expectedActor, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(expectedActor);
-        if (registry is not IInstalledApplicationOriginalActorRegistry originalRegistry)
+        if (registry is not IInstalledApplicationOriginalReadRegistry originalRead)
             throw new UnauthorizedAccessException("The installed owner cannot retain the original read session.");
         await RequireOriginalAsync(expectedActor, null, ct);
         var scope = new ResourceScope("os.installed-application", id.ToString("D"), revision.ToString(System.Globalization.CultureInfo.InvariantCulture), ResourceAccess.Read);
         if (await resources.AuthorizeForActorAsync(expectedActor, "os.application.read", [scope], ct) != expectedActor)
             throw new UnauthorizedAccessException("The original installed application read is unavailable.");
         await RequireOriginalAsync(expectedActor, null, ct);
-        var app = await originalRegistry.ResolveLaunchForActorAsync(id, revision, expectedActor, ct);
+        var snapshot = await originalRead.ReadExistingForActorAsync(expectedActor, ct);
+        var app = snapshot?.Applications.SingleOrDefault(item => item.ApplicationId == id && item.Revision == revision &&
+            item.Enabled && item.ProfileAccessible);
         await RequireOriginalAsync(expectedActor, null, ct);
         if (app is null || app.HomeProfileId != expectedActor.ProfileId || app.ProviderId != "linux.xdg-desktop" ||
             await resources.AuthorizeForActorAsync(expectedActor, "os.application.read", [scope], ct) != expectedActor)
