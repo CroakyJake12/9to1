@@ -32,9 +32,9 @@
     {
       "path": ".github/scripts/astra-organisation-full-owning.py",
       "mode": "100644",
-      "object": "0eb6275e55d019841fc8eca96f7626caa0849729",
-      "bytes": 29107,
-      "sha256": "dd5c059f436ddb867d019f81b985f01cace6142ca0c19a11c8f9c0786ec8f901"
+      "object": "42b544995a1b27729fca89b0228dfd6a218a2319",
+      "bytes": 29108,
+      "sha256": "8a3c64a5c55c089eedd36aa1e4e5bbef2e2adb6de7b4c02fc400cc5eb6f4b69a"
     },
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
@@ -65034,9 +65034,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "e57215057802840a331591c818946a9d24cfdbe9",
-      "bytes": 12395,
-      "sha256": "ddc5970fc11bc87f99661f269e8f399a5fe40958fac6a5b4ce31dbb888253338"
+      "object": "b66f2b8bbdfd1b1f6258c838c982caaf1320e1a1",
+      "bytes": 16159,
+      "sha256": "eb957867b94ca81df856186bddb0cd91487911608db6f5b4b3a32eb6468d9bfd"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
