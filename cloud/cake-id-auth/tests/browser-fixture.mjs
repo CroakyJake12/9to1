@@ -43,7 +43,7 @@ const devVars = [
   `LOGIN_LIMITER_KEY=${randomBytes(48).toString("base64url")}`,
   `LOCAL_TEST_KEY=${testKey}`,
   `API_RESOURCE=${resource}`,
-  `ALLOWED_WEB_ORIGINS=${baseURL},${browserOrigin}`,
+  `ALLOWED_WEB_ORIGINS=${process.env.CAKE_BROWSER_FIXTURE_ISSUER_ORIGIN_TEST === "1" ? browserOrigin : `${baseURL},${browserOrigin}`}`,
 ].join("\n") + "\n";
 
 if (existsSync(varsPath)) {
@@ -229,6 +229,11 @@ try {
   console.log(JSON.stringify({ status: "ready", fixtureOnly: true, manifestPath, issuer: discovery.issuer,
     apiResource: resource, browserOrigin, redirectUri: callback, accounts: accounts.length,
     credentials: "private file only; never print or commit", email: "local D1 capture only", port5095: "unused" }));
+  if (process.env.CAKE_BROWSER_FIXTURE_ISSUER_ORIGIN_TEST === "1") {
+    const { testIssuerOrigin } = await import("./issuer-origin.mjs");
+    await testIssuerOrigin({ authClient, response, realFetch, cookies, baseURL, authPath,
+      resource, browserOrigin, callback, clientId: client.client_id, testAccount: accounts[0], discovery });
+  }
   if (process.env.CAKE_BROWSER_FIXTURE_PUBLIC_CORS_TEST === "1") {
     const { testPublicCors } = await import("./public-cors.mjs");
     await testPublicCors({ authClient, response, jsonRequest, realFetch, cookies, baseURL, authPath,
