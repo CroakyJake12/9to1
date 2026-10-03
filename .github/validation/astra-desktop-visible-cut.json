@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7fe75b961ecf4fd980df4097ff472980dbc412bc",
-  "programTree": "b74bfa25c512d096cb1f8cc1ec83d72d3d8cd96e",
+  "baselineCommit": "e59cbdfb17ba050b11a3c27bfe02eceadad8b255",
+  "programTree": "de3b23b129ada9b29ece13b899c625a3fb8183a8",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -134,16 +134,16 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "a0280b7e56efeb2e5f8323dcd5aabcda54c0f5e5",
+      "object": "a221179b8b717416cef945101ae5ea0b6f8e88f2",
       "bytes": 105913,
-      "sha256": "a3e3ef3fe07e0d8a4259c21fecc1f38cf26e581a167c41a67a62374cbf3abdf8"
+      "sha256": "2ada5b82b4ee31f0530caa360352d638a596fb43ad45c6b4fce258142e0543c0"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
       "mode": "100644",
-      "object": "cefbc82378140918c3bddf9a36fa9a8847c2c32e",
-      "bytes": 12717,
-      "sha256": "79b468bcdebfa86d415beeee19227fd1c9bde59e5af8a3bfe9fd7c4a4cadf685"
+      "object": "aa085dc37b702f957af1da4a744c3f5bbb785fd2",
+      "bytes": 12718,
+      "sha256": "666e7ad40777d33a7169538878c782ea540a2df92a752a934b8b983b3587b782"
     },
     {
       "path": ".github/validation/astra-desktop-visible-resource-classes.json",
@@ -39803,9 +39803,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ContextualAiCuiSurfaceTests.cs",
       "mode": "100644",
-      "object": "6a7ea5443b551ebc078179eed9199e05c2d301ec",
-      "bytes": 12094,
-      "sha256": "567147d1f29ca59bc75281c88aa1721afb9f0d692cefa93c6b6812e312f21141"
+      "object": "60f0065e9073431df533db4f58e0faf80d99acff",
+      "bytes": 14512,
+      "sha256": "7f4f19d3a393cbadc3f1e6e8aa05486e3519f5850e802cd68ea70a7eec6c21a4"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ConvergenceQolTests.cs",
@@ -66340,7 +66340,12 @@
     "Only the original Sites fixture nullable Name and named fifth cancellationToken binding, plus the original Home host fixture Avalonia.Application namespace, change fixture behavior. Every assertion, nine Sites methods/fourteen outcomes and both Home host facts are preserved by whole inverses.",
     "The actual83566 Sites04 source fixture is byte-identical to actual685d Home07 and its two full failed original families bind the compiler errors. Actual Sites04 hosted jobs failed, but their bundle contents remain unreviewed; no specific owning failure, complete owning closure or native acceptance is inferred.",
     "Every original process/session/native/TLS/Java/CRL/profile/source/PDB/task/restore/drain caller and workflow remains byte-identical to actual83566. This is an unexecuted corrective package; separate real NativeWebView/classic observer acceptance remains pending.",
-    "Actual Sites05 complete125-member regression original proves the sole xUnit2029 predicate-absence compiler error. Resource and owning originals remain unreviewed; no complete prior-three-family or actual native DOM/profile acceptance is inferred. Sole assertion adapter and truthful owning211 SHA repin retain all211/12/44 class/case membership and every actual caller/filter/workflow/native/TLS/CRL/Java/task/PDB/restore/drain byte. Root alone constructs/launches after complete peer."
+    "Actual Sites05 complete125-member regression original proves the sole xUnit2029 predicate-absence compiler error. Resource and owning originals remain unreviewed; no complete prior-three-family or actual native DOM/profile acceptance is inferred. Sole assertion adapter and truthful owning211 SHA repin retain all211/12/44 class/case membership and every actual caller/filter/workflow/native/TLS/CRL/Java/task/PDB/restore/drain byte. Root alone constructs/launches after complete peer.",
+    "Prior limits above remain predecessor history. This corrective preserves current30 accepted Math23, Android1, IMAP4, Shelf, Writer and ledger, whole211/12/44 and all original caller filters/guards.",
+    "The sole changed fixture adds a controlled acknowledged presenter that awaits the SAME actual manual broker decision. Production unavailable-display refusal, every old three Fact names/positive finish/no owner execution/no replay assertion, and all actual prompt/issuer APIs remain unchanged. The test port never supplies an approval or grant.",
+    "Full151 Sites06 regression original source/PDB/task/restores proves the sole actual Desktop contextual finish assertion failure; owning failed status and resource success status have unreviewed originals. No assumed whole owning cause/full-three/native GUI/provider or deployment acceptance.",
+    "Every original caller/workflow/native/TLS/Java/CRL/profile/task/PDB/restore/process/drain byte remains exact actuale59. This candidate is unconstructed/uncompiled/unrun; separate real NativeWebView observer acceptance remains mandatory.",
+    "Historical captured Contextual fixture SHA567147/source remain exact; selected fixture SHA7f4f is reviewed source01 and therefore matchesCurrentCapture is false. This provenance correction grants no authority and changes no caller check, source body, cohort or assertion."
   ],
   "inputManifests": [
     {
@@ -66698,6 +66703,30 @@
     {
       "path": "/workspace/astra-source/worker3-sites10-actual-xunit2029-whole-predicate-api-peer01.json",
       "sha256": "f67d5f17d6d826560fecdf91c592431aeadc18184c8eaec34a2718e5a5f55cc7"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites211-current30-actual-xunit2029-full-corrective-package06/manifest.json",
+      "sha256": "edb75e31eb77aac4adad540cf36b0d64c1ac100a0c704c7ff2485fcbbc0b81ac"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home11-contextual-finish-original-prompt-fixture-source01/manifest.json",
+      "sha256": "2f9f11512aedf13867676d17b9d2197c4fc75eaf7622a56e8d786a7318b09ee7"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-home11-original-prompt-fixture-source01-peer01.json",
+      "sha256": "06407c0c4f039d275a37f05e2c164cdd3cfa1a5232ac5030143c97ad87eea4df"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites06-regression-full-original-contextual-home-failure-closure02-compact.json",
+      "sha256": "9c75ab112e871fc617e72511a80aea803aa38a59acab49e1962caa0c01fea493"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-sites211-current30-corrective06-full-preservation-peer01.json",
+      "sha256": "5d1a8068fb38c2184e7aba00f3e2240cf13745ade4d34998c25038d38fcdc398"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites211-current30-original-prompt-fixture-full-corrective-package07/manifest.json",
+      "sha256": "f3e04654af7f685a1478044277523bda0babefee5402ac9b41224de0540c8aa6"
     }
   ],
   "sharedCakeIdContract": null
