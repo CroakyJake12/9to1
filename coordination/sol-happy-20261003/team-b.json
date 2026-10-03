@@ -107,9 +107,12 @@
     "A1 maintained theme/font API and exact Runtime dependency ACK received in 5f945e3. C independently reviewed 969 native inputs and c74 keep-alive source at 06c75ec; these source acknowledgements do not accept full runtime/native/provider/product behavior. Please review the new 83 host pointer fix and actual local evidence before global integration.",
     "Team A outstanding owner request remains actual Dashboard branch overlap and missing browser control semantics. Exact unchanged a63 renderer/Home identities and latest 83 reproduction are separately versioned in the handoff. Supply owner corrections and populated cross-client visual/accessibility regression evidence.",
     "Team A A1: exact remotely delivered inputWritebackOwnerProposal above needs ownership ACK/current maintained source. Real native same-turn value+invoke and actual Wave strictoffset fail; identical evidence-only one-line passes8; no shared source modified.",
-    "Team C C2: exact maintainedPublicClientCorsRequest above blocks browser public PKCE metadata/token reads from HTTPSclient.example.test:5096. Current actual8798 discovery/JWKS200 omitACAO. Path-specific explicit-origin public metadata/token success+error/OPTIONS sourcefix +strict fixture handover required; no proxy/fake issuer/login-cookie authority expansion."
+    "Team C C2: exact maintainedPublicClientCorsRequest above blocks browser public PKCE metadata/token reads from HTTPSclient.example.test:5096. Current actual8798 discovery/JWKS200 omitACAO. Path-specific explicit-origin public metadata/token success+error/OPTIONS sourcefix +strict fixture handover required; no proxy/fake issuer/login-cookie authority expansion.",
+    "A2: complete current49-source Write glyph failure delivered artifact254dc0883ad276ede070466d8fc49d46237a2032. Read docs/releases/sol-happy-20261003/team-b-write-glyph-current-red/DELIVERY-README.md and complete source/witness/log. Original beta glyph wraps above retained height; maintain original layout/measurement, no browser width multiplier. Historical missing harness remains qualified.",
+    "A Cards/Study/C: exact current canonical Cards owner request nowfetchable c162e6cd28a2b0d6bac6ab02d84560ddf918f401:apps/Web/Cards/OWNER-CONTRACT-REQUEST.json. Selectedsource absence only; provide newer maintained schema/ops/migration and stable private attributed reviews ratherthan NotesFlashcard substitution.",
+    "C2: publicClientCORS exact delivered successor received for source/handover review. B prepares separate own fixture, current63118 strictcustody will be kernel-drained before replacement; actualHTTPS5096 browser journeys follow fresh source-sealed WASM. No host/staging/credential routing requested."
   ],
-  "testStatus": "Historical83 subset preserved. Resumed actual AX baseline fails5 with3 NOT_RUN; native automation source fixture13 PASS, navigation regression running; durable Write/Files and account CUI queued. No full app/deployment acceptance.",
+  "testStatus": "Current root registry37 PASS; actual current native Render25 PASS after same-oracle old13 then rollback FAIL; owner-ACK Home8 PASS; Write package admission original3 then FAIL with actual effects, repaired6 PASS with all effect counts0; independent current20-source lifecycle review clear. Actual fullWebbuild03 exit0/22warnings/0errors precedes exact newly ACKed input line. B1 actual canonical8+availability26 pending, fresh sealed browser Home/Write/Wave journeys pending. No fullapp/globalrelease acceptance.",
   "evidenceLocation": {
     "branch": "team-b/sol-happy-browser-20261003",
     "commit": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
@@ -135,7 +138,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T21:53:00Z",
+  "updatedUTC": "2026-10-03 22:42:43 UTC",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -428,7 +431,7 @@
   },
   "inputWritebackOwnerProposal": {
     "owner": "Team A A1 shared CUI Runtime",
-    "state": "OWNER_ACK_REQUESTED_NOT_SHIPPED",
+    "state": "EXACT_A1_OWNER_ACK_APPLIED_ISOLATED_CURRENT_NATIVE_AND_FRESH_BROWSER_PENDING",
     "deliveryBranch": "artifact/team-b-browser-83c24b2",
     "deliveryCommit": "80b31bf10aacba30474ed9d9178e48b837d71984",
     "path": "docs/releases/sol-happy-20261003/team-b-input-writeback",
@@ -436,7 +439,9 @@
     "canonicalLoaderSha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3",
     "proposedLoaderSha256": "ccfe9d900b1e0c5fa8664990f26474f6ee57a02af99dd746a60dca3b868dcfb8",
     "change": "Existing guarded TextBox two-way writeback TextChanged->TextChanging only; actual native same-turn IValueProvider.SetValue0.5 then IInvokeProvider reads old0 and refresh resets native0. canonical2/8 exit134; identical8 proposal8/8 exit0. B6 whole one-line/regression8/native event mechanism reviewed. Exact original logs remotely delivered, no shared source edit.",
-    "request": "A1 ACK this exact one-line owned source change or publish maintained fix/current source for integration. Previously failing actual Wave imported WAV48000frames TimelineStartFrame0 expected24000 must rerun against fresh exact candidate; no harness delay or changed assertion."
+    "request": "A1 exact source ACK received. No wholebrowser/native/runtime/release ACK inferred; exact inputline will enter B isolated source commit after current native checks.",
+    "ownerReceiptSha256": "4a05655d14d4eb9a3a4cc6f16b70cd5c3e4d1d819164117e77f705c1875c7e9a",
+    "integration": "Root matched actual canonical11af+threevendorAPIpins and applied sole reviewed TextChanged->TextChanging line, resultingexactccfe. B1 current actualcanonical8+availability26 running. Genuine immediate Wave48000frames/TimelineStartFrame24000 rerun unchanged in fresh bundle required."
   },
   "maintainedPublicClientCorsRequest": {
     "requestId": "b5-maintained-public-client-cors-20261003",
@@ -500,7 +505,7 @@
         "Exact updated fixture startup protocol/environment contract and strict kernel custody/reap receipt. Receiver will stop current fixture through its existing custodian and verify strict drain before launching any replacement; no numeric PID signaling or live edits."
       ]
     },
-    "consumerState": "Browser account acceptance BLOCKED. Supporting Node PKCE negatives9PASS only. Default app client stays null/unavailable until owner reviewed config/composition and real browser checks."
+    "consumerState": "C2 exact reviewed correction DELIVERED source27aa37abb0462869d2b1cb1aa5ee1371b8b13415 branchteam-c/sol-happy-c2-public-cors releasee70c36f1f74f47f7ef430998b07ce006b723894a:handoff/team-c/public-client-cors. B5 reading maintained handover/new isolated source worktree; currentfixture63118 strictcustody retained until reviewed replacement prepared. Genuine HTTPS5096 publicclient browser/profile/session/restart pending; no proxy/faketokens/stagingdependency."
   },
   "homeKeyboardRepairProgress": {
     "sealedCandidate": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
@@ -512,13 +517,45 @@
     "scope": "Real device-local NotesRepository bridge only; not Files provider/hosted/cross-client/fullapp acceptance."
   },
   "continuationRuntimeProgress": {
-    "sourceHead": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
-    "newOwnedWork": "Write real canonical editor/retained renderer+originalfont/theme source, actualNotes IDB17, unchanged native9to1w codecPackages10 +picker28 +unknowncleanup35. Root awaitedprepare-before-detach asynccloseRegistry33pass; platformdirtywarning10unitpass; nativeWebcompositionbuild02exit0/22warnings/0errors (notimmutablebrowseracceptance). B1actualfocusnative18/virtual3/JScontrols, genericTabproduction authored; currentgeometry diagnostics/nativepointerharness pending. B5trustedcallerAccount15/JSImportcompile +PKCEhelper11unit +beforeBFCachetokeninvalidationsource; realauthbrowserCORSblocked. B3closecontrols/Picture8nextactualSDK. B4Cards discovery newlyassigned, B2Present actualretained typed workflow source authoring.",
-    "qualification": "All currentuncommittedsource remainsprovisional until boundedreview/sourcecommit/freshpublishedbrowsercriticaljourneys. RealrichWriteglyphgeometryA2red remains, fulldonor/format/AX/platform/restart/appscope outstanding."
+    "sourceBranch": "team-b/astra-browser-validation-20261003",
+    "sourceHead": "c162e6cd28a2b0d6bac6ab02d84560ddf918f401",
+    "boundedCommitted": "Files17 and Sites13+separate actual restart pass source adapters/tests/contracts committed16+Cards exact owner request; Web parent excludes Files/Sites/Cards, no HTTP/provider/browser activation.",
+    "uncommittedCandidate": "Actual Write canonical repo/renderer/codec+IDB17; staged independent presentation admission and rollback; awaitable draft close; owner-ACK Home2line and CUITextChanging1line; generic current-native AX geometry/Tab; account trusted caller/public PKCE/BFcache. B2 exact20 post-package guard source and B5 lifecycle review clear; B6 common current closure underway.",
+    "next": "Canonical native input8+availability26, exact reviewed source commit, fresh immutable publish, independent actual Home8 and actual Write14 followed by strict realWave14 (timeline24000 unchanged).",
+    "remaining": "All active browserapp/typedcrossapp/platform/donor/backendACL/crossclient/restart requirements remain. RichWrite glyph native failure preserved/owner requested; Cards schema/Forms browser store authority/Present/Motion and other active owners continue."
   },
   "LEOwnerContractDependencies": {
     "TeamA_A1": "Publish maintained versioned package/app/shared-runtime manifests, mandatory Home dependency/installation/bootstrap +registered trusted web service contract. Browser cannot start localHome or invent installer/installedreadiness; currentsourceclient stillincomplete.",
     "TeamA_A2_A3_A4_and_C": "LE12 actualtypedversionedoperations/argument+result IDs/revision/permission/CAS/pagination/idempotency/operationId for Cards/StudyRevisionBank/PlannerBurrows and local/oneMesh/eligibleCloud promotion/revocation before browserconsumers. Currentownerserverpaid+strictStorageAllocatedBytes>10000000000+quota/crossappStudyprogress endpoints absent/unACKed perCcatalogue. No guessedaccount limits/ledger/Spaceidentity/remoteAIpermission.",
     "TeamB": "Continue independentactualHome/Write/Wave/Picture/Present/Cards portable paths; no wholebrowserworkblocked by these individualseams."
+  },
+  "glyphOwnerReproductionDelivery": {
+    "owner": "Team A A2 original Write retained typography/layout",
+    "state": "COMPLETE_NEW_CURRENT_CAUSAL_FAILURE_DELIVERED_OWNER_FIX_REQUESTED",
+    "branch": "artifact/team-b-browser-83c24b2",
+    "commit": "254dc0883ad276ede070466d8fc49d46237a2032",
+    "prefix": "docs/releases/sol-happy-20261003/team-b-write-glyph-current-red",
+    "inventorySha256": "3a3c700c6e2232bbdff25d92ba301ddad3bcfc83b019c30cc7b638f301bc3c33",
+    "capturedSources": 49,
+    "compiledWitnesses": 4,
+    "originalFontFiles": 11,
+    "actual": "2026-10-03 22:19:35 UTC exact current cohort actualFAIL after12PASS. Original beta retainedWidth31.36/height23.625 versus originalFormattedTextHeight34.132. Full actual source/harness/log/json/png/fonts and before-after source identities preserved.",
+    "request": "A2 deliver maintained original measurement/layout/caret/selection/wrapping/emphasis correction. No B-owned width fudge/private renderer. Historical21:04 missing harness attribution remains separate; new49-source replay does not recover missing original bytes. Native current source snapshot predates subsequent two pending-package guards; no false current reexecution claim."
+  },
+  "homeOwnerAcknowledgementIntegration": {
+    "state": "EXACT_A1_TWO_LINE_ACK_APPLIED_NATIVE_CURRENT8_PASS_ISOLATED_BROWSER_PENDING",
+    "target": "9to1 Workspace/Home/UI/Home.cui",
+    "sha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571",
+    "ownerReceiptSha256": "6a03eb168c2dca321c7307ab46f9fec8161c8d35874b43d633cf8c11aeeec448",
+    "actual": "Root verified exact target/base+5APIpins before applying sole dashboardStackPanel2lines. B1 actual currentprotectedfixture8PASSexit0 and actualnativeRender25PASS. Installed readiness/providers/keyboard/browser all separate."
+  },
+  "cardsOwnerContractRequest": {
+    "owner": "Team A maintained Cards/Study schema and typedoperations + Team C service catalogue",
+    "state": "EXACT_CURRENT_SOURCE_ABSENCE_QUALIFIED_OWNER_DELIVERY_REQUESTED",
+    "sourceCommit": "c162e6cd28a2b0d6bac6ab02d84560ddf918f401",
+    "path": "apps/Web/Cards/OWNER-CONTRACT-REQUEST.json",
+    "sha256": "71570e0e00f8113dbcc17d3d957d3c6746352e28c73ca5fb473d1a20737c49ab",
+    "request": "Publish existing maintained CardSet/independent structuredSides/stableSetIDs/privateprincipalReviewRecord and attributedStudy/CAS/idempotency/Topic contracts/current source if newer than selected source. Existing NotesFlashcard front/back/sharedschedule is not LE Cards canonical schema. B has not invented replacement store/UI or exposed placeholder.",
+    "platformMatrix": "Whole8534 live source reconciled31 actualproductsections +310 platform-term clauses; LauncherAndroid/9to1OSonly and MiniComputer explicitwebexemption kept exact. JSONc8a42d1701643a450f5cc716ea06a2e20cb5cb779aee13ff658fe466fc7e260c supports requirement inventory, not completion count."
   }
 }
