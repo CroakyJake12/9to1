@@ -1,0 +1,172 @@
+{
+  "auditedHead": "cf63a04b2c985261c16aec5151b4d7a26ff2d95a",
+  "method": "Read immutable Git objects only; no tests or original payload execution.",
+  "indices": {
+    "c3-admin-attempt5": {
+      "expected": 585,
+      "observed": 585,
+      "hashSizeTrackingErrors": [],
+      "recursiveBinaryFiles": []
+    },
+    "c3-admin-generated-context": {
+      "expected": 11,
+      "observed": 11,
+      "hashSizeTrackingErrors": [],
+      "recursiveBinaryFiles": []
+    }
+  },
+  "holds": [
+    "SDK5 REFUSED; SDK6 preparation gated; no success inferred",
+    "Full SDK, native, provider, HTTPS, global semantic acceptance unresolved"
+  ],
+  "latestSpecification": {
+    "artifacts": 3,
+    "errors": [],
+    "paragraphs": 8534,
+    "paragraphsAreNotRequirementDenominator": true
+  },
+  "C5Catalogue": {
+    "files": 10,
+    "canonicalQuotes": 18,
+    "errors": [],
+    "combinedCatalogue": "MISSING",
+    "runtimeTests": "None; read-only discovery and docs only; independent prior runnable evidence remains scoped"
+  },
+  "C4Map": {
+    "groups": 25,
+    "quoteErrors": [],
+    "states": [
+      "BLOCKED"
+    ],
+    "outcomes": [
+      "NOT_RUN by C4"
+    ],
+    "globalDenominator": "Still unresolved; bounded map not full atomicLE/inherited decomposition."
+  },
+  "serviceContinuity": {
+    "recordedFiles": 52,
+    "runtimeChanges": [],
+    "historicalProseDifference": [
+      "cloud/cake-id-auth/README.md"
+    ],
+    "originalTestHead": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+    "runtimeTestPackageSchemaFiles": 51
+  },
+  "deltaOutsideDocs": [
+    "handoff/team-c/browser-account-review/README.md",
+    "handoff/team-c/browser-account-review/disposed-private-retention-negative.log",
+    "handoff/team-c/browser-account-review/negative/Negative.csproj",
+    "handoff/team-c/browser-account-review/negative/Program.cs",
+    "handoff/team-c/browser-account-review/node-33-controls.log",
+    "handoff/team-c/browser-account-review/original-runtime-build-failure.log",
+    "handoff/team-c/browser-account-review/published-harness-negative.log",
+    "handoff/team-c/browser-account-review/review.json"
+  ],
+  "peerBindings": [
+    {
+      "review": "C5-generated-producer-proposal-peer-review.json",
+      "sourceAndOriginalEvidenceChecks": 15,
+      "errors": [],
+      "scope": "Recorded peer controls only; C6 did not execute tests"
+    },
+    {
+      "review": "C5-compile-metadata-proposal-peer-review.json",
+      "sourceAndOriginalEvidenceChecks": 22,
+      "errors": [],
+      "scope": "Recorded peer controls only; C6 did not execute tests"
+    }
+  ],
+  "historicalByteChangesSince98034": [],
+  "originMain": "98a08827c9fbc486fe987da73f4aee8398120d31",
+  "errors": [],
+  "generatedContextPeer": {
+    "sourceChecks": 4,
+    "originalEvidenceChecks": 4,
+    "errors": [],
+    "scope": "isolated tooling proposal; no global adoption or full SDK acceptance"
+  },
+  "BBoundaryPeer": {
+    "exactSourceFiles": 39,
+    "exactLineBindings": 73,
+    "runtimeQualification": {
+      "tests_rerun": false,
+      "raw_TeamB_evidence": "/workspace/team-b-evidence unavailable in this receivingworkspace; reportedresults not independentlyreproduced",
+      "reported_accessibility": "AX5 structuralPASS but40Tabtrap",
+      "reported_wave": "2PASS1FAIL11NOT_RUN",
+      "new_runtime_acceptance": false
+    }
+  },
+  "SDK5Commands": {
+    "recorded": 115,
+    "exitZero": 115,
+    "strictDrainsTrue": 115,
+    "result": {
+      "head": "8189d31aa86a4fa200d938345a07d976e5ea1030",
+      "cutSha256": "84c421bff2fbc3f0a61a2964bd99b475e63a8cab4cc148a2033f466a9e8638b6",
+      "driverExit": 1,
+      "commands": 115,
+      "commandExitZero": 115,
+      "strictDrainsTrue": 115,
+      "suiteExecutions": [
+        {
+          "name": "debug-whole-accounts",
+          "exitCode": 0,
+          "strictDrain": true
+        },
+        {
+          "name": "debug-whole-organisation-pools",
+          "exitCode": 0,
+          "strictDrain": true
+        }
+      ],
+      "releaseConfigurationExecuted": false,
+      "sourcePdbPhase": "PARTIAL: Web refused unsupported added generated-path guard for configured Avalonia.Base sibling folder",
+      "actualSdk": "10.0.401",
+      "workflowSdk": "10.0.301",
+      "retainedCompiledFiles": 2480,
+      "retainedCompiledBytes": 497802856,
+      "fullAcceptance": "UNVERIFIED",
+      "keyProposalIntegrated": false
+    }
+  },
+  "SDK5ExternalOriginals": {
+    "files": 2480,
+    "logicalBytes": 497802856,
+    "errors": [],
+    "explicitExclusions": 55,
+    "leaks": []
+  },
+  "C2NegativeBindings": {
+    "sourceReadHashes": 9,
+    "sourceBindings": 5,
+    "reproductionSources": 2,
+    "scope": [
+      "Source-linked scripted cancellation probe and Node transport doubles only",
+      "No configured actual browser artifact/OAuth callback/profile/session journey executed",
+      "No real Jacob, provider credentials, external email, deployment or global trust changes",
+      "Strict .NET RSA/auth_revision and Files actor adapter remain separate owner seams"
+    ],
+    "C6executed": false,
+    "publishedRawLogs": 4,
+    "rawHashErrors": []
+  },
+  "finalRevisionContinuity": {
+    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revisionId": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+    "previousRevisionId": "ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8",
+    "recordedUTC": "2026-10-03T21:48:17.775730+00:00",
+    "capture": "Final atomic get_document_text; get_document revision probe agreed. Paragraph text joined with newline and exactly one final newline.",
+    "paragraphs": 8534,
+    "bytes": 1383780,
+    "sha256": "a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c",
+    "identicalTrackedSource": "native-text.txt",
+    "byteComparison": "Entire 1383780-byte native serialization identical to tracked21:04 capture; no textual scope/default/requirement change. Reason for revision change not inferred.",
+    "qualification": "Prior maps/results retain original source identities; clause count is not requirement count, no completion or acceptance inferred."
+  },
+  "ack": "Bounded packaging/source-binding ACK only; no release or source adoption.",
+  "scopeCountClarification": "C5 B JSON lists39 changed_file_hashes (request shorthand38); all39 verified. Source-only review, no TeamB runtime reproduced.",
+  "SDK5Attributes": {
+    "rules": 87,
+    "scope": "Exact retained raw paths; original bytes independently hashed, no runtime suppression"
+  }
+}
