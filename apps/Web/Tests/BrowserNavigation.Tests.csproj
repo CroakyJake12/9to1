@@ -14,4 +14,8 @@
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/HomeDashboard.cs" />
     <ProjectReference Include="../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
   </ItemGroup>
+  <ItemGroup Condition="Exists('../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs')">
+    <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs" Link="Owner/HomeStateCommitActorGuard.cs" />
+    <Compile Include="../../../9to1 Workspace/shared/src/Haven.Application/Authorization/ResourceAuthorization.cs" Link="Owner/ResourceAuthorization.cs" />
+  </ItemGroup>
 </Project>
