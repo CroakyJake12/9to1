@@ -54,6 +54,13 @@
     "/workspace/team-c/evidence/c2/b-account-8b4-readonly-tests.log": {
       "sha256": "2cc0c3b4afaa58fe61c39e3d7c967f8e18440c5ac2287119c28bbaf43de9c996",
       "qualification": "Wrong initial cwd/missing source test paths, preserved"
+    },
+    "originalRuntimeAttempt": {
+      "argv": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c2/dotnet-home NUGET_PACKAGES=/workspace/.nuget/packages AVALONIA_TELEMETRY_OPTOUT=1 /workspace/.tools/dotnet/dotnet run --project /workspace/team-c/evidence/c2/b-account-dispose-negative/Negative.csproj -c Release",
+      "cwd": "/workspace/team-c/c2-browser-account-review",
+      "projectDependency": "First attempt referenced actual framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj plus original exact B bindings/Itransport. Build failed before control execution; later harness linked unchanged actual runtime interfaces and Core project.",
+      "exit": 1,
+      "controlsExecuted": 0
     }
   },
   "limitations": [
@@ -74,5 +81,15 @@
     "framework/CUI/Runtime/ICuiWritableBindingContext.cs": "792aaed32f7d12a896bd6d1e7b505489d34d63e9be5ef3b7526489c37850cc3d",
     "framework/CUI/Runtime/ICuiRepeatItemBindingContext.cs": "9974b6bc624e9f7941c9bb3289b1ebb41b0f2c0801d30a03ebe5401226d06f1a",
     "framework/CUI/Core/CuiRuntimeContracts.cs": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+  },
+  "publishedRelativeHarnessReplay": {
+    "commit": "72381a186d75971f63213aa2f583b29befcd3a7f",
+    "exit": 1,
+    "discovered": 1,
+    "executed": 1,
+    "failed": 1,
+    "qualification": "Expected unchanged production failure; no source edits or assertion weakening",
+    "command": "DOTNET_CLI_HOME=/workspace/team-c/evidence/c2/dotnet-home NUGET_PACKAGES=/workspace/.nuget/packages AVALONIA_TELEMETRY_OPTOUT=1 /workspace/.tools/dotnet/dotnet run --project handoff/team-c/browser-account-review/negative/Negative.csproj -c Release",
+    "rawSha256": "ec6d99c186f8db5e2befe5cb489a7956e8797b9b4063280e5b595564389eff16"
   }
 }
