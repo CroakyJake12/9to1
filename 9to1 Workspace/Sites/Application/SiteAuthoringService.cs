@@ -91,7 +91,7 @@ public sealed class SiteAuthoringService(SiteProjectService projects)
             return component with { Layout=component.Layout with { BreakpointOverrides=overrides } };
         },ct);
     }
-    internal static HashSet<Guid> Reachable(SiteProject project,IEnumerable<Guid> roots)
+    public static HashSet<Guid> Reachable(SiteProject project,IEnumerable<Guid> roots)
     {
         var found=new HashSet<Guid>();var queue=new Queue<Guid>(roots);var nodes=project.Components.ToDictionary(c=>c.ComponentId);
         while(queue.TryDequeue(out var id))

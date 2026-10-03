@@ -28,7 +28,7 @@ public sealed class NativeHomeApprovalPromptPresenter(IServiceProvider services)
                 cancellationToken.ThrowIfCancellationRequested();
                 if (!ReferenceEquals(App.Services, services)) return null;
                 MainView? shell = null;
-                switch (Application.Current?.ApplicationLifetime)
+                switch (Avalonia.Application.Current?.ApplicationLifetime)
                 {
                     case IClassicDesktopStyleApplicationLifetime desktop when desktop.MainWindow is { } window:
                         shell = window.DataContext as MainView;

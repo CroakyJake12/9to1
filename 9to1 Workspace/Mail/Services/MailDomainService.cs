@@ -75,16 +75,27 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
             return Fail<MailProviderSyncBatch>(MailErrorCode.ProviderUnavailable, "The provider adapter is unavailable. Cached mail remains available.", $"account:{accountId}", "9to1.Mail.Sync", recoverable: true);
         if (!account.IsAuthenticated)
             return Fail<MailProviderSyncBatch>(MailErrorCode.AuthenticationRequired, "Reconnect this account before syncing.", $"account:{accountId}", "9to1.Mail.Sync", recoverable: true);
-        await SetSyncStatusAsync(account, MailSyncState.Syncing, null, null, cancellationToken).ConfigureAwait(false);
+        MailState? started = null;
         try
         {
+            started = await _store.TransactAsync(state => state with
+            {
+                Accounts = ReplaceAccount(state.Accounts, account with
+                {
+                    SyncState = MailSyncState.Syncing, LastSyncError = null,
+                }),
+            }, expectedRevision: snapshot.Revision, cancellationToken: cancellationToken).ConfigureAwait(false);
             var batch = await provider.SynchronizeAsync(account, account.ChangeCursor, cancellationToken).ConfigureAwait(false);
+            // A warm cursor cannot hydrate an existing UID whose cache was removed.
+            // Recover that account's bodies before applying any inventory retirement.
+            if (batch.MessageStates?.Any(observed => snapshot.Messages.All(message => message.MessageId != observed.MessageId)
+                && batch.Messages.All(message => message.MessageId != observed.MessageId)) == true)
+                batch = await provider.SynchronizeAsync(account, null, cancellationToken).ConfigureAwait(false);
             var updated = await _store.TransactAsync(state =>
             {
+                var reconciled = ReconcileProviderMessages(state, accountId, batch);
                 var folders = state.Folders.Where(item => item.AccountId != accountId).Concat(batch.Folders).GroupBy(item => item.FolderId).Select(group => group.Last()).ToArray();
-                var messages = state.Messages.Where(item => item.AccountId != accountId).Concat(
-                    state.Messages.Where(item => item.AccountId == accountId && batch.Messages.All(incoming => incoming.ProviderMessageId != item.ProviderMessageId || incoming.FolderKey != item.FolderKey)))
-                    .Concat(batch.Messages).GroupBy(item => item.MessageId).Select(group => group.Last()).ToArray();
+                var messages = reconciled.Messages;
                 var accountNow = state.Accounts.First(item => item.AccountId == accountId) with
                 {
                     SyncState = MailSyncState.Succeeded,
@@ -99,16 +110,48 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                     Accounts = ReplaceAccount(state.Accounts, accountNow),
                     Folders = folders,
                     Messages = messages,
+                    PendingOperations = reconciled.PendingOperations,
                     Threads = state.Threads.Where(item => item.AccountId != accountId).Concat(threads).ToArray(),
                 };
-            }, cancellationToken: cancellationToken).ConfigureAwait(false);
+            }, expectedRevision: started.Revision, cancellationToken: cancellationToken).ConfigureAwait(false);
             return MailResult<MailProviderSyncBatch>.Success(batch);
         }
-        catch (OperationCanceledException) { await SetSyncStatusAsync(account, MailSyncState.Offline, "Sync was cancelled.", account.LastSuccessfulContact, CancellationToken.None).ConfigureAwait(false); throw; }
+        catch (OperationCanceledException)
+        {
+            if (started is not null)
+                await SetSyncStatusIfCurrentAsync(account, MailSyncState.Offline, "Sync was cancelled.", started.Revision).ConfigureAwait(false);
+            throw;
+        }
         catch (MailProviderException ex)
         {
-            await SetSyncStatusAsync(account, ex.Code == MailErrorCode.AuthenticationRequired ? MailSyncState.Failed : MailSyncState.Failed, ex.Message, account.LastSuccessfulContact, CancellationToken.None).ConfigureAwait(false);
+            if (started is not null)
+                await SetSyncStatusIfCurrentAsync(account, MailSyncState.Failed, ex.Message, started.Revision).ConfigureAwait(false);
             return Fail<MailProviderSyncBatch>(ex.Code, ex.Message, $"account:{accountId}", "9to1.Mail.Sync", ex.IsRetryable);
+        }
+        catch (MailStoreException ex)
+        {
+            // Any intervening canonical mutation makes this original batch stale.
+            // Preserve that newer state, including local operations and diagnostics,
+            // rather than applying an older observation or downgrading a newer sync.
+            return Fail<MailProviderSyncBatch>(ex.Code, ex.Message, $"account:{accountId}", "9to1.Mail.Sync", recoverable: true);
+        }
+    }
+
+    private async Task SetSyncStatusIfCurrentAsync(MailAccount account, MailSyncState status, string error, long expectedRevision)
+    {
+        try
+        {
+            await _store.TransactAsync(state => state with
+            {
+                Accounts = ReplaceAccount(state.Accounts, account with
+                {
+                    SyncState = status, LastSyncError = error,
+                }),
+            }, expectedRevision: expectedRevision, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (MailStoreException ex) when (ex.Code == MailErrorCode.Conflict)
+        {
+            // A newer mutation owns the diagnostics too; never overwrite it.
         }
     }
 
@@ -480,9 +523,23 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                 var currentOp = state.PendingOperations.FirstOrDefault(op => op.AccountId == current.AccountId && op.IdempotencyKey == idempotencyKey);
                 if (currentOp is not null) { result = current; return state; }
                 result = update(current) ?? throw new InvalidOperationException("Message update returned no message.");
+                var arguments = kind switch
+                {
+                    MailOperationKind.MarkRead => new Dictionary<string, string> { ["isRead"] = result.IsRead ? "true" : "false" },
+                    MailOperationKind.Star => new Dictionary<string, string> { ["isStarred"] = result.IsStarred ? "true" : "false" },
+                    MailOperationKind.Snooze => new Dictionary<string, string> { ["snoozedUntil"] = result.SnoozedUntil?.ToString("O", System.Globalization.CultureInfo.InvariantCulture) ?? "" },
+                    _ => new Dictionary<string, string>(),
+                };
                 var operation = new MailPendingOperation(Guid.NewGuid(), current.AccountId, kind, messageId, current.ProviderRevision,
-                    idempotencyKey, DateTimeOffset.UtcNow, MailOperationState.Pending, null, null, new Dictionary<string, string>());
-                return state with { Messages = ReplaceMessage(state.Messages, result), PendingOperations = [.. state.PendingOperations, operation] };
+                    idempotencyKey, DateTimeOffset.UtcNow, MailOperationState.Pending, null, null, arguments);
+                var messages = ReplaceMessage(state.Messages, result);
+                return state with
+                {
+                    Messages = messages,
+                    PendingOperations = [.. state.PendingOperations, operation],
+                    Threads = state.Threads.Where(thread => thread.AccountId != current.AccountId)
+                        .Concat(RebuildThreads(messages, current.AccountId)).ToArray(),
+                };
             }, cancellationToken: cancellationToken).ConfigureAwait(false);
             return MailResult<MailMessage>.Success(result!);
         }
@@ -540,6 +597,91 @@ public sealed class MailDomainService(IMailStateStore store, IEnumerable<IMailPr
                     ordered.Select(item => item.MessageId).ToArray(), participants, latest.Subject,
                     ordered.Count(item => !item.IsRead), latest.ReceivedAt);
             }).ToArray();
+
+    private static MailState ReconcileProviderMessages(MailState state, Guid accountId, MailProviderSyncBatch batch)
+    {
+        var observations = batch.MessageStates ?? [];
+        var inventories = batch.FolderInventories ?? [];
+        if (batch.AccountId != accountId || batch.Folders.Any(folder => folder.AccountId != accountId)
+            || batch.Messages.Any(message => message.AccountId != accountId || message.MessageId == Guid.Empty
+                || state.Messages.Any(existing => existing.MessageId == message.MessageId && existing.AccountId != accountId))
+            || observations.Any(message => message.AccountId != accountId || message.MessageId == Guid.Empty
+                || string.IsNullOrEmpty(message.ProviderMessageId) || string.IsNullOrEmpty(message.FolderKey) || string.IsNullOrEmpty(message.ProviderRevision))
+            || inventories.Any(folder => folder.AccountId != accountId || string.IsNullOrEmpty(folder.FolderKey)
+                || folder.MessageIds.Any(id => id == Guid.Empty) || folder.MessageIds.Distinct().Count() != folder.MessageIds.Count)
+            || inventories.Select(folder => folder.FolderKey).Distinct(StringComparer.Ordinal).Count() != inventories.Count
+            || observations.Select(message => message.MessageId).Distinct().Count() != observations.Count
+            || batch.Messages.Select(message => message.MessageId).Distinct().Count() != batch.Messages.Count
+            || batch.Folders.Any(folder => state.Folders.Any(existing => existing.FolderId == folder.FolderId && existing.AccountId != accountId)))
+            throw new MailProviderException(MailErrorCode.SyncFailed, "The provider returned an invalid account-scoped sync batch. Cached mail was preserved.", false);
+
+        // Existing adapters that do not provide the new complete membership/flag
+        // contract keep their original merge behavior. No invented completeness
+        // or deletion inference is applied to those batches.
+        if (batch.MessageStates is null && batch.FolderInventories is null)
+            return state with
+            {
+                Messages = state.Messages.Concat(batch.Messages).GroupBy(message => message.MessageId).Select(group => group.Last()).ToArray(),
+            };
+
+        var messages = state.Messages.ToDictionary(message => message.MessageId);
+        var operations = state.PendingOperations.ToArray();
+        bool IsMessageOperation(MailPendingOperation operation, Guid id) => operation.AccountId == accountId
+            && operation.TargetId == id && (operation.Kind is MailOperationKind.MarkRead or MailOperationKind.Star
+                or MailOperationKind.Move or MailOperationKind.Archive or MailOperationKind.Delete or MailOperationKind.Restore or MailOperationKind.Snooze)
+            && (operation.State is MailOperationState.Pending or MailOperationState.Applying or MailOperationState.Conflict);
+        void Conflict(Guid id, string code, string reason, string? revision = null)
+        {
+            for (var index = 0; index < operations.Length; index++)
+                if (IsMessageOperation(operations[index], id)
+                    && (code == "ProviderMessageGone" || !string.Equals(operations[index].ExpectedProviderRevision, revision, StringComparison.Ordinal)))
+                    operations[index] = operations[index] with { State = MailOperationState.Conflict, ErrorCode = code, ErrorMessage = reason };
+        }
+        MailMessage Merge(MailMessage current, MailMessage incoming)
+        {
+            if (current.AccountId != accountId || incoming.AccountId != accountId
+                || current.ProviderMessageId != incoming.ProviderMessageId || current.FolderKey != incoming.FolderKey)
+                throw new MailProviderException(MailErrorCode.SyncFailed, "The provider changed a canonical message identity. Cached mail was preserved.", false);
+            var pending = operations.Where(operation => IsMessageOperation(operation, current.MessageId)).ToArray();
+            Conflict(current.MessageId, "ProviderRevisionConflict", "The provider changed this message while a local operation was pending. Review the preserved local change before replay.", incoming.ProviderRevision);
+            return incoming with
+            {
+                IsRead = pending.Any(operation => operation.Kind == MailOperationKind.MarkRead) ? current.IsRead : incoming.IsRead,
+                IsStarred = pending.Any(operation => operation.Kind == MailOperationKind.Star) ? current.IsStarred : incoming.IsStarred,
+                IsDeleted = pending.Any(operation => operation.Kind is MailOperationKind.Delete or MailOperationKind.Restore) ? current.IsDeleted : incoming.IsDeleted,
+                SnoozedUntil = current.SnoozedUntil,
+                RemoteContent = current.RemoteContent,
+            };
+        }
+        foreach (var incoming in batch.Messages)
+        {
+            messages[incoming.MessageId] = messages.TryGetValue(incoming.MessageId, out var current) ? Merge(current, incoming) : incoming;
+        }
+        foreach (var observed in observations)
+        {
+            if (!messages.TryGetValue(observed.MessageId, out var current))
+                throw new MailProviderException(MailErrorCode.SyncFailed, "A message cache is missing while its provider flags are current. Retry a full sync.", true);
+            var incoming = current with
+            {
+                AccountId = observed.AccountId, ProviderMessageId = observed.ProviderMessageId, FolderKey = observed.FolderKey,
+                IsRead = observed.IsRead, IsStarred = observed.IsStarred, IsImportant = observed.IsImportant,
+                IsDeleted = observed.IsDeleted, ProviderRevision = observed.ProviderRevision,
+            };
+            messages[observed.MessageId] = Merge(current, incoming);
+        }
+        foreach (var inventory in inventories)
+        {
+            var live = inventory.MessageIds.ToHashSet();
+            if (live.Any(id => !messages.TryGetValue(id, out var current) || current.AccountId != accountId || current.FolderKey != inventory.FolderKey))
+                throw new MailProviderException(MailErrorCode.SyncFailed, "A folder inventory contains an unknown or differently scoped message. Retry sync.", true);
+            foreach (var current in messages.Values.Where(message => message.AccountId == accountId && message.FolderKey == inventory.FolderKey && !live.Contains(message.MessageId)).ToArray())
+            {
+                messages[current.MessageId] = current with { IsDeleted = true };
+                Conflict(current.MessageId, "ProviderMessageGone", "The provider no longer contains this message. Its cached content and pending local operation were preserved for review.");
+            }
+        }
+        return state with { Messages = messages.Values.ToArray(), PendingOperations = operations };
+    }
 
     private static MailResult<T> Fail<T>(MailErrorCode code, string message, string target, string action, bool recoverable = false, IReadOnlyDictionary<string, string>? details = null) =>
         MailResult<T>.Failure(new MailError(code, message, target, action, recoverable, Details: details));
