@@ -13,3 +13,10 @@ export function installFixtureRelease(release) {
     input.close();process.stdin.pause();
   };
 }
+
+export async function finishFixtureRelease(stopOwned, disposeCaller) {
+  const failures=[];
+  try { await stopOwned(); } catch(error) { failures.push(error); }
+  try { disposeCaller(); } catch(error) { failures.push(error); }
+  if(failures.length) throw new AggregateError(failures,'Owned drain and independent caller-control disposal failures retained');
+}

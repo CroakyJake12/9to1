@@ -1,4 +1,4 @@
-import { installFixtureRelease } from "./fixture-control.mjs";
+import { installFixtureRelease, finishFixtureRelease } from "./fixture-control.mjs";
 import { finishIntegrationCleanup } from "./integration-lifecycle.mjs";
 import { launchFixtureCustodian } from "./fixture-launch.mjs";
 import { fixturePort as parseFixturePort, assertFixturePortFree } from "./fixture-network.mjs";
@@ -256,8 +256,7 @@ try {
 } finally {
   // A cleanup error deliberately skips all state removal and remains an observable nonzero failure.
   await finishIntegrationCleanup(mainFailure, async () => {
-  await stopWorker();
-  closeCallerControl();
+  await finishFixtureRelease(stopWorker, closeCallerControl);
   const journalCloseFailure = worker?.fixtureLaunchError ?? mainFailure?.fixtureJournalCloseError;
   if (journalCloseFailure) throw new Error("Caller journal-close authority ambiguous; fixture state retained", { cause: journalCloseFailure });
   globalThis.fetch = realFetch;
