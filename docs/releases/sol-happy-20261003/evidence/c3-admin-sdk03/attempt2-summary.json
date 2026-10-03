@@ -1,0 +1,57 @@
+{
+  "head": "640f63e08f83a2da6a28e3f370199438d0430003",
+  "status": "ACTUAL_WHOLE_SDK_WEB_REFUSED_OR_FAILED",
+  "exitCode": 1,
+  "commandsExecuted": 27,
+  "commandsExitedZero": 27,
+  "sessionSealsDrained": 26,
+  "failedCustodyCommand": {
+    "argv": [
+      "dotnet",
+      "build",
+      "9to1 Workspace/Web/Tests/Web.Specs.csproj",
+      "--no-restore",
+      "--disable-build-servers",
+      "-m:1",
+      "-nr:false",
+      "-p:UseSharedCompilation=false",
+      "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+      "-p:EnableWindowsTargeting=true",
+      "-p:Configuration=Debug",
+      "-p:UseArtifactsOutput=true",
+      "-p:ArtifactsPath=/workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build",
+      "-p:IncludeProjectNameInArtifactsPaths=true",
+      "-p:RuntimeIdentifier=linux-x64",
+      "-p:RuntimeIdentifiers=linux-x64",
+      "-p:SelfContained=false",
+      "-p:AvaloniaBuildTasksLocation=/workspace/team-c/c3-admin-driver-validation/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+      "-p:TargetFramework=net10.0"
+    ],
+    "cleanupTypes": [
+      "RuntimeError",
+      "RuntimeError"
+    ],
+    "creatorPidfdCaptured": true,
+    "exitCode": 0,
+    "extraEnvironment": {},
+    "log": "logs/debug-build-web.log",
+    "logBytes": 9101,
+    "logSha256": "eff2f4235fc9f2fc952c004c15019cab3beae3205ff87e79e049d371f0028d3b",
+    "name": "debug-build-web",
+    "originalSessionCaptured": true,
+    "primaryType": null,
+    "seal": {
+      "classification": "Original SDK metadata/build or complete console harness process",
+      "drained": false,
+      "expectedManagedLaunch": true
+    },
+    "seconds": 166.07220509500075
+  },
+  "completeConfigurations": [],
+  "suitesExecuted": 0,
+  "fullDriverPdbPhaseReached": false,
+  "retainedPhysicalOutputFiles": 2328,
+  "retainedPhysicalOutputBytes": 496209837,
+  "orphanZombieStat": "52449 (MSBuild) Z 1 51587 51587 0 -1 4227340 75334 0 0 0 517 21 0 0 20 0 1 0 1237845 0 0 18446744073709551615 0 0 0 0 0 0 0 16781312 148734 0 0 0 17 2 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
+  "qualification": "Physical Debug outputs retained after original drain refusal; no reinterpretation as full source/PDB/runtime acceptance. Evidence output retention external to original driver256MiB bound; original failure receipt/budget unchanged."
+}
