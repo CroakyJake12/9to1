@@ -8,25 +8,23 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <WasmMainJSPath>wwwroot/main.js</WasmMainJSPath>
-    <WasmMainHTMLPath>wwwroot/index.html</WasmMainHTMLPath>
     <WasmEnableThreads>false</WasmEnableThreads>
+    <PinnedBrowserProject>$(MSBuildProjectDirectory)/../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser</PinnedBrowserProject>
+    <!-- The transitive native packages select the SDK's SIMD/thread variant themselves. -->
+    <ShouldIncludeNativeSkiaSharp>false</ShouldIncludeNativeSkiaSharp>
+    <ShouldIncludeNativeHarfBuzzSharp>false</ShouldIncludeNativeHarfBuzzSharp>
   </PropertyGroup>
+  <!-- Source project references do not import the adapter's packaged build contract. -->
+  <Import Project="$(PinnedBrowserProject)/build/Avalonia.Browser.props" />
+  <Import Project="$(PinnedBrowserProject)/build/Avalonia.Browser.targets" />
   <ItemGroup>
     <Compile Remove="Tests/**/*.cs" />
     <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj" />
     <ProjectReference Include="../../9to1 Workspace/Home/HavenOS.Home.csproj" />
     <EmbeddedResource Include="../../9to1 Workspace/Home/UI/Home.cui" LogicalName="NineToOne.Web.Home.cui" />
-    <WasmExtraFilesToDeploy Include="wwwroot/browser-platform.js" />
   </ItemGroup>
-  <Target Name="CollectPinnedBrowserAssets" BeforeTargets="_WasmGenerateAppBundle">
-    <PropertyGroup>
-      <PinnedBrowserAssets>$(MSBuildProjectDirectory)/../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/staticwebassets</PinnedBrowserAssets>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(PinnedBrowserAssets)/avalonia.js')" Text="The pinned Avalonia browser runtime assets have not been built. Restore the source build prerequisites before bundling this host." />
-    <ItemGroup>
-      <WasmExtraFilesToDeploy Include="$(PinnedBrowserAssets)/*.js;$(PinnedBrowserAssets)/*.js.map" />
-    </ItemGroup>
+  <Target Name="RequirePinnedBrowserAssets" BeforeTargets="ResolveStaticWebAssetsInputs">
+    <Error Condition="!Exists('$(PinnedBrowserProject)/staticwebassets/avalonia.js') or !Exists('$(PinnedBrowserProject)/staticwebassets/storage.js')" Text="The pinned Avalonia browser runtime assets have not been built. Build the adapter's locked webapp sources before publishing this host." />
   </Target>
 </Project>

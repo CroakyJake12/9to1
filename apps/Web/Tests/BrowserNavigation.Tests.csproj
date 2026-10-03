@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="../BrowserRouteCodec.cs" Link="Production/BrowserRouteCodec.cs" />
     <Compile Include="../BrowserSurfaceRegistry.cs" Link="Production/BrowserSurfaceRegistry.cs" />
+    <Compile Include="../BrowserRouteDispatcher.cs" Link="Production/BrowserRouteDispatcher.cs" />
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs" Link="Owner/HomeCoreContracts.cs" />
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs" Link="Owner/HomeFeatureContracts.cs" />
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/HomeDashboard.cs" />

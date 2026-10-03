@@ -111,8 +111,72 @@ await Run("B1-REGISTRY-06-duplicate-owner-not-overwritten", () =>
     var duplicate = registry.Register(handler, _ => FixtureSurface());
     Check(!duplicate.Succeeded && duplicate.Code == "HomeFeatureRouteConflict" && registry.AvailableRoutes.Count == 1);
 });
-Console.WriteLine($"Discovered: 16; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
-return executed == 16 ? 0 : 1;
+await RunAsync("B1-DISPATCH-01-canonical-owner-before-fallback", async () =>
+{
+    foreach (var route in new[] { HomeFeatureRouteIds.Dashboard, HomeFeatureRouteIds.Library, HomeFeatureRouteIds.Events })
+    {
+        var registry = new BrowserSurfaceRegistry();
+        var ownerCalls = 0;
+        var fallbackCalls = 0;
+        var request = new HomeFeatureNavigationRequest(route, EntityType: "file", EntityId: "opaque / artifact", Action: "Reveal", DeepLink: "cake://opaque");
+        registry.Register(new Handler(route, target => { ownerCalls++; Check(target == request); return Task.FromResult(Success(target)); }), _ => FixtureSurface());
+        var dispatch = await BrowserRouteDispatcher.OpenAsync(registry, request, _ => { fallbackCalls++; return FixtureSurface(); }, default);
+        Check(ownerCalls == 1 && fallbackCalls == 0 && dispatch.Result.Succeeded && !dispatch.IsUnavailableHome && dispatch.Surface is not null);
+    }
+});
+await RunAsync("B1-DISPATCH-02-owner-failures-never-fallback", async () =>
+{
+    foreach (var route in new[] { HomeFeatureRouteIds.Dashboard, HomeFeatureRouteIds.Library, HomeFeatureRouteIds.Events })
+    foreach (var code in new[] { "PermissionDenied", "PermissionRequired", "HomeServiceUnavailable" })
+    {
+        var registry = new BrowserSurfaceRegistry();
+        var ownerCalls = 0;
+        var fallbackCalls = 0;
+        var request = new HomeFeatureNavigationRequest(route, EntityId: "private");
+        registry.Register(new Handler(route, target => { ownerCalls++; return Task.FromResult(new HomeFeatureNavigationResult(false, code, "Denied or unavailable", target)); }), _ => throw new Exception("Failed owner must not render."));
+        var dispatch = await BrowserRouteDispatcher.OpenAsync(registry, request, _ => { fallbackCalls++; return FixtureSurface(); }, default);
+        Check(ownerCalls == 1 && fallbackCalls == 0 && !dispatch.Result.Succeeded && dispatch.Result.Code == code && dispatch.Result.Request == request && dispatch.Surface is null && !dispatch.IsUnavailableHome);
+    }
+});
+await RunAsync("B1-DISPATCH-03-absent-owner-unavailable-home", async () =>
+{
+    var registry = new BrowserSurfaceRegistry();
+    var fallbackCalls = 0;
+    var request = new HomeFeatureNavigationRequest(HomeFeatureRouteIds.Dashboard);
+    var dispatch = await BrowserRouteDispatcher.OpenAsync(registry, request, _ => { fallbackCalls++; return FixtureSurface(); }, default);
+    Check(fallbackCalls == 1 && dispatch.Result.Succeeded && dispatch.Result.Code == "HomeServiceUnavailable" && dispatch.IsUnavailableHome && dispatch.Surface is not null);
+});
+await RunAsync("B1-DISPATCH-04-owner-exception-never-fallback", async () =>
+{
+    var registry = new BrowserSurfaceRegistry();
+    var fallbackCalls = 0;
+    registry.Register(new Handler(HomeFeatureRouteIds.Dashboard, _ => throw new InvalidOperationException("UNIT owner failed")), _ => FixtureSurface());
+    var request = new HomeFeatureNavigationRequest(HomeFeatureRouteIds.Dashboard);
+    var dispatch = await BrowserRouteDispatcher.OpenAsync(registry, request, _ => { fallbackCalls++; return FixtureSurface(); }, default);
+    // The actual Home owner host maps provider exceptions to HomeServiceUnavailable.
+    Check(fallbackCalls == 0 && !dispatch.Result.Succeeded && dispatch.Result.Code == "HomeServiceUnavailable" && dispatch.Result.Request == request && dispatch.Surface is null && !dispatch.IsUnavailableHome);
+});
+await RunAsync("B1-DISPATCH-05-absent-nonhome-unavailable", async () =>
+{
+    var request = new HomeFeatureNavigationRequest("app.write", EntityId: "private");
+    var dispatch = await BrowserRouteDispatcher.OpenAsync(new(), request, _ => null, default);
+    Check(!dispatch.Result.Succeeded && dispatch.Result.Code == "HomeServiceUnavailable" && dispatch.Result.Request == request && dispatch.Surface is null && !dispatch.IsUnavailableHome);
+});
+await RunAsync("B1-DISPATCH-06-cancelled-home-no-fallback", async () =>
+{
+    using var cancellation = new CancellationTokenSource();
+    cancellation.Cancel();
+    var fallbackCalls = 0;
+    try
+    {
+        await BrowserRouteDispatcher.OpenAsync(new(), new(HomeFeatureRouteIds.Dashboard), _ => { fallbackCalls++; return FixtureSurface(); }, cancellation.Token);
+        throw new Exception("Cancelled Home fallback was accepted.");
+    }
+    catch (OperationCanceledException) { }
+    Check(fallbackCalls == 0);
+});
+Console.WriteLine($"Discovered: 22; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
+return executed == 22 ? 0 : 1;
 
 async Task Run(string id, Action test)
 {

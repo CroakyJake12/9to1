@@ -27,6 +27,8 @@ public sealed class BrowserApplication : Application, IDisposable
     /// <summary>Registration is supplied by the composition root after obtaining real authenticated owner adapters.</summary>
     public BrowserSurfaceRegistry Surfaces => _surfaces;
 
+    public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
+
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is not ISingleViewApplicationLifetime lifetime)
@@ -64,16 +66,13 @@ public sealed class BrowserApplication : Application, IDisposable
             return;
         }
 
-        EnsureHome();
-        if (_home!.Open(request!))
-        {
-            if (!Render(new(_homeDocument!, _home, _home), BrowserRouteCodec.Encode(request!))) return;
-            Program.ShowStatus("HomeServiceUnavailable", "Account services are unavailable. Your files and activity have not been loaded.");
-            return;
-        }
-
         Program.ShowStatus("Loading", "Opening your destination…");
-        var (result, surface) = await _surfaces.OpenAsync(request!, cancellation);
+        var dispatch = await BrowserRouteDispatcher.OpenAsync(_surfaces, request!, target =>
+        {
+            EnsureHome();
+            return _home!.Open(target) ? new(_homeDocument!, _home, _home) : null;
+        }, cancellation);
+        var (result, surface, isUnavailableHome) = dispatch;
         if (_disposed || version != _navigationVersion || cancellation.IsCancellationRequested)
         {
             surface?.Lifetime?.Dispose();
@@ -89,7 +88,9 @@ public sealed class BrowserApplication : Application, IDisposable
         {
             if (_disposed || version != _navigationVersion || cancellation.IsCancellationRequested)
                 surface.Lifetime?.Dispose();
-            else if (Render(surface, BrowserRouteCodec.Encode(request!))) Program.ShowStatus("Ready", "");
+            else if (Render(surface, BrowserRouteCodec.Encode(request!)))
+                Program.ShowStatus(isUnavailableHome ? "HomeServiceUnavailable" : "Ready",
+                    isUnavailableHome ? "Account services are unavailable. Your files and activity have not been loaded." : "");
         });
     }
 

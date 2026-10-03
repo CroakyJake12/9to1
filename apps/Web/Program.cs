@@ -2,6 +2,7 @@ using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Browser;
+using CakeOS.Cui.Runtime;
 
 namespace NineToOne.Web;
 
@@ -12,7 +13,7 @@ public static partial class Program
 
     public static async Task Main()
     {
-        await AppBuilder.Configure<BrowserApplication>().StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
+        await CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowserApplication>()).StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
         {
             RegisterAvaloniaServiceWorker = false,
             RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
