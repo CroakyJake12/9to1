@@ -97,6 +97,9 @@ async function stopWorker() {
     throw new Error("Strict original descendant reaping unproven; fixture state retained");
   }
   console.log(JSON.stringify({ status: "drained", custody: receipt }));
+  if (worker.fixtureLaunchError) {
+    throw new Error("Caller journal-close authority ambiguous; fixture state retained", { cause: worker.fixtureLaunchError });
+  }
 }
 
 const browserLocation = {
@@ -202,6 +205,7 @@ try {
   worker.once("error", error => { workerStartupError = error; });
   worker.stdout.setEncoding("utf8").on("data", chunk => { serverOutput = (serverOutput + chunk).slice(-16000); });
   worker.stderr.setEncoding("utf8").on("data", chunk => { serverOutput = (serverOutput + chunk).slice(-16000); });
+  if (worker.fixtureLaunchError) throw worker.fixtureLaunchError;
   await waitForWorker();
   const admin = await createSyntheticAccount("browser-operator", `operator_${runId}`, randomBytes(32).toString("base64url"));
   const promoted = await jsonRequest("/__test/promote-admin", "POST", { userId: admin.id, email: admin.email }, { "x-local-test-key": testKey });
