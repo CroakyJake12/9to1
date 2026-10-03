@@ -52,3 +52,49 @@ def assert_actual_pair(dll,pdb):
  identifier=metadata_streams(pdb)['#Pdb'][:20];assert len(identifier)==20
  assert identifier[:16]==matches[0][0] and struct.unpack_from('<I',identifier,16)[0]==matches[0][1], 'actual DLL/PDB identity mismatch'
  return {'portablePdbId':identifier.hex(),'codeViewGuid':str(uuid.UUID(bytes_le=matches[0][0])),'codeViewStamp':matches[0][1]}
+
+def actual_symbols(dll, external_pdb=None, maximum=16*1024*1024):
+ """Read symbols from this physical PE; never use a different producer's PDB."""
+ import hashlib,zlib
+ def require(condition, message):
+  if not condition: raise ValueError(message)
+ def unpack(fmt, at):
+  require(at>=0 and at+struct.calcsize(fmt)<=len(dll), 'truncated actual PE')
+  return struct.unpack_from(fmt,dll,at)
+ require(dll[:2]==b'MZ','actual PE MZ missing');pe=unpack('<I',0x3c)[0]
+ require(dll[pe:pe+4]==b'PE\0\0','actual PE signature missing')
+ sections=unpack('<H',pe+6)[0];opt_size=unpack('<H',pe+20)[0];opt=pe+24;magic=unpack('<H',opt)[0]
+ require(magic in (0x10b,0x20b),'actual PE optional header invalid')
+ directory=opt+(96 if magic==0x10b else 112)
+ require(directory+7*8<=opt+opt_size,'actual PE debug directory absent')
+ rva,size=unpack('<II',directory+6*8)
+ require(rva and size and size%28==0 and size<=maximum,'actual PE debug directory invalid')
+ def offset(address,amount):
+  for index in range(sections):
+   row=opt+opt_size+index*40;virtual_size,start,raw_size,raw=unpack('<IIII',row+8)
+   if start<=address and address+amount<=start+raw_size:
+    result=raw+address-start;require(result+amount<=len(dll),'actual PE section truncated');return result
+  raise ValueError('actual PE debug bytes outside physical section')
+ at=offset(rva,size);embedded=[]
+ for index in range(size//28):
+  row=at+index*28;kind,amount,address,pointer=unpack('<IIII',row+12)
+  if kind==17:
+   require(amount>=8 and amount<=maximum and pointer==offset(address,amount),'embedded debug record bounds invalid')
+   embedded.append((pointer,dll[pointer:pointer+amount]))
+ require(len(embedded)<=1,'duplicate embedded symbol records')
+ if embedded:
+  require(external_pdb is None,'ambiguous embedded and external symbols')
+  pointer,payload=embedded[0];require(payload[:4]==b'MPDB','embedded MPDB signature invalid')
+  declared=struct.unpack_from('<I',payload,4)[0]
+  require(0<declared<=maximum,'embedded declared size exceeds bound')
+  inflater=zlib.decompressobj(-15)
+  try: symbols=inflater.decompress(payload[8:],declared+1)
+  except zlib.error as error: raise ValueError('embedded deflate invalid') from error
+  require(len(symbols)==declared and inflater.eof and not inflater.unused_data and not inflater.unconsumed_tail,'embedded deflate size/end mismatch')
+  kind='embedded-portable-pdb'
+  origin={'physicalPeSha256':hashlib.sha256(dll).hexdigest(),'debugRecordOffset':pointer,'debugRecordBytes':len(payload),'debugRecordSha256':hashlib.sha256(payload).hexdigest(),'declaredSymbolBytes':declared}
+ else:
+  require(external_pdb is not None and 0<len(external_pdb)<=maximum,'actual external physical PDB missing/oversized')
+  symbols=external_pdb;kind='external-portable-pdb';origin={'physicalPeSha256':hashlib.sha256(dll).hexdigest()}
+ identity=assert_actual_pair(dll,symbols)
+ return symbols,{'kind':kind,'origin':origin,'bytes':len(symbols),'sha256':hashlib.sha256(symbols).hexdigest(),'identity':identity}

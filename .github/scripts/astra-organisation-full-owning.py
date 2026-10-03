@@ -334,11 +334,22 @@ def main():
                         raise RuntimeError('Actual compiled project/configuration mismatch')
                     if P(values['AvaloniaBuildTasksLocation']).resolve() != task_target:
                         raise RuntimeError('Actual original consumer build-task location differs')
-                    target = P(values['TargetPath']).resolve(); pair = [target, target.with_suffix('.pdb')]
-                    if not target.is_relative_to(root) or any(file.is_symlink() or not file.is_file() for file in pair):
-                        raise RuntimeError('Complete actual first-party project physical PE/PDB missing: ' + project)
-                    identity = pdb.assert_actual_pair(pair[0].read_bytes(), pair[1].read_bytes())
-                    documents = pdb.pdb_documents(pair[1].read_bytes())
+                    target = P(values['TargetPath']).resolve(); external = target.with_suffix('.pdb')
+                    if not target.is_relative_to(root) or target.is_symlink() or not target.is_file() or external.is_symlink():
+                        raise RuntimeError('Complete actual first-party physical PE/symbol input invalid: ' + project)
+                    symbols, symbol_proof = pdb.actual_symbols(target.read_bytes(), external.read_bytes() if external.is_file() else None)
+                    pair = [target]
+                    if symbol_proof['kind'] == 'external-portable-pdb':
+                        pair.append(external)
+                    else:
+                        extracted = out / phase / 'embedded-symbols' / (digest(target) + '.portable-pdb')
+                        extracted.parent.mkdir(parents=True, exist_ok=True)
+                        if extracted.exists() and extracted.read_bytes() != symbols:
+                            raise RuntimeError('Retained actual embedded symbols changed')
+                        extracted.write_bytes(symbols)
+                        symbol_proof['retainedExtractedSymbols'] = str(extracted.relative_to(out))
+                    identity = symbol_proof['identity']
+                    documents = pdb.pdb_documents(symbols)
                     inputs = []
                     for item in evaluated.get('Items', {}).get('Compile', []):
                         source = P(item.get('FullPath', ''))
@@ -374,7 +385,7 @@ def main():
                         proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
                     if not inputs or not proof_docs: raise RuntimeError('Actual complete source/PDB evidence empty')
                     compiled.append({'suite': suite['name'], 'project': project, 'evaluated': evaluated,
-                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'pairs': [retained(file, out / phase / 'compiled') for file in pair],
+                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'symbols': symbol_proof, 'pairs': [retained(file, out / phase / 'compiled') for file in pair],
                         'compileInputs': inputs, 'allPdbDocuments': proof_docs})
                 suite_evaluated = query(suite['project'], [*managed_props, '-p:TargetFramework=net10.0'], name + '-entry')
                 target = P(suite_evaluated['Properties']['TargetPath']).resolve()
