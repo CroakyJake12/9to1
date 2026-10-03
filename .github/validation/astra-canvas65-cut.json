@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "dd6a60fac11b4dfb8045fd816d11aabad471b024",
-  "programTree": "d0d6a0d2b77cb6e7b9fabc2efcafe2008fa120e1",
+  "baselineCommit": "8782b3c38201ba803a91dacf8b61ce2ad525603a",
+  "programTree": "c9796dfb01d01030a0083abd7f25e76fa97fc25f",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -120,9 +120,9 @@
     {
       "path": ".github/validation/astra-canvas65-test-classes.json",
       "mode": "100644",
-      "object": "cbac15e52b17b5b860ae9b3aa75ead85474cd0e4",
+      "object": "bbf01903c40278286dd7bae82a7c07fee5d80c15",
       "bytes": 28497,
-      "sha256": "fc6d9bc104b46ed40bedaac3e383d57e9f909df13b25cfcf96feab8f4e73502a"
+      "sha256": "a1c7ff40e39d68a4184ae47379e3052f173230f97b986df1a9908081bed7c80d"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -5237,9 +5237,9 @@
     {
       "path": "9to1 Workspace/Canvas/Tests/CanvasFilesFinalAuthorityTests.cs",
       "mode": "100644",
-      "object": "0ed28f3a91c9280f86650a04032bf84a72296048",
-      "bytes": 8033,
-      "sha256": "a6ec6f02f9c400201748e558da17f76a0b82d91fbee541f5d6dcf344fe820cbe"
+      "object": "322440f46943c9fdfb792b40e39570dbba681640",
+      "bytes": 8044,
+      "sha256": "868534ac5ac5e968002ded1fac96f61fcc4f285ae581c625cc34f34816695d90"
     },
     {
       "path": "9to1 Workspace/Canvas/Tests/CanvasHomeEraserOperationTests.cs",
@@ -66495,7 +66495,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact. Preferred08 is a failure-only diagnostic on actual07/current28. All21 exact native assertions, retained original19 IDs, whole95/12/36, strict SDK155 complete archive/source/provider/PE/PDB/task/restores and original process/drain caller bytes remain unchanged. Actual07 owns complete26-file original closure190 and still fails exact SVG20/21; its126 serialized bits are equal after maintained dp3 rounding and do not measure live geometry. Source193 adds read-only direct public BrushStroke raw f64 bits/exact start-equality evidence only. No production donor correction or parser/geometry cause claim. Actual07 regression/resource statuses are SUCCESS but their original archives remain unreviewed; this diagnostic does not claim their full original closure. Four source-reviewed, actual IMAP16 accepted normal28 Mail bytes are copied exactly; no other canonical source merge or runtime guard change. Preferred09 on actual08/current30 consumes only the exact authenticated published Rnote successor53981d09/tree3cac017 (two opt-in compose files, upstream defaults/schema unchanged); every other21 Gitlink unchanged. Actual08 direct original live geometry proves72 bit drifts/8 renderer predicate changes across save; source213 adds one raw pressure/width/RGBA/path exact persistence test to old21=22 and preserves the exact SVG assertion. Caller changes only fixed donor literal and exact new Cargo Passed ID. Strict protected SDK155/full archive/member/source/provider, old105 tuples, whole95/12/36/native22/PDB/task/restores/native original-process/drains remain mandatory. Exact accepted Math23 and Android1 current30 source bytes are copied without merge; original selected Canvas49 files remain. Actual08 reg/resource original archives remain unreviewed despite success statuses; no full runtime/native fix acceptance until fresh original evidence.",
+  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact. Preferred08 is a failure-only diagnostic on actual07/current28. All21 exact native assertions, retained original19 IDs, whole95/12/36, strict SDK155 complete archive/source/provider/PE/PDB/task/restores and original process/drain caller bytes remain unchanged. Actual07 owns complete26-file original closure190 and still fails exact SVG20/21; its126 serialized bits are equal after maintained dp3 rounding and do not measure live geometry. Source193 adds read-only direct public BrushStroke raw f64 bits/exact start-equality evidence only. No production donor correction or parser/geometry cause claim. Actual07 regression/resource statuses are SUCCESS but their original archives remain unreviewed; this diagnostic does not claim their full original closure. Four source-reviewed, actual IMAP16 accepted normal28 Mail bytes are copied exactly; no other canonical source merge or runtime guard change. Preferred09 on actual08/current30 consumes only the exact authenticated published Rnote successor53981d09/tree3cac017 (two opt-in compose files, upstream defaults/schema unchanged); every other21 Gitlink unchanged. Actual08 direct original live geometry proves72 bit drifts/8 renderer predicate changes across save; source213 adds one raw pressure/width/RGBA/path exact persistence test to old21=22 and preserves the exact SVG assertion. Caller changes only fixed donor literal and exact new Cargo Passed ID. Strict protected SDK155/full archive/member/source/provider, old105 tuples, whole95/12/36/native22/PDB/task/restores/native original-process/drains remain mandatory. Exact accepted Math23 and Android1 current30 source bytes are copied without merge; original selected Canvas49 files remain. Actual08 reg/resource original archives remain unreviewed despite success statuses; no full runtime/native fix acceptance until fresh original evidence. Preferred10 preserves actual09 complete native22 pass, exact SVG/live f64 persistence, and all95/12/36/source/SDK/provider/PDB/task/restores/drain guards. Sole fixture correction adds async/await to the actual CS4034 lambda; every24 assertion and original two theory cases remain. Actual09 managed Canvas tests compile refusal prevented remaining owning native UI acceptance. Regression/resource statuses SUCCESS still have unreviewed originals. Exact reviewed published donor53981 link is retained from actual09, no new Gitlink update; all other21 links are exact normal30. Fresh full runtime remains mandatory.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/checkpoint22-publication-local.json",
@@ -66824,6 +66824,22 @@
     {
       "path": "/workspace/astra-source/worker6-freeze-canvas09-current30-lossless226.py",
       "sha256": "578b0e335d67bf628f4ee8345501cc1f1fc1af33a3d00f4d968346cd4b68f6d7"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas08-current30-published-lossless-full-corrective09/manifest.json",
+      "sha256": "00849906b19f115d60f2404eaac6f0a455e033a196199156af86651b7b9fee24"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas09-exact-test-async-compiler-source281/manifest.json",
+      "sha256": "451840ab89850ba96bcacfe855b66fd743e5ff14f0bd83ff2a34282245acad02"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas09-complete-owning-original-native22-build-failure-closure279.json",
+      "sha256": "0266e920ba88a20054fabb794c06e38f64e647b13c2037c0c55886c4a3606206"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas09-actual-pdb-pathmap-whole-source-extension280.json",
+      "sha256": "8cfbcd676f0fcc819af6c8bffdf93e169cad02c455104e0dd6cdc93cda801a64"
     }
   ],
   "sharedCakeIdContract": null,

@@ -72,7 +72,7 @@ public sealed class CanvasFilesFinalAuthorityTests
             var candidate=session.GetArtifactSnapshot();
             Assert.True(session.RenameArtifact(new(candidate.RevisionId,Guid.NewGuid(),new(actor.Current.ActorId,"Fixture")),"Second candidate").IsSuccess);
             candidate=session.GetArtifactSnapshot();
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(()=>bridge.SaveWithFinalAuthorityAsync(created.FileId,
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(async()=>await bridge.SaveWithFinalAuthorityAsync(created.FileId,
                 candidate,(allow?(await bridge.OpenAsync(created.FileId,ct)).CasRevisionId:opened.CasRevisionId),
                 opened.StoreId,actor.Current,(_,_,_)=>ValueTask.FromResult<CanvasFilesFinalAuthority>(null!),ct));
             var current=await bridge.OpenAsync(created.FileId,ct);
