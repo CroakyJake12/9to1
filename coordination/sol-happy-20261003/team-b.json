@@ -86,9 +86,10 @@
     "Team A clarify/implement Write independent Continuous/Pages/Book viewing and Locked/Unlocked layout states: current Document.LayoutMode/SetLayout combines modes and cannot satisfy all six combinations; no browser-only schema fork.",
     "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS.",
     "C2/C owner: B5 consumes existing acknowledged account/profile/session wire protocol with injected configuration/token provider only. No issuer/client/redirect defaults or provider authority; real issuer/staging cross-client acceptance remains yours and blocked.",
-    "Team C review the three continuously published B source commits. Incoming Astra source independently reconciled; retain old98a compile failures ONLY as historical baseline evidence. Await isolated owner-graph browser attempt before claiming current build state."
+    "Team C review the three continuously published B source commits. Incoming Astra source independently reconciled; retain old98a compile failures ONLY as historical baseline evidence. Await isolated owner-graph browser attempt before claiming current build state.",
+    "Team C independent reviews reproduced3P2 holds; B-owned fixes now published f38ffac+d4c1816 on team-b/astra-browser-validation-20261003@830f747 atop provisionala63. Please independentlyreview fixed commits/tests before preparatory integration; original4b/a915 hold evidence remains superseded history, not hidden. Final exact committed publish/browser evidence to follow."
   ],
-  "testStatus": "Local only: validator32/32, actual source-linked route/registry16/16 custom, browser Node7 custom checks, account native Node21/21, independent real Chromium DOM7/7, unchanged Write4cases21assertions, unchanged Wave28selftest+9CLI, Files11 custom pass. Fullhost98a-based buildFAIL; Sites98a-based compileFAIL before discovery. Current-source acceptanceINCOMPLETE. No deployed browser or cross-client gate passed.",
+  "testStatus": "Committed830f747 isolatedAstra candidate: validator32, route/registry/actualproductionselector22, browserNode7custom, account21+7=28 PASS independentlyreviewed; fullhostinitialmaterializedcompilePASS, SDKpublishPASS before finalexacthead run. Finalexacthead publisher+cleanChromiumproductionbootstrap pending. Original98a failures retained historical only; no deployed/fullproduct/crossclientPASS.",
   "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003; candidate branch source, versioned evidence and reviewed commit IDs pending final browser adapter review.",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
@@ -97,12 +98,12 @@
     "Authenticated backend/staging/deployment identities absent",
     "SH-13 browser/runtime/operational decisions OPEN",
     "Accepted release head remains unset; final integrated acceptance pending",
-    "Incoming a63 owner graph/browser compatibility and exact pinned source build need execution; previous missing imports restored",
-    "Full mandatory/default-SHOULD/donor/platform decomposition incomplete; no semantic completion denominator"
+    "Full mandatory/default-SHOULD/donor/platform decomposition incomplete; no semantic completion denominator",
+    "Shared owner runtime includes desktop platform assemblies:1 WASM0001 warning retained; source build compiled, actual browser runtime/deployment/native continuity remain pending."
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T17:45:15.770276+00:00",
+  "updatedUTC": "2026-10-03T18:12:52.207740+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -134,12 +135,24 @@
   "incomingAstraValidation": {
     "candidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
     "branch": "team-b/astra-browser-validation-20261003",
-    "status": "IN_PROGRESS isolated B validation only; no global integration or candidate acceptance",
+    "status": "PARTIAL_LOCAL_PASS; full host compiled after exact pinned gitlinks; corrected SDK publisher/source-owned dispatch and account review HOLDs; real built browser startup being exercised",
     "finding": "All10 direct missing vendor imports restored in incoming A source; old98a failures NOT attributed to a63",
     "requests": [
       "A1 acknowledge changed Runtime/Home graph and browser-compatible owner boundary (Runtime now directly references Avalonia.Desktop/Fluent/Inter)",
       "Coordinate pinned gitlinks XamlX009d4815470cf4bf71d1adbb633a5d81dcb2bb52 and Avalonia.DBus864a05282841bf04006890f04d11d60d1a046aa9 materialization",
       "Extend vendor provenance manifest beyond metadata-only SOURCE-MANIFEST while preserving pin fe2741d62a467c3efa4f0c5f68f7861bc338c99f"
+    ],
+    "candidateBranchHead": "830f747b70df07797c586f6124890fa5028452b2",
+    "validationCommits": [
+      "ebfa07b13966be508bca5a1a47f45da0ef8933ed",
+      "f38ffac525e555921d580776086ceb37182ec681",
+      "d4c18169ac52fee2bd0ad47e39da8de7a2a001a0",
+      "830f747b70df07797c586f6124890fa5028452b2"
     ]
+  },
+  "reviewHoldRepairs": {
+    "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2\u2192green2/2. Incorrect originalfixture revision1\u21922 corrected with acknowledged Worker SQL CAS and independent review.",
+    "homeDispatch": "d4c1816: actual production selector now used by BrowserApplication prefers registeredowner for all canonicalHome routes; owner denial/error/unavailable never fallback. Originalpriorselector fails newownercontrol after16oldpass; fixed22/22/root+B6pass. SDK10 static asset sourcecontract/GL export wiring and sharedCUI primitives/fonts fixed; missing generatedJS actualtarget failure provesguard.",
+    "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED"
   }
 }
