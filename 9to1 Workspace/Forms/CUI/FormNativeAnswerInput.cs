@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Avalonia.Controls;
 using Haven.Core.Forms;
+using Haven.Application;
 
 namespace HavenOS.Forms;
 
@@ -17,6 +18,10 @@ internal sealed class FormNativeAnswerInput(Control control, IReadOnlyList<Actio
         Control.IsEnabled = false;
     }
     public static FormNativeAnswerInput Create(FormField definition, JsonElement? answer, Action<JsonElement> changed)
+        => Create(definition, answer, changed, null);
+
+    public static FormNativeAnswerInput Create(FormField definition, JsonElement? answer, Action<JsonElement> changed,
+        Func<Guid, Func<bool>, CancellationToken, Task<IFormDataReferenceLookupSession?>>? referenceLookup)
     {
         var detach = new List<Action>();
         Control input;
@@ -27,7 +32,7 @@ internal sealed class FormNativeAnswerInput(Control control, IReadOnlyList<Actio
         }
         else if (definition.Kind == FormFieldKind.TableInput)
         {
-            var table = new FormNativeTableInput(definition.Table!, answer, value => changed(value));
+            var table = new FormNativeTableInput(definition.Table!, answer, value => changed(value), referenceLookup);
             detach.Add(table.Dispose); input = table;
         }
         else if (definition.Kind is FormFieldKind.MultipleChoice or FormFieldKind.CheckboxSet)

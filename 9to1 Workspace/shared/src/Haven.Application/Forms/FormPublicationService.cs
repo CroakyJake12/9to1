@@ -82,19 +82,53 @@ public sealed class FormPublicationService(IVersionedSettingsStore settings, IRe
     public Task<FormPublicationResult> CloseAsync(Guid id, long revision, CancellationToken token = default) =>
         ChangeAsync(id, revision, "forms.close", current => Required(current) with { Revision = checked(revision + 1), State = FormPublicationState.Closed }, token);
 
-    public async Task<FormPublicationResult> ReadAsync(Guid id, CancellationToken token = default)
+    public Task<FormPublicationResult> ReadAsync(Guid id, CancellationToken token = default)
+        => ReadCoreAsync(id, null, null, token);
+
+    /// <summary>Owning retained read context. IDs and actor values are constraints, never grants;
+    /// actual current authority must still admit the original actor/root before publication.</summary>
+    public Task<FormPublicationResult> ReadForOriginalActorAsync(Guid id, AuthenticatedResourceActor expectedActor,
+        Guid expectedStoreID, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (expectedStoreID == Guid.Empty) return Task.FromResult(new FormPublicationResult(false, "PermissionDenied", null));
+        return ReadCoreAsync(id, expectedActor, expectedStoreID, token);
+    }
+    private async Task<FormPublicationResult> ReadCoreAsync(Guid id, AuthenticatedResourceActor? expectedActor,
+        Guid? expectedStoreID, CancellationToken token)
     {
         var originatingActor = actors is null ? null : await actors.GetCurrentAsync(token).ConfigureAwait(false);
-        if (originatingActor is null) return new(false, "PermissionDenied", null);
+        if (originatingActor is null || expectedActor is not null && originatingActor != expectedActor)
+            return new(false, "PermissionDenied", null);
         await _gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
+            ResourceStoreIdentity? originalRoot = null;
+            if (expectedStoreID is { } expectedRoot)
+            {
+                originalRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
+                if (originalRoot.SchemaVersion != 1 || originalRoot.StoreId != expectedRoot
+                    || await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
+                    return new(false, "PermissionDenied", null);
+            }
+            if (await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
+                return new(false, "PermissionDenied", null);
             var form = await LoadAsync(id, token).ConfigureAwait(false);
+            if (await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
+                return new(false, "PermissionDenied", null);
             if (form is null) return new(false, "NotFound", null);
-            var root = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
-            return await authority.AuthorizeAsync(root.StoreId, id, form.Revision, "forms.read", token).ConfigureAwait(false)
-                && await actors!.GetCurrentAsync(token).ConfigureAwait(false) == originatingActor
-                ? new(true, null, Clone(form)) : new(false, "PermissionDenied", null);
+            var root = originalRoot ?? await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
+            if (!await authority.AuthorizeAsync(root.StoreId, id, form.Revision, "forms.read", token).ConfigureAwait(false)
+                || await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
+                return new(false, "PermissionDenied", null);
+            if (expectedStoreID is { } retainedRoot)
+            {
+                var currentRoot = await identities.GetStoreIdentityAsync(token).ConfigureAwait(false);
+                if (currentRoot.SchemaVersion != 1 || currentRoot.StoreId != retainedRoot
+                    || await actors!.GetCurrentAsync(token).ConfigureAwait(false) != originatingActor)
+                    return new(false, "PermissionDenied", null);
+            }
+            return new(true, null, Clone(form));
         }
         finally { _gate.Release(); }
     }

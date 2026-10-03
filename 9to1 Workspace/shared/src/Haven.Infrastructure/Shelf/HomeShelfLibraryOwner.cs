@@ -23,6 +23,9 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
     HomeOwnedLibraryCommitFenceSource? finalFence = null)
 {
     public const string ActionID = "shelf.item.add";
+    public const string ItemEditActionID = "shelf.item.edit";
+    public const string CollectionActionID = "shelf.collection.create";
+    public const string MembershipActionID = "shelf.collection.membership.add";
     public string ResourceKind => "shelf.library";
     private sealed record Selection(HomeShelfLibraryOwner Issuer, Guid StoreID, AuthenticatedResourceActor Actor,
         long Revision, Func<bool>? OriginalLifetime = null) : IShelfLibraryDisplay
@@ -39,12 +42,16 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
         }
         public void Dispose() => Interlocked.Exchange(ref _revoked, 1);
     }
-    private sealed class Review(HomeShelfLibraryOwner issuer, Selection selection, ShelfLaunchItem proposed,
+    private sealed class Review(HomeShelfLibraryOwner issuer, Selection selection, ShelfLaunchItem? proposed,
         long? expectedObjectRevision, JsonElement arguments, ResourceScope[] scopes, string requestID) : IShelfLibraryReview
     {
         public HomeShelfLibraryOwner Issuer { get; } = issuer;
         public Selection Selection { get; } = selection;
-        public ShelfLaunchItem Proposed { get; } = proposed;
+        public ShelfLaunchItem? Proposed { get; } = proposed;
+        public ShelfCollection? Collection { get; init; }
+        public ShelfItemEdit? ItemEdit { get; init; }
+        public ShelfCollectionMembership? Membership { get; init; }
+        public string Action { get; init; } = ActionID;
         public long Revision => Selection.Revision;
         public long? ExpectedObjectRevision { get; } = expectedObjectRevision;
         public JsonElement Arguments { get; } = arguments;
@@ -160,6 +167,72 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
         catch (Exception) { issued.OriginAvailable = false; } // No grant, cancellation or audit inference.
         return issued;
     }
+    public Task<IShelfLibraryReview> ReviewCreateCollectionAsync(IShelfLibraryDisplay display, ShelfCollection proposed,
+        CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(proposed);
+        // This owning entry supports actual manual collections only; smart predicate authority is separate.
+        if (proposed.Kind != ShelfCollectionKind.Manual || proposed.Criteria is not null)
+            throw new NotSupportedException("Manual collection owning entry required.");
+        var captured = proposed with { };
+        return ReviewOrganisationAsync(display, captured, null, token);
+    }
+    public Task<IShelfLibraryReview> ReviewCreateSmartCollectionAsync(IShelfLibraryDisplay display,
+        ShelfCollection proposed, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(proposed);
+        if (proposed.Id == Guid.Empty || proposed.Kind != ShelfCollectionKind.Smart || proposed.Criteria is null
+            || string.IsNullOrWhiteSpace(proposed.Name) || proposed.Name.Length > 4096 || proposed.Order < 0
+            || !Enum.IsDefined(proposed.Presentation))
+            throw new ArgumentException("A bounded original smart collection is required.", nameof(proposed));
+        var originalTags = proposed.Criteria.RequiredTags;
+        var originalKinds = proposed.Criteria.TargetKinds;
+        if (originalTags?.Count > 256 || originalKinds?.Count > 8)
+            throw new ArgumentException("Smart collection criteria exceed their bounds.", nameof(proposed));
+        var tags = originalTags?.Take(257).ToArray(); var kinds = originalKinds?.Take(9).ToArray();
+        if ((tags is not null && (tags.Length != originalTags!.Count || tags.Length > 256
+                || tags.Any(tag => string.IsNullOrWhiteSpace(tag) || tag.Length > 4096)))
+            || (kinds is not null && (kinds.Length != originalKinds!.Count || kinds.Length > 8
+                || kinds.Any(kind => !Enum.IsDefined(kind)))))
+            throw new ArgumentException("Invalid original smart collection criteria.", nameof(proposed));
+        var criteria = proposed.Criteria with { RequiredTags = tags is null ? null : Array.AsReadOnly(tags),
+            TargetKinds = kinds is null ? null : Array.AsReadOnly(kinds) };
+        var captured = proposed with { Name = proposed.Name.Trim(), Criteria = criteria };
+        return ReviewOrganisationAsync(display, captured, null, token);
+    }
+    public Task<IShelfLibraryReview> ReviewAddMembershipAsync(IShelfLibraryDisplay display, Guid collectionID, Guid itemID,
+        int order = 0, CancellationToken token = default)
+        => ReviewOrganisationAsync(display, null, new(collectionID, itemID, order), token);
+    private async Task<IShelfLibraryReview> ReviewOrganisationAsync(IShelfLibraryDisplay display, ShelfCollection? collection,
+        ShelfCollectionMembership? membership, CancellationToken token)
+    {
+        var selection = await RequireAsync(display, token).ConfigureAwait(false);
+        var snapshot = await library.ReadAsync(token).ConfigureAwait(false);
+        if (snapshot.Library.Revision != selection.Revision) throw new InvalidOperationException("LibraryRevisionConflict");
+        var action = collection is not null ? CollectionActionID : MembershipActionID;
+        if (collection is not null) _ = ShelfLibraryPolicy.AddCollection(snapshot.Library, collection);
+        else if (membership is not null)
+        {
+            if (snapshot.ArchivedItemIds.Contains(membership.LaunchItemId) || snapshot.ArchivedCollectionIds.Contains(membership.CollectionId))
+                throw new InvalidOperationException("Restore archived targets before editing membership.");
+            _ = ShelfLibraryPolicy.AddMembership(snapshot.Library, membership);
+        }
+        else throw new InvalidOperationException("Actual organisation intent missing.");
+        await CaptureAsync(selection, token).ConfigureAwait(false);
+        var args = JsonSerializer.SerializeToElement(new { operationID = Guid.NewGuid(), storeID = selection.StoreID,
+            revision = selection.Revision, operation = action, collection, membership });
+        var scopes = new[] { new ResourceScope(ResourceKind, selection.StoreID.ToString("D"),
+            selection.Revision.ToString(CultureInfo.InvariantCulture), ResourceAccess.Write) };
+        await RequireAsync(selection, token).ConfigureAwait(false);
+        var request = await home.AuthorizeForActorAsync(selection.Actor, "shelf", action, scopes, args,
+            "Review Shelf collection organisation", null, "shelf-owned-library", token).ConfigureAwait(false);
+        if (request.State != HomePermissionRequestState.PendingApproval) throw new UnauthorizedAccessException("Individual Home review required.");
+        var issued = new Review(this, selection, null, null, args, scopes, request.RequestId)
+            { Collection = collection, Membership = membership, Action = action };
+        try { await RequireAsync(selection, token).ConfigureAwait(false); }
+        catch (Exception) { issued.OriginAvailable = false; }
+        return issued;
+    }
     public async Task<ShelfLibraryCommit> CommitAsync(IShelfLibraryReview issuedReview, CancellationToken token = default)
     {
         if (issuedReview is not Review review || !ReferenceEquals(review.Issuer, this)) throw new UnauthorizedAccessException("Private owning review required.");
@@ -192,7 +265,7 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
                     { return await FinishRejectedAdmissionAsync(review).ConfigureAwait(false); }
                     if (review.Capability is null) return await FinishRejectedAdmissionAsync(review).ConfigureAwait(false);
                     AuthenticatedResourceActor? claimed;
-                    try { claimed = await home.ClaimExecutionAsync(review.Capability, "shelf", ActionID, review.Scopes, review.Arguments, token).ConfigureAwait(false); }
+                    try { claimed = await home.ClaimExecutionAsync(review.Capability, "shelf", review.Action, review.Scopes, review.Arguments, token).ConfigureAwait(false); }
                     catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
                     { return await FinishRejectedAdmissionAsync(review).ConfigureAwait(false); }
                     if (claimed is null) return await FinishRejectedAdmissionAsync(review).ConfigureAwait(false);
@@ -254,6 +327,45 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
         }
         finally { review.Gate.Release(); }
     }
+    public Task<IShelfLibraryReview> ReviewEditItemAsync(IShelfLibraryDisplay display, ShelfItemEdit proposed,
+        CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(proposed); ArgumentNullException.ThrowIfNull(proposed.Tags);
+        if (proposed.ItemID == Guid.Empty || string.IsNullOrWhiteSpace(proposed.Name)
+            || proposed.Name.Length > ShelfItemEdit.MaximumNameCharacters || proposed.Order < 0
+            || !Enum.IsDefined(proposed.Behaviour) || proposed.Tags.Count > ShelfItemEdit.MaximumTags)
+            throw new ArgumentException("Invalid bounded Shelf organisation proposal.", nameof(proposed));
+        var tags = proposed.Tags.Take(ShelfItemEdit.MaximumTags + 1).ToArray();
+        if (tags.Length != proposed.Tags.Count || tags.Length > ShelfItemEdit.MaximumTags
+            || tags.Any(tag => string.IsNullOrWhiteSpace(tag) || tag.Length > ShelfItemEdit.MaximumTagCharacters))
+            throw new ArgumentException("Invalid bounded Shelf tags.", nameof(proposed));
+        var captured = proposed with { Name = proposed.Name.Trim(), Tags = Array.AsReadOnly(tags) };
+        return ReviewCapturedEditItemAsync(display, captured, token);
+    }
+    private async Task<IShelfLibraryReview> ReviewCapturedEditItemAsync(IShelfLibraryDisplay display,
+        ShelfItemEdit itemEdit, CancellationToken token)
+    {
+        var selection = await RequireAsync(display, token).ConfigureAwait(false);
+        var snapshot = await library.ReadAsync(token).ConfigureAwait(false);
+        if (snapshot.Library.Revision != selection.Revision) throw new InvalidOperationException("LibraryRevisionConflict");
+        if (snapshot.ArchivedItemIds.Contains(itemEdit.ItemID)
+            || !snapshot.Library.Items.Any(item => item.Id == itemEdit.ItemID))
+            throw new InvalidOperationException("Select an active original library item.");
+        await CaptureAsync(selection, token).ConfigureAwait(false);
+        var args = JsonSerializer.SerializeToElement(new { operationID = Guid.NewGuid(), storeID = selection.StoreID,
+            revision = selection.Revision, operation = ItemEditActionID, itemEdit });
+        var scopes = new[] { new ResourceScope(ResourceKind, selection.StoreID.ToString("D"),
+            selection.Revision.ToString(CultureInfo.InvariantCulture), ResourceAccess.Write) };
+        await RequireAsync(selection, token).ConfigureAwait(false);
+        var request = await home.AuthorizeForActorAsync(selection.Actor, "shelf", ItemEditActionID, scopes, args,
+            "Review Shelf pin, tags and order", null, "shelf-owned-library", token).ConfigureAwait(false);
+        if (request.State != HomePermissionRequestState.PendingApproval) throw new UnauthorizedAccessException("Individual Home review required.");
+        var issued = new Review(this, selection, null, null, args, scopes, request.RequestId)
+            { ItemEdit = itemEdit, Action = ItemEditActionID };
+        try { await RequireAsync(selection, token).ConfigureAwait(false); }
+        catch (Exception) { issued.OriginAvailable = false; }
+        return issued;
+    }
     private async Task<ShelfOperationResult> SaveFencedAsync(Review review, AuthenticatedResourceActor claimed, CancellationToken token)
     {
         // Ordinary resource/ownership checks occur before Home is leased. The final wrapper never
@@ -261,10 +373,26 @@ public sealed class HomeShelfLibraryOwner(ShelfLibraryService library, IAuthenti
         await CaptureAsync(review.Selection, token).ConfigureAwait(false);
         if (finalFence is null || !finalFence.IsFor(home, ownership))
             throw new UnauthorizedAccessException("Actual same-composition final Home claim fence is unavailable.");
-        await using var fence = await finalFence.CaptureAsync("shelf", review.Selection.StoreID,
-            review.Capability!, claimed, () => !review.Selection.Revoked, token).ConfigureAwait(false)
+        await using var fence = await (review.Action == ActionID
+            ? finalFence.CaptureAsync("shelf", review.Selection.StoreID, review.Capability!, claimed,
+                () => !review.Selection.Revoked, token)
+            : review.Action == ItemEditActionID
+            ? finalFence.CaptureShelfItemEditAsync(review.Selection.StoreID, review.Revision, review.Action,
+                review.Arguments, review.Capability!, claimed, () => !review.Selection.Revoked, token)
+            : finalFence.CaptureShelfCollectionAsync(review.Selection.StoreID, review.Revision, review.Action,
+                review.Arguments, review.Capability!, claimed, () => !review.Selection.Revoked, token)).ConfigureAwait(false)
             ?? throw new UnauthorizedAccessException("The original Home claim or ownership receipt is no longer current.");
         var admission = new FinalAdmission(review.Selection, fence);
+        if (review.Action == ItemEditActionID && review.ItemEdit is { } edit)
+            return await library.EditItemAsync(review.Revision, edit.ItemID, edit.Name, edit.Tags, edit.IsFavourite,
+                edit.Order, edit.Behaviour, admission, review.Receipt, token).ConfigureAwait(false);
+        if (review.Action == CollectionActionID && review.Collection is { } collection)
+            return await library.CreateCollectionAsync(review.Revision, collection, admission, review.Receipt, token).ConfigureAwait(false);
+        if (review.Action == MembershipActionID && review.Membership is { } membership)
+            return await library.AddMembershipAsync(review.Revision, membership.CollectionId, membership.LaunchItemId,
+                membership.Order, admission, review.Receipt, token).ConfigureAwait(false);
+        if (review.Action != ActionID || review.Proposed is null)
+            throw new UnauthorizedAccessException("Exact original Shelf mutation proposal is unavailable.");
         return await library.AddItemAsync(review.Revision, review.Proposed, admission, review.Receipt, token).ConfigureAwait(false);
         // await using disposes BEFORE caller observes receipts or records Home execution audit.
     }
