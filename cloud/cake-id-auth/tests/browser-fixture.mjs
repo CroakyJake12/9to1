@@ -1,5 +1,7 @@
+import { launchFixtureCustodian } from "./fixture-launch.mjs";
+import { fixturePort as parseFixturePort, assertFixturePortFree } from "./fixture-network.mjs";
 import assert from "node:assert/strict";
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { randomBytes, createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -34,7 +36,8 @@ const runId = randomBytes(8).toString("hex");
 const browserOrigin = "https://client.example.test:5096";
 const callback = `${browserOrigin}/callback`;
 const persistPath = path.join(root, ".local-run", runId);
-const baseURL = "http://127.0.0.1:8798";
+const fixturePort = parseFixturePort(process.env.CAKE_BROWSER_FIXTURE_PORT);
+const baseURL = `http://127.0.0.1:${fixturePort}`;
 const authPath = "/api/auth";
 const resource = baseURL;
 const testKey = randomBytes(32).toString("base64url");
@@ -42,6 +45,7 @@ const devVars = [
   `AUTH_SECRET=${randomBytes(48).toString("base64url")}`,
   `LOGIN_LIMITER_KEY=${randomBytes(48).toString("base64url")}`,
   `LOCAL_TEST_KEY=${testKey}`,
+  `AUTH_BASE_URL=${baseURL}`,
   `API_RESOURCE=${resource}`,
   `ALLOWED_WEB_ORIGINS=${process.env.CAKE_BROWSER_FIXTURE_ISSUER_ORIGIN_TEST === "1" ? browserOrigin : `${baseURL},${browserOrigin}`}`,
 ].join("\n") + "\n";
@@ -50,6 +54,8 @@ if (existsSync(varsPath)) {
   throw new Error("Refusing to overwrite an existing local .dev.vars file. Move it temporarily, then rerun this isolated test.");
 }
 
+// Refuse occupied loopback ports before secrets/state; a later race still fails strict custody closed.
+await assertFixturePortFree(fixturePort);
 mkdirSync(persistPath, { recursive: true, mode: 0o700 });
 writeFileSync(varsPath, devVars, { flag: "wx", mode: 0o600 });
 
@@ -60,6 +66,7 @@ let release;
 const released = new Promise(resolve => { release = resolve; });
 process.once("SIGINT", release);
 process.once("SIGTERM", release);
+process.once("SIGHUP", release);
 let serverOutput = "";
 let activeURL = new URL(baseURL);
 const cookies = new Map();
@@ -185,9 +192,9 @@ async function createSyntheticAccount(prefix, username, password) {
 // State and credentials live only in ignored .local-run and .dev.vars with restrictive modes.
 try {
   const wrangler = path.join(root, "node_modules", "wrangler", "bin", "wrangler.js");
-  worker = spawn("python3", [custodianPath, process.execPath, wrangler, "dev", "--local", "--config", "wrangler.local.jsonc",
-    "--ip", "127.0.0.1", "--port", "8798", "--persist-to", persistPath],
-    { cwd: root, stdio: ["pipe", "pipe", "pipe", "pipe"] });
+  worker = launchFixtureCustodian(custodianPath, [process.execPath, wrangler, "dev", "--local", "--config", "wrangler.local.jsonc",
+    "--ip", "127.0.0.1", "--port", String(fixturePort), "--persist-to", persistPath], root,
+    path.join(persistPath, "custody-receipt.json"));
   worker.stdin.on("error", () => {}); // Broken control pipe is diagnosed by failed exit/receipt checks.
   worker.stdio[3].setEncoding("utf8").on("data", chunk => { custodyReceipt += chunk; });
   worker.once("error", error => { workerStartupError = error; });

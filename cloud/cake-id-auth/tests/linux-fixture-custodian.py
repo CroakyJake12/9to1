@@ -170,6 +170,8 @@ def launch(command, custody):
                 os.close(3)  # A child can never write the custodian's receipt channel.
             except OSError:
                 pass
+            if getattr(custody, 'journal_fd', None) == 4:
+                os.close(4)  # Private durable receipt is exclusively custodian-owned.
             os.write(write_fd, b'ready\n')
             os.close(write_fd)
             os.execve(command[0], command, os.environ)
@@ -214,16 +216,23 @@ def main():
         preflight()
         print('Actual fork/setsid/exec + pidfd/subreaper/reaping available')
         return
-    if len(sys.argv) < 2:
+    command = sys.argv[1:]
+    journal = None
+    if command and command[0] == '--receipt-fd=4':
+        journal = 4
+        command = command[1:]
+    if not command:
         raise RuntimeError('Missing controlled child command')
     custody = Custody()
+    custody.journal_fd = journal
     stopping = False
     def stop(_sig=None, _frame=None):
         nonlocal stopping
         stopping = True
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
-    launch(sys.argv[1:], custody)
+    signal.signal(signal.SIGHUP, stop)
+    launch(command, custody)
     while not stopping:
         custody.observe()
         if select.select([sys.stdin], [], [], .05)[0]:
@@ -233,7 +242,16 @@ def main():
             else:
                 raise RuntimeError('Unknown custody command; fixture held')
     receipt = custody.drain()
-    os.write(3, (json.dumps(receipt) + '\n').encode())
+    data = (json.dumps(receipt) + '\n').encode()
+    if journal is not None:
+        os.write(journal, data)
+        os.fsync(journal)
+    try:
+        os.write(3, data)
+    except BrokenPipeError:
+        if journal is None:
+            raise  # No surviving proof channel: never claim a usable receipt.
+
 
 
 if __name__ == '__main__':
