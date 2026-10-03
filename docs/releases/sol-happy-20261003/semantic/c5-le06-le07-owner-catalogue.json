@@ -102,7 +102,36 @@
       "eec_blob": "da0d2021c9810d18db28da2743fb9a34c94ad1ba",
       "a63_sha256": "f21034da612966113bc0b3edf7ee8515e52075318d25e5c36a8a01016b084736",
       "same_as_a63": true,
-      "bindings": [],
+      "bindings": [
+        {
+          "line": 7,
+          "text": "public sealed record Resources(long AIDustAllocated, long StorageAllocatedBytes, int HostedSiteLimit,"
+        },
+        {
+          "line": 9,
+          "text": "public sealed record SubscriptionState(Guid AccountID, string? PresetID, int? PresetVersion, bool IsCustomised,"
+        },
+        {
+          "line": 11,
+          "text": "public sealed record Entitlements(IReadOnlyList<PlanThreshold> EffectiveThresholds, string ModelBand,"
+        },
+        {
+          "line": 33,
+          "text": "    public static Entitlements Evaluate(SubscriptionState state)"
+        },
+        {
+          "line": 36,
+          "text": "        if (state.EntitlementPriceMonthly < 0) throw new ArgumentOutOfRangeException(nameof(state));"
+        },
+        {
+          "line": 37,
+          "text": "        var unlocked = Thresholds.Where(t => state.EntitlementPriceMonthly >= t.PriceMonthly).ToArray();"
+        },
+        {
+          "line": 43,
+          "text": "        if (resources.AIDustAllocated < 0 || resources.StorageAllocatedBytes < 0 ||"
+        }
+      ],
       "behavior_and_gap": "Allocation long; EntitlementPriceMonthly is threshold input, no paid/current CloudChat discriminator."
     },
     {
