@@ -13,12 +13,21 @@ public static partial class Program
 
     public static async Task Main()
     {
-        await CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowserApplication>()).StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
+        try
         {
-            RegisterAvaloniaServiceWorker = false,
-            RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
-        });
-        await Application!.OpenFragmentAsync(ReadFragment());
+            await CuiNativeHost.ConfigureFonts(AppBuilder.Configure<BrowserApplication>()).StartBrowserAppAsync("nine-to-one-root", new BrowserPlatformOptions
+            {
+                RegisterAvaloniaServiceWorker = false,
+                RenderingMode = [BrowserRenderingMode.WebGL2, BrowserRenderingMode.WebGL1, BrowserRenderingMode.Software2D],
+            });
+            await Application!.OpenFragmentAsync(ReadFragment());
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine(exception);
+            ShowStatus("BrowserRuntimeUnavailable", "9to1 could not start. Reload to try again.");
+            throw;
+        }
     }
 
     internal static void Attach(BrowserApplication application) => Application = application;

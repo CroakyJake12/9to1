@@ -17,7 +17,8 @@ try {
         () => { unsubscribe(); exports.NineToOne.Web.Program.CloseShell(); },
         exports.NineToOne.Web.Program.PrivateContextInvalidated);
     await dotnet.run();
-} catch {
+} catch (error) {
+    console.error('9to1 browser startup failed.', error);
     platform.showStatus(isCompatible ? 'BrowserRuntimeUnavailable' : 'BrowserCapabilityUnavailable',
         isCompatible ? '9to1 could not start. Check your connection and reload the page.'
             : 'This browser cannot run 9to1. Use a browser with WebAssembly and modern JavaScript support.');
