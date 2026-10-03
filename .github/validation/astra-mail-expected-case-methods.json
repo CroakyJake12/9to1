@@ -1,5 +1,5 @@
 {
-  "status": "Private current28 Home211 complete-method mapping: every prior tuple and original TRX pin preserved, two exact accepted Inbox methods added to mandatory mail-full Passed execution; this joined milestone unexecuted.",
+  "status": "Private Home08: all original method/TRX mapping retained plus accepted Math15 methods/22 Passed-case minima; actual execution required.",
   "originalTRX": [
     {
       "path": "trx/ai.trx",
@@ -506,6 +506,61 @@
       {
         "fullClass": "Haven.Core.Tests.GraphPublicationIntentTests",
         "method": "Explicit_configuration_budget_rejects_oversized_scalar_or_aggregate_before_clone"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Graph_expression_references_require_exact_revisions_and_conflicts_are_atomic",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Point_then_manipulation_preserves_canonical_ID_and_captured_arrays_without_aliasing",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+        "method": "Stale_foreign_undeclared_and_partially_invalid_operations_leave_entire_graph_unchanged",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "All_eleven_typed_answers_round_trip_stable_identity_revision_and_representation",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Capture_detaches_mutable_payloads_and_bounds_full_use_of_configured_arrays",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Exact_numeric_rules_use_actual_value_without_discarding_the_submitted_literal",
+        "minimumPassedCases": 4
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Graph_manipulation_marking_requires_actual_graded_target_identity_and_type",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Graph_marking_compares_typed_coordinates_and_refuses_unavailable_equivalence",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Precision_units_percentage_and_absolute_tolerance_have_explicit_boundaries",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Strict_codec_rejects_future_schema_unknown_fields_duplicate_properties_and_unknown_union",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+        "method": "Unsupported_numeric_precision_or_representation_is_refused_instead_of_rounded",
+        "minimumPassedCases": 5
       }
     ],
     "files-desktop": [
@@ -1504,6 +1559,26 @@
       {
         "fullClass": "Haven.Desktop.Tests.SitesNativeAuthoringConsumerTests",
         "method": "A_retained_original_component_gesture_cannot_keep_fields_when_its_target_is_no_longer_on_the_current_page"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+        "method": "Authored_visual_and_LaTeX_controls_edit_same_ID_real_layout_and_recover_invalid_input",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+        "method": "Maintained_parser_and_editor_enforce_real_source_limits_stale_revision_and_no_registry_mutation",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+        "method": "Maintained_native_graph_renders_structured_ids_and_actual_pointer_edits_exact_graph_version",
+        "minimumPassedCases": 1
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+        "method": "Undeclared_tools_invalid_coordinates_and_unavailable_symbolic_plotting_preserve_canonical_graph",
+        "minimumPassedCases": 1
       }
     ],
     "home-full": [

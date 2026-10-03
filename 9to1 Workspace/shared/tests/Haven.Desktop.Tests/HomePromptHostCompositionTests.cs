@@ -29,7 +29,7 @@ public sealed class HomePromptHostCompositionTests
     public async Task Actual_normal_App_presenter_without_a_window_retains_the_real_pending_request_and_cannot_begin_execution()
     {
         var token = TestContext.Current.CancellationToken;
-        var app = Assert.IsType<App>(Application.Current);
+        var app = Assert.IsType<App>(Avalonia.Application.Current);
         Assert.False(app.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime or ISingleViewApplicationLifetime,
             "This case requires the actual headless no-window lifetime; it does not substitute a native shell.");
         var services = App.Services ?? throw new InvalidOperationException("Actual normal App services were not initialized.");

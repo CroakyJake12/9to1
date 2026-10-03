@@ -1,5 +1,5 @@
 {
-  "status": "Private current28 Home211 successor: entire prior210 rows preserved, one exact accepted Inbox class added; original full native/TLS/CRL/Java/Home/profile/task/drain guards mandatory and this joined milestone unexecuted.",
+  "status": "Private Home08 current30 complete prior cohort plus accepted four shared math classes; only two observed Desktop fixture bindings corrected; unexecuted.",
   "classes": [
     {
       "class": "PlannerAssignmentMutationTests",
@@ -1454,7 +1454,7 @@
       "fullClass": "Haven.Desktop.Tests.HomePromptHostCompositionTests",
       "namespace": "Haven.Desktop.Tests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomePromptHostCompositionTests.cs",
-      "sha256": "9a22130a0769575a81dc0cfd1ea3a1b18a19fcdc8586165c156282274f8576ff",
+      "sha256": "97fa0a263c0edce76a01afe98bf976fd5e566aac683bbf6c5e86e23b801c1040",
       "origin": "Additive complete Home prompt/API/native host class; original178 rows retained"
     },
     {
@@ -1681,7 +1681,7 @@
       "class": "SitesNativeAuthoringConsumerTests",
       "fullClass": "Haven.Desktop.Tests.SitesNativeAuthoringConsumerTests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SitesNativeAuthoringConsumerTests.cs",
-      "sha256": "079e425630610ec367dc5b66d1e7a220499ba2a655a33cb20ef478de169551c3",
+      "sha256": "bf74238c16fdc50152d5e2b961e2b1ef4111c4a1dab259c365f416a3fa2878c4",
       "namespace": "Haven.Desktop.Tests",
       "origin": "Complete canonical Sites test project and exact mounted Sites06 consumer source; unexecuted joined Home dependency candidate"
     },
@@ -1692,6 +1692,42 @@
       "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8",
       "namespace": "HavenOS.Mail.Tests",
       "origin": "Exact accepted actual IMAP16 d657f2ae64ef4c08440f31affa84ddd1b04d60c1, published normal28; mandatory full unfiltered Mail suite in this unexecuted Home211 successor."
+    },
+    {
+      "class": "SharedMathEditorSessionTests",
+      "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+      "namespace": "Haven.Core.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476",
+      "origin": "Exact accepted Math06 full3/current29 source; inherited unchanged normal30. Mandatory full actual Home08 cohort remains unexecuted.",
+      "source": "/workspace/astra-source/worker3-shared-canonical-math-source04-explicit-params-consistent-overlays/manifest.json"
+    },
+    {
+      "class": "SharedMathObjectTests",
+      "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+      "namespace": "Haven.Core.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7",
+      "origin": "Exact accepted Math06 full3/current29 source; inherited unchanged normal30. Mandatory full actual Home08 cohort remains unexecuted.",
+      "source": "/workspace/astra-source/worker3-shared-canonical-math-source04-explicit-params-consistent-overlays/manifest.json"
+    },
+    {
+      "class": "SharedMathNativeEditorTests",
+      "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+      "namespace": "Haven.Desktop.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9",
+      "origin": "Exact accepted Math06 full3/current29 source; inherited unchanged normal30. Mandatory full actual Home08 cohort remains unexecuted.",
+      "source": "/workspace/astra-source/worker3-shared-canonical-math-source06-original-native-test-cancellation/manifest.json"
+    },
+    {
+      "class": "SharedMathNativeGraphTests",
+      "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+      "namespace": "Haven.Desktop.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e",
+      "origin": "Exact accepted Math06 full3/current29 source; inherited unchanged normal30. Mandatory full actual Home08 cohort remains unexecuted.",
+      "source": "/workspace/astra-source/worker3-shared-canonical-math-source06-original-native-test-cancellation/manifest.json"
     }
   ],
   "consoleHarness": {
