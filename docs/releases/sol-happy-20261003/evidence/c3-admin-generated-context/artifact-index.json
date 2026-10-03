@@ -1,8 +1,8 @@
 [
   {
     "path": "README.md",
-    "bytes": 1631,
-    "sha256": "b9550a02ffd6e337a5dbb09f9f7d25b2f7b2356dcd2b34230d7b569872193362"
+    "bytes": 2072,
+    "sha256": "37066e0aa5b64730516568ed607586e36176077c7880686ea0eef407feef93f2"
   },
   {
     "path": "actual/commands.json",
@@ -43,6 +43,11 @@
     "path": "generated-context-controls-attempt1.log",
     "bytes": 1223,
     "sha256": "2f3dd099cadb32b8d1a27b19200a7f1973e7bbce997c82c186fa209e75eaa786"
+  },
+  {
+    "path": "generated-context-controls-attempt2.log",
+    "bytes": 1223,
+    "sha256": "1c9ab9280fcba39d50ddd83314101ac83cac2c985ec95ed2a5fd080a828515d9"
   },
   {
     "path": "generated-context-result.json",
