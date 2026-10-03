@@ -1,0 +1,10 @@
+PASS: Actual native Button receives focus
+PASS: Actual Button Space invokes once and consumes key without text
+PASS: Actual Button Enter invokes exactly once more
+PASS: Actual Button releases pressed state
+PASS: Actual ordinary Input receives native focus
+PASS: Actual ordinary Input admits one Space text event
+PASS: Custom owning keyboard handler receives native focus
+PASS: Custom true Space handler retains ownership and receives no duplicate text
+PASS: Actual owning Write scene renders with native resources
+PASS: Actual owning Write surface receives native focus

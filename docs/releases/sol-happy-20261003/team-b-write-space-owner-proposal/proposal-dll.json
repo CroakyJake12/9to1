@@ -1,0 +1,10 @@
+{
+  "ownerDLLPath": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.UI/bin/Release/net10.0/Haven.UI.dll",
+  "sha256": "4844c5132d8ee27aad83b30cdf79ad46b579cd179b118e470fe86f03fd565490",
+  "bytes": 417280,
+  "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/proposed-Haven.UI.dll",
+  "fixtureSource": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs",
+  "fixtureSha256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee",
+  "passed": 15,
+  "exit": 0
+}

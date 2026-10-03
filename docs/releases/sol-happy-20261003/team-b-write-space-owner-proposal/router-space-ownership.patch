@@ -1,0 +1,18 @@
+--- a/9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs
++++ b/9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs
+@@ -402,6 +402,7 @@
+             if (key == HavenKey.End) { select.SelectBoundary(true); return true; }
+             if (key == HavenKey.Escape && select.IsExpanded) { select.IsExpanded = false; return true; }
+         }
++        if (key == HavenKey.Space && _focused is IHavenTextInputTarget) return false;
+         if (_focused is null || key is not (HavenKey.Enter or HavenKey.Space)) return false;
+         _focused.SetState(HavenElementState.Pressed, true);
+         return true;
+@@ -432,6 +433,7 @@
+         if (_focused is Input && key is HavenKey.Enter or HavenKey.Space or HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End or HavenKey.Backspace or HavenKey.Delete or HavenKey.A or HavenKey.C or HavenKey.V or HavenKey.X or HavenKey.Y or HavenKey.Z) return true;
+         if (_focused is Slider && key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down) return true;
+         if (_focused is Select && key is HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End or HavenKey.Escape) return true;
++        if (key == HavenKey.Space && _focused is IHavenTextInputTarget) return false;
+         if (_focused is null || key is not (HavenKey.Enter or HavenKey.Space)) return false;
+         _focused.SetState(HavenElementState.Pressed, false);
+         Activate(_focused);

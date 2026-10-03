@@ -1,0 +1,5 @@
+/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs(36,63): error CS1503: Argument 3: cannot convert from 'Avalonia.Controls.Window' to 'Avalonia.Input.IInputRoot' [/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpace.Tests.csproj]
+/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs(42,90): error CS1503: Argument 3: cannot convert from 'Avalonia.Controls.Window' to 'Avalonia.Input.IInputRoot' [/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpace.Tests.csproj]
+/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs(43,61): error CS1503: Argument 3: cannot convert from 'Avalonia.Controls.Window' to 'Avalonia.Input.IInputRoot' [/workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpace.Tests.csproj]
+
+The build failed. Fix the build errors and run again.

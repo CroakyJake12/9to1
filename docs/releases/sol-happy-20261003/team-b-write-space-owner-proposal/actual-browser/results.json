@@ -1,0 +1,1191 @@
+{
+  "commit": "f8de954396326ca4630202fc0daededb6023f28d",
+  "bundle": "/workspace/team-b-artifacts/browser-f8de9543/wwwroot",
+  "port": 18762,
+  "runnerSha256": "3151069a7028a8e0f99fab4cd69e0f9ca3fccba0d49ccb6a48c0f50feb961001",
+  "scope": "Actual local native CUI/retained Write physical input and IndexedDB durability. Not layout, rich-editor automation, deployed, platform or full product acceptance.",
+  "outcomes": {
+    "actual-write-native-cui": {
+      "outcome": "PASS",
+      "observed": {
+        "generation": 1,
+        "elements": [
+          {
+            "id": "1:1",
+            "role": "text",
+            "name": "Write",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 12,
+              "width": 1416,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:2",
+            "role": "button",
+            "name": "New",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 50,
+              "width": 49,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:3",
+            "role": "button",
+            "name": "Save",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 61,
+              "y": 50,
+              "width": 51,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:4",
+            "role": "button",
+            "name": "Bold",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 112,
+              "y": 50,
+              "width": 48,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:5",
+            "role": "button",
+            "name": "Undo",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 160,
+              "y": 50,
+              "width": 54,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:6",
+            "role": "button",
+            "name": "Redo",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 214,
+              "y": 50,
+              "width": 53,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:7",
+            "role": "button",
+            "name": "Close",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 267,
+              "y": 50,
+              "width": 56,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:8",
+            "role": "button",
+            "name": "Import native package",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 323,
+              "y": 50,
+              "width": 167,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:9",
+            "role": "button",
+            "name": "Download native package",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 490,
+              "y": 50,
+              "width": 189,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:10",
+            "role": "text",
+            "name": "No document open",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 80,
+              "width": 1416,
+              "height": 17
+            }
+          },
+          {
+            "id": "1:11",
+            "role": "text",
+            "name": "",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 97,
+              "width": 1416,
+              "height": 17
+            }
+          },
+          {
+            "id": "1:12",
+            "role": "text",
+            "name": "Saved documents on this browser",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 122,
+              "width": 1416,
+              "height": 20
+            }
+          },
+          {
+            "id": "1:13",
+            "role": "button",
+            "name": "Refresh documents",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 146,
+              "width": 147,
+              "height": 30
+            }
+          }
+        ],
+        "unsupported": [],
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        },
+        "unsupportedPeers": []
+      }
+    },
+    "native-logical-canvas-mapping": {
+      "outcome": "PASS",
+      "observed": {
+        "host": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "canvases": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1000
+          }
+        ],
+        "dpr": 1,
+        "canvas": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "nativeViewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        }
+      }
+    },
+    "native-pointer-create-durable-document": {
+      "outcome": "PASS",
+      "observed": {
+        "click": {
+          "label": "New",
+          "native": {
+            "id": "1:2",
+            "role": "button",
+            "name": "New",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 50,
+              "width": 49,
+              "height": 30
+            }
+          },
+          "view": {
+            "host": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 1000
+            },
+            "canvases": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 1440,
+                "height": 1000
+              }
+            ],
+            "dpr": 1,
+            "canvas": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 1000
+            },
+            "nativeViewport": {
+              "width": 1440,
+              "height": 1000,
+              "renderScaling": 1
+            }
+          },
+          "pointer": {
+            "x": 36.5,
+            "y": 65
+          },
+          "hit": {
+            "tag": "DIV",
+            "native": true
+          }
+        },
+        "record": {
+          "id": "8e3a0d0a-529b-492f-80e1-c648770af662",
+          "version": "1",
+          "documentJson": "{\n  \"schemaVersion\": 1,\n  \"id\": \"8e3a0d0a-529b-492f-80e1-c648770af662\",\n  \"title\": \"Untitled document\",\n  \"language\": \"en-GB\",\n  \"createdAt\": \"2026-10-03T22:51:45.395+00:00\",\n  \"updatedAt\": \"2026-10-03T22:51:45.955+00:00\",\n  \"version\": 1,\n  \"layoutMode\": 1,\n  \"pageSetup\": {\n    \"widthPoints\": 595,\n    \"heightPoints\": 842,\n    \"marginTopPoints\": 72,\n    \"marginRightPoints\": 72,\n    \"marginBottomPoints\": 72,\n    \"marginLeftPoints\": 72,\n    \"orientation\": \"Portrait\",\n    \"background\": \"#FFFFFFFF\",\n    \"showPageNumbers\": true\n  },\n  \"sections\": [\n    {\n      \"id\": \"dfe233a0-e1f2-45c2-98c6-28cfae380a8d\",\n      \"title\": \"Section 1\",\n      \"header\": \"\",\n      \"footer\": \"\",\n      \"startOnNewPage\": false,\n      \"pages\": [\n        {\n          \"id\": \"981beaa9-5eb3-43a4-b938-fbb91f53f1f4\",\n          \"title\": \"Page 1\",\n          \"order\": 0,\n          \"canvasWidth\": 1200,\n          \"canvasHeight\": 900,\n          \"blocks\": [\n            {\n              \"id\": \"3759f67e-bb84-4f76-b241-f949720c3dea\",\n              \"kind\": 0,\n              \"order\": 0,\n              \"styleId\": \"normal\",\n              \"plainText\": \"\",\n              \"runs\": [\n                {\n                  \"id\": \"8f0b1d0e-92e7-4b37-851d-678c7b2327d9\",\n                  \"text\": \"\",\n                  \"fontFamily\": \"Montserrat\",\n                  \"fontSize\": 14,\n                  \"bold\": false,\n                  \"italic\": false,\n                  \"underline\": false,\n                  \"strikeThrough\": false,\n                  \"foreground\": \"#FFEEEEEE\",\n                  \"background\": \"#00000000\",\n                  \"link\": null,\n                  \"language\": null\n                }\n              ],\n              \"paragraph\": {\n                \"alignment\": 0,\n                \"lineSpacing\": 1.25,\n                \"spaceBefore\": 0,\n                \"spaceAfter\": 8,\n                \"indentLeft\": 0,\n                \"indentRight\": 0,\n                \"firstLineIndent\": 0,\n                \"keepWithNext\": false,\n                \"pageBreakBefore\": false\n              },\n              \"list\": null,\n              \"table\": null,\n              \"media\": null,\n              \"equation\": null,\n              \"html\": null,\n              \"canvas\": null,\n              \"vectorShape\": null,\n              \"flashcard\": null,\n              \"metadata\": {}\n            }\n          ],\n          \"canvasObjects\": []\n        }\n      ]\n    }\n  ],\n  \"styles\": [\n    {\n      \"id\": \"normal\",\n      \"name\": \"Normal\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"5387e0c7-d0d2-4cc0-af7c-8ff4b218a3b5\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 0,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-1\",\n      \"name\": \"Heading 1\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"d4b421a6-08e0-468d-8556-b8c69625ce46\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 28,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 18,\n        \"spaceAfter\": 10,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-2\",\n      \"name\": \"Heading 2\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"7eeb0597-36dc-43a5-8a4e-72fab3e4bf24\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 22,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 14,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"quote\",\n      \"name\": \"Quote\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"c7d63c65-4190-4ca8-be68-9333102a2e32\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": true,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 24,\n        \"indentRight\": 24,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"code\",\n      \"name\": \"Code\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"fc6c2a54-ffb1-4438-b311-2197b8642471\",\n        \"text\": \"\",\n        \"fontFamily\": \"Cascadia Mono\",\n        \"fontSize\": 13,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    }\n  ],\n  \"fields\": [],\n  \"bookmarks\": [],\n  \"citations\": [],\n  \"comments\": [],\n  \"revisions\": [\n    {\n      \"id\": \"a3f77928-5e42-4b3a-9ac3-52933bacf725\",\n      \"kind\": 0,\n      \"blockId\": null,\n      \"author\": \"Browser\",\n      \"summary\": \"Document created\",\n      \"beforeHash\": \"\",\n      \"afterHash\": \"\",\n      \"createdAt\": \"2026-10-03T22:51:45.395+00:00\"\n    }\n  ],\n  \"aiChanges\": [],\n  \"flashcardReviews\": [],\n  \"collaboration\": {\n    \"ownerId\": \"Browser\",\n    \"collaborators\": [],\n    \"syncRevision\": \"\",\n    \"remoteEtag\": \"\",\n    \"conflictState\": 0,\n    \"lastSyncedAt\": null,\n    \"conflicts\": []\n  },\n  \"recovery\": {\n    \"lastAutosaveAt\": \"2026-10-03T22:51:45.955+00:00\",\n    \"lastBackupAt\": null,\n    \"lastRecoveredAt\": null,\n    \"lastValidSha256\": \"\",\n    \"hasUnsavedRecovery\": false,\n    \"recoveryReason\": \"\"\n  },\n  \"metadata\": {}\n}",
+          "sha256": "c6926893b1986685ac33c1dfbfb79b455a02537c564ed05cd8ff586a9e64ebb6",
+          "versionInfoJson": "{\n  \"versionId\": \"v0000000001-20261003-225145955\",\n  \"version\": 1,\n  \"createdAt\": \"2026-10-03T22:51:45.955+00:00\",\n  \"reason\": \"Created Write document\",\n  \"sizeBytes\": 6991,\n  \"sha256\": \"c6926893b1986685ac33c1dfbfb79b455a02537c564ed05cd8ff586a9e64ebb6\"\n}"
+        }
+      }
+    },
+    "unsupported-rich-editor-real-bounds": {
+      "outcome": "PASS",
+      "observed": {
+        "automationId": "Write.Document.Surface",
+        "name": "Document editor",
+        "className": "HavenSceneControl",
+        "controlType": "Edit",
+        "bounds": {
+          "x": 12,
+          "y": 214,
+          "width": 1416,
+          "height": 900
+        }
+      }
+    },
+    "native-pointer-raw-keyboard-text": {
+      "outcome": "PASS",
+      "observed": {
+        "click": {
+          "label": "actual retained editor",
+          "native": {
+            "automationId": "Write.Document.Surface",
+            "name": "Document editor",
+            "className": "HavenSceneControl",
+            "controlType": "Edit",
+            "bounds": {
+              "x": 12,
+              "y": 214,
+              "width": 1416,
+              "height": 900
+            }
+          },
+          "view": {
+            "host": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 1000
+            },
+            "canvases": [
+              {
+                "x": 0,
+                "y": 0,
+                "width": 1440,
+                "height": 1000
+              }
+            ],
+            "dpr": 1,
+            "canvas": {
+              "x": 0,
+              "y": 0,
+              "width": 1440,
+              "height": 1000
+            },
+            "nativeViewport": {
+              "width": 1440,
+              "height": 1000,
+              "renderScaling": 1
+            }
+          },
+          "pointer": {
+            "x": 720,
+            "y": 607
+          },
+          "hit": {
+            "tag": "DIV",
+            "native": true
+          }
+        },
+        "entered": "Alpha beta gamma",
+        "method": "physical native mouse + raw browser keyboard"
+      }
+    },
+    "typed-text-durable-receipt": {
+      "outcome": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'Alphabetagamma'\n- 'Alpha beta gamma'\n        ^\n\n    at /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:185:96\n    at async check (/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:43:60)\n    at async /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:184:5"
+    },
+    "physical-range-and-owning-bold": {
+      "outcome": "NOT_RUN"
+    },
+    "rich-format-durable-receipt": {
+      "outcome": "NOT_RUN"
+    },
+    "close-clears-real-editor": {
+      "outcome": "NOT_RUN"
+    },
+    "native-pointer-open-same-document": {
+      "outcome": "NOT_RUN"
+    },
+    "reopen-preserves-exact-record-and-identities": {
+      "outcome": "NOT_RUN"
+    },
+    "cold-route-readonly-reopen": {
+      "outcome": "NOT_RUN"
+    },
+    "runtime-errors-absent": {
+      "outcome": "PASS",
+      "observed": {
+        "counts": {
+          "pageError": 0,
+          "consoleError": 0,
+          "managedError": 0,
+          "requestFailed": 0
+        },
+        "samples": []
+      }
+    },
+    "sealed-bundle-unchanged": {
+      "outcome": "PASS",
+      "observed": {
+        "files": 267,
+        "bytes": 56959186
+      }
+    }
+  },
+  "snapshots": [
+    {
+      "label": "empty-route",
+      "state": {
+        "generation": 1,
+        "elements": [
+          {
+            "id": "1:1",
+            "role": "text",
+            "name": "Write",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 12,
+              "width": 1416,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:2",
+            "role": "button",
+            "name": "New",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 50,
+              "width": 49,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:3",
+            "role": "button",
+            "name": "Save",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 61,
+              "y": 50,
+              "width": 51,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:4",
+            "role": "button",
+            "name": "Bold",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 112,
+              "y": 50,
+              "width": 48,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:5",
+            "role": "button",
+            "name": "Undo",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 160,
+              "y": 50,
+              "width": 54,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:6",
+            "role": "button",
+            "name": "Redo",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 214,
+              "y": 50,
+              "width": 53,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:7",
+            "role": "button",
+            "name": "Close",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 267,
+              "y": 50,
+              "width": 56,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:8",
+            "role": "button",
+            "name": "Import native package",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 323,
+              "y": 50,
+              "width": 167,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:9",
+            "role": "button",
+            "name": "Download native package",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 490,
+              "y": 50,
+              "width": 189,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:10",
+            "role": "text",
+            "name": "No document open",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 80,
+              "width": 1416,
+              "height": 17
+            }
+          },
+          {
+            "id": "1:11",
+            "role": "text",
+            "name": "",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 97,
+              "width": 1416,
+              "height": 17
+            }
+          },
+          {
+            "id": "1:12",
+            "role": "text",
+            "name": "Saved documents on this browser",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 122,
+              "width": 1416,
+              "height": 20
+            }
+          },
+          {
+            "id": "1:13",
+            "role": "button",
+            "name": "Refresh documents",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 146,
+              "width": 147,
+              "height": 30
+            }
+          }
+        ],
+        "unsupported": [],
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        },
+        "unsupportedPeers": []
+      }
+    },
+    {
+      "label": "editor-created",
+      "state": {
+        "generation": 1,
+        "elements": [
+          {
+            "id": "1:1",
+            "role": "text",
+            "name": "Untitled document",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 12,
+              "width": 1416,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:2",
+            "role": "button",
+            "name": "New",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 50,
+              "width": 49,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:3",
+            "role": "button",
+            "name": "Save",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 61,
+              "y": 50,
+              "width": 51,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:4",
+            "role": "button",
+            "name": "Bold",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 112,
+              "y": 50,
+              "width": 48,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:5",
+            "role": "button",
+            "name": "Undo",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 160,
+              "y": 50,
+              "width": 54,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:6",
+            "role": "button",
+            "name": "Redo",
+            "automationId": null,
+            "enabled": false,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "This action requires an available account service or browser capability.",
+            "focused": false,
+            "bounds": {
+              "x": 214,
+              "y": 50,
+              "width": 53,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:7",
+            "role": "button",
+            "name": "Close",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 267,
+              "y": 50,
+              "width": 56,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:8",
+            "role": "button",
+            "name": "Import native package",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 323,
+              "y": 50,
+              "width": 167,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:9",
+            "role": "button",
+            "name": "Download native package",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 490,
+              "y": 50,
+              "width": 189,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:10",
+            "role": "text",
+            "name": "Saved",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 80,
+              "width": 1416,
+              "height": 17
+            }
+          },
+          {
+            "id": "1:11",
+            "role": "text",
+            "name": "",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 97,
+              "width": 1416,
+              "height": 17
+            }
+          },
+          {
+            "id": "1:12",
+            "role": "text",
+            "name": "Saved documents on this browser",
+            "automationId": null,
+            "enabled": true,
+            "focusable": false,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 122,
+              "width": 1416,
+              "height": 20
+            }
+          },
+          {
+            "id": "1:13",
+            "role": "button",
+            "name": "Refresh documents",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 146,
+              "width": 147,
+              "height": 30
+            }
+          },
+          {
+            "id": "1:14",
+            "role": "button",
+            "name": "Untitled document",
+            "automationId": null,
+            "enabled": true,
+            "focusable": true,
+            "value": null,
+            "readOnly": true,
+            "help": "",
+            "focused": false,
+            "bounds": {
+              "x": 12,
+              "y": 176,
+              "width": 141,
+              "height": 30
+            }
+          }
+        ],
+        "unsupported": [
+          "Edit"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        },
+        "unsupportedPeers": [
+          {
+            "automationId": "Write.Document.Surface",
+            "name": "Document editor",
+            "className": "HavenSceneControl",
+            "controlType": "Edit",
+            "bounds": {
+              "x": 12,
+              "y": 214,
+              "width": 1416,
+              "height": 900
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "pointers": [
+    {
+      "label": "New",
+      "native": {
+        "id": "1:2",
+        "role": "button",
+        "name": "New",
+        "automationId": null,
+        "enabled": true,
+        "focusable": true,
+        "value": null,
+        "readOnly": true,
+        "help": "",
+        "focused": false,
+        "bounds": {
+          "x": 12,
+          "y": 50,
+          "width": 49,
+          "height": 30
+        }
+      },
+      "view": {
+        "host": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "canvases": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1000
+          }
+        ],
+        "dpr": 1,
+        "canvas": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "nativeViewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        }
+      },
+      "pointer": {
+        "x": 36.5,
+        "y": 65
+      },
+      "hit": {
+        "tag": "DIV",
+        "native": true
+      }
+    },
+    {
+      "label": "actual retained editor",
+      "native": {
+        "automationId": "Write.Document.Surface",
+        "name": "Document editor",
+        "className": "HavenSceneControl",
+        "controlType": "Edit",
+        "bounds": {
+          "x": 12,
+          "y": 214,
+          "width": 1416,
+          "height": 900
+        }
+      },
+      "view": {
+        "host": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "canvases": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1000
+          }
+        ],
+        "dpr": 1,
+        "canvas": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "nativeViewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        }
+      },
+      "pointer": {
+        "x": 720,
+        "y": 607
+      },
+      "hit": {
+        "tag": "DIV",
+        "native": true
+      }
+    },
+    {
+      "label": "Save",
+      "native": {
+        "id": "1:3",
+        "role": "button",
+        "name": "Save",
+        "automationId": null,
+        "enabled": true,
+        "focusable": true,
+        "value": null,
+        "readOnly": true,
+        "help": "",
+        "focused": false,
+        "bounds": {
+          "x": 61,
+          "y": 50,
+          "width": 51,
+          "height": 30
+        }
+      },
+      "view": {
+        "host": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "canvases": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 1000
+          }
+        ],
+        "dpr": 1,
+        "canvas": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1000
+        },
+        "nativeViewport": {
+          "width": 1440,
+          "height": 1000,
+          "renderScaling": 1
+        }
+      },
+      "pointer": {
+        "x": 86.5,
+        "y": 65
+      },
+      "hit": {
+        "tag": "DIV",
+        "native": true
+      }
+    }
+  ],
+  "diagnostics": {
+    "counts": {
+      "pageError": 0,
+      "consoleError": 0,
+      "managedError": 0,
+      "requestFailed": 0
+    },
+    "samples": []
+  },
+  "unsupported": [
+    "Owner rich editor has no IValueProvider/ITextProvider; its Edit peer is diagnostic geometry only.",
+    "Original retained text glyph/line layout remains separately unaccepted; screenshots alone do not establish visual correctness."
+  ],
+  "fullProductParityVerified": false,
+  "profile": "/tmp/b1-write-native-n6YPEe",
+  "browserVersion": "151.0.7922.173",
+  "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'Alphabetagamma'\n- 'Alpha beta gamma'\n        ^\n\n    at /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:185:96\n    at async check (/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:43:60)\n    at async /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:184:5",
+  "closed": true,
+  "completedAt": "2026-10-03T22:51:48.506Z"
+}

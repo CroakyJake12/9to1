@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="UseEvidenceOnlyProposedRouter" BeforeTargets="CoreCompile" Condition="'$(MSBuildProjectFullPath)' == '$(EvidenceOwnerUiProject)'">
+    <ItemGroup>
+      <Compile Remove="Input/HavenInputRouter.cs;$(MSBuildProjectDirectory)/Input/HavenInputRouter.cs" />
+      <Compile Include="$(EvidenceProposedRouter)" Link="Input/HavenInputRouter.cs" />
+    </ItemGroup>
+    <Message Importance="High" Text="EVIDENCE_ONLY exact owner UI Compile replacement: $(EvidenceProposedRouter)" />
+  </Target>
+</Project>

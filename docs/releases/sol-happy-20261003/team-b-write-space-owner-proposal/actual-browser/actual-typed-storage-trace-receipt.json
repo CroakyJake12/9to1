@@ -1,0 +1,166 @@
+{
+  "source": "Unchanged actual Playwright trace evaluate return, not reconstructed or mutated database",
+  "receipts": [
+    {
+      "traceMember": "trace.trace",
+      "event": {
+        "type": "after",
+        "callId": "call@75",
+        "endTime": 5014.376,
+        "result": {
+          "value": {
+            "o": [
+              {
+                "k": "documents",
+                "v": {
+                  "a": [
+                    {
+                      "o": [
+                        {
+                          "k": "id",
+                          "v": {
+                            "s": "8e3a0d0a-529b-492f-80e1-c648770af662"
+                          }
+                        },
+                        {
+                          "k": "version",
+                          "v": {
+                            "s": "2"
+                          }
+                        },
+                        {
+                          "k": "documentJson",
+                          "v": {
+                            "s": "{\n  \"schemaVersion\": 1,\n  \"id\": \"8e3a0d0a-529b-492f-80e1-c648770af662\",\n  \"title\": \"Untitled document\",\n  \"language\": \"en-GB\",\n  \"createdAt\": \"2026-10-03T22:51:45.395+00:00\",\n  \"updatedAt\": \"2026-10-03T22:51:47.01+00:00\",\n  \"version\": 2,\n  \"layoutMode\": 1,\n  \"pageSetup\": {\n    \"widthPoints\": 595,\n    \"heightPoints\": 842,\n    \"marginTopPoints\": 72,\n    \"marginRightPoints\": 72,\n    \"marginBottomPoints\": 72,\n    \"marginLeftPoints\": 72,\n    \"orientation\": \"Portrait\",\n    \"background\": \"#FFFFFFFF\",\n    \"showPageNumbers\": true\n  },\n  \"sections\": [\n    {\n      \"id\": \"dfe233a0-e1f2-45c2-98c6-28cfae380a8d\",\n      \"title\": \"Section 1\",\n      \"header\": \"\",\n      \"footer\": \"\",\n      \"startOnNewPage\": false,\n      \"pages\": [\n        {\n          \"id\": \"981beaa9-5eb3-43a4-b938-fbb91f53f1f4\",\n          \"title\": \"Page 1\",\n          \"order\": 0,\n          \"canvasWidth\": 1200,\n          \"canvasHeight\": 900,\n          \"blocks\": [\n            {\n              \"id\": \"3759f67e-bb84-4f76-b241-f949720c3dea\",\n              \"kind\": 0,\n              \"order\": 0,\n              \"styleId\": \"normal\",\n              \"plainText\": \"Alphabetagamma\",\n              \"runs\": [\n                {\n                  \"id\": \"8f0b1d0e-92e7-4b37-851d-678c7b2327d9\",\n                  \"text\": \"Alphabetagamma\",\n                  \"fontFamily\": \"Montserrat\",\n                  \"fontSize\": 14,\n                  \"bold\": false,\n                  \"italic\": false,\n                  \"underline\": false,\n                  \"strikeThrough\": false,\n                  \"foreground\": \"#FFEEEEEE\",\n                  \"background\": \"#00000000\",\n                  \"link\": null,\n                  \"language\": null\n                }\n              ],\n              \"paragraph\": {\n                \"alignment\": 0,\n                \"lineSpacing\": 1.25,\n                \"spaceBefore\": 0,\n                \"spaceAfter\": 8,\n                \"indentLeft\": 0,\n                \"indentRight\": 0,\n                \"firstLineIndent\": 0,\n                \"keepWithNext\": false,\n                \"pageBreakBefore\": false\n              },\n              \"list\": null,\n              \"table\": null,\n              \"media\": null,\n              \"equation\": null,\n              \"html\": null,\n              \"canvas\": null,\n              \"vectorShape\": null,\n              \"flashcard\": null,\n              \"metadata\": {}\n            }\n          ],\n          \"canvasObjects\": []\n        }\n      ]\n    }\n  ],\n  \"styles\": [\n    {\n      \"id\": \"normal\",\n      \"name\": \"Normal\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"5387e0c7-d0d2-4cc0-af7c-8ff4b218a3b5\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 0,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-1\",\n      \"name\": \"Heading 1\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"d4b421a6-08e0-468d-8556-b8c69625ce46\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 28,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 18,\n        \"spaceAfter\": 10,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-2\",\n      \"name\": \"Heading 2\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"7eeb0597-36dc-43a5-8a4e-72fab3e4bf24\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 22,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 14,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"quote\",\n      \"name\": \"Quote\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"c7d63c65-4190-4ca8-be68-9333102a2e32\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": true,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 24,\n        \"indentRight\": 24,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"code\",\n      \"name\": \"Code\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"fc6c2a54-ffb1-4438-b311-2197b8642471\",\n        \"text\": \"\",\n        \"fontFamily\": \"Cascadia Mono\",\n        \"fontSize\": 13,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    }\n  ],\n  \"fields\": [],\n  \"bookmarks\": [],\n  \"citations\": [],\n  \"comments\": [],\n  \"revisions\": [\n    {\n      \"id\": \"a3f77928-5e42-4b3a-9ac3-52933bacf725\",\n      \"kind\": 0,\n      \"blockId\": null,\n      \"author\": \"Browser\",\n      \"summary\": \"Document created\",\n      \"beforeHash\": \"\",\n      \"afterHash\": \"\",\n      \"createdAt\": \"2026-10-03T22:51:45.395+00:00\"\n    }\n  ],\n  \"aiChanges\": [],\n  \"flashcardReviews\": [],\n  \"collaboration\": {\n    \"ownerId\": \"Browser\",\n    \"collaborators\": [],\n    \"syncRevision\": \"\",\n    \"remoteEtag\": \"\",\n    \"conflictState\": 0,\n    \"lastSyncedAt\": null,\n    \"conflicts\": []\n  },\n  \"recovery\": {\n    \"lastAutosaveAt\": \"2026-10-03T22:51:47.01+00:00\",\n    \"lastBackupAt\": null,\n    \"lastRecoveredAt\": null,\n    \"lastValidSha256\": \"\",\n    \"hasUnsavedRecovery\": false,\n    \"recoveryReason\": \"\"\n  },\n  \"metadata\": {}\n}"
+                          }
+                        },
+                        {
+                          "k": "sha256",
+                          "v": {
+                            "s": "5216b2c4f36f9e23a025cd55b40d8c42a6389aade07775b25b87559ac9f04d74"
+                          }
+                        },
+                        {
+                          "k": "versionInfoJson",
+                          "v": {
+                            "s": "{\n  \"versionId\": \"v0000000002-20261003-225147010\",\n  \"version\": 2,\n  \"createdAt\": \"2026-10-03T22:51:47.01+00:00\",\n  \"reason\": \"Saved browser Write edit\",\n  \"sizeBytes\": 7017,\n  \"sha256\": \"5216b2c4f36f9e23a025cd55b40d8c42a6389aade07775b25b87559ac9f04d74\"\n}"
+                          }
+                        }
+                      ],
+                      "id": 3
+                    }
+                  ],
+                  "id": 2
+                }
+              },
+              {
+                "k": "history",
+                "v": {
+                  "a": [
+                    {
+                      "o": [
+                        {
+                          "k": "documentId",
+                          "v": {
+                            "s": "8e3a0d0a-529b-492f-80e1-c648770af662"
+                          }
+                        },
+                        {
+                          "k": "versionId",
+                          "v": {
+                            "s": "v0000000001-20261003-225145955"
+                          }
+                        },
+                        {
+                          "k": "id",
+                          "v": {
+                            "s": "8e3a0d0a-529b-492f-80e1-c648770af662"
+                          }
+                        },
+                        {
+                          "k": "version",
+                          "v": {
+                            "s": "1"
+                          }
+                        },
+                        {
+                          "k": "documentJson",
+                          "v": {
+                            "s": "{\n  \"schemaVersion\": 1,\n  \"id\": \"8e3a0d0a-529b-492f-80e1-c648770af662\",\n  \"title\": \"Untitled document\",\n  \"language\": \"en-GB\",\n  \"createdAt\": \"2026-10-03T22:51:45.395+00:00\",\n  \"updatedAt\": \"2026-10-03T22:51:45.955+00:00\",\n  \"version\": 1,\n  \"layoutMode\": 1,\n  \"pageSetup\": {\n    \"widthPoints\": 595,\n    \"heightPoints\": 842,\n    \"marginTopPoints\": 72,\n    \"marginRightPoints\": 72,\n    \"marginBottomPoints\": 72,\n    \"marginLeftPoints\": 72,\n    \"orientation\": \"Portrait\",\n    \"background\": \"#FFFFFFFF\",\n    \"showPageNumbers\": true\n  },\n  \"sections\": [\n    {\n      \"id\": \"dfe233a0-e1f2-45c2-98c6-28cfae380a8d\",\n      \"title\": \"Section 1\",\n      \"header\": \"\",\n      \"footer\": \"\",\n      \"startOnNewPage\": false,\n      \"pages\": [\n        {\n          \"id\": \"981beaa9-5eb3-43a4-b938-fbb91f53f1f4\",\n          \"title\": \"Page 1\",\n          \"order\": 0,\n          \"canvasWidth\": 1200,\n          \"canvasHeight\": 900,\n          \"blocks\": [\n            {\n              \"id\": \"3759f67e-bb84-4f76-b241-f949720c3dea\",\n              \"kind\": 0,\n              \"order\": 0,\n              \"styleId\": \"normal\",\n              \"plainText\": \"\",\n              \"runs\": [\n                {\n                  \"id\": \"8f0b1d0e-92e7-4b37-851d-678c7b2327d9\",\n                  \"text\": \"\",\n                  \"fontFamily\": \"Montserrat\",\n                  \"fontSize\": 14,\n                  \"bold\": false,\n                  \"italic\": false,\n                  \"underline\": false,\n                  \"strikeThrough\": false,\n                  \"foreground\": \"#FFEEEEEE\",\n                  \"background\": \"#00000000\",\n                  \"link\": null,\n                  \"language\": null\n                }\n              ],\n              \"paragraph\": {\n                \"alignment\": 0,\n                \"lineSpacing\": 1.25,\n                \"spaceBefore\": 0,\n                \"spaceAfter\": 8,\n                \"indentLeft\": 0,\n                \"indentRight\": 0,\n                \"firstLineIndent\": 0,\n                \"keepWithNext\": false,\n                \"pageBreakBefore\": false\n              },\n              \"list\": null,\n              \"table\": null,\n              \"media\": null,\n              \"equation\": null,\n              \"html\": null,\n              \"canvas\": null,\n              \"vectorShape\": null,\n              \"flashcard\": null,\n              \"metadata\": {}\n            }\n          ],\n          \"canvasObjects\": []\n        }\n      ]\n    }\n  ],\n  \"styles\": [\n    {\n      \"id\": \"normal\",\n      \"name\": \"Normal\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"5387e0c7-d0d2-4cc0-af7c-8ff4b218a3b5\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 0,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-1\",\n      \"name\": \"Heading 1\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"d4b421a6-08e0-468d-8556-b8c69625ce46\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 28,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 18,\n        \"spaceAfter\": 10,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-2\",\n      \"name\": \"Heading 2\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"7eeb0597-36dc-43a5-8a4e-72fab3e4bf24\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 22,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 14,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"quote\",\n      \"name\": \"Quote\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"c7d63c65-4190-4ca8-be68-9333102a2e32\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": true,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 24,\n        \"indentRight\": 24,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"code\",\n      \"name\": \"Code\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"fc6c2a54-ffb1-4438-b311-2197b8642471\",\n        \"text\": \"\",\n        \"fontFamily\": \"Cascadia Mono\",\n        \"fontSize\": 13,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    }\n  ],\n  \"fields\": [],\n  \"bookmarks\": [],\n  \"citations\": [],\n  \"comments\": [],\n  \"revisions\": [\n    {\n      \"id\": \"a3f77928-5e42-4b3a-9ac3-52933bacf725\",\n      \"kind\": 0,\n      \"blockId\": null,\n      \"author\": \"Browser\",\n      \"summary\": \"Document created\",\n      \"beforeHash\": \"\",\n      \"afterHash\": \"\",\n      \"createdAt\": \"2026-10-03T22:51:45.395+00:00\"\n    }\n  ],\n  \"aiChanges\": [],\n  \"flashcardReviews\": [],\n  \"collaboration\": {\n    \"ownerId\": \"Browser\",\n    \"collaborators\": [],\n    \"syncRevision\": \"\",\n    \"remoteEtag\": \"\",\n    \"conflictState\": 0,\n    \"lastSyncedAt\": null,\n    \"conflicts\": []\n  },\n  \"recovery\": {\n    \"lastAutosaveAt\": \"2026-10-03T22:51:45.955+00:00\",\n    \"lastBackupAt\": null,\n    \"lastRecoveredAt\": null,\n    \"lastValidSha256\": \"\",\n    \"hasUnsavedRecovery\": false,\n    \"recoveryReason\": \"\"\n  },\n  \"metadata\": {}\n}"
+                          }
+                        },
+                        {
+                          "k": "sha256",
+                          "v": {
+                            "s": "c6926893b1986685ac33c1dfbfb79b455a02537c564ed05cd8ff586a9e64ebb6"
+                          }
+                        },
+                        {
+                          "k": "versionInfoJson",
+                          "v": {
+                            "s": "{\n  \"versionId\": \"v0000000001-20261003-225145955\",\n  \"version\": 1,\n  \"createdAt\": \"2026-10-03T22:51:45.955+00:00\",\n  \"reason\": \"Created Write document\",\n  \"sizeBytes\": 6991,\n  \"sha256\": \"c6926893b1986685ac33c1dfbfb79b455a02537c564ed05cd8ff586a9e64ebb6\"\n}"
+                          }
+                        }
+                      ],
+                      "id": 5
+                    },
+                    {
+                      "o": [
+                        {
+                          "k": "documentId",
+                          "v": {
+                            "s": "8e3a0d0a-529b-492f-80e1-c648770af662"
+                          }
+                        },
+                        {
+                          "k": "versionId",
+                          "v": {
+                            "s": "v0000000002-20261003-225147010"
+                          }
+                        },
+                        {
+                          "k": "id",
+                          "v": {
+                            "s": "8e3a0d0a-529b-492f-80e1-c648770af662"
+                          }
+                        },
+                        {
+                          "k": "version",
+                          "v": {
+                            "s": "2"
+                          }
+                        },
+                        {
+                          "k": "documentJson",
+                          "v": {
+                            "s": "{\n  \"schemaVersion\": 1,\n  \"id\": \"8e3a0d0a-529b-492f-80e1-c648770af662\",\n  \"title\": \"Untitled document\",\n  \"language\": \"en-GB\",\n  \"createdAt\": \"2026-10-03T22:51:45.395+00:00\",\n  \"updatedAt\": \"2026-10-03T22:51:47.01+00:00\",\n  \"version\": 2,\n  \"layoutMode\": 1,\n  \"pageSetup\": {\n    \"widthPoints\": 595,\n    \"heightPoints\": 842,\n    \"marginTopPoints\": 72,\n    \"marginRightPoints\": 72,\n    \"marginBottomPoints\": 72,\n    \"marginLeftPoints\": 72,\n    \"orientation\": \"Portrait\",\n    \"background\": \"#FFFFFFFF\",\n    \"showPageNumbers\": true\n  },\n  \"sections\": [\n    {\n      \"id\": \"dfe233a0-e1f2-45c2-98c6-28cfae380a8d\",\n      \"title\": \"Section 1\",\n      \"header\": \"\",\n      \"footer\": \"\",\n      \"startOnNewPage\": false,\n      \"pages\": [\n        {\n          \"id\": \"981beaa9-5eb3-43a4-b938-fbb91f53f1f4\",\n          \"title\": \"Page 1\",\n          \"order\": 0,\n          \"canvasWidth\": 1200,\n          \"canvasHeight\": 900,\n          \"blocks\": [\n            {\n              \"id\": \"3759f67e-bb84-4f76-b241-f949720c3dea\",\n              \"kind\": 0,\n              \"order\": 0,\n              \"styleId\": \"normal\",\n              \"plainText\": \"Alphabetagamma\",\n              \"runs\": [\n                {\n                  \"id\": \"8f0b1d0e-92e7-4b37-851d-678c7b2327d9\",\n                  \"text\": \"Alphabetagamma\",\n                  \"fontFamily\": \"Montserrat\",\n                  \"fontSize\": 14,\n                  \"bold\": false,\n                  \"italic\": false,\n                  \"underline\": false,\n                  \"strikeThrough\": false,\n                  \"foreground\": \"#FFEEEEEE\",\n                  \"background\": \"#00000000\",\n                  \"link\": null,\n                  \"language\": null\n                }\n              ],\n              \"paragraph\": {\n                \"alignment\": 0,\n                \"lineSpacing\": 1.25,\n                \"spaceBefore\": 0,\n                \"spaceAfter\": 8,\n                \"indentLeft\": 0,\n                \"indentRight\": 0,\n                \"firstLineIndent\": 0,\n                \"keepWithNext\": false,\n                \"pageBreakBefore\": false\n              },\n              \"list\": null,\n              \"table\": null,\n              \"media\": null,\n              \"equation\": null,\n              \"html\": null,\n              \"canvas\": null,\n              \"vectorShape\": null,\n              \"flashcard\": null,\n              \"metadata\": {}\n            }\n          ],\n          \"canvasObjects\": []\n        }\n      ]\n    }\n  ],\n  \"styles\": [\n    {\n      \"id\": \"normal\",\n      \"name\": \"Normal\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"5387e0c7-d0d2-4cc0-af7c-8ff4b218a3b5\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 0,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-1\",\n      \"name\": \"Heading 1\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"d4b421a6-08e0-468d-8556-b8c69625ce46\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 28,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 18,\n        \"spaceAfter\": 10,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"heading-2\",\n      \"name\": \"Heading 2\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"7eeb0597-36dc-43a5-8a4e-72fab3e4bf24\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 22,\n        \"bold\": true,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 14,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": true,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"quote\",\n      \"name\": \"Quote\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"c7d63c65-4190-4ca8-be68-9333102a2e32\",\n        \"text\": \"\",\n        \"fontFamily\": \"Montserrat\",\n        \"fontSize\": 14,\n        \"bold\": false,\n        \"italic\": true,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 24,\n        \"indentRight\": 24,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    },\n    {\n      \"id\": \"code\",\n      \"name\": \"Code\",\n      \"basedOn\": \"\",\n      \"character\": {\n        \"id\": \"fc6c2a54-ffb1-4438-b311-2197b8642471\",\n        \"text\": \"\",\n        \"fontFamily\": \"Cascadia Mono\",\n        \"fontSize\": 13,\n        \"bold\": false,\n        \"italic\": false,\n        \"underline\": false,\n        \"strikeThrough\": false,\n        \"foreground\": \"#FFEEEEEE\",\n        \"background\": \"#00000000\",\n        \"link\": null,\n        \"language\": null\n      },\n      \"paragraph\": {\n        \"alignment\": 0,\n        \"lineSpacing\": 1.25,\n        \"spaceBefore\": 8,\n        \"spaceAfter\": 8,\n        \"indentLeft\": 0,\n        \"indentRight\": 0,\n        \"firstLineIndent\": 0,\n        \"keepWithNext\": false,\n        \"pageBreakBefore\": false\n      }\n    }\n  ],\n  \"fields\": [],\n  \"bookmarks\": [],\n  \"citations\": [],\n  \"comments\": [],\n  \"revisions\": [\n    {\n      \"id\": \"a3f77928-5e42-4b3a-9ac3-52933bacf725\",\n      \"kind\": 0,\n      \"blockId\": null,\n      \"author\": \"Browser\",\n      \"summary\": \"Document created\",\n      \"beforeHash\": \"\",\n      \"afterHash\": \"\",\n      \"createdAt\": \"2026-10-03T22:51:45.395+00:00\"\n    }\n  ],\n  \"aiChanges\": [],\n  \"flashcardReviews\": [],\n  \"collaboration\": {\n    \"ownerId\": \"Browser\",\n    \"collaborators\": [],\n    \"syncRevision\": \"\",\n    \"remoteEtag\": \"\",\n    \"conflictState\": 0,\n    \"lastSyncedAt\": null,\n    \"conflicts\": []\n  },\n  \"recovery\": {\n    \"lastAutosaveAt\": \"2026-10-03T22:51:47.01+00:00\",\n    \"lastBackupAt\": null,\n    \"lastRecoveredAt\": null,\n    \"lastValidSha256\": \"\",\n    \"hasUnsavedRecovery\": false,\n    \"recoveryReason\": \"\"\n  },\n  \"metadata\": {}\n}"
+                          }
+                        },
+                        {
+                          "k": "sha256",
+                          "v": {
+                            "s": "5216b2c4f36f9e23a025cd55b40d8c42a6389aade07775b25b87559ac9f04d74"
+                          }
+                        },
+                        {
+                          "k": "versionInfoJson",
+                          "v": {
+                            "s": "{\n  \"versionId\": \"v0000000002-20261003-225147010\",\n  \"version\": 2,\n  \"createdAt\": \"2026-10-03T22:51:47.01+00:00\",\n  \"reason\": \"Saved browser Write edit\",\n  \"sizeBytes\": 7017,\n  \"sha256\": \"5216b2c4f36f9e23a025cd55b40d8c42a6389aade07775b25b87559ac9f04d74\"\n}"
+                          }
+                        }
+                      ],
+                      "id": 6
+                    }
+                  ],
+                  "id": 4
+                }
+              }
+            ],
+            "id": 1
+          }
+        },
+        "afterSnapshot": "after@call@75"
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "sourceCommit": "f8de954396326ca4630202fc0daededb6023f28d",
+  "scope": "Actual local native CUI/retained Write physical input and IndexedDB durability. Not layout, rich-editor automation, deployed, platform or full product acceptance.",
+  "runner": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs",
+    "bytes": 18701,
+    "sha256": "3151069a7028a8e0f99fab4cd69e0f9ca3fccba0d49ccb6a48c0f50feb961001"
+  },
+  "originalResults": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/results.json",
+    "bytes": 39248,
+    "sha256": "1628fd8f01b1e6790f03ef18f98abc0f0a75591475f0c7034fa6c0bac6233be2"
+  },
+  "counts": {
+    "PASS": 7,
+    "FAIL": 1,
+    "NOT_RUN": 6
+  },
+  "firstFailure": {
+    "name": "typed-text-durable-receipt",
+    "outcome": "FAIL",
+    "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'Alphabetagamma'\n- 'Alpha beta gamma'\n        ^\n\n    at /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:185:96\n    at async check (/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:43:60)\n    at async /workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/run-write-browser.cjs:184:5"
+  },
+  "notRunReason": "Six dependent workflow checks blocked by first exact durable-text failure; original results preserved.",
+  "runtimeErrors": {
+    "counts": {
+      "pageError": 0,
+      "consoleError": 0,
+      "managedError": 0,
+      "requestFailed": 0
+    },
+    "samples": []
+  },
+  "bundleBefore": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/bundle-before.json",
+    "bytes": 45035,
+    "sha256": "dee9e3383a533eceb952c3ae22411f4cf31ff18560f018f821811101a52134e8"
+  },
+  "bundleAfter": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/bundle-after.json",
+    "bytes": 45035,
+    "sha256": "dee9e3383a533eceb952c3ae22411f4cf31ff18560f018f821811101a52134e8"
+  },
+  "rawTrace": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/trace.zip",
+    "bytes": 12091041,
+    "sha256": "0d22160a17cad27ffe33c59d81aab1c446f8b66484dc8628b13f26ac58217efd"
+  },
+  "traceReceiptProof": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/actual-typed-storage-trace-receipt.json",
+    "bytes": 29806,
+    "sha256": "cb0e7d1b81b7d6cd78295f2765223d8c84470448fff20ed698d17fd940143169"
+  },
+  "screenshot": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/final-native.png",
+    "bytes": 18407,
+    "sha256": "a6ab1b426e4f99050d156753b9e293dd6287fe73d6c2e350020f3874812bd165"
+  },
+  "releaseProof": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/release-proof.json",
+    "bytes": 184,
+    "sha256": "3f9b88dedc7b2acf8a3d31353b198413af7c1bd1ae7d5dca2fb0ffac32d3b974"
+  },
+  "browserVersion": "151.0.7922.173",
+  "fullProductParityVerified": false,
+  "knownUnsupported": [
+    "Owner rich editor has no IValueProvider/ITextProvider; its Edit peer is diagnostic geometry only.",
+    "Original retained text glyph/line layout remains separately unaccepted; screenshots alone do not establish visual correctness."
+  ]
+}

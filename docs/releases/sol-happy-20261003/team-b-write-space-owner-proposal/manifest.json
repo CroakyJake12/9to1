@@ -1,0 +1,202 @@
+{
+  "request": "Exact two-guard shared InputRouter Space text ownership owner ACK",
+  "originalRouterSha256": "eb887775d9c1ec9928acf9a1411c8ab1ebe5e77550ac2f7aae4c478963d927dd",
+  "proposedRouterSha256": "35c5126f547ca5106a94a930c664a9015671ee842d3d7f1d9bf6af61d2033f9f",
+  "files": [
+    {
+      "path": "BrowserWriteSpace.Tests.csproj",
+      "bytes": 850,
+      "sha256": "02448d481ff10e13073d4035013d95bee0a8ad9142fb145f8a128153db785f7d"
+    },
+    {
+      "path": "BrowserWriteSpaceRegression.cs",
+      "bytes": 8972,
+      "sha256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee"
+    },
+    {
+      "path": "HavenInputRouter.proposed.cs",
+      "bytes": 31065,
+      "sha256": "35c5126f547ca5106a94a930c664a9015671ee842d3d7f1d9bf6af61d2033f9f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3142,
+      "sha256": "1c0964ea4bdb763427eb1038060417fb5b755c75989ba160ff1e2c3a03666901"
+    },
+    {
+      "path": "SameSpaceRegression.cs.frozen",
+      "bytes": 8972,
+      "sha256": "3f72a2b4310db50ca7e70a5b622837367d0c40de2d379a0ab8e0fa478bbd15ee"
+    },
+    {
+      "path": "actual-browser/actual-typed-storage-trace-receipt.json",
+      "bytes": 29806,
+      "sha256": "cb0e7d1b81b7d6cd78295f2765223d8c84470448fff20ed698d17fd940143169"
+    },
+    {
+      "path": "actual-browser/bundle-after.json",
+      "bytes": 45035,
+      "sha256": "dee9e3383a533eceb952c3ae22411f4cf31ff18560f018f821811101a52134e8"
+    },
+    {
+      "path": "actual-browser/bundle-before.json",
+      "bytes": 45035,
+      "sha256": "dee9e3383a533eceb952c3ae22411f4cf31ff18560f018f821811101a52134e8"
+    },
+    {
+      "path": "actual-browser/qualified-results.json",
+      "bytes": 3551,
+      "sha256": "d8470fd2add31df1552bd450f55f476b1870307f8e4752eba6c3b962c324e0ac"
+    },
+    {
+      "path": "actual-browser/release-proof.json",
+      "bytes": 184,
+      "sha256": "3f9b88dedc7b2acf8a3d31353b198413af7c1bd1ae7d5dca2fb0ffac32d3b974"
+    },
+    {
+      "path": "actual-browser/results.json",
+      "bytes": 39248,
+      "sha256": "1628fd8f01b1e6790f03ef18f98abc0f0a75591475f0c7034fa6c0bac6233be2"
+    },
+    {
+      "path": "canonical-complete-red.log",
+      "bytes": 1708,
+      "sha256": "5e41059e34265a88f6f22f8e2229e2a1ce3e25b518a24181253945e6831e5c76"
+    },
+    {
+      "path": "canonical-dll-before.json",
+      "bytes": 348,
+      "sha256": "99af646fb179983b96b1a976475eef77184c2015c04a256532947b7a7b1f314a"
+    },
+    {
+      "path": "canonical-final-data/raw-key-diagnostics.json",
+      "bytes": 4627,
+      "sha256": "94e642e96d8e82bdb5646f67c0c4197276efa134c998611a705b40146b9686f0"
+    },
+    {
+      "path": "canonical-final-red.log",
+      "bytes": 1672,
+      "sha256": "c50286de3a8bf5c3a81445b2d7718a461023e18ae89008040c3b6ec2513bf05a"
+    },
+    {
+      "path": "canonical-native-red.log",
+      "bytes": 570,
+      "sha256": "daa1773b41a0928786841fd71293abead2f5d5e381a9bcdf7d7cf29ec70df1dd"
+    },
+    {
+      "path": "canonical-red.log",
+      "bytes": 931,
+      "sha256": "2c41f5f9ac0fd65145cb91619e5e659da75f669c4e07aae60329f5b719e8223f"
+    },
+    {
+      "path": "executed-results.json",
+      "bytes": 14722,
+      "sha256": "e3b55d0b1f548a1a1943755974fa2025b950c06d8e3b76c3b5788d77a30a8849"
+    },
+    {
+      "path": "original-sources/BrowserInputHandler.cs",
+      "bytes": 13480,
+      "sha256": "1a19a4a58582b809b09aa55d0abe30ff352410f7023545d0942b1fe576fc3400"
+    },
+    {
+      "path": "original-sources/HavenInputRouter.cs",
+      "bytes": 30893,
+      "sha256": "eb887775d9c1ec9928acf9a1411c8ab1ebe5e77550ac2f7aae4c478963d927dd"
+    },
+    {
+      "path": "original-sources/HavenSceneControl.cs",
+      "bytes": 44574,
+      "sha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3"
+    },
+    {
+      "path": "original-sources/IInputManager.cs",
+      "bytes": 1146,
+      "sha256": "323f72269f67ee8e115d80948f4fd3eed59a7e5111919ebadc3bada099c1bcfe"
+    },
+    {
+      "path": "original-sources/RawKeyEventArgs.cs",
+      "bytes": 1141,
+      "sha256": "d092068b9560f58a696146255a7f7581e91bfc374d1aa0554f808de267b579e3"
+    },
+    {
+      "path": "original-sources/RawTextInputEventArgs.cs",
+      "bytes": 430,
+      "sha256": "475e57b9b0cc234b171ec2aa1bd76440b0da24426d4334850cf73ab761f389e0"
+    },
+    {
+      "path": "original-sources/TopLevel.cs",
+      "bytes": 33965,
+      "sha256": "09298bd271e283dc4f78df1271a5d35cbe72270f8675d6dcad26caef4bae259f"
+    },
+    {
+      "path": "original-sources/WriteDocumentEditor.DocumentEditing.cs",
+      "bytes": 14936,
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c"
+    },
+    {
+      "path": "original-sources/WriteDocumentSurface.cs",
+      "bytes": 31995,
+      "sha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383"
+    },
+    {
+      "path": "portable-router-compile.targets",
+      "bytes": 523,
+      "sha256": "e4f6e1879ad9d9ae0b3b736b617c7ba82ce375a4d2fc1610d8477586ced8f2c2"
+    },
+    {
+      "path": "proposal-data/raw-key-diagnostics.json",
+      "bytes": 4639,
+      "sha256": "4063732948cc6b7091d92b34d6fbd0aad1e3ab12fef9d713f607bc30048dacfe"
+    },
+    {
+      "path": "proposal-dll.json",
+      "bytes": 575,
+      "sha256": "fe6ce3ecfa0137a23ce987812e52339919a75fcde5d91a39c539f3b32f09779b"
+    },
+    {
+      "path": "proposal-green.log",
+      "bytes": 1052,
+      "sha256": "ce7935efef984a56682afad968eeefabf3fd2d96b47a0b235537494a502ec803"
+    },
+    {
+      "path": "proposed-router-compile.targets",
+      "bytes": 758,
+      "sha256": "dbe7cd5f43c43603a14e0cd4c6b8a755985eab35fca5165879546ba8c41f86e0"
+    },
+    {
+      "path": "restore-canonical-ui-build.log",
+      "bytes": 281,
+      "sha256": "a3cee1c6fa5bd50d272b4b7c78d28c252e3dfb830d8a4b13500d668f060c9c91"
+    },
+    {
+      "path": "restore-data/raw-key-diagnostics.json",
+      "bytes": 4627,
+      "sha256": "38b6f584107dcccaf563a968f4828453fb83699e00e29206f32ad530145dd980"
+    },
+    {
+      "path": "restored-canonical-red.log",
+      "bytes": 1672,
+      "sha256": "c50286de3a8bf5c3a81445b2d7718a461023e18ae89008040c3b6ec2513bf05a"
+    },
+    {
+      "path": "router-space-ownership.patch",
+      "bytes": 1516,
+      "sha256": "5a09a47c0e83675e64b6698993672575e5d6b45a14cd8d6b53ce17f9c3d260e8"
+    },
+    {
+      "path": "source-identities.json",
+      "bytes": 3882,
+      "sha256": "6a1eafd3d55e61575779ea01b2e855d6938324bb7129159a0321181d322d2ce0"
+    }
+  ],
+  "fileCountExcludingManifest": 37,
+  "productionSourcesEdited": false,
+  "canonicalDllRestored": true,
+  "proposalAccepted": false,
+  "rawBrowserTraceTransported": false,
+  "rawBrowserTraceLocalPin": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-browser/actual-f8de9543/trace.zip",
+    "bytes": 12091041,
+    "sha256": "0d22160a17cad27ffe33c59d81aab1c446f8b66484dc8628b13f26ac58217efd"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "originals": [
+    {
+      "source": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.UI/Input/HavenInputRouter.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/HavenInputRouter.cs",
+      "sha256": "eb887775d9c1ec9928acf9a1411c8ab1ebe5e77550ac2f7aae4c478963d927dd",
+      "bytes": 30893
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/BrowserInputHandler.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/BrowserInputHandler.cs",
+      "sha256": "1a19a4a58582b809b09aa55d0abe30ff352410f7023545d0942b1fe576fc3400",
+      "bytes": 13480
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/HavenSceneControl.cs",
+      "sha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3",
+      "bytes": 44574
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/WriteDocumentSurface.cs",
+      "sha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383",
+      "bytes": 31995
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/WriteDocumentEditor.DocumentEditing.cs",
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "bytes": 14936
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Controls/TopLevel.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/TopLevel.cs",
+      "sha256": "09298bd271e283dc4f78df1271a5d35cbe72270f8675d6dcad26caef4bae259f",
+      "bytes": 33965
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/IInputManager.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/IInputManager.cs",
+      "sha256": "323f72269f67ee8e115d80948f4fd3eed59a7e5111919ebadc3bada099c1bcfe",
+      "bytes": 1146
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/Raw/RawKeyEventArgs.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/RawKeyEventArgs.cs",
+      "sha256": "d092068b9560f58a696146255a7f7581e91bfc374d1aa0554f808de267b579e3",
+      "bytes": 1141
+    },
+    {
+      "source": "/workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Input/Raw/RawTextInputEventArgs.cs",
+      "preserved": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b1/write-space/original-sources/RawTextInputEventArgs.cs",
+      "sha256": "475e57b9b0cc234b171ec2aa1bd76440b0da24426d4334850cf73ab761f389e0",
+      "bytes": 430
+    }
+  ],
+  "onlyProposalChanges": "Two guards immediately before generic activation: Space + IHavenTextInputTarget return false after owning custom keyboard/clipboard/input/navigation branches.",
+  "productionFilesEdited": false,
+  "proposalSha256": "35c5126f547ca5106a94a930c664a9015671ee842d3d7f1d9bf6af61d2033f9f",
+  "unacceptedProposal": true
+}

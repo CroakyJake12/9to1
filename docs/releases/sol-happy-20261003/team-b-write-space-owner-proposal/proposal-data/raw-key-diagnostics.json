@@ -1,0 +1,204 @@
+{
+  "documentId": "3fb97df4-13bf-4160-aced-b56018448ba9",
+  "authoredText": "Alpha beta gamma",
+  "savedText": "Alpha beta gamma",
+  "Version": 1,
+  "observations": [
+    {
+      "key": "Space",
+      "symbol": " ",
+      "downHandled": true,
+      "upHandled": true,
+      "pressedAfterDown": true,
+      "textEventEmitted": false,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "Return",
+      "symbol": "Enter",
+      "downHandled": true,
+      "upHandled": true,
+      "pressedAfterDown": true,
+      "textEventEmitted": false,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "Space",
+      "symbol": " ",
+      "downHandled": false,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "Space",
+      "symbol": " ",
+      "downHandled": true,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": false,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "A",
+      "symbol": "A",
+      "downHandled": false,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "L",
+      "symbol": "l",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "P",
+      "symbol": "p",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "H",
+      "symbol": "h",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "A",
+      "symbol": "a",
+      "downHandled": false,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "Space",
+      "symbol": " ",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "B",
+      "symbol": "b",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "E",
+      "symbol": "e",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "T",
+      "symbol": "t",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "A",
+      "symbol": "a",
+      "downHandled": false,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "Space",
+      "symbol": " ",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "G",
+      "symbol": "g",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "A",
+      "symbol": "a",
+      "downHandled": false,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "M",
+      "symbol": "m",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "M",
+      "symbol": "m",
+      "downHandled": false,
+      "upHandled": false,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    },
+    {
+      "key": "A",
+      "symbol": "a",
+      "downHandled": false,
+      "upHandled": true,
+      "pressedAfterDown": false,
+      "textEventEmitted": true,
+      "pressedAfterUp": false
+    }
+  ],
+  "spaces": [
+    {
+      "Down": false,
+      "Up": false,
+      "Pressed": false,
+      "Text": true
+    },
+    {
+      "Down": false,
+      "Up": false,
+      "Pressed": false,
+      "Text": true
+    }
+  ],
+  "uiAssembly": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.UI.dll",
+  "sceneAssembly": "/workspace/team-b-astra-browser-validation/apps/Web/Tests/bin/Release/net10.0/Haven.dll"
+}

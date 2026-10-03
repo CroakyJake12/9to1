@@ -1,0 +1,21 @@
+PASS: Actual native Button receives focus
+PASS: Actual Button Space invokes once and consumes key without text
+PASS: Actual Button Enter invokes exactly once more
+PASS: Actual Button releases pressed state
+PASS: Actual ordinary Input receives native focus
+PASS: Actual ordinary Input admits one Space text event
+PASS: Custom owning keyboard handler receives native focus
+PASS: Custom true Space handler retains ownership and receives no duplicate text
+PASS: Actual owning Write scene renders with native resources
+PASS: Actual owning Write surface receives native focus
+Unhandled exception. System.ArgumentException: Requested value 'KeyA' was not found.
+   at System.Enum.TryParseByName[TStorage](RuntimeType enumType, ReadOnlySpan`1 value, Boolean ignoreCase, Boolean throwOnFailure, TStorage& result)
+   at System.Enum.Parse[TEnum](String value, Boolean ignoreCase)
+   at System.Enum.Parse[TEnum](String value)
+   at Program.<>c.<<<Main>$>b__0_0>d.MoveNext() in /workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs:line 86
+--- End of stack trace from previous location ---
+   at Avalonia.Headless.HeadlessUnitTestSession.<>c__DisplayClass12_0`1.<DispatchCore>b__0() in /workspace/team-b-astra-browser-validation/framework/CUI/vendor/Avalonia/src/Headless/Avalonia.Headless/HeadlessUnitTestSession.cs:line 122
+--- End of stack trace from previous location ---
+   at Program.<Main>$(String[] args) in /workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs:line 19
+   at Program.<Main>$(String[] args) in /workspace/team-b-astra-browser-validation/apps/Web/Tests/BrowserWriteSpaceRegression.cs:line 19
+   at Program.<Main>(String[] args)
