@@ -275,4 +275,7 @@ verify()
 sys.dont_write_bytecode=True
 formsNativeSpec=importlib.util.spec_from_file_location('forms_original_native_probe',root/'.github/scripts/astra-forms-original-native-probe.py')
 formsNative=importlib.util.module_from_spec(formsNativeSpec);formsNativeSpec.loader.exec_module(formsNative)
+def assert_native_unchanged():
+ # Preserve the SAME original entire Desktop output/native payload, source-built task and restored graph guard.
+ assert_compiled_target_unchanged('desktop')
 formsNative.run(root,out,cutPaths,digest,command,verify,taskTarget,assert_task_unchanged,assert_native_unchanged)
