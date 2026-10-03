@@ -161,8 +161,9 @@ public sealed class FormCanonicalMathematicsTests
             JsonSerializer.SerializeToElement(new { }), true, new(), Graph:question,
             Assessment:new(4, 1, [], Graph:rule, ExpectedGraph:expected));
         var project = FormProjectCodec.Capture(Add(field, DateTimeOffset.UtcNow));
-        Assert.Equal(expected.GraphID, project.Fields[0].Assessment!.ExpectedGraph!.GraphID);
-        Assert.Equal(expected.Revision, project.Fields[0].Assessment.ExpectedGraph.Revision);
+        var savedExpected = Assert.IsType<GraphDefinition>(project.Fields[0].Assessment?.ExpectedGraph);
+        Assert.Equal(expected.GraphID, savedExpected.GraphID);
+        Assert.Equal(expected.Revision, savedExpected.Revision);
         var runtime = new FormResponseRuntime(project, Guid.NewGuid());
         Assert.True(runtime.Answer(runtime.Read().Revision, field.FieldID, Element(response)).Success);
         Assert.True(runtime.Submit(runtime.Read().Revision).Success); Assert.Equal(4m, runtime.Read().AwardedPoints);

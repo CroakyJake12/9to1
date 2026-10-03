@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "5a9fb66bfcc8e3b3b8e0e2ed664c9f10db6fb25e",
-  "programTree": "aa133900f782493daa9af09a6bc40f0bd6abcfac",
-  "currentNormalCommit": "17e5d86e4f44684a36e10dd1baf8c4eeea44d859",
+  "baselineCommit": "5100edbf643ff3f3034d93192ff1d0b20303263a",
+  "programTree": "45770aa83259272b90026a9395a23106fbbd1076",
+  "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
     {
@@ -113,16 +113,16 @@
     {
       "path": ".github/validation/astra-forms-math01-resource-classes.json",
       "mode": "100644",
-      "object": "11b130880cceb7ed229956d3e280dcc508bde15a",
-      "bytes": 46342,
-      "sha256": "3dd5dfefa9253fd91c558b669e3dd945256e3f9475eec916b749e68cf6916f98"
+      "object": "f5fd0b1735aac2238e0648764cc2f9e4790dc1ec",
+      "bytes": 46299,
+      "sha256": "749c8abd875186651a8805c93848d3bc88fad4704b93e9f701d2b32fd8c322bf"
     },
     {
       "path": ".github/validation/astra-forms-math01-test-classes.json",
       "mode": "100644",
-      "object": "d376e8064a39134d55b79e121224b31615991030",
-      "bytes": 31725,
-      "sha256": "8ecfdbe6f2b610128ba9273d0c8345ba3e03528a8c0c6c07ea7b87321f36fc23"
+      "object": "8a4cbd245be9b3ad07f97c4408947cf9d72fdfc9",
+      "bytes": 31682,
+      "sha256": "1be89f9a1b75bc48a7f0c4255da8e6f71f8bb3d10360068f0c91d5aeb911028c"
     },
     {
       "path": ".github/validation/astra-forms-native-probe.targets",
@@ -617,9 +617,9 @@
     {
       "path": "9-1 OS (Android)/src/Haven.Android/Haven.Android.csproj",
       "mode": "100644",
-      "object": "33ac373116fc9f45b0f5c05f3dac26f3848ea7b1",
-      "bytes": 8917,
-      "sha256": "d560666a859d9d8a7197017f5c63dc207a4cc59634e80e917174d1c05120b13d"
+      "object": "870029585fae19a18b4968105d010bd7d4aa4d70",
+      "bytes": 9081,
+      "sha256": "b88e8d1f8731e60357f1be61a0ec73bb98719f2ea5c4d43934bcc39b464d48cf"
     },
     {
       "path": "9-1 OS (Android)/src/Haven.Android/HavenImeService.cs",
@@ -38900,9 +38900,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormCanonicalMathematicsTests.cs",
       "mode": "100644",
-      "object": "76940d52694d55683e69166e4fc92b6dd96ffcd4",
-      "bytes": 16151,
-      "sha256": "0407f9b974adf2cbbe461740ce41fb2ee4199d3ed130eed212ab4048254217f6"
+      "object": "1d27c038a6e5f9109e5c15e8da9b6c4dfacdd744",
+      "bytes": 16196,
+      "sha256": "facd755ff50d327b74f15d3314621e47a442631af2d7e0962abfb3161cc71263"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormDataRecordUpdateProjectionTests.cs",
@@ -42624,9 +42624,9 @@
     {
       "path": "docs/ASTRA-WORKING-LEDGER.md",
       "mode": "100644",
-      "object": "ba2a3b1399763ee75f76c245dbe51854cd838af1",
-      "bytes": 76644,
-      "sha256": "c512eee1aba42bec711824e41150f8d71e2defdf7cd1087f72fd1bc07668e50b"
+      "object": "f23f1f84b8b48004b98c41f44069435a30be53ff",
+      "bytes": 78602,
+      "sha256": "3174c16d89654eb6b7dde1ce3d3c8aa6dac29f596a5a00add4e0a96b6919e986"
     },
     {
       "path": "docs/CONSOLIDATION.md",
@@ -66327,7 +66327,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-forms-math01-cut.json",
-  "limits": "Exact current normal27 full source/root index protected. Complete inherited Math06 owning46/resource48/regression12 classes and original full/filtered suites retained. Add full Home prerequisites and Forms classes to53/55/15 with exact source/method pins. Every original task/build-task/restore/package/native/compiled/PDB/Xvfb/session/pidfd/zero-skip/final-source guard preserved. Actual original classic App/DI/factory/CUI/owning-settings/edit/save/reopen/publish/respond/mark scenario uses fresh0700 XDG/HAVEN_DATA_DIR without HOME changes; original async callbacks/App shutdown, direct native process/maps/Skia/profile inode/witness custody and strictdrains must prove separately. Diagnostics are conditional validation only and excluded from future product publication. No cloud/backend/default provider/billing/WP/data import/global scope claim. Full02 changes only three complete presenter/Home-observer/Forms-observer source files through exact Avalonia.Application.Current qualifications. Tests/classes/counts/callers/workflow/native/restore/drain/App707c and original54ac constructor remain byte-exact full01. Known actual Sites03 presenter CS0234 is fixed as source only; Home/Forms observer bindings are preventive/unreached until actual native run. Full03 refreshes only normal28 metadata/class provenance and binds the four already accepted IMAP sources inherited without overlays. Whole53/55/15 class identities, SHA, ordering and method coverage are retained; no selected Mail suite exists, so no unrelated Inbox suite is introduced. All actual App707c, selected source bodies, full native/caller/workflow/restore/task/session/PE-PDB/profile/drain guards are byte-exact02. Forms04 sole actual Core CS0136 correction renames the field.Graph local and its Validate use. Original53/55/15 whole classes, all35 outcomes, source/PDB/native/task/restore/drain/strict original callbacks and all callers/workflow are unchanged03. Tables retain original actual28 source provenance because no class body/source bytes change. Current29 metadata inherits acceptedMath publication with no source/table regeneration. Root alone constructs/pushes/dispatches.",
+  "limits": "Exact current normal27 full source/root index protected. Complete inherited Math06 owning46/resource48/regression12 classes and original full/filtered suites retained. Add full Home prerequisites and Forms classes to53/55/15 with exact source/method pins. Every original task/build-task/restore/package/native/compiled/PDB/Xvfb/session/pidfd/zero-skip/final-source guard preserved. Actual original classic App/DI/factory/CUI/owning-settings/edit/save/reopen/publish/respond/mark scenario uses fresh0700 XDG/HAVEN_DATA_DIR without HOME changes; original async callbacks/App shutdown, direct native process/maps/Skia/profile inode/witness custody and strictdrains must prove separately. Diagnostics are conditional validation only and excluded from future product publication. No cloud/backend/default provider/billing/WP/data import/global scope claim. Full02 changes only three complete presenter/Home-observer/Forms-observer source files through exact Avalonia.Application.Current qualifications. Tests/classes/counts/callers/workflow/native/restore/drain/App707c and original54ac constructor remain byte-exact full01. Known actual Sites03 presenter CS0234 is fixed as source only; Home/Forms observer bindings are preventive/unreached until actual native run. Full03 refreshes only normal28 metadata/class provenance and binds the four already accepted IMAP sources inherited without overlays. Whole53/55/15 class identities, SHA, ordering and method coverage are retained; no selected Mail suite exists, so no unrelated Inbox suite is introduced. All actual App707c, selected source bodies, full native/caller/workflow/restore/task/session/PE-PDB/profile/drain guards are byte-exact02. Forms04 sole actual Core CS0136 correction renames the field.Graph local and its Validate use. Original53/55/15 whole classes, all35 outcomes, source/PDB/native/task/restore/drain/strict original callbacks and all callers/workflow are unchanged03. Tables retain original actual28 source provenance because no class body/source bytes change. Current29 metadata inherits acceptedMath publication with no source/table regeneration. Root alone constructs/pushes/dispatches. Forms05 captures the actual saved expected GraphDefinition with Assert.IsType, preserves both original identity/revision comparisons and every existing five Fact/outcome, and adds no null-forgiving workaround. Exactly one Core fixture plus its two class SHA/provenance rows change; all53/55/15 class names/order/outcomes and original callers/workflow/App/native/PDB/task/restore/drain/profile/callback guards remain intact. Current30 index protects newer Android publication; no Android or unrelated source overlay. Root alone constructs/pushes/dispatches. Forms06 corrects the frozen05 current-normal coherence omission with exact accepted Android30 csproj and raw current30 documentation refreshes. Those two paths are canonical refresh only, not new Forms/Android product behavior or publication candidates. Sole Forms behavior/test correction, both class rows, all53/55/15/all35 outcomes, every original callback/native/source/PDB/task/restore/drain guard and all78 selected source bodies are unchanged05. Strong54ac constructor remains unchanged and root alone constructs.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -67032,6 +67032,38 @@
     {
       "path": "/workspace/attachments/c6cb889e-d0b8-47fa-953e-c3414b6c5adb/9to1 Development Specification.txt",
       "sha256": "88d1f3d0c438f4b79e4d169b077de70943752af4c6c58198736cb92912f9d0ec"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-canonical-math-consumer-source10-actual-saved-graph-nullable-flow/manifest.json",
+      "sha256": "df11207aa7102c7ea2c844afcdc3ddc1ff6d669e516ad398b902d3d186ba99fc"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math04-actual5a9-current29-full-three-core-pattern-corrective/manifest.json",
+      "sha256": "ca56d6a319448c4a89060d7bd15affcd7ea7eb73f0b753bf3b12b8aa9f07efbc"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms04-owning53-original-cs8602-failure-closure02.json",
+      "sha256": "5811db446133f320b51c11405e65726cc05a74deaa0f9bb63520a579c60fdf20"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-forms-consumer10-actual-saved-graph-source-api-peer01.json",
+      "sha256": "4e1a50167576e94e4e802fdbfc196994a7cd268fb951309de5b0c5c89099ce4a"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint30-publication-local.json",
+      "sha256": "2c564108c0110315f8922efdd6a3ec572e89f17e88cf42a1f0b3f116b7099cc3"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math05-actual5100-current30-full-three-saved-graph-corrective/manifest.json",
+      "sha256": "c11bfa35ef9a2a213d3582214c2c3bcde17bfc683350e46f830a899b83d0c6aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-forms05-full-preservation-held-android-coherence-peer01.json",
+      "sha256": "e95437b311ea66cce4b7ffc7e2f02686ad28559cf8d7bddf1226a40187b705cd"
+    },
+    {
+      "path": "/workspace/astra-source/root-android-shared-math-dependency-source596/manifest.json",
+      "sha256": "713de4205f8039477f7f632b28d4e48f9b6835d464c534b995fb9a91702a0a9d"
     }
   ],
   "sharedCakeIdContract": null
