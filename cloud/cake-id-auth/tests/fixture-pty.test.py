@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Actual private PTY fault controls; outer test subreaper strictly drains its own family."""
-import fcntl, hashlib, importlib.util, json, os, pty, subprocess, tempfile, termios, time, unittest
+import fcntl, hashlib, importlib.util, json, os, pty, shutil, subprocess, tempfile, termios, time, unittest
 from pathlib import Path
 ROOT = Path(__file__).parent.resolve()
 spec = importlib.util.spec_from_file_location('custodian', ROOT/'linux-fixture-custodian.py')
@@ -44,8 +44,8 @@ class PtyControls(unittest.TestCase):
         c = m.Custody()
         temporary = None; master = None; slave = None; caller = None; primary = None
         try:
-            temporary = tempfile.TemporaryDirectory()
-            folder = Path(temporary.name); ready=folder/'ready'; marker=folder/'worker'
+            temporary = tempfile.mkdtemp()
+            folder = Path(temporary); ready=folder/'ready'; marker=folder/'worker'
             source=ROOT/'linux-fixture-custodian.py'
             if mode=='baseline-loss':
                 source=folder/'aedc-custodian.py'
@@ -96,9 +96,24 @@ class PtyControls(unittest.TestCase):
                 if caller is not None: caller.returncode=0 # Kernel-reaped by outer custodian; no numeric wait.
             except BaseException as error: cleanup.append(error)
             if drained and temporary is not None:
-                try: temporary.cleanup()
+                try: shutil.rmtree(temporary)
                 except BaseException as error: cleanup.append(error)
             preserve_control_failures(primary,cleanup)
+    def test_acquisition_failure_retains_original_and_closes_actual_pty(self):
+        original_spawn=subprocess.Popen; original_pty=pty.openpty; opened=[]
+        failure=RuntimeError('isolated acquisition failure')
+        def capture_pty():
+            pair=original_pty();opened.extend(pair);return pair
+        def unavailable(*args,**kwargs): raise failure
+        subprocess.Popen=unavailable;pty.openpty=capture_pty
+        try:
+            with self.assertRaises(RuntimeError) as result: self.exercise('handled','ctrl-c')
+            self.assertIs(failure,result.exception)
+            self.assertEqual(2,len(opened))
+            for fd in opened:
+                with self.assertRaises(OSError): os.fstat(fd)
+        finally:
+            subprocess.Popen=original_spawn;pty.openpty=original_pty
     def test_original_shared_session_hangup_negative(self): self.exercise('baseline-loss','hangup')
     def test_detached_custodian_drains_after_unhandled_caller_loss(self): self.exercise('caller-loss','hangup')
     def test_actual_ctrl_c_handler_and_strict_receipt(self): self.exercise('handled','ctrl-c')
