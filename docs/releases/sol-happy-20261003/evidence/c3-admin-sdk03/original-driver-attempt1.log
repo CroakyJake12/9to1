@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 412, in <module>
+    if __name__ == '__main__': main()
+                               ^^^^^^
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 409, in main
+    fail(primary, cleanup)
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 40, in fail
+    if all_errors: raise all_errors[0]
+                   ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 257, in main
+    command('toolchain', ['dotnet', '--info'], deadline=60)
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 178, in command
+    fail(primary, cleanup)
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 40, in fail
+    if all_errors: raise all_errors[0]
+                   ^^^^^^^^^^^^^^^^^^^
+  File "/workspace/team-c/c3-admin-receipt/.github/scripts/astra-organisation-full-owning.py", line 148, in command
+    if process.wait() != 0: raise RuntimeError('Original whole command failed: ' + name)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Original whole command failed: toolchain
