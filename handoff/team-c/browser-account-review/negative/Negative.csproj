@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+<ItemGroup>
+<Compile Include="../../../../apps/Web/Accounts/AccountBrowserBindings.cs" Link="Production/AccountBrowserBindings.cs" />
+<Compile Include="../../../../apps/Web/Services/IAccountBrowserTransport.cs" Link="Production/IAccountBrowserTransport.cs" />
+<ProjectReference Include="../../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+<Compile Include="../../../../framework/CUI/Runtime/ICuiWritableBindingContext.cs" Link="Production/ICuiWritableBindingContext.cs" />
+<Compile Include="../../../../framework/CUI/Runtime/ICuiRepeatItemBindingContext.cs" Link="Production/ICuiRepeatItemBindingContext.cs" />
+</ItemGroup>
+</Project>
