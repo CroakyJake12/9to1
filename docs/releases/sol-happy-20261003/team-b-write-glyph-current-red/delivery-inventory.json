@@ -1,0 +1,358 @@
+{
+  "scope": "immutable complete native glyph failure delivery; excludes inventory self",
+  "sourceChecks": 53,
+  "files": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/IWriteDocumentEngine.cs",
+      "bytes": 3671,
+      "sha256": "0dcf4d4daa88a87da03e4239c4c052025c4d7e98632be3f0b7a1a67e5fb54637"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/IWriteNativeDocumentPackageStore.cs",
+      "bytes": 2007,
+      "sha256": "59ca383eece77e688f979ce59a8913cd140bf3379871053e7c90bf88dddd7ac1"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "bytes": 14936,
+      "sha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+      "bytes": 40304,
+      "sha256": "98beb6356609b19abddfee2a5c08357b82278be26377767a176450405246ac89"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteNamedStyleOperations.cs",
+      "bytes": 2128,
+      "sha256": "34e5549b08eabf422342ed67eb163986568874008c7a31f4f971ff1bef84184d"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaImageResolver.cs",
+      "bytes": 1415,
+      "sha256": "82fb75c88ca18d903eb27eedbd7824b1e63cdc88e958386d818ccb852fd2a65b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaNativeControlResolver.cs",
+      "bytes": 849,
+      "sha256": "257038c532cf1ab15974ba4edafd65d52d302ddbd05787e1ce724deb8cbd165e"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaThemeResolver.cs",
+      "bytes": 2712,
+      "sha256": "ba0ba608d793ea44fa476a07e895853283347c5209a1d9caabccd677d4fdbf80"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenDesktopImageResolver.cs",
+      "bytes": 2095,
+      "sha256": "cb2c8e6dacbf1f9b5b85106b3e90cad10afe2ebb5e92702a7461ebfb5cc959da"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenInteractiveAutomationPeers.cs",
+      "bytes": 6933,
+      "sha256": "9eb59d8180b2334d8c6d41e7449cb71a901f9012493a80d5129d897a9efa29f8"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs",
+      "bytes": 10119,
+      "sha256": "8c2d8957371c014892c4c6b606d9673389b13048f94c9f02516060ee5e285cda"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+      "bytes": 44574,
+      "sha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSelectItemAutomationPeer.cs",
+      "bytes": 3647,
+      "sha256": "1e5e085ad8ca0574a21589904819179bcdac5f10feb53cf6541ae5fe88ca43f4"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenTabAutomationPeers.cs",
+      "bytes": 2659,
+      "sha256": "e3536de521efb4d59892a3ecbc8e569c4562a963b643253c6d8422e60556dabd"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Styles/DefaultTheme.axaml",
+      "bytes": 77993,
+      "sha256": "54e479254465e596f864215cb1a80b0d35d770bf92b406230cb81efdf251a12b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.ContextualAuthoring.cs",
+      "bytes": 6746,
+      "sha256": "0b2cc5f93ede65b9367cc511e12446f1152d777b4ae6866ab09882b4fd192bf6"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.ModernRibbon.cs",
+      "bytes": 9313,
+      "sha256": "bafc59b8f078c95c1b635c8ffd4e2617c7de8ef5bb9588df6306862601353aab"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.ReadAloud.cs",
+      "bytes": 3727,
+      "sha256": "198c2949703c1ffc869f3a5a5b0856975ac154467cb55933fb42fc88c4b04188"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.RibbonLayout.cs",
+      "bytes": 6810,
+      "sha256": "7aa8df24c7ded43447ca6f2599b75bfaad5629b7649c95a474aa37eb73775d05"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.cs",
+      "bytes": 52010,
+      "sha256": "27f5c28470fe06718f42e3f86d9196e366442e9bb4c29e27c7fcfec767501958"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.DirectObjects.cs",
+      "bytes": 19312,
+      "sha256": "ecebaa806b00ae1ad63becf4f5b4e583a763eaba7602b80ccc91bb3f6747bbc2"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.cs",
+      "bytes": 31995,
+      "sha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteHavenScene.cs",
+      "bytes": 14159,
+      "sha256": "6ad0426ac4425b4e2bf020c9a5c8267a929a2ff09da4929a2339ec633fb6b18b"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WritePage.WordProcessor.cs",
+      "bytes": 1916,
+      "sha256": "229bbf79e080f556f255999da081a68b6bef4312d60dff72924a5a21eb597b31"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WritePage.axaml.cs",
+      "bytes": 42134,
+      "sha256": "8a7ce4b6f596e244a346afac9aa0a8b33930ad9294ef29157b3f3f6ccbe8e999"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+      "bytes": 40838,
+      "sha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs",
+      "bytes": 23242,
+      "sha256": "559b61801042107efb622070ac08d3aa5f59b6a54119c4a0966a7f5c29f7c502"
+    },
+    {
+      "path": "DELIVERY-README.md",
+      "bytes": 1746,
+      "sha256": "b11a09334312d2f8df05e28f045792f65446991567846f4d4ad464ff10179a1c"
+    },
+    {
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "bytes": 7180,
+      "sha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369"
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "bytes": 8412,
+      "sha256": "e329dd3847875a596eb46e9aaa108aad3d6821ee24cace034d1082f0b76d3ece"
+    },
+    {
+      "path": "apps/Web/Write/IWriteBrowserPackageBroker.cs",
+      "bytes": 954,
+      "sha256": "67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0"
+    },
+    {
+      "path": "apps/Web/Write/Packages/BrowserWritePackageBroker.cs",
+      "bytes": 3775,
+      "sha256": "e8be7331ecc54a5eeb89fb2f001c4504c48a1b810276680c5729ce91a9e82293"
+    },
+    {
+      "path": "apps/Web/Write/Packages/NineToOne.Write.Packages.csproj",
+      "bytes": 718,
+      "sha256": "cdcead31de80b2fc6f981c949d1a2887be508b57d6242e02a11a4a3668b93a48"
+    },
+    {
+      "path": "apps/Web/Write/Packages/write-packages.js",
+      "bytes": 2367,
+      "sha256": "8e757506389202c46009090faa60a12831a290c804f34806fab09af64d4e73f0"
+    },
+    {
+      "path": "apps/Web/Write/README.md",
+      "bytes": 4439,
+      "sha256": "4b6b802aba998e78116fafcf5e367ed18856420e62eb9a01cd07483a8eef4f1e"
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "bytes": 6624,
+      "sha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "bytes": 4010,
+      "sha256": "7640a081cd4efb66fd28750b9c90ee7c8caa0c0a9ccdce6a499bb8744b0a27f3"
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneResources.cs",
+      "bytes": 731,
+      "sha256": "bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e"
+    },
+    {
+      "path": "apps/Web/Write/Tests/PackageProgram.cs",
+      "bytes": 4920,
+      "sha256": "45767bf7bc06d56ae43dba51a56c781366f3ff07a4e4074b5be16fb5c3c0ae73"
+    },
+    {
+      "path": "apps/Web/Write/Tests/Program.cs",
+      "bytes": 13599,
+      "sha256": "44b11fa3bb3b508bf249bfb52892144f999d754c56d333d0ab325c0e0f7217b8"
+    },
+    {
+      "path": "apps/Web/Write/Tests/SceneProgram.cs",
+      "bytes": 34469,
+      "sha256": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202"
+    },
+    {
+      "path": "apps/Web/Write/Tests/UnknownCommitProgram.cs",
+      "bytes": 17459,
+      "sha256": "fbbaff01dd09b19abb05bff6fe2c685768bd3cf3ca109a2293094ffa5a90d771"
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Package.Tests.csproj",
+      "bytes": 496,
+      "sha256": "2b5498c0e6e5d0cb61dddedb5ea980e39c51342c1d77c84f231a25ddebca6542"
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+      "bytes": 1983,
+      "sha256": "a03ae96ff75514a85a54eb2f587d292d26d655a87d6b71d0111e6ace1dd4a3c2"
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "bytes": 1974,
+      "sha256": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2"
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.UnknownCommit.Tests.csproj",
+      "bytes": 1657,
+      "sha256": "80e6e0ea6cd3065bac2862782bf476ee2b223c9c827267104608315dd7ce47e2"
+    },
+    {
+      "path": "apps/Web/Write/Write.cui",
+      "bytes": 2152,
+      "sha256": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e"
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserFeature.cs",
+      "bytes": 12137,
+      "sha256": "dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4"
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserSession.cs",
+      "bytes": 31453,
+      "sha256": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b"
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserSurface.cs",
+      "bytes": 2269,
+      "sha256": "04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0"
+    },
+    {
+      "path": "compiled-witness/Haven.dll",
+      "bytes": 5181952,
+      "sha256": "55944553e027d341808113a86b4461ba2e5747c51d64ecb0a2b104418753d6f6"
+    },
+    {
+      "path": "compiled-witness/Haven.pdb",
+      "bytes": 61764,
+      "sha256": "4ababa3d3ed75ce978777490a4e739978d583b307911146fad8b826cf2915239"
+    },
+    {
+      "path": "compiled-witness/WriteBrowser.Scene.Tests.dll",
+      "bytes": 435712,
+      "sha256": "3ce0131d915b42becc1ec7cc64da1555fc320cb2bada032278be7cd06fe08ea5"
+    },
+    {
+      "path": "compiled-witness/WriteBrowser.Scene.Tests.pdb",
+      "bytes": 91236,
+      "sha256": "577e9d9a30223a59ee068899762de9bdab23506a0e08fd58d6e25e8df40a1011"
+    },
+    {
+      "path": "delivery-map.json",
+      "bytes": 21180,
+      "sha256": "5f0aaeb377ee830cd149cf0e1f631ef577ecdfe9b9bcfda9da91e8a8ce03f5c4"
+    },
+    {
+      "path": "glyph-current-red.json",
+      "bytes": 2269,
+      "sha256": "58d3e675455175f578ecd92ead12a18fd7fc2d310ae76b8d2b36ff92ef82de1f"
+    },
+    {
+      "path": "glyph-current-red.log",
+      "bytes": 2112,
+      "sha256": "8889658454d339b1c7ab28c97e8a11873bbcb5561f340b87416cd0cfe2c54a1b"
+    },
+    {
+      "path": "glyph-current-red.png",
+      "bytes": 29146,
+      "sha256": "cb38cae7caf1353a0f92f9fe398d5e40616a92b8a917dc39352ee6b0ba67745f"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 9976,
+      "sha256": "2e61edb3c6d427a5ad7ee1d18a32b5f3dde1060321a9a4d6c7277203b5f01fa1"
+    },
+    {
+      "path": "owner-fonts/Montserrat-Black.ttf",
+      "bytes": 462844,
+      "sha256": "ea67b37f8776eebea135cd1fe9adeaf6f9427683e8dc11ab8398b6be5f102c60"
+    },
+    {
+      "path": "owner-fonts/Montserrat-BlackItalic.ttf",
+      "bytes": 466860,
+      "sha256": "ba072e896619782f65f2d4329b7de7326d253a905654981b8cb1a2f9a9ecd31b"
+    },
+    {
+      "path": "owner-fonts/Montserrat-Bold.ttf",
+      "bytes": 454864,
+      "sha256": "bc6e854971cea46b463be6f9eef4d9cd52f51cfc1fc0dd90c9d3e6483dc0ec61"
+    },
+    {
+      "path": "owner-fonts/Montserrat-BoldItalic.ttf",
+      "bytes": 460160,
+      "sha256": "b4c121b337aaa977d711b6f397c5b9672d720af622555f1e3f9d3b87f2983665"
+    },
+    {
+      "path": "owner-fonts/Montserrat-ExtraBold.ttf",
+      "bytes": 455468,
+      "sha256": "d3ac6a843d3ba6d5cafd44cf39e437055c8aed7e261010f595f57d3c7b3e2c1b"
+    },
+    {
+      "path": "owner-fonts/Montserrat-Italic.ttf",
+      "bytes": 449764,
+      "sha256": "b8fa0ea7f433669d94d27e66ea81cc627deb71861ed9d20f53d7afa1f33ba86a"
+    },
+    {
+      "path": "owner-fonts/Montserrat-Medium.ttf",
+      "bytes": 447320,
+      "sha256": "dae47428bb041f9716604e0e07b5b0c8585b3bdd8183362f75c69fe7bb3cfaf4"
+    },
+    {
+      "path": "owner-fonts/Montserrat-MediumItalic.ttf",
+      "bytes": 452480,
+      "sha256": "b544641c1fde7c5228a26ddade08870a9c1dc7426446828fc8aa8acab2521a45"
+    },
+    {
+      "path": "owner-fonts/Montserrat-Regular.ttf",
+      "bytes": 445928,
+      "sha256": "3e8abe50c44c82e2242e97d1ec8c0d385c4890cdc50447bcdb8605c81a38cfb2"
+    },
+    {
+      "path": "owner-fonts/Montserrat-SemiBold.ttf",
+      "bytes": 454716,
+      "sha256": "b4e1563393d73fdff491a869441245aef31add2ec03d9c97a6dae4de07c52fd0"
+    },
+    {
+      "path": "owner-fonts/Montserrat-SemiBoldItalic.ttf",
+      "bytes": 459340,
+      "sha256": "210b2e7882fee6db983bab33a7c98418b709592189c128e3c7a40026f4ccb80e"
+    }
+  ],
+  "fileCount": 70,
+  "totalBytes": 11478859
+}

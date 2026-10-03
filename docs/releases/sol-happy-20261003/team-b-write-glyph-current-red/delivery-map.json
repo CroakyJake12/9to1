@@ -1,0 +1,408 @@
+{
+  "capturedAt": "2026-10-03T22:25:37.514931+00:00",
+  "scope": "new actual current-source causal failure replay; historical missing full harness remains separately qualified",
+  "sourceSnapshot": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/glyph-current-source-snapshot/manifest.json",
+  "actualExecution": {
+    "command": [
+      "/workspace/.tools/dotnet/dotnet",
+      "apps/Web/Write/Tests/bin/Debug/net10.0/WriteBrowser.Scene.Tests.dll",
+      "layout"
+    ],
+    "started": "2026-10-03T22:19:35.040091+00:00",
+    "finished": "2026-10-03T22:19:36.460347+00:00",
+    "environment": {
+      "DOTNET_CLI_HOME": "/workspace/team-b-evidence/sol-happy-20261003/b2/dotnet-home",
+      "NUGET_PACKAGES": "/workspace/team-b-evidence/sol-happy-20261003/b2/nuget",
+      "XDG_CACHE_HOME": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/font-cache",
+      "HAVEN_DATA_DIR": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/glyph-current-red-fixture"
+    },
+    "exit_code": -6,
+    "executed_assertions_before_exit": 12,
+    "source_before": {
+      "apps/Web/Write/WriteBrowserSession.cs": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b",
+      "apps/Web/Write/Write.cui": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+      "apps/Web/Write/Tests/SceneProgram.cs": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+      "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+      "apps/Web/BrowserActionAvailability.cs": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+      "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    "source_after": {
+      "apps/Web/Write/WriteBrowserSession.cs": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b",
+      "apps/Web/Write/Write.cui": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+      "apps/Web/Write/Tests/SceneProgram.cs": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+      "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+      "apps/Web/BrowserActionAvailability.cs": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+      "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+    },
+    "tracked_source_unchanged": true,
+    "scope": "focused actual local/native sources; browser GUI/donor/ACL not accepted"
+  },
+  "sourceIdentityAfterExecution": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/IWriteDocumentEngine.cs",
+      "capturedSha256": "0dcf4d4daa88a87da03e4239c4c052025c4d7e98632be3f0b7a1a67e5fb54637",
+      "currentSha256": "0dcf4d4daa88a87da03e4239c4c052025c4d7e98632be3f0b7a1a67e5fb54637",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/IWriteNativeDocumentPackageStore.cs",
+      "capturedSha256": "59ca383eece77e688f979ce59a8913cd140bf3379871053e7c90bf88dddd7ac1",
+      "currentSha256": "59ca383eece77e688f979ce59a8913cd140bf3379871053e7c90bf88dddd7ac1",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.DocumentEditing.cs",
+      "capturedSha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "currentSha256": "c3f958eba1e2c226e4acce8963aaea14282ebd4e2f43b042703ed84df475cc6c",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteDocumentEditor.cs",
+      "capturedSha256": "98beb6356609b19abddfee2a5c08357b82278be26377767a176450405246ac89",
+      "currentSha256": "98beb6356609b19abddfee2a5c08357b82278be26377767a176450405246ac89",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Write/WriteNamedStyleOperations.cs",
+      "capturedSha256": "34e5549b08eabf422342ed67eb163986568874008c7a31f4f971ff1bef84184d",
+      "currentSha256": "34e5549b08eabf422342ed67eb163986568874008c7a31f4f971ff1bef84184d",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaImageResolver.cs",
+      "capturedSha256": "82fb75c88ca18d903eb27eedbd7824b1e63cdc88e958386d818ccb852fd2a65b",
+      "currentSha256": "82fb75c88ca18d903eb27eedbd7824b1e63cdc88e958386d818ccb852fd2a65b",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaNativeControlResolver.cs",
+      "capturedSha256": "257038c532cf1ab15974ba4edafd65d52d302ddbd05787e1ce724deb8cbd165e",
+      "currentSha256": "257038c532cf1ab15974ba4edafd65d52d302ddbd05787e1ce724deb8cbd165e",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenAvaloniaThemeResolver.cs",
+      "capturedSha256": "ba0ba608d793ea44fa476a07e895853283347c5209a1d9caabccd677d4fdbf80",
+      "currentSha256": "ba0ba608d793ea44fa476a07e895853283347c5209a1d9caabccd677d4fdbf80",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenDesktopImageResolver.cs",
+      "capturedSha256": "cb2c8e6dacbf1f9b5b85106b3e90cad10afe2ebb5e92702a7461ebfb5cc959da",
+      "currentSha256": "cb2c8e6dacbf1f9b5b85106b3e90cad10afe2ebb5e92702a7461ebfb5cc959da",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenInteractiveAutomationPeers.cs",
+      "capturedSha256": "9eb59d8180b2334d8c6d41e7449cb71a901f9012493a80d5129d897a9efa29f8",
+      "currentSha256": "9eb59d8180b2334d8c6d41e7449cb71a901f9012493a80d5129d897a9efa29f8",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneAutomationPeer.cs",
+      "capturedSha256": "8c2d8957371c014892c4c6b606d9673389b13048f94c9f02516060ee5e285cda",
+      "currentSha256": "8c2d8957371c014892c4c6b606d9673389b13048f94c9f02516060ee5e285cda",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSceneControl.cs",
+      "capturedSha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3",
+      "currentSha256": "87a76ce5c3c0c3ca457300503eb992d396f4e2ec3a010b11c9379257624d31b3",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenSelectItemAutomationPeer.cs",
+      "capturedSha256": "1e5e085ad8ca0574a21589904819179bcdac5f10feb53cf6541ae5fe88ca43f4",
+      "currentSha256": "1e5e085ad8ca0574a21589904819179bcdac5f10feb53cf6541ae5fe88ca43f4",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/HavenUI/Backend/HavenTabAutomationPeers.cs",
+      "capturedSha256": "e3536de521efb4d59892a3ecbc8e569c4562a963b643253c6d8422e60556dabd",
+      "currentSha256": "e3536de521efb4d59892a3ecbc8e569c4562a963b643253c6d8422e60556dabd",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Styles/DefaultTheme.axaml",
+      "capturedSha256": "54e479254465e596f864215cb1a80b0d35d770bf92b406230cb81efdf251a12b",
+      "currentSha256": "54e479254465e596f864215cb1a80b0d35d770bf92b406230cb81efdf251a12b",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.ContextualAuthoring.cs",
+      "capturedSha256": "0b2cc5f93ede65b9367cc511e12446f1152d777b4ae6866ab09882b4fd192bf6",
+      "currentSha256": "0b2cc5f93ede65b9367cc511e12446f1152d777b4ae6866ab09882b4fd192bf6",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.ModernRibbon.cs",
+      "capturedSha256": "bafc59b8f078c95c1b635c8ffd4e2617c7de8ef5bb9588df6306862601353aab",
+      "currentSha256": "bafc59b8f078c95c1b635c8ffd4e2617c7de8ef5bb9588df6306862601353aab",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.ReadAloud.cs",
+      "capturedSha256": "198c2949703c1ffc869f3a5a5b0856975ac154467cb55933fb42fc88c4b04188",
+      "currentSha256": "198c2949703c1ffc869f3a5a5b0856975ac154467cb55933fb42fc88c4b04188",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.RibbonLayout.cs",
+      "capturedSha256": "7aa8df24c7ded43447ca6f2599b75bfaad5629b7649c95a474aa37eb73775d05",
+      "currentSha256": "7aa8df24c7ded43447ca6f2599b75bfaad5629b7649c95a474aa37eb73775d05",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WordWriteHavenScene.cs",
+      "capturedSha256": "27f5c28470fe06718f42e3f86d9196e366442e9bb4c29e27c7fcfec767501958",
+      "currentSha256": "27f5c28470fe06718f42e3f86d9196e366442e9bb4c29e27c7fcfec767501958",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.DirectObjects.cs",
+      "capturedSha256": "ecebaa806b00ae1ad63becf4f5b4e583a763eaba7602b80ccc91bb3f6747bbc2",
+      "currentSha256": "ecebaa806b00ae1ad63becf4f5b4e583a763eaba7602b80ccc91bb3f6747bbc2",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteDocumentSurface.cs",
+      "capturedSha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383",
+      "currentSha256": "cba8ec28168a119a3a156e1a8867cede51098e9219493c9122914c873b6bf383",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WriteHavenScene.cs",
+      "capturedSha256": "6ad0426ac4425b4e2bf020c9a5c8267a929a2ff09da4929a2339ec633fb6b18b",
+      "currentSha256": "6ad0426ac4425b4e2bf020c9a5c8267a929a2ff09da4929a2339ec633fb6b18b",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WritePage.WordProcessor.cs",
+      "capturedSha256": "229bbf79e080f556f255999da081a68b6bef4312d60dff72924a5a21eb597b31",
+      "currentSha256": "229bbf79e080f556f255999da081a68b6bef4312d60dff72924a5a21eb597b31",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Write/WritePage.axaml.cs",
+      "capturedSha256": "8a7ce4b6f596e244a346afac9aa0a8b33930ad9294ef29157b3f3f6ccbe8e999",
+      "currentSha256": "8a7ce4b6f596e244a346afac9aa0a8b33930ad9294ef29157b3f3f6ccbe8e999",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+      "capturedSha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7",
+      "currentSha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7",
+      "unchanged": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Write/WriteNativeDocumentPackageStore.cs",
+      "capturedSha256": "559b61801042107efb622070ac08d3aa5f59b6a54119c4a0966a7f5c29f7c502",
+      "currentSha256": "559b61801042107efb622070ac08d3aa5f59b6a54119c4a0966a7f5c29f7c502",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/BrowserActionAvailability.cs",
+      "capturedSha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+      "currentSha256": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/BrowserSurfaceRegistry.cs",
+      "capturedSha256": "e329dd3847875a596eb46e9aaa108aad3d6821ee24cace034d1082f0b76d3ece",
+      "currentSha256": "e329dd3847875a596eb46e9aaa108aad3d6821ee24cace034d1082f0b76d3ece",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/IWriteBrowserPackageBroker.cs",
+      "capturedSha256": "67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0",
+      "currentSha256": "67599b070ef01fa5a8a4dedd1f9aa00784bc90cf41d4e136328f4709d29ebcb0",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Packages/BrowserWritePackageBroker.cs",
+      "capturedSha256": "e8be7331ecc54a5eeb89fb2f001c4504c48a1b810276680c5729ce91a9e82293",
+      "currentSha256": "e8be7331ecc54a5eeb89fb2f001c4504c48a1b810276680c5729ce91a9e82293",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Packages/NineToOne.Write.Packages.csproj",
+      "capturedSha256": "cdcead31de80b2fc6f981c949d1a2887be508b57d6242e02a11a4a3668b93a48",
+      "currentSha256": "cdcead31de80b2fc6f981c949d1a2887be508b57d6242e02a11a4a3668b93a48",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Packages/write-packages.js",
+      "capturedSha256": "8e757506389202c46009090faa60a12831a290c804f34806fab09af64d4e73f0",
+      "currentSha256": "8e757506389202c46009090faa60a12831a290c804f34806fab09af64d4e73f0",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/README.md",
+      "capturedSha256": "4b6b802aba998e78116fafcf5e367ed18856420e62eb9a01cd07483a8eef4f1e",
+      "currentSha256": "4b6b802aba998e78116fafcf5e367ed18856420e62eb9a01cd07483a8eef4f1e",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj",
+      "capturedSha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2",
+      "currentSha256": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneControl.cs",
+      "capturedSha256": "7640a081cd4efb66fd28750b9c90ee7c8caa0c0a9ccdce6a499bb8744b0a27f3",
+      "currentSha256": "7640a081cd4efb66fd28750b9c90ee7c8caa0c0a9ccdce6a499bb8744b0a27f3",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Scene/WriteRetainedSceneResources.cs",
+      "capturedSha256": "bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e",
+      "currentSha256": "bed2e445784ab0b8c7cb3eac260ddb11cbd569e6ae54dceab234da835ce6701e",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/PackageProgram.cs",
+      "capturedSha256": "45767bf7bc06d56ae43dba51a56c781366f3ff07a4e4074b5be16fb5c3c0ae73",
+      "currentSha256": "45767bf7bc06d56ae43dba51a56c781366f3ff07a4e4074b5be16fb5c3c0ae73",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/Program.cs",
+      "capturedSha256": "44b11fa3bb3b508bf249bfb52892144f999d754c56d333d0ab325c0e0f7217b8",
+      "currentSha256": "44b11fa3bb3b508bf249bfb52892144f999d754c56d333d0ab325c0e0f7217b8",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/SceneProgram.cs",
+      "capturedSha256": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+      "currentSha256": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/UnknownCommitProgram.cs",
+      "capturedSha256": "fbbaff01dd09b19abb05bff6fe2c685768bd3cf3ca109a2293094ffa5a90d771",
+      "currentSha256": "fbbaff01dd09b19abb05bff6fe2c685768bd3cf3ca109a2293094ffa5a90d771",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Package.Tests.csproj",
+      "capturedSha256": "2b5498c0e6e5d0cb61dddedb5ea980e39c51342c1d77c84f231a25ddebca6542",
+      "currentSha256": "2b5498c0e6e5d0cb61dddedb5ea980e39c51342c1d77c84f231a25ddebca6542",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Persistence.Tests.csproj",
+      "capturedSha256": "a03ae96ff75514a85a54eb2f587d292d26d655a87d6b71d0111e6ace1dd4a3c2",
+      "currentSha256": "a03ae96ff75514a85a54eb2f587d292d26d655a87d6b71d0111e6ace1dd4a3c2",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj",
+      "capturedSha256": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+      "currentSha256": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Tests/WriteBrowser.UnknownCommit.Tests.csproj",
+      "capturedSha256": "80e6e0ea6cd3065bac2862782bf476ee2b223c9c827267104608315dd7ce47e2",
+      "currentSha256": "80e6e0ea6cd3065bac2862782bf476ee2b223c9c827267104608315dd7ce47e2",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/Write.cui",
+      "capturedSha256": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+      "currentSha256": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserFeature.cs",
+      "capturedSha256": "dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4",
+      "currentSha256": "dda639e189f00b46500c705e331acfa54c97bb27608cc9b1f69129cb755c48e4",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserSession.cs",
+      "capturedSha256": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b",
+      "currentSha256": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b",
+      "unchanged": true
+    },
+    {
+      "path": "apps/Web/Write/WriteBrowserSurface.cs",
+      "capturedSha256": "04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0",
+      "currentSha256": "04f2dfce3b52e212ab8eaa09ad77370b8e324ce0863231c2cfd5487fc2a18ad0",
+      "unchanged": true
+    }
+  ],
+  "all49CapturedSourcesUnchanged": true,
+  "fonts": [
+    {
+      "file": "owner-fonts/Montserrat-Black.ttf",
+      "sha256": "ea67b37f8776eebea135cd1fe9adeaf6f9427683e8dc11ab8398b6be5f102c60",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-BlackItalic.ttf",
+      "sha256": "ba072e896619782f65f2d4329b7de7326d253a905654981b8cb1a2f9a9ecd31b",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-Bold.ttf",
+      "sha256": "bc6e854971cea46b463be6f9eef4d9cd52f51cfc1fc0dd90c9d3e6483dc0ec61",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-BoldItalic.ttf",
+      "sha256": "b4c121b337aaa977d711b6f397c5b9672d720af622555f1e3f9d3b87f2983665",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-ExtraBold.ttf",
+      "sha256": "d3ac6a843d3ba6d5cafd44cf39e437055c8aed7e261010f595f57d3c7b3e2c1b",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-Italic.ttf",
+      "sha256": "b8fa0ea7f433669d94d27e66ea81cc627deb71861ed9d20f53d7afa1f33ba86a",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-Medium.ttf",
+      "sha256": "dae47428bb041f9716604e0e07b5b0c8585b3bdd8183362f75c69fe7bb3cfaf4",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-MediumItalic.ttf",
+      "sha256": "b544641c1fde7c5228a26ddade08870a9c1dc7426446828fc8aa8acab2521a45",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-Regular.ttf",
+      "sha256": "3e8abe50c44c82e2242e97d1ec8c0d385c4890cdc50447bcdb8605c81a38cfb2",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-SemiBold.ttf",
+      "sha256": "b4e1563393d73fdff491a869441245aef31add2ec03d9c97a6dae4de07c52fd0",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    },
+    {
+      "file": "owner-fonts/Montserrat-SemiBoldItalic.ttf",
+      "sha256": "210b2e7882fee6db983bab33a7c98418b709592189c128e3c7a40026f4ccb80e",
+      "originalURI": "avares://Haven/Assets/Fonts/MontserratStatic#Montserrat"
+    }
+  ],
+  "PNG": {
+    "path": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/glyph-current-source-snapshot/glyph-current-red.png",
+    "sha256": "cb38cae7caf1353a0f92f9fe398d5e40616a92b8a917dc39352ee6b0ba67745f"
+  },
+  "actualMeasuredFailure": {
+    "text": "beta",
+    "width": 31.360000000000003,
+    "assignedHeight": 23.625000000000004,
+    "actualFormattedHeight": 34.132,
+    "oracle": "actual original CreateText/FormattedText height <= original retained run Rect.Height+.01"
+  },
+  "ownerRequest": "Original structured text typography measurement/layout, caret/selection, wrapping and emphasis metrics; no B-owned width multiplier/private renderer. Preserve donor/semantic requirements.",
+  "historicalEvidence": "glyph-owner-delivery/delivery-map.json; original21:04 harness bytes not available, current replay is separate immutable source/binary witness",
+  "candidateScope": "native CUI+owning retained renderer and packed fonts; browser rendering/donor/full Write requirements not accepted"
+}

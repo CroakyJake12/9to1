@@ -1,0 +1,35 @@
+{
+  "command": [
+    "/workspace/.tools/dotnet/dotnet",
+    "apps/Web/Write/Tests/bin/Debug/net10.0/WriteBrowser.Scene.Tests.dll",
+    "layout"
+  ],
+  "started": "2026-10-03T22:19:35.040091+00:00",
+  "finished": "2026-10-03T22:19:36.460347+00:00",
+  "environment": {
+    "DOTNET_CLI_HOME": "/workspace/team-b-evidence/sol-happy-20261003/b2/dotnet-home",
+    "NUGET_PACKAGES": "/workspace/team-b-evidence/sol-happy-20261003/b2/nuget",
+    "XDG_CACHE_HOME": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/font-cache",
+    "HAVEN_DATA_DIR": "/workspace/team-b-evidence/sol-happy-20261003/continuation/b2/glyph-current-red-fixture"
+  },
+  "exit_code": -6,
+  "executed_assertions_before_exit": 12,
+  "source_before": {
+    "apps/Web/Write/WriteBrowserSession.cs": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b",
+    "apps/Web/Write/Write.cui": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+    "apps/Web/Write/Tests/SceneProgram.cs": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+    "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+    "apps/Web/BrowserActionAvailability.cs": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+    "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+  },
+  "source_after": {
+    "apps/Web/Write/WriteBrowserSession.cs": "bab6882910d395ca8fb4864a193edbadd92c058f9c4f308326284074a63a473b",
+    "apps/Web/Write/Write.cui": "cd1148831be0875be6c00b4ba053b999a5c3eb2ca70578e5fc5de9c6fc2c704e",
+    "apps/Web/Write/Tests/SceneProgram.cs": "ef27a58a9c87310426f05cc4ac03c9eb37e0c0313bc3be133630cbc4c275c202",
+    "apps/Web/Write/Tests/WriteBrowser.Scene.Tests.csproj": "c1fcaee4f76e2da10f5edf029230cd3ac09e0415c887c5b7a177315a228fb9f2",
+    "apps/Web/BrowserActionAvailability.cs": "ddf06cef31846c9b3b81017910c7779fced75b1b47560d696754995f56370369",
+    "apps/Web/Write/Scene/Haven.WriteBrowser.Scene.csproj": "c3430e7517586c6e6f0da26ffa8a91fb435828937ac5e46998f4e92ca17fb4e2"
+  },
+  "tracked_source_unchanged": true,
+  "scope": "focused actual local/native sources; browser GUI/donor/ACL not accepted"
+}
