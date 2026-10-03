@@ -7,13 +7,13 @@
   "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
   "baselineAcceptance": "UNVERIFIED; verified remote main identity, acceptedHead remains null",
   "specification": {
-    "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
-    "revision": "ANLCKQkCrmbihNMCbeFRqzK0BaTxpPaEp3yoMQ2um7PE5n6qkvwD6w8z2AAmpnVW00R9fNA768H_J_jZkUioT16L8LKKop7lnL4Fx7TKS60",
-    "paragraphExtractionSha256": "5ab42a11451e05181196f3d205a7210106dd02ecba86f86fce06d5236c23bd39",
-    "readStartedUTC": "2026-10-03 20:48:47 UTC",
-    "readCompletedUTC": "2026-10-03 20:49:00 UTC",
-    "paragraphs": 8444,
-    "scope": "Live8444 extraction; independent semantic diff all8336 previously active records exactunchanged; new finishingPass beforeRelease obligations retained as outstanding, no automatic exemption or relabelling historical tests."
+    "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+    "revisionId": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+    "modifiedTime": "2026-10-03T21:06:10.712Z",
+    "retrievedUTC": "2026-10-03 21:35:45 UTC",
+    "paragraphRecords": 8534,
+    "captureSha256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+    "review": "B6 independently compared/read all14changes +wholeLE01-15tail. All8336inheritedpre1342106records exact; newshipping/pre-releaseLEobligations additive; ONLYfixedSpaceshierarchy/layout superseded, built-inbehavior/security/discovery remain. Cardsfirst-partycanonicalrichwebappactive. Droidpostrelease/TrainingLabexplicitdeferred. No paragraphpercentage/denominator oroldtestrevisionrelabel."
   },
   "modelAssignments": {
     "B1": "gpt-6.1-sol",
@@ -135,7 +135,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T21:40:00Z",
+  "updatedUTC": "2026-10-03T21:53:00Z",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -510,5 +510,15 @@
   "currentStorageProgress": {
     "actual": "Latest frozen real IndexedDB List/unknown-settlement17/17PASS actual Chromium151, all module/fixture/runner before-after hashes same, zero skip/notrun/integrity. Independent exact critical replay outstanding; older14 evidence retained.",
     "scope": "Real device-local NotesRepository bridge only; not Files provider/hosted/cross-client/fullapp acceptance."
+  },
+  "continuationRuntimeProgress": {
+    "sourceHead": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+    "newOwnedWork": "Write real canonical editor/retained renderer+originalfont/theme source, actualNotes IDB17, unchanged native9to1w codecPackages10 +picker28 +unknowncleanup35. Root awaitedprepare-before-detach asynccloseRegistry33pass; platformdirtywarning10unitpass; nativeWebcompositionbuild02exit0/22warnings/0errors (notimmutablebrowseracceptance). B1actualfocusnative18/virtual3/JScontrols, genericTabproduction authored; currentgeometry diagnostics/nativepointerharness pending. B5trustedcallerAccount15/JSImportcompile +PKCEhelper11unit +beforeBFCachetokeninvalidationsource; realauthbrowserCORSblocked. B3closecontrols/Picture8nextactualSDK. B4Cards discovery newlyassigned, B2Present actualretained typed workflow source authoring.",
+    "qualification": "All currentuncommittedsource remainsprovisional until boundedreview/sourcecommit/freshpublishedbrowsercriticaljourneys. RealrichWriteglyphgeometryA2red remains, fulldonor/format/AX/platform/restart/appscope outstanding."
+  },
+  "LEOwnerContractDependencies": {
+    "TeamA_A1": "Publish maintained versioned package/app/shared-runtime manifests, mandatory Home dependency/installation/bootstrap +registered trusted web service contract. Browser cannot start localHome or invent installer/installedreadiness; currentsourceclient stillincomplete.",
+    "TeamA_A2_A3_A4_and_C": "LE12 actualtypedversionedoperations/argument+result IDs/revision/permission/CAS/pagination/idempotency/operationId for Cards/StudyRevisionBank/PlannerBurrows and local/oneMesh/eligibleCloud promotion/revocation before browserconsumers. Currentownerserverpaid+strictStorageAllocatedBytes>10000000000+quota/crossappStudyprogress endpoints absent/unACKed perCcatalogue. No guessedaccount limits/ledger/Spaceidentity/remoteAIpermission.",
+    "TeamB": "Continue independentactualHome/Write/Wave/Picture/Present/Cards portable paths; no wholebrowserworkblocked by these individualseams."
   }
 }
