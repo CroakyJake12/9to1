@@ -1,0 +1,629 @@
+{
+  "ownerManifestSha256": "0d446f22870b85368f4e5e19685302a16280ca9b53ff7958c1125e7014100527",
+  "classes": [
+    {
+      "path": "9to1 Workspace/Files/CUI.Tests/FilesDomainContractTests.cs",
+      "class": "FilesDomainContractTests",
+      "namespace": "HavenOS.Files.CUI.Tests",
+      "sha256": "12e43fb491b30922b34cf64ae4b268c01c0fc38fe0bfaf2d05eb80a69f063882",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Files/CUI.Tests/FilesDomainContractTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesMediaOriginalStoreTests.cs",
+      "class": "NativeFilesMediaOriginalStoreTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "1f152922cd67edf5f0bf0707a22aaeb11d7d47b1770bc9c01a6c67c3c5615798",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesMediaOriginalStoreTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs",
+      "class": "FilesNativeChildFolderReadTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "deafffd9402fe03385d6dba4c4152e3222a475e124db653cf248b46f0f1bf4fe",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "class": "FilesCompatibilityPackageContentSourceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "97bf566c0cd09b2620fed3a6a042218894de89080ce0f05b6e5bed1f5e839d51",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "class": "FilesNativeBrowserSurfaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "7a419351e0fca150127511f870c842705e99c7903df30617936919492e89afb6",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "class": "FilesNativeBrowserAuthorityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "48d095641a6328aee39b053417ec527428bacb7760108280fdb742f4a68c69e4",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "class": "FilesExistingStoreHostAuthorityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "f543be9db16d9c4ce51da890896380bac4db5c30193b203e94917754bbf206d6",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "class": "CompatibilityPackageInspectorTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs"
+    },
+    {
+      "class": "DataRecordCreationTests",
+      "fullClass": "Haven.Core.Tests.DataRecordCreationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationTests.cs",
+      "sha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1",
+      "joinedSource": "/workspace/astra-source/worker3-data-record-keys-final/source/DataRecordCreationTests.cs",
+      "joinedSourceSha256": "98e410894c2e16a96084d4d5247492c56ee1ab0891391b59de188863881734d1",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationTests.cs"
+    },
+    {
+      "class": "DataRecordCreationProjectionTests",
+      "fullClass": "Haven.Core.Tests.DataRecordCreationProjectionTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationProjectionTests.cs",
+      "sha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0",
+      "joinedSource": "/workspace/astra-source/worker3-data-record-keys-final/source/DataRecordCreationProjectionTests.cs",
+      "joinedSourceSha256": "5a15d6889acc88d23972ed216605701bb062ebecc78501deee647200a36496f0",
+      "namespace": "Haven.Core.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/DataRecordCreationProjectionTests.cs"
+    },
+    {
+      "class": "DataLocalStoreAuthorityTests",
+      "fullClass": "Haven.Infrastructure.Tests.DataLocalStoreAuthorityTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs",
+      "sha256": "41bdd502610227cc0bee81225d2f185be8e876a236eb0e10da5df0808515b563",
+      "joinedSource": "/workspace/astra-source/worker3-data-bounded-values-successor-02/DataLocalStoreAuthorityTests.cs",
+      "joinedSourceSha256": "162305c9d4379e190f7aa23f7a260bb0ac04080f9c76f3cc97c6b2febfd74df6",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/DataLocalStoreAuthorityTests.cs"
+    },
+    {
+      "class": "HomeDataConversationRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "joinedSource": "/workspace/astra-source/worker1-data-record-di-draft03/HomeDataConversationRegistrationTests.cs",
+      "joinedSourceSha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "namespace": "Haven.Infrastructure.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs"
+    },
+    {
+      "class": "DataPageTests",
+      "fullClass": "Haven.Desktop.Tests.DataPageTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataPageTests.cs",
+      "sha256": "2ce04557385d02394bc2e5a89fb7fe9d0fedf39de28d04babfe5f4246160bbcb",
+      "joinedSource": "/workspace/astra-source/worker3-data-native-fixture-successor-03/DataPageTests.cs",
+      "joinedSourceSha256": "2ce04557385d02394bc2e5a89fb7fe9d0fedf39de28d04babfe5f4246160bbcb",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataPageTests.cs"
+    },
+    {
+      "class": "DataRecordDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataRecordDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs",
+      "sha256": "dfd414001ffa61ae041f4348ff830ca0747415544bf06d279e4d367731e4da6a",
+      "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-08/DataRecordDocumentWorkspaceHostTests.cs",
+      "joinedSourceSha256": "91bb276f43b8c78d71f5d5903a8172d420d5f5d9ba2f0edf92ac4fca653f06bd",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRecordDocumentWorkspaceHostTests.cs"
+    },
+    {
+      "class": "DataRelationshipDocumentWorkspaceHostTests",
+      "fullClass": "Haven.Desktop.Tests.DataRelationshipDocumentWorkspaceHostTests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "sha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382",
+      "joinedSource": "/workspace/astra-source/worker2-next-data-record-display-host-07/DataRelationshipDocumentWorkspaceHostTests.cs",
+      "joinedSourceSha256": "2dc628a9ecdb443fa1efdc0001256ef0eead0c99f5b210ca2e956aa5b8215382",
+      "namespace": "Haven.Desktop.Tests",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/DataRelationshipDocumentWorkspaceHostTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
+      "class": "FormNativeHomePublicationResponseTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
+      "class": "FormNativePageOrderOwnerTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "class": "FormNativePreviewTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "58291b6eef950b275bf526ceef15b53cf2724fedaa8e37cd01f5582e8cdc0156",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs",
+      "class": "FormNativePublicationValidatorTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "3eec3883374bca1c833cd5c232b0f7f794000b873c4f6ae930f403d68e2fc22e",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormNativePublicationValidatorTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
+      "class": "FormNativeResponseSurfaceTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "85890468d85ab06f8c062dcd3f22bb34ccbfef2e524f0fe34c58ba87957397a5",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
+      "class": "FormsCuiWorkspaceTests",
+      "namespace": "HavenOS.Forms.Tests",
+      "sha256": "67526f28a5f3c46e8c0def35762962f2eccc04e308a5c1c9b630a1085167190e",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormDataRecordUpdateProjectionTests.cs",
+      "class": "FormDataRecordUpdateProjectionTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "b3c435b391c8f5e1875e5abe2cabe52d30e903bfba818c34537b9e0cb43417ed",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/FormDataRecordUpdateProjectionTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormMarkingTests.cs",
+      "class": "FormMarkingTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "bc9752f69289d1e2854a65e6308add435edab847de70af8f6a04d3539c1a1020",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/FormMarkingTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormProjectRuntimeTests.cs",
+      "class": "FormProjectRuntimeTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "cafc5c834d92dbe45ee85d0cdf2db547f608609b205e695f3978c7b1741b050c",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/FormProjectRuntimeTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/FormTableInputTests.cs",
+      "class": "FormTableInputTests",
+      "namespace": "Haven.Core.Tests",
+      "sha256": "574d9b306d33f681d603c5bf9ee4cf54dacd584f4ccd148a80b0cb56967bd5a6",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/FormTableInputTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
+      "class": "FormsNativeWorkspaceHostTests",
+      "namespace": "Haven.Desktop.Tests",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs",
+      "class": "FormAuthoringWorkflowTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "6ad0808410c7b8c15394bc90da8a0b0fed95ef937ab4e0b6b6d1601e669a483e",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
+      "class": "FormDataPreparationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "83c4f59fe3cfa822bab5558af95e97d65b3d1063267df6b1477706ff2a03b7cd",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
+      "class": "FormGraphReferenceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "efec344e536f3cbcb98633e9726df8364da703310071aa680c3ad3eb5f9f4c72",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs",
+      "class": "FormLocalStoreAuthorityTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "deb0abb8824be3a78a8e3fe2b88c2f89843b34c69d4be6dd97ce071b88a1ddc8",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
+      "class": "FormPublicationOriginatingActorTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
+      "class": "FormPublicationRegistrationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "4737ee8b8fc4c1d91a34250e98606ef812469bb1d050362880a7ebd3418d06d8",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs",
+      "class": "FormPublicationTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "e926b6c3e26dc93155f32066b7c9730694510b54ac380491e674ecf284d5efdf",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs",
+      "class": "FormResponseSessionTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "a9ab42186095b5cdf65644dc20962da0013eafce9d0c0b58009dbce5b6b8d7da",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs",
+      "class": "FormsSubmissionStoreTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "sha256": "375c979fdb259d553d77d593be852c4c8a2423462d597f4b733aa50b253c2e99",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormsSubmissionStoreTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Forms/Tests/CUI/FormNativePreviewViewportTests.cs",
+      "namespace": "HavenOS.Forms.Tests",
+      "class": "FormNativePreviewViewportTests",
+      "sha256": "b736d09401c2f8e2277f7906d8ef93e2a19090afb95596b639f54d32ab4bc95c",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Forms/Tests/CUI/FormNativePreviewViewportTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionCommitAdmissionTests.cs",
+      "class": "ShelfCollectionCommitAdmissionTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.ShelfCollectionCommitAdmissionTests",
+      "sha256": "f8ac45dd265db5f2450c8b4945679178e6b82ed9ef22ec59b681f28cabe7b126",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionCommitAdmissionTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "class": "HomeLocalReadCompositionTests",
+      "namespace": "HavenOS.Home.Tests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalReadCompositionTests",
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
+      "class": "ShelfMapsFinalClaimFenceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+      "sha256": "e9e39c4bcbd5c762edb5ecbca8ddd8810b9f2d088d0f42ff7089611c7629e4ea",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
+      "class": "ShelfNativeWorkspaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+      "sha256": "8b7da98e9b93f676b34085b2320bcd023ff70f6a2665b0fba4e505efdfa89327",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
+      "class": "MapsJourneyLibraryPanelTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+      "sha256": "3df4e1a2258026ab11bc40b978753f2d39f8b5aec4b8e42b393e1386fc0ca6bf",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs",
+      "class": "FormDataReferenceLookupSourceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+      "sha256": "e5484d027d1a3f7c3a471fa5a75ae9ff01cb90692c6184d74ece4b0d00882bf3",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs",
+      "class": "HavenAppRoutePolicyTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+      "sha256": "4ff4f5fe52eb3c0746233be7ed09412ed5ec1ed8a5a333f15a9fb91531252439",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfItemEditCommitAdmissionTests.cs",
+      "class": "ShelfItemEditCommitAdmissionTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.ShelfItemEditCommitAdmissionTests",
+      "sha256": "6c303875d44e1aea93a76c8c7acfe9f6c4d99d9d4fc38a5539788016a23ef76e",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfItemEditCommitAdmissionTests.cs"
+    },
+    {
+      "class": "SharedMathEditorSessionTests",
+      "fullClass": "Haven.Core.Tests.SharedMathEditorSessionTests",
+      "namespace": "Haven.Core.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs",
+      "sha256": "b1909c91396c66139f89ebb68be5c41abee969b47f80f29d6fe79e5b464c6476",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathEditorSessionTests.cs"
+    },
+    {
+      "class": "SharedMathObjectTests",
+      "fullClass": "Haven.Core.Tests.SharedMathObjectTests",
+      "namespace": "Haven.Core.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs",
+      "sha256": "0de78df0d34b6f772f93eb2502ee1cae3e2069b0e07008cb2c28ce4bdfc6d3b7",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Core.Tests/SharedMathObjectTests.cs"
+    },
+    {
+      "class": "SharedMathNativeEditorTests",
+      "fullClass": "Haven.Desktop.Tests.SharedMathNativeEditorTests",
+      "namespace": "Haven.Desktop.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs",
+      "sha256": "197741241c68a6793767e2e69f1a4ebf3bcdadf343db48f1666d7d1053275ad9",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeEditorTests.cs"
+    },
+    {
+      "class": "SharedMathNativeGraphTests",
+      "fullClass": "Haven.Desktop.Tests.SharedMathNativeGraphTests",
+      "namespace": "Haven.Desktop.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs",
+      "sha256": "7fe290a62ca2c03d5ede2bbe5f8c4ea11e9abdeeea9b2259e96ffb57d47f7a7e",
+      "origin": "Whole accepted Math06 class retained on exact current30; rational class additive only",
+      "source": "a63d77fe5a9dfea56c938eaa85678a9e170368ec:9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedMathNativeGraphTests.cs"
+    },
+    {
+      "class": "SharedRationalExpressionEvaluatorTests",
+      "fullClass": "Haven.Desktop.Tests.SharedRationalExpressionEvaluatorTests",
+      "namespace": "Haven.Desktop.Tests",
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedRationalExpressionEvaluatorTests.cs",
+      "sha256": "a5669ec2a8f1bb3614f088125cf417cdc2e60fe60a2c1dde543fd4472140df52",
+      "origin": "Bounded maintained exact-rational evaluator source02; source-only, whole current30 gate required",
+      "source": "/workspace/astra-source/worker3-shared-rational-evaluator-source02-explicit-declared-variable/manifest.json",
+      "expectedMethods": {
+        "Exact_rational_proof_binds_original_versions_and_original_domain": 7,
+        "Declared_letters_with_library_constant_meanings_bind_an_ordinary_variable_and_preserve_holes": 2,
+        "Equal_normal_values_do_not_erase_holes_or_claim_unproved_domain_equivalence": 6,
+        "Undefined_constant_or_identically_zero_denominator_is_refused": 4,
+        "Unsupported_or_malformed_syntax_remains_review_without_numeric_sampling": 7,
+        "Tiny_exact_nonzero_rational_is_preserved_before_domain_and_coefficient_checks": 1,
+        "Domain_reading_is_explicit_and_sealed_even_for_the_same_rational_tree": 1,
+        "Same_ID_and_revision_cannot_name_two_different_canonical_bodies": 1,
+        "Declared_source_literal_degree_and_coefficient_limits_refuse_original_input": 1,
+        "Original_cancellation_propagates_without_mutating_the_canonical_expression": 1
+      },
+      "expectedOutcomes": 31
+    }
+  ],
+  "consoleHarness": {
+    "path": "9to1 Workspace/Files/CUI.Tests/Program.cs",
+    "sha256": "b837c0a84fc24fff5e9093577e46147bb8690a74b9d3530a8aea75767f9e050d",
+    "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
+  },
+  "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
+  "data22ManifestSha256": "1747fee9e62509924a802f25d6c7cabb3349f066912ef2dd0d360600a50f0715",
+  "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-04/joined-source25.json",
+  "forms25ManifestSha256": "3e3e7b9563d97d4ab9d3767f7f5caceb332c21b0d4bbcb2be7a7f9b02b2bba62",
+  "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
+  "forms26OwnerRows": [
+    {
+      "source": "/workspace/astra-source/worker3-forms-host-session-successor/FormPublicationService.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
+      "sha256": "2ebf75539a820f00197ec80891a114eda5e868174986c59f505e3b8037f31438",
+      "expectedOriginalSHA256": "2cff1f4665082ea77555214b57b1a990343d0d55c452c32f1507d8ba3be05d2c"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-final-join25-03/FormPublicationOriginatingActorTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormPublicationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs",
+      "sha256": "e926b6c3e26dc93155f32066b7c9730694510b54ac380491e674ecf284d5efdf",
+      "expectedOriginalSHA256": "5593e48f4bd171baeb404f2137a2ade823262bc6640861f90f1d52212566cdc8"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormAuthoringWorkflowTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs",
+      "sha256": "6ad0808410c7b8c15394bc90da8a0b0fed95ef937ab4e0b6b6d1601e669a483e",
+      "expectedOriginalSHA256": "d8aa664848bde41d2807f1058a044449fad80f92b96fadd3b546cca5807e3c54"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormGraphReferenceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
+      "sha256": "efec344e536f3cbcb98633e9726df8364da703310071aa680c3ad3eb5f9f4c72",
+      "expectedOriginalSHA256": "986a418eda078e75c9fe3a23b4cf5715666c443713c0c97007c6e3c4cc834582"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormResponseSessionTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs",
+      "sha256": "a9ab42186095b5cdf65644dc20962da0013eafce9d0c0b58009dbce5b6b8d7da",
+      "expectedOriginalSHA256": "2809a8d5e3edb80938540f19f015f8bd7b40a85867ce3253db8be90e5d5decc9"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormLocalStoreAuthorityTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs",
+      "sha256": "deb0abb8824be3a78a8e3fe2b88c2f89843b34c69d4be6dd97ce071b88a1ddc8",
+      "expectedOriginalSHA256": "2696e13f498e05e7c6c9344c940d76dc6b1d892c05f1e3eb4c3630542bbf76d6"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormDataPreparationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
+      "sha256": "dcf0bf4ec33978f7f21b00fe551142e1609cf1bf5cb47e1e83bae4986fcd75f9",
+      "expectedOriginalSHA256": "7e32eed3aa978f26c4f96b8b5166cad3c07027a2968c201f332cb9212ddb685d"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspaceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
+      "sha256": "2d86ab1d7dbc5626f0b346d839775c8a828e490434f7453ded17883fcaa8477a",
+      "expectedOriginalSHA256": "da30f7d47779e89dd90d8366470db1d0dd052a85f6d0e86e48b289a438f0145f"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeResponseSurfaceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
+      "sha256": "3115d29f06cea487aca5b677ea0cc76c2e80968d95bea86c9345c7ee440c4d83",
+      "predecessorSource": "/workspace/astra-source/worker3-next-forms-publication-actor/FormNativeResponseSurfaceTests.cs",
+      "predecessorSha256": "7052236c16fb85b9ca7c9a15ff6d2f0b758937b404032038320443df9f7b2c7d",
+      "expectedOriginalSHA256": "1fe6768e4dc3fb2cb33eae1429ec0d88cc9a2f9413860bcb09fdff54e546fd5e"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormResponseSessionService.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
+      "sha256": "bd31e5f85d504eb0518ef63dbe61139092708816bd81cf3c6e4e044b83caede2",
+      "expectedOriginalSHA256": "b78a1f14a6435829038a06829cd7ddccab15d3cca28a40cdacbac50eeff692e9"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspace.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
+      "sha256": "cf9ab455ad0f1a14fd06bbf6efa09566d7ce4679b84b2ccaad96e7f8add7c2b8",
+      "predecessorSource": "/workspace/9to1/9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
+      "predecessorSha256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381",
+      "expectedOriginalSHA256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsWorkspace.cui",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
+      "sha256": "1eac413aa482a06099a6cf20b683ccfc946e7f99e22f4df82e1f538a45259703",
+      "predecessorSource": "/workspace/9to1/9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
+      "predecessorSha256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749",
+      "expectedOriginalSHA256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-final-join25-04/FormNativePageOrderOwnerTests.cs",
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeHomePublicationResponseTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-host-session-lifetime-03/FormHostSession.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormHostSession.cs",
+      "sha256": "0865b32c1275e3f1227f42875d7ea98930b33cd03564549a33221212c31d54b6",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker1-forms-publication-di-owner16-lifetime03/FormPublicationServiceCollectionExtensions.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Infrastructure/DI/FormPublicationServiceCollectionExtensions.cs",
+      "sha256": "7d8d37345354d9af1181473b3917463db47cec1cb75b3ef43f338b781d807d90",
+      "expectedOriginalSHA256": null,
+      "owner": "worker1_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker1-forms-publication-di-owner16-lifetime03/FormPublicationRegistrationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
+      "sha256": "4737ee8b8fc4c1d91a34250e98606ef812469bb1d050362880a7ebd3418d06d8",
+      "expectedOriginalSHA256": null,
+      "owner": "worker1_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/App.axaml.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
+      "sha256": "70e64e5f4fae4994ac934d2d3ebd0a9a1d12e87a4f6cae10943640c5b3dd38e5",
+      "expectedOriginalSHA256": "07023b77e901d035a787878ed50335e52f942618bbda11d731873b14da4a0aa5"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/MainView.Forms.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Forms.cs",
+      "sha256": "bd1eeb4bb1ee79ebd5ea8143cdd2cef9e47de438604114f72d992b6e6c91f090",
+      "expectedOriginalSHA256": "279749fa7613019998899bc59a7db49d99486cdad3cccc15f2524c5283de23ae"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/FormsNativeWorkspaceHost.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Forms/FormsNativeWorkspaceHost.cs",
+      "sha256": "1e8c8d84c957149bfe9e112f56bdc0ed09f8e3cd53ec29762089548bd7b0d87a",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker2-forms-closed-response-fixture-06/FormsNativeWorkspaceHostTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-owning-home-metadata-draft/HavenOS.Forms.CUI.Tests.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
+      "sha256": "41dbfd35a57ca4be65f18cab872af621512e1285073480cb04fd3766ea01824c",
+      "expectedOriginalSHA256": "340549aa066e889dd6bd3bf124a18e575c2ae935602e896a0b9985ea0df9107a",
+      "owner": "worker4_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-desktop-metadata-draft-sol1/Haven.Desktop.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519",
+      "expectedOriginalSHA256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798",
+      "owner": "worker4_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-desktop-metadata-draft-sol1/Haven.Desktop.Tests.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "expectedOriginalSHA256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
+      "owner": "worker4_sol"
+    },
+    {
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "expectedOriginalSHA256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativePreviewTests.cs",
+      "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36"
+    }
+  ],
+  "joined95": "joined-source95.json",
+  "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "inheritedWholeClassCount": 44,
+  "additiveMathClassCount": 4,
+  "inheritedMath06WholeClassCount": 48,
+  "additiveRationalClassCount": 1
+}

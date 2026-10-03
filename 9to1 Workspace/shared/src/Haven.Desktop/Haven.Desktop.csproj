@@ -53,6 +53,13 @@
     <ProjectReference Include="..\Haven.UI\Haven.UI.csproj" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
     <PackageReference Include="ScottPlot.Avalonia" />
+    <PackageReference Include="AngouriMath" />
+    <EmbeddedResource Include="ThirdParty/AngouriMath/**/*" />
+    <Content Include="ThirdParty/AngouriMath/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="Antlr4.Runtime.Standard" />
+    <PackageReference Include="GenericTensor" />
+    <PackageReference Include="HonkSharp" />
+    <PackageReference Include="PeterO.Numbers" />
     <EmbeddedResource Include="ThirdParty/ScottPlot/**/*" />
     <Content Include="ThirdParty/ScottPlot/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="Avalonia" />
