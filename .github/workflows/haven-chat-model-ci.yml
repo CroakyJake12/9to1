@@ -45,7 +45,7 @@ jobs:
         if: matrix.cohort == 'owning'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libglib2.0-dev libcairo2-dev libpango1.0-dev librsvg2-dev libseccomp-dev liblcms2-dev libxml2-dev libfontconfig1-dev bubblewrap apparmor-utils fonts-dejavu-core xvfb xauth openssl ca-certificates openjdk-21-jre-headless
+          sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libglib2.0-dev libcairo2-dev libpango1.0-dev librsvg2-dev libseccomp-dev liblcms2-dev libxml2-dev libfontconfig1-dev bubblewrap apparmor-utils fonts-dejavu-core xvfb xauth openssl ca-certificates openjdk-21-jre-headless libwebkit2gtk-4.1-0
           mkdir -p artifacts/desktop-visible-owning
           dpkg-query -W > artifacts/desktop-visible-owning/native-hosted-packages.txt
       - uses: actions/setup-dotnet@v4

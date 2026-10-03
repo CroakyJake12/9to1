@@ -122,7 +122,10 @@ public sealed class MailKitImapSmtpProvider : IMailProviderAdapter
             try { type = ContentType.Parse(content.MimeType); }
             catch (FormatException ex) { throw new MailProviderException(MailErrorCode.AttachmentUnavailable, "The attachment content type is invalid.", false, ex); }
             // MimeKit retains this detached copy, not mutable bytes owned by the content source.
-            builder.Attachments.Add(content.FileName, content.Bytes.ToArray(), type);
+            // A Files attachment is original content. Text MIME types must not
+            // undergo transport newline conversion when SMTP uses CRLF.
+            if (builder.Attachments.Add(content.FileName, content.Bytes.ToArray(), type) is MimePart attachment)
+                attachment.ContentTransferEncoding = ContentEncoding.Base64;
         }
         message.Body = builder.ToMessageBody();
         var config = account.Connection!;

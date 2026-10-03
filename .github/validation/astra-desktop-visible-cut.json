@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "6d1056db618699a0a827fb5b586c4d6836e002f2",
-  "programTree": "9bc26d18bbdecb7d5d39770d5b7c9b1ffd9d4d69",
-  "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
+  "baselineCommit": "50e27978fa32a746afdf51bb3d6b5c3a14665c9e",
+  "programTree": "b72460dd98e5213708f29bf09887c41917b05853",
+  "currentNormalCommit": "ca9b0d1aa188468f4249a058fa7ac9215145f0e8",
   "kind": "corrective",
   "files": [
     {
@@ -85,9 +85,9 @@
     {
       "path": ".github/scripts/astra-mail-trusted-tls.py",
       "mode": "100644",
-      "object": "425b8dae723e828fb268bb3141533fbc68fb7819",
-      "bytes": 20629,
-      "sha256": "588f150122cf620c77ce636bf9720baeedfc9d5efa44f242d3cbf598b71a6cab"
+      "object": "2248ff4cb92a1c8856b61cadd5f75b77fb63fa63",
+      "bytes": 20650,
+      "sha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd"
     },
     {
       "path": ".github/scripts/astra_mail_original_caller_session.py",
@@ -281,9 +281,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "f33a932d87be028ace2e97d7efdfbcc8ad63bfba",
-      "bytes": 10106,
-      "sha256": "25e18228eef279297d01567277e8473f7fc1f14a6feb2758110b8d0ad4581f5f"
+      "object": "7d8d5b52c05605692cfef8d6051b70320f12ecb8",
+      "bytes": 10126,
+      "sha256": "7ff4f078c8f7f6a3683580336b5949f1a4a4935c0e4f823de546bd017fecdc1a"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -24424,9 +24424,9 @@
     {
       "path": "9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
       "mode": "100644",
-      "object": "fd86b1bc8a1d64fbc0ad8d0a9030cd3fe8e29e24",
-      "bytes": 21003,
-      "sha256": "9be88a2cfabd738a872f1ca1b60ba5c27ce7c9a58645f553c7c1e8ce84724a6d"
+      "object": "4c09beb83e955567ee60c26a8aa12b7897b01387",
+      "bytes": 21260,
+      "sha256": "904101d7d62f40879bde24682d90dbc55a5e70c8e9314ca9aea5099e949e1990"
     },
     {
       "path": "9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
@@ -35596,9 +35596,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
       "mode": "100644",
-      "object": "a0cb2ac46cc63f6a6ebe5858625dc0abcab0d38b",
-      "bytes": 21664,
-      "sha256": "11187004d90ce5ad9e69be862a543d14bcd8d73b7865030c208a85bb92832617"
+      "object": "da24fe53e99c8f552fc92d23f482951be10f8977",
+      "bytes": 24500,
+      "sha256": "a2e5e42bde0910ad68f65c3baa4b0d2a9faea5ca6af3b9eb909ac2a6168a07d0"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/SpaceGeneratedSurfaceRenderer.cs",
@@ -40709,6 +40709,13 @@
       "object": "3f233a5ba90933ae82b6b0e4be9efebb071dac4d",
       "bytes": 11058,
       "sha256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+      "mode": "100644",
+      "object": "7b91b7b7961ded7e56b3fdec5ee26f03e047a7c1",
+      "bytes": 15943,
+      "sha256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
@@ -66086,6 +66093,34 @@
     {
       "path": "/workspace/astra-source/worker2-mail08-crl-pki-bounded-probe02.py",
       "sha256": "73d03df5fff22649b77a84cfa42a468964f29e000349befac4e4b6b99a5fa817"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail10-actual-byte-preserving-attachment-webkit-drain-source01/manifest.json",
+      "sha256": "c40f27f5ab5159aa680345042505cf0ac32ea0d3688f996ecaaa78af1ae8963c"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail10-all-three-original-full-failure-closure01.json",
+      "sha256": "e54c20cea598a4671a115cf38ec059fee0705c5ffc7ffefc41b5a633f98b5002"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-mail10-native-delegation-path-diagnosis01.json",
+      "sha256": "d7c5eaba771d620a6719fc26d0b55ce72bd1e2e1dfaa254fc5d1696f3d900cf1"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-mail-mimekit418-preparation-review01/review.json",
+      "sha256": "6c6b2654c13503b3859a0b640aa1b87ef5185bad52e9db5050cde10a47c686b0"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-spaces03-full-three-original-acceptance01.json",
+      "sha256": "9dcb47f514b9d0c541506b1906cadbf21f4c929c96168a7097a9a859c6494b97"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-spaces03-current22-four-source-publication-plan01.json",
+      "sha256": "de133271d7cf8a2dee6cc84bfc55b617f7b85abe169401250fdbd1dc4130b2a8"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail10-actual-byte-preserving-attachment-webkit-drain-full-corrective11/freeze-full-package.py",
+      "sha256": "485cbb999ae543eaf9d5e377579aa42b78ea62816c4b62f4677ee1b2e2d11f59"
     }
   ],
   "sharedCakeIdContract": null
