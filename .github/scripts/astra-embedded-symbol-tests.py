@@ -45,6 +45,22 @@ class ActualSymbols(unittest.TestCase):
   with self.assertRaises(ValueError):pdb.actual_symbols(self.altered(self.proof['origin']['debugRecordOffset']+8,b'\xff\xff\xff\xff'))
  def test_truncated_pe_refused(self):
   with self.assertRaises(ValueError):pdb.actual_symbols(self.dll[:64])
+class ActualWholeProducerEmission(unittest.TestCase):
+ def verify(self,phase):
+  producer=pathlib.Path(os.environ['ASTRA_PRODUCER_RECEIVING_ROOT']).resolve()
+  target=producer/('artifacts/task-producer-'+phase)/'bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll'
+  symbols,proof=pdb.actual_symbols(target.read_bytes());self.assertEqual(proof['kind'],'embedded-portable-pdb')
+  docs=pdb.pdb_documents(symbols);self.assertEqual(len(docs),221);missing=[]
+  for name,row in docs.items():
+   source=pathlib.Path(name).resolve();self.assertTrue(source.is_relative_to(producer))
+   if not source.is_file():missing.append(name);continue
+   self.assertFalse(source.is_symlink());self.assertEqual(hashlib.new(row['hashName'],source.read_bytes()).hexdigest(),row['digest'])
+  return missing
+ def test_original_whole_producer_missing_generated_refusal(self):
+  missing=self.verify('before');self.assertEqual(len(missing),2)
+  self.assertEqual({pathlib.Path(name).name for name in missing},{'CompilerDynamicDependenciesAttribute.generated.cs','globalAvalonia.Media.KnownColors.cs'})
+ def test_fixed_whole_producer_every_document_hash(self):
+  self.assertEqual(self.verify('fixed'),[])
 class RetainedSymbolBounds(unittest.TestCase):
  def test_fresh_and_identical_retention(self):
   with tempfile.TemporaryDirectory() as tmp:
