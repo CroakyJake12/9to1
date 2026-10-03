@@ -231,6 +231,185 @@ public sealed class MapsJourneyLibraryPanelTests
         finally { fixture.Settings.Release.TrySetResult(); window.Close(); }
     }
 
+    [AvaloniaTheory]
+    [InlineData(1, 0)]
+    [InlineData(2, 1)]
+    public async Task Actual_native_typed_step_review_retains_original_intent_and_duration_through_later_edits_and_physical_reopen(int kindIndex, int intentIndex)
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync();
+        using var panel = await MapsJourneyLibraryPanel.CreateAsync(fixture.Owner, fixture.Actor, _ => Task.CompletedTask);
+        var window = new Window { Content = panel }; window.Show();
+        try
+        {
+            panel.NameInput.Text = "Original typed journey"; panel.InstructionInput.Text = "Original bench activity";
+            panel.StepTypeInput.SelectedIndex = kindIndex; panel.StepIntentInput.SelectedIndex = intentIndex;
+            panel.DurationInput.Text = kindIndex == 1 ? 7.5m.ToString(System.Globalization.CultureInfo.CurrentCulture) : "";
+            var before = await File.ReadAllBytesAsync(fixture.SettingsFile);
+            Click(panel.ReviewButton); await panel.WhenActionsIdleAsync();
+            var review = Assert.Single(panel.Reviews);
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            var originalDetails = panel.ReviewDetails.Text;
+            Assert.Contains("Original bench activity", originalDetails);
+            panel.NameInput.Text = "Later edit"; panel.InstructionInput.Text = "Not the reviewed instruction";
+            panel.StepTypeInput.SelectedIndex = 0; panel.StepIntentInput.SelectedIndex = 2; panel.DurationInput.Text = "99";
+            Assert.Equal(originalDetails, panel.ReviewDetails.Text);
+            Click(panel.ApplyButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal("ApprovalRequired", Assert.Single(panel.Reviews).LastObservation!.Code);
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            Assert.True((await fixture.Permissions.DecideAsync(review.RequestID, HomeApprovalChoice.Accept)).Succeeded);
+            Click(panel.ApplyButton); await panel.WhenActionsIdleAsync();
+            Assert.True(Assert.Single(panel.Reviews).LastObservation!.Committed); Assert.Equal(1, fixture.Settings.GuardedWriteCalls);
+            var committed = await File.ReadAllBytesAsync(fixture.SettingsFile);
+            var reopened = await new MapsJourneyService(new VersionedAtomicSettingsStore(fixture.Paths)).ReadAsync();
+            var journey = Assert.Single(reopened.Journeys); var step = Assert.Single(journey.Steps);
+            Assert.Equal("Original typed journey", journey.Name); Assert.Equal("Original bench activity", step.Instruction);
+            Assert.Equal(kindIndex == 1 ? MapJourneyStepKind.Wait : MapJourneyStepKind.Activity, step.Kind);
+            Assert.Equal((MapStepIntent)intentIndex, step.Intent);
+            if (kindIndex == 1) Assert.Equal(TimeSpan.FromMinutes(7.5), step.Duration); else Assert.Null(step.Duration);
+            Assert.Null(step.PlaceId); Assert.Null(step.Coordinate); Assert.Null(step.TravelProfile);
+            Assert.NotEqual(Guid.Empty, step.StepId);
+            Click(panel.FinishButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal(committed, await File.ReadAllBytesAsync(fixture.SettingsFile)); Assert.Equal(1, fixture.Settings.GuardedWriteCalls);
+            panel.Dispose(); Click(panel.ReviewButton); await panel.WhenActionsIdleAsync();
+            Assert.Single(panel.Reviews); Assert.Equal(committed, await File.ReadAllBytesAsync(fixture.SettingsFile));
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("invalid")]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("1441")]
+    public async Task Actual_native_invalid_wait_draft_is_refused_before_Home_request_or_owner_write(string duration)
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync();
+        using var panel = await MapsJourneyLibraryPanel.CreateAsync(fixture.Owner, fixture.Actor, _ => Task.CompletedTask);
+        var window = new Window { Content = panel }; window.Show();
+        try
+        {
+            panel.NameInput.Text = "Invalid wait"; panel.InstructionInput.Text = "Wait at the bench";
+            panel.StepTypeInput.SelectedIndex = 1; panel.DurationInput.Text = duration;
+            var settings = await File.ReadAllBytesAsync(fixture.SettingsFile); var home = await File.ReadAllBytesAsync(fixture.HomeFile);
+            Click(panel.ReviewButton); await panel.WhenActionsIdleAsync();
+            Assert.Empty(panel.Reviews); Assert.Equal(duration, panel.DurationInput.Text);
+            Assert.False(string.IsNullOrWhiteSpace(panel.Status.Text)); Assert.Equal(0, fixture.Settings.GuardedWriteCalls);
+            Assert.Equal(settings, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            Assert.Equal(home, await File.ReadAllBytesAsync(fixture.HomeFile));
+        }
+        finally { window.Close(); }
+    }
+
+    [AvaloniaFact]
+    public async Task Actual_ordered_native_draft_keeps_step_ids_order_and_original_review_through_physical_commit()
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync();
+        using var panel = await MapsJourneyLibraryPanel.CreateAsync(fixture.Owner, fixture.Actor, _ => Task.CompletedTask);
+        var window = new Window { Content = panel }; window.Show();
+        try
+        {
+            var before = await File.ReadAllBytesAsync(fixture.SettingsFile);
+            var home = await File.ReadAllBytesAsync(fixture.HomeFile);
+            panel.NameInput.Text = "Ordered original journey";
+            panel.InstructionInput.Text = "First instruction";
+            Click(panel.AddStepButton); await panel.WhenActionsIdleAsync();
+            panel.StepTypeInput.SelectedIndex = 1; panel.DurationInput.Text = "2";
+            panel.InstructionInput.Text = "Second wait";
+            Click(panel.AddStepButton); await panel.WhenActionsIdleAsync();
+            panel.StepTypeInput.SelectedIndex = 2; panel.DurationInput.Text = "";
+            panel.InstructionInput.Text = "Temporary activity";
+            Click(panel.AddStepButton); await panel.WhenActionsIdleAsync();
+            Click(panel.RemoveStepButton); await panel.WhenActionsIdleAsync();
+            panel.DraftSteps.SelectedIndex = 1;
+            Click(panel.MoveStepUpButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal(2, panel.DraftSteps.ItemCount);
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            Assert.Equal(home, await File.ReadAllBytesAsync(fixture.HomeFile));
+            Assert.Empty(panel.Reviews);
+            Click(panel.ReviewButton); await panel.WhenActionsIdleAsync();
+            var review = Assert.Single(panel.Reviews);
+            var originalDetails = panel.ReviewDetails.Text;
+            panel.NameInput.Text = "Later name";
+            Click(panel.RemoveStepButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal(originalDetails, panel.ReviewDetails.Text);
+            Click(panel.ApplyButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal("ApprovalRequired", Assert.Single(panel.Reviews).LastObservation!.Code);
+            Assert.Equal(before, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            Assert.True((await fixture.Permissions.DecideAsync(review.RequestID, HomeApprovalChoice.Accept)).Succeeded);
+            Click(panel.ApplyButton); await panel.WhenActionsIdleAsync();
+            Assert.True(Assert.Single(panel.Reviews).LastObservation!.Committed);
+            var journey = Assert.Single((await new MapsJourneyService(new VersionedAtomicSettingsStore(fixture.Paths)).ReadAsync()).Journeys);
+            Assert.Equal("Ordered original journey", journey.Name);
+            Assert.Equal(new[] { "Second wait", "First instruction" }, journey.Steps.Select(step => step.Instruction).ToArray());
+            Assert.Equal(MapJourneyStepKind.Wait, journey.Steps[0].Kind);
+            Assert.Equal(TimeSpan.FromMinutes(2), journey.Steps[0].Duration);
+            Assert.Equal(MapJourneyStepKind.ManualInstruction, journey.Steps[1].Kind);
+            Assert.Equal(2, journey.Steps.Select(step => step.StepId).Distinct().Count());
+            Assert.All(journey.Steps, step => Assert.NotEqual(Guid.Empty, step.StepId));
+            var committed = await File.ReadAllBytesAsync(fixture.SettingsFile);
+            Click(panel.FinishButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal(committed, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            panel.Dispose();
+            Click(panel.AddStepButton); await panel.WhenActionsIdleAsync();
+            Assert.Equal(committed, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            Assert.Single(panel.Reviews);
+        }
+        finally { window.Close(); }
+    }
+    [AvaloniaFact]
+    public async Task Actual_displayed_journey_search_preserves_canonical_ids_and_both_physical_stores()
+    {
+        using var fixture = new Fixture(); await fixture.InitializeAsync();
+        using var panel = await MapsJourneyLibraryPanel.CreateAsync(fixture.Owner, fixture.Actor, _ => Task.CompletedTask);
+        var window = new Window { Content = panel }; window.Show();
+        try
+        {
+            foreach (var pair in new[] { ("Morning route", "Visit orchard"), ("Evening route", "Visit harbor") })
+            {
+                panel.NameInput.Text = pair.Item1; panel.InstructionInput.Text = pair.Item2;
+                Click(panel.ReviewButton); await panel.WhenActionsIdleAsync();
+                var review = panel.Reviews.Last();
+                Assert.True((await fixture.Permissions.DecideAsync(review.RequestID, HomeApprovalChoice.Accept)).Succeeded);
+                Click(panel.ApplyButton); await panel.WhenActionsIdleAsync();
+                Assert.True(panel.Reviews.Last().LastObservation!.Committed);
+                Click(panel.ReloadButton); await panel.WhenActionsIdleAsync();
+            }
+            var reopened = await new MapsJourneyService(new VersionedAtomicSettingsStore(fixture.Paths)).ReadAsync();
+            Assert.Equal(2, reopened.Journeys.Count);
+            var settings = await File.ReadAllBytesAsync(fixture.SettingsFile);
+            var home = await File.ReadAllBytesAsync(fixture.HomeFile);
+            panel.SearchInput.Text = "MORNING";
+            Assert.Equal(reopened.Journeys.Single(j => j.Name == "Morning route").JourneyId,
+                Assert.IsType<TextBlock>(Assert.Single(panel.JourneyItems.Children)).Tag);
+            var originalRow = Assert.IsType<MapSavedJourney>(Assert.Single(panel.JourneySelection.Items));
+            panel.JourneySelection.SelectedItem = originalRow;
+            Assert.Contains("1. ManualInstruction: Visit orchard (Required)", panel.JourneyDetails.Text);
+            panel.JourneySelection.SelectedItem = originalRow with { Name = "Foreign display lookalike" };
+            Assert.Equal("", panel.JourneyDetails.Text);
+            panel.JourneySelection.SelectedItem = originalRow;
+            Assert.Contains("Visit orchard", panel.JourneyDetails.Text);
+            panel.SearchInput.Text = "harbor";
+            Assert.Equal(reopened.Journeys.Single(j => j.Name == "Evening route").JourneyId,
+                Assert.IsType<TextBlock>(Assert.Single(panel.JourneyItems.Children)).Tag);
+            Assert.Equal("", panel.JourneyDetails.Text);
+            panel.JourneySelection.SelectedItem = originalRow;
+            Assert.Equal("", panel.JourneyDetails.Text);
+            var betaRow = Assert.IsType<MapSavedJourney>(Assert.Single(panel.JourneySelection.Items));
+            panel.JourneySelection.SelectedItem = betaRow;
+            Assert.Contains("Visit harbor", panel.JourneyDetails.Text);
+            panel.SearchInput.Text = "absent"; Assert.Empty(panel.JourneyItems.Children);
+            panel.SearchInput.Text = "";
+            Assert.Equal(reopened.Journeys.Select(j => j.JourneyId).ToArray(),
+                panel.JourneyItems.Children.Cast<TextBlock>().Select(item => (Guid)item.Tag!).ToArray());
+            panel.Dispose(); panel.SearchInput.Text = "absent";
+            Assert.Equal(2, panel.JourneyItems.Children.Count);
+            panel.JourneySelection.SelectedItem = betaRow;
+            Assert.Equal("", panel.JourneyDetails.Text);
+            Assert.Equal(settings, await File.ReadAllBytesAsync(fixture.SettingsFile));
+            Assert.Equal(home, await File.ReadAllBytesAsync(fixture.HomeFile));
+        }
+        finally { window.Close(); }
+    }
     private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     private sealed class Fixture : IDisposable
     {

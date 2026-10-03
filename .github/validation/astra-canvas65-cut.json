@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "e6e0187faf0c776ce129b1cff86adedf01a5acfa",
-  "programTree": "2845ef1f8d46143d8940b4e8155199d8e73efa68",
-  "currentNormalCommit": "ca9b0d1aa188468f4249a058fa7ac9215145f0e8",
+  "baselineCommit": "59c7486615aa61272865af88b8aed3cc868397ba",
+  "programTree": "74d1de07b0c73a831a3d3fddb3b689e4b33311a7",
+  "currentNormalCommit": "2f7759a6127a1a011d9355324c81adbf64a370b1",
   "kind": "corrective",
   "files": [
     {
@@ -36,9 +36,9 @@
     {
       "path": ".github/scripts/astra-canvas-sdk-archive-admission.py",
       "mode": "100644",
-      "object": "d9a1697d975fc3a28ae8130985706d74daaae40c",
-      "bytes": 11158,
-      "sha256": "5d7529cfb52d194ca014e4c663ec4d5cbcbb167e40a05531ace01d6e989deecb"
+      "object": "885a63e38aebd62a0522d9552f1843b173ecff56",
+      "bytes": 13509,
+      "sha256": "ba2a1edd1981b84654579956e497378b499a40f6e2ced22b62f3bd76f0e689de"
     },
     {
       "path": ".github/scripts/astra-canvas-sdk-provider-preflight.py",
@@ -295,9 +295,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "b379bd669c84f382ea4c21c4ec307216ec6d8d56",
-      "bytes": 17012,
-      "sha256": "a225cff2e49ae6fb7afd6e45b69564a298c8b239f6abb44c0b1d7ac81efddab0"
+      "object": "c9564c7318941a2d1a655855df00bfe3707a4fdf",
+      "bytes": 17183,
+      "sha256": "970ac7b00e23b1bda97bf02b6bdd3d08cfcfdbedb64c449b56abcc51193ea4db"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -351,9 +351,9 @@
     {
       "path": ".github/workflows/validate-write-libreoffice-poc.yml",
       "mode": "100644",
-      "object": "07c6356fe03a7240df0c2b26382a12762d54b0ab",
-      "bytes": 20024,
-      "sha256": "c186fbbd792ddb36625def61c08cf8458dd7ae38fd674969b317f3c1be483da5"
+      "object": "d6b3548f2d6da26cfca22cda25cbe5e159e6126f",
+      "bytes": 20822,
+      "sha256": "1e768081227b9ac5b20c8f9e8fcdf5ab06547b987f8a4cd40e99381e84dfbdb9"
     },
     {
       "path": ".gitignore",
@@ -22702,9 +22702,9 @@
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativeAnswerInput.cs",
       "mode": "100644",
-      "object": "7e0645e1a9efcb7400d960fa28d24b8e496e6835",
-      "bytes": 4436,
-      "sha256": "eab4170a6a9dd0c17d86af5526e0cf4989fe0ea40642215a89070b7e9d901787"
+      "object": "ad9cafa1ede0765ad3280e364056731579fe2240",
+      "bytes": 4760,
+      "sha256": "786ddefab7a7fd18a74d52c99bbf003aa1c864a0fa4fc68b3f39b20edf04d4dc"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativeChoiceInput.cs",
@@ -22730,9 +22730,9 @@
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativePreview.cs",
       "mode": "100644",
-      "object": "7b23e32081a3629501c1ae8843789ce31bcb86b6",
-      "bytes": 15108,
-      "sha256": "313f9432954e7ce89ca8e3e1e625ca1eb5ce6517afd8a01eab55ae743e58a916"
+      "object": "c8c1c3c85fadd25763b0a8dae04bbceb79c00824",
+      "bytes": 15196,
+      "sha256": "1ebe93993396a46c32516bd4ee88bad7d86e6a5243e22849748d17c6661eaf2f"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativePublicationValidator.cs",
@@ -22749,25 +22749,32 @@
       "sha256": "18150f18b87b587f9410513fb83c3241beb6c19ad0b376df663afabb5bd0aa1e"
     },
     {
+      "path": "9to1 Workspace/Forms/CUI/FormNativeReferenceLookupInput.cs",
+      "mode": "100644",
+      "object": "1ffb3b6abda3eb3c3ba215f63cb8d62b9a68912e",
+      "bytes": 6713,
+      "sha256": "00dd2f4622bc23d6aa9227fd2855272b470bfe3d92b0f80861947c22d7e87f28"
+    },
+    {
       "path": "9to1 Workspace/Forms/CUI/FormNativeResponseSurface.cs",
       "mode": "100644",
-      "object": "a480e956f3bc7e9f17eb1ae34a55c0e675bde541",
-      "bytes": 13101,
-      "sha256": "322a39e6a065f7d798a05193ee3ed151eec53e9f740c1ea810d4840b099e5f55"
+      "object": "a01b96e4d70fd1c7805c78cfb4a69c697726dcc2",
+      "bytes": 14028,
+      "sha256": "d5cdbc0700854b094b7012dcf5df945f34c4cdb24d7243be7a21a50aba8dd195"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativeTableInput.cs",
       "mode": "100644",
-      "object": "df3eeaf12e709090f9806e7e7bf356bb76da504e",
-      "bytes": 7670,
-      "sha256": "7b57d3048d1fd5106b8eda0ff89b19fb356b2251f537abd83b37c75f0f268ab8"
+      "object": "e3a1d072d0c3f454777f23c86ee1b152787284f5",
+      "bytes": 8501,
+      "sha256": "712502683253b04c6ce1665890e64c0fa5ccbe100a838434b0348ba39caff07f"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
       "mode": "100644",
-      "object": "f8680c0aba8d0364d69bd05d783f1b8e73121435",
-      "bytes": 31984,
-      "sha256": "81e0ecdeebe689bac3a17362125e6abcc811758b89ac19d8faf6aaa8771b41d7"
+      "object": "b4631d5c4959ebdf790aeb40f4807344a64c5528",
+      "bytes": 32542,
+      "sha256": "da37c3042a519fe654d362091af8ffa6d25634a4c20f16c452167124042eb8dc"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj",
@@ -23526,11 +23533,18 @@
       "sha256": "faab52617bb737de1c3aac016ae879d2511fad2c1c3718eb04d33ce48bf475b7"
     },
     {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.ShelfItemEdit.cs",
+      "mode": "100644",
+      "object": "01bbc49b4edcc5742b507a2affb6db7f0d0933fc",
+      "bytes": 5021,
+      "sha256": "42294985082fd32854ec97441446ff5f09515775728728d7f3e76bb9ebbe11db"
+    },
+    {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.cs",
       "mode": "100644",
-      "object": "767dabfaf155dd284d5964f6b32328bc6d837959",
-      "bytes": 14058,
-      "sha256": "85ee7be0f48bd7444c4902d9e87afcbc6ae9db7d3a066fbd4ca471fb48b4738f"
+      "object": "7a63ab4e842b72dc37cb1a1d55f3ae5c27e771d0",
+      "bytes": 18295,
+      "sha256": "7ebed9fe0d51c08c516a6304a12ab4f00082b21c5f4dedbd26e0af42acc82bc7"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreApi.cs",
@@ -29035,6 +29049,13 @@
       "sha256": "29d77f5ddfc49817967cfa5554204646b96783b11f4e51b2e1e060381d37c1d8"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataReferenceLookupContracts.cs",
+      "mode": "100644",
+      "object": "f6d17f44a3dc66df4750bb2d824e70ca264c06c8",
+      "bytes": 2410,
+      "sha256": "057cb3f724e29d3ec7f237737f6cda4d2e236f613aa79fdb058c2c8437bdc82f"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataResponseWriteService.cs",
       "mode": "100644",
       "object": "4f60f62960d8d3b44374ac483bdf51654e8e6a2a",
@@ -29065,9 +29086,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
       "mode": "100644",
-      "object": "7e0840bb77c54d13d46a756e9a994d67f4c34f4c",
-      "bytes": 11086,
-      "sha256": "2ebf75539a820f00197ec80891a114eda5e868174986c59f505e3b8037f31438"
+      "object": "0c413b05c3692b350b41199d3ca75b090cd1f725",
+      "bytes": 13321,
+      "sha256": "4e29e1a27c922bbb96beed599f493918560043a376adaafde09544ce8b095828"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.DataWrites.cs",
@@ -29079,9 +29100,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
       "mode": "100644",
-      "object": "4e68a03ec8f949d2d2004c6b956a763fdfa59aa9",
-      "bytes": 20743,
-      "sha256": "bd31e5f85d504eb0518ef63dbe61139092708816bd81cf3c6e4e044b83caede2"
+      "object": "fb311e1352fd941345f91b3571868d797a72f045",
+      "bytes": 21034,
+      "sha256": "5aa7a922334217dc195c279432d796d27a914f05444c3f3c3eddae1af3bb7d2f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSubmissionProjection.cs",
@@ -29639,9 +29660,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Modes/BuiltInModeSeed.cs",
       "mode": "100644",
-      "object": "7cad4c1d19f4cfa64e913fd4eabc26e5632d4911",
-      "bytes": 18415,
-      "sha256": "a83434f836062f9dc282886d5d90fe5446689ce70daf824cced82828e9473d67"
+      "object": "118bc43c306f2e729878d73cdbe484e6acb596fe",
+      "bytes": 19053,
+      "sha256": "fb0f3013f22faf1476f0783dc7e207313057053839873278bae650ea2b206420"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Modes/CapabilityPreflightService.cs",
@@ -30113,6 +30134,13 @@
       "sha256": "b411b2c7be3eaea69eda57fefb923f54df5170dee514549ed197dcb663724d36"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfItemEdit.cs",
+      "mode": "100644",
+      "object": "30f4aff00a1da8a5754633026a7d46eb04b872bf",
+      "bytes": 557,
+      "sha256": "401cf9367d343388d1270cfc48d87eb7feb3d84c41d815bb4db4579964c47983"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfLibraryPolicy.cs",
       "mode": "100644",
       "object": "cf7033538f704b0ec4b7375e1e43a6f43c2e2727",
@@ -30122,9 +30150,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfLibraryService.cs",
       "mode": "100644",
-      "object": "3308520dfbe65257bf3f0b155018aaf76c2583be",
-      "bytes": 15511,
-      "sha256": "9fe20ff1bf53908fde63988c4202bc2067282c6562800f40de5ae54d55302535"
+      "object": "fbeb6dd2fcd7656a735575710fd6ba4b2bcc0e60",
+      "bytes": 17444,
+      "sha256": "c243d9fa9a555021e5edced0157b828f612c0a3070a7cbc4bbea31a4f613f8bf"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfOwnedMutationReceipt.cs",
@@ -30689,9 +30717,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/HavenSurface.cs",
       "mode": "100644",
-      "object": "85c619bf78d5f591113bb33a8a583e746b555a24",
-      "bytes": 1535,
-      "sha256": "6eda38a124df80de63e794e9c402d0b28e5a9dc16c7c27a3d96ff7872d0cfb0a"
+      "object": "c9b3334f2cdbfe9061790725f1c46f2f53256fa5",
+      "bytes": 1551,
+      "sha256": "8590527acf4ef290d1ef31c0c9e00da2d9eefead81a61a4134bfcfb7bf8385f7"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/InferenceProfile.cs",
@@ -32243,9 +32271,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Controls/SurfacePaletteCatalog.cs",
       "mode": "100644",
-      "object": "d60a3573078c4c9acc85c9542f11040b91b965a5",
-      "bytes": 13473,
-      "sha256": "dbcb490378b10ac3cc963d9cc26b999272c763f0c80e794d1ea84254f9c25b77"
+      "object": "25462a8f766d848d4a05f67cf7d00b2ed0e334ba",
+      "bytes": 13578,
+      "sha256": "58334f0e8f913ad6da2953fd7ad1d2a535a9d4223997efbcba7ea2fe74e1e0ea"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Controls/TidalBackground.cs",
@@ -32950,9 +32978,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Shelf.cs",
       "mode": "100644",
-      "object": "b6ef2c97477e78164caacfd286e271e2d6c12b15",
-      "bytes": 4403,
-      "sha256": "affa9d52b2fd01da214e8aaa5b99b6c6401290bd87c86a051767b2b095156575"
+      "object": "09eecd7ac65508a41930c909d5d5c92df19376bd",
+      "bytes": 4404,
+      "sha256": "baed8fc33ea454d90e685548ae3db557e41271ac15147e341f602a1079309866"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Spaces.cs",
@@ -33006,9 +33034,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml.cs",
       "mode": "100644",
-      "object": "5da828e8fb6aacd2d9d753df8eb6db8387dc3316",
-      "bytes": 169989,
-      "sha256": "1168cae2f8b8bea0cd66cfcb6ed2c48a25d25407919fbce1bfe27093d46f9a0f"
+      "object": "5d0ba314fa89457495e5d643e20883d7a64e09ba",
+      "bytes": 170316,
+      "sha256": "ba6474d21b0d62a00af51c8e5ee042b05dd2088d0f79f20f840b182adb5c9d56"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/NativePresentation/ChatSidebarHavenScene.cs",
@@ -33314,9 +33342,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Pages/Maps/MapsJourneyLibraryPanel.cs",
       "mode": "100644",
-      "object": "9892f9108407f94291bd3eebf9182576493b9ee0",
-      "bytes": 7177,
-      "sha256": "19671836faa3c9a21bcb3d857dd30c6d0cdde0ff7772144a71043039941e5364"
+      "object": "5313cf946dd3eb70907504a463f4541174cc5782",
+      "bytes": 16082,
+      "sha256": "cb5fc00b005d3406e1bbcae8da151d5aed42bcbc3eb437bbefed64373a702258"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ParallelHelper.cs",
@@ -33391,9 +33419,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/ShelfWorkspace.cui",
       "mode": "100644",
-      "object": "6ad5d84cbbe471581f05d8a043a538785bdc8052",
-      "bytes": 931,
-      "sha256": "6ed32419a7bb9e5e3bcedb2846596d02a2128dedd292acac65fdf388f2849c49"
+      "object": "9e49c4d2e75b4aa287d0fb65c8f68858f5cfd62e",
+      "bytes": 3807,
+      "sha256": "f713e66c6c39ad3d42742bba2f05b240116cc7b3a86379d3769147e64c690aaf"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/EMOJI-PROVENANCE.md",
@@ -35806,9 +35834,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Shelf/ShelfNativeWorkspacePage.cs",
       "mode": "100644",
-      "object": "318daa9df7056681ebe26073d1fdd566bf8881ea",
-      "bytes": 5287,
-      "sha256": "e058a8bb35a19b993eea9cbacc5bcbc72669bf5069e810679d6fe997f50ec058"
+      "object": "5f60e0a953b81cdc1e7fd90ec221187a58ef4924",
+      "bytes": 17116,
+      "sha256": "6242aa759784036ef0668b63f7287d943528993070375fcff2160416aea64c65"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
@@ -36233,9 +36261,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Shell/HavenAppRoutePolicy.cs",
       "mode": "100644",
-      "object": "189ecd5baa1ec9a263a5336a4b6d55fa7d2b63c4",
-      "bytes": 3463,
-      "sha256": "c62d7879638ecb5780468cfb6db46e8fe2e3d745b2b55c0ce292cb8c0ac2d97c"
+      "object": "d69f03641de4424690bb0a68430052cb6435ff27",
+      "bytes": 3552,
+      "sha256": "eac9c57ce547c2ec922871ea4f0ededc671799673438eab64169f9e3f9887747"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Shell/HavenShellEdition.cs",
@@ -36980,6 +37008,13 @@
       "sha256": "bcf3b0c67d4b6718a511d565efd841251956a19934d4d8703194a1a1b266b1c7"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Forms/FormDataReferenceLookupSource.cs",
+      "mode": "100644",
+      "object": "9fa448590379709b7ec13202a944a9640d895fda",
+      "bytes": 18309,
+      "sha256": "46cf3b57d70c70661df7e592b0a1019623a2a14b2557aef49e388b69f558a787"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Forms/FormLocalStoreAuthority.cs",
       "mode": "100644",
       "object": "a85afe41e775db4a722b4f567a40b0a9f0bcaf61",
@@ -37024,9 +37059,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/HomeOwnedLibraryCommitFenceSource.cs",
       "mode": "100644",
-      "object": "d82581b77fe09f0b4453cffbeb44fb96d4086190",
-      "bytes": 1274,
-      "sha256": "e0e0d55f8566f9fffc1595fd1b2f5193e9194b6abab33525a26fa5f3ae14cd2d"
+      "object": "a26e989a3c32f9e0efd93ccb3f2d3abe314f4a09",
+      "bytes": 2707,
+      "sha256": "b046b5f0ad98d7b2988a9468cd1a4940ae42ede528621bd7b4c69ef05501639c"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/InternalsVisibleTo.cs",
@@ -37885,30 +37920,30 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/HomeShelfLibraryOwner.cs",
       "mode": "100644",
-      "object": "37ffb65d31815c160ff2d36387b50b67647e6d1d",
-      "bytes": 21987,
-      "sha256": "ea8438cb8ad0e042d956dedcbdebd728e4744ad6cfc363a08aedd99c91f69129"
+      "object": "628b656798f7c56f011dcd69eed3febca8e5b996",
+      "bytes": 32193,
+      "sha256": "f0f391a0ea3a47de985e636142e8cb2712c2961a60e0b5b20b8f86e0d38fc540"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/ShelfOwnedLibraryAccessResolver.cs",
       "mode": "100644",
-      "object": "a191c4126b82a939e263b7960fde52f21634c25f",
-      "bytes": 2732,
-      "sha256": "cf8367439df44df1a18c75e135212d212bc961e68a3e959e737043e273299d06"
+      "object": "4ef77d55324fa726c62942f359caccdedd401a13",
+      "bytes": 2900,
+      "sha256": "7a712b1ced5390fd662f7198e60e661f0803e1c8a6b1322128306bcfe57d31fb"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/ShelfOwnedLibraryEvidence.cs",
       "mode": "100644",
-      "object": "8b1e2c68b23dfb025ac32b72aa3b66c7f4810bbe",
-      "bytes": 1881,
-      "sha256": "543fbe4a1726307d00010d97bca995303c65027bdadccb2ec5e68856136ba69f"
+      "object": "fafda3599890fcceb4bfd07b4c2c4a4a5f28b1ff",
+      "bytes": 2061,
+      "sha256": "cd30d9e2a64f5082a18bbd650a3c71af098ddb510cc58808d1f05c9a82912d51"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/ShelfLibraryWorkspace.cs",
       "mode": "100644",
-      "object": "70aa4e9af0d2531772827e4da168eeb69bb9f252",
-      "bytes": 5967,
-      "sha256": "e51d49ead5e23306c5bf2bb60cc5668fdabe014d5d935986ba59c170e1c88573"
+      "object": "ff30957d5d321e01424dbbb7d9c43b85a4079a18",
+      "bytes": 7858,
+      "sha256": "8f81eb93a56069ec0c5ed5afe99ef228b36c856ef11ee571cfa5d7ad480cf07b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Speech/CallFallbackServices.cs",
@@ -40083,9 +40118,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs",
       "mode": "100644",
-      "object": "e5f01a0411b321f6914a035c3926499a5c3fcc94",
-      "bytes": 5469,
-      "sha256": "8197c47b070f8442c84d0c5f52df6eb8924bae1b1f81aa72d62e6995e7f0f4d6"
+      "object": "266bab7352a6df56d830f45b4e842a45a4b77022",
+      "bytes": 5544,
+      "sha256": "4ff4f5fe52eb3c0746233be7ed09412ed5ec1ed8a5a333f15a9fb91531252439"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenGenUiSceneSurfaceTests.cs",
@@ -40377,9 +40412,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
       "mode": "100644",
-      "object": "16da3552c5d972c4f7941a98db856ff032e9ea82",
-      "bytes": 22079,
-      "sha256": "1813cfded28e61c33b7a671ac1481ee3133bce544666c3db81ea719c474ebcc9"
+      "object": "a420b462d29f2e1c31bb516592f3c4823ba96117",
+      "bytes": 34609,
+      "sha256": "3df4e1a2258026ab11bc40b978753f2d39f8b5aec4b8e42b393e1386fc0ca6bf"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsLocalStoreEvidenceProviderTests.cs",
@@ -40853,9 +40888,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "mode": "100644",
-      "object": "973b37be8128eadf08708428f3239384315af895",
-      "bytes": 20274,
-      "sha256": "d83ee97ca3357f051fc2fd8b19de21b840b2f37263b669b6b1f8e3cb9f3c8c94"
+      "object": "6f76f95353b655aa01e238f1ad76a887cd545e4d",
+      "bytes": 57935,
+      "sha256": "8b7da98e9b93f676b34085b2320bcd023ff70f6a2665b0fba4e505efdfa89327"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -41579,6 +41614,13 @@
       "sha256": "83c4f59fe3cfa822bab5558af95e97d65b3d1063267df6b1477706ff2a03b7cd"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs",
+      "mode": "100644",
+      "object": "496350dd13ead84d0d93d82826eba7fc4d4c0392",
+      "bytes": 41248,
+      "sha256": "e5484d027d1a3f7c3a471fa5a75ae9ff01cb90692c6184d74ece4b0d00882bf3"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
       "mode": "100644",
       "object": "1505e51950ce41249b1ac96b2d5c491613d82a09",
@@ -41693,9 +41735,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
       "mode": "100644",
-      "object": "1c7bc8afac4b9bc00535a92fd56b046741550d36",
-      "bytes": 1364,
-      "sha256": "f1876b75576e8087b6ea17d54f42bef4a688991714507a52d7e80445f00322fb"
+      "object": "93b3225de0d87fff5492ac2aff02e41b55ba1621",
+      "bytes": 1572,
+      "sha256": "e8be919ba2eb6ef84279e200854cdb96bfdbbf0470b5fd870a03c7023771df9e"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HistoricalSchemaUpgradeTests.cs",
@@ -42055,11 +42097,25 @@
       "sha256": "57c711f9dd9db8ee9819d502f57494b65d6bc31fb3f0ebca766bb0592f04a1f1"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionCommitAdmissionTests.cs",
+      "mode": "100644",
+      "object": "e5d5fa3946a1854bebdc2a0f741f5596c69b438d",
+      "bytes": 4484,
+      "sha256": "f8ac45dd265db5f2450c8b4945679178e6b82ed9ef22ec59b681f28cabe7b126"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionOrderingPersistenceTests.cs",
       "mode": "100644",
       "object": "2fa485b03714b1c3d384ca7e9f872680041701e8",
       "bytes": 15505,
       "sha256": "303141c89a7a83f8df40fe7242142291f6cb5efed0e1aeb41e611f152cda8fb8"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfItemEditCommitAdmissionTests.cs",
+      "mode": "100644",
+      "object": "f23c4dfe20826266d1b179a152de183dd1491bac",
+      "bytes": 6072,
+      "sha256": "6c303875d44e1aea93a76c8c7acfe9f6c4d99d9d4fc38a5539788016a23ef76e"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfLibraryWorkspaceTests.cs",
@@ -42071,9 +42127,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
       "mode": "100644",
-      "object": "5439d132751061c4d89bc5c1bd2c748e194f368e",
-      "bytes": 19790,
-      "sha256": "c7d1b160e6cfbce7cc8f838a7260fd0000869a1173c3f3e34ffc5f904d5d2102"
+      "object": "d316dafd76c684e11664172f8ff1c8278d132f1a",
+      "bytes": 55744,
+      "sha256": "e9e39c4bcbd5c762edb5ecbca8ddd8810b9f2d088d0f42ff7089611c7629e4ea"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
@@ -66215,7 +66271,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged.",
+  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/checkpoint22-publication-local.json",
@@ -66408,6 +66464,34 @@
     {
       "path": "/workspace/astra-source/worker2-canvas-source135-files-canonical-capture-source-peer01.json",
       "sha256": "8fccfedb22bc1d139dcba196703f9bb5bf08f501a7c0d86501b89540890c8484"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas04-current23-required-dependencies-immutable-sdk-full-corrective05/manifest.json",
+      "sha256": "4201f25cc2f246d723f98ad1963ad206eb986a479789ba9bf2fdd3c40c7030d0"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas05-protected-root-issued-sdk-source155/manifest.json",
+      "sha256": "6db2e8788400a7bfc1575e69a3915b303085516c7f3c29aba9c4647935bf8157"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas05-full-three-original-cause-closure02-owning-replay.json",
+      "sha256": "948638ca7828c98807019d56fba8344f5e4cbbd231c62ce4c94fa90a980fe077"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas-protected-root-source155-peer01.json",
+      "sha256": "75de4e0bedfe52698b8f0f3c478103a2807eb60d776dcec69aae51d1c3ff7102"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint24-publication-local.json",
+      "sha256": "68f97bbe297c6459673a1c26029a1226f22d88dad6f44de76f9347500d8475ca"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint25-publication-local.json",
+      "sha256": "924553c09e69b3e8c3a91721b3cac93ce0b62c090d61dc903eafafcc1fb00849"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-write-normal24-pinned-xamlx-workflow-correction01/manifest.json",
+      "sha256": "a4a8a0c0f3d5e3d0fa3ddfda1a54c6fac642e024ab591f353373f12c14c92881"
     }
   ],
   "sharedCakeIdContract": null,

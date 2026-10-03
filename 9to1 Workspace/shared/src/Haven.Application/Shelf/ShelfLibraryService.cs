@@ -33,6 +33,19 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings) : IRes
         return MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.AddOrRefreshTarget(state.Library, captured) }, token, admission, receipt);
     }
 
+    public Task<ShelfOperationResult> CreateCollectionAsync(long revision, ShelfCollection collection,
+        ISettingsCommitAdmission admission, ShelfOwnedMutationReceipt receipt, CancellationToken token)
+    {
+        var captured = Capture(collection);
+        return MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.AddCollection(state.Library, captured) }, token, admission, receipt);
+    }
+    public Task<ShelfOperationResult> AddMembershipAsync(long revision, Guid collectionID, Guid itemID, int order,
+        ISettingsCommitAdmission admission, ShelfOwnedMutationReceipt receipt, CancellationToken token)
+        => MutateAsync(revision, state => {
+            EnsureActive(state, itemID, collectionID);
+            return state with { Library = ShelfLibraryPolicy.AddMembership(state.Library, new(collectionID, itemID, order)) };
+        }, token, admission, receipt);
+
     public async Task<ShelfSnapshot> ReadAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -101,18 +114,32 @@ public sealed class ShelfLibraryService(IVersionedSettingsStore settings) : IRes
         MutateAsync(revision, state => state with { Library = ShelfLibraryPolicy.RemoveMembership(state.Library, collectionId, itemId) }, token);
 
     public Task<ShelfOperationResult> EditItemAsync(long revision, Guid id, string name, IReadOnlyList<string> tags,
+        bool favourite, int order, ShelfLaunchBehaviour behaviour, ISettingsCommitAdmission admission,
+        ShelfOwnedMutationReceipt receipt, CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(admission); ArgumentNullException.ThrowIfNull(receipt);
+        ArgumentNullException.ThrowIfNull(tags);
+        if (tags.Count > 256) throw new ArgumentException("At most 256 tags are supported.", nameof(tags));
+        var captured = tags.Take(257).ToArray();
+        if (captured.Length != tags.Count || captured.Length > 256)
+            throw new ArgumentException("Tag enumeration differs from its declared bounded count.", nameof(tags));
+        return EditCapturedItemAsync(revision, id, name, captured, favourite, order, behaviour, token, admission, receipt);
+    }
+
+    public Task<ShelfOperationResult> EditItemAsync(long revision, Guid id, string name, IReadOnlyList<string> tags,
         bool favourite, int order, ShelfLaunchBehaviour behaviour, CancellationToken token = default) =>
         EditCapturedItemAsync(revision, id, name, tags.ToArray(), favourite, order, behaviour, token);
 
     private Task<ShelfOperationResult> EditCapturedItemAsync(long revision, Guid id, string name, IReadOnlyList<string> tags,
-        bool favourite, int order, ShelfLaunchBehaviour behaviour, CancellationToken token) =>
+        bool favourite, int order, ShelfLaunchBehaviour behaviour, CancellationToken token,
+        ISettingsCommitAdmission? admission = null, ShelfOwnedMutationReceipt? receipt = null) =>
         MutateAsync(revision, state =>
         {
             if (!state.Library.Items.Any(item => item.Id == id)) throw new KeyNotFoundException("Launch item not found.");
             return state with { Library = state.Library with { Items = state.Library.Items.Select(item => item.Id == id
                 ? item with { Name = name.Trim(), Tags = tags.ToArray(), IsFavourite = favourite, Order = order, Behaviour = behaviour }
                 : item).ToArray() } };
-        }, token);
+        }, token, admission, receipt);
 
     public Task<ShelfOperationResult> EditCollectionAsync(long revision, ShelfCollection collection, CancellationToken token = default) =>
         EditCapturedCollectionAsync(revision, Capture(collection), token);

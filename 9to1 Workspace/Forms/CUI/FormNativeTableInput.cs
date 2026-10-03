@@ -2,6 +2,7 @@ using System.Text.Json;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Haven.Core.Forms;
+using Haven.Application;
 
 namespace HavenOS.Forms;
 
@@ -11,6 +12,7 @@ internal sealed class FormNativeTableInput : StackPanel, IDisposable
 {
     private readonly FormTableInputDefinition _definition;
     private readonly Action<JsonElement> _changed;
+    private readonly Func<Guid, Func<bool>, CancellationToken, Task<IFormDataReferenceLookupSession?>>? _referenceLookup;
     private readonly List<(Guid ID, Dictionary<Guid, JsonElement> Cells)> _rows = [];
     private readonly List<Action> _detachCells = [];
     private readonly ComboBox _selector = new();
@@ -21,11 +23,15 @@ internal sealed class FormNativeTableInput : StackPanel, IDisposable
     private bool _disposed;
 
     public FormNativeTableInput(FormTableInputDefinition definition, JsonElement? answer, Action<JsonElement> changed)
+        : this(definition, answer, changed, null) { }
+
+    public FormNativeTableInput(FormTableInputDefinition definition, JsonElement? answer, Action<JsonElement> changed,
+        Func<Guid, Func<bool>, CancellationToken, Task<IFormDataReferenceLookupSession?>>? referenceLookup)
     {
         FormTableInput.ValidateDefinition(definition);
-        if (definition.Columns.Any(column => column.Type == FormTableCellType.Reference))
+        if (referenceLookup is null && definition.Columns.Any(column => column.Type == FormTableCellType.Reference))
             throw new NotSupportedException("CapabilityUnavailable: table references require a Data lookup provider.");
-        _definition = definition; _changed = changed; Spacing = 6;
+        _definition = definition; _changed = changed; _referenceLookup = referenceLookup; Spacing = 6;
         if (answer is { ValueKind: JsonValueKind.Object } value)
         {
             var response = value.Deserialize<FormTableInputResponse>()!;
@@ -83,7 +89,13 @@ internal sealed class FormNativeTableInput : StackPanel, IDisposable
                 row.Cells[column.ColumnID] = value; Publish();
             }
             Control input;
-            if (column.Type == FormTableCellType.Number)
+            if (column.Type == FormTableCellType.Reference)
+            {
+                var reference = new FormNativeReferenceLookupInput(
+                    (alive, token) => _referenceLookup!(column.ColumnID, alive, token), Change, current);
+                _detachCells.Add(reference.Dispose); input = reference;
+            }
+            else if (column.Type == FormTableCellType.Number)
             {
                 var number = new FormNativeNumberInput(current.ValueKind == JsonValueKind.Number ? current.GetDecimal() : null, Change,
                     current.ValueKind == JsonValueKind.String ? current.GetString() : null);

@@ -7,11 +7,26 @@ VMR_COMMIT='96856fd726ffd058fb3dfef0851dbafc7ef3b011'
 VSTEST_COMMIT='778909789acae5b87b753b4daea984e4b23a1e4c'
 SOURCE_SHA256='f8c1fd1e5a09563257011cab551f688a7fe45e8f91b5ddb6fd468dd58da30231'
 
+def verify_issuance_parent(installed_root,output):
+    run=os.environ.get('GITHUB_RUN_ID','');attempt=os.environ.get('GITHUB_RUN_ATTEMPT','')
+    if not run.isdigit() or not attempt.isdigit() or os.environ.get('GITHUB_ACTIONS')!='true' or os.environ.get('RUNNER_ENVIRONMENT')!='github-hosted':raise ValueError('Exact freshly issued hosted SDK lane required')
+    if os.getuid()!=os.geteuid() or os.geteuid()==0:raise ValueError('SDK caller must be ordinary nonroot runner')
+    expected=pathlib.Path('/')/('astra-canvas-sdk-'+SDK_VERSION+'-'+run+'-'+attempt)
+    root=pathlib.Path(installed_root)
+    if root!=expected or root.exists() or root.is_symlink() or root.parent.resolve(strict=True)!=root.parent:raise ValueError('Exact unissued protected SDK path required')
+    parent=root.parent;observed=parent.lstat();mode=observed.st_mode;writable=os.access(parent,os.W_OK)
+    admitted=stat.S_ISDIR(mode) and observed.st_uid==0 and observed.st_gid==0 and not writable
+    node={'path':str(parent),'type':'directory' if stat.S_ISDIR(mode) else 'regular' if stat.S_ISREG(mode) else 'unadmitted','mode':stat.S_IMODE(mode),'installedUid':observed.st_uid,'installedGid':observed.st_gid,'device':observed.st_dev,'inode':observed.st_ino,'writableByCaller':writable}
+    receipt={'status':'STRICT_FRESH_SDK_PARENT_ADMITTED_BEFORE_EXTRACTION' if admitted else 'STRICT_FRESH_SDK_PARENT_REFUSED_BEFORE_EXTRACTION','root':str(root),'runnerUid':os.getuid(),'runnerEuid':os.geteuid(),'runnerGid':os.getgid(),'runnerEgid':os.getegid(),'supplementaryGroups':os.getgroups(),'observedParent':node,'qualification':'Exact original parent observed before fresh private subtree creation. Same full ancestor/descendant guard remains mandatory before every SDK archive admission; sampled facts do not claim an atomic lease or other-administrator protection.'}
+    destination=pathlib.Path(output);destination.parent.mkdir(parents=True,exist_ok=True);destination.write_text(json.dumps(receipt,indent=2)+'\n')
+    if not admitted:raise ValueError('SDK issuance parent is not root-owned and nonwritable by actual runner: '+str(parent))
+    return receipt
+
 def verify_write_isolation(installed_root):
     run=os.environ.get('GITHUB_RUN_ID','');attempt=os.environ.get('GITHUB_RUN_ATTEMPT','')
     if not run.isdigit() or not attempt.isdigit() or os.environ.get('GITHUB_ACTIONS')!='true' or os.environ.get('RUNNER_ENVIRONMENT')!='github-hosted':raise ValueError('Exact freshly issued hosted SDK lane required')
     if os.getuid()!=os.geteuid() or os.geteuid()==0:raise ValueError('SDK caller must be ordinary nonroot runner')
-    expected=pathlib.Path('/opt')/('astra-canvas-sdk-'+SDK_VERSION+'-'+run+'-'+attempt)
+    expected=pathlib.Path('/')/('astra-canvas-sdk-'+SDK_VERSION+'-'+run+'-'+attempt)
     root=pathlib.Path(installed_root)
     if root!=expected or root.is_symlink() or root.resolve(strict=True)!=expected:raise ValueError('Exact original protected SDK issuance path required')
     nodes=[]
@@ -106,3 +121,8 @@ def admit(installed_root,archive_path,metadata_record,output):
     receipt={'sdkWriteIsolation':verified['sdkWriteIsolation'],'sdkExecutable':record,'archivePath':str(archive),'archiveUrl':SDK_URL,'archiveSha512':SDK_SHA512,'sdkFiles':expected,'sdkLinks':links,'sdkDirectories':directories,'provider':metadata_record,'vmrCommit':VMR_COMMIT,'vstestCommit':VSTEST_COMMIT,'sourceSha256':SOURCE_SHA256,'sourceLineageAccepted':True,'depsSha256':digest(deps),'testPlatformLibraries':libraries,'qualification':'Complete official archive byte/type/permission/directory inventory and immutable source lineage; archive uid/gid retained as provenance, installed ownership not asserted equal. Sampled pre/post hashes are not an atomic file lease; caller must recheck before/after native execution.'}
     (out/'official-sdk-admission.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return record,receipt
+
+if __name__=='__main__':
+    import sys
+    if len(sys.argv)!=4 or sys.argv[1]!='--verify-issued-parent':raise ValueError('Exact pre-issuance diagnostic command required')
+    verify_issuance_parent(sys.argv[2],sys.argv[3])

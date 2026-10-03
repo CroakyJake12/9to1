@@ -55,10 +55,11 @@ jobs:
         if: matrix.cohort == 'owning'
         run: |
           set -euo pipefail
-          sdk_root="/opt/astra-canvas-sdk-10.0.301-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          sdk_root="/astra-canvas-sdk-10.0.301-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           sdk_archive="$RUNNER_TEMP/astra-canvas-sdk-10.0.301.tar.gz"
           test ! -e "$sdk_root"
           test ! -e "$sdk_archive"
+          python3 .github/scripts/astra-canvas-sdk-archive-admission.py --verify-issued-parent "$sdk_root" artifacts/canvas65-managed/sdk-issued-parent-before-extraction.json
           curl --fail --location --proto '=https' --tlsv1.2 --max-time 300 'https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.301/dotnet-sdk-10.0.301-linux-x64.tar.gz' --output "$sdk_archive"
           printf '%s  %s\n' 'cfbeec3a3a1d3ad3e168e37a77c4cc26c23125acd84a86d014047da3ecffce4c368a9acac4d7c950a047fa3d98989ce8aea69f8e5842cb6d330e8911e1c335a7' "$sdk_archive" | sha512sum --check --strict
           sudo -n mkdir "$sdk_root"
