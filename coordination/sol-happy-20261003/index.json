@@ -45,7 +45,7 @@
     "Jacob local delivery destination/tooling unverified",
     "Team A/B current source reconciliation, shared patch acknowledgement and exact final integrated acceptance pending",
     "All deployed SH12 journeys NOT-RUN; exact full mandatory/native/donor/platform/product acceptance and global semantic denominator incomplete",
-    "Current LE full text byte-identical at final revision; full semantic/platform denominator incomplete,25 bounded groups NOT_RUN. Versioned owner API catalogues and async session/store/read/publication contracts remain. SDK6 retained103 successful strict-drained commands/two Debug suites then source-owner tooling refusal; corrected freshd302 SDK7 isolated run underway, global shared adoption/whole owner ACK separate. Public OAuth adopted117+27+222 pass; exact CUI one-line source-owner ACK verified but fresh B browser/Wave/framework acceptance pending. Browser configured client/sign-in/disposal/focus and installed/provider/SH13/PC gates remain open."
+    "Full LE semantic/platform denominator incomplete;25 bounded groups NOT_RUN, owner APIs and async session/store/read/publication gates remain. Isolated SDK7 COMPLETE all6 original Debug/Release suites and379 strict-drained commands pass; shared adoption and whole-owner ACK remain separate. Public OAuth117+27+222 pass. Old B receiver fixture HELD after caller loss; fresh isolated8799 custody candidate under independent review. Configured browser sign-in/disposal/focus/input/AX/Wave, genuine provider/installed/SH13/PC gates remain open."
   ],
   "specification": {
     "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "7fc259f1b3aaa02952e2d32a8316fd9d0650a814",
+  "candidateHead": "7236b58fbdfa45bac720b249ddffea6212cce41e",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -92,7 +92,20 @@
   },
   "browserFixture": {
     "source": "27aa37abb0462869d2b1cb1aa5ee1371b8b13415",
-    "state": "Ready for each receiver own local fixture and reviewed public OAuth transport. Final117+27+222 local actual Workerd/D1 pass; C1 independent27; strict cleanup. B configured browser journey and disposal remain owner dependencies.",
-    "evidence": "Release e70c36f1f74f47f7ef430998b07ce006b723894a:handoff/team-c/public-client-cors and public-oauth-adoption.json"
+    "state": "Original AEDC receiver fixture now HELD on B-host tool-session63118 loss: no strict receipt,8798 still live/private state retained, original kernel handles/reap authority unavailable. No foreign numeric-ID recovery or private deletion authorized. Exact public OAuth source remains adopted. B own browser journeys NOT_RUN; fresh isolated8799 candidate under C1 review, original failure retained.",
+    "evidence": "Release e70c36f1f74f47f7ef430998b07ce006b723894a:handoff/team-c/public-client-cors and public-oauth-adoption.json",
+    "recovery": {
+      "requestCommit": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+      "requestSha256": "09be131a2a0e85b339aa8ba19c1f74530fce8b98dbe212070a7602b4fcee4f95",
+      "reviewedCandidate": "6d7aaf92",
+      "state": "HELD pending failure-preserving PTY control cleanup and complete durable journal write. Bounded actual PTY topology negative reproduces custodian loss in same caller session; exact B tool failure cause remains unknown. New detached custodian/private EOF and isolated8799 proposal does not recover old B fixture. C1 network and9 kernel controls pass; fresh real8799 Workerd NOT_RUN."
+    }
+  },
+  "sdk7LocalValidation": {
+    "source": "d30253dd94c1d9978367adb80acfd4c4f74c2931",
+    "cutSha256": "9100687593dac2e9efb7fecd951b91ce6ba69995cc880bb032d945a0d627ba2d",
+    "state": "COMPLETE EXIT0: ACTUAL_WHOLE_ACCOUNTS_ORGPOOLS_WEB_DEBUG_RELEASE_SDK_PASS;379/379 commands exit0, all379 strict drains TRUE; all six original whole Accounts/OrgPools/Web Debug/Release suites exit0. Both configurations51 compiled-project entries/source-built tasks retained. Original source/physical PE-PDB/restore/output/tree gates pass,110292911B evidence within original256MiB cap. Counts are execution/evidence records, not semantic acceptance.",
+    "audit": "8c7642d1a82c4509b70466df6a0aa948da421eb7",
+    "globalAdoption": false
   }
 }
