@@ -1,0 +1,15 @@
+{
+  "reviewedPackagingParent": "67e1419",
+  "incomingSource": "830f747b70df07797c586f6124890fa5028452b2",
+  "stagedArtifactHashesChecked": 6,
+  "historicalFinalArtifactHashesChecked": 19,
+  "artifactHashErrors": [],
+  "sourceHashesChecked": 4,
+  "sourceHashErrors": [],
+  "ancestry": "a63d77f and both named fix commits ancestors of830f747;830f747 not integrated",
+  "counts": "route22/account28; original account probes repair both defects",
+  "disposition": "ACK bounded incoming-source threeP2 closure; no release/browser/provider acceptance",
+  "referenceNote": "Immutable original review basenames differ from packaged bootstrap-tests.log/account-tests.log/account-original-probes.log. Recommend manifest alias mapping; preserve original review bytes.",
+  "cloudflare": "No tools/OAuth/account execution verified; private versus selected plugin equivalence unresolved",
+  "testsRerun": false
+}
