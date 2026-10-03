@@ -1,5 +1,5 @@
 {
-  "status": "Exact actual prior TRX method tuples plus source-owned added methods; theory rows are separate outcomes",
+  "status": "HELD PRIVATE IMAP04 FULL CURRENT27 ACCEPTED SOURCE/CASE REFRESH; UNCOMPILED/UNRUN; INDEPENDENT PROVIDER AND FULL METADATA PEERS REQUIRED",
   "originalTRX": [
     {
       "path": "trx/ai.trx",
@@ -494,6 +494,18 @@
       {
         "fullClass": "Haven.Core.Tests.VersionedAtomicSettingsStoreTests",
         "method": "Unrecoverable_corruption_is_not_empty_state_and_cannot_be_overwritten"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.GraphPublicationIntentTests",
+        "method": "Publication_detaches_caller_graph_and_complete_scope_tuple"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.GraphPublicationIntentTests",
+        "method": "Claimed_small_node_count_stops_at_actual_existing_schema_budget_sentinel"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.GraphPublicationIntentTests",
+        "method": "Explicit_configuration_budget_rejects_oversized_scalar_or_aggregate_before_clone"
       }
     ],
     "files-desktop": [
@@ -1300,6 +1312,142 @@
       {
         "fullClass": "Haven.Desktop.Tests.WriteSaveSnapshotTests",
         "method": "Actual_physical_save_retains_captured_content_and_native_later_edits_remain_dirty_until_their_own_save"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_Journey_panel_requires_individual_Home_approval_and_Finish_never_applies_pending_request"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_panel_close_retains_exact_pending_Home_request_for_explicit_decline_without_write"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_routed_Review_cannot_adopt_replacement_settings_UUID_or_write_foreign_root"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_native_panel_close_during_real_settings_publication_revokes_original_display_and_preserves_bytes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_native_panel_lost_physical_publication_return_stays_unknown_until_original_receipt_and_Finish_never_replays"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Native_original_display_factory_preserves_host_token_and_denies_replacement_UUID_before_UI_construction"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Original_host_lifetime_guard_survives_factory_reload_and_revokes_real_final_publication"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_native_typed_step_review_retains_original_intent_and_duration_through_later_edits_and_physical_reopen"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_native_invalid_wait_draft_is_refused_before_Home_request_or_owner_write"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_ordered_native_draft_keeps_step_ids_order_and_original_review_through_physical_commit"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+        "method": "Actual_displayed_journey_search_preserves_canonical_ids_and_both_physical_stores"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsNativeJourneyHostTests",
+        "method": "Actual_host_mount_preserves_Map_and_routes_exact_Home_native_individual_review_before_actual_Journey_save"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsNativeJourneyHostTests",
+        "method": "Provider_retirement_during_actual_owner_identity_read_never_mounts_a_late_panel_or_adopts_new_actor"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.MapsNativeJourneyHostTests",
+        "method": "Actual_host_replacement_during_held_Settings_final_publication_retires_same_panel_and_preserves_physical_bytes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Canonical_launcher_keyboard_opens_actual_Shelf_host_without_approving_or_writing"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Real_rendered_target_actions_require_Home_then_reload_canonical_identity_without_Finish_replay"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Real_rendered_pending_request_survives_tab_close_for_exact_Home_decline_without_owner_write"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Actual_tab_close_during_original_identity_or_final_publication_denies_without_physical_write"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Old_rendered_display_refuses_independently_Home_approved_replacement_root_without_new_pending_or_foreign_write"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Actual_delayed_UI_publication_after_close_preserves_pending_owner_handle_without_late_presentation"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Genuine_rendered_manual_collection_and_canonical_membership_require_individual_Home_and_survive_reopen_without_replay"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Genuine_rendered_pending_collection_survives_close_and_exact_decline_without_collection_publication"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Genuine_native_collection_proposal_is_captured_before_actual_original_identity_await"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Actual_native_unknown_save_guidance_retains_original_receipt_recovery_without_replaying_publication"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Actual_native_pin_tag_order_review_keeps_original_edit_across_real_identity_wait_and_recovers_ack"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Actual_native_smart_criteria_are_original_before_await_and_filter_only_canonical_local_matches"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Real_native_search_filters_genuine_approved_targets_without_Home_or_settings_write_and_retires_after_close"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+        "method": "Actual_owned_page_refuses_overlong_or_retired_query_without_losing_original_valid_search_or_writing"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+        "method": "EveryBuiltInAppHasTheExpectedConcreteRoute"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+        "method": "RouteMatrixCoversTheCompleteBuiltInInventory"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+        "method": "UserAppsFallBackToTheirCompatibleBaseMode"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+        "method": "WebAliasUsesTheExistingBrowseRoute"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+        "method": "SpreadsheetAliasUsesTheExistingDataWorkspaceRoute"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+        "method": "DatabaseAliasUsesTheExistingDataWorkspaceRoute"
       }
     ],
     "home-full": [
@@ -2258,6 +2406,38 @@
       {
         "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
         "method": "Unsupported_browser_or_schema_and_invalid_arguments_fail_closed"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Observer_reads_actual_persisted_record_without_FileHome_lock_reentry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Lost_actual_write_acknowledgement_preserves_bytes_and_stale_retry_does_not_republish"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Guard_refusal_and_CAS_conflict_never_notify_observer"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Final_claimed_fence_holds_actual_Home_revocation_until_explicit_owner_release"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Original_configuration_swap_between_capture_and_final_acquisition_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Retired_original_lifetime_or_disposed_fence_never_reacquires_authority"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Actual_original_ownership_receipt_substitution_before_final_acquisition_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Actual_caller_revocation_before_final_acquisition_denies_without_reclaim"
       }
     ],
     "infrastructure": [
@@ -2692,6 +2872,206 @@
       {
         "fullClass": "Haven.Infrastructure.Tests.WriteWordProcessorTests",
         "method": "Text_editing_preserves_existing_run_formatting"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfLibraryWorkspaceTests",
+        "method": "Real_manual_target_review_requires_Home_accept_then_reload_keeps_canonical_identity_and_Finish_never_replays"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfLibraryWorkspaceTests",
+        "method": "Close_retains_pending_request_for_real_Home_decline_and_audit_only_Finish"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfLibraryWorkspaceTests",
+        "method": "Original_display_refuses_changed_physical_UUID_on_review_and_reload_without_foreign_write"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfLibraryWorkspaceTests",
+        "method": "Retired_original_host_after_reload_denies_original_approved_review_without_new_Home_or_settings_effect"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfLibraryWorkspaceTests",
+        "method": "Queued_original_factory_keeps_prequeue_UUID_and_rejects_replacement_without_adopting_it"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_physical_settings_held_before_final_Home_acquisition_denies_late_action_or_original_receipt_change"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_Settings_first_Home_lease_holds_late_block_until_physical_owner_commit_then_preserves_known_receipt"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_commit_return_loss_and_hidden_receipt_stays_unknown_until_original_evidence_without_Home_reentry_deadlock"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Missing_actual_final_fence_composition_denies_without_owner_write_or_replay"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_owner_library_revision_change_before_settings_transaction_preserves_competing_root_without_commit"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_original_capability_competing_completion_waits_for_physical_owner_publication_and_cannot_erase_receipt"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_original_collection_review_commits_once_and_recovers_only_exact_physical_receipt"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_collection_final_claim_denies_actual_late_Home_change_without_publication_or_replay"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_collection_original_display_retirement_denies_before_claim_and_preserves_both_stores"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_collection_competing_independent_store_revision_preserves_competitor_without_original_commit"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_collection_original_completion_waits_for_actual_publication_and_cannot_erase_known_receipt"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_claimed_collection_capture_refuses_substitution_or_foreign_composition_without_consuming_original_effect"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_item_edit_approval_original_receipt_and_lost_return_recovery_never_replays"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_item_edit_final_original_Home_change_denies_physical_publication"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Original_item_edit_tags_are_frozen_before_real_identity_return_wait"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_smart_collection_freezes_local_criteria_and_retains_canonical_match_after_reopen"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_smart_collection_known_or_hidden_lost_return_recovers_only_original_receipt"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_smart_collection_final_original_Home_change_denies_physical_publication"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_item_edit_original_completion_waits_for_actual_publication_and_cannot_erase_known_receipt"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_claimed_item_edit_capture_refuses_substitution_or_foreign_composition_without_consuming_original_effect"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Actual_item_edit_independent_same_store_revision_preserves_competitor_and_never_replays"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+        "method": "Genuine_approved_original_request_rejects_misbound_raw_source_before_consumption_or_publication"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_SQLite_Home_settings_owner_requires_individual_approval_and_retains_exact_known_commit_on_retry"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Suspended_actual_identity_read_rejects_actor_change_before_first_library_display_without_mutation_or_pending"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_UUID_replacement_before_review_cannot_be_adopted_by_old_display_and_supplied_bytes_are_preserved"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_settings_final_publication_lease_rejects_revoked_actor_or_disposed_display"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Owning_proposal_count_lie_stops_at_sentinel_before_actual_identity_or_Home_work"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_owning_review_detaches_caller_lists_before_suspended_identity_then_commits_only_reviewed_values"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_canonical_proposal_validation_denies_invalid_target_or_missing_place_before_Home_pending"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_inner_publication_lost_return_uses_exact_receipt_or_retains_unknown_without_replay"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_rejected_begin_or_claim_retains_exact_audit_attempt_without_Begin_Claim_or_owner_write_replay"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfMapsOwnedLibraryTests",
+        "method": "Actual_pending_publication_origin_loss_returns_exact_unavailable_review_for_explicit_Home_closure"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfCollectionCommitAdmissionTests",
+        "method": "Collection_mutations_require_final_admission_and_preserve_physical_root_on_refusal"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_mounted_reference_response_uses_personal_Data_owner_and_saves_only_selected_original_reference"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_native_query_change_retires_completed_old_record_selection_before_answer_publication"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Canonical_Respond_route_requires_explicit_actual_lookup_and_retains_same_durable_response_on_reopen"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_personal_bound_stores_read_paginated_canonical_choices_and_retain_reference_answer_without_lookup_writes"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_original_session_never_adopts_replaced_same_profile_receipt_but_explicit_fresh_open_can_read"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_original_ownership_receipt_retired_during_final_repository_identity_withholds_choices"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_completed_repository_read_lost_return_reports_unavailable_not_empty_and_invalidates_original_choices"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_completed_repository_return_cannot_publish_after_original_lifetime_or_Data_revision_retires"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_foreign_Home_composition_and_foreign_response_or_table_configuration_do_not_gain_lookup_reads"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+        "method": "Actual_original_publication_and_response_reads_refuse_foreign_actor_and_store_before_content_load"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfItemEditCommitAdmissionTests",
+        "method": "Actual_pin_tags_and_order_edit_requires_admission_and_keeps_original_target"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ShelfItemEditCommitAdmissionTests",
+        "method": "Tags_are_captured_before_actual_publication_wait_and_later_caller_mutation_is_not_saved"
       }
     ],
     "mail-full": [
@@ -2746,6 +3126,14 @@
       {
         "fullClass": "HavenOS.Mail.Tests.MailKitSubmissionValidationTests",
         "method": "Attachment_draft_is_refused_before_credentials_or_connection_instead_of_sending_without_files"
+      },
+      {
+        "fullClass": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests",
+        "method": "Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit"
+      },
+      {
+        "fullClass": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests",
+        "method": "Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit"
       }
     ],
     "runtime": [
@@ -3268,6 +3656,112 @@
       {
         "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
         "method": "SessionChangedDuringOwnerObservationRejectsProposal"
+      }
+    ],
+    "forms-cui-full": [
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativeHomePublicationResponseTests",
+        "method": "Actual_Home_owned_native_publication_recovers_failed_mount_and_original_session_denies_revocation_or_root_replacement"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePageOrderOwnerTests",
+        "method": "Native_page_order_actions_preserve_ids_published_version_and_reject_stale_or_revoked_owner"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewTests",
+        "method": "Native_ranking_preserves_option_identity_order_and_blocks_empty_required_draft"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewTests",
+        "method": "Invalid_visible_numeric_text_cannot_submit_last_valid_value"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewTests",
+        "method": "Native_table_edits_typed_cells_preserves_row_ids_and_blocks_stale_valid_submission"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewTests",
+        "method": "Actual_native_set_choices_validate_required_answers_and_mark_stable_ids"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewTests",
+        "method": "Clearing_optional_typed_native_input_removes_prior_value_without_stale_submission"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewTests",
+        "method": "Actual_native_quiz_fields_keep_option_identity_question_release_and_detached_control_isolation"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePublicationValidatorTests",
+        "method": "Typed_table_publishes_but_reference_column_requires_actual_Data_lookup"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePublicationValidatorTests",
+        "method": "Draft_structure_is_editable_but_publication_requires_actual_configured_capability"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativeResponseSurfaceTests",
+        "method": "Published_workspace_retry_opens_same_durable_response_and_real_native_answers_save"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativeResponseSurfaceTests",
+        "method": "Native_answers_save_through_durable_owner_and_invalid_visible_draft_blocks_submission_after_partial_save"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativeResponseSurfaceTests",
+        "method": "Native_conflict_retains_draft_until_explicit_reload_and_authentication_change_clears_surface_without_write"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativeResponseSurfaceTests",
+        "method": "Definition_and_scope_keep_published_schema_and_reject_old_authentication_before_response_operation"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativeResponseSurfaceTests",
+        "method": "Published_native_columns_reflow_same_inputs_without_saving_draft_then_submit_through_actual_store"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Row_limit_inspector_retains_invalid_and_conflicted_text_until_saved_or_discarded"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Fixed_row_authoring_keeps_stable_ids_and_published_rows_when_draft_changes"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Table_column_inspector_persists_typed_stable_columns_and_preserves_conflicted_drafts"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Palette_and_choice_inspector_preserve_typed_ids_dirty_edits_and_immutable_publication"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Actual_native_publication_capabilities_preserve_advanced_draft_and_prior_active_version"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Owning_builder_saves_and_moves_canonical_field_then_reopens_immutable_publication_and_preserves_dirty_edit_on_conflict"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Live_regex_tester_uses_runtime_semantics_without_changing_physical_form"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormsCuiWorkspaceTests",
+        "method": "Mounted_regex_inputs_refresh_live_results_and_preserve_invalid_pattern"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewViewportTests",
+        "method": "Actual_native_viewport_switch_preserves_same_canonical_response_and_invalid_numeric_draft"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewViewportTests",
+        "method": "Actual_preview_columns_reflow_retained_canonical_fields_and_response_without_rebuilding_inputs"
+      },
+      {
+        "fullClass": "HavenOS.Forms.Tests.FormNativePreviewViewportTests",
+        "method": "Actual_window_width_reflows_visible_fields_in_order_and_quiz_advance_reserves_no_hidden_slots"
       }
     ]
   }
