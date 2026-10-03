@@ -1,0 +1,222 @@
+[
+  {
+    "argv": [
+      "sudo",
+      "-n",
+      "--",
+      "cat",
+      "/sys/kernel/security/apparmor/profiles"
+    ],
+    "exit": 0,
+    "pid": 5892,
+    "startedUnixNs": 1791062317336401096,
+    "finishedUnixNs": 1791062317343619771,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 3134,
+    "stderrBytes": 0,
+    "stdoutSha256": "ef2454359440858f5fa6603ba0c9d7c1ac72bd19f1d5a5b1434c45110e12c0d9",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "apparmor_parser",
+      "--version"
+    ],
+    "exit": 0,
+    "pid": 5894,
+    "startedUnixNs": 1791062317343923851,
+    "finishedUnixNs": 1791062317345090735,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 101,
+    "stderrBytes": 0,
+    "stdoutSha256": "6276efb97a7dd291906a56b72319f1932d883167bb55d922aae9f9c56fa685f9",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "bwrap",
+      "--version"
+    ],
+    "exit": 0,
+    "pid": 5895,
+    "startedUnixNs": 1791062317345241283,
+    "finishedUnixNs": 1791062317346389048,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 17,
+    "stderrBytes": 0,
+    "stdoutSha256": "3a0618bed56bc5ced74eea5965def37047e2b879a25ceb85bbc964efbe00489e",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "uname",
+      "-a"
+    ],
+    "exit": 0,
+    "pid": 5896,
+    "startedUnixNs": 1791062317346655862,
+    "finishedUnixNs": 1791062317348705020,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 113,
+    "stderrBytes": 0,
+    "stdoutSha256": "6ecb75ce9d770bd2cfb6898b267dd8f29398821b25cb233675e182e0323ba0d2",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "dpkg-query",
+      "-W",
+      "-f=${Package} ${Version} ${Architecture}\n",
+      "apparmor",
+      "bubblewrap"
+    ],
+    "exit": 0,
+    "pid": 5897,
+    "startedUnixNs": 1791062317348967087,
+    "finishedUnixNs": 1791062317358419860,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 83,
+    "stderrBytes": 0,
+    "stdoutSha256": "92e4aa521bd6334d6ea40145d93997ba7e9b763a325b5bf71b93d8cbc9f745ef",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "apparmor_parser",
+      "--skip-kernel-load",
+      "--skip-cache",
+      "/home/runner/work/9to1/9to1/.github/validation/picture-bwrap-upstream-abi4.profile"
+    ],
+    "exit": 0,
+    "pid": 5898,
+    "startedUnixNs": 1791062317358752873,
+    "finishedUnixNs": 1791062317364777133,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "apparmor_parser",
+      "--preprocess",
+      "--skip-kernel-load",
+      "--skip-cache",
+      "/home/runner/work/9to1/9to1/.github/validation/picture-bwrap-upstream-abi4.profile"
+    ],
+    "exit": 0,
+    "pid": 5900,
+    "startedUnixNs": 1791062317365094302,
+    "finishedUnixNs": 1791062317368270400,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 17979,
+    "stderrBytes": 0,
+    "stdoutSha256": "f6baf29fa5dfd7fb1d4d717fea9cfdfe5a78303494dd0cafb69c23c1533b01fa",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "sudo",
+      "-n",
+      "--",
+      "apparmor_parser",
+      "--add",
+      "--skip-cache",
+      "/home/runner/work/9to1/9to1/.github/validation/picture-bwrap-upstream-abi4.profile"
+    ],
+    "exit": 0,
+    "pid": 5902,
+    "startedUnixNs": 1791062317368818919,
+    "finishedUnixNs": 1791062317380487443,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "sudo",
+      "-n",
+      "--",
+      "cat",
+      "/sys/kernel/security/apparmor/profiles"
+    ],
+    "exit": 0,
+    "pid": 5905,
+    "startedUnixNs": 1791062317380864363,
+    "finishedUnixNs": 1791062317387339539,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 3173,
+    "stderrBytes": 0,
+    "stdoutSha256": "1b50acaaee939c0d62c9e979969661ec183a0a25aa15a85a94ef6273a457d514",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "/usr/bin/bwrap",
+      "--unshare-all",
+      "--die-with-parent",
+      "--ro-bind",
+      "/",
+      "/",
+      "/usr/bin/true"
+    ],
+    "exit": 0,
+    "pid": 5907,
+    "startedUnixNs": 1791062317415117186,
+    "finishedUnixNs": 1791062317418917422,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 0,
+    "stderrBytes": 0,
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "/usr/bin/bwrap",
+      "--unshare-all",
+      "--die-with-parent",
+      "--ro-bind",
+      "/",
+      "/",
+      "--proc",
+      "/proc",
+      "/bin/sh",
+      "-c",
+      "printf \"%s\\n\" \"$$\"; cat /proc/$$/attr/current; cat /proc/$$/status"
+    ],
+    "exit": 0,
+    "pid": 5910,
+    "startedUnixNs": 1791062317419278729,
+    "finishedUnixNs": 1791062317424726321,
+    "timedOut": false,
+    "truncated": false,
+    "maximumBytesPerStream": 262144,
+    "stdoutBytes": 1517,
+    "stderrBytes": 0,
+    "stdoutSha256": "fc7bb70d31d53569c61f96789360914cff687f740b125c586a6051d07947e7b3",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

@@ -1,0 +1,59 @@
+  CakeOS.Cui.Language -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Language/release_linux-x64/CakeOS.Cui.Language.dll
+  CakeOS.Cui.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Core/release_linux-x64/CakeOS.Cui.Core.dll
+  Haven.Core -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Core/release_linux-x64/Haven.Core.dll
+  NineToOne.Cui.AI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Cui.AI/release_linux-x64/NineToOne.Cui.AI.dll
+  Haven.Application -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Application/release_linux-x64/Haven.Application.dll
+  Dulche.Runtime -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Dulche.Runtime/release_linux-x64/Dulche.Runtime.dll
+  Den -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Den/release_linux-x64/Den.dll
+  HavenOS.Home -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home/release_linux-x64/HavenOS.Home.dll
+  DevAnalyzers -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/DevAnalyzers/release_linux-x64/DevAnalyzers.dll
+  Avalonia.Analyzers.CSharp -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Analyzers.CSharp/release_linux-x64/Avalonia.Analyzers.CSharp.dll
+  Avalonia.Analyzers.CodeFixes.CSharp -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Analyzers.CodeFixes.CSharp/release_linux-x64/Avalonia.Analyzers.CodeFixes.CSharp.dll
+  Avalonia.Analyzers.VisualBasic -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Analyzers.VisualBasic/release_linux-x64/Avalonia.Analyzers.VisualBasic.dll
+  DevGenerators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/DevGenerators/release_linux-x64/DevGenerators.dll
+  Avalonia.Base -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Base/release_net10.0_linux-x64/Avalonia.Base.dll
+  Avalonia.Remote.Protocol -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Remote.Protocol/release_net10.0_linux-x64/Avalonia.Remote.Protocol.dll
+  Avalonia.Controls -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Controls/release_net10.0_linux-x64/Avalonia.Controls.dll
+  DevGenerators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/DevGenerators/release/DevGenerators.dll
+  Avalonia.Build.Tasks -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll
+  Avalonia.MicroCom -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.MicroCom/release_net10.0_linux-x64/Avalonia.MicroCom.dll
+  Avalonia.OpenGL -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.OpenGL/release_net10.0_linux-x64/Avalonia.OpenGL.dll
+  Avalonia.Vulkan -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Vulkan/release_net10.0_linux-x64/Avalonia.Vulkan.dll
+  Avalonia.Metal -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Metal/release_net10.0_linux-x64/Avalonia.Metal.dll
+  Avalonia.Skia -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Skia/release_net10.0_linux-x64/Avalonia.Skia.dll
+  Avalonia.Win32.Automation -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Win32.Automation/release_net10.0_linux-x64/Avalonia.Win32.Automation.dll
+  Avalonia.Win32 -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Win32/release_net10.0_linux-x64/Avalonia.Win32.dll
+  Avalonia.Markup -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Markup/release_net10.0_linux-x64/Avalonia.Markup.dll
+  Avalonia.Markup.Xaml -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Markup.Xaml/release_net10.0_linux-x64/Avalonia.Markup.Xaml.dll
+  Avalonia.DesignerSupport -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.DesignerSupport/release_net10.0_linux-x64/Avalonia.DesignerSupport.dll
+  Avalonia.Dialogs -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Dialogs/release_net10.0_linux-x64/Avalonia.Dialogs.dll
+  Avalonia.Build.Tasks -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Build.Tasks/release_linux-x64/Avalonia.Build.Tasks.dll
+  Avalonia.Generators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Generators/release_linux-x64/Avalonia.Generators.dll
+  Avalonia -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia/release_net10.0_linux-x64/Avalonia.dll
+  Avalonia.Native -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Native/release_net10.0_linux-x64/Avalonia.Native.dll
+  Avalonia.FreeDesktop -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.FreeDesktop/release_net10.0_linux-x64/Avalonia.FreeDesktop.dll
+  Avalonia.DBus.Generators -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.DBus.Generators/release_linux-x64/Avalonia.DBus.Generators.dll
+  Avalonia.FreeDesktop.AtSpi -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.FreeDesktop.AtSpi/release_net10.0_linux-x64/Avalonia.FreeDesktop.AtSpi.dll
+  Avalonia.X11 -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.X11/release_net10.0_linux-x64/Avalonia.X11.dll
+  Avalonia.HarfBuzz -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.HarfBuzz/release_net10.0_linux-x64/Avalonia.HarfBuzz.dll
+  Avalonia.Desktop -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Desktop/release_net10.0_linux-x64/Avalonia.Desktop.dll
+  Avalonia.Themes.Fluent -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Themes.Fluent/release_net10.0_linux-x64/Avalonia.Themes.Fluent.dll
+  Avalonia.Fonts.Inter -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Fonts.Inter/release_net10.0_linux-x64/Avalonia.Fonts.Inter.dll
+  Avalonia.Headless -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Avalonia.Headless/release_net10.0_linux-x64/Avalonia.Headless.dll
+  CakeOS.Cui.Themes -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Themes/release_linux-x64/CakeOS.Cui.Themes.dll
+  CakeOS.Cui.Runtime -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime/release_linux-x64/CakeOS.Cui.Runtime.dll
+  HavenOS.Home.NativeUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Home.NativeUI/release_linux-x64/HavenOS.Home.NativeUI.dll
+  Haven.UI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.UI/release_linux-x64/Haven.UI.dll
+  HavenOS.Files.CUI -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Files.CUI/release_linux-x64/HavenOS.Files.CUI.dll
+  HavenOS.Mail -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Mail/release_linux-x64/HavenOS.Mail.dll
+  HavenOS.Files.NativeHost -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/HavenOS.Files.NativeHost/release_linux-x64/HavenOS.Files.NativeHost.dll
+  CakeOS.Platform -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/CakeOS.Platform/release_linux-x64/CakeOS.Platform.dll
+  Haven.Infrastructure -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/Haven.Infrastructure/release_linux-x64/Haven.Infrastructure.dll
+  NineToOne.Os.Shell -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Os.Shell/release_linux-x64/NineToOne.Os.Shell.dll
+  NineToOne.Os.Supervisor.Root.Tests -> /home/runner/work/9to1/9to1/artifacts/root14-managed-build/bin/NineToOne.Os.Supervisor.Root.Tests/release_linux-x64/NineToOne.Os.Supervisor.Root.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.30
