@@ -1,0 +1,65 @@
+{
+  "status": "SOURCE/LICENCE/EXPLICIT-VERSION EVIDENCE; ACTUAL RESTORE/DLL/API/RUNTIME GATE PENDING",
+  "angouriVersion": "2.5.0",
+  "angouriUpstream": "ab7a8bd6b92d9ae99b3e23e51b10dca5c0e8fe11",
+  "licenceFiles": [
+    {
+      "target": "AngouriMath-2.5.0/LICENSE.md",
+      "source": "/workspace/astra-source/worker6-maintained-symbolic-library-inventory177/angouri/LICENSE.md",
+      "bytes": 1055,
+      "sha256": "1264e9521026b83dad6ee044a3183f1eb2e7232c68ad2856ca7468065965d3e3",
+      "licence": "MIT"
+    },
+    {
+      "target": "Antlr4.Runtime.Standard-4.13.1/LICENSE.txt",
+      "source": "/workspace/astra-source/worker6-angouri250-net10-dependency-source-inventory192/maintained-source/antlr4.13.1/LICENSE.txt",
+      "bytes": 1480,
+      "sha256": "3db1fb3ee79a4b4f9918fc4d0f6133bf18a3cf787f126cd22f8aa9b862281c0c",
+      "licence": "BSD-3-Clause"
+    },
+    {
+      "target": "GenericTensor-1.0.4/LICENSE",
+      "source": "/workspace/astra-source/worker3-generictensor104-official-package-license-evidence01/LICENSE",
+      "bytes": 1098,
+      "sha256": "347c7882d824d724f58f2a2dc839f3a7cf87b8384c2d447b9ad6dca890dd86ff",
+      "licence": "MIT"
+    },
+    {
+      "target": "HonkSharp-1.0.3/LICENSE",
+      "source": "/workspace/astra-source/worker6-angouri250-net10-dependency-source-inventory192/maintained-source/honksharp1.0.3/LICENSE",
+      "bytes": 1072,
+      "sha256": "7d05d940af97a7a478f2bc3f4b3df595ff39f7f62b5a777624d85fc4bf5b94fb",
+      "licence": "MIT"
+    },
+    {
+      "target": "PeterO.Numbers-1.8.0/LICENSE.md",
+      "source": "/workspace/astra-source/worker6-angouri250-net10-dependency-source-inventory192/maintained-source/peteronumbers1.8.0/LICENSE.md",
+      "bytes": 278,
+      "sha256": "3cb1fbbaec53f947877ce3b862deca73fb034791358f52ead6c5b93f83f0f791",
+      "licence": "CC0-1.0"
+    }
+  ],
+  "explicitExpectedNet10PackageClosure": [
+    [
+      "AngouriMath",
+      "2.5.0"
+    ],
+    [
+      "Antlr4.Runtime.Standard",
+      "4.13.1"
+    ],
+    [
+      "GenericTensor",
+      "1.0.4"
+    ],
+    [
+      "HonkSharp",
+      "1.0.3"
+    ],
+    [
+      "PeterO.Numbers",
+      "1.8.0"
+    ]
+  ],
+  "qualification": "Nearest compatible nuspec groups have no additional selected packages. Explicit pins are not an actual lock/restore result. Package DLL-to-upstream source binding is not claimed. GenericTensor published licence bytes verified separately; other complete licences bind exact maintained source."
+}

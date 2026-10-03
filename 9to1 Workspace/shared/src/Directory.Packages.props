@@ -4,6 +4,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="ScottPlot.Avalonia" Version="[5.1.59]" />
+    <PackageVersion Include="AngouriMath" Version="[2.5.0]" />
+    <PackageVersion Include="Antlr4.Runtime.Standard" Version="[4.13.1]" />
+    <PackageVersion Include="GenericTensor" Version="[1.0.4]" />
+    <PackageVersion Include="HonkSharp" Version="[1.0.3]" />
+    <PackageVersion Include="PeterO.Numbers" Version="[1.8.0]" />
     <PackageVersion Include="Avalonia" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Android" Version="12.0.1" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.0.1" />
