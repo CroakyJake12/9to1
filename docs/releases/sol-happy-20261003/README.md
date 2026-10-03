@@ -165,9 +165,27 @@ source04/SDK03's 17 source products, six original validation targets and metadat
 are now delivered at `eecadfc7463c944bcc6f9788075c293ab14120f9`; all 33 received
 manifest/blob identities match. Independent receiving-path review identified a
 missing tracked complete source cut. An isolated validation successor supplies
-that cut while preserving the original driver/source/metadata bytes. Full SDK/Web
-execution awaits independent mapping review and external cut-hash issuance. This
-is receipt and preparation, with no Admin runtime or compatibility acceptance.
+that cut while preserving the original driver/source/metadata bytes. C1 verified
+the complete receiving maps and root issued independent external pins. The first
+original driver run refused before SDK work because `execv` could not resolve
+bare `dotnet`. A separately reviewed launcher correction allowed all 27 commands
+in the second run to exit zero, including the complete original Debug builds.
+Only 26/27 original sessions drained: an orphaned MSBuild zombie kept the final
+strict disappearance check false. No original suite, Release build or full
+evaluated-source/PDB phase ran. Both failures and their original receipts remain
+in [Admin SDK03 evidence](evidence/c3-admin-sdk03/README.md).
+
+A separate maintained Accounts regression reproduced a persisted-key defect:
+request validation accepted control characters that the next shared-state read
+rejected. The proposed one-line correction rejects those keys before writes.
+The full maintained Accounts assembly passes with the original checks and 16
+new operation/control cases, while the exact original-source regression fails.
+Actual before/fixed outputs and source/PDB proofs are retained. This is bounded
+local Accounts evidence, with no Web HTTP, provider or whole-product acceptance.
+The key and launcher fixes remain isolated proposals awaiting source-owner
+acknowledgement and integration. Installed SDK 10.0.401 differs from the workflow's
+10.0.301. A genuine owned-child reaping correction is under separate review;
+failed process custody has not been waived.
 
 Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
 Both requested outer ZIP hashes and all 159 included indexed pieces match. The
