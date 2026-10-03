@@ -116,9 +116,11 @@ Team A acknowledged narrowly scoped Home identity and provider-stream edits and
 ownership of configured OIDC resource/response-envelope repairs. Home's isolated
 rebase `b73a45b4` onto `a63d77f` preserves the existing service body outside the three
 approved production edits. Normal Home tests passed 331/331; unchanged Astra with
-only the new theory failed both regression controls. Its file hash differs from
-Team A's selected working source hash, so it remains a separate proposal pending
-exact-source delivery and reconciliation. Evidence is in
+only the new theory failed both regression controls. Exact A1 owner acknowledgement
+at `eecadfc7463c944bcc6f9788075c293ab14120f9` clears the normal candidate's
+ownership/current-body qualification. The delivered future AppliedGrantId body
+remains reference only and must preserve these narrow edits in later composition.
+Root adoption and integrated runtime acceptance remain pending. Evidence is in
 [shared-source-proposals/](shared-source-proposals/). These proposals are not
 integrated here, and local checks do not verify the full issuer/native flow.
 
@@ -128,8 +130,12 @@ Release, including an exact committed-source Release run; original-source contro
 failed 10 of 24 cases as expected. C1 independently reviewed the patch, actual
 routing/usage tests, generator and raw results. The full normal test project still
 fails before discovery because its pinned XamlX dependency is absent from that
-checkout. Those failures are retained. Selected normal30 source equality and
-real provider acceptance remain unverified. Reproduction details are in
+checkout. Those failures are retained. The delivered per-file map now selects the
+unchanged actual A63 provider and
+clears that provider-file source-equivalence condition. Wider current/RAM tree
+equality, integrated runtime and real provider acceptance remain unverified.
+The [source-selection review](C5-provider-source-equivalence-review.md) retains
+those limits. Reproduction details are in
 [C5-provider-reconciled.md](C5-provider-reconciled.md); its generator is used in
 the separately checked-out proposal where the referenced current test files exist.
 
@@ -151,8 +157,13 @@ C4 gives a bounded [Files Project design acknowledgement](semantic/c4-project-co
 for existing identities, the same durable State authority, logical membership and
 preservation of originals. Six wire/revision/digest/migration/ACL/reference seams
 remain unresolved. No Project wire or synthetic Space was introduced. Admin
-source04/SDK03 requires exact remotely delivered source bodies and test drivers
-before compatibility or test acknowledgement.
+source04/SDK03's 17 source products, six original validation targets and metadata
+are now delivered at `eecadfc7463c944bcc6f9788075c293ab14120f9`; all 33 received
+manifest/blob identities match. Independent receiving-path review identified a
+missing tracked complete source cut. An isolated validation successor supplies
+that cut while preserving the original driver/source/metadata bytes. Full SDK/Web
+execution awaits independent mapping review and external cut-hash issuance. This
+is receipt and preparation, with no Admin runtime or compatibility acceptance.
 
 Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
 Both requested outer ZIP hashes and all 159 included indexed pieces match. The
@@ -183,6 +194,16 @@ branch. [Pointer review](browser-pointer-review/manifest.json) and
 Shared Dashboard overlap and missing painted-control accessibility semantics
 remain blocked, alongside services, cross-client and full browser acceptance.
 This browser source is not incorporated into the release branch.
+
+The requested [original custody followup](c6/custody-followup/README.md)
+verifies Graph02, Forms12, Home14 part05 and Canvas11 part00. Root repeated all
+four outer/member CRC/SHA checks with zero errors. Graph02's original Desktop
+build fails before discovery on `Assert.Throws(Func<Task>)` (CS0619/xUnit2014).
+Forms12 records eight managed TRX results but lacks the native runtime failure
+receipt, so that native cause remains unresolved. Home14 retains a missing settled
+callback marker despite drained records. Canvas parts00/01 reconstruct all 295
+indexed files and preserve all five failures. These are historical byte custody
+and causal observations; no payload was executed or native acceptance inferred.
 
 ## Specification and remaining gates
 

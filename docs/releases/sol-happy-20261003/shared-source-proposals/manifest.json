@@ -25,7 +25,7 @@
     "sourceSha256": "91cefb9cc982f15a436c41d3cb9a69a8349eae52b427cbd218b4cce03312463e",
     "selectedTeamASourceSha256": "8555592cd12a293e94e419b4870bf84706f96c3b98435c16cde1e04b84cbf11f",
     "selectedSourceMatches": false,
-    "hold": "Exact selected Team A body/commit and owner review required before adoption"
+    "hold": "Source ownership/current-body qualification CLEARED by exact owner ACK at eecadfc; root adoption/future source composition and runtime acceptance pending"
   },
   "preservedEvidenceAliases": {
     "home-reconciled-release.log": "home-positive.log",
@@ -87,7 +87,10 @@
     "provider-full-project-debug-failure.log": "eeda59999fb6a894306f862e7b167e6aa98166db2de3d1de424ab8d16da717b5",
     "provider-full-project-release-failure.log": "0ba63f17039199bc70df3c2b228306a6690304bba36f78e99729a61be8178710",
     "provider-initial-harness-failure.log": "a3c54147d923e8552d1c24183468e69f93c569cf4b559d7ee9656d7f40cd6e95",
-    "provider-independent-review.md": "f44319569f50c9db3d655c2995a6ce563b00c5c8f7c5bc82f84c48d4097892d1"
+    "provider-independent-review.md": "f44319569f50c9db3d655c2995a6ce563b00c5c8f7c5bc82f84c48d4097892d1",
+    "c2-current-owner-ack-review.json": "2b0bc58efec4a0a2a5174a80c651bffb50cacc5046b9c682bf42876774b6b728",
+    "../C5-provider-source-equivalence-review.json": "19a31bef29a127840bb4e018b505566a143d7a5c63fd98bcf3c610dc8417d4ba",
+    "../C5-provider-source-equivalence-review.md": "644ad891550b88d16bad7850c90497ffd31aca581c79800c085bcd236ad24586"
   },
   "oidc": {
     "head": "542aca10f0bc93e77b5a70b0ced0d6d9ad68376a",
@@ -131,5 +134,13 @@
       "Actual provider/protocol/timeout/privacy/funding/deployed acceptance NOT_RUN"
     ],
     "reproduction": "Use generator at original repository path in separately checked-out54766d2 candidate, where current production/test files exist; it is not a release-branch full-suite command."
+  },
+  "currentSourceFollowup": {
+    "ownerDelivery": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+    "coordination": "14dd1e12",
+    "home": "Exact normal A63 b73 ownership/current-body qualification CLEARED; future AppliedGrantId body delivered reference-only, not adopted. Historical differentbodyhash remains correct; owner explicitly approves normal candidate independently.",
+    "provider": "Actual selected A63 provider-file bytes/hash/blob verified, precise seven-line proposal unchanged; provider-file source-equivalence qualification CLEARED. Wider current/RAM tree equality not inferred.",
+    "integration": "NONE; root adoption and exact final integrated runtime acceptance pending",
+    "runtime": "No tests rerun for metadata/source-selection-only review; all prior evidence retains tested heads"
   }
 }
