@@ -1,0 +1,155 @@
+{
+  "reviewer": "C5",
+  "scope": "bounded source-only Cards owner-request receipt; no executable/service/schema adoption",
+  "requestCommit": "c162e6cd28a2b0d6bac6ab02d84560ddf918f401",
+  "requestPath": "apps/Web/Cards/OWNER-CONTRACT-REQUEST.json",
+  "requestBlob": "61fba20afd64066b12da413db064f584d79228b7",
+  "requestBytes": 8291,
+  "requestSha256": "71570e0e00f8113dbcc17d3d957d3c6746352e28c73ca5fb473d1a20737c49ab",
+  "coordinationCommit": "16b807be55200df6af8f9596fbb316d63624687a",
+  "selectedSourceTree": "8b4f2a0c071b91be357e48a603e25fff3c6f14ff",
+  "requestCanonicalRevision": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+  "requestCanonicalCaptureSha256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+  "requestReadComplete": true,
+  "sourcePins": [
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesInkAndStudy.cs",
+      "sha256": "8b90aac61d2f05961c20b083deda0b8703908da510ebe98ab8ce94a00d8e4b3e",
+      "bytes": 8055,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesDocument.cs",
+      "sha256": "6aaf49f88b08b77ae98c3efdef067f7af3741c52df51e89e3aee4815e9947bc4",
+      "bytes": 8528,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesEnums.cs",
+      "sha256": "5a7ab9574af8ae44be8fe22c5fef65f14d179ec2fe81c5055c998a2026d83ef8",
+      "bytes": 2392,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Notes/NotesBlock.cs",
+      "sha256": "a38e7219429490bd10debe93960a0c14036fc939d3b109ad0ccc248f644c7916",
+      "bytes": 19407,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/NotesAbstractions.cs",
+      "sha256": "72d70b50c9c6a09ecd53e1faf18c0069b8a6f7c7409ad0c78980b0d64868bd0b",
+      "bytes": 11449,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Notes/NotesAdvancedServices.cs",
+      "sha256": "eaf6638f3183b332a2b3e6addf3b127763d935e3ab5eb9040e0e1abbac75f84e",
+      "bytes": 62088,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/NotesRepository.cs",
+      "sha256": "22da17f566b1e65010075b8bf2c238deda25f2d127b361328ab0bfcf37bc33a7",
+      "bytes": 40838,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/FileSystem/VerifiedNotesStores.cs",
+      "sha256": "dba2e7981f1c6bcce188045a04c819cba8016f05739144e15d92b124ff6a052f",
+      "bytes": 14303,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Core/Entities/ContainerEntities.cs",
+      "sha256": "2359496a8af47a9f79b77e8f6fab797e97a3bd4de1193ffc4355c5300e04aef5",
+      "bytes": 909,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Abstractions.cs",
+      "sha256": "ff79738a76c7cccd6952c4922c3edf0fde129107427acb44140d151731ee8074",
+      "bytes": 29416,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Persistence/SQLite/ContainerRepository.cs",
+      "sha256": "c5614bbadc6467cc60c69c92ab039211d9276e716e4770587d197e6c31d95453",
+      "bytes": 16955,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Study/StudyLessonMetadata.cs",
+      "sha256": "229747c5191f41e9c959f4d8fbb75321b15f922bfe1f951a543b27dbcad013c1",
+      "bytes": 10343,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Study/StudySubjectPage.cs",
+      "sha256": "518f3732040403491b5121a2a83768f72ebc9a95721e75201daf01bddca4c67b",
+      "bytes": 47097,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Study/StudyHomePage.cs",
+      "sha256": "3ed957f538a2dcd45ae5cbeff7053d4714af954f42a1cf947c2c7a1fa221fa26",
+      "bytes": 18167,
+      "verifiedAtSelectedTree": true,
+      "deliveredCommitByteIdentical": true
+    }
+  ],
+  "existingCatalogue": {
+    "path": "docs/releases/sol-happy-20261003/semantic/c5-le06-le07-owner-catalogue.json",
+    "sha256": "8ecb5a3a3ddaf4b3ce51b311da0605c3aa669b90aed152d34be3ffe9b21f8e18",
+    "versionedCombinedCatalogueState": "MISSING; no new Cards owner ACK/catalogue supplied by this request",
+    "scopeQualification": "Existing captured LE12 catalogue evidence used; no canonical full-document poll or new revision equivalence claimed."
+  },
+  "ownerDependencies": [
+    {
+      "owner": "Team A Cards/Shared Productivity",
+      "deliverable": "Exact maintained canonical CardSet/card structured-side/stable-artifact schema and portable module ownership/source closure; requested field names remain requests, not approved schemas."
+    },
+    {
+      "owner": "Team A Cards/Study",
+      "deliverable": "Separate per-current-principal private review contract, actual attributed Study evidence/progress transaction, valid/unlinked topic behavior and no guessed rating mapping."
+    },
+    {
+      "owner": "Team A domain operation/catalogue owners",
+      "deliverable": "LE12 versioned typed existing 9to1.Cards operations, arguments/results/errors, stable IDs/scope/current permissions/CAS/pagination/replay/cancellation and per-target outcomes."
+    },
+    {
+      "owner": "Team A existing Notes/Study persistence owners",
+      "deliverable": "Actual existing-data inspection and explicit migration/import/export/unknown-field/recoverable-version policy; Notes storage is only a potential approved reuse seam."
+    },
+    {
+      "owner": "Team A Files/Home/CUI + relevant service owners",
+      "deliverable": "Canonical artifact/open-with/editor/preview bindings and reference continuity/revocation; registered portable storage/host transport contract before hosted consumer."
+    },
+    {
+      "owner": "C2/C4/C3 with Team A authoritative resource bridge",
+      "deliverable": "Current verified principal/resource/session checks and exact optional hosted service catalogue; account IDs alone confer no authority, no new ledger/store or remote AI permission."
+    }
+  ],
+  "findings": [
+    "Verified all14 pins at selected8b4f and byte equality in deliveredc162; absence claim remains confined to selected inspected source, not unpublished/new owner branches.",
+    "NotesFlashcardData uses stringFront/stringBack and embedded shared Schedule; NotesFlashcardScheduler.Review directly mutates card.Schedule. This cannot establish canonical rich sides or private per-principal records.",
+    "Request is a dependency proposal not versioned action/schema contract or adoption ACK. No NotesFlashcard fallback, new CardSet model, private review store or endpoint invented.",
+    "LE06 conversation cloud entitlement/threshold rules do not automatically establish Cards hosting policy; any such consumer requires exact owner catalogue rather than generalized defaults."
+  ],
+  "result": "Useful new immutable dependency receipt; no new C-owned executable implementation authorized",
+  "runtime": "NOT_RUN/source-only",
+  "fullCompletion": "UNVERIFIED"
+}
