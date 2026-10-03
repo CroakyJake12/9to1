@@ -1,4 +1,5 @@
 using NineToOne.Admin;
+using System.Runtime.ExceptionServices;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -11,6 +12,8 @@ using HavenOS.Files;
 static void Check(bool value,string message){if(!value)throw new Exception(message);}
 var root=Path.Combine(Path.GetTempPath(),"9to1-web-"+Guid.NewGuid());Directory.CreateDirectory(root);
 Process? host=null;
+Exception? primary=null;
+Task? originalExit=null;
 var browserFixture=args.Contains("--browser-fixture");
 try
 {
@@ -89,9 +92,30 @@ try
     await http.PostAsync("/api/account/signout",null);
     Check((await http.GetAsync("/api/catalogue")).StatusCode==HttpStatusCode.Unauthorized,"revoked token domain dispatch denied");
     await nativeAdmin.DispatchAsync("Refresh",null);Check(nativeAdmin.Organisations.Count==0&&nativeAdmin.Members.Count==0&&nativeAdmin.Audit.Count==0,"native projection cleared after actual server revocation");
+    await AdminRoleJobHttpSpecs.RunAsync(http,identity,organisationAuthority,id,redirect);
     Console.WriteLine("PASS authenticated HTTP CAKE identity, actual Files/Sites adapters, canonical creation/edit, missing price inputs, revocation");
 }
-finally {if(host is {HasExited:false}){host.Kill(true);await host.WaitForExitAsync();}host?.Dispose();Directory.Delete(root,true);}
+catch(Exception error) { primary=error; }
+finally
+{
+var originalFailures=new List<Exception>();
+void KeepFailure(Exception error){if(!originalFailures.Any(e=>ReferenceEquals(e,error)))originalFailures.Add(error);}
+if(primary is not null)KeepFailure(primary);
+try {if(host is {HasExited:false})host.Kill(true);}catch(Exception error){KeepFailure(error);}
+try {if(host is not null){originalExit=host.WaitForExitAsync();await originalExit.WaitAsync(TimeSpan.FromSeconds(20));}}catch(Exception error){KeepFailure(error);}
+var originalExitProven=host is null || originalExit is {IsCompletedSuccessfully:true};
+if(originalExitProven)
+{
+    try {host?.Dispose();}catch(Exception error){KeepFailure(error);}
+    try {Directory.Delete(root,true);}catch(Exception error){KeepFailure(error);}
+}
+else KeepFailure(new InvalidOperationException("original_web_exit_unsettled_process_and_data_retained"));
+if(originalFailures.Count==1)ExceptionDispatchInfo.Capture(originalFailures[0]).Throw();
+if(originalFailures.Count>1)throw new AggregateException(originalFailures);
+// A timeout is refusal, not a child-exit proof. Hosted original session/creator
+// drain must still prove the exact Web host and every original descendant gone.
+}
+
 
 sealed class FixtureBusinessLifecycleVerifier(VerifiedBusinessBillingTransition transition):ITrustedBusinessBillingVerifier
 {

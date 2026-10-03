@@ -52,7 +52,9 @@ IFilesProvider? Provider(Guid accountID)=>filesProviders.GetValueOrDefault(accou
 var filesResolver=new FilesWorkspaceDirectoryResolver(Path.Combine(stateRoot,"files-workspace-bindings.json"),Provider);
 domains.Register(new FilesWebDomain(Provider));
 domains.Register(new SitesWebDomain(filesResolver));
-domains.Register(new AdminWebDomain(organisations));
+var adminDomain=new AdminWebDomain(organisations);
+var adminSessions=new AuthenticatedAdminManagementOperations(identity);
+domains.Register(adminDomain);
 var costModel=builder.Configuration.GetSection("SubscriptionCosts").Get<ApprovedCostModel>()
     ?? new ApprovedCostModel("","GBP",null,null,null,null,null,null,null,null,null,null,null,null,null,null,false);
 var calculator=new SubscriptionBuilder(costModel);
@@ -71,6 +73,7 @@ app.Use(async (context, next) =>
     catch (FileNotFoundException) { context.Response.StatusCode = 404; await context.Response.WriteAsJsonAsync(new { error = "AccountNotFound" }); }
     catch (ArgumentException) { context.Response.StatusCode = 400; await context.Response.WriteAsJsonAsync(new { error = "InvalidInput" }); }
     catch (InvalidDataException) { context.Response.StatusCode = 503; await context.Response.WriteAsJsonAsync(new { error = "StateRecoveryRequired" }); }
+    catch (AdministrationConflictException error) { context.Response.StatusCode = 409; await context.Response.WriteAsJsonAsync(new { error = error.Code, requiresOriginalOutcomeReconciliation = error.RequiresOriginalOutcomeReconciliation }); }
     catch (InvalidOperationException) { context.Response.StatusCode = 409; await context.Response.WriteAsJsonAsync(new { error = "Conflict" }); }
 });
 app.MapGet("/health", () => new { status = "ready", identity = "CAKE-ID", modelBandVersion = SubscriptionPolicy.ModelBandVersion });
@@ -128,7 +131,8 @@ app.MapPost("/api/subscription/checkout/{quoteID:guid}", (HttpContext c,Guid quo
 });
 app.MapGet("/api/catalogue", (HttpContext c) => { identity.Authenticate(Token(c)); return domains.Catalogue; });
 app.MapPost("/api/apps/{domain}/{action}", async (HttpContext c, string domain, string action, JsonElement arguments, CancellationToken ct) =>
-    await domains.InvokeAsync(domain, action, arguments, identity.Authenticate(Token(c)).AccountID, ct));
+    domain=="Admin"?await adminDomain.InvokeAuthenticatedAsync(action,arguments,adminSessions.Open(Token(c)),ct):
+        await domains.InvokeAsync(domain, action, arguments, identity.Authenticate(Token(c)).AccountID, ct));
 app.Run();
 
 static string Token(HttpContext context)

@@ -1,0 +1,64 @@
+{
+  "status": "OWNER_ACK_PRECISE_C2_A63_NARROW_SOURCE_CANDIDATE_WITH_FUTURE_SOURCE_DELIVERY_MAP",
+  "reviewer": "A1",
+  "runId": "sol-happy-20261003",
+  "candidate": {
+    "commit": "b73a45b4a319fe619f517e9bd1ed1f262ba00b33",
+    "parent": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "branch": "team-c/sol-happy-c2-home-reconciled",
+    "production": {
+      "target": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+      "bytes": 46109,
+      "sha256": "91cefb9cc982f15a436c41d3cb9a69a8349eae52b427cbd218b4cce03312463e",
+      "gitBlob": "977d15ada778fe39f9de08a895f69246dd8ae2c6"
+    },
+    "tests": {
+      "target": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+      "bytes": 11426,
+      "sha256": "eed40108020f0d876c700736b6afa2d222d9b4889272a63810ed18372d1b4654",
+      "gitBlob": "722dab4cb657a7646f4a611c9b2140a629b12b63"
+    }
+  },
+  "review": {
+    "wholeProductionInverseToActualA63": true,
+    "wholeTestInverseToActualA63": true,
+    "sourceChangeCount": 3,
+    "testChange": "Sole additive changed/null IdentityVersion Theory with same-session positive and BeginExecution denial; all old test body bytes retained.",
+    "apiSourceRead": "Published exact commit metadata plus both immutable Git blobs read in RAM through GitHub connector; byte/SHA256/Git blob hashes independently verified. No Git fetch or source materialization."
+  },
+  "ownerAck": "The precise three identity-binding edits and additive Theory on genuine actual A63 are approved for source integration review. Different future joint body is not a blocker for this independent normal-source improvement. No broader grant, risk, lifecycle or stored-state change is approved.",
+  "futureSelectedSourceDelivery": {
+    "plan": "/workspace/astra-source/worker1-home-den-studio-joint-sdk-native-plan04-studio290-original-overlap-and-native-callback-gate/manifest.json",
+    "planSha256": "79410d09b09376582ada5aa9a520173ca60624eb2597b5a3683c81ff7c997c2b",
+    "zeroBasedSelectedTargetRow": 85,
+    "source": "/workspace/astra-source/worker1-home-trusted-core-api-source03-retiring-session-original-drain/HomePermissionTrustService.cs",
+    "target": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
+    "bytes": 46308,
+    "sha256": "ada51273b49a766885edb9477df6dc29ade1ba3a5e33b28114132a64007694f4",
+    "baseCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "expectedBaseBytes": 45986,
+    "expectedBaseSha256": "2051bb0ebf9aa595be9ee2091d313bafc4a206f1beb09fd80363c5fe863658c1",
+    "delivery": "Root may publish this exact existing reviewed body and per-file map on an isolated source-delivery ref. No current remote delivery or release incorporation claimed.",
+    "additionalSelectedBehavior": "Preserves actual A63 plus exact AppliedGrantId correlations for explicit accepted persistent/temporary trust decisions. C2 narrow edits must carry forward onto this body rather than replace it with its earlier A63 candidate.",
+    "c2RebasePreviewRamOnly": {
+      "bytes": 46431,
+      "sha256": "8555592cd12a293e94e419b4870bf84706f96c3b98435c16cde1e04b84cbf11f",
+      "materialized": false
+    }
+  },
+  "providerSourceDelivery": {
+    "target": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+    "selection": "No CloudModelProviders override in joint04; actual A63 remains selected unchanged by A1.",
+    "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "gitBlob": "4a7801e0996821dadf458cd0bf649d6cc2672f4e",
+    "bytes": 29923,
+    "sha256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+    "fetchableUrl": "https://github.com/CroakyJake12/9to1/blob/a63d77fe5a9dfea56c938eaa85678a9e170368ec/9to1%20Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+    "C5Qualification": "Per-file current source map only; not a new C5 body/runtime acceptance."
+  },
+  "validationQualification": [
+    "C-reported normal Home331 PASS and unchanged-A63 negative control2 failures are reported by C, not independently executed by A1.",
+    "No A1 SDK/native/installed readiness/default activation or release acceptance. Owning root/Team C must preserve original evidence and run agreed source composition."
+  ],
+  "budget": "Fresh separate 32 KiB peer metadata; no source copies/build/download/Git mutation."
+}

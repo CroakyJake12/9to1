@@ -1,0 +1,481 @@
+{
+  "status": "PRIVATE_SOURCE_FROZEN_UNCOMPILED_UNRUN",
+  "normalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "normalTree": "68eecf040cb3d55adc40da05df77b675102c7a65",
+  "normalProductTree": "776628d7297f07222c57ab8ca5efcf542fe1679b",
+  "scope": "Same canonical Accounts OrganisationService roles and bounded original configuration-export jobs, authenticated existing legacy Web Admin transport only",
+  "files": [
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "bytes": 23792,
+      "sha256": "990e08a53d7e5728e46d9033aa6275c94419566bca7114b8164b885e337a92d9",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null,
+      "expectedPredecessorSha256": "a76df1e843d79e2dc4adbad36a4f01ef07ca060ce4de6dee63b78d91381d1be4"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "bytes": 6941,
+      "sha256": "530dbbc5a38f63037e13be662f2745edadff2be5852cf348b002927aa666a44c",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null,
+      "expectedPredecessorSha256": "54aa340b055c1f9e4dbb61a2b98727205146ec8afd4d070d3c225f8f149640d9"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "source": "/workspace/astra-source/worker4-admin-canonical-collections-source01/sources/9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "bytes": 5636,
+      "sha256": "8bb5ce52f01b896a5dba257ef5bd132d2bf66f3a9fe6a5b1b1ef812c96d131bd",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "source": "/workspace/astra-source/worker4-admin-canonical-collections-source01/sources/9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "bytes": 459,
+      "sha256": "1dbb6e282e601e814261b04945f67102267206388586cc6dc4375176d59cc88b",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "bytes": 5141,
+      "sha256": "22e003cc311d0545297a24e287afd93b48d0a89b93c7db21b715fd2354456298",
+      "expectedNormalSha256": "1285925c5ad922457f5aa4b687b970d23fb2958e348838eb16cb9c09b217b8a7",
+      "expectedNormalBlob": "59b8df2ab2cf809e3c3b1ccc85f8f2243907e543",
+      "expectedPredecessorSha256": "592f91f26293b2a216eef7a1428cbc26a19ac04862a157d88d8b60cf5c4d3418"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "source": "/workspace/astra-source/worker4-organisation-lifecycle-current30-source01/sources/9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "bytes": 15756,
+      "sha256": "1bb78389d445654b09a756fe1c64a27d5d4a3c21fd873bcf6cb9ccedf7182407",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "source": "/workspace/astra-source/worker4-organisation-lifecycle-current30-source02-owner-lock-recheck/sources/9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "bytes": 6601,
+      "sha256": "2928309de1932eb19121a20dcc5471c34e7f2e588728ed93c648eeebeae6d8e1",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "bytes": 7894,
+      "sha256": "892eaa144d8e182089c263413ec17d0ff5175e3a8021888186f712ffd81f26bd",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationService.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/OrganisationService.cs",
+      "bytes": 19263,
+      "sha256": "59ba0ab354893fe62c9e59db3eee0e72ac04fd72962782b998f640580a378c5c",
+      "expectedNormalSha256": "1281ada5db3e9f38a08174e512038f097009c042bdb534b6b9abd1f307a4526c",
+      "expectedNormalBlob": "08ba38523f1f90934fc8bf53083d872a1bb17944",
+      "expectedPredecessorSha256": "c0ddd7a2fe725c66e88710452cadeb809c1f4b8b0698c461199902697912ffb2"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "source": "/workspace/astra-source/worker4-admin-canonical-collections-source01/sources/9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "bytes": 11526,
+      "sha256": "eb27113b66e660fe9d3d02eb3008539d40daa3254a022a5735e29dd765c1f1c7",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "source": "/workspace/astra-source/worker4-organisation-lifecycle-current30-source02-owner-lock-recheck/sources/9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "bytes": 33395,
+      "sha256": "bb8b1d66e1932bea01c50f18dcefe1e08823b08d4cc85013f3b133ce3acc5e35",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "bytes": 23522,
+      "sha256": "094a954991553e344d05c1477dc71e745b68a9eb35df71a073da51e7ce701418",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null,
+      "expectedPredecessorSha256": "f8a120202529596cf47c46c05a0aa02e7f0abde98c1e2bd882b1ab876300b77b"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/Program.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Accounts/Tests/Program.cs",
+      "bytes": 33408,
+      "sha256": "9b54905018e32d6ab64e554faa2db600f151bf268aa78d694f43785bfcd3f863",
+      "expectedNormalSha256": "775145d5f6e67ac41e7f6b111f4bc437b0e5600a2a3388dc7ef931f34afbd21f",
+      "expectedNormalBlob": "12c6aa1ef1190efae1bd8d01524106f6414d1351",
+      "expectedPredecessorSha256": "41e9eab2068b7dd0dfe9faf57903cf85bdbb1e041ce4fd8af8c08d69631dcecd"
+    },
+    {
+      "target": "9to1 Workspace/Web/AdminWebDomain.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Web/AdminWebDomain.cs",
+      "bytes": 8269,
+      "sha256": "c7f91887244922cb93815d3fcd229501e8b76ee1994ec1d9a40e28572b42b962",
+      "expectedNormalSha256": "e8420f29f25e619cc03ede922d58aa31a09ce6ca709c8fa22671ca2810e1be61",
+      "expectedNormalBlob": "8b22883934ef2d68ce8cd7c2446478c3f3913e72",
+      "expectedPredecessorSha256": "585a13b72b5d2f328f842b4bb1dff6698f69d9b4376943db1600bc5d8447f0a1"
+    },
+    {
+      "target": "9to1 Workspace/Web/Program.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Web/Program.cs",
+      "bytes": 10977,
+      "sha256": "81462812cab372cf11f80db938ebb375e666a4eedbe23fcf176526b4f26d99e1",
+      "expectedNormalSha256": "b809f0ca5d1e3d0b9c57d25eafb8e889b6ea865202efaa5589b0af69260268ed",
+      "expectedNormalBlob": "45148cf9c8db270d99b70d80bf0d2d9148752277",
+      "expectedPredecessorSha256": "b809f0ca5d1e3d0b9c57d25eafb8e889b6ea865202efaa5589b0af69260268ed"
+    },
+    {
+      "target": "9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/sources/9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
+      "bytes": 6478,
+      "sha256": "0dc1024d198cf2adcc1381b77dee54d1debfc32b33aca6f44e453746312187a2",
+      "expectedNormalSha256": null,
+      "expectedNormalBlob": null
+    },
+    {
+      "target": "9to1 Workspace/Web/Tests/Program.cs",
+      "source": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/sources/9to1 Workspace/Web/Tests/Program.cs",
+      "bytes": 13244,
+      "sha256": "7a412cb1a8f256b92ab5942d28928b7313f8840a02b196d247ff8f99603abb89",
+      "expectedNormalSha256": "3d74b24df80f0dba46d5db01b2dc5e7986dfe5ef8cd6d3f8daaac697826eefa6",
+      "expectedNormalBlob": "1e199d85c0944a123ac0843131b1830422b8c1c4",
+      "expectedPredecessorSha256": "49f6815ce0d426e3888c278f0eeea5b8782adc60c29c0a780f38c9642a9c55ce"
+    }
+  ],
+  "inputManifests": [
+    {
+      "path": "/workspace/astra-source/worker4-admin-canonical-collections-source01/manifest.json",
+      "bytes": 12848,
+      "sha256": "af9b5948bca9104819c367faafaf75c9be1aee11cc430117cb0e6fd5ac0f432e"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/whole-collection01-normal30-source-inverses.json",
+      "bytes": 13768,
+      "sha256": "a924e3782ff2e0466e4e55efa492a0b67da33b21d3f96d5255a0d139a86679e3"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-admin-collections01-complete-current-authority-cursor-source-peer01.json",
+      "bytes": 3036,
+      "sha256": "9fb982050f71cba44e795f576474d274ab0b1ad1b9fa9b2a94517cec7f77dcea"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-org05-actual-complete-source-pdb-session-runtime-peer01.json",
+      "bytes": 13690,
+      "sha256": "c7b89859f46bb25b54e1d301724a7f0a05aca2dfad362bda57d5d2376bce27ed"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-org05-full-owning-sdk-web-integration-plan01.json",
+      "bytes": 9072,
+      "sha256": "db9f4a3bf735ff3c367ba1a9dca2fd4854af38cd41fa5d6e74bfaae15f2c62f2"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint30-publication-local.json",
+      "bytes": 1215,
+      "sha256": "2c564108c0110315f8922efdd6a3ec572e89f17e88cf42a1f0b3f116b7099cc3"
+    },
+    {
+      "path": "/workspace/astra-source/spec-active-current690.json",
+      "bytes": 1318,
+      "sha256": "83338384b366e32b7c7c778a59d515eee5028091ace27730cf252f3dd5694d2b"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source02/manifest.json",
+      "bytes": 21672,
+      "sha256": "260ded2606ee9c2b164249cb8da96c4731a51064259083144329634396ddc2b1"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source03-exact-preservation-inventory/manifest.json",
+      "bytes": 22110,
+      "sha256": "e1f8a27b29b87ddaf093c5f1669d1b8f8448a1753e4603548b44f5d84b64b278"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-admin03-original-job-session-http-custody-held-peer01.json",
+      "bytes": 3322,
+      "sha256": "5e1e0536acc5890bdd7e9bd16bc2963eb25e2b281cc1ab86b10aac4c4d0f1e70"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-admin-owned-roles-export-jobs-source04-original-output-and-exit-fences/whole-source03-original-publication-and-exit-inverses.json",
+      "bytes": 13746,
+      "sha256": "3b9e94ddb95410b5cc4903910de9e43cbc091e78f309a91316af79b3f6a67c8a"
+    }
+  ],
+  "unchangedAccountsDependencies": [
+    {
+      "target": "9to1 Workspace/Accounts/AccountContractJson.cs",
+      "bytes": 1035,
+      "sha256": "e34f1f521f63efeaf161b8bfab8c74bafc22ad94e4ae692932d58d0e4955d279",
+      "gitBlob": "82249e1e7cf7840fe3b575897b61239beea9dc05"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/AccountLedger.cs",
+      "bytes": 8618,
+      "sha256": "92c3125e66653b5237d077ff2dabc21921f98071085294ff033381924394a117",
+      "gitBlob": "58beb317c57c0447c4f1b4e8966ea634f782faf0"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Authentication.cs",
+      "bytes": 8923,
+      "sha256": "b4314c8274f73c55a433dd99f48b8d25cfc75d24bf3130fbc5280494110a541f",
+      "gitBlob": "145617292137d43d986a7dd3c6a60dcdfc73f300"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/DurableState.cs",
+      "bytes": 2549,
+      "sha256": "ec8bdd3835205ac06f413e3effc43c24960d8ba730dc950b351e8f44eb5eef09",
+      "gitBlob": "83d76b6a86a7e8f58d46a075e46d2b87373d83f8"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationBilling.cs",
+      "bytes": 5438,
+      "sha256": "2b90b0b16c4c7a60c7c9ac27f128a0f58e4000f9d6e6b165a04ad1191c96a629",
+      "gitBlob": "115842aa62e565c0fb6087d301806f871f532c5e"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationDustPools.cs",
+      "bytes": 28711,
+      "sha256": "803531e2f9b9c53d8905cedfa40b472e41c2cffe4860dc5df63be346feac153e",
+      "gitBlob": "8ed2319a637a714da4292517e9b38a08eb2fe102"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationRollover.cs",
+      "bytes": 15799,
+      "sha256": "47985c539689c3c911118487b74cd50be44f0ccc1609d91bb4998396da712a04",
+      "gitBlob": "4ed6e1cbc7b273b11809288546dfa2172264d9d7"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationUsageContracts.cs",
+      "bytes": 2778,
+      "sha256": "cc4119aa05a80fb78acd997493a712cbb57bf342cb021bdfdfdc4eba1e770f35",
+      "gitBlob": "ffbe398d90cdf6e83e4262b6b035e24136482005"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/OrganisationUsageReports.cs",
+      "bytes": 2872,
+      "sha256": "03335140d982ad518e98d09d2839c484d02e1959ef7f4963aaafd41b1e666580",
+      "gitBlob": "0a6ad1933ab8f9d9ce98da3b45b39e6ca7470218"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Profiles.cs",
+      "bytes": 4179,
+      "sha256": "d49d45a9b447a02ac57187d2b9e932ea6389a71f5233bce1fe36f24f4ec76af9",
+      "gitBlob": "6e6f91acac5d391cf6f7c52164570a1ab092eed8"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Subscription.cs",
+      "bytes": 3252,
+      "sha256": "f21034da612966113bc0b3edf7ee8515e52075318d25e5c36a8a01016b084736",
+      "gitBlob": "da0d2021c9810d18db28da2743fb9a34c94ad1ba"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/SubscriptionBuilder.cs",
+      "bytes": 11281,
+      "sha256": "c106647472a1f522815c4d3125eb87ac236951ecbf278c71189f9f2198067b52",
+      "gitBlob": "8927f2a2ea39e525c8af25cbb52fd9b779407d0f"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/SubscriptionPurchases.cs",
+      "bytes": 8935,
+      "sha256": "fa32580d216a882513c7a7b07b3cfb5df7c5f28ec3af3dd2693ea3ac936b7984",
+      "gitBlob": "21e173a891c5083f6867dcb525c51de49b48e8f5"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/SubscriptionQuotes.cs",
+      "bytes": 1539,
+      "sha256": "67d553bf585f30f225734d5f74f90d124018996028667c00c0efa0d054aff70c",
+      "gitBlob": "ec0b66ae9fb8da9f0005c5e0fa12f92168782738"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/NineToOne.Accounts.csproj",
+      "bytes": 159,
+      "sha256": "96d22c24d1d62f349318ad83614eef885c38ea2613219a4b548c6b0eb731922e",
+      "gitBlob": "4349b039e8398cd946edff35e2fff5adf73ef2e7"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+      "bytes": 223,
+      "sha256": "65df3a2677258e2c57506d107b1abc5f014d79beae620b977af3ffdbded42abc",
+      "gitBlob": "19cd1be180bf5da52a08d59b438a2aca5174aeef"
+    }
+  ],
+  "actualCurrentWebProjectAndOldOrgPoolPins": [
+    {
+      "target": "9to1 Workspace/Web/WorkspaceWebDomain.cs",
+      "bytes": 1102,
+      "sha256": "ca96afd767235b673e075876348a881ef2bc492d36aea061a6ab6cca66234fed",
+      "gitBlob": "9d31ee7375c46df7f8d11f86a95974332459f71f"
+    },
+    {
+      "target": "9to1 Workspace/Web/NineToOne.Web.csproj",
+      "bytes": 922,
+      "sha256": "73e6b0ec8023c51102dd5f3d084d81ed2ccbe81a3f6630faecadf5c50530cad5",
+      "gitBlob": "0f9e8452603ce2f4329889040ad212a4ed95a538"
+    },
+    {
+      "target": "9to1 Workspace/Web/Tests/Web.Specs.csproj",
+      "bytes": 301,
+      "sha256": "61d9cc6d21b711dde9b95ea41afcd3bd5e578789463742af4b094fac1731bd9f",
+      "gitBlob": "d87c4984e549000b62102dec81d35826179ab711"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/OrgPools.Specs.csproj",
+      "bytes": 290,
+      "sha256": "ea35dd98036baa10265033f0381385f651fd1139dff687fb793c470cfd665ce4",
+      "gitBlob": "2df7998c715481e892d4dec7cb48b04937af3188"
+    },
+    {
+      "target": "9to1 Workspace/Accounts/Tests/OrgPoolsProgram.cs",
+      "bytes": 21746,
+      "sha256": "f42b79dd9583da83b27d6408eb22341fcd9ef79745d4d52a89536b79a2e4ad87",
+      "gitBlob": "6f28d7272c99811e1888da6b3f8d998ded94c446"
+    }
+  ],
+  "registeredNewAccountsScenarioMethods": [
+    "RoleMutationReplayRestartAndDelegation",
+    "ProtectedOwnerAndRoleInUse",
+    "EffectiveCandidatesAreCurrentDetachedMetadata",
+    "ActualExportPagesAndRestart",
+    "HistoricalExportOutputRetiresWithCurrentAuthority",
+    "SignOutAfterClaimRetainsOriginalTerminalFailure",
+    "ExpiryAfterClaimRetainsOriginalTerminalFailure",
+    "ConcurrentOrganisationRevisionRefusesOutput",
+    "PendingCancellationAndOriginalCancellation",
+    "ConcurrentRoleMutationHasOneCanonicalWinner",
+    "CompletedSaveRetiresPayloadWithoutReplayingOriginal",
+    "ActualSerializationRetiresPayloadAfterKnownCommit"
+  ],
+  "addedWebScenario": "AdminRoleJobHttpSpecs.RunAsync: actual existing host role edit/replay/stale revision/effective metadata/export/current scope/cancellation/replay/delete/output retirement/signout flow",
+  "preservation": {
+    "allOldAccountsHarnessAnd11Org02And4CollectionsScenarios": true,
+    "otherSixCollection01SourceRowsByteExact": true,
+    "entireRemoteWorkerModeAndLoginTokenBranchesByteExact": true,
+    "currentNormalProductSourcesUnmodified": true,
+    "wholeFourExistingCollection01AndTwoActualNormalWebSourcesInvertExactly": true,
+    "allTenSource03AccountsScenariosAndEveryOriginalBodyAssertion": true,
+    "otherTwelveSource03RowsByteExact": true,
+    "wholeFiveSource04ChangesInvertToSource03": true,
+    "knownSucceededOriginalNeverRewrittenByExpectedOutputRetirement": true,
+    "sameUnsettledWebExitTaskProcessAndChildDataRetained": true
+  },
+  "authority": [
+    "CurrentAdminSession internal constructor bound to SAME original CakeIdentity SessionID/AccountID/token and issuer, no DTO-created account grants",
+    "Actual synchronous original session -> same named organisation mutex; active same-thread issuer recheck after org lock and immediately before durable Save",
+    "Synchronous canonical policy read reuses entire prior EvaluateAsync body via EvaluateCurrent; no asynchronous provider under locked admission",
+    "Read result recheck before return; successful durable mutation keeps original known commit outcome",
+    "Async export releases locks during preparation and re-enters same issuer/current role/policy/org revision for claim and final output",
+    "Original RunID retained before persistence/lease exit; failed/cancelled admitted original may record redacted terminal status/audit without current new output permission",
+    "Unknown Running outcome is not retried; pending cancellation is actual CAS/idempotent target status, not guessed process cancellation",
+    "Role effective capabilities are detached metadata requiring original object/Home/entitlement/device intersections; no blanket resource access",
+    "After the actual completed durable Save, SAME issuer-held recheck suppresses retired ExportDocument while returning known JobID/RunID/revision/Succeeded observation",
+    "Registered original Web publication re-reads SAME canonical job under SAME original session and org lock, serializes the real result, then SAME issuer recheck occurs before built JSON return",
+    "Internal per-instance default-null checkpoint observes after-save and after-serialization scheduling only; no wire, DTO, provider, global or session authority replacement"
+  ],
+  "operationContracts": [
+    {
+      "action": "Roles.Update",
+      "permission": "Admin.Roles.Update",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "canonical role CAS and durable audit/receipt",
+      "risk": "PrivilegeChange",
+      "reversibility": "new explicit revision update"
+    },
+    {
+      "action": "Roles.Delete",
+      "permission": "Admin.Roles.Delete",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "unused non-owner canonical role removal",
+      "risk": "PrivilegeChange",
+      "reversibility": "explicit recreation uses a new ID"
+    },
+    {
+      "action": "Roles.GetEffectivePermissions",
+      "permission": "Admin.Roles.GetEffectivePermissions",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "detached role/policy candidates only",
+      "risk": "ReadMetadata",
+      "reversibility": "read only"
+    },
+    {
+      "action": "Organisations.Export",
+      "permission": "Admin.Organisations.Export",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "bounded asynchronous configuration page original job",
+      "risk": "ReadMetadata",
+      "reversibility": "original pending job cancellable before claim"
+    },
+    {
+      "action": "Jobs.List",
+      "permission": "Admin.Jobs.List",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "bounded permission-filtered current job metadata",
+      "risk": "ReadMetadata",
+      "reversibility": "read only"
+    },
+    {
+      "action": "Jobs.Get",
+      "permission": "Admin.Jobs.Get",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "original state with current-authorised output only",
+      "risk": "ReadMetadata",
+      "reversibility": "read only"
+    },
+    {
+      "action": "Jobs.Cancel",
+      "permission": "Admin.Jobs.Cancel",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "pending-only exact original CAS/idempotency cancellation",
+      "risk": "CancelPending",
+      "reversibility": "terminal cancellation"
+    },
+    {
+      "action": "Jobs.ExecuteExport",
+      "permission": "Admin.Jobs.ExecuteExport",
+      "scope": "current original authenticated account and canonical OrgID/target IDs",
+      "effect": "registered owner executes exact pending original job",
+      "risk": "ReadMetadata",
+      "reversibility": "unknown original must reconcile"
+    }
+  ],
+  "limits": [
+    "No compiler, SDK, analyzers, direct new runtime, native Admin CUI, remote Worker or Business full acceptance claimed",
+    "New export is bounded canonical role/membership/policy dependency configuration only; no content, credential, invitation token, private setting value or excluded WP record export",
+    "Canonical device issuer/global reservation/native enforcement remain separate; management records mint no authority",
+    "Missing Admin action families/import/deletion/rollout/provider/billing policy/native surfaces remain incomplete, not success through unavailability",
+    "Original Web child-exit timeout is refusal; hosted strict original creator/session/drains remain mandatory",
+    "Unknown seat reservation/commercial period/retention policy remains explicit OPEN; no invented paid entitlement",
+    "Export payload currentness is checked at returned JsonElement publication; network transmission is not a distributed atomic authority commit",
+    "OutputWithheldReason is observation-only and refused in persisted canonical state; metadata is not an admission grant",
+    "On Web original exit timeout, process handle and child data stay retained; timeout does not settle SAME task or prove original child/session exit"
+  ],
+  "requiredChecks": [
+    "Complete source/API/current authority peers and actual SDK Debug+Release restore/build/full Accounts.Specs and unchanged OrgPools.Specs",
+    "Complete exact evaluated source lists/physical PE-PDB/source documents/task/restore/evidence provenance",
+    "Actual existing Web host full old and new HTTP scenarios with strict original host/creator/session descendants drained",
+    "Native Windows/OS/browser Admin route/role flow and remote Worker current issuer integration remain mandatory subsequent gates"
+  ],
+  "metadataSuccessor": "Source04 closes only the two accepted source03 custody findings with five complete sources and two additive original-session expiry cases; other twelve selected rows remain whole-byte exact source03.",
+  "heldPredecessorFindings": {
+    "receipt": {
+      "path": "/workspace/astra-source/worker2-admin03-original-job-session-http-custody-held-peer01.json",
+      "bytes": 3322,
+      "sha256": "5e1e0536acc5890bdd7e9bd16bc2963eb25e2b281cc1ab86b10aac4c4d0f1e70"
+    },
+    "completedSavePayloadRecheck": "CORRECTED_SOURCE_ONLY_PENDING_PEER_AND_RUNTIME",
+    "sameOriginalWebExitCustody": "CORRECTED_SOURCE_ONLY_PENDING_PEER_AND_RUNTIME"
+  },
+  "sourceBudget": {
+    "rootRatifiedCumulativeMaximumBytes": 327680,
+    "priorActualSource02And03Bytes": 209171,
+    "newFiveSourceBodiesBytes": 75768,
+    "noBuildRestoreDownload": true,
+    "actualCumulativeBytesWithSource04ManifestAndInverse": 324149
+  }
+}

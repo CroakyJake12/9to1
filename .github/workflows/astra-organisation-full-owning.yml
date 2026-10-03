@@ -1,0 +1,49 @@
+name: Canonical Accounts and Admin Web whole SDK
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        required: true
+        type: string
+      cut_manifest_sha256:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  owning:
+    if: github.ref == 'refs/heads/validation/astra-admin-sdk-web02-a63d77fe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      COHORT: owning
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER: '1'
+      MSBUILDDISABLENODEREUSE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit }}
+          submodules: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.301
+      - name: Exact three existing source dependencies
+        shell: bash
+        run: |
+          git submodule update --init --depth 1 -- 'framework/CUI/vendor/Avalonia/external/XamlX' 'framework/CUI/vendor/Avalonia/external/Avalonia.DBus' '9to1 Workspace/Terminal/Source/libvterm'
+      - name: Whole Debug and Release SDK source and Web gate
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          CUT_SHA256: ${{ inputs.cut_manifest_sha256 }}
+        shell: bash
+        run: python3 .github/scripts/astra-organisation-full-owning.py --expected-commit "$EXPECTED_COMMIT" --manifest .github/validation/astra-organisation-full-owning-cut.json --manifest-sha "$CUT_SHA256"
+      - name: Retain original complete success or refusal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-accounts-admin-web-whole-sdk-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/desktop-visible-owning/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

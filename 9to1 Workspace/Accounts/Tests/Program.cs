@@ -251,6 +251,9 @@ try
     try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("foreign signed account accepted");}catch(UnauthorizedAccessException){}
     billingVerifier.Receipt=billingVerifier.Receipt with{AccountID=purchaseAccount,SettlementID="conflicting-replay"};
     try{await purchases.ProcessProviderEventAsync(ReadOnlyMemory<byte>.Empty,new Dictionary<string,string>());throw new Exception("conflicting receipt replay accepted");}catch(InvalidOperationException){}
+    OrganisationLifecycleSpecs.Run();
+    OrganisationAdministrationSpecs.Run();
+    OrganisationRoleAndJobSpecs.Run();
     Console.WriteLine("PASS: thresholds, resource independence, concurrent reservations, restart, idempotency, hosting quotas, inactivity, unresolved presets");
 }
 finally { if (Directory.Exists(root)) Directory.Delete(root, true); }

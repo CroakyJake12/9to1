@@ -1,0 +1,213 @@
+{
+  "status": "EXACT_REVIEWED_SOURCE_AND_ORIGINAL_SDK_DRIVER_DELIVERY_UNRUN_NOT_ACCEPTED",
+  "baseCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "branch": "handoff/team-a-admin-sdk03-20261003",
+  "sourceProducts": 17,
+  "validationTargets": 6,
+  "entries": [
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdminJobs.cs",
+      "bytes": 23792,
+      "sha256": "990e08a53d7e5728e46d9033aa6275c94419566bca7114b8164b885e337a92d9",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdminOperationContracts.cs",
+      "bytes": 6941,
+      "sha256": "530dbbc5a38f63037e13be662f2745edadff2be5852cf348b002927aa666a44c",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdministration.cs",
+      "bytes": 5636,
+      "sha256": "8bb5ce52f01b896a5dba257ef5bd132d2bf66f3a9fe6a5b1b1ef812c96d131bd",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationAdministrationContracts.cs",
+      "bytes": 459,
+      "sha256": "1dbb6e282e601e814261b04945f67102267206388586cc6dc4375176d59cc88b",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationContracts.cs",
+      "bytes": 5141,
+      "sha256": "22e003cc311d0545297a24e287afd93b48d0a89b93c7db21b715fd2354456298",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationLifecycle.cs",
+      "bytes": 15756,
+      "sha256": "1bb78389d445654b09a756fe1c64a27d5d4a3c21fd873bcf6cb9ccedf7182407",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationOwningOperation.cs",
+      "bytes": 6601,
+      "sha256": "2928309de1932eb19121a20dcc5471c34e7f2e588728ed93c648eeebeae6d8e1",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationRoleAdministration.cs",
+      "bytes": 7894,
+      "sha256": "892eaa144d8e182089c263413ec17d0ff5175e3a8021888186f712ffd81f26bd",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/OrganisationService.cs",
+      "bytes": 19263,
+      "sha256": "59ba0ab354893fe62c9e59db3eee0e72ac04fd72962782b998f640580a378c5c",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationAdministrationSpecs.cs",
+      "bytes": 11526,
+      "sha256": "eb27113b66e660fe9d3d02eb3008539d40daa3254a022a5735e29dd765c1f1c7",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationLifecycleSpecs.cs",
+      "bytes": 33395,
+      "sha256": "bb8b1d66e1932bea01c50f18dcefe1e08823b08d4cc85013f3b133ce3acc5e35",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/OrganisationRoleAndJobSpecs.cs",
+      "bytes": 23522,
+      "sha256": "094a954991553e344d05c1477dc71e745b68a9eb35df71a073da51e7ce701418",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Accounts/Tests/Program.cs",
+      "bytes": 33408,
+      "sha256": "9b54905018e32d6ab64e554faa2db600f151bf268aa78d694f43785bfcd3f863",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Web/AdminWebDomain.cs",
+      "bytes": 8269,
+      "sha256": "c7f91887244922cb93815d3fcd229501e8b76ee1994ec1d9a40e28572b42b962",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Web/Program.cs",
+      "bytes": 10977,
+      "sha256": "81462812cab372cf11f80db938ebb375e666a4eedbe23fcf176526b4f26d99e1",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Web/Tests/AdminRoleJobHttpSpecs.cs",
+      "bytes": 6478,
+      "sha256": "0dc1024d198cf2adcc1381b77dee54d1debfc32b33aca6f44e453746312187a2",
+      "role": "P"
+    },
+    {
+      "path": "9to1 Workspace/Web/Tests/Program.cs",
+      "bytes": 13244,
+      "sha256": "7a412cb1a8f256b92ab5942d28928b7313f8840a02b196d247ff8f99603abb89",
+      "role": "P"
+    },
+    {
+      "path": ".github/scripts/astra-original-native-session-drain.py",
+      "bytes": 3791,
+      "sha256": "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be",
+      "role": "V"
+    },
+    {
+      "path": ".github/scripts/astra-auth-restore-evidence.py",
+      "bytes": 10043,
+      "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3",
+      "role": "V"
+    },
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 3680,
+      "sha256": "f7f4ac108d287f211eb43e26c5602a2646f149382af0bc8f3fcfff9c4a1d98c8",
+      "role": "V"
+    },
+    {
+      "path": ".github/scripts/astra-organisation-full-owning.py",
+      "bytes": 29107,
+      "sha256": "dd5c059f436ddb867d019f81b985f01cace6142ca0c19a11c8f9c0786ec8f901",
+      "role": "V"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "3b7ba31564c78a3b8c70eb836cebc3f18073a36aeb4f50dff109f584420ab086",
+      "role": "V"
+    },
+    {
+      "path": ".github/workflows/astra-organisation-full-owning.yml",
+      "bytes": 1864,
+      "sha256": "02f4dd2f484dfc97b3ab2e68d202353dbe0116c4cf32ae7e0559ce2796287bca",
+      "role": "V"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/frozen-sdk03-manifest.json",
+      "bytes": 31438,
+      "sha256": "79d5fb4bbe7864fb462f18bbca992ce2909ad24589f50bf5805dec89a570a306",
+      "role": "ORIGINAL_METADATA_NOT_REWRITTEN"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/frozen-sdk03-config.json",
+      "bytes": 21517,
+      "sha256": "2eb0f8605851108fc46da7043ae272b3b5feed0addb57e4cd7fe29ed0ab9b1cd",
+      "role": "ORIGINAL_METADATA_NOT_REWRITTEN"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/frozen-source04-manifest.json",
+      "bytes": 25464,
+      "sha256": "83b1e8b7ba9b42b1472fa0bfabdd979b51d53d451ad780f1a92026003edbf381",
+      "role": "ORIGINAL_METADATA_NOT_REWRITTEN"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/exact-owner-export-map.json",
+      "bytes": 8120,
+      "sha256": "7bf4ff9c49a914a62e55f18787794221fcf8f2fedf63526da98c891e40b82a46",
+      "role": "OWNER_DELIVERY_MAP"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/evidence/whole-sdk-web02-persistence-inverse.json",
+      "bytes": 2560,
+      "sha256": "5251b5527be8e991c38ad04292e2b4e7ed94e00f21585eb5aeb3b26c68f5460b",
+      "role": "SOURCE_PEER_OR_WHOLE_INVERSE_NOT_EXECUTION"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/evidence/worker1-admin-sdk03-complete-original-compiler-source-pdb-creator-peer01.json",
+      "bytes": 2774,
+      "sha256": "5a1f6cf52c2f5f18475ffecf77427523337f09e0ece5666efd1c67898cc64901",
+      "role": "SOURCE_PEER_OR_WHOLE_INVERSE_NOT_EXECUTION"
+    },
+    {
+      "path": "handoff/team-a/admin-sdk03/evidence/worker2-admin-sdk03-original-persistence-close-source-peer-extension01.json",
+      "bytes": 1095,
+      "sha256": "8fd6feac80ef38447ac31d189685603a9163a233767f5409bc0764b4b7d38084",
+      "role": "SOURCE_PEER_OR_WHOLE_INVERSE_NOT_EXECUTION"
+    },
+    {
+      "path": "handoff/team-a/shared/HomePermissionTrustService.selected-source.txt",
+      "bytes": 46308,
+      "sha256": "ada51273b49a766885edb9477df6dc29ade1ba3a5e33b28114132a64007694f4",
+      "role": "REVIEWED_FUTURE_NATIVE_BODY_NOT_PRODUCTION_REPLACEMENT"
+    },
+    {
+      "path": "handoff/team-a/shared/a1-C2-normal-ack-and-source-delivery-map.json",
+      "bytes": 4333,
+      "sha256": "025aa34301145e7b4879b4c8dfd033158cf7a7f0556abdf1d8cb611260ebe5c6",
+      "role": "OWNER_ACK_NORMAL_C2_B73_AND_FUTURE_SOURCE_MAP"
+    }
+  ],
+  "normalC2Acknowledgement": "A1 precise owner ACK for b73a45b4a319fe619f517e9bd1ed1f262ba00b33 independent narrow A63 identity-version change; future native selected body is delivered separately and must retain the C2 edits when integrated.",
+  "providerSource": {
+    "target": "9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+    "selection": "No CloudModelProviders override in joint04; actual A63 remains selected unchanged by A1.",
+    "commit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "gitBlob": "4a7801e0996821dadf458cd0bf649d6cc2672f4e",
+    "bytes": 29923,
+    "sha256": "80ecb0678d3890445991ae1ae287255dce48a915d3b2a842943a70993218da35",
+    "fetchableUrl": "https://github.com/CroakyJake12/9to1/blob/a63d77fe5a9dfea56c938eaa85678a9e170368ec/9to1%20Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs",
+    "C5Qualification": "Per-file current source map only; not a new C5 body/runtime acceptance."
+  },
+  "qualification": "Source-only handoff. Admin SDK03 source/driver peers are clear; original SDK Debug/Release, source/PDB, restore/task/creator/session/process drains and real HTTP outcomes have not run. Exact original configs/manifests retain their local absolute pins for audit and need a verified receiving environment mapping before execution. No self-cut, executable acceptance or release claim. Future trust body is reference delivery only, not an overlay of current Home service. Existing auth/cloud/deployment holds and Team C sole global integration remain unchanged."
+}

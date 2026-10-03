@@ -4,7 +4,7 @@ using System.Text;
 namespace NineToOne.Accounts;
 
 /// <summary>Server authority for Business membership, roles and capability intersections; public clients supply no role assertions.</summary>
-public sealed partial class OrganisationService(string statePath,ProfileService profiles,IOrganisationObjectScopeResolver? objectScopesAuthority=null) : IOrganisationPolicyAuthority
+public sealed partial class OrganisationService(string statePath,ProfileService profiles,IOrganisationObjectScopeResolver? objectScopesAuthority=null,TimeProvider? lifecycleTimeProvider=null,Func<CancellationToken,Task>? adminJobCheckpoint=null) : IOrganisationPolicyAuthority,IOrganisationOwningOperationAuthority
 {
     public Organisation CreateTrustedOrganisation(Guid verifiedOwnerID,string name,BusinessAddOnKind kind,string trustedBillingReference)
     {
@@ -76,19 +76,23 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
             org with {Policy=new(org.Policy.PolicyID,org.Policy.Revision+1,blocked.ToHashSet(StringComparer.Ordinal),new Dictionary<string,string>(forced),new Dictionary<string,string>(defaults),"Published")});
     public Organisation PreviewDowngrade(Guid actorID,Guid orgID)
     {using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.Single(o=>o.OrgID==orgID);Demand(org,actorID,"Admin.Billing.GetConfiguration");return org with {AddOn=org.AddOn with {AddOnID="business",MonthlyPrice=5,SeatLimit=50,State=org.Members.Count(m=>m.State==OrganisationMemberState.Active)>50?BusinessBillingState.PendingDowngrade:org.AddOn.State}};}
-    public ValueTask<OrganisationPolicyDecision> EvaluateAsync(Guid accountID,Guid orgID,string action,IReadOnlyList<string> objectScopes,long? expectedPolicyRevision,CancellationToken ct)
+    public ValueTask<OrganisationPolicyDecision> EvaluateAsync(Guid accountID,Guid orgID,string action,IReadOnlyList<string> objectScopes,long? expectedPolicyRevision,CancellationToken ct) =>
+        ValueTask.FromResult(EvaluateCurrent(accountID,orgID,action,objectScopes,expectedPolicyRevision,ct));
+    // SAME synchronous canonical evaluation; authenticated Admin transport never starts
+    // an unknown async provider under its original session/organisation admission.
+    public OrganisationPolicyDecision EvaluateCurrent(Guid accountID,Guid orgID,string action,IReadOnlyList<string> objectScopes,long? expectedPolicyRevision,CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();using var lease=DurableState.Acquire(statePath);var org=Read().Organisations.SingleOrDefault(o=>o.OrgID==orgID);
-        if(org is null)return ValueTask.FromResult(Decision(false,"OrganisationNotFound",0));
-        if(expectedPolicyRevision is {} expected&&expected!=org.Policy.Revision)return ValueTask.FromResult(Decision(false,"RevisionConflict",org.Policy.Revision));
+        if(org is null)return Decision(false,"OrganisationNotFound",0);
+        if(expectedPolicyRevision is {} expected&&expected!=org.Policy.Revision)return Decision(false,"RevisionConflict",org.Policy.Revision);
         var code=Allowed(org,accountID,action);
         if(code=="Allowed")
         {
             if(objectScopes.Count==0&&!OrganisationGlobalActions.Contains(action))code="ObjectScopeRequired";
             else if(objectScopes.Any(scope=>string.IsNullOrWhiteSpace(scope)||objectScopesAuthority is null||!objectScopesAuthority.Allows(accountID,orgID,action,scope)))code="ObjectScopeDenied";
         }
-        return ValueTask.FromResult(new OrganisationPolicyDecision(code=="Allowed",code,org.Policy.Revision,[],
-            new Dictionary<string,string>(org.Policy.ForcedSettings)));
+        return new OrganisationPolicyDecision(code=="Allowed",code,org.Policy.Revision,[],
+            new Dictionary<string,string>(org.Policy.ForcedSettings));
     }
     // Internal owning-service boundary: the callback must validate its actual canonical resource belongs to this OrgID.
     // Lock order is session -> organisation -> owning resource. No client-supplied ACL, role or scope assertion is used.
@@ -99,11 +103,13 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
         Demand(org,accountID,action);return operation(org);
     }
     private static readonly IReadOnlySet<string> OrganisationGlobalActions=new HashSet<string>(StringComparer.Ordinal){
-        "Admin.Organisations.Get","Admin.Organisations.Update","Admin.Members.Invite","Admin.Members.List","Admin.Roles.Create","Admin.Roles.List","Admin.Policies.Publish","Admin.Policies.Get","Admin.Policies.Preview","Admin.Billing.GetConfiguration","Admin.Audit.List","Admin.Resources.GetUsage"};
+        "Admin.Organisations.Get","Admin.Organisations.Update","Admin.Organisations.Archive","Admin.Organisations.Restore","Admin.Organisations.TransferOwnership","Admin.Members.Invite","Admin.Members.List","Admin.Roles.Create","Admin.Roles.List","Admin.Roles.Update","Admin.Roles.Delete","Admin.Roles.GetEffectivePermissions","Admin.Jobs.List","Admin.Jobs.Get","Admin.Jobs.Cancel","Admin.Jobs.ExecuteExport","Admin.Organisations.Export","Admin.Policies.Publish","Admin.Policies.Get","Admin.Policies.Preview","Admin.Billing.GetConfiguration","Admin.Audit.List","Admin.Resources.GetUsage"};
     private static OrganisationPolicyDecision Decision(bool allowed,string code,long revision)=>new(allowed,code,revision,[],new Dictionary<string,string>());
     private static string Allowed(Organisation org,Guid accountID,string action)
     {
         if((org.AddOn.State is BusinessBillingState.Cancelled or BusinessBillingState.Suspended || org.AddOn.EffectiveFrom > DateTimeOffset.UtcNow || org.AddOn.EffectiveUntil is {} until && until <= DateTimeOffset.UtcNow) && !action.StartsWith("Admin.Billing.",StringComparison.Ordinal)&&!action.StartsWith("Admin.Recovery.",StringComparison.Ordinal))return "EntitlementRequired";
+        if(org.Lifecycle==OrganisationLifecycleState.Archived&&!ArchivedManagementActions.Contains(action)&&
+            !action.StartsWith("Admin.Billing.",StringComparison.Ordinal)&&!action.StartsWith("Admin.Recovery.",StringComparison.Ordinal))return "OrganisationArchived";
         var member=org.Members.SingleOrDefault(m=>m.AccountID==accountID&&m.State==OrganisationMemberState.Active);if(member is null)return "PermissionDenied";
         var roles=org.Roles.Where(r=>member.RoleIDs.Contains(r.RoleID)).ToArray();
         if(org.Policy.BlockedCapabilities.Contains(action)||roles.Any(r=>r.Denials.Contains(action)||r.Denials.Contains("*")))return "PolicyDenied";
@@ -134,7 +140,7 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
         if(state.Organisations is null||state.Audit is null||state.Idempotency is null||state.Organisations.Any(o=>o is null)||state.Audit.Any(a=>a is null)||state.Organisations.Select(o=>o.OrgID).Distinct().Count()!=state.Organisations.Count)throw new InvalidDataException("corrupt_organisation_state");
         foreach(var org in state.Organisations)
         {
-            if(org.SchemaVersion!=1||org.OrgID==Guid.Empty||org.Revision<1||org.Members is null||org.Roles is null||org.Members.Any(m=>m is null)||org.Roles.Any(r=>r is null)||org.Policy is null||org.AddOn is null||!Enum.IsDefined(org.AddOn.State))throw new InvalidDataException("corrupt_organisation");
+            if(org.SchemaVersion is not (1 or 2)||!Enum.IsDefined(org.Lifecycle)||org.SchemaVersion==1&&org.Lifecycle!=OrganisationLifecycleState.Active||org.OrgID==Guid.Empty||org.Revision<1||org.Members is null||org.Roles is null||org.Members.Any(m=>m is null)||org.Roles.Any(r=>r is null)||org.Policy is null||org.AddOn is null||!Enum.IsDefined(org.AddOn.State))throw new InvalidDataException("corrupt_organisation");
             if(org.AddOn.DefinitionVersion!=1||org.AddOn.Currency!="USD"||org.AddOn.AddOnID is not ("business" or "business-plus")||
                 (org.AddOn.AddOnID=="business"?org.AddOn.SeatLimit!=50:org.AddOn.SeatLimit is not null)||
                 org.AddOn.EffectiveFrom==default||org.AddOn.EffectiveUntil is {} end&&end<=org.AddOn.EffectiveFrom||
@@ -150,7 +156,8 @@ public sealed partial class OrganisationService(string statePath,ProfileService 
             !state.Organisations.Any(o=>o.OrgID==t.OrgID)||t.DefinitionVersion!=1||t.AddOnID is not ("business" or "business-plus"))||
             transitions.Select(t=>t.EventID).Distinct(StringComparer.Ordinal).Count()!=transitions.Count))throw new InvalidDataException("corrupt_business_billing_history");
         if(state.Invitations is {} invitations && invitations.Any(i=>i is null||i.InvitationID==Guid.Empty||i.InviterID==Guid.Empty||i.RoleIDs is null||string.IsNullOrWhiteSpace(i.TokenHash)||!state.Organisations.Any(o=>o.OrgID==i.OrgID)))throw new InvalidDataException("corrupt_organisation_invitation");
+        ValidateOwnershipTransfers(state);ValidateLifecycleReceipts(state);ValidateAdministrationState(state);
         return state;
     }
-    private void Save(OrganisationState state){Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(statePath))!);DurableState.Write(statePath,state);}
+    private void Save(OrganisationState state){var admission=administrationAdmission.Value;admission?.Recheck();Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(statePath))!);admission?.Recheck();DurableState.Write(statePath,state);if(admission is not null)admission.Committed=true;}
 }
