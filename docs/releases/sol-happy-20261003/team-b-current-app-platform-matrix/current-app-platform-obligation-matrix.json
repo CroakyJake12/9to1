@@ -1,0 +1,3014 @@
+{
+  "canonicalRevision": "AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI",
+  "captureSHA256": "207abdfb6575d0348da10e4227888a026d71c3a01053535166f3cf4382d8099a",
+  "recordedUTC": "2026-10-03T22:18:58.677662+00:00",
+  "method": "Scanned complete current8534-record canonical snapshot for exact platform terms; bounded each product section using actual headings. App-specific clauses remain attached verbatim; inherited defaults and explicit overrides distinguished. This is an obligation matrix, not implementation/readiness/app-count acceptance.",
+  "platformClauseScanCount": 310,
+  "globalClauses": [
+    {
+      "startIndex": 2699,
+      "text": "Supported platforms and capability matrix \u2014 Windows, 9to1-OS, web and other supported surfaces, including exact differences rather than silent feature loss."
+    },
+    {
+      "startIndex": 7985,
+      "text": "Completion evidence MUST cover representative end-to-end journeys, persistence/restart behaviour, API/UI parity, permissions, accessibility, failure/recovery paths, donor parity where applicable and platform/package validation for every declared supported platform."
+    },
+    {
+      "startIndex": 97581,
+      "text": "Web CUI MAY use a browser-specific implementation/runtime, but it MUST preserve the same public CUI semantics, component contracts, state identities and supported action/property behaviour except for explicitly declared platform capability differences."
+    },
+    {
+      "startIndex": 102919,
+      "text": "Every installable/native 9to1 app has a hard runtime dependency on 9-1 Home. Before initialising the app\u2019s normal UI or opening user artifacts, the app MUST complete a local Home availability/version handshake against the Home-managed shared services it requires."
+    },
+    {
+      "startIndex": 103827,
+      "text": "This local-install dependency applies to native/installable clients. Browser-hosted web surfaces cannot require a local Home installation; they instead use the corresponding authenticated 9to1 shared web services and capability negotiation defined for web clients."
+    },
+    {
+      "startIndex": 112703,
+      "text": "Cakemods.com MUST host a web version of every 9-1 Workspace/AI product that is not explicitly listed as web-exempt. Web surfaces MUST share the same CAKE ID identity, canonical artifact formats, domain APIs, permission model and underlying server-side entities as desktop equivalents. Browser-specific UI/layout MAY differ, but it MUST NOT create a separate incompatible product model."
+    },
+    {
+      "startIndex": 113091,
+      "text": "The default rule is to provide a web version whenever the product\u2019s core value can sensibly work in a browser. Browser-specific capability limits are acceptable when they are explicit and the useful core product remains intact; a single desktop-only feature is not by itself a reason to omit an otherwise useful web app."
+    },
+    {
+      "startIndex": 113413,
+      "text": "Web exemption is permitted only when the product\u2019s core function requires infrastructure, privileged device access or hosted compute that CAKE does not currently provide. Each exemption MUST state the blocking capability/infrastructure. Exemptions MUST be re-evaluated when that blocker is removed; exemption is not a permanent product classification."
+    },
+    {
+      "startIndex": 113786,
+      "text": "Mini Computer \u2014 a useful web version would require hosted virtualisation/server compute that CAKE does not currently have capacity to provide."
+    },
+    {
+      "startIndex": 113930,
+      "text": "Mini Computer may gain a hosted web mode in the future as a 9to1 subscription capability if sufficient server compute is available. The same principle applies to future apps whose meaningful web implementation requires paid hosted compute."
+    },
+    {
+      "startIndex": 1309589,
+      "text": "Windows, 9to1-OS and browser/web MUST implement the useful core authoring and reader experiences for this tranche using the same canonical formats, account identity, domain APIs and permissions. Native interfaces use CUI/Home; web uses the existing authenticated web-service contract and MUST not require arbitrary local filesystem/process access. A narrow viewport by itself is not a reason to replace an otherwise supported app with an unrelated simplified data model."
+    },
+    {
+      "startIndex": 1346713,
+      "text": "The single trusted installer MUST install Home, all mandatory modules, the selected app and its app-required dependencies. Selecting a second app MUST reuse compatible shared packages. Internal platform package formats may be used; separate user-facing standalone MSIX installers for individual apps are not the distribution model. Native Windows and 9to1-OS use this contract through their supported packaging mechanisms. Browser apps use authenticated shared web services and MUST NOT require a local Home installation."
+    }
+  ],
+  "apps": [
+    {
+      "app": "Home",
+      "sectionStart": 144391,
+      "sectionEndIndex": 199544,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 145395,
+          "text": "Home installation includes the Home Core background service/runtime required by native apps plus the Home user-facing CUI shell. Native apps require a compatible Home installation/Home Core service, but the visible Home window does not need to remain open while other apps run. On 9to1-OS, Home Core may be integrated as a system component while preserving the same service contracts."
+        },
+        {
+          "startIndex": 151936,
+          "text": "Library is Home\u2019s cross-app artifact index/browser, not a duplicate Files app and not a separate storage authority. It MUST surface canonical references to authorised artifacts across 9to1 apps, including recent, favourite/pinned, shared, generated/created and app/type-filtered content where applicable."
+        },
+        {
+          "startIndex": 153651,
+          "text": "9-1 Discover is the model browser/discovery surface inside Home. It MUST aggregate model/catalogue information from configured providers rather than depend on one catalogue. Search, filter and comparison MUST support model identity, provider/origin, modality, capabilities, architecture/parameter information when known, context limits, quantisation/format where known, local/cloud status, hardware-fit estimate, install/connection state, entitlement/cost class and privacy/residency information."
+        },
+        {
+          "startIndex": 157054,
+          "text": "The Universal Model Picker is the single shared model/provider selection and routing interface for the 9to1 ecosystem. On Windows/regular 9to1 it is hosted by Home; on 9to1-OS the same canonical state is surfaced by the OS. Apps, Agents and AI surfaces MUST NOT create incompatible private model pickers, provider registries or fallback logic when this shared capability applies."
+        },
+        {
+          "startIndex": 160487,
+          "text": "Home/Dulche MUST support versioned ordered Model Routes shared by regular 9to1 and 9to1-OS. A Model Route is an ordered list of stable configured model identities plus per-entry enabled/disabled state and routing policy. Users can reorder candidates directly in Home, including by drag/reorder UI, without changing the models' canonical identities."
+        },
+        {
+          "startIndex": 166014,
+          "text": "For local candidates the picker may show estimated RAM/VRAM requirement, current availability, loading state and reclaimable resources when known. On 9to1-OS this integrates with the AI-aware resource manager; on other Home platforms it uses the available Dulche/runtime resource information without pretending OS-level reclamation exists where it does not."
+        },
+        {
+          "startIndex": 166726,
+          "text": "Regular 9to1/Home and 9to1-OS use one canonical Dulche model catalogue and versioned routing contract."
+        },
+        {
+          "startIndex": 183206,
+          "text": "Home Core MUST expose the Shared Productivity Engine as a versioned shared platform capability. Apps may link/embed approved shared engine libraries/components as part of their package for rendering performance, but the canonical schema registry, compatibility negotiation and shared service/version authority remain Home-owned. Apps MUST validate compatible engine/schema versions during startup."
+        },
+        {
+          "startIndex": 186688,
+          "text": "Home MUST support notification history, read/unread state, dismiss/clear subject to retention policy, per-source/category preferences and deep-link actions. Where Windows/9to1-OS system notifications are available, Home MAY bridge eligible notifications to the OS while retaining the canonical 9to1 notification record/state."
+        },
+        {
+          "startIndex": 192911,
+          "text": "Windows: Home provides the full native hub/shell, Home Core background services and the Home-hosted Universal Model Picker. Native apps depend on the compatible Home installation/Home Core handshake."
+        },
+        {
+          "startIndex": 193112,
+          "text": "9to1-OS: Home Core/shared service contracts remain authoritative platform services, but selected controls may be integrated into OS-native system surfaces. The Universal Model Picker is OS-hosted while using the same canonical Dulche/model/provider state. 9to1-OS MUST NOT create divergent duplicate settings/package/model databases."
+        },
+        {
+          "startIndex": 193447,
+          "text": "Web: the Home web surface uses CAKE ID and server-hosted equivalents for account, Library, Dashboard, notifications, search and other supported cloud capabilities. It MUST capability-negotiate and clearly mark local-only/native-only functions such as local package management, local models/devices or unavailable Home Core services rather than pretending they exist in-browser."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "9to1 Admin",
+      "sectionStart": 199546,
+      "sectionEndIndex": 218586,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 200117,
+          "text": "Admin MUST have Windows, 9to1-OS and browser/web surfaces sharing the same CAKE ID, organisation entities, domain APIs and permission evaluation. Native clients use Home\u2019s shared services. The web app uses authenticated shared web services without requiring a local Home installation for ordinary organisation administration. Device operations require an enrolled compatible endpoint; a browser cannot directly enforce unsupported local OS controls. Unsupported capabilities MUST remain distinguishable from denied permission or an offline device."
+        },
+        {
+          "startIndex": 200665,
+          "text": "Admin owns management workflows and policy editing. The account/billing service owns subscriptions and ledgers; Spaces owns Team Spaces; Files owns shared-drive content; Connect owns communications; Home/Mesh owns pairing and device-resource execution; Dulche/Den owns Agents; the 9to1-OS policy service owns endpoint enforcement. Admin MUST invoke these canonical services rather than create duplicate content, Agent registries, payment records or a competing permission broker. This is a native CUI product built on those existing services; no new paid administration donor or hosting service is selected by this specification."
+        },
+        {
+          "startIndex": 208485,
+          "text": "Controls MUST include organisation, role and member ceilings for AI usage and applicable storage/site resources; warnings and hard-stop behaviour; configured time windows; and model/Agent/Automation attribution. A hard ceiling is enforced before work is admitted. No paid overage or automatic top-up is enabled merely because a warning threshold is crossed. Reports MUST separate allocated, available, reserved, consumed, rolled-over and expired credits and display the reset/expiry policy and freshness."
+        },
+        {
+          "startIndex": 217405,
+          "text": "Platform tests MUST cover Windows, 9to1-OS and web, including browser administration without local Home, unsupported endpoint controls and offline rollout remaining pending. Test restart/persistence, stale revisions, partial bulk failure, rollback, secret redaction, report reconciliation, keyboard/focus/screen-reader operation and equivalent API behaviour. Lists MUST remain paginated, exports/rollouts asynchronous where long-running, and expensive reports must not block policy checks. A rendered dashboard or stub action is not implementation completion."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Files",
+      "sectionStart": 218588,
+      "sectionEndIndex": 245453,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 226009,
+          "text": "9to1 Drive MUST appear directly in the normal Files sidebar/location tree alongside local drives and other providers. Hosted storage MUST NOT open into a separate incompatible cloud-files UI. Desktop, web and owning apps address the same canonical hosted objects by stable IDs."
+        },
+        {
+          "startIndex": 242270,
+          "text": "Windows and 9to1-OS native Files expose local, removable, network, hosted and connected-provider locations according to platform/provider capability. Web Files exposes hosted/provider-accessible content but MUST NOT pretend to have arbitrary access to the browser user\u2019s local filesystem. Browser local upload/download uses explicit browser-authorised file/folder selection."
+        },
+        {
+          "startIndex": 242899,
+          "text": "9to1 Drive appears as a normal first-class location and the same FileID opened via web and desktop represents the same canonical hosted object."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Connect",
+      "sectionStart": 245455,
+      "sectionEndIndex": 270647,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Mail",
+      "sectionStart": 270648,
+      "sectionEndIndex": 290970,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 272334,
+          "text": "Users MUST be able to select reading-pane right, reading-pane bottom or reading-pane off, plus supported density options. Smaller windows MUST responsively collapse the layout into two-pane or single-pane navigation without squeezing unreadable columns."
+        },
+        {
+          "startIndex": 288315,
+          "text": "Native Windows/9to1-OS Mail MUST support configured local caching/offline behaviour and Home-integrated notifications/files/model services. Web Mail uses authenticated server/provider APIs and the same canonical account/message identities where available, but browser storage/offline capabilities MUST be capability-negotiated rather than assumed identical to native."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Games",
+      "sectionStart": 290972,
+      "sectionEndIndex": 320607,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 292881,
+          "text": "The user-facing editor MUST be rebuilt as a coherent 9to1 CUI experience rather than exposing donor-native editor chrome as the final interface. Existing mature donor capability MAY remain behind the shell, but navigation, inspector, asset browser, scene graph, editors, dialogs, settings, errors and workflows MUST follow 9to1 interaction conventions."
+        },
+        {
+          "startIndex": 302565,
+          "text": "Games SHOULD support readable controller-layout names rather than forcing numeric button indices, including semantic/positional forms such as Controller.Letters.Down, Controller.Letters.Left, bumpers, triggers, D-pad, LeftStick and RightStick. Platform-specific glyph/display mapping is handled by the engine."
+        },
+        {
+          "startIndex": 311940,
+          "text": "Every advanced renderer feature MUST expose truthful hardware/platform capability detection, quality fallbacks, performance diagnostics and deterministic project settings. Unsupported hardware MUST degrade gracefully rather than silently producing broken scenes."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Spaces",
+      "sectionStart": 320608,
+      "sectionEndIndex": 355444,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 321769,
+          "text": "Chat is the broad general-purpose conversational environment for ordinary questions, app actions, files, web research where enabled, shared objects, tools and agentic work."
+        },
+        {
+          "startIndex": 323066,
+          "text": "Research is the deeper source-oriented research environment for research plans, source sets, citations/provenance, findings, notes and structured outputs. It MUST make source scope and outside-web access explicit."
+        },
+        {
+          "startIndex": 347005,
+          "text": "Web access and source provenance"
+        },
+        {
+          "startIndex": 347039,
+          "text": "Web access MUST be an explicit Space/tool policy with at least Allowed, Ask and Disabled semantics where applicable. Source-only/closed-corpus workflows MUST be able to disable outside web retrieval completely."
+        },
+        {
+          "startIndex": 347251,
+          "text": "When an answer materially relies on identifiable source material, Spaces MUST preserve clickable provenance/citations back to the underlying file/page/message/web source/entity where supported. It MUST distinguish source-derived claims from generated reasoning and must not claim support that the retrieved sources do not provide."
+        },
+        {
+          "startIndex": 354613,
+          "text": "A web-disabled/source-only workflow cannot silently browse outside its allowed corpus."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Vision & Voice",
+      "sectionStart": 355446,
+      "sectionEndIndex": 383078,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 374871,
+          "text": "Dictation is a separate reusable speech-to-text editing capability, not a full Voice conversation mode. It MUST be available to supported editable text surfaces such as Write, Spaces, Mail, Boards, Present speaker notes, Planner descriptions, Sites, AI Studio and other CUI text editors through the shared platform capability."
+        },
+        {
+          "startIndex": 376997,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 377028,
+          "text": "Native Windows/9to1-OS may provide the full OS-global Overlay, native window/display capture and background voice capabilities. Web may provide microphone, camera and browser-authorised screen sharing but MUST NOT claim an OS-global Overlay outside the browser. Mobile uses supported camera/microphone/share-sheet/screen-capture capabilities. All surfaces capability-negotiate rather than assuming parity."
+        },
+        {
+          "startIndex": 382852,
+          "text": "Web/native capability differences are reported accurately, including no false claim of OS-global Overlay on web."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "AI Studio",
+      "sectionStart": 383080,
+      "sectionEndIndex": 410679,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 388693,
+          "text": "Plugins / Connectors lists canonical Dulche Plugins, MCP/external connectors and applicable 9to1 app capability bindings available to the Agent. + Add opens the relevant Dulche capability browser. Entries are stable references; Agent Builder MUST NOT clone Plugin/connector definitions into the Agent."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Play",
+      "sectionStart": 410681,
+      "sectionEndIndex": 426394,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 418644,
+          "text": "A GameDefinition MUST declare the game-specific capability profile available to Agent contestants. Tools such as web search, calculators, code execution, Files, Plugins or external connectors may be Allowed, Denied or constrained per game/role."
+        },
+        {
+          "startIndex": 418890,
+          "text": "Disallowed capabilities MUST be removed/blocked at runtime rather than merely discouraged in instructions. A no-calculator maths quiz cannot expose calculator/code/web tools to Agent contestants. A research contest may explicitly permit them."
+        },
+        {
+          "startIndex": 425700,
+          "text": "Game-specific tool restrictions are enforced at runtime, including a no-web/no-code/no-calculator quiz profile."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Write",
+      "sectionStart": 426395,
+      "sectionEndIndex": 456066,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 426415,
+          "text": "9to1 Write is the production document/word-processing surface. It MUST behave like a mature word processor rather than a web editor, site builder, Markdown editor, collection of HTML blocks or browser contenteditable surface. LibreOffice Writer/LibreOfficeKit is the mature donor/layout/format engine for text-oriented documents; 9to1 owns the CUI shell, shared Productivity Engine integration, collaboration, AI, Sections model and native extensions."
+        },
+        {
+          "startIndex": 443922,
+          "text": "Write MUST open and edit PDFs as first-class fixed-layout documents; PDF support is not export-only and MUST NOT simply convert every PDF into HTML or an approximate web editor. The Write shell remains consistent while an appropriate PDF/page-object engine (including applicable LibreOffice Draw/PDF capabilities or equivalent mature implementation) owns fixed-layout PDF object semantics."
+        },
+        {
+          "startIndex": 452565,
+          "text": "Write uses a real structured word-processing/document engine and is not implemented as a generic HTML/contenteditable/web editor."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Present",
+      "sectionStart": 456068,
+      "sectionEndIndex": 488941,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 458115,
+          "text": "A platform capability is supported only when the platform capability registry declares the required capability and version for the active device/runtime."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Canvas",
+      "sectionStart": 488942,
+      "sectionEndIndex": 526501,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 490872,
+          "text": "REPLACE_WITH_9TO1_NATIVE_EQUIVALENT is used when 9to1 already owns the equivalent platform capability, including CUI shell/UI, Dulche AI, Home permission handling, Files storage integration or other shared 9to1 services."
+        },
+        {
+          "startIndex": 491386,
+          "text": "Supported platforms and capability negotiation"
+        },
+        {
+          "startIndex": 491433,
+          "text": "Canvas MUST ship on every 9to1 platform for which the app is not explicitly exempt under the global platform/web rules. Desktop/native and web implementations MUST share the same Canvas artifact schema, stable identities, domain API semantics and server-side canonical entities."
+        },
+        {
+          "startIndex": 491712,
+          "text": "Platform-specific input or rendering capability differences MUST be negotiated explicitly. Hardware capability absence MUST NOT be misrepresented as format incapability."
+        },
+        {
+          "startIndex": 525791,
+          "text": "Native and web/open-on-lower-capability round trips preserve unsupported pressure/tilt and other stored data."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Boards",
+      "sectionStart": 526502,
+      "sectionEndIndex": 555687,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 542297,
+          "text": "Scoped Chat is a closed-corpus notebook-style Chat PageType. Its answers MUST be grounded only in the authorised contents of the containing Board plus the explicit source collection attached to that Scoped Chat. It MUST NOT search the public web, invoke external-information retrieval tools or consult unrelated connected-app content to fill evidence gaps."
+        },
+        {
+          "startIndex": 547334,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 547365,
+          "text": "Boards MUST ship useful supported native behaviour on Windows and 9to1-OS and a useful web version under the global web-product contract. All clients operate on the same Board/Page/artifact identities and canonical revisions. Platform capability differences MUST be explicit and queryable rather than silently dropping features."
+        },
+        {
+          "startIndex": 547695,
+          "text": "Browser/native differences may include pen pressure/tilt, OS file drag-and-drop, clipboard richness, filesystem access, windowing and availability of specialised embedded surfaces. When a capability is unavailable, Boards MUST provide the closest useful supported interaction or a clear unsupported-capability state without corrupting or flattening the underlying artifact."
+        },
+        {
+          "startIndex": 555255,
+          "text": "Windows, 9to1-OS and web clients capability-negotiate declared differences while preserving the same canonical Board/Page/artifact identities."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Planner",
+      "sectionStart": 555689,
+      "sectionEndIndex": 580795,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 576704,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 576734,
+          "text": "Planner MUST provide useful supported native behaviour on Windows and 9to1-OS plus a useful web version under the global web contract. All clients operate on the same canonical Planner/provider entities."
+        },
+        {
+          "startIndex": 576938,
+          "text": "Native clients MAY have richer OS notification/calendar integration; web may depend on browser notification/background constraints. Capability differences are explicit and MUST NOT silently downgrade the canonical planning state or turn the web app into a read-only viewer."
+        },
+        {
+          "startIndex": 580398,
+          "text": "Windows, 9to1-OS and web preserve the same canonical entity model while surfacing declared capability differences."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Automations",
+      "sectionStart": 580796,
+      "sectionEndIndex": 603734,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Picture",
+      "sectionStart": 603735,
+      "sectionEndIndex": 631739,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 627379,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 627409,
+          "text": "Picture MUST provide useful Windows, 9to1-OS and web editing/creation experiences over the same PictureDocument model. Codec, RAW, HDR, GPU effect, pen/tilt and local/remote AI capability differences are explicit and queryable."
+        },
+        {
+          "startIndex": 627637,
+          "text": "The web app MUST NOT degrade into a read-only image viewer. Unsupported platform features are disabled with a capability reason while preserving the canonical document so another capable client can continue editing."
+        },
+        {
+          "startIndex": 631308,
+          "text": "Windows, 9to1-OS and web preserve the same canonical document model while capability-negotiating codecs/GPU/AI/pen differences."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Wave",
+      "sectionStart": 631740,
+      "sectionEndIndex": 658707,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 655357,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 655387,
+          "text": "Wave MUST provide useful Windows, 9to1-OS and web editing/creation experiences over the same canonical project model. Input devices, realtime audio APIs, codecs, plugin/instrument backends, MIDI/controller access and local/cloud model capabilities are explicit/queryable."
+        },
+        {
+          "startIndex": 655659,
+          "text": "Web MUST remain a useful multitrack/sequencer/editor experience rather than a static player. Unsupported platform capabilities are disabled with a clear reason while preserving project state for another capable client."
+        },
+        {
+          "startIndex": 658417,
+          "text": "Windows, 9to1-OS and web preserve the same project/generated-component model while capability-negotiating audio hardware/backend differences."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Motion",
+      "sectionStart": 658708,
+      "sectionEndIndex": 688671,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 684630,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 684660,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Motion project/graph/generated-component model while capability-negotiating codecs, GPU/hardware acceleration, camera/device access, model availability and performance differences."
+        },
+        {
+          "startIndex": 688433,
+          "text": "Windows, 9to1-OS and web preserve the same canonical project model while capability-negotiating backend/hardware/model differences."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Data",
+      "sectionStart": 688672,
+      "sectionEndIndex": 734946,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 704581,
+          "text": "Data MUST provide native SQL authoring/execution with syntax highlighting, dialect-aware parsing/validation, schema/object browser, table/column/function completion, relationship-aware join suggestions, query formatting, parameters where supported, saved queries, query history, execution timing/statistics, cancellation, paged/virtualised result sets, EXPLAIN/plan access where supported and result export/materialisation."
+        },
+        {
+          "startIndex": 729567,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 729597,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Data project/workbook/schema/query/pipeline/cube/Visualisation model while capability-negotiating local DuckDB execution, LibreOffice-derived compatibility components, external database drivers, file access and hardware/resource differences."
+        },
+        {
+          "startIndex": 734721,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Data model while capability-negotiating local/provider execution differences."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Forms",
+      "sectionStart": 734947,
+      "sectionEndIndex": 771112,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 750834,
+          "text": "Authors can configure logos, organisation branding, custom header/footer, background artwork and hosted-form identity. Custom domains/advanced branding integrate with the wider 9to1 web platform where supported."
+        },
+        {
+          "startIndex": 756769,
+          "text": "Forms MUST provide configurable anti-cheat/integrity controls, with stronger options available for Tests and live assessments while making clear that browser-based controls reduce opportunities but cannot guarantee that cheating is impossible."
+        },
+        {
+          "startIndex": 766327,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 766357,
+          "text": "Windows, 9to1-OS and web preserve the same canonical FormProject, response, mode, Data binding, graph and multiplayer-session model while capability-negotiating device features, realtime transport, identity providers, proctoring/kiosk integrations and mathematical/rendering backends."
+        },
+        {
+          "startIndex": 769368,
+          "text": "A standard live multiplayer quiz synchronises question state, answer windows, scoring and reveal using server-authoritative state."
+        },
+        {
+          "startIndex": 770861,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Forms model while capability-negotiating platform-specific realtime/integrity features."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Dev",
+      "sectionStart": 771113,
+      "sectionEndIndex": 812450,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 773220,
+          "text": "First-party examples include console applications, CUI applications, class/static/shared libraries, web/API services, test projects, Python packages/CLI applications, Sites projects, Android/mobile projects, operating-system/kernel/bootloader projects, 9to1 extensions, CUI component libraries, AI provider/tool projects and other supported templates."
+        },
+        {
+          "startIndex": 779331,
+          "text": "Examples include console \u2192 terminal, web \u2192 development server + preview, Android \u2192 emulator/device install + launch, CUI application \u2192 application runtime, 9to1 extension \u2192 extension development host, operating system \u2192 virtual machine, and library \u2192 test/sample host where configured."
+        },
+        {
+          "startIndex": 790838,
+          "text": "Dev is the primary development/debugging environment for a shared native 9to1 Extension platform. Extensions MAY contribute language/toolchain/debugger/formatter/linter providers, project templates, package providers, editors, commands, tool windows, CUI/visual-builder components, AI context/tools, Node Graph node types and product-specific contributions exposed by host APIs."
+        },
+        {
+          "startIndex": 791393,
+          "text": "Extensions use a versioned manifest declaring ExtensionID, publisher/name/version, compatible host/API versions, entry points, target products, contributions, permissions/capabilities, dependencies, supported platforms, assets, update channel and signature/provenance."
+        },
+        {
+          "startIndex": 794221,
+          "text": "Web/Sites-compatible Run/Preview may use Sites preview/runtime infrastructure for responsive preview, route inspection, development server integration, preview environments and deployment-oriented diagnostics without Dev duplicating the entire Sites authoring product."
+        },
+        {
+          "startIndex": 798687,
+          "text": "PreviewProvider is a typed project/extension capability. Representative providers include CUI live render, Sites/web preview, Markdown render, extension host/sample host, AI Studio tool test harness, Android emulator/device and OS virtual-machine display/serial view."
+        },
+        {
+          "startIndex": 799752,
+          "text": "Applicable previews are interactive. CUI/web previews can accept pointer/keyboard/navigation input, resize, hover/focus state and other runtime interactions without becoming the general Browse product."
+        },
+        {
+          "startIndex": 807799,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 807829,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Dev project/workspace/action models while capability-negotiating local compiler availability, process execution, VM acceleration, terminal/debugger integration, filesystem access, extension hosting and remote environments."
+        },
+        {
+          "startIndex": 812227,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Dev model while capability-negotiating unsupported local execution features."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Stacks",
+      "sectionStart": 812451,
+      "sectionEndIndex": 862473,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 857322,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 857352,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Project/Domain/Root/Subroot/Freeze/ChangeRequest model. Local materialisation, Git executable availability, filesystem semantics, credential providers and build integrations are capability-negotiated."
+        },
+        {
+          "startIndex": 862249,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Stack model while capability-negotiating local materialisation/Git support."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Sites",
+      "sectionStart": 862474,
+      "sectionEndIndex": 911015,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 862517,
+          "text": "9-1 Sites is the native CUI visual website-building, CMS, preview and deployment surface. It MUST support professional source-backed websites and web applications while remaining approachable for users who prefer visual authoring."
+        },
+        {
+          "startIndex": 866089,
+          "text": "New Site provides searchable templates/project types such as Blank, marketing/business site, portfolio, blog, documentation, landing page, web application, community/project site, content-driven site and other installed provider templates."
+        },
+        {
+          "startIndex": 869806,
+          "text": "The visual editor supports mature responsive web layout including normal document flow, stack/flex-style layout, grid, wrapping, alignment, gaps, padding/margins, min/max sizing, aspect ratio, container widths, sticky/fixed positioning where supported, overlays and deliberate absolute/freeform positioning."
+        },
+        {
+          "startIndex": 878033,
+          "text": "Every executable node declares execution context/capabilities such as client-safe, server/trusted backend, build-time, deployment-provider or external integration. Sites MUST NOT compile secrets or trusted permission checks into untrusted browser execution merely because a graph contains them."
+        },
+        {
+          "startIndex": 880950,
+          "text": "Complex structured data/database requirements may delegate to Data; Sites CMS remains optimised for web content authoring rather than duplicating Data's complete database product."
+        },
+        {
+          "startIndex": 883321,
+          "text": "The asset browser supports images, video, icons, documents, fonts where licensing permits and other registered media. Moving/renaming a Files-backed asset MUST NOT break references that use stable identity."
+        },
+        {
+          "startIndex": 885402,
+          "text": "Performance and web-quality diagnostics"
+        },
+        {
+          "startIndex": 885442,
+          "text": "Sites surfaces web-performance problems it can determine such as oversized images/media, excessive bundles/scripts/fonts, known render-blocking resources, large page payloads and expensive third-party dependencies."
+        },
+        {
+          "startIndex": 889338,
+          "text": "Secrets MUST NOT be exposed into browser bundles, logs, previews, AI context or generated diffs unless the operation explicitly requires the value and the caller/environment is authorised."
+        },
+        {
+          "startIndex": 905112,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 905142,
+          "text": "Windows, 9to1-OS and web preserve the same canonical SiteProject/Page/Component/CMS/NodeGraph/Deployment models while capability-negotiating local framework tooling, embedded preview, browser isolation, filesystem/source access and provider integrations."
+        },
+        {
+          "startIndex": 908899,
+          "text": "Private secrets are not emitted into browser bundles, logs, AI context or diffs during representative build/deploy workflows."
+        },
+        {
+          "startIndex": 909479,
+          "text": "Windows, 9to1-OS and web preserve the same canonical Sites model while capability-negotiating local build/preview/provider features."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Terminal",
+      "sectionStart": 911016,
+      "sectionEndIndex": 942215,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 912099,
+          "text": "Environment identity is explicit. A session always knows whether it targets the local host, WSL, container, SSH host, VM, Dev environment, 9to1-OS host or another registered execution provider."
+        },
+        {
+          "startIndex": 923791,
+          "text": "Terminal supports environment providers for local host, WSL, containers, SSH/remotes, virtual machines, Dev environments, 9to1-OS systems and extension-contributed execution targets."
+        },
+        {
+          "startIndex": 927192,
+          "text": "Every 9to1 app MAY register a Terminal integration provider exposing discoverable read/actions, context resolvers, entity links, completion/help metadata and structured renderers through the shared API model. Terminal treats this as a first-class platform capability, not bespoke one-off integrations."
+        },
+        {
+          "startIndex": 937657,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 937687,
+          "text": "Windows, 9to1-OS and web preserve the same TerminalSession, mode, AI action and integration model while capability-negotiating local PTY implementation, shells, WSL, OS elevation, SSH/provider and process controls."
+        },
+        {
+          "startIndex": 937902,
+          "text": "Web Terminal requires an authorised remote/server environment provider for real shell execution unless the web platform exposes an approved execution environment. It MUST NOT present browser-side simulation as host terminal access."
+        },
+        {
+          "startIndex": 941981,
+          "text": "Windows, 9to1-OS and web/remote configurations preserve the same canonical Terminal model while capability-negotiating shell execution."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Mini Computer",
+      "sectionStart": 942216,
+      "sectionEndIndex": 979977,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "EXPLICIT CURRENT WEB EXEMPTION at113786: hosted virtualisation/server compute unavailable; re-evaluate when removed. Declared remote/web management retains canonical model when supported; no fake local VM.",
+      "otherClients": "Other supported desktop hosts preserve canonical VM/provider/media model at974549.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 944934,
+          "text": "Mini Computer exposes a canonical VirtualisationProvider interface. The built-in 9to1 VirtualBox fork is selected by default, while users may connect/install additional compatible providers such as QEMU, KVM, Windows hypervisor integrations or extension-contributed providers when supported."
+        },
+        {
+          "startIndex": 949287,
+          "text": "Curated ISO Browser"
+        },
+        {
+          "startIndex": 949307,
+          "text": "Mini Computer includes a first-class ISO Browser/Discover OS experience for acquiring trusted operating-system installation media. It is a curated publisher catalogue, not an unrestricted Internet ISO search engine."
+        },
+        {
+          "startIndex": 951830,
+          "text": "ISO Browser user flow"
+        },
+        {
+          "startIndex": 961954,
+          "text": "Users can save reusable VM templates/profiles for common environments such as Windows testing, Linux development, server labs or 9to1-OS development."
+        },
+        {
+          "startIndex": 962614,
+          "text": "A template may state ISO required and route the user into the ISO Browser/provider flow rather than implying the operating system is included."
+        },
+        {
+          "startIndex": 966563,
+          "text": "User logout/system shutdown semantics are platform-specific and exposed clearly when background VM continuation is unavailable."
+        },
+        {
+          "startIndex": 968142,
+          "text": "AI requests such as create a Windows test VM, take a snapshot before this kernel test, explain why boot failed or add disk capacity resolve to typed Mini Computer/provider actions."
+        },
+        {
+          "startIndex": 972324,
+          "text": "VM list, create wizard, settings, snapshots, networks, ISO Browser, provider status and power controls are keyboard-operable with screen-reader semantics."
+        },
+        {
+          "startIndex": 974519,
+          "text": "Platform capability behaviour"
+        },
+        {
+          "startIndex": 974549,
+          "text": "Windows, 9to1-OS and other supported desktop hosts preserve the same canonical VM/provider/media model while capability-negotiating the built-in VirtualBox fork, hardware acceleration, host networking, device passthrough and filesystem/storage behaviour."
+        },
+        {
+          "startIndex": 974804,
+          "text": "Web surfaces may manage/view remote Mini Computer providers/VMs when an authorised remote execution provider exists but MUST NOT pretend the browser itself can provide unrestricted local hardware virtualisation."
+        },
+        {
+          "startIndex": 977597,
+          "text": "The ISO Browser lists only registered/curated publisher providers rather than arbitrary unverified Internet downloads."
+        },
+        {
+          "startIndex": 979592,
+          "text": "Keyboard/screen-reader workflows cover VM creation, ISO Browser, VM state controls, settings, snapshots and provider status."
+        },
+        {
+          "startIndex": 979717,
+          "text": "Windows, 9to1-OS and supported remote/web management preserve the same canonical Mini Computer model while capability-negotiating local execution."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Browse",
+      "sectionStart": 979978,
+      "sectionEndIndex": 1000552,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 979985,
+          "text": "9to1 Browse is a full Firefox-derived browser product with native CUI chrome and native CUI internal surfaces. Firefox/Gecko is the primary donor, default web engine and behavioural baseline. Chromium/Blink is a first-class secondary browser/rendering backend available per tab. Browse MUST remain one coherent browser with one canonical 9to1-owned tab/session model; Chromium support MUST NOT be implemented as a second browser bolted onto Firefox or as a separate user profile universe."
+        },
+        {
+          "startIndex": 980790,
+          "text": "Tabs and windows, including restore/reopen behaviour, pinned tabs and normal navigation history."
+        },
+        {
+          "startIndex": 981671,
+          "text": "Web engine architecture"
+        },
+        {
+          "startIndex": 981695,
+          "text": "Each web BrowserTab selects a WebEngine value of Firefox/Gecko or Chromium/Blink. The normal user-facing choice SHOULD be labelled Firefox and Chromium; implementation and diagnostics MAY additionally expose the underlying Gecko and Blink engine names. Gecko is the default unless the user or a persisted site rule selects Chromium."
+        },
+        {
+          "startIndex": 982394,
+          "text": "Browse MUST own canonical higher-level browser entities instead of allowing Gecko and Chromium to directly share raw profile databases. At minimum the architecture must model BrowserProfile, BrowserTab, NavigationEntry, Bookmark, HistoryEntry, Download, SitePermission, Workspace, TabGroup, SplitView, SearchProvider, SiteEnhancer and EnginePreference as typed 9to1-owned entities or equivalent strongly typed contracts."
+        },
+        {
+          "startIndex": 983070,
+          "text": "Users MUST be able to use Firefox for this tab, Chromium for this tab, always Firefox for a site/domain, always Chromium for a site/domain, and reset a persisted site engine preference. A broken page SHOULD be switchable to the other engine with one obvious action without opening a separate browser product."
+        },
+        {
+          "startIndex": 983670,
+          "text": "Automatic update does not mean blindly shipping an unvalidated upstream binary. The update pipeline MUST fetch/rebase or reapply maintained 9to1 changes, build the affected engine integration, run Browse compatibility and regression suites, verify CUI integration, engine switching, extension baselines, session/profile isolation, Site Enhancer behaviour, DevTools integration and Dulche browser capabilities, and promote the new engine only after the applicable acceptance gates pass. Security-sensitive upstream releases receive expedited priority. The previous known-good engine build MUST remain rollback-capable until promotion is proven stable."
+        },
+        {
+          "startIndex": 984869,
+          "text": "9to1:// \u2014 native 9to1 application surfaces hosted inside a Browse tab, for example 9to1://Spaces, 9to1://Write or a typed deep link such as 9to1://Write/<resource>. These are the actual application surfaces, not web versions or reduced browser copies."
+        },
+        {
+          "startIndex": 985121,
+          "text": "https:// and http:// \u2014 ordinary web content. User-facing normal web navigation uses these web schemes; Browse-owned, CUI and native-app content MUST NOT masquerade as an HTTP(S) origin."
+        },
+        {
+          "startIndex": 985554,
+          "text": "Opening 9to1://<App> MUST instantiate the real CUI application surface and the real application services inside the Browse tab. It MUST NOT load a separately implemented web edition, feature-reduced embedded edition or imitation of the app. Responsive layout adaptation is allowed and expected; capability divergence merely because the app is hosted in Browse is not."
+        },
+        {
+          "startIndex": 986505,
+          "text": "9to1 native app tabs participate in normal Browse capabilities including tab groups, pinning, workspaces, restore/reopen and Split View. A user can therefore place 9to1://Write with a research document beside an https:// research page, or combine two different native 9to1 apps, without requiring a separate web version of either app."
+        },
+        {
+          "startIndex": 986864,
+          "text": "Browser profiles are tab-scoped, not window-scoped. Every BrowserTab carries a ProfileID or equivalent profile context, allowing one window, one workspace and one Split View to contain tabs from different profiles simultaneously."
+        },
+        {
+          "startIndex": 987094,
+          "text": "A BrowserProfile is an identity/storage/privacy boundary. Depending on supported configuration, it owns or scopes cookies, login sessions, site storage, site permissions, browsing-data attribution, extensions and extension state, search preferences, Site Enhancers, credentials/passkeys and other profile-specific browser configuration."
+        },
+        {
+          "startIndex": 987751,
+          "text": "Profile identity MUST be visually discoverable on tabs and in relevant browser UI so the user can tell which account/session context will be used. Consequential actions and Dulche-controlled actions SHOULD make the active profile context clear where confusion could cause the action to occur under the wrong identity."
+        },
+        {
+          "startIndex": 988069,
+          "text": "Changing a tab to another profile MUST reopen/recreate its web session under the destination profile rather than copying authentication material across profile boundaries. Safe navigation/organisation metadata such as URL, group, workspace and split position may be preserved where applicable."
+        },
+        {
+          "startIndex": 988390,
+          "text": "Browse MUST provide modern tab management in addition to Firefox donor parity. Tab groups are first-class canonical entities with stable identity, naming, optional colour/icon metadata, collapse/expand state, persistence, restore, drag/drop and movement between windows/workspaces. Dulche and other typed APIs can address a group directly."
+        },
+        {
+          "startIndex": 989399,
+          "text": "Split View displays two independent BrowserTab entities side-by-side in one browser content area with a resizable divider. The split container owns presentation only; each pane remains a real tab with its own URL/route, navigation history, profile, renderer/backend where applicable and canonical tab identity."
+        },
+        {
+          "startIndex": 989710,
+          "text": "A split may mix any compatible tab surface classes, including web + web, 9to1 app + web, 9to1 app + 9to1 app, Browse internal + web and tabs from different BrowserProfiles. Either pane can be swapped, unsplit or moved without destroying the underlying tab."
+        },
+        {
+          "startIndex": 990457,
+          "text": "The canvas can host deterministic widgets, browser widgets, 9to1 app widgets, extension-provided CUI widgets, static content and Generative Areas. It SHOULD reuse shared 9to1 canvas/layout infrastructure where practical instead of creating an incompatible bespoke layout system."
+        },
+        {
+          "startIndex": 991694,
+          "text": "Search mode performs normal navigation/search behaviour and MUST NOT invoke an LLM merely to execute an ordinary URL or provider query. AI mode sends the request to Dulche and can use permissioned Browse capabilities and referenced browser/app context."
+        },
+        {
+          "startIndex": 992650,
+          "text": "Dulche browser experience"
+        },
+        {
+          "startIndex": 992676,
+          "text": "Dulche is the only authoritative AI system in Browse. Firefox-provided proprietary AI surfaces MUST be removed/replaced. Browse SHOULD provide both a persistent Dulche sidebar for larger tasks and a lightweight floating/command bar for contextual requests, using the shared Dulche runtime rather than launching a browser-specific model server."
+        },
+        {
+          "startIndex": 993020,
+          "text": "The Dulche UI MUST support @-mentioning canonical browser context. At minimum users can mention tabs and SHOULD be able to mention tab groups, workspaces, split panes and other supported Browse entities. Mention autocomplete resolves to stable canonical IDs rather than copying only titles/URLs into the prompt."
+        },
+        {
+          "startIndex": 994011,
+          "text": "Permission scope MUST be explicit and composable. The implementation must support equivalents of read this page, control this tab, control these selected tabs and control Browse for this task. Granting one scope MUST NOT silently grant permanent global browser control."
+        },
+        {
+          "startIndex": 994281,
+          "text": "Browser automation SHOULD use structured semantic capabilities such as Navigate, OpenTab, CloseTab, ActivateTab, ReadPage, ReadElement, Find, Scroll, Click, FillField, SelectOption, GoBack, GoForward and Reload when structured control exists. Blind coordinate input is a fallback, not the primary architecture."
+        },
+        {
+          "startIndex": 997132,
+          "text": "Split panes and tabs SHOULD support semantic drag/drop. Where both surfaces understand a canonical 9to1 entity, transfer the typed entity/link instead of degrading it to copied text. Examples include dragging a Maps place into Planner or a Board item into Write. Web upload targets may receive files through normal browser security/permission rules."
+        },
+        {
+          "startIndex": 997860,
+          "text": "cui://, browse:// and 9to1:// are privileged/non-web namespaces with separate routing and origin/capability rules. Ordinary HTTP(S) pages MUST NOT be able to inspect native app state, call privileged CUI/Browse APIs, forge trusted 9to1:// content or inherit internal permissions simply by navigating to or linking an internal route."
+        },
+        {
+          "startIndex": 998193,
+          "text": "A web page may request navigation to an allowed registered internal route only through the normal navigation/policy boundary. Navigating to 9to1:// does not grant the originating site the destination app's authority. Profile cookies/credentials and engine-private state MUST remain isolated according to their owning profile/backend."
+        },
+        {
+          "startIndex": 998556,
+          "text": "Browse MUST handle Firefox renderer crashes, Chromium renderer crashes, whole-browser crashes, failed engine startup, unavailable selected engines, extension incompatibility, interrupted downloads, invalid/corrupt engine-private state and failed engine switches without corrupting the other engine or canonical Browse profile state."
+        },
+        {
+          "startIndex": 1000126,
+          "text": "Dulche @ mentions resolve to canonical browser/app entities and permissioned autonomous browsing uses semantic browser capabilities with consequential-action safeguards."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Maps",
+      "sectionStart": 1000553,
+      "sectionEndIndex": 1020185,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Launcher",
+      "sectionStart": 1020186,
+      "sectionEndIndex": 1026639,
+      "native": "Android/9to1-OS HOME LAUNCHER ONLY; no Windows Launcher requirement inferred; Home/platform owns packages",
+      "web": "NOT A BROWSER PRODUCT under explicit Android/9to1-OS home-launcher-only product scope (1020195,1025914); no invented browser package installer",
+      "otherClients": "Android app/widget/user/work-profile capability obligations explicit.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 1020195,
+          "text": "9to1 Launcher is the Android/9to1-OS home launcher. It is a maintained fork/adaptation of the latest appropriate Lawnchair source and is a distinct product from Shelf. Launcher MUST NOT be implemented as the cross-platform 9to1 package installer/updater or as the Shelf quick-access library."
+        },
+        {
+          "startIndex": 1020513,
+          "text": "Lawnchair is the primary donor and mature behavioural baseline for Launcher. Applicable donor functionality and quality-of-life behaviour MUST be retained unless this specification explicitly replaces it. The goal is not merely donor parity: 9to1 Launcher is intended to be substantially more customisable than conventional Android launchers, including mature highly-customisable launchers such as Nova Launcher, while remaining coherent, performant and accessible."
+        },
+        {
+          "startIndex": 1021002,
+          "text": "Launcher owns the Android-style home screen, home pages, app drawer, dock, folders, widgets, app shortcuts, gestures, app discovery and visual organisation of installed applications. It consumes the authoritative installed-application/package registry owned by Home/platform package infrastructure; it does not maintain a competing package database."
+        },
+        {
+          "startIndex": 1021762,
+          "text": "Compatible Android widgets plus 9to1-native CUI widgets through a shared widget abstraction."
+        },
+        {
+          "startIndex": 1023679,
+          "text": "Launcher can represent Android apps, 9to1-native apps and other platform-recognised application targets exposed through the OS compatibility/application registry. Package install, uninstall, update, repair, rollback and channel management remain Home/platform responsibilities. Launcher may surface status/actions such as 'update available' but delegates execution to the authoritative package service."
+        },
+        {
+          "startIndex": 1024090,
+          "text": "9to1-native apps and extensions can register typed CUI launcher widgets with declared supported sizes, configuration surfaces, update behaviour, data permissions and actions. Compatible Android App Widgets remain supported where the Android platform layer permits them. Launcher MUST present both through a coherent placement/resizing model without pretending they share identical runtime/security semantics."
+        },
+        {
+          "startIndex": 1025457,
+          "text": "Launcher MUST respect Android/OS user, work-profile and application-profile boundaries. Profile-specific apps/widgets/shortcuts must retain their owning profile identity and should be visually distinguishable where confusion could cause the user to act under the wrong account or authority."
+        },
+        {
+          "startIndex": 1025914,
+          "text": "Launcher is the Android/9to1-OS home launcher only; Shelf remains a separate quick-access product and Home/platform services own package management."
+        },
+        {
+          "startIndex": 1026202,
+          "text": "Customisation materially exceeds the donor/default Android baseline and supports deep grid, icon, folder, dock, page, theme, animation and gesture configuration without destabilising canonical launcher state."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Shelf",
+      "sectionStart": 1026640,
+      "sectionEndIndex": 1032292,
+      "native": "Native/installable supported clients retain Home availability/version handshake and canonical model; Windows/9to1-OS obligations retained",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "Retain already-supported client obligations; no new macOS/iOS/Android guarantee inferred from common matrix request.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 1026646,
+          "text": "Shelf is the cross-platform quick-access library for things the user wants to launch or open frequently. It is a separate product from the Android Launcher. Shelf can organise applications, games, 9to1 surfaces, projects, files, folders, websites and other supported shortcuts into reusable user-defined collections."
+        },
+        {
+          "startIndex": 1027303,
+          "text": "Android applications where the hosting platform supports them."
+        },
+        {
+          "startIndex": 1027478,
+          "text": "Web URLs and registered URI schemes."
+        },
+        {
+          "startIndex": 1030116,
+          "text": "Opening an item delegates to the owning platform/application service using the target's canonical semantics. 9to1-native targets use their registered 9to1:// identity/deep-link contracts where applicable. Files/folders use Files/platform open semantics; web targets use Browse/default-browser semantics; applications/games use the appropriate registered launcher/provider."
+        },
+        {
+          "startIndex": 1031551,
+          "text": "Shelf remains a distinct cross-platform quick-access product and is never conflated with the Lawnchair-derived Android Launcher."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    },
+    {
+      "app": "Cards app",
+      "sectionStart": 1368651,
+      "sectionEndIndex": 1373617,
+      "native": "EXPLICIT Windows +9to1-OS same canonical flashcard model at1370115; inherited native Home dependency",
+      "web": "REQUIRED useful core under global default + app-specific negotiation; authenticated shared web services, no local Home",
+      "otherClients": "LE10 explicitly retains other already-supported client obligations; no mobile-only fallback.",
+      "directPlatformClauses": [
+        {
+          "startIndex": 1370115,
+          "text": "Cards is a first-party CUI app. No external app donor is selected by this section. It MUST ship through the normal app catalogue, modular installer, Files/open-with and registered preview/editor paths, with the global launch screen, settings, permissions and contextual AI bar. Windows, 9to1-OS and web retain the same canonical flashcard model; other already-supported client obligations remain active. A platform constraint must be declared and tested, not hidden behind an empty app shell or assumed mobile fallback."
+        }
+      ],
+      "inheritedClauses": [
+        2699,
+        7985,
+        97581,
+        102919,
+        103827,
+        112703,
+        113091,
+        113413,
+        1346713
+      ],
+      "verification": "NOT_VERIFIED_BY_THIS_REQUIREMENT_MATRIX"
+    }
+  ],
+  "TerraFormSurfaces": [
+    {
+      "name": "Link",
+      "canonicalModelOwner": "Existing Files organisation/shared owning artifacts; no independent replacement formats",
+      "platforms": "EXPLICIT Windows/9to1-OS/browser useful authoring +reader at1309589; same canonical formats/account/domain/permissions",
+      "paragraphStart": 1274868,
+      "inheritedPlatformClause": 1309589,
+      "verification": "NOT_VERIFIED_BY_THIS_MATRIX"
+    },
+    {
+      "name": "Prototype",
+      "canonicalModelOwner": "Existing Files organisation/shared owning artifacts; no independent replacement formats",
+      "platforms": "EXPLICIT Windows/9to1-OS/browser useful authoring +reader at1309589; same canonical formats/account/domain/permissions",
+      "paragraphStart": 1282889,
+      "inheritedPlatformClause": 1309589,
+      "verification": "NOT_VERIFIED_BY_THIS_MATRIX"
+    },
+    {
+      "name": "Paths",
+      "canonicalModelOwner": "Existing Files organisation/shared owning artifacts; no independent replacement formats",
+      "platforms": "EXPLICIT Windows/9to1-OS/browser useful authoring +reader at1309589; same canonical formats/account/domain/permissions",
+      "paragraphStart": 1288758,
+      "inheritedPlatformClause": 1309589,
+      "verification": "NOT_VERIFIED_BY_THIS_MATRIX"
+    },
+    {
+      "name": "Replay",
+      "canonicalModelOwner": "Existing Files organisation/shared owning artifacts; no independent replacement formats",
+      "platforms": "EXPLICIT Windows/9to1-OS/browser useful authoring +reader at1309589; same canonical formats/account/domain/permissions",
+      "paragraphStart": 1293887,
+      "inheritedPlatformClause": 1309589,
+      "verification": "NOT_VERIFIED_BY_THIS_MATRIX"
+    },
+    {
+      "name": "Variants",
+      "canonicalModelOwner": "Existing Files organisation/shared owning artifacts; no independent replacement formats",
+      "platforms": "EXPLICIT Windows/9to1-OS/browser useful authoring +reader at1309589; same canonical formats/account/domain/permissions",
+      "paragraphStart": 1299027,
+      "inheritedPlatformClause": 1309589,
+      "verification": "NOT_VERIFIED_BY_THIS_MATRIX"
+    }
+  ],
+  "globalHostedRule": "All non-exempt Workspace/AI products need web; useful browser core cannot be excused by one unsupported desktop capability. Mini Computer has exact hosted-compute exemption; Launcher has explicit Android/9OS-only product boundary. Do not conflate these categories.",
+  "futureScope": "Droid post-release and Training Lab deferred. No shipping obligation imported from those headings.",
+  "allPlatformClauseSourceScan": [
+    {
+      "index": 16,
+      "startIndex": 2699,
+      "text": "Supported platforms and capability matrix \u2014 Windows, 9to1-OS, web and other supported surfaces, including exact differences rather than silent feature loss."
+    },
+    {
+      "index": 175,
+      "startIndex": 30711,
+      "text": "a browser should use familiar browser interactions;"
+    },
+    {
+      "index": 297,
+      "startIndex": 39057,
+      "text": "relevant platform-specific testing;"
+    },
+    {
+      "index": 424,
+      "startIndex": 46289,
+      "text": "Where a project supports multiple operating systems, architectures, browsers, devices, or runtime environments, changes must account for the supported matrix. The agent must not unknowingly introduce a dependency on the environment it personally used for development. Platform-specific behaviour should be isolated where appropriate. Where comprehensive multi-platform testing is unavailable, affected platforms must be identified as unverified rather than implicitly claimed as validated."
+    },
+    {
+      "index": 580,
+      "startIndex": 60694,
+      "text": "Object \u2014 host for specialised renderers/objects such as graphs, Canvas surfaces, browser/media/document engines and other non-primitive content."
+    },
+    {
+      "index": 640,
+      "startIndex": 65394,
+      "text": "Montserrat is the default CUI/9to1 interface font wherever technically available and legally redistributable. First-party 9to1 applications and the 9to1-OS shell SHOULD inherit the global CUI typography system rather than independently selecting unrelated UI fonts."
+    },
+    {
+      "index": 935,
+      "startIndex": 96114,
+      "text": "The test harness MUST be able to render a CUI Page/Prefab at declared dimensions, Theme, scale, accessibility/reduced-motion settings and platform capability profile; interact through semantic input; inspect resulting state; and capture deterministic visual evidence where applicable."
+    },
+    {
+      "index": 946,
+      "startIndex": 97581,
+      "text": "Web CUI MAY use a browser-specific implementation/runtime, but it MUST preserve the same public CUI semantics, component contracts, state identities and supported action/property behaviour except for explicitly declared platform capability differences."
+    },
+    {
+      "index": 982,
+      "startIndex": 102325,
+      "text": "Native and web/platform capability negotiation plus language/runtime version mismatch handling."
+    },
+    {
+      "index": 989,
+      "startIndex": 103827,
+      "text": "This local-install dependency applies to native/installable clients. Browser-hosted web surfaces cannot require a local Home installation; they instead use the corresponding authenticated 9to1 shared web services and capability negotiation defined for web clients."
+    },
+    {
+      "index": 1036,
+      "startIndex": 112694,
+      "text": "Web Apps"
+    },
+    {
+      "index": 1037,
+      "startIndex": 112703,
+      "text": "Cakemods.com MUST host a web version of every 9-1 Workspace/AI product that is not explicitly listed as web-exempt. Web surfaces MUST share the same CAKE ID identity, canonical artifact formats, domain APIs, permission model and underlying server-side entities as desktop equivalents. Browser-specific UI/layout MAY differ, but it MUST NOT create a separate incompatible product model."
+    },
+    {
+      "index": 1038,
+      "startIndex": 113091,
+      "text": "The default rule is to provide a web version whenever the product\u2019s core value can sensibly work in a browser. Browser-specific capability limits are acceptable when they are explicit and the useful core product remains intact; a single desktop-only feature is not by itself a reason to omit an otherwise useful web app."
+    },
+    {
+      "index": 1039,
+      "startIndex": 113413,
+      "text": "Web exemption is permitted only when the product\u2019s core function requires infrastructure, privileged device access or hosted compute that CAKE does not currently provide. Each exemption MUST state the blocking capability/infrastructure. Exemptions MUST be re-evaluated when that blocker is removed; exemption is not a permanent product classification."
+    },
+    {
+      "index": 1041,
+      "startIndex": 113786,
+      "text": "Mini Computer \u2014 a useful web version would require hosted virtualisation/server compute that CAKE does not currently have capacity to provide."
+    },
+    {
+      "index": 1042,
+      "startIndex": 113930,
+      "text": "Mini Computer may gain a hosted web mode in the future as a 9to1 subscription capability if sufficient server compute is available. The same principle applies to future apps whose meaningful web implementation requires paid hosted compute."
+    },
+    {
+      "index": 1046,
+      "startIndex": 114452,
+      "text": "9to1 web apps authenticate against CAKEMODS/CAKE ID using a browser-based OAuth 2.0 Authorization Code flow with PKCE or an equivalent secure public-client flow. Desktop, web and open-source/custom clients are treated as untrusted public clients: they receive short-lived user access tokens and never contain provider keys, billing secrets or entitlement-signing secrets."
+    },
+    {
+      "index": 1048,
+      "startIndex": 115132,
+      "text": "Authentication/session operations must support account sign-in/sign-out, current-user/profile lookup, active-session/device inspection and revocation. Sensitive account or billing changes use trusted CAKEMODS web flows rather than accepting raw payment credentials through the open-source client."
+    },
+    {
+      "index": 1145,
+      "startIndex": 132590,
+      "text": "Web subscription behaviour"
+    },
+    {
+      "index": 1146,
+      "startIndex": 132617,
+      "text": "Web and desktop clients MUST resolve account state from the same CAKE ID and entitlement service. For the same account and organisation context, plan identity, Dust balance, hosted-storage usage, site quota/usage and applicable feature entitlements MUST be consistent across official clients, subject only to explicitly documented platform capability differences."
+    },
+    {
+      "index": 1147,
+      "startIndex": 132983,
+      "text": "Where a future web feature requires material hosted compute that is not available on the free/local product - for example hosted Mini Computer virtual machines - it may be offered as a subscription-backed server capability with explicit resource limits. The browser UI must never pretend that local-only or unavailable server compute exists."
+    },
+    {
+      "index": 1150,
+      "startIndex": 133419,
+      "text": "Business is an organisation collaboration and management capability set, not merely labels on pricing cards. It comprises Team Space and an organisation drive; organisation Connect; cross-account device Mesh; pooled or individually partitioned usage; team-wide Agents; and device-level policy controls for managed 9to1-OS Business accounts. 9to1 Admin supplies their management interface, while the existing apps retain canonical ownership of their domain data."
+    },
+    {
+      "index": 1162,
+      "startIndex": 138086,
+      "text": "Mesh MUST expose availability, queued/running jobs, utilisation, failure and cancellation/revocation outcomes. Revocation blocks new work and cancels or safely terminates existing work where supported; it must not claim to undo already completed actions or erase copies outside its actual control. A disconnected device remains unavailable/pending, never fictitiously running a workload. Windows and 9to1-OS expose only supported native capabilities; web can manage grants and observe jobs without pretending to supply privileged local resources."
+    },
+    {
+      "index": 1171,
+      "startIndex": 141678,
+      "text": "BIZ-07 \u2014 Managed 9to1-OS accounts and device policy"
+    },
+    {
+      "index": 1172,
+      "startIndex": 141730,
+      "text": "Business MUST provide device-level administrative controls for explicitly enrolled managed 9to1-OS Business accounts. Controls MUST cover supported app/package and Plugin installation/enablement restrictions, allowed features and Automations, required organisation/role Plugins, enforced settings, default-model/routing policy and Mesh-resource participation. Existing compatibility-framework and privileged-operation restrictions continue to apply beneath every launch surface."
+    },
+    {
+      "index": 1174,
+      "startIndex": 142672,
+      "text": "Managed account policy is not automatic whole-device ownership. Personal users, personal artifacts and unenrolled devices remain outside the organisation\u2019s authority. Destructive remote actions, full-device wipe, arbitrary privileged shell access and surveillance are not implicitly authorised by Business. Other operating systems may expose supported Mesh and app policy, but they must not claim complete 9to1-OS endpoint-management parity without an explicit capability implementation."
+    },
+    {
+      "index": 1184,
+      "startIndex": 145395,
+      "text": "Home installation includes the Home Core background service/runtime required by native apps plus the Home user-facing CUI shell. Native apps require a compatible Home installation/Home Core service, but the visible Home window does not need to remain open while other apps run. On 9to1-OS, Home Core may be integrated as a system component while preserving the same service contracts."
+    },
+    {
+      "index": 1211,
+      "startIndex": 151936,
+      "text": "Library is Home\u2019s cross-app artifact index/browser, not a duplicate Files app and not a separate storage authority. It MUST surface canonical references to authorised artifacts across 9to1 apps, including recent, favourite/pinned, shared, generated/created and app/type-filtered content where applicable."
+    },
+    {
+      "index": 1219,
+      "startIndex": 153651,
+      "text": "9-1 Discover is the model browser/discovery surface inside Home. It MUST aggregate model/catalogue information from configured providers rather than depend on one catalogue. Search, filter and comparison MUST support model identity, provider/origin, modality, capabilities, architecture/parameter information when known, context limits, quantisation/format where known, local/cloud status, hardware-fit estimate, install/connection state, entitlement/cost class and privacy/residency information."
+    },
+    {
+      "index": 1229,
+      "startIndex": 157054,
+      "text": "The Universal Model Picker is the single shared model/provider selection and routing interface for the 9to1 ecosystem. On Windows/regular 9to1 it is hosted by Home; on 9to1-OS the same canonical state is surfaced by the OS. Apps, Agents and AI surfaces MUST NOT create incompatible private model pickers, provider registries or fallback logic when this shared capability applies."
+    },
+    {
+      "index": 1243,
+      "startIndex": 160487,
+      "text": "Home/Dulche MUST support versioned ordered Model Routes shared by regular 9to1 and 9to1-OS. A Model Route is an ordered list of stable configured model identities plus per-entry enabled/disabled state and routing policy. Users can reorder candidates directly in Home, including by drag/reorder UI, without changing the models' canonical identities."
+    },
+    {
+      "index": 1269,
+      "startIndex": 166014,
+      "text": "For local candidates the picker may show estimated RAM/VRAM requirement, current availability, loading state and reclaimable resources when known. On 9to1-OS this integrates with the AI-aware resource manager; on other Home platforms it uses the available Dulche/runtime resource information without pretending OS-level reclamation exists where it does not."
+    },
+    {
+      "index": 1273,
+      "startIndex": 166726,
+      "text": "Regular 9to1/Home and 9to1-OS use one canonical Dulche model catalogue and versioned routing contract."
+    },
+    {
+      "index": 1337,
+      "startIndex": 183206,
+      "text": "Home Core MUST expose the Shared Productivity Engine as a versioned shared platform capability. Apps may link/embed approved shared engine libraries/components as part of their package for rendering performance, but the canonical schema registry, compatibility negotiation and shared service/version authority remain Home-owned. Apps MUST validate compatible engine/schema versions during startup."
+    },
+    {
+      "index": 1360,
+      "startIndex": 186688,
+      "text": "Home MUST support notification history, read/unread state, dismiss/clear subject to retention policy, per-source/category preferences and deep-link actions. Where Windows/9to1-OS system notifications are available, Home MAY bridge eligible notifications to the OS while retaining the canonical 9to1 notification record/state."
+    },
+    {
+      "index": 1416,
+      "startIndex": 192911,
+      "text": "Windows: Home provides the full native hub/shell, Home Core background services and the Home-hosted Universal Model Picker. Native apps depend on the compatible Home installation/Home Core handshake."
+    },
+    {
+      "index": 1417,
+      "startIndex": 193112,
+      "text": "9to1-OS: Home Core/shared service contracts remain authoritative platform services, but selected controls may be integrated into OS-native system surfaces. The Universal Model Picker is OS-hosted while using the same canonical Dulche/model/provider state. 9to1-OS MUST NOT create divergent duplicate settings/package/model databases."
+    },
+    {
+      "index": 1418,
+      "startIndex": 193447,
+      "text": "Web: the Home web surface uses CAKE ID and server-hosted equivalents for account, Library, Dashboard, notifications, search and other supported cloud capabilities. It MUST capability-negotiate and clearly mark local-only/native-only functions such as local package management, local models/devices or unavailable Home Core services rather than pretending they exist in-browser."
+    },
+    {
+      "index": 1464,
+      "startIndex": 200117,
+      "text": "Admin MUST have Windows, 9to1-OS and browser/web surfaces sharing the same CAKE ID, organisation entities, domain APIs and permission evaluation. Native clients use Home\u2019s shared services. The web app uses authenticated shared web services without requiring a local Home installation for ordinary organisation administration. Device operations require an enrolled compatible endpoint; a browser cannot directly enforce unsupported local OS controls. Unsupported capabilities MUST remain distinguishable from denied permission or an offline device."
+    },
+    {
+      "index": 1465,
+      "startIndex": 200665,
+      "text": "Admin owns management workflows and policy editing. The account/billing service owns subscriptions and ledgers; Spaces owns Team Spaces; Files owns shared-drive content; Connect owns communications; Home/Mesh owns pairing and device-resource execution; Dulche/Den owns Agents; the 9to1-OS policy service owns endpoint enforcement. Admin MUST invoke these canonical services rather than create duplicate content, Agent registries, payment records or a competing permission broker. This is a native CUI product built on those existing services; no new paid administration donor or hosting service is selected by this specification."
+    },
+    {
+      "index": 1484,
+      "startIndex": 208485,
+      "text": "Controls MUST include organisation, role and member ceilings for AI usage and applicable storage/site resources; warnings and hard-stop behaviour; configured time windows; and model/Agent/Automation attribution. A hard ceiling is enforced before work is admitted. No paid overage or automatic top-up is enabled merely because a warning threshold is crossed. Reports MUST separate allocated, available, reserved, consumed, rolled-over and expired credits and display the reset/expiry policy and freshness."
+    },
+    {
+      "index": 1504,
+      "startIndex": 217405,
+      "text": "Platform tests MUST cover Windows, 9to1-OS and web, including browser administration without local Home, unsupported endpoint controls and offline rollout remaining pending. Test restart/persistence, stale revisions, partial bulk failure, rollback, secret redaction, report reconciliation, keyboard/focus/screen-reader operation and equivalent API behaviour. Lists MUST remain paginated, exports/rollouts asynchronous where long-running, and expensive reports must not block policy checks. A rendered dashboard or stub action is not implementation completion."
+    },
+    {
+      "index": 1537,
+      "startIndex": 226009,
+      "text": "9to1 Drive MUST appear directly in the normal Files sidebar/location tree alongside local drives and other providers. Hosted storage MUST NOT open into a separate incompatible cloud-files UI. Desktop, web and owning apps address the same canonical hosted objects by stable IDs."
+    },
+    {
+      "index": 1645,
+      "startIndex": 242270,
+      "text": "Windows and 9to1-OS native Files expose local, removable, network, hosted and connected-provider locations according to platform/provider capability. Web Files exposes hosted/provider-accessible content but MUST NOT pretend to have arbitrary access to the browser user\u2019s local filesystem. Browser local upload/download uses explicit browser-authorised file/folder selection."
+    },
+    {
+      "index": 1649,
+      "startIndex": 242899,
+      "text": "9to1 Drive appears as a normal first-class location and the same FileID opened via web and desktop represents the same canonical hosted object."
+    },
+    {
+      "index": 1776,
+      "startIndex": 272334,
+      "text": "Users MUST be able to select reading-pane right, reading-pane bottom or reading-pane off, plus supported density options. Smaller windows MUST responsively collapse the layout into two-pane or single-pane navigation without squeezing unreadable columns."
+    },
+    {
+      "index": 1881,
+      "startIndex": 288315,
+      "text": "Native Windows/9to1-OS Mail MUST support configured local caching/offline behaviour and Home-integrated notifications/files/model services. Web Mail uses authenticated server/provider APIs and the same canonical account/message identities where available, but browser storage/offline capabilities MUST be capability-negotiated rather than assumed identical to native."
+    },
+    {
+      "index": 1911,
+      "startIndex": 292881,
+      "text": "The user-facing editor MUST be rebuilt as a coherent 9to1 CUI experience rather than exposing donor-native editor chrome as the final interface. Existing mature donor capability MAY remain behind the shell, but navigation, inspector, asset browser, scene graph, editors, dialogs, settings, errors and workflows MUST follow 9to1 interaction conventions."
+    },
+    {
+      "index": 1952,
+      "startIndex": 302565,
+      "text": "Games SHOULD support readable controller-layout names rather than forcing numeric button indices, including semantic/positional forms such as Controller.Letters.Down, Controller.Letters.Left, bumpers, triggers, D-pad, LeftStick and RightStick. Platform-specific glyph/display mapping is handled by the engine."
+    },
+    {
+      "index": 1992,
+      "startIndex": 311940,
+      "text": "Every advanced renderer feature MUST expose truthful hardware/platform capability detection, quality fallbacks, performance diagnostics and deterministic project settings. Unsupported hardware MUST degrade gracefully rather than silently producing broken scenes."
+    },
+    {
+      "index": 2040,
+      "startIndex": 321769,
+      "text": "Chat is the broad general-purpose conversational environment for ordinary questions, app actions, files, web research where enabled, shared objects, tools and agentic work."
+    },
+    {
+      "index": 2045,
+      "startIndex": 323066,
+      "text": "Research is the deeper source-oriented research environment for research plans, source sets, citations/provenance, findings, notes and structured outputs. It MUST make source scope and outside-web access explicit."
+    },
+    {
+      "index": 2139,
+      "startIndex": 347005,
+      "text": "Web access and source provenance"
+    },
+    {
+      "index": 2140,
+      "startIndex": 347039,
+      "text": "Web access MUST be an explicit Space/tool policy with at least Allowed, Ask and Disabled semantics where applicable. Source-only/closed-corpus workflows MUST be able to disable outside web retrieval completely."
+    },
+    {
+      "index": 2141,
+      "startIndex": 347251,
+      "text": "When an answer materially relies on identifiable source material, Spaces MUST preserve clickable provenance/citations back to the underlying file/page/message/web source/entity where supported. It MUST distinguish source-derived claims from generated reasoning and must not claim support that the retrieved sources do not provide."
+    },
+    {
+      "index": 2216,
+      "startIndex": 354613,
+      "text": "A web-disabled/source-only workflow cannot silently browse outside its allowed corpus."
+    },
+    {
+      "index": 2318,
+      "startIndex": 374871,
+      "text": "Dictation is a separate reusable speech-to-text editing capability, not a full Voice conversation mode. It MUST be available to supported editable text surfaces such as Write, Spaces, Mail, Boards, Present speaker notes, Planner descriptions, Sites, AI Studio and other CUI text editors through the shared platform capability."
+    },
+    {
+      "index": 2327,
+      "startIndex": 376997,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 2328,
+      "startIndex": 377028,
+      "text": "Native Windows/9to1-OS may provide the full OS-global Overlay, native window/display capture and background voice capabilities. Web may provide microphone, camera and browser-authorised screen sharing but MUST NOT claim an OS-global Overlay outside the browser. Mobile uses supported camera/microphone/share-sheet/screen-capture capabilities. All surfaces capability-negotiate rather than assuming parity."
+    },
+    {
+      "index": 2389,
+      "startIndex": 382852,
+      "text": "Web/native capability differences are reported accurately, including no false claim of OS-global Overlay on web."
+    },
+    {
+      "index": 2419,
+      "startIndex": 388693,
+      "text": "Plugins / Connectors lists canonical Dulche Plugins, MCP/external connectors and applicable 9to1 app capability bindings available to the Agent. + Add opens the relevant Dulche capability browser. Entries are stable references; Agent Builder MUST NOT clone Plugin/connector definitions into the Agent."
+    },
+    {
+      "index": 2609,
+      "startIndex": 418644,
+      "text": "A GameDefinition MUST declare the game-specific capability profile available to Agent contestants. Tools such as web search, calculators, code execution, Files, Plugins or external connectors may be Allowed, Denied or constrained per game/role."
+    },
+    {
+      "index": 2610,
+      "startIndex": 418890,
+      "text": "Disallowed capabilities MUST be removed/blocked at runtime rather than merely discouraged in instructions. A no-calculator maths quiz cannot expose calculator/code/web tools to Agent contestants. A research contest may explicitly permit them."
+    },
+    {
+      "index": 2671,
+      "startIndex": 425700,
+      "text": "Game-specific tool restrictions are enforced at runtime, including a no-web/no-code/no-calculator quiz profile."
+    },
+    {
+      "index": 2681,
+      "startIndex": 426415,
+      "text": "9to1 Write is the production document/word-processing surface. It MUST behave like a mature word processor rather than a web editor, site builder, Markdown editor, collection of HTML blocks or browser contenteditable surface. LibreOffice Writer/LibreOfficeKit is the mature donor/layout/format engine for text-oriented documents; 9to1 owns the CUI shell, shared Productivity Engine integration, collaboration, AI, Sections model and native extensions."
+    },
+    {
+      "index": 2754,
+      "startIndex": 443922,
+      "text": "Write MUST open and edit PDFs as first-class fixed-layout documents; PDF support is not export-only and MUST NOT simply convert every PDF into HTML or an approximate web editor. The Write shell remains consistent while an appropriate PDF/page-object engine (including applicable LibreOffice Draw/PDF capabilities or equivalent mature implementation) owns fixed-layout PDF object semantics."
+    },
+    {
+      "index": 2817,
+      "startIndex": 452565,
+      "text": "Write uses a real structured word-processing/document engine and is not implemented as a generic HTML/contenteditable/web editor."
+    },
+    {
+      "index": 2856,
+      "startIndex": 458115,
+      "text": "A platform capability is supported only when the platform capability registry declares the required capability and version for the active device/runtime."
+    },
+    {
+      "index": 3201,
+      "startIndex": 490872,
+      "text": "REPLACE_WITH_9TO1_NATIVE_EQUIVALENT is used when 9to1 already owns the equivalent platform capability, including CUI shell/UI, Dulche AI, Home permission handling, Files storage integration or other shared 9to1 services."
+    },
+    {
+      "index": 3204,
+      "startIndex": 491386,
+      "text": "Supported platforms and capability negotiation"
+    },
+    {
+      "index": 3205,
+      "startIndex": 491433,
+      "text": "Canvas MUST ship on every 9to1 platform for which the app is not explicitly exempt under the global platform/web rules. Desktop/native and web implementations MUST share the same Canvas artifact schema, stable identities, domain API semantics and server-side canonical entities."
+    },
+    {
+      "index": 3206,
+      "startIndex": 491712,
+      "text": "Platform-specific input or rendering capability differences MUST be negotiated explicitly. Hardware capability absence MUST NOT be misrepresented as format incapability."
+    },
+    {
+      "index": 3551,
+      "startIndex": 525791,
+      "text": "Native and web/open-on-lower-capability round trips preserve unsupported pressure/tilt and other stored data."
+    },
+    {
+      "index": 3627,
+      "startIndex": 542297,
+      "text": "Scoped Chat is a closed-corpus notebook-style Chat PageType. Its answers MUST be grounded only in the authorised contents of the containing Board plus the explicit source collection attached to that Scoped Chat. It MUST NOT search the public web, invoke external-information retrieval tools or consult unrelated connected-app content to fill evidence gaps."
+    },
+    {
+      "index": 3646,
+      "startIndex": 547334,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 3647,
+      "startIndex": 547365,
+      "text": "Boards MUST ship useful supported native behaviour on Windows and 9to1-OS and a useful web version under the global web-product contract. All clients operate on the same Board/Page/artifact identities and canonical revisions. Platform capability differences MUST be explicit and queryable rather than silently dropping features."
+    },
+    {
+      "index": 3648,
+      "startIndex": 547695,
+      "text": "Browser/native differences may include pen pressure/tilt, OS file drag-and-drop, clipboard richness, filesystem access, windowing and availability of specialised embedded surfaces. When a capability is unavailable, Boards MUST provide the closest useful supported interaction or a clear unsupported-capability state without corrupting or flattening the underlying artifact."
+    },
+    {
+      "index": 3719,
+      "startIndex": 555255,
+      "text": "Windows, 9to1-OS and web clients capability-negotiate declared differences while preserving the same canonical Board/Page/artifact identities."
+    },
+    {
+      "index": 3859,
+      "startIndex": 576704,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 3860,
+      "startIndex": 576734,
+      "text": "Planner MUST provide useful supported native behaviour on Windows and 9to1-OS plus a useful web version under the global web contract. All clients operate on the same canonical Planner/provider entities."
+    },
+    {
+      "index": 3861,
+      "startIndex": 576938,
+      "text": "Native clients MAY have richer OS notification/calendar integration; web may depend on browser notification/background constraints. Capability differences are explicit and MUST NOT silently downgrade the canonical planning state or turn the web app into a read-only viewer."
+    },
+    {
+      "index": 3884,
+      "startIndex": 580398,
+      "text": "Windows, 9to1-OS and web preserve the same canonical entity model while surfacing declared capability differences."
+    },
+    {
+      "index": 4222,
+      "startIndex": 627379,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 4223,
+      "startIndex": 627409,
+      "text": "Picture MUST provide useful Windows, 9to1-OS and web editing/creation experiences over the same PictureDocument model. Codec, RAW, HDR, GPU effect, pen/tilt and local/remote AI capability differences are explicit and queryable."
+    },
+    {
+      "index": 4224,
+      "startIndex": 627637,
+      "text": "The web app MUST NOT degrade into a read-only image viewer. Unsupported platform features are disabled with a capability reason while preserving the canonical document so another capable client can continue editing."
+    },
+    {
+      "index": 4249,
+      "startIndex": 631308,
+      "text": "Windows, 9to1-OS and web preserve the same canonical document model while capability-negotiating codecs/GPU/AI/pen differences."
+    },
+    {
+      "index": 4432,
+      "startIndex": 655357,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 4433,
+      "startIndex": 655387,
+      "text": "Wave MUST provide useful Windows, 9to1-OS and web editing/creation experiences over the same canonical project model. Input devices, realtime audio APIs, codecs, plugin/instrument backends, MIDI/controller access and local/cloud model capabilities are explicit/queryable."
+    },
+    {
+      "index": 4434,
+      "startIndex": 655659,
+      "text": "Web MUST remain a useful multitrack/sequencer/editor experience rather than a static player. Unsupported platform capabilities are disabled with a clear reason while preserving project state for another capable client."
+    },
+    {
+      "index": 4455,
+      "startIndex": 658417,
+      "text": "Windows, 9to1-OS and web preserve the same project/generated-component model while capability-negotiating audio hardware/backend differences."
+    },
+    {
+      "index": 4602,
+      "startIndex": 684630,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 4603,
+      "startIndex": 684660,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Motion project/graph/generated-component model while capability-negotiating codecs, GPU/hardware acceleration, camera/device access, model availability and performance differences."
+    },
+    {
+      "index": 4628,
+      "startIndex": 688433,
+      "text": "Windows, 9to1-OS and web preserve the same canonical project model while capability-negotiating backend/hardware/model differences."
+    },
+    {
+      "index": 4708,
+      "startIndex": 704581,
+      "text": "Data MUST provide native SQL authoring/execution with syntax highlighting, dialect-aware parsing/validation, schema/object browser, table/column/function completion, relationship-aware join suggestions, query formatting, parameters where supported, saved queries, query history, execution timing/statistics, cancellation, paged/virtualised result sets, EXPLAIN/plan access where supported and result export/materialisation."
+    },
+    {
+      "index": 4856,
+      "startIndex": 729567,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 4857,
+      "startIndex": 729597,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Data project/workbook/schema/query/pipeline/cube/Visualisation model while capability-negotiating local DuckDB execution, LibreOffice-derived compatibility components, external database drivers, file access and hardware/resource differences."
+    },
+    {
+      "index": 4891,
+      "startIndex": 734721,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Data model while capability-negotiating local/provider execution differences."
+    },
+    {
+      "index": 4976,
+      "startIndex": 750834,
+      "text": "Authors can configure logos, organisation branding, custom header/footer, background artwork and hosted-form identity. Custom domains/advanced branding integrate with the wider 9to1 web platform where supported."
+    },
+    {
+      "index": 5011,
+      "startIndex": 756769,
+      "text": "Forms MUST provide configurable anti-cheat/integrity controls, with stronger options available for Tests and live assessments while making clear that browser-based controls reduce opportunities but cannot guarantee that cheating is impossible."
+    },
+    {
+      "index": 5084,
+      "startIndex": 766327,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 5085,
+      "startIndex": 766357,
+      "text": "Windows, 9to1-OS and web preserve the same canonical FormProject, response, mode, Data binding, graph and multiplayer-session model while capability-negotiating device features, realtime transport, identity providers, proctoring/kiosk integrations and mathematical/rendering backends."
+    },
+    {
+      "index": 5106,
+      "startIndex": 769368,
+      "text": "A standard live multiplayer quiz synchronises question state, answer windows, scoring and reveal using server-authoritative state."
+    },
+    {
+      "index": 5117,
+      "startIndex": 770861,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Forms model while capability-negotiating platform-specific realtime/integrity features."
+    },
+    {
+      "index": 5131,
+      "startIndex": 773220,
+      "text": "First-party examples include console applications, CUI applications, class/static/shared libraries, web/API services, test projects, Python packages/CLI applications, Sites projects, Android/mobile projects, operating-system/kernel/bootloader projects, 9to1 extensions, CUI component libraries, AI provider/tool projects and other supported templates."
+    },
+    {
+      "index": 5162,
+      "startIndex": 779331,
+      "text": "Examples include console \u2192 terminal, web \u2192 development server + preview, Android \u2192 emulator/device install + launch, CUI application \u2192 application runtime, 9to1 extension \u2192 extension development host, operating system \u2192 virtual machine, and library \u2192 test/sample host where configured."
+    },
+    {
+      "index": 5230,
+      "startIndex": 790838,
+      "text": "Dev is the primary development/debugging environment for a shared native 9to1 Extension platform. Extensions MAY contribute language/toolchain/debugger/formatter/linter providers, project templates, package providers, editors, commands, tool windows, CUI/visual-builder components, AI context/tools, Node Graph node types and product-specific contributions exposed by host APIs."
+    },
+    {
+      "index": 5232,
+      "startIndex": 791393,
+      "text": "Extensions use a versioned manifest declaring ExtensionID, publisher/name/version, compatible host/API versions, entry points, target products, contributions, permissions/capabilities, dependencies, supported platforms, assets, update channel and signature/provenance."
+    },
+    {
+      "index": 5248,
+      "startIndex": 794221,
+      "text": "Web/Sites-compatible Run/Preview may use Sites preview/runtime infrastructure for responsive preview, route inspection, development server integration, preview environments and deployment-oriented diagnostics without Dev duplicating the entire Sites authoring product."
+    },
+    {
+      "index": 5274,
+      "startIndex": 798687,
+      "text": "PreviewProvider is a typed project/extension capability. Representative providers include CUI live render, Sites/web preview, Markdown render, extension host/sample host, AI Studio tool test harness, Android emulator/device and OS virtual-machine display/serial view."
+    },
+    {
+      "index": 5281,
+      "startIndex": 799752,
+      "text": "Applicable previews are interactive. CUI/web previews can accept pointer/keyboard/navigation input, resize, hover/focus state and other runtime interactions without becoming the general Browse product."
+    },
+    {
+      "index": 5353,
+      "startIndex": 807799,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 5354,
+      "startIndex": 807829,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Dev project/workspace/action models while capability-negotiating local compiler availability, process execution, VM acceleration, terminal/debugger integration, filesystem access, extension hosting and remote environments."
+    },
+    {
+      "index": 5388,
+      "startIndex": 812227,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Dev model while capability-negotiating unsupported local execution features."
+    },
+    {
+      "index": 5747,
+      "startIndex": 857322,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 5748,
+      "startIndex": 857352,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Project/Domain/Root/Subroot/Freeze/ChangeRequest model. Local materialisation, Git executable availability, filesystem semantics, credential providers and build integrations are capability-negotiated."
+    },
+    {
+      "index": 5786,
+      "startIndex": 862249,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Stack model while capability-negotiating local materialisation/Git support."
+    },
+    {
+      "index": 5790,
+      "startIndex": 862517,
+      "text": "9-1 Sites is the native CUI visual website-building, CMS, preview and deployment surface. It MUST support professional source-backed websites and web applications while remaining approachable for users who prefer visual authoring."
+    },
+    {
+      "index": 5806,
+      "startIndex": 866089,
+      "text": "New Site provides searchable templates/project types such as Blank, marketing/business site, portfolio, blog, documentation, landing page, web application, community/project site, content-driven site and other installed provider templates."
+    },
+    {
+      "index": 5826,
+      "startIndex": 869806,
+      "text": "The visual editor supports mature responsive web layout including normal document flow, stack/flex-style layout, grid, wrapping, alignment, gaps, padding/margins, min/max sizing, aspect ratio, container widths, sticky/fixed positioning where supported, overlays and deliberate absolute/freeform positioning."
+    },
+    {
+      "index": 5879,
+      "startIndex": 878033,
+      "text": "Every executable node declares execution context/capabilities such as client-safe, server/trusted backend, build-time, deployment-provider or external integration. Sites MUST NOT compile secrets or trusted permission checks into untrusted browser execution merely because a graph contains them."
+    },
+    {
+      "index": 5897,
+      "startIndex": 880950,
+      "text": "Complex structured data/database requirements may delegate to Data; Sites CMS remains optimised for web content authoring rather than duplicating Data's complete database product."
+    },
+    {
+      "index": 5915,
+      "startIndex": 883321,
+      "text": "The asset browser supports images, video, icons, documents, fonts where licensing permits and other registered media. Moving/renaming a Files-backed asset MUST NOT break references that use stable identity."
+    },
+    {
+      "index": 5929,
+      "startIndex": 885402,
+      "text": "Performance and web-quality diagnostics"
+    },
+    {
+      "index": 5930,
+      "startIndex": 885442,
+      "text": "Sites surfaces web-performance problems it can determine such as oversized images/media, excessive bundles/scripts/fonts, known render-blocking resources, large page payloads and expensive third-party dependencies."
+    },
+    {
+      "index": 5955,
+      "startIndex": 889338,
+      "text": "Secrets MUST NOT be exposed into browser bundles, logs, previews, AI context or generated diffs unless the operation explicitly requires the value and the caller/environment is authorised."
+    },
+    {
+      "index": 6069,
+      "startIndex": 905112,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 6070,
+      "startIndex": 905142,
+      "text": "Windows, 9to1-OS and web preserve the same canonical SiteProject/Page/Component/CMS/NodeGraph/Deployment models while capability-negotiating local framework tooling, embedded preview, browser isolation, filesystem/source access and provider integrations."
+    },
+    {
+      "index": 6097,
+      "startIndex": 908899,
+      "text": "Private secrets are not emitted into browser bundles, logs, AI context or diffs during representative build/deploy workflows."
+    },
+    {
+      "index": 6101,
+      "startIndex": 909479,
+      "text": "Windows, 9to1-OS and web preserve the same canonical Sites model while capability-negotiating local build/preview/provider features."
+    },
+    {
+      "index": 6116,
+      "startIndex": 912099,
+      "text": "Environment identity is explicit. A session always knows whether it targets the local host, WSL, container, SSH host, VM, Dev environment, 9to1-OS host or another registered execution provider."
+    },
+    {
+      "index": 6193,
+      "startIndex": 923791,
+      "text": "Terminal supports environment providers for local host, WSL, containers, SSH/remotes, virtual machines, Dev environments, 9to1-OS systems and extension-contributed execution targets."
+    },
+    {
+      "index": 6217,
+      "startIndex": 927192,
+      "text": "Every 9to1 app MAY register a Terminal integration provider exposing discoverable read/actions, context resolvers, entity links, completion/help metadata and structured renderers through the shared API model. Terminal treats this as a first-class platform capability, not bespoke one-off integrations."
+    },
+    {
+      "index": 6302,
+      "startIndex": 937657,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 6303,
+      "startIndex": 937687,
+      "text": "Windows, 9to1-OS and web preserve the same TerminalSession, mode, AI action and integration model while capability-negotiating local PTY implementation, shells, WSL, OS elevation, SSH/provider and process controls."
+    },
+    {
+      "index": 6304,
+      "startIndex": 937902,
+      "text": "Web Terminal requires an authorised remote/server environment provider for real shell execution unless the web platform exposes an approved execution environment. It MUST NOT present browser-side simulation as host terminal access."
+    },
+    {
+      "index": 6337,
+      "startIndex": 941981,
+      "text": "Windows, 9to1-OS and web/remote configurations preserve the same canonical Terminal model while capability-negotiating shell execution."
+    },
+    {
+      "index": 6353,
+      "startIndex": 944934,
+      "text": "Mini Computer exposes a canonical VirtualisationProvider interface. The built-in 9to1 VirtualBox fork is selected by default, while users may connect/install additional compatible providers such as QEMU, KVM, Windows hypervisor integrations or extension-contributed providers when supported."
+    },
+    {
+      "index": 6377,
+      "startIndex": 949287,
+      "text": "Curated ISO Browser"
+    },
+    {
+      "index": 6378,
+      "startIndex": 949307,
+      "text": "Mini Computer includes a first-class ISO Browser/Discover OS experience for acquiring trusted operating-system installation media. It is a curated publisher catalogue, not an unrestricted Internet ISO search engine."
+    },
+    {
+      "index": 6393,
+      "startIndex": 951830,
+      "text": "ISO Browser user flow"
+    },
+    {
+      "index": 6475,
+      "startIndex": 961954,
+      "text": "Users can save reusable VM templates/profiles for common environments such as Windows testing, Linux development, server labs or 9to1-OS development."
+    },
+    {
+      "index": 6480,
+      "startIndex": 962614,
+      "text": "A template may state ISO required and route the user into the ISO Browser/provider flow rather than implying the operating system is included."
+    },
+    {
+      "index": 6509,
+      "startIndex": 966563,
+      "text": "User logout/system shutdown semantics are platform-specific and exposed clearly when background VM continuation is unavailable."
+    },
+    {
+      "index": 6520,
+      "startIndex": 968142,
+      "text": "AI requests such as create a Windows test VM, take a snapshot before this kernel test, explain why boot failed or add disk capacity resolve to typed Mini Computer/provider actions."
+    },
+    {
+      "index": 6574,
+      "startIndex": 972324,
+      "text": "VM list, create wizard, settings, snapshots, networks, ISO Browser, provider status and power controls are keyboard-operable with screen-reader semantics."
+    },
+    {
+      "index": 6586,
+      "startIndex": 974519,
+      "text": "Platform capability behaviour"
+    },
+    {
+      "index": 6587,
+      "startIndex": 974549,
+      "text": "Windows, 9to1-OS and other supported desktop hosts preserve the same canonical VM/provider/media model while capability-negotiating the built-in VirtualBox fork, hardware acceleration, host networking, device passthrough and filesystem/storage behaviour."
+    },
+    {
+      "index": 6588,
+      "startIndex": 974804,
+      "text": "Web surfaces may manage/view remote Mini Computer providers/VMs when an authorised remote execution provider exists but MUST NOT pretend the browser itself can provide unrestricted local hardware virtualisation."
+    },
+    {
+      "index": 6609,
+      "startIndex": 977597,
+      "text": "The ISO Browser lists only registered/curated publisher providers rather than arbitrary unverified Internet downloads."
+    },
+    {
+      "index": 6623,
+      "startIndex": 979592,
+      "text": "Keyboard/screen-reader workflows cover VM creation, ISO Browser, VM state controls, settings, snapshots and provider status."
+    },
+    {
+      "index": 6624,
+      "startIndex": 979717,
+      "text": "Windows, 9to1-OS and supported remote/web management preserve the same canonical Mini Computer model while capability-negotiating local execution."
+    },
+    {
+      "index": 6628,
+      "startIndex": 979985,
+      "text": "9to1 Browse is a full Firefox-derived browser product with native CUI chrome and native CUI internal surfaces. Firefox/Gecko is the primary donor, default web engine and behavioural baseline. Chromium/Blink is a first-class secondary browser/rendering backend available per tab. Browse MUST remain one coherent browser with one canonical 9to1-owned tab/session model; Chromium support MUST NOT be implemented as a second browser bolted onto Firefox or as a separate user profile universe."
+    },
+    {
+      "index": 6631,
+      "startIndex": 980790,
+      "text": "Tabs and windows, including restore/reopen behaviour, pinned tabs and normal navigation history."
+    },
+    {
+      "index": 6636,
+      "startIndex": 981671,
+      "text": "Web engine architecture"
+    },
+    {
+      "index": 6637,
+      "startIndex": 981695,
+      "text": "Each web BrowserTab selects a WebEngine value of Firefox/Gecko or Chromium/Blink. The normal user-facing choice SHOULD be labelled Firefox and Chromium; implementation and diagnostics MAY additionally expose the underlying Gecko and Blink engine names. Gecko is the default unless the user or a persisted site rule selects Chromium."
+    },
+    {
+      "index": 6639,
+      "startIndex": 982394,
+      "text": "Browse MUST own canonical higher-level browser entities instead of allowing Gecko and Chromium to directly share raw profile databases. At minimum the architecture must model BrowserProfile, BrowserTab, NavigationEntry, Bookmark, HistoryEntry, Download, SitePermission, Workspace, TabGroup, SplitView, SearchProvider, SiteEnhancer and EnginePreference as typed 9to1-owned entities or equivalent strongly typed contracts."
+    },
+    {
+      "index": 6641,
+      "startIndex": 983070,
+      "text": "Users MUST be able to use Firefox for this tab, Chromium for this tab, always Firefox for a site/domain, always Chromium for a site/domain, and reset a persisted site engine preference. A broken page SHOULD be switchable to the other engine with one obvious action without opening a separate browser product."
+    },
+    {
+      "index": 6644,
+      "startIndex": 983670,
+      "text": "Automatic update does not mean blindly shipping an unvalidated upstream binary. The update pipeline MUST fetch/rebase or reapply maintained 9to1 changes, build the affected engine integration, run Browse compatibility and regression suites, verify CUI integration, engine switching, extension baselines, session/profile isolation, Site Enhancer behaviour, DevTools integration and Dulche browser capabilities, and promote the new engine only after the applicable acceptance gates pass. Security-sensitive upstream releases receive expedited priority. The previous known-good engine build MUST remain rollback-capable until promotion is proven stable."
+    },
+    {
+      "index": 6649,
+      "startIndex": 984869,
+      "text": "9to1:// \u2014 native 9to1 application surfaces hosted inside a Browse tab, for example 9to1://Spaces, 9to1://Write or a typed deep link such as 9to1://Write/<resource>. These are the actual application surfaces, not web versions or reduced browser copies."
+    },
+    {
+      "index": 6650,
+      "startIndex": 985121,
+      "text": "https:// and http:// \u2014 ordinary web content. User-facing normal web navigation uses these web schemes; Browse-owned, CUI and native-app content MUST NOT masquerade as an HTTP(S) origin."
+    },
+    {
+      "index": 6653,
+      "startIndex": 985554,
+      "text": "Opening 9to1://<App> MUST instantiate the real CUI application surface and the real application services inside the Browse tab. It MUST NOT load a separately implemented web edition, feature-reduced embedded edition or imitation of the app. Responsive layout adaptation is allowed and expected; capability divergence merely because the app is hosted in Browse is not."
+    },
+    {
+      "index": 6656,
+      "startIndex": 986505,
+      "text": "9to1 native app tabs participate in normal Browse capabilities including tab groups, pinning, workspaces, restore/reopen and Split View. A user can therefore place 9to1://Write with a research document beside an https:// research page, or combine two different native 9to1 apps, without requiring a separate web version of either app."
+    },
+    {
+      "index": 6658,
+      "startIndex": 986864,
+      "text": "Browser profiles are tab-scoped, not window-scoped. Every BrowserTab carries a ProfileID or equivalent profile context, allowing one window, one workspace and one Split View to contain tabs from different profiles simultaneously."
+    },
+    {
+      "index": 6659,
+      "startIndex": 987094,
+      "text": "A BrowserProfile is an identity/storage/privacy boundary. Depending on supported configuration, it owns or scopes cookies, login sessions, site storage, site permissions, browsing-data attribution, extensions and extension state, search preferences, Site Enhancers, credentials/passkeys and other profile-specific browser configuration."
+    },
+    {
+      "index": 6661,
+      "startIndex": 987751,
+      "text": "Profile identity MUST be visually discoverable on tabs and in relevant browser UI so the user can tell which account/session context will be used. Consequential actions and Dulche-controlled actions SHOULD make the active profile context clear where confusion could cause the action to occur under the wrong identity."
+    },
+    {
+      "index": 6662,
+      "startIndex": 988069,
+      "text": "Changing a tab to another profile MUST reopen/recreate its web session under the destination profile rather than copying authentication material across profile boundaries. Safe navigation/organisation metadata such as URL, group, workspace and split position may be preserved where applicable."
+    },
+    {
+      "index": 6664,
+      "startIndex": 988390,
+      "text": "Browse MUST provide modern tab management in addition to Firefox donor parity. Tab groups are first-class canonical entities with stable identity, naming, optional colour/icon metadata, collapse/expand state, persistence, restore, drag/drop and movement between windows/workspaces. Dulche and other typed APIs can address a group directly."
+    },
+    {
+      "index": 6672,
+      "startIndex": 989399,
+      "text": "Split View displays two independent BrowserTab entities side-by-side in one browser content area with a resizable divider. The split container owns presentation only; each pane remains a real tab with its own URL/route, navigation history, profile, renderer/backend where applicable and canonical tab identity."
+    },
+    {
+      "index": 6673,
+      "startIndex": 989710,
+      "text": "A split may mix any compatible tab surface classes, including web + web, 9to1 app + web, 9to1 app + 9to1 app, Browse internal + web and tabs from different BrowserProfiles. Either pane can be swapped, unsplit or moved without destroying the underlying tab."
+    },
+    {
+      "index": 6677,
+      "startIndex": 990457,
+      "text": "The canvas can host deterministic widgets, browser widgets, 9to1 app widgets, extension-provided CUI widgets, static content and Generative Areas. It SHOULD reuse shared 9to1 canvas/layout infrastructure where practical instead of creating an incompatible bespoke layout system."
+    },
+    {
+      "index": 6682,
+      "startIndex": 991694,
+      "text": "Search mode performs normal navigation/search behaviour and MUST NOT invoke an LLM merely to execute an ordinary URL or provider query. AI mode sends the request to Dulche and can use permissioned Browse capabilities and referenced browser/app context."
+    },
+    {
+      "index": 6685,
+      "startIndex": 992650,
+      "text": "Dulche browser experience"
+    },
+    {
+      "index": 6686,
+      "startIndex": 992676,
+      "text": "Dulche is the only authoritative AI system in Browse. Firefox-provided proprietary AI surfaces MUST be removed/replaced. Browse SHOULD provide both a persistent Dulche sidebar for larger tasks and a lightweight floating/command bar for contextual requests, using the shared Dulche runtime rather than launching a browser-specific model server."
+    },
+    {
+      "index": 6687,
+      "startIndex": 993020,
+      "text": "The Dulche UI MUST support @-mentioning canonical browser context. At minimum users can mention tabs and SHOULD be able to mention tab groups, workspaces, split panes and other supported Browse entities. Mention autocomplete resolves to stable canonical IDs rather than copying only titles/URLs into the prompt."
+    },
+    {
+      "index": 6691,
+      "startIndex": 994011,
+      "text": "Permission scope MUST be explicit and composable. The implementation must support equivalents of read this page, control this tab, control these selected tabs and control Browse for this task. Granting one scope MUST NOT silently grant permanent global browser control."
+    },
+    {
+      "index": 6692,
+      "startIndex": 994281,
+      "text": "Browser automation SHOULD use structured semantic capabilities such as Navigate, OpenTab, CloseTab, ActivateTab, ReadPage, ReadElement, Find, Scroll, Click, FillField, SelectOption, GoBack, GoForward and Reload when structured control exists. Blind coordinate input is a fallback, not the primary architecture."
+    },
+    {
+      "index": 6704,
+      "startIndex": 997132,
+      "text": "Split panes and tabs SHOULD support semantic drag/drop. Where both surfaces understand a canonical 9to1 entity, transfer the typed entity/link instead of degrading it to copied text. Examples include dragging a Maps place into Planner or a Board item into Write. Web upload targets may receive files through normal browser security/permission rules."
+    },
+    {
+      "index": 6707,
+      "startIndex": 997860,
+      "text": "cui://, browse:// and 9to1:// are privileged/non-web namespaces with separate routing and origin/capability rules. Ordinary HTTP(S) pages MUST NOT be able to inspect native app state, call privileged CUI/Browse APIs, forge trusted 9to1:// content or inherit internal permissions simply by navigating to or linking an internal route."
+    },
+    {
+      "index": 6708,
+      "startIndex": 998193,
+      "text": "A web page may request navigation to an allowed registered internal route only through the normal navigation/policy boundary. Navigating to 9to1:// does not grant the originating site the destination app's authority. Profile cookies/credentials and engine-private state MUST remain isolated according to their owning profile/backend."
+    },
+    {
+      "index": 6710,
+      "startIndex": 998556,
+      "text": "Browse MUST handle Firefox renderer crashes, Chromium renderer crashes, whole-browser crashes, failed engine startup, unavailable selected engines, extension incompatibility, interrupted downloads, invalid/corrupt engine-private state and failed engine switches without corrupting the other engine or canonical Browse profile state."
+    },
+    {
+      "index": 6720,
+      "startIndex": 1000126,
+      "text": "Dulche @ mentions resolve to canonical browser/app entities and permissioned autonomous browsing uses semantic browser capabilities with consequential-action safeguards."
+    },
+    {
+      "index": 6815,
+      "startIndex": 1020195,
+      "text": "9to1 Launcher is the Android/9to1-OS home launcher. It is a maintained fork/adaptation of the latest appropriate Lawnchair source and is a distinct product from Shelf. Launcher MUST NOT be implemented as the cross-platform 9to1 package installer/updater or as the Shelf quick-access library."
+    },
+    {
+      "index": 6817,
+      "startIndex": 1020513,
+      "text": "Lawnchair is the primary donor and mature behavioural baseline for Launcher. Applicable donor functionality and quality-of-life behaviour MUST be retained unless this specification explicitly replaces it. The goal is not merely donor parity: 9to1 Launcher is intended to be substantially more customisable than conventional Android launchers, including mature highly-customisable launchers such as Nova Launcher, while remaining coherent, performant and accessible."
+    },
+    {
+      "index": 6819,
+      "startIndex": 1021002,
+      "text": "Launcher owns the Android-style home screen, home pages, app drawer, dock, folders, widgets, app shortcuts, gestures, app discovery and visual organisation of installed applications. It consumes the authoritative installed-application/package registry owned by Home/platform package infrastructure; it does not maintain a competing package database."
+    },
+    {
+      "index": 6825,
+      "startIndex": 1021762,
+      "text": "Compatible Android widgets plus 9to1-native CUI widgets through a shared widget abstraction."
+    },
+    {
+      "index": 6840,
+      "startIndex": 1023679,
+      "text": "Launcher can represent Android apps, 9to1-native apps and other platform-recognised application targets exposed through the OS compatibility/application registry. Package install, uninstall, update, repair, rollback and channel management remain Home/platform responsibilities. Launcher may surface status/actions such as 'update available' but delegates execution to the authoritative package service."
+    },
+    {
+      "index": 6842,
+      "startIndex": 1024090,
+      "text": "9to1-native apps and extensions can register typed CUI launcher widgets with declared supported sizes, configuration surfaces, update behaviour, data permissions and actions. Compatible Android App Widgets remain supported where the Android platform layer permits them. Launcher MUST present both through a coherent placement/resizing model without pretending they share identical runtime/security semantics."
+    },
+    {
+      "index": 6849,
+      "startIndex": 1025457,
+      "text": "Launcher MUST respect Android/OS user, work-profile and application-profile boundaries. Profile-specific apps/widgets/shortcuts must retain their owning profile identity and should be visually distinguishable where confusion could cause the user to act under the wrong account or authority."
+    },
+    {
+      "index": 6852,
+      "startIndex": 1025914,
+      "text": "Launcher is the Android/9to1-OS home launcher only; Shelf remains a separate quick-access product and Home/platform services own package management."
+    },
+    {
+      "index": 6854,
+      "startIndex": 1026202,
+      "text": "Customisation materially exceeds the donor/default Android baseline and supports deep grid, icon, folder, dock, page, theme, animation and gesture configuration without destabilising canonical launcher state."
+    },
+    {
+      "index": 6858,
+      "startIndex": 1026646,
+      "text": "Shelf is the cross-platform quick-access library for things the user wants to launch or open frequently. It is a separate product from the Android Launcher. Shelf can organise applications, games, 9to1 surfaces, projects, files, folders, websites and other supported shortcuts into reusable user-defined collections."
+    },
+    {
+      "index": 6864,
+      "startIndex": 1027303,
+      "text": "Android applications where the hosting platform supports them."
+    },
+    {
+      "index": 6867,
+      "startIndex": 1027478,
+      "text": "Web URLs and registered URI schemes."
+    },
+    {
+      "index": 6882,
+      "startIndex": 1030116,
+      "text": "Opening an item delegates to the owning platform/application service using the target's canonical semantics. 9to1-native targets use their registered 9to1:// identity/deep-link contracts where applicable. Files/folders use Files/platform open semantics; web targets use Browse/default-browser semantics; applications/games use the appropriate registered launcher/provider."
+    },
+    {
+      "index": 6889,
+      "startIndex": 1031551,
+      "text": "Shelf remains a distinct cross-platform quick-access product and is never conflated with the Lawnchair-derived Android Launcher."
+    },
+    {
+      "index": 7172,
+      "startIndex": 1070692,
+      "text": "Dulche MUST expose a canonical request-aware Tool Registry describing the tools, executable capabilities and usable resources that a model can employ to satisfy a request. The registry is broader than a literal list of function names: it includes first-party 9to1 app actions/APIs, Automations actions, Plugins, MCP tools, callable Agents, Skills that contribute executable workflows through authorised dependencies, Files/resource retrieval, image/audio/video generation capabilities, code/shell tools, web/network tools where permitted and other registered Dulche capabilities. Computer Use is represented only when it has been explicitly invoked under the Computer Use contract."
+    },
+    {
+      "index": 7174,
+      "startIndex": 1071940,
+      "text": "Dulche MUST derive an EffectiveCapabilitySet for each request from the canonical registry. The effective set is filtered by the active user/profile, current app/Space/project, installed/enabled package state, app/API availability, explicit @ invocations, platform capability, privacy policy, administrator policy, current permissions/trust and any request-specific restrictions. Installed-but-unavailable, available-but-unapproved and immediately executable capabilities MUST remain distinguishable."
+    },
+    {
+      "index": 7410,
+      "startIndex": 1122434,
+      "text": "Context Summarisation is a distinct Dulche job. A summariser model reads the retained conversation/history section by section using bounded windows so the summariser's own context cannot overflow. Each section produces a structured intermediate summary containing obligations, facts, decisions, identifiers, artifacts/references, completed actions, unresolved work/blockers, provenance and continuity notes. Dulche then performs one or more bounded merge passes until a final execution summary fits the target context budget."
+    },
+    {
+      "index": 7523,
+      "startIndex": 1149500,
+      "text": "Card grid / gallery / result browser."
+    },
+    {
+      "index": 7624,
+      "startIndex": 1167098,
+      "text": "Plugins and web integrations \u2014 WebMCP and site-hosted MCP servers"
+    },
+    {
+      "index": 7625,
+      "startIndex": 1167164,
+      "text": "Support MUST be added for WebMCP-enabled web pages and for remote MCP servers hosted by websites. These are distinct integration surfaces: browser-side WebMCP support alone does not satisfy remote MCP-server support, and connecting to a remote MCP endpoint alone does not satisfy WebMCP support."
+    },
+    {
+      "index": 7626,
+      "startIndex": 1167460,
+      "text": "The existing Plugin/MCP integration system MUST expose discovery/inspection, connection or permission setup, tool invocation, cancellation where supported, and disconnect/revocation for the appropriate surface. WebMCP integration MUST use the supported browser capability with explicit capability detection and origin boundaries. Site-hosted MCP connections MUST support the applicable remote HTTP transport and protocol-version/authentication contracts rather than assuming that a page URL is itself a valid MCP endpoint. The implementation MUST record supported browser/protocol versions and visibly report unsupported capabilities instead of claiming a successful integration."
+    },
+    {
+      "index": 7628,
+      "startIndex": 1168557,
+      "text": "Web integration API and acceptance"
+    },
+    {
+      "index": 7629,
+      "startIndex": 1168592,
+      "text": "Extend the existing canonical MCP/Plugin APIs for capability inspection, discovery, connection/authentication setup, invocation, supported cancellation and revocation. Browser-side WebMCP bindings MUST preserve browser origin/document identity; remote MCP bindings MUST preserve ServerID, endpoint identity and negotiated protocol/transport metadata. Test an authorised WebMCP-enabled page and a website-hosted remote MCP endpoint separately, then test unsupported browser/protocol, denied scopes, disconnected transport, cancellation limits and revocation. Neither route may claim success from a placeholder, silently use a page URL as an MCP endpoint or expose secrets in logs."
+    },
+    {
+      "index": 7751,
+      "startIndex": 1191693,
+      "text": "9to1-OS"
+    },
+    {
+      "index": 7753,
+      "startIndex": 1191741,
+      "text": "9to1-OS is derived from the latest appropriate maintained Ubuntu/GNOME stack. The project forks/adapts the complete relevant desktop/system stack rather than treating Ubuntu merely as a kernel image, then rebuilds the 9to1 user-facing desktop environment and first-party system interfaces in CUI.NET while preserving mature non-replaced functionality underneath."
+    },
+    {
+      "index": 7757,
+      "startIndex": 1193318,
+      "text": "Desktop shell and Windows-style interaction model"
+    },
+    {
+      "index": 7758,
+      "startIndex": 1193368,
+      "text": "The default 9to1-OS shell uses a familiar Windows-like desktop interaction model while retaining Linux/Ubuntu capabilities. Conventional minimise, maximise/restore and close controls, taskbar representation, window switching, context menus, system tray/status, desktop workspaces and predictable mouse/keyboard behaviour are first-class rather than hidden or intentionally omitted."
+    },
+    {
+      "index": 7760,
+      "startIndex": 1193788,
+      "text": "Drag windows to edges/corners to preview and snap them into supported layouts."
+    },
+    {
+      "index": 7763,
+      "startIndex": 1194178,
+      "text": "Support conventional app/window switching, previews, multiple windows per app, virtual-desktop awareness, task-view/overview and keyboard-first operation."
+    },
+    {
+      "index": 7765,
+      "startIndex": 1194490,
+      "text": "Linux/GTK/Qt and other compatible desktop applications remain runnable even when they are not CUI-native. They participate in the taskbar, window switching, snapping, desktops and supported system integration to the extent the underlying platform permits."
+    },
+    {
+      "index": 7772,
+      "startIndex": 1196081,
+      "text": "A layer can contain typed items such as pinned/running apps, individual windows, Go, system controls, quick actions, settings, files/folders, Shelf items/collections, 9to1 routes, Dulche Agents, Agent runs, Automations actions, widgets, status indicators, media controls, spacers and authorised extension-provided modules."
+    },
+    {
+      "index": 7777,
+      "startIndex": 1196868,
+      "text": "Virtual Desktops organise sets of windows within the current shell experience. Desktop Spaces redefine the surrounding shell/interaction experience. Desktop Pages are multiple pages of desktop icons/widgets within a desktop surface. These are separate orthogonal concepts."
+    },
+    {
+      "index": 7788,
+      "startIndex": 1199318,
+      "text": "Customisation is an architectural property of 9to1-OS. The requirement is not satisfied by wallpaper, accent colour and taskbar-position options. Stable shell behaviour and presentation that can reasonably be represented as configuration SHOULD be configurable unless doing so would materially compromise security, accessibility, compatibility or system integrity."
+    },
+    {
+      "index": 7789,
+      "startIndex": 1199683,
+      "text": "The OS MUST expose substantially deeper supported first-party customisation than stock Windows or stock GNOME without requiring registry hacks, shell patches, unsupported extensions or third-party Start/taskbar replacements. Configuration uses versioned typed schemas and transactions so Settings, Dulche, Automations and authorised extensions operate on the same underlying state."
+    },
+    {
+      "index": 7806,
+      "startIndex": 1202404,
+      "text": "Quick Settings combines Windows-style desktop system controls with Android-style customisation. Users can add/remove/reorder tiles, choose supported sizes, resize tiles, use multiple pages, configure layout/density/panel placement and install authorised custom tiles."
+    },
+    {
+      "index": 7809,
+      "startIndex": 1203261,
+      "text": "Related flyouts such as audio, network, Bluetooth, calendar, battery and notification centre must provide friendly direct controls and the expected Windows-class QoL, including optional battery percentage, output-device switching, tray overflow, date/calendar, power/session controls and useful status detail."
+    },
+    {
+      "index": 7816,
+      "startIndex": 1204689,
+      "text": "The default OS must be aggressively memory-efficient without sacrificing specified functionality or quality so local models can use more of the machine. 9to1-OS should lazy-load non-critical services/surfaces, suspend or trim eligible inactive apps, reclaim caches, use appropriate compression/zram and memory mapping, avoid duplicated runtime state and unload inactive models/compatibility environments when policy permits."
+    },
+    {
+      "index": 7833,
+      "startIndex": 1208037,
+      "text": "9to1-OS supports multiple isolated user accounts/profiles with standard and administrator roles, secure per-user data/settings/secrets, fast switching/sign-out and clearly scoped system-wide versus user-specific configuration."
+    },
+    {
+      "index": 7834,
+      "startIndex": 1208264,
+      "text": "Administrators can create managed policy profiles for family, school, organisation or kiosk-style deployments. Policies can control application allow/deny lists, package/app installation, external providers, Plugins/MCP, Terminal/admin access, removable storage, networking/VPN, Desktop Space/customisation options, web/content controls where supported, update policy and other security-sensitive capabilities."
+    },
+    {
+      "index": 7838,
+      "startIndex": 1209405,
+      "text": "All release-scope first-party 9to1 applications are installed by default as part of the complete 9to1-OS experience, while application updates are independently deliverable from full OS updates. A central update/package service handles discovery, automatic/manual updates, integrity checks, history, repair and supported rollback instead of every app shipping a private updater."
+    },
+    {
+      "index": 7843,
+      "startIndex": 1210748,
+      "text": "9to1-OS MUST provide a friendly graphical CUI.NET installer and first-run/OOBE experience. A normal installation MUST NOT require interacting with the traditional Linux text/terminal installer or memorising shell commands. Advanced/technical options may be exposed through expandable UI without making them mandatory for ordinary users."
+    },
+    {
+      "index": 7847,
+      "startIndex": 1211827,
+      "text": "9to1-OS provides a custom CUI recovery environment designed for ordinary users. It should expose Continue/boot normally, automatic startup repair, restore a previous healthy snapshot, undo the latest system update, safe mode, package/system repair, filesystem/disk checks, disable problematic drivers or shell extensions, recover/reset shell configuration, inspect System Log, backup/restore, advanced Terminal and supported repair/reinstall-with-data-preservation flows."
+    },
+    {
+      "index": 7848,
+      "startIndex": 1212299,
+      "text": "The custom 9to1 Recovery environment supplements rather than replaces the underlying Ubuntu/Linux recovery environment. The stock/default recovery path MUST remain available as an emergency fallback if the custom CUI recovery environment is damaged or cannot launch."
+    },
+    {
+      "index": 7853,
+      "startIndex": 1213076,
+      "text": "9to1 Recovery provides friendly repair/rollback tools, while the lower-level Ubuntu/Linux recovery environment remains independently reachable."
+    },
+    {
+      "index": 7860,
+      "startIndex": 1214472,
+      "text": "9to1-OS includes a friendly CUI graphical package manager with search, categories, source/publisher, version, architecture, size, installed/update state, screenshots/metadata where available, dependency/permission information and install/update/uninstall/repair workflows."
+    },
+    {
+      "index": 7861,
+      "startIndex": 1214745,
+      "text": "The package manager uses typed PackageProvider adapters for applicable Linux package ecosystems such as Ubuntu/Debian packages, Flatpak, Snap if retained and coherent AppImage handling, plus Winget for supported Windows/Wine scenarios and 9to1 package sources. It may show multiple sources for the same product and explain meaningful differences instead of silently choosing an arbitrary provider."
+    },
+    {
+      "index": 7865,
+      "startIndex": 1215457,
+      "text": "9to1-OS includes a CUI System Log surface that translates underlying journal/service/app events into useful searchable/filterable diagnostics while retaining advanced technical detail. Events can expose timestamp, component/process, severity, subsystem, version/build, crash ID, stack/debug data where available and related logs/actions."
+    },
+    {
+      "index": 7870,
+      "startIndex": 1216437,
+      "text": "Task Manager is rebuilt in CUI.NET using the appropriate Ubuntu/GNOME system-monitor tooling as donor baseline unless another donor is explicitly assigned. It preserves mature process/resource functionality and extends it with Windows-style usability plus 9to1-specific visibility for models, Agents, containers/compatibility environments and relevant GPU/RAM usage."
+    },
+    {
+      "index": 7872,
+      "startIndex": 1216987,
+      "text": "9to1-OS acceptance requirements"
+    },
+    {
+      "index": 7884,
+      "startIndex": 1218623,
+      "text": "Go is the universal Start/search/action surface for 9to1-OS. It combines the roles of a Windows-style Start menu, system-wide search, application launcher and contextual quick-action surface. Go is an OS primitive, not a separate heavyweight application, and the default taskbar places Go at the left/start position."
+    },
+    {
+      "index": 7887,
+      "startIndex": 1219342,
+      "text": "All Apps is a first-class Go view containing installed applications/programs available to the current user/profile. It is separate from the Android-style Launcher app drawer. Go is the primary application-launcher replacement for the 9to1-OS desktop shell."
+    },
+    {
+      "index": 7893,
+      "startIndex": 1220520,
+      "text": "Go may search applications, files/folders, settings, people/contacts, LLM Spaces/conversations where authorised, Boards, Planner tasks/events, Maps places, Shelf items/collections, Stack repositories/branches, Dev projects, browser history/bookmarks where enabled, installed tools, Plugins/extensions and registered system actions."
+    },
+    {
+      "index": 7905,
+      "startIndex": 1222676,
+      "text": "Users can disable sensitive providers/categories such as browser history, message contents or private project indexing. Stale/offline remote results must be marked with their freshness state and invalid/deleted results removed rather than accumulating as zombie entries."
+    },
+    {
+      "index": 7911,
+      "startIndex": 1223553,
+      "text": "Go acts as the primary 9to1-OS Start menu, universal search and quick-action surface, with Go at the default left/start taskbar position."
+    },
+    {
+      "index": 7917,
+      "startIndex": 1224114,
+      "text": "On 9to1-OS, the Universal Model Picker is the OS-hosted presentation of the same canonical Dulche/Home model/provider state used by regular 9to1. Model identities, provider connections, ordered Model Routes, active/background routing, category overrides, fallbacks, permissions and usage state MUST remain interoperable across Home and 9to1-OS rather than becoming separate OS-only configuration."
+    },
+    {
+      "index": 7919,
+      "startIndex": 1224917,
+      "text": "9to1-OS may host the picker natively while Windows regular 9to1 hosts it through Home, but both clients MUST read/write the same versioned routing contracts and Dulche model catalogue. A route configured in Home remains meaningful on 9to1-OS subject to device-local model availability, provider authentication, administrator policy and device-specific resource constraints."
+    },
+    {
+      "index": 7921,
+      "startIndex": 1225326,
+      "text": "When a selected local model requires additional memory, the picker integrates with the 9to1-OS resource broker to show required/available/reclaimable RAM/VRAM and may request permitted reclamation before declaring the model unavailable. It MUST distinguish Installed, Unloaded, Loading, Loaded, Offloaded/Partially loaded where supported and Unavailable due to resources."
+    },
+    {
+      "index": 7924,
+      "startIndex": 1225968,
+      "text": "Ordered model fallback is a shared 9to1 capability, not an OS-specific behaviour. Requests from regular 9to1/Home and 9to1-OS use the same eligibility-first routing semantics: determine required capabilities and policy constraints, filter the configured route, then choose the highest-priority eligible available model and fall through only on classified model/provider-routing conditions."
+    },
+    {
+      "index": 7926,
+      "startIndex": 1226381,
+      "text": "The Wine/WinBoat Framework is the unified 9to1-OS compatibility platform for non-native application packages. It provides one coherent installation, routing, execution, lifecycle, permissions, diagnostics and shell-integration model across Windows applications and Android APK applications rather than exposing Wine, VM/container tooling or an Android runtime as unrelated expert-only subsystems."
+    },
+    {
+      "index": 7928,
+      "startIndex": 1226801,
+      "text": "A CompatibilityBackend is a typed implementation capable of installing/running one or more foreign application formats. Required backend classes include a Wine-compatible Windows runtime, a WinBoat-style Windows environment for applications needing a fuller Windows VM/container context, and an APK/Android compatibility layer for Android applications. Additional compatible backends MAY be registered later through the same framework."
+    },
+    {
+      "index": 7932,
+      "startIndex": 1227974,
+      "text": "Windows .exe/.msi and equivalent supported installers are routed to an eligible Windows backend. Android .apk packages are routed to an eligible APK/Android compatibility backend. The normal user experience is Install/Open application, not manually invoking wine, configuring a prefix, running Docker/Podman/QEMU/RDP commands or issuing Android runtime commands in Terminal."
+    },
+    {
+      "index": 7937,
+      "startIndex": 1229426,
+      "text": "Users can change/reset the backend association later from the application's compatibility settings. Global defaults may exist for Windows packages and APK packages, but per-app rules take precedence where valid."
+    },
+    {
+      "index": 7938,
+      "startIndex": 1229638,
+      "text": "Windows: Wine path"
+    },
+    {
+      "index": 7942,
+      "startIndex": 1230464,
+      "text": "Windows: WinBoat-style environment path"
+    },
+    {
+      "index": 7943,
+      "startIndex": 1230504,
+      "text": "The WinBoat-style backend provides a managed Windows VM/container environment for applications that need or work better with a fuller Windows installation. It may expose configurable CPU, RAM, storage, hardware acceleration, networking, shared folders, USB/device passthrough, graphics configuration and individual-app/RemoteApp-style window integration where supported."
+    },
+    {
+      "index": 7944,
+      "startIndex": 1230875,
+      "text": "The management experience hides Docker/Podman, QEMU, VM orchestration and RDP implementation details during normal use while retaining advanced diagnostics. Individual Windows applications should appear as normal 9to1-OS windows where technically possible; a full Windows desktop remains available as a fallback/advanced mode."
+    },
+    {
+      "index": 7945,
+      "startIndex": 1231202,
+      "text": "Android/APK compatibility path"
+    },
+    {
+      "index": 7946,
+      "startIndex": 1231233,
+      "text": "9to1-OS MUST support Android APK applications through the same Compatibility Framework using an Android/APK compatibility layer. Installing an APK creates/registers a normal CompatibilityApp backed by the Android runtime rather than placing Android apps in a disconnected secondary launcher."
+    },
+    {
+      "index": 7947,
+      "startIndex": 1231525,
+      "text": "The APK backend is responsible for Android runtime/container lifecycle, package installation/update/removal, Android package identity, architecture/ABI compatibility, graphics acceleration, display/window integration, storage mappings, networking, clipboard, audio, microphone/camera, notifications, input, orientation, intents/file associations and other host bridges where supported."
+    },
+    {
+      "index": 7948,
+      "startIndex": 1231911,
+      "text": "Android applications should participate in Go, taskbar/taskbar layers, window switching, Desktop Spaces, notifications, Files/open-with/share flows, Shelf and other applicable 9to1-OS integrations. The Android compatibility layer MUST NOT require the user to launch a separate Android desktop merely to start an installed APK unless a full Android environment is explicitly requested."
+    },
+    {
+      "index": 7949,
+      "startIndex": 1232296,
+      "text": "If multiple APK-compatible runtimes/backends are available, the same automatic eligibility and per-app default framework rules apply. The user may choose a backend and persist it for that Android app; otherwise 9to1 selects the highest-priority eligible configured default."
+    },
+    {
+      "index": 7952,
+      "startIndex": 1232998,
+      "text": "The GUI package manager may also install Windows software through Winget or other approved Windows sources and Android packages through approved configured package sources where supported. Package-source discovery does not bypass administrator policy, signing/trust requirements or compatibility permissions."
+    },
+    {
+      "index": 7955,
+      "startIndex": 1233766,
+      "text": "Compatibility apps may expose Automations/Dulche actions only through typed supported bridges. Running inside Wine, a Windows VM or an Android runtime does not give an application unrestricted access to the host Automation framework or other 9to1 capabilities."
+    },
+    {
+      "index": 7957,
+      "startIndex": 1234059,
+      "text": "Host folder exposure is explicit and revocable. Compatibility environments receive only user/admin-authorised Files locations rather than unrestricted access to the entire Linux home directory by default. Shared-folder mappings identify the canonical host location and the guest-visible mapping."
+    },
+    {
+      "index": 7960,
+      "startIndex": 1234642,
+      "text": "The framework exposes backend-appropriate GPU acceleration, Vulkan/DirectX translation, discrete/integrated GPU preference, fullscreen, controller/input support and relevant compatibility/performance settings. Windows or Android games can integrate with Gaming Desktop Space telemetry/controls where the backend exposes the required data."
+    },
+    {
+      "index": 7962,
+      "startIndex": 1235015,
+      "text": "CompatibilityEnvironment lifecycle states include at least Starting, Running, Suspended, Stopped, Degraded/Error and backend-specific transitional states. The framework reports allocated and actual RAM/CPU/storage/GPU usage where available and participates in 9to1-OS memory/resource policy so idle VM/container environments can be suspended or stopped according to user policy."
+    },
+    {
+      "index": 7965,
+      "startIndex": 1235668,
+      "text": "Backends supporting snapshots/checkpoints should expose them through the unified manager, particularly before major guest/runtime changes. Compatibility snapshots are separate from 9to1-OS system snapshots."
+    },
+    {
+      "index": 7966,
+      "startIndex": 1235875,
+      "text": "The framework manages or coordinates updates for Wine/runtime components, WinBoat-derived host integration, Android compatibility/runtime components and guest-integration tooling. Guest Windows/Android update behaviour remains explicit and must not be confused with host OS updates."
+    },
+    {
+      "index": 7969,
+      "startIndex": 1236408,
+      "text": "The CUI compatibility manager normalises common failures such as missing Wine dependency, application crash, graphics translation failure, Windows guest boot failure, RemoteApp disconnection, Android runtime failure, incompatible APK ABI, insufficient RAM, unavailable hardware acceleration, broken shared folder or package-install failure into actionable health states."
+    },
+    {
+      "index": 7970,
+      "startIndex": 1236779,
+      "text": "Advanced diagnostics expose underlying Wine/runtime/VM/RDP/Android logs and environment details through System Log integration. Dulche may analyse these diagnostics and invoke typed repair/configuration APIs but should not replace a supported manager operation with arbitrary host shell automation."
+    },
+    {
+      "index": 7972,
+      "startIndex": 1237098,
+      "text": "Administrator policies can disable foreign-app compatibility entirely, restrict allowed backends, block arbitrary .exe/.msi/.apk installation, allowlist approved applications/package identities, restrict package sources such as Winget/Android sources, constrain host-folder/device/network bridges and lock per-app backend choices."
+    },
+    {
+      "index": 7975,
+      "startIndex": 1237684,
+      "text": "Double-clicking/opening a supported Windows installer/executable or Android APK automatically enters the unified compatibility routing flow rather than requiring Terminal."
+    },
+    {
+      "index": 7976,
+      "startIndex": 1237856,
+      "text": "Wine, WinBoat-style Windows environments and APK/Android compatibility are represented as typed backends under one manager."
+    },
+    {
+      "index": 7978,
+      "startIndex": 1238131,
+      "text": "Installed Windows and Android applications integrate with Go, taskbar/window management, Desktop Spaces, Files, notifications, diagnostics and resource policy wherever technically possible."
+    },
+    {
+      "index": 7996,
+      "startIndex": 1242117,
+      "text": "Android and Go release rule"
+    },
+    {
+      "index": 7997,
+      "startIndex": 1242145,
+      "text": "Full Android/Go parity remains the target. If time is genuinely critical near the 21:00 deadline, complex newly added Terra-form surfaces MAY temporarily ship on Android/Go as responsive read-only or limited-editing experiences provided their canonical data formats, permissions and navigation remain compatible and all existing Android/Go functionality continues to work. Full authoring parity then continues overnight. This fallback does not apply to existing features that already had stronger mobile requirements."
+    },
+    {
+      "index": 8166,
+      "startIndex": 1309589,
+      "text": "Windows, 9to1-OS and browser/web MUST implement the useful core authoring and reader experiences for this tranche using the same canonical formats, account identity, domain APIs and permissions. Native interfaces use CUI/Home; web uses the existing authenticated web-service contract and MUST not require arbitrary local filesystem/process access. A narrow viewport by itself is not a reason to replace an otherwise supported app with an unrelated simplified data model."
+    },
+    {
+      "index": 8167,
+      "startIndex": 1310060,
+      "text": "The operating contract's Android/Go timing exception remains limited to newly added complex Terra-form surfaces. Any temporary read-only/limited-editing mode MUST still provide source-aware navigation, faithful content, accessible controls, per-user reading/progress state where supported and a visible explanation of unavailable authoring. Tree viewers still receive only View. No disabled authoring control may pretend to save. Full Android/Go authoring parity remains required after the temporary fallback; existing stronger mobile functionality MUST not regress."
+    },
+    {
+      "index": 8175,
+      "startIndex": 1314228,
+      "text": "The release evidence ledger MUST identify each group as VERIFIED, IMPLEMENTED-UNVERIFIED, MISSING or BLOCKED, with tested revision/build, platform, evidence and exact remaining exception. A temporary Android/Go fallback is recorded as a scoped incomplete-authoring exception, not full parity. These tests add to, and do not replace or weaken, the operating contract, full active specification, donor parity, security, privacy, performance, native-device and package gates."
+    },
+    {
+      "index": 8182,
+      "startIndex": 1315782,
+      "text": "The pass brings the 9to1 ecosystem onto its real production infrastructure: public websites, browser applications, CAKE ID authentication, subscription billing, hosted files, hosted websites, cloud-backed application services and operational management."
+    },
+    {
+      "index": 8183,
+      "startIndex": 1316036,
+      "text": "The required outcome is a connected service that a user can access from a fresh device without a development environment. A user MUST be able to visit the website, create or access their account, open an eligible application in their browser, create and save real work, continue that work in a desktop application, purchase an available subscription and use the resources that subscription provides."
+    },
+    {
+      "index": 8194,
+      "startIndex": 1318626,
+      "text": "Sol Happy\u2019s execution model and deadline MUST be specified separately. Terra-form\u2019s deadline and temporary Android/Go fallback MUST NOT automatically become Pass 3 rules."
+    },
+    {
+      "index": 8196,
+      "startIndex": 1318843,
+      "text": "Cloudflare is the intended production hosting platform for the public websites, web applications, hosted files and hosted sites. Stripe provides subscription payment processing and associated billing services."
+    },
+    {
+      "index": 8202,
+      "startIndex": 1319591,
+      "text": "Public website and browser-application delivery"
+    },
+    {
+      "index": 8214,
+      "startIndex": 1320775,
+      "text": "Every environment MUST have explicit resource bindings, secret references, deployment identities and rollback procedures. Private credentials MUST NOT enter browser bundles, public assets, repository history or ordinary diagnostic output."
+    },
+    {
+      "index": 8227,
+      "startIndex": 1323165,
+      "text": "Desktop and web MUST use the same CAKE ID, account identity, organisation context and entitlement services. Ordinary users MUST NOT require WordPress accounts."
+    },
+    {
+      "index": 8228,
+      "startIndex": 1323325,
+      "text": "Authentication MUST preserve the existing secure public-client contract, including the specified browser-based authorisation flow or an explicitly equivalent secure implementation. Clients MUST NOT contain provider credentials, billing secrets or entitlement-signing secrets."
+    },
+    {
+      "index": 8232,
+      "startIndex": 1324343,
+      "text": "Browser applications MUST use authenticated equivalents of Home\u2019s shared services without requiring a local Home installation. Permission approval, trust, revocation and audit semantics MUST remain consistent with native applications."
+    },
+    {
+      "index": 8234,
+      "startIndex": 1324803,
+      "text": "SH-06 \u2014 Full browser versions of the applications"
+    },
+    {
+      "index": 8235,
+      "startIndex": 1324853,
+      "text": "Every non-exempt Workspace and AI application MUST have a functional browser version."
+    },
+    {
+      "index": 8236,
+      "startIndex": 1324939,
+      "text": "The target is the same application on the web, not a companion dashboard, viewer-only edition or simplified alternative. At equivalent viewport sizes, the browser version MUST preserve the desktop application\u2019s information architecture, tools, editor structure, commands, menus, selection behaviour, settings and supported workflows."
+    },
+    {
+      "index": 8237,
+      "startIndex": 1325273,
+      "text": "Browser-specific adaptations are permitted for actual capability differences and responsive layouts. They MUST NOT justify avoidable feature loss."
+    },
+    {
+      "index": 8238,
+      "startIndex": 1325420,
+      "text": "Web implementations MUST preserve CUI\u2019s public semantics, shared component contracts, canonical state identities and supported actions. A browser-specific runtime is permitted; an independently redesigned, incompatible UI framework is not the intended outcome."
+    },
+    {
+      "index": 8240,
+      "startIndex": 1325917,
+      "text": "The web inventory MUST include the active Terra-form additions: Link, Prototype, Paths, Replay, Files\u2019 organisation types and Variants in their owning applications. These retain their existing ownership and terminology; they MUST NOT be reorganised into different products for the web implementation."
+    },
+    {
+      "index": 8241,
+      "startIndex": 1326218,
+      "text": "Each application MUST have a capability matrix identifying supported browser operations, equivalent adaptations and exact remaining restrictions. A restriction MUST identify the missing capability, affected operation, user-visible behaviour and validation evidence."
+    },
+    {
+      "index": 8242,
+      "startIndex": 1326484,
+      "text": "A desktop-only feature is not sufficient reason to omit an otherwise useful web app. Mini Computer retains its existing web exemption unless the required hosted-compute capability is explicitly provided. Other missing native capabilities MUST NOT be represented as available merely because a browser interface exists."
+    },
+    {
+      "index": 8243,
+      "startIndex": 1326802,
+      "text": "Direct links, browser refresh, back/forward navigation and account restoration MUST preserve the intended application and artifact context. Unsupported browsers MUST receive a meaningful compatibility state rather than a broken interface."
+    },
+    {
+      "index": 8245,
+      "startIndex": 1327089,
+      "text": "9to1 Drive MUST become a real hosted storage service used by the web and desktop applications."
+    },
+    {
+      "index": 8246,
+      "startIndex": 1327184,
+      "text": "A file uploaded in the browser and opened on desktop MUST retain the same FileID and durable revision history. Local materialisation is a managed replica, not an unrelated imported copy. Files remains responsible for storage and filesystem operations; the owning application remains responsible for semantic document editing and collaboration."
+    },
+    {
+      "index": 8260,
+      "startIndex": 1330301,
+      "text": "Browser isolation requires an explicit design decision. Different paths on the same hostname are not separate browser origins. The implementation MUST NOT assume that /site-a and /site-b isolate customer JavaScript, browser storage or other origin-scoped capabilities. A validated isolation design\u2014or an explicitly approved namespace amendment\u2014is required before arbitrary customer active content ships. (developer.mozilla.org)"
+    },
+    {
+      "index": 8287,
+      "startIndex": 1335165,
+      "text": "Desktop, web and Personal API access MUST draw from the same applicable entitlement and usage services. Personal API access retains its existing eligibility and shared-allocation rules."
+    },
+    {
+      "index": 8289,
+      "startIndex": 1335627,
+      "text": "Execution location MUST be explicit. A browser task, a cloud-hosted task and a task requiring an enrolled desktop device are different capabilities. Closing a tab MUST NOT silently terminate a task advertised as cloud-hosted; an offline device MUST NOT be shown as executing work."
+    },
+    {
+      "index": 8296,
+      "startIndex": 1337156,
+      "text": "Deployment pipelines MUST identify exact source revisions, validate changes before activation and support rollback. Database/schema and client updates MUST account for already-open browser sessions and older supported native clients."
+    },
+    {
+      "index": 8303,
+      "startIndex": 1337809,
+      "text": "A new browser session can register or sign in, reach eligible apps and save persistent work without local Home or development tooling."
+    },
+    {
+      "index": 8304,
+      "startIndex": 1337946,
+      "text": "Web/desktop continuity"
+    },
+    {
+      "index": 8307,
+      "startIndex": 1338124,
+      "text": "Every in-scope app passes its applicable browser workflows, accessibility checks and recorded capability matrix."
+    },
+    {
+      "index": 8329,
+      "startIndex": 1340891,
+      "text": "Customer-site browser isolation. Approve the isolation mechanism for active content under the specified path-based public addresses. Any change to the canonical URL model requires an explicit specification amendment."
+    },
+    {
+      "index": 8330,
+      "startIndex": 1341108,
+      "text": "Operational and launch parameters. Confirm supported browser versions, measurable performance/capacity targets, recovery objectives, infrastructure budgets, merchant readiness and production cutover authorisation."
+    },
+    {
+      "index": 8340,
+      "startIndex": 1342790,
+      "text": "The coordinator MUST capture the latest canonical document revision, accepted repository baseline, active workstreams, supported platforms and existing data before implementation. It MUST maintain requirement-level VERIFIED, IMPLEMENTED-UNVERIFIED, MISSING and BLOCKED states tied to the exact revision/build, platform and evidence. Source presence, a successful build or a worker assertion is not verification."
+    },
+    {
+      "index": 8342,
+      "startIndex": 1343764,
+      "text": "The new mini sidebar and custom main sidebar explicitly replace the earlier fixed Spaces navigation hierarchy and its layout-specific acceptance test. Built-in Space behaviour, safe extension hooks and permission protections remain mandatory; required destinations MUST remain discoverable through the rail/switcher and Spaces browser. Customisation changes presentation, not security authority."
+    },
+    {
+      "index": 8343,
+      "startIndex": 1344160,
+      "text": "In the older Home package paragraph, the bootstrap/outside-Home package client means the installer/bootstrap client, not the Launcher product. Launcher retains its Android/9to1-OS home-screen role and delegates package operations to Home/platform services. This clarification does not authorise a new app or a second package database."
+    },
+    {
+      "index": 8344,
+      "startIndex": 1344495,
+      "text": "Droid remains post-release Android ROM work and Training Lab remains explicitly out of scope. Their headings do not add work to Lunar Eclipse. Do not inherit another pass's deadline, selected model, temporary Android limitation or production-release permission. An implementation pass is not permission to spend money, change production routing, publish publicly or remove production resources."
+    },
+    {
+      "index": 8354,
+      "startIndex": 1346713,
+      "text": "The single trusted installer MUST install Home, all mandatory modules, the selected app and its app-required dependencies. Selecting a second app MUST reuse compatible shared packages. Internal platform package formats may be used; separate user-facing standalone MSIX installers for individual apps are not the distribution model. Native Windows and 9to1-OS use this contract through their supported packaging mechanisms. Browser apps use authenticated shared web services and MUST NOT require a local Home installation."
+    },
+    {
+      "index": 8357,
+      "startIndex": 1348148,
+      "text": "Acceptance: clean-install one chosen app without unrelated optional apps; add another without duplicated core; decline and retry a feature-module install; reject removal of an in-use dependency; interrupt an update and recover; uninstall/reinstall without losing artifacts; verify Home version negotiation and the browser/no-local-Home case."
+    },
+    {
+      "index": 8362,
+      "startIndex": 1348602,
+      "text": "Spaces sidebar - Replaces the dropdown switcher by default. Each pinned space is listed as an individual item on the mini sidebar, plus the spaces browser."
+    },
+    {
+      "index": 8365,
+      "startIndex": 1348850,
+      "text": "The rail is the default. Each pinned Space is an independently selectable, named item, followed by access to the Spaces browser. The browser exposes all authorised Spaces and the existing create/edit/manage actions, including unpinned built-ins and nested user-created Spaces. Pinning, unpinning and reordering preserve SpaceID; names are not identities."
+    },
+    {
+      "index": 8369,
+      "startIndex": 1349724,
+      "text": "Horizontal tabs in spaces app for multiple chats, open windows, etc."
+    },
+    {
+      "index": 8405,
+      "startIndex": 1356130,
+      "text": "The floating usage bar is anchored to the bottom of the chat-list area without covering list items or the composer. It shows the actual configured 9to1 windows and any limits a connected provider can measure; daily, weekly and monthly are supported window types, not permission to invent a limit the account does not have. Compact summaries expand into source-labelled details."
+    },
+    {
+      "index": 8492,
+      "startIndex": 1370115,
+      "text": "Cards is a first-party CUI app. No external app donor is selected by this section. It MUST ship through the normal app catalogue, modular installer, Files/open-with and registered preview/editor paths, with the global launch screen, settings, permissions and contextual AI bar. Windows, 9to1-OS and web retain the same canonical flashcard model; other already-supported client obligations remain active. A platform constraint must be declared and tested, not hidden behind an empty app shell or assumed mobile fallback."
+    }
+  ]
+}
