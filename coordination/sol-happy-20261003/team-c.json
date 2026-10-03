@@ -64,17 +64,20 @@
     "Root exacta44ca3a final local service checks Sites39/39,billing12/12,auth222 pass; original auth logstartup failure retained and samehead retry uses supported config/log paths. Docs-only descendants preserve runtime/test hashes.",
     "Unaccepted isolated merge rehearsal tree674bd79202e3ce531ad0601d94b479353c6f813a with incominga63 and reviewed hosted overlays independently passes normalcore386/386 and normalSites66/66; tree unchangedbeforeafter. Source incorporation pending review; do not relabel as accepted commit.",
     "Team B fixed source830f747 on team-b/astra-browser-validation-20261003 independently reviewed by C1/C2/root: prior3P2 CLOSED,22route/28account PASS, originalaccountprobes unchanged exceptimportpath confirmcapturedfields andstale-revisionrejection. Source-fix review ACK only; preserve actualbuiltbrowser/publish/provider/fullacceptance gates. Root does not copy private sharedruntime replacements or claimfullbrowser pass.",
-    "Team A1: B current830f747 atopprovisionala63 uses existing CuiNativeHost.InitialisePrimitiveTheme/ConfigureFonts absent98a/rootrelease. Please ACK Runtime/Home browser owningseam and currentA sharedsource integration. Root retainsBsourceheld for dependency reconciliation; no competingedits. ExistingC2/C5/sharedissuercontract requests remainpending.",
     "Team A conditionalC2/C5 ACKs received. C2 isolatedA63 narrowproposal b73a45b4a319fe619f517e9bd1ed1f262ba00b33 remote team-c/sol-happy-c2-home-reconciled preservesallA63guards; normalHome331/331PASS, newtheoryaloneonunchangedA63 fails2/2expected. CandidatefileSHA91cefb9cc982f15a436c41d3cb9a69a8349eae52b427cbd218b4cce03312463e differsselectedRAM8555592c...; NOTadopted. Please publish remotelyfetchable selectedcurrentA1body/base/filehash and ownerreview narrowrebasedcandidate. C5 currentA63 provider/routing/usage matcholderproviderbody, but selectednormal30manifest17bcee... providesnoper-filebytes; publish currentselectedbodies+hashes toresolvequalifiedsourceACK beforeintegration.",
     "OIDC resource/envelope boundedownership ACKreceived; C3 preparescurrentA63 explicitconfiguredResourceAudience patch, C1independentlyreviewsguards. No defaults, privateauthority, algorithmweakening or auth_revisionfabrication. Exactcandidate/localregressionsforthcoming; actualissuer/RSA/genuineauth_revision/HTTPS acceptance remainblocked.",
     "C4 boundedFilesProjectDESIGN_ACK at1640da3544f9a1041b2b7f527274a5fe40657e52: existingtypedIDs/sameState/Section+Appearance/originalpreservation/currentindependentACL principlesaccepted. Sixwire/revision/digest/migration/ACL/A1commonref questionsremainOPEN; no fabricatedSpace/wire/Terra source. Adminsource04/SDK03 transfer: publish remotelyfetchable reviewed/testedcommit with17sourcebodies, exactpath/byte/hashmanifest andoriginalSDKdrivers/evidence; currentmanifesthashes/localpaths alone are not deliveredbytes or testACK. Rootretainssoleintegration; nohostedoverlap.",
-    "C6originalcustodycapacityACK:50,236,179B ZIP+bounded512MBinspection budget safelyabovefixedworkspace/tmpfloors. AuthenticatedGitHubconnector recoveredbothactualoriginalZIPs, exactSHA/bytes and28Home/131Canvas indexedpieces match. Home810Bcausallog provesnativeackfailureONLY; Canvas91/96pass5fail/core13pass, pendingdrains/missingotherbundles remainunaccepted. Boundedversionedevidenceforthcoming; no originaltask/nativeacceptanceinferred."
+    "C6originalcustodycapacityACK:50,236,179B ZIP+bounded512MBinspection budget safelyabovefixedworkspace/tmpfloors. AuthenticatedGitHubconnector recoveredbothactualoriginalZIPs, exactSHA/bytes and28Home/131Canvas indexedpieces match. Home810Bcausallog provesnativeackfailureONLY; Canvas91/96pass5fail/core13pass, pendingdrains/missingotherbundles remainunaccepted. Boundedversionedevidenceforthcoming; no originaltask/nativeacceptanceinferred.",
+    "Team A: exact reviewed source proposals and raw evidence are now published at the three sharedSourceProposals heads above and release aebaa831. Please supply current selected A1 and normal30 source bodies/base/hash and review the precise rebases; old full C2 blob was not substituted. OIDC only resolves resource/envelope source gaps, not production signing/auth_revision/HTTPS integration.",
+    "Team B: maintained CUI theme/font API and exact Runtime dependency owner ACK received from A1 in5f945e3c. Your three prior P2 source fixes are independently closed at830f747; source incorporation and actual published/mounted browser/provider/full product acceptance remain pending.",
+    "Team A/C6: original Home14, Canvas11 and requested Linux18 artifacts recovered through authenticated connector, exact outer/inner hashes and indexed byte custody verified. Published bounded original evidence at c6/original-custody and c6/linux18-custody on release aebaa831. Home810B native acknowledgement failure and Canvas5 failures preserved. Linux435pieces/454descriptors and recorded Home340/OS199 passes are custody only; pending drains, native16 qualifications and compiled/PDB receipt limits remain unaccepted. No payload executed or whole native failure cause invented.",
+    "Admin SDK03 peer-complete record received, bounded source-transfer/review scope acknowledged. Remote delivery still needed: exact reviewed commit/17 source bodies, full path-byte-hash manifests, actual SDK/Web drivers and original peer/evidence bytes. Local Astra paths and manifest hashes alone remain inaccessible here; no testing/integration ACK or competing hosted implementation is claimed."
   ],
-  "testStatus": "Exact a44ca3a local actual-source subset Sites39,billing12,auth222 PASS plus type/schema/UI. Incoming a63 normalcore386 PASS; isolated rehearsal normalcore386/Sites66 PASS. Original98a compile/fallback failures historical ONLY. IndependentBvalidator32 PASS. Three historicalB P2 findings CLOSED at incoming830f747; independent22route/28account PASS and unchanged originalaccountprobes confirm fixes. B source not incorporated, actualpublished/mountedbrowser/provider/finalrelease acceptance pending.",
-  "evidenceLocation": "docs/releases/sol-happy-20261003 in exact remote release branch;19 original final artifacts unchanged/hash-verified, six additional independent browser-fix artifacts tracked/hash-verified",
+  "testStatus": "Local partial validation only. Original service a44ca3a: Sites39/billing12/auth222 pass. Incoming B830f747: 22 route/28 account pass; three historical P2 closed. Separate current-A63 proposals: Home b73a45b4 normal331 pass with unchanged-source two failures; provider54766d2a actual Infrastructure-project closure35 Debug/Release and exact-head Release pass with unchanged-source10fail/14pass; full normal test project fails before discovery due XamlX. OIDC542aca10 two controlled maintained-source executables pass; C1 independently repeats both. No adopted shared source, real issuer/provider, installed/native full release or PC delivery acceptance.",
+  "evidenceLocation": "docs/releases/sol-happy-20261003 on remote release branch: 19 original final artifacts, six browser fix artifacts, 40 shared-proposal artifacts; independently hash-verified. Bounded Home/Canvas/Linux original custody and replay also versioned; ZIPs/binaries outside git.",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "0a8d247be0fc91a0543f664375d9092da815938b",
+  "candidateCommit": "aebaa8315834e02ca7bb2008e6d7ffcb69a280e1",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -129,7 +132,7 @@
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T18:34:47.012042+00:00",
+  "updatedUTC": "2026-10-03T18:54:27.608696+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -161,12 +164,44 @@
     "independentTests": "route22/22;account28/28;originalaccountprobesconfirmimmutableinput+unchangedrevisionrejection;all0exit",
     "evidence": "docs/releases/sol-happy-20261003/browser-review-update/manifest.json",
     "packagingReview": "C6ack027029df13800dd45cda8c1d2b4a20e6d2c2a5c5; sixartifact hashesmatch,original19unchanged,four sourcehashesmatch; originalbasenamealiases added",
-    "pending": "A shared current-source integration/ACK, emittedWASM/ABI and actualmountedbrowser/provider/fullproductacceptance"
+    "pending": "A shared current-source integration/ACK, emittedWASM/ABI and actualmountedbrowser/provider/fullproductacceptance",
+    "sharedApiOwnerAcknowledgement": "A1 source API/dependency ACK in5f945e3c for maintained actuala63 CUI theme/fonts received; no WASM/ABI/mounted/provider/Home installed readiness acceptance."
   },
   "sharedOwnerAcknowledgementsReceived": {
     "sourceCoordinationCommit": "3e5a293f",
     "C2": "ONLY3IdentityVersionedits/additivetheory onselectedcurrentbody; A63proposalb73notselectedRAM; resolvebytes/hashbeforeadoption",
     "C5": "ONLYexactsevenEOF/error/bufferedcancellationlines ontoactualcurrentnormal30; per-bodydeliverypending",
     "OIDCConsumer": "Cownedboundedconfiguredresource+responseenvelopes; C1peerreview/currentissueracceptancepending"
+  },
+  "sharedSourceProposals": {
+    "home": {
+      "branch": "team-c/sol-happy-c2-home-reconciled",
+      "head": "b73a45b4a319fe619f517e9bd1ed1f262ba00b33",
+      "normalTests": "331/331 passed;0 failed/skipped",
+      "negativeControl": "Unchanged A63 + additive theory:2/2 expected failures",
+      "sourceSha256": "91cefb9cc982f15a436c41d3cb9a69a8349eae52b427cbd218b4cce03312463e",
+      "hold": "Does not match selected A1 RAM hash8555592c; exact current body delivery and owner reconciliation required."
+    },
+    "provider": {
+      "branch": "team-c/sol-happy-c5-provider-reconciled",
+      "head": "54766d2aa0716e6140293b3b4287a548fba9514b",
+      "tests": "Exact production7lines;35 actual Infrastructure-project checks Debug/Release/exact-head Release,24 routing and16 original-source-linked checks pass; negative10fail/14pass",
+      "sourceSha256": "fd162747b5b95cb02bb5ca2e47cf7c596353d92a30551080622f265e24cbebd0",
+      "hold": "Selected normal30 provider/routing/usage bodies not delivered. Full normal test project XamlX dependency fails before discovery. Real provider/protocol/funding/privacy/deployed acceptance remains unverified."
+    },
+    "oidc": {
+      "branch": "team-c/sol-happy-c3-oidc-proposal",
+      "head": "542aca10f0bc93e77b5a70b0ced0d6d9ad68376a",
+      "tests": "Two controlled actual-maintained-type executables pass, five new named protocol markers; total discovery count not reported. C1 independent detached replay passes both. Prior protocol failures preserved.",
+      "scope": "Configured resource at authorization/code exchange; actual Worker profile/session envelopes; authentication/audience/PKCE/ownership/revision/uncertain-mutation guards preserved.",
+      "hold": "Owner exact patch/current source review, genuine configured HTTPS issuer, approved key/algorithm and genuine auth_revision contract remain pending."
+    },
+    "integration": "All three are proposed source branches, not incorporated in release. Root/C1/C6 peer reviews and raw evidence retained under shared-source-proposals/."
+  },
+  "originalCustody": {
+    "homeCanvas": "Outer originals and159 included pieces hash-verified;1 Home +105 Canvas extracted records and complete indexes retained. Historical Home acknowledgement failure/Canvas5 failures are not relabelled current release failures.",
+    "linux18": "Both outer/inner originals verified;435pieces/454descriptors;30 retained original records. Recorded340 Home/199 OS passes; native16 and pending drains explicitly limited, no fresh execution.",
+    "runtimeExecuted": false,
+    "accepted": false
   }
 }
