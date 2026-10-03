@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><TargetFramework>net10.0</TargetFramework><LangVersion>14</LangVersion><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsTestProject>true</IsTestProject><EnableDefaultCompileItems>false</EnableDefaultCompileItems><TreatWarningsAsErrors>true</TreatWarningsAsErrors><NoWarn>xUnit2031</NoWarn></PropertyGroup>
+<ItemGroup>
+<Compile Include="/workspace/team-c/c1/9to1 Workspace/Sites/Domain/*.cs" />
+<Compile Include="/workspace/team-c/c1/9to1 Workspace/Sites/Infrastructure/*.cs" />
+<Compile Include="/workspace/team-c/c1/9to1 Workspace/Sites/Hosting/*.cs" />
+<Compile Include="/workspace/team-c/c1/9to1 Workspace/Sites/Application/SiteActionAuthorization.cs" />
+<Compile Include="/workspace/team-c/c1/9to1 Workspace/Sites/Tests/*.cs" />
+<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+<PackageReference Include="xunit" Version="2.9.3" />
+<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+</ItemGroup></Project>
