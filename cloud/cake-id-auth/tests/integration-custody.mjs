@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { finishIntegrationCleanup } from "./integration-lifecycle.mjs";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes, createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -275,6 +276,7 @@ async function exchangeCode(discovery, clientId, code, verifier, expectedStatus 
   return result.json();
 }
 
+let mainFailure;
 let testAccount;
 let durationMs = {};
 try {
@@ -617,12 +619,14 @@ try {
     cloudflareDeployment: "none",
   }, null, 2));
 } catch (error) {
+  mainFailure = error;
   console.error(error instanceof Error ? error.message : String(error));
   if (error?.cause?.code) console.error(`failure cause code: ${error.cause.code}`);
   process.exitCode = 1;
 } finally {
   globalThis.fetch = realFetch;
   delete globalThis.window;
+  await finishIntegrationCleanup(mainFailure, async () => {
   await stopWorker();
   if (existsSync(varsPath) && readFileSync(varsPath, "utf8") === devVars) rmSync(varsPath, { force: true });
   const resolvedRunPath = path.resolve(persistPath);
@@ -645,4 +649,5 @@ try {
       if (error?.code !== "ENOENT") throw error;
     }
   }
+  });
 }
