@@ -70,4 +70,26 @@ class Controls(unittest.TestCase):
             self.assertIsNone(module.stat(descendant))
             self.assertIn(descendant, [item['pid'] for item in receipt['reaped']])
             parent.returncode = 0
+class ProductionLauncherControls(unittest.TestCase):
+    def test_same_production_launch_preflight_strict_reaps(self):
+        receipt = module.preflight()
+        self.assertTrue(receipt['strictReaped'] and receipt['originalsDisappeared'])
+        self.assertEqual(0, receipt['reaped'][0]['status'])
+    def test_unavailable_private_session_fails_same_launch_preflight(self):
+        original = module.os.setsid
+        def unsupported():
+            raise NotImplementedError('isolated capability negative control')
+        module.os.setsid = unsupported
+        try:
+            with self.assertRaisesRegex(RuntimeError, 'private-session launch unavailable'):
+                module.preflight()
+            with self.assertRaises(ChildProcessError):
+                module.os.waitid(module.os.P_ALL, 0, module.os.WEXITED | module.os.WNOHANG | module.os.WNOWAIT)
+        finally:
+            module.os.setsid = original
+    def test_missing_executable_fails_preflight_after_reaping_own_child(self):
+        with self.assertRaisesRegex(RuntimeError, 'preflight did not exit successfully'):
+            module.preflight(['/definitely-no-fixture-executable'])
+        with self.assertRaises(ChildProcessError):
+            module.os.waitid(module.os.P_ALL, 0, module.os.WEXITED | module.os.WNOHANG | module.os.WNOWAIT)
 if __name__ == '__main__': unittest.main(verbosity=2)

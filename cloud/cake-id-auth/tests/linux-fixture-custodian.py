@@ -154,10 +154,65 @@ class Custody:
         raise RuntimeError('Owned descendant drain timeout; fixture state retained')
 
 
+def launch(command, custody):
+    """Exact production launch; a private child handshake proves setsid before exec/capture."""
+    read_fd, write_fd = os.pipe2(os.O_CLOEXEC)
+    pid = os.fork()
+    if pid == 0:
+        os.close(read_fd)
+        try:
+            os.setsid()
+            null_fd = os.open('/dev/null', os.O_RDONLY)
+            os.dup2(null_fd, 0)
+            if null_fd != 0:
+                os.close(null_fd)
+            try:
+                os.close(3)  # A child can never write the custodian's receipt channel.
+            except OSError:
+                pass
+            os.write(write_fd, b'ready\n')
+            os.close(write_fd)
+            os.execve(command[0], command, os.environ)
+        except BaseException:
+            os._exit(127)
+    os.close(write_fd)
+    try:
+        if not select.select([read_fd], [], [], 2)[0] or os.read(read_fd, 16) != b'ready\n':
+            # Our own failed child is kernel-bound/reaped; no auth secrets exist during preflight.
+            custody.observe()
+            custody.drain()
+            raise RuntimeError('Controlled private-session launch unavailable')
+    finally:
+        os.close(read_fd)
+    custody.observe()
+    if pid not in custody.records:
+        raise RuntimeError('Original creator child not captured; fixture held')
+    root = custody.records[pid]['row']
+    if root['ppid'] != custody.owner['pid'] or root['pgid'] != pid or root['sid'] != pid:
+        raise RuntimeError('Private creator session unverified; fixture held')
+    return pid
+
+
+def preflight(command=None):
+    custody = Custody()
+    pid = launch(command or ['/bin/true'], custody)
+    # Let the exact controlled executable finish normally, then strictly reap it.
+    for _ in range(100):
+        row = stat(pid)
+        if row is None or row['state'] in ('Z', 'X'):
+            break
+        time.sleep(.01)
+    receipt = custody.drain()
+    result = next((item for item in receipt['reaped'] if item['pid'] == pid), None)
+    if result is None or result['code'] != os.CLD_EXITED or result['status'] != 0:
+        raise RuntimeError('Actual production launch preflight did not exit successfully')
+    return receipt
+
+
 def main():
     if sys.argv[1:] == ['--check']:
-        enroll()
-        print('Linux pidfd/subreaper available')
+        preflight()
+        print('Actual fork/setsid/exec + pidfd/subreaper/reaping available')
         return
     if len(sys.argv) < 2:
         raise RuntimeError('Missing controlled child command')
@@ -168,12 +223,7 @@ def main():
         stopping = True
     signal.signal(signal.SIGINT, stop)
     signal.signal(signal.SIGTERM, stop)
-    # posix_spawn has no Popen destructor/poll path that could wait on a reused numeric PID.
-    child_pid = os.posix_spawn(sys.argv[1], sys.argv[1:], os.environ, setsid=True,
-                               file_actions=[(os.POSIX_SPAWN_OPEN, 0, '/dev/null', os.O_RDONLY, 0)])
-    custody.observe()
-    if child_pid not in custody.records:
-        raise RuntimeError('Original creator child not captured; fixture held')
+    launch(sys.argv[1:], custody)
     while not stopping:
         custody.observe()
         if select.select([sys.stdin], [], [], .05)[0]:
