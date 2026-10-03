@@ -185,14 +185,16 @@ adds `position: relative` to the owned browser root. C1 independently reviewed
 that complete change and the actual pinned native canvas/input contract. C6
 verified the sealed `1356a134` package: all 405 listed artifact hashes, two root
 documents and current/original source hashes match. The inspected owning results
-record B1 14/14 and unchanged B6 pointer 5/5 at 1440×1000; the earlier c74 timeout
-remains retained. These results are Team B observations, with no runtime replay
-by Team C. The exact 180-file compiled output is still inaccessible here; its
-21,686,097-byte archive and SHA-256 were requested through the shared coordination
-branch. [Pointer review](browser-pointer-review/manifest.json) and
-[C6 package audit](c6/browser411-review.json) retain identities and limits.
-Shared Dashboard overlap and missing painted-control accessibility semantics
-remain blocked, alongside services, cross-client and full browser acceptance.
+record B1 14/14 and unchanged B6 pointer 5/5; the earlier c74 timeout remains
+retained. The initially missing exact archive was delivered at `bc04bd3608f2fa29d5cfcb9c5ea86ac054d4bec3`.
+C6 then independently executed the unedited pointer runner against those exact
+180 files: 5/5 passed at 1440×1000 in Chromium 151.0.7922.173, with no runtime
+errors and every published file hash unchanged afterward. Root read the runner,
+command/raw report and Dashboard screenshot. [Runtime evidence](c6/browser83-runtime/review.json)
+retains logs, screenshots and trace; [initial review](browser-pointer-review/manifest.json)
+preserves the historical delivery blocker. This is anonymous local startup/pointer
+coverage. Shared Dashboard overlap and missing painted-control accessibility
+semantics remain failed, alongside services, cross-client and full browser gates.
 This browser source is not incorporated into the release branch.
 
 The requested [original custody followup](c6/custody-followup/README.md)

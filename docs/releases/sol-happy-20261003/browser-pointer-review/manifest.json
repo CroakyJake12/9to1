@@ -22,14 +22,15 @@
       "failed": 1
     }
   },
-  "independentCRuntime": "BLOCKED_COMPILED_OUTPUT_NOT_DELIVERED; no C runtime replay or rebuilt substitute",
+  "independentCRuntime": "C6 actual unchanged runner PASS5/5 against exact delivered83 compiled artifact; bounded anonymous pointer/startup scope only",
   "runtimePrerequisite": {
     "coordinationRequestCommit": "6905e3e8023b64cc3ab18f679dcd4637a8a5c7ed",
     "files": 180,
     "uncompressedBytes": 35339902,
     "zipBytes": 21686097,
     "zipSha256": "0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b",
-    "delivery": "Local B path only; no retrievable artifact/file/download ID delivered"
+    "delivery": "SATISFIED by artifact/team-b-browser-83c24b2@bc04bd3608f2fa29d5cfcb9c5ea86ac054d4bec3; all180 original ZIP members and manifest hashes verified",
+    "initialDelivery": "Local B path only; no retrievable artifact/file/download ID delivered"
   },
   "limitations": [
     "1440x1000 Chromium pointer/startup/fragment/history observations only",
@@ -67,5 +68,18 @@
       "bytes": 1980,
       "sha256": "be89ce37f356d05e4e8ef68b079c23246f9c43f28f958d8a9c7d0c6f609dfc57"
     }
+  },
+  "initialIndependentCRuntime": "BLOCKED_COMPILED_OUTPUT_NOT_DELIVERED; no C runtime replay or rebuilt substitute",
+  "laterRuntimeReview": {
+    "review": "../c6/browser83-runtime/review.json",
+    "reviewSha256": "0335734f34560ac64232f0a830f6a7d06300c59e63b6bea7dc54ca5a4f8ca808",
+    "source": "83c24b2f0033fb2828169921fc905a327120143b",
+    "runnerUnchanged": true,
+    "executed": 5,
+    "passed": 5,
+    "failed": 0,
+    "postRuntime180FileHashes": "UNCHANGED",
+    "integration": "NOT_INCORPORATED",
+    "visualAccessibility": "Dashboard overlap and absent painted-control semantics remain BLOCKED"
   }
 }
