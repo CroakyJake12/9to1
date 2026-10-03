@@ -25,6 +25,37 @@ jobs:
       - name: Check out pull request
         uses: actions/checkout@v6
 
+      - name: Materialize the pinned source-built XAML compiler dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          dependency=framework/CUI/vendor/Avalonia/external/XamlX
+          entry="$(git ls-tree HEAD -- "$dependency")"
+          test "$(printf '%s' "$entry" | awk '{print $1}')" = 160000
+          expected="$(printf '%s' "$entry" | awk '{print $3}')"
+          test "${#expected}" -eq 40
+          git submodule update --init --depth=1 -- "$dependency"
+          test "$(git -C "$dependency" rev-parse HEAD)" = "$expected"
+          git -C "$dependency" diff --exit-code
+          git -C "$dependency" diff --cached --exit-code
+          test -f "$dependency/src/XamlX/XamlX.csproj"
+          test -f "$dependency/src/XamlX.IL.Cecil/XamlX.IL.Cecil.csproj"
+
+      - name: Materialize the pinned native accessibility source dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          dependency=framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+          entry="$(git ls-tree HEAD -- "$dependency")"
+          test "$(printf '%s' "$entry" | awk '{print $1}')" = 160000
+          expected="$(printf '%s' "$entry" | awk '{print $3}')"
+          test "${#expected}" -eq 40
+          git submodule update --init --depth=1 -- "$dependency"
+          test "$(git -C "$dependency" rev-parse HEAD)" = "$expected"
+          git -C "$dependency" diff --exit-code
+          git -C "$dependency" diff --cached --exit-code
+          test -f "$dependency/src/Avalonia.DBus/Avalonia.DBus.csproj"
+
       - name: Install .NET from global.json
         uses: actions/setup-dotnet@v6
         with:

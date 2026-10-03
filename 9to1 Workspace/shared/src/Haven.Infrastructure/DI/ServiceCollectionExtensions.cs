@@ -81,7 +81,7 @@ public static class ServiceCollectionExtensions
             return new(provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
                 new HomePermissionCallerIdentity(actor.ActorId, "9to1 native Home host", "os-bound-local-profile", actor.AuthenticationRevision, true),
                 provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>(), provider.GetServices<IHomeActionPolicySource>(),
-                provider.GetRequiredService<HomePersonalModelRoutes>());
+                provider.GetRequiredService<HomePersonalModelRoutes>(), provider.GetService<IHomeApprovalPromptPresenter>());
         });
         services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
         services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());

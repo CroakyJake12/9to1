@@ -32,7 +32,21 @@ public sealed partial class HomePage
             HomeOwnedSurfaceTitle.Text = "Home permissions";
             HomeOwnedSurfaceHost.Content = review;
             CloseHomeOwnedSurfaceButton.Content = "Back to Home";
-            await closed.Task.WaitAsync(lifetime.Token);
+            if (!await review.AcknowledgeDisplayedRequestAsync(lifetime.Token))
+                throw new InvalidOperationException("The exact native Home prompt could not be displayed.");
+            if (!ReferenceEquals(App.Services, services))
+                throw new UnauthorizedAccessException("The original Home prompt host changed.");
+            var permissions = services.GetRequiredService<HomePermissionTrustService>();
+            while (!closed.Task.IsCompleted)
+            {
+                await Task.WhenAny(closed.Task, Task.Delay(150, lifetime.Token));
+                lifetime.Token.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(App.Services, services))
+                    throw new UnauthorizedAccessException("The original Home prompt host changed.");
+                if ((await permissions.GetAuthorizationAsync(requestId, lifetime.Token)).State != HomePermissionRequestState.PendingApproval)
+                    break;
+            }
+            lifetime.Token.ThrowIfCancellationRequested();
         }
         finally
         {

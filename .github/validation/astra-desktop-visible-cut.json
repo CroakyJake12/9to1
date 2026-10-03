@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "50e27978fa32a746afdf51bb3d6b5c3a14665c9e",
-  "programTree": "b72460dd98e5213708f29bf09887c41917b05853",
-  "currentNormalCommit": "ca9b0d1aa188468f4249a058fa7ac9215145f0e8",
+  "baselineCommit": "c6cb55f5f5ef6fbbbd55f8d18969b1e891c84c75",
+  "programTree": "23e65f602d3786c5d03cb046781b5082d8a137fb",
+  "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
   "kind": "corrective",
   "files": [
     {
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-desktop-visible-owning.py",
       "mode": "100644",
-      "object": "8400dd27a6ae0c423e4e389d243ef8f0b872585e",
-      "bytes": 33469,
-      "sha256": "a18beb0d87f59d9daa91f5a96e7b644ab823d9b3a73067c07263f3075e9df75a"
+      "object": "bc8111e36241a5f75e2541b7466fbdd9f506fbf9",
+      "bytes": 35485,
+      "sha256": "9547926b1dc0cf36e8b9dd101f15fb00543c7a898c17c083725d4a6d986b2343"
     },
     {
       "path": ".github/scripts/astra-desktop-visible-regression.py",
@@ -43,9 +43,9 @@
     {
       "path": ".github/scripts/astra-desktop-visible-resource.py",
       "mode": "100644",
-      "object": "b7769dfc87171ef5ebc43f2f8ffeaa90d7bc81ab",
-      "bytes": 24412,
-      "sha256": "f39aa8f6425f20d1ea2c2ec14a55fc909aa16a5110d26389b403b9eaf482cd00"
+      "object": "c48dcbb40b3c664a44d62c8dd7c6a2e89b620cf2",
+      "bytes": 25929,
+      "sha256": "663abf74f702f548c8ed876086d1c481ac2cd5b441467467471fab375a9fec42"
     },
     {
       "path": ".github/scripts/astra-files-artifact-parts.py",
@@ -76,6 +76,20 @@
       "sha256": "6f1f105817e7cead42b2cc9ad2d9b3e7038a785163ccb5ef7fa61cb5eb2480a8"
     },
     {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "mode": "100644",
+      "object": "a9e335f25dc1cc3936ff0952a46f79c4aa6f7b64",
+      "bytes": 3680,
+      "sha256": "f7f4ac108d287f211eb43e26c5602a2646f149382af0bc8f3fcfff9c4a1d98c8"
+    },
+    {
+      "path": ".github/scripts/astra-home-prompt-compiled-sources.py",
+      "mode": "100644",
+      "object": "a11652ac7d7d525c5f7b1bd1a44e178ced2cfe24",
+      "bytes": 4354,
+      "sha256": "054885f82bb00a80d1a729d41c5b6dce5dd756df84311f3d0325487a084dd31c"
+    },
+    {
       "path": ".github/scripts/astra-mail-local-crl-server.py",
       "mode": "100644",
       "object": "ec676582d95f24567f9d9a5c7482b6c2976b1454",
@@ -88,6 +102,13 @@
       "object": "2248ff4cb92a1c8856b61cadd5f75b77fb63fa63",
       "bytes": 20650,
       "sha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd"
+    },
+    {
+      "path": ".github/scripts/astra-sites-compiled-sources.py",
+      "mode": "100644",
+      "object": "0102b3a52308d3aeb748dbb8c3f6153d700c81a8",
+      "bytes": 3430,
+      "sha256": "1009df6b42db2b4bca1af968daf2db5e895c15968725c1b88e07897e1d53d9dc"
     },
     {
       "path": ".github/scripts/astra_mail_original_caller_session.py",
@@ -113,9 +134,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "5a28de5c52aa62a29940b496afe69058b7e850b4",
-      "bytes": 89028,
-      "sha256": "28cf601b037754791e9667f0468f03c3934bca41dbf35bf3fe0a97e7b7dde2ed"
+      "object": "bc8efd89d4b04a3b162533ac86f30ff78e5982cf",
+      "bytes": 105404,
+      "sha256": "09fa211f76e43327e2f22ab5f9fee0f271e14f55faa0750239cce022587af04d"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -127,16 +148,23 @@
     {
       "path": ".github/validation/astra-desktop-visible-resource-classes.json",
       "mode": "100644",
-      "object": "9ab8cf8dd6f7e9c40a1351ee3a425b585e14def3",
-      "bytes": 32324,
-      "sha256": "39cb59a2db1d8a68fb493ccd687bf7c03a3161890e8565f34158e620166f3d3a"
+      "object": "d5a0f90dc3adb60db951bf6554c6521ac149bb59",
+      "bytes": 37363,
+      "sha256": "c1eb701b989e85eb46e79b8c5dee5f2052629cba341b7ac2f55fe192efa91a55"
+    },
+    {
+      "path": ".github/validation/astra-home-resource-expected-case-methods.json",
+      "mode": "100644",
+      "object": "acfae1b27b1b676c5468c1ddf6eecb9ff99486c5",
+      "bytes": 40639,
+      "sha256": "3bdec561c531b5691d7f0601a56ffd2eb9cc6170e5f88bcf78c01bb490c929ff"
     },
     {
       "path": ".github/validation/astra-mail-expected-case-methods.json",
       "mode": "100644",
-      "object": "57b0c7a425da4f9f81bc60dd693fb65ecf9ef753",
-      "bytes": 142681,
-      "sha256": "ebede24b1b840350264936e8fa6c86c7a33fb5480dd9c9b9eb3dc21d8cc863a0"
+      "object": "dbf1ea6c26d10a48168381ffc9302db7d82400d6",
+      "bytes": 178068,
+      "sha256": "cb6b94358edf35dd5a92173e45dd9ee4db385d0d3b8478a9fddaa729ee508513"
     },
     {
       "path": ".github/validation/picture-bwrap-upstream-abi4.profile",
@@ -337,9 +365,9 @@
     {
       "path": ".github/workflows/validate-write-libreoffice-poc.yml",
       "mode": "100644",
-      "object": "07c6356fe03a7240df0c2b26382a12762d54b0ab",
-      "bytes": 20024,
-      "sha256": "c186fbbd792ddb36625def61c08cf8458dd7ae38fd674969b317f3c1be483da5"
+      "object": "ba1ec2974a0943b7abc9d42221d0fb2b33ab1a9f",
+      "bytes": 21572,
+      "sha256": "100821424d5e90822acfdb805d02ea0f777a0c8a0ddf9f88fa3630b56d44a834"
     },
     {
       "path": ".gitignore",
@@ -22499,9 +22527,9 @@
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativeAnswerInput.cs",
       "mode": "100644",
-      "object": "7e0645e1a9efcb7400d960fa28d24b8e496e6835",
-      "bytes": 4436,
-      "sha256": "eab4170a6a9dd0c17d86af5526e0cf4989fe0ea40642215a89070b7e9d901787"
+      "object": "ad9cafa1ede0765ad3280e364056731579fe2240",
+      "bytes": 4760,
+      "sha256": "786ddefab7a7fd18a74d52c99bbf003aa1c864a0fa4fc68b3f39b20edf04d4dc"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativeChoiceInput.cs",
@@ -22527,9 +22555,9 @@
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativePreview.cs",
       "mode": "100644",
-      "object": "7b23e32081a3629501c1ae8843789ce31bcb86b6",
-      "bytes": 15108,
-      "sha256": "313f9432954e7ce89ca8e3e1e625ca1eb5ce6517afd8a01eab55ae743e58a916"
+      "object": "c8c1c3c85fadd25763b0a8dae04bbceb79c00824",
+      "bytes": 15196,
+      "sha256": "1ebe93993396a46c32516bd4ee88bad7d86e6a5243e22849748d17c6661eaf2f"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativePublicationValidator.cs",
@@ -22546,25 +22574,32 @@
       "sha256": "18150f18b87b587f9410513fb83c3241beb6c19ad0b376df663afabb5bd0aa1e"
     },
     {
+      "path": "9to1 Workspace/Forms/CUI/FormNativeReferenceLookupInput.cs",
+      "mode": "100644",
+      "object": "1ffb3b6abda3eb3c3ba215f63cb8d62b9a68912e",
+      "bytes": 6713,
+      "sha256": "00dd2f4622bc23d6aa9227fd2855272b470bfe3d92b0f80861947c22d7e87f28"
+    },
+    {
       "path": "9to1 Workspace/Forms/CUI/FormNativeResponseSurface.cs",
       "mode": "100644",
-      "object": "a480e956f3bc7e9f17eb1ae34a55c0e675bde541",
-      "bytes": 13101,
-      "sha256": "322a39e6a065f7d798a05193ee3ed151eec53e9f740c1ea810d4840b099e5f55"
+      "object": "a01b96e4d70fd1c7805c78cfb4a69c697726dcc2",
+      "bytes": 14028,
+      "sha256": "d5cdbc0700854b094b7012dcf5df945f34c4cdb24d7243be7a21a50aba8dd195"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormNativeTableInput.cs",
       "mode": "100644",
-      "object": "df3eeaf12e709090f9806e7e7bf356bb76da504e",
-      "bytes": 7670,
-      "sha256": "7b57d3048d1fd5106b8eda0ff89b19fb356b2251f537abd83b37c75f0f268ab8"
+      "object": "e3a1d072d0c3f454777f23c86ee1b152787284f5",
+      "bytes": 8501,
+      "sha256": "712502683253b04c6ce1665890e64c0fa5ccbe100a838434b0348ba39caff07f"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
       "mode": "100644",
-      "object": "f8680c0aba8d0364d69bd05d783f1b8e73121435",
-      "bytes": 31984,
-      "sha256": "81e0ecdeebe689bac3a17362125e6abcc811758b89ac19d8faf6aaa8771b41d7"
+      "object": "b4631d5c4959ebdf790aeb40f4807344a64c5528",
+      "bytes": 32542,
+      "sha256": "da37c3042a519fe654d362091af8ffa6d25634a4c20f16c452167124042eb8dc"
     },
     {
       "path": "9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj",
@@ -22800,9 +22835,9 @@
     {
       "path": "9to1 Workspace/Home/NativeUI/Controls/HomeApprovalCuiSurface.cs",
       "mode": "100644",
-      "object": "2b71b0df6d3f72b6a4519c5c604811354251de9d",
-      "bytes": 16581,
-      "sha256": "0e07fd3c032e13406fbd03b8100ede8b28d54b298d629a940e44966f66e796e6"
+      "object": "72aa7ffc5185a3696f9be158801510be3013d65b",
+      "bytes": 20140,
+      "sha256": "34365a294d7381f4ba176ea8a70cb422b8294c840b682346f92ba2fe92d794a8"
     },
     {
       "path": "9to1 Workspace/Home/NativeUI/Controls/HomeModelPickerBindings.cs",
@@ -22877,9 +22912,9 @@
     {
       "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/HomeApprovals.cui",
       "mode": "100644",
-      "object": "9e6865133b8c96a3ad5311210783f5848890ae9f",
-      "bytes": 4199,
-      "sha256": "871c474eab03aef495347f24db4f21621072baf7155e114c278e193f98f18381"
+      "object": "60de8594a90cbccdc46e5baf7c1f93f26c84ea4c",
+      "bytes": 4767,
+      "sha256": "98000a602764c3eda03386f49327c067f9b7c20f987260b68eeb21d1902ab266"
     },
     {
       "path": "9to1 Workspace/Home/NativeUI/Resources/Cui/Models.cui",
@@ -23297,9 +23332,16 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeAppAiServices.cs",
       "mode": "100644",
-      "object": "dd92fb0405e8a758f9c52862170abf4ef4d6682f",
-      "bytes": 26192,
-      "sha256": "590504a311b109c0d41d6451da54edd4bbe74c42aa264ed844ef141fe47a9bb6"
+      "object": "0b5602f16d2a2dea072bca54e40cf16e45d44c4a",
+      "bytes": 26222,
+      "sha256": "879b72323b8465f75fa0f4605ce3224e0df9e8b0144fb8aa6394b75d70ce0673"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeApprovalPromptFlow.cs",
+      "mode": "100644",
+      "object": "4df543560c78a770272f754410ad14740f3622df",
+      "bytes": 2198,
+      "sha256": "10f9fd402ace1441ff46b41cb9d0d335731dbfdaa270bb167f7ae1319569d20d"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeArtifactReferenceObjects.cs",
@@ -23316,18 +23358,25 @@
       "sha256": "faab52617bb737de1c3aac016ae879d2511fad2c1c3718eb04d33ce48bf475b7"
     },
     {
+      "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.ShelfItemEdit.cs",
+      "mode": "100644",
+      "object": "01bbc49b4edcc5742b507a2affb6db7f0d0933fc",
+      "bytes": 5021,
+      "sha256": "42294985082fd32854ec97441446ff5f09515775728728d7f3e76bb9ebbe11db"
+    },
+    {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeClaimedResourceCommitFence.cs",
       "mode": "100644",
-      "object": "767dabfaf155dd284d5964f6b32328bc6d837959",
-      "bytes": 14058,
-      "sha256": "85ee7be0f48bd7444c4902d9e87afcbc6ae9db7d3a066fbd4ca471fb48b4738f"
+      "object": "7a63ab4e842b72dc37cb1a1d55f3ae5c27e771d0",
+      "bytes": 18295,
+      "sha256": "7ebed9fe0d51c08c516a6304a12ab4f00082b21c5f4dedbd26e0af42acc82bc7"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreApi.cs",
       "mode": "100644",
-      "object": "ed79f57001074f03335a5f16ac73f82e2574e170",
-      "bytes": 3777,
-      "sha256": "a5c4cbdb78bafc83a70889727f930d00ec4750d8e1112e28ecfadd9b1b4eb0b7"
+      "object": "06ef25c8add91786ac3ffba66c8a1e892790286e",
+      "bytes": 5122,
+      "sha256": "2181a8a1d5d36470c820d26769bcf357ec7b4b819b698b79946ceb2a3e52dfd5"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/Core/HomeCoreContracts.cs",
@@ -23724,9 +23773,9 @@
     {
       "path": "9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs",
       "mode": "100644",
-      "object": "d5d563544b2c5935d48456ebdaaec4f8dc2b7f3c",
-      "bytes": 45986,
-      "sha256": "2051bb0ebf9aa595be9ee2091d313bafc4a206f1beb09fd80363c5fe863658c1"
+      "object": "57cf63d45dd854debe167b057f0b08fd35e524f0",
+      "bytes": 47962,
+      "sha256": "1f0942a5ca5ecfbd400bebd59c23b9046c746bf1820353ea271bfba297cae4a4"
     },
     {
       "path": "9to1 Workspace/Home/Source/Home/ModelPicker/HomeModelCatalogueEntry.cs",
@@ -23862,6 +23911,13 @@
       "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2"
     },
     {
+      "path": "9to1 Workspace/Home/Tests/HomeCoreApiSnapshotFenceTests.cs",
+      "mode": "100644",
+      "object": "298a9e0eed00b756ff754235698dcff124cba2c6",
+      "bytes": 9858,
+      "sha256": "8537573e4541b62cb5c89a5654c4fb09decba37d9afaa7673b76d4887d0719f8"
+    },
+    {
       "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
       "mode": "100644",
       "object": "5ee22cbc2be946179e606a77f5a1ee62e801e150",
@@ -23983,9 +24039,9 @@
     {
       "path": "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
       "mode": "100644",
-      "object": "671a177065d29fb9d76217b2b3b3a256de8846a8",
-      "bytes": 11965,
-      "sha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567"
+      "object": "faf6fbe83331390a60f325512504043ce2887a10",
+      "bytes": 14756,
+      "sha256": "ef605a3d99981cca2093a44243691e50296bee7d159601187620945c9a616797"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
@@ -24056,6 +24112,13 @@
       "object": "a76092270b10131ade50c2b6d645c2cc14096dd1",
       "bytes": 5592,
       "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomePermissionPromptDisplayTests.cs",
+      "mode": "100644",
+      "object": "2562328feb11edec40260e737841950d58672001",
+      "bytes": 10638,
+      "sha256": "1d1851c0400d41e47ccc66567caa542bd0bab9dbe16241fc0e533975358356e6"
     },
     {
       "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
@@ -25374,6 +25437,13 @@
       "sha256": "e34d9e40a1eb0fbbbff8d3d2f73878edef5160f040ca4591b3b1bc3dae51c6f5"
     },
     {
+      "path": "9to1 Workspace/Sites/Application/SiteNativeAuthoringSession.cs",
+      "mode": "100644",
+      "object": "be504d44accd943bc082aef71944ad2926a77371",
+      "bytes": 15477,
+      "sha256": "64e64a14201795994360c7d27934a62f5fb1c9702b3cded280d72d12deeb218a"
+    },
+    {
       "path": "9to1 Workspace/Sites/Application/SiteNativeProjectAccessResolver.cs",
       "mode": "100644",
       "object": "108930e2f5866ae486ecbe83b94658350262bf1c",
@@ -25393,6 +25463,13 @@
       "object": "88acc0ae300bad2415866e1b50952547114f5df1",
       "bytes": 18076,
       "sha256": "e1fe109c3217f25f3f4f7072d9d881e76addfdaebeee9a9964efac78aed829c0"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Application/SitePreviewService.cs",
+      "mode": "100644",
+      "object": "4b1483d215c76db45c6f3a7701dc4b3406078c46",
+      "bytes": 10436,
+      "sha256": "caaf065b7259f98026e80ceacc3897d3bdb6b4acb2f70eb8317a48de92299be1"
     },
     {
       "path": "9to1 Workspace/Sites/Application/SiteProjectService.cs",
@@ -25540,6 +25617,13 @@
       "object": "29ac381dc5621bc68d779329fdb875e45b383f0c",
       "bytes": 15706,
       "sha256": "70fa5c5b923ab2a77bde23ee620dd465ce84b261c20ca6624176042f12bd3f47"
+    },
+    {
+      "path": "9to1 Workspace/Sites/Tests/SitePreviewServiceTests.cs",
+      "mode": "100644",
+      "object": "175fe95fdd014681c45a752a25d934a4fbb71aed",
+      "bytes": 13610,
+      "sha256": "afed9b8486ff2353c5e9c406df333e878dd6d598712b2373d20d8d8063be1d13"
     },
     {
       "path": "9to1 Workspace/Sites/Tests/SiteResponsiveCascadeTests.cs",
@@ -28797,6 +28881,13 @@
       "sha256": "29d77f5ddfc49817967cfa5554204646b96783b11f4e51b2e1e060381d37c1d8"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataReferenceLookupContracts.cs",
+      "mode": "100644",
+      "object": "f6d17f44a3dc66df4750bb2d824e70ca264c06c8",
+      "bytes": 2410,
+      "sha256": "057cb3f724e29d3ec7f237737f6cda4d2e236f613aa79fdb058c2c8437bdc82f"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormDataResponseWriteService.cs",
       "mode": "100644",
       "object": "4f60f62960d8d3b44374ac483bdf51654e8e6a2a",
@@ -28827,9 +28918,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
       "mode": "100644",
-      "object": "7e0840bb77c54d13d46a756e9a994d67f4c34f4c",
-      "bytes": 11086,
-      "sha256": "2ebf75539a820f00197ec80891a114eda5e868174986c59f505e3b8037f31438"
+      "object": "0c413b05c3692b350b41199d3ca75b090cd1f725",
+      "bytes": 13321,
+      "sha256": "4e29e1a27c922bbb96beed599f493918560043a376adaafde09544ce8b095828"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.DataWrites.cs",
@@ -28841,9 +28932,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
       "mode": "100644",
-      "object": "4e68a03ec8f949d2d2004c6b956a763fdfa59aa9",
-      "bytes": 20743,
-      "sha256": "bd31e5f85d504eb0518ef63dbe61139092708816bd81cf3c6e4e044b83caede2"
+      "object": "fb311e1352fd941345f91b3571868d797a72f045",
+      "bytes": 21034,
+      "sha256": "5aa7a922334217dc195c279432d796d27a914f05444c3f3c3eddae1af3bb7d2f"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSubmissionProjection.cs",
@@ -29401,9 +29492,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Modes/BuiltInModeSeed.cs",
       "mode": "100644",
-      "object": "7cad4c1d19f4cfa64e913fd4eabc26e5632d4911",
-      "bytes": 18415,
-      "sha256": "a83434f836062f9dc282886d5d90fe5446689ce70daf824cced82828e9473d67"
+      "object": "9821b91d54e279b3fd08d63c0016ec833a35bb0e",
+      "bytes": 19740,
+      "sha256": "efa071394f289c5cd081f25724607f1201dbfe0f031f5cdda8377c80fe1b5ac8"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Modes/CapabilityPreflightService.cs",
@@ -29875,6 +29966,13 @@
       "sha256": "b411b2c7be3eaea69eda57fefb923f54df5170dee514549ed197dcb663724d36"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfItemEdit.cs",
+      "mode": "100644",
+      "object": "30f4aff00a1da8a5754633026a7d46eb04b872bf",
+      "bytes": 557,
+      "sha256": "401cf9367d343388d1270cfc48d87eb7feb3d84c41d815bb4db4579964c47983"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfLibraryPolicy.cs",
       "mode": "100644",
       "object": "cf7033538f704b0ec4b7375e1e43a6f43c2e2727",
@@ -29884,9 +29982,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfLibraryService.cs",
       "mode": "100644",
-      "object": "3308520dfbe65257bf3f0b155018aaf76c2583be",
-      "bytes": 15511,
-      "sha256": "9fe20ff1bf53908fde63988c4202bc2067282c6562800f40de5ae54d55302535"
+      "object": "fbeb6dd2fcd7656a735575710fd6ba4b2bcc0e60",
+      "bytes": 17444,
+      "sha256": "c243d9fa9a555021e5edced0157b828f612c0a3070a7cbc4bbea31a4f613f8bf"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Application/Shelf/ShelfOwnedMutationReceipt.cs",
@@ -30451,9 +30549,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/HavenSurface.cs",
       "mode": "100644",
-      "object": "85c619bf78d5f591113bb33a8a583e746b555a24",
-      "bytes": 1535,
-      "sha256": "6eda38a124df80de63e794e9c402d0b28e5a9dc16c7c27a3d96ff7872d0cfb0a"
+      "object": "37ae11a91f853af5d2350310981b1472489a1f8c",
+      "bytes": 1567,
+      "sha256": "5a16a7d14bfa057e1dfd5bbd5e4062cb5f4437c812087f26d0c1cb055fcf2865"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/DomainLogic/InferenceProfile.cs",
@@ -31151,9 +31249,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
       "mode": "100644",
-      "object": "5cdaeda4a029d7dc6a62d794de534c9db303894d",
-      "bytes": 23789,
-      "sha256": "99dfced6fcd6bfdedcef4a9fe33ee3cf4992ecd54776b63319b27abed7332e1f"
+      "object": "92865e14e2cd54216cf06753ed328d258aed4aff",
+      "bytes": 23931,
+      "sha256": "f31dfcaaea03d18ef5f2f54f3ca73a74b33a50bd280a71ab29eccdc48844d3dc"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Montserrat-Italic-VariableFont_wght.ttf",
@@ -32005,9 +32103,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Controls/SurfacePaletteCatalog.cs",
       "mode": "100644",
-      "object": "d60a3573078c4c9acc85c9542f11040b91b965a5",
-      "bytes": 13473,
-      "sha256": "dbcb490378b10ac3cc963d9cc26b999272c763f0c80e794d1ea84254f9c25b77"
+      "object": "25462a8f766d848d4a05f67cf7d00b2ed0e334ba",
+      "bytes": 13578,
+      "sha256": "58334f0e8f913ad6da2953fd7ad1d2a535a9d4223997efbcba7ea2fe74e1e0ea"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Controls/TidalBackground.cs",
@@ -32621,9 +32719,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.DocumentWorkspaces.cs",
       "mode": "100644",
-      "object": "2e310c3d2229e8ca73d7db0cca25a1189479d045",
-      "bytes": 3957,
-      "sha256": "464346aba9d1a48118b2e804b6e1ae32a520b33bd29e7498cb33e1eb47e50e5a"
+      "object": "8f1e5059423337ee339fc509d26c7c7080999e34",
+      "bytes": 5416,
+      "sha256": "672213e81063fd4e3e04df2d09195e5f2a8b2cf389a77a3f62d50c301b759a68"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Forms.cs",
@@ -32712,9 +32810,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Shelf.cs",
       "mode": "100644",
-      "object": "b6ef2c97477e78164caacfd286e271e2d6c12b15",
-      "bytes": 4403,
-      "sha256": "affa9d52b2fd01da214e8aaa5b99b6c6401290bd87c86a051767b2b095156575"
+      "object": "09eecd7ac65508a41930c909d5d5c92df19376bd",
+      "bytes": 4404,
+      "sha256": "baed8fc33ea454d90e685548ae3db557e41271ac15147e341f602a1079309866"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Spaces.cs",
@@ -32768,9 +32866,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.axaml.cs",
       "mode": "100644",
-      "object": "5da828e8fb6aacd2d9d753df8eb6db8387dc3316",
-      "bytes": 169989,
-      "sha256": "1168cae2f8b8bea0cd66cfcb6ed2c48a25d25407919fbce1bfe27093d46f9a0f"
+      "object": "5d0ba314fa89457495e5d643e20883d7a64e09ba",
+      "bytes": 170316,
+      "sha256": "ba6474d21b0d62a00af51c8e5ee042b05dd2088d0f79f20f840b182adb5c9d56"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/NativePresentation/ChatSidebarHavenScene.cs",
@@ -33076,9 +33174,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Pages/Maps/MapsJourneyLibraryPanel.cs",
       "mode": "100644",
-      "object": "9892f9108407f94291bd3eebf9182576493b9ee0",
-      "bytes": 7177,
-      "sha256": "19671836faa3c9a21bcb3d857dd30c6d0cdde0ff7772144a71043039941e5364"
+      "object": "5313cf946dd3eb70907504a463f4541174cc5782",
+      "bytes": 16082,
+      "sha256": "cb5fc00b005d3406e1bbcae8da151d5aed42bcbc3eb437bbefed64373a702258"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/ParallelHelper.cs",
@@ -33160,9 +33258,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/ShelfWorkspace.cui",
       "mode": "100644",
-      "object": "6ad5d84cbbe471581f05d8a043a538785bdc8052",
-      "bytes": 931,
-      "sha256": "6ed32419a7bb9e5e3bcedb2846596d02a2128dedd292acac65fdf388f2849c49"
+      "object": "9e49c4d2e75b4aa287d0fb65c8f68858f5cfd62e",
+      "bytes": 3807,
+      "sha256": "f713e66c6c39ad3d42742bba2f05b240116cc7b3a86379d3769147e64c690aaf"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Resources/EMOJI-PROVENANCE.md",
@@ -33359,6 +33457,13 @@
       "object": "1174dfc8e78ddc84f1239e3466cc2ee49e2fef4f",
       "bytes": 779,
       "sha256": "66fbec609a19e230e92d0d32b59cc45ce26bc052a6721c37c6531e381107f29a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeApprovalPromptPresenter.cs",
+      "mode": "100644",
+      "object": "570c8adb17e49dd1309c7e30d4487a1d2fc08f85",
+      "bytes": 2817,
+      "sha256": "a6caed673368cd30958ef0b47795c02245757242ba3a5027577cc42221e0ba7a"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/NotesDictationController.cs",
@@ -34889,9 +34994,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/HomePage.ApprovalNavigation.cs",
       "mode": "100644",
-      "object": "18d5333b90d3a3c99e243e91fba147a530017878",
-      "bytes": 2353,
-      "sha256": "7d3a9a372e944ee81de1cfa7d85863efbd61da2ab3d1d2932a21c38299a4f63d"
+      "object": "fda4eed3363b37bf185eb20a3e021d01e7bd702e",
+      "bytes": 3338,
+      "sha256": "7c324d68f72efc2230ae52fa40bec345b1488d3e6c9a1e6967bb6635b9e0370e"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/HomePage.axaml",
@@ -35589,9 +35694,23 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Shelf/ShelfNativeWorkspacePage.cs",
       "mode": "100644",
-      "object": "318daa9df7056681ebe26073d1fdd566bf8881ea",
-      "bytes": 5287,
-      "sha256": "e058a8bb35a19b993eea9cbacc5bcbc72669bf5069e810679d6fe997f50ec058"
+      "object": "5f60e0a953b81cdc1e7fd90ec221187a58ef4924",
+      "bytes": 17116,
+      "sha256": "6242aa759784036ef0668b63f7287d943528993070375fcff2160416aea64c65"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Sites/NativeSitesPage.cs",
+      "mode": "100644",
+      "object": "fe593d737df7bb56a0d9d6ac1281da634041c20b",
+      "bytes": 17098,
+      "sha256": "33cf2173d9cebf7ee34a91b4181ae28f00313f3d3269ef713c4282299124fcc9"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Sites/SitesHavenScene.cs",
+      "mode": "100644",
+      "object": "bb28830a87a17695bf0c6d8048e1ab4d4771f60a",
+      "bytes": 8312,
+      "sha256": "b038d6a718db5748868d327fc93ca40ef8b67f642dcfa7b5a8285c243a5fd47b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Spaces/NativeSpacesPage.cs",
@@ -36016,9 +36135,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Shell/HavenAppRoutePolicy.cs",
       "mode": "100644",
-      "object": "189ecd5baa1ec9a263a5336a4b6d55fa7d2b63c4",
-      "bytes": 3463,
-      "sha256": "c62d7879638ecb5780468cfb6db46e8fe2e3d745b2b55c0ce292cb8c0ac2d97c"
+      "object": "1a535a6e4d93b19e32069f854c8444cc8d13d887",
+      "bytes": 3633,
+      "sha256": "3070c22ce7e1cb77216c76678bd55643560fe316267e19ed491f80841b18416b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Shell/HavenShellEdition.cs",
@@ -36485,9 +36604,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ServiceCollectionExtensions.cs",
       "mode": "100644",
-      "object": "a2431379ccc992b96924376c3c7e3aa1e02507d1",
-      "bytes": 32570,
-      "sha256": "115601c40f13f9944b60c6f889cd0caea7d0e0599807aef2cf8bab9ebf6c367e"
+      "object": "d7250391d39dbe59b3b257575288eff5e8dcaff6",
+      "bytes": 32623,
+      "sha256": "f9dc3d51a7d584a7390aa44187354a394ff53feb9749eb996079bc8683c44fd1"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/DI/ShelfMapsOwnerServiceCollectionExtensions.cs",
@@ -36763,6 +36882,13 @@
       "sha256": "bcf3b0c67d4b6718a511d565efd841251956a19934d4d8703194a1a1b266b1c7"
     },
     {
+      "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Forms/FormDataReferenceLookupSource.cs",
+      "mode": "100644",
+      "object": "9fa448590379709b7ec13202a944a9640d895fda",
+      "bytes": 18309,
+      "sha256": "46cf3b57d70c70661df7e592b0a1019623a2a14b2557aef49e388b69f558a787"
+    },
+    {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Forms/FormLocalStoreAuthority.cs",
       "mode": "100644",
       "object": "a85afe41e775db4a722b4f567a40b0a9f0bcaf61",
@@ -36807,9 +36933,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/HomeOwnedLibraryCommitFenceSource.cs",
       "mode": "100644",
-      "object": "d82581b77fe09f0b4453cffbeb44fb96d4086190",
-      "bytes": 1274,
-      "sha256": "e0e0d55f8566f9fffc1595fd1b2f5193e9194b6abab33525a26fa5f3ae14cd2d"
+      "object": "a26e989a3c32f9e0efd93ccb3f2d3abe314f4a09",
+      "bytes": 2707,
+      "sha256": "b046b5f0ad98d7b2988a9468cd1a4940ae42ede528621bd7b4c69ef05501639c"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/InternalsVisibleTo.cs",
@@ -37668,30 +37794,30 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/HomeShelfLibraryOwner.cs",
       "mode": "100644",
-      "object": "37ffb65d31815c160ff2d36387b50b67647e6d1d",
-      "bytes": 21987,
-      "sha256": "ea8438cb8ad0e042d956dedcbdebd728e4744ad6cfc363a08aedd99c91f69129"
+      "object": "628b656798f7c56f011dcd69eed3febca8e5b996",
+      "bytes": 32193,
+      "sha256": "f0f391a0ea3a47de985e636142e8cb2712c2961a60e0b5b20b8f86e0d38fc540"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/ShelfOwnedLibraryAccessResolver.cs",
       "mode": "100644",
-      "object": "a191c4126b82a939e263b7960fde52f21634c25f",
-      "bytes": 2732,
-      "sha256": "cf8367439df44df1a18c75e135212d212bc961e68a3e959e737043e273299d06"
+      "object": "4ef77d55324fa726c62942f359caccdedd401a13",
+      "bytes": 2900,
+      "sha256": "7a712b1ced5390fd662f7198e60e661f0803e1c8a6b1322128306bcfe57d31fb"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Shelf/ShelfOwnedLibraryEvidence.cs",
       "mode": "100644",
-      "object": "8b1e2c68b23dfb025ac32b72aa3b66c7f4810bbe",
-      "bytes": 1881,
-      "sha256": "543fbe4a1726307d00010d97bca995303c65027bdadccb2ec5e68856136ba69f"
+      "object": "fafda3599890fcceb4bfd07b4c2c4a4a5f28b1ff",
+      "bytes": 2061,
+      "sha256": "cd30d9e2a64f5082a18bbd650a3c71af098ddb510cc58808d1f05c9a82912d51"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/ShelfLibraryWorkspace.cs",
       "mode": "100644",
-      "object": "70aa4e9af0d2531772827e4da168eeb69bb9f252",
-      "bytes": 5967,
-      "sha256": "e51d49ead5e23306c5bf2bb60cc5668fdabe014d5d935986ba59c170e1c88573"
+      "object": "ff30957d5d321e01424dbbb7d9c43b85a4079a18",
+      "bytes": 7858,
+      "sha256": "8f81eb93a56069ec0c5ed5afe99ef228b36c856ef11ee571cfa5d7ad480cf07b"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Infrastructure/Speech/CallFallbackServices.cs",
@@ -39859,9 +39985,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs",
       "mode": "100644",
-      "object": "e5f01a0411b321f6914a035c3926499a5c3fcc94",
-      "bytes": 5469,
-      "sha256": "8197c47b070f8442c84d0c5f52df6eb8924bae1b1f81aa72d62e6995e7f0f4d6"
+      "object": "125d0c3a7c24312f0c66cd6572d84facde0122d6",
+      "bytes": 5627,
+      "sha256": "418f6364ea75ebb16b35b83a27fcb56d203ad454a5d16ba0ca4b778549e55d12"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenGenUiSceneSurfaceTests.cs",
@@ -39971,9 +40097,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeApprovalCuiSurfaceTests.cs",
       "mode": "100644",
-      "object": "47d6f8d7a8776c6891e07f2064723b6af06ecb68",
-      "bytes": 5321,
-      "sha256": "75866a47b03c95321c06dfbf0a0b40bcaa02e9f5ba52b378457aec401ea307f2"
+      "object": "cf7629441f280103a7b2a8d0d24bec64fe5fa13a",
+      "bytes": 10570,
+      "sha256": "edbee80b29a1c9a8fd94be8243e929a59c3162a6bce16d7661338ab786c99beb"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeEquationRenderingTests.cs",
@@ -40016,6 +40142,13 @@
       "object": "68b9ea7392d5ba6f91cf7b7be01b13e9299e31c8",
       "bytes": 4785,
       "sha256": "538f11ad2dbb36ec219ee7a65dab129fb6275d0276f40c98beff686182a27b22"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomePromptHostCompositionTests.cs",
+      "mode": "100644",
+      "object": "8f343041d734b369f3b7dfd5ffd2cb87cd473f78",
+      "bytes": 4055,
+      "sha256": "9a22130a0769575a81dc0cfd1ea3a1b18a19fcdc8586165c156282274f8576ff"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HomeTerminalHostTests.cs",
@@ -40160,9 +40293,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
       "mode": "100644",
-      "object": "16da3552c5d972c4f7941a98db856ff032e9ea82",
-      "bytes": 22079,
-      "sha256": "1813cfded28e61c33b7a671ac1481ee3133bce544666c3db81ea719c474ebcc9"
+      "object": "a420b462d29f2e1c31bb516592f3c4823ba96117",
+      "bytes": 34609,
+      "sha256": "3df4e1a2258026ab11bc40b978753f2d39f8b5aec4b8e42b393e1386fc0ca6bf"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsLocalStoreEvidenceProviderTests.cs",
@@ -40636,9 +40769,16 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
       "mode": "100644",
-      "object": "973b37be8128eadf08708428f3239384315af895",
-      "bytes": 20274,
-      "sha256": "d83ee97ca3357f051fc2fd8b19de21b840b2f37263b669b6b1f8e3cb9f3c8c94"
+      "object": "6f76f95353b655aa01e238f1ad76a887cd545e4d",
+      "bytes": 57935,
+      "sha256": "8b7da98e9b93f676b34085b2320bcd023ff70f6a2665b0fba4e505efdfa89327"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SitesNativeAuthoringConsumerTests.cs",
+      "mode": "100644",
+      "object": "174a925306980a989177f62fda86c258b6c972c7",
+      "bytes": 29380,
+      "sha256": "079e425630610ec367dc5b66d1e7a220499ba2a655a33cb20ef478de169551c3"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
@@ -41362,6 +41502,13 @@
       "sha256": "83c4f59fe3cfa822bab5558af95e97d65b3d1063267df6b1477706ff2a03b7cd"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs",
+      "mode": "100644",
+      "object": "496350dd13ead84d0d93d82826eba7fc4d4c0392",
+      "bytes": 41248,
+      "sha256": "e5484d027d1a3f7c3a471fa5a75ae9ff01cb90692c6184d74ece4b0d00882bf3"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
       "mode": "100644",
       "object": "1505e51950ce41249b1ac96b2d5c491613d82a09",
@@ -41476,9 +41623,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/Haven.Infrastructure.Tests.csproj",
       "mode": "100644",
-      "object": "1c7bc8afac4b9bc00535a92fd56b046741550d36",
-      "bytes": 1364,
-      "sha256": "f1876b75576e8087b6ea17d54f42bef4a688991714507a52d7e80445f00322fb"
+      "object": "93b3225de0d87fff5492ac2aff02e41b55ba1621",
+      "bytes": 1572,
+      "sha256": "e8be919ba2eb6ef84279e200854cdb96bfdbbf0470b5fd870a03c7023771df9e"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HistoricalSchemaUpgradeTests.cs",
@@ -41838,11 +41985,25 @@
       "sha256": "57c711f9dd9db8ee9819d502f57494b65d6bc31fb3f0ebca766bb0592f04a1f1"
     },
     {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionCommitAdmissionTests.cs",
+      "mode": "100644",
+      "object": "e5d5fa3946a1854bebdc2a0f741f5596c69b438d",
+      "bytes": 4484,
+      "sha256": "f8ac45dd265db5f2450c8b4945679178e6b82ed9ef22ec59b681f28cabe7b126"
+    },
+    {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionOrderingPersistenceTests.cs",
       "mode": "100644",
       "object": "2fa485b03714b1c3d384ca7e9f872680041701e8",
       "bytes": 15505,
       "sha256": "303141c89a7a83f8df40fe7242142291f6cb5efed0e1aeb41e611f152cda8fb8"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfItemEditCommitAdmissionTests.cs",
+      "mode": "100644",
+      "object": "f23c4dfe20826266d1b179a152de183dd1491bac",
+      "bytes": 6072,
+      "sha256": "6c303875d44e1aea93a76c8c7acfe9f6c4d99d9d4fc38a5539788016a23ef76e"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfLibraryWorkspaceTests.cs",
@@ -41854,9 +42015,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
       "mode": "100644",
-      "object": "5439d132751061c4d89bc5c1bd2c748e194f368e",
-      "bytes": 19790,
-      "sha256": "c7d1b160e6cfbce7cc8f838a7260fd0000869a1173c3f3e34ffc5f904d5d2102"
+      "object": "d316dafd76c684e11664172f8ff1c8278d132f1a",
+      "bytes": 55744,
+      "sha256": "e9e39c4bcbd5c762edb5ecbca8ddd8810b9f2d088d0f42ff7089611c7629e4ea"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsOwnedLibraryTests.cs",
@@ -42295,9 +42456,9 @@
     {
       "path": "docs/ASTRA-WORKING-LEDGER.md",
       "mode": "100644",
-      "object": "88d8a14d99472ec83179ef1fac38265581db1f6e",
-      "bytes": 68899,
-      "sha256": "ba84bfd08f59029b24560835669d2c4075e13fe9a47e017d799ca7d219767bbf"
+      "object": "be93cbec5ad2e020481fb2ae1aefa1cd9c160b8f",
+      "bytes": 75777,
+      "sha256": "b73caffcbc73640e037f04b21cac0d24a0c859ade535972934927cfceab7d84d"
     },
     {
       "path": "docs/CONSOLIDATION.md",
@@ -66003,7 +66164,17 @@
     "Bounded local OpenSSL HTTP download, complete signed chain CRL, missing CRL rejection, revoked certificate rejection and original helper drain verified; no .NET, MailKit, Java or OS trust acceptance inferred.",
     "Full owning native launch/inner true seal remains required; no cleanup exemption. Exact failed actual6d and all-three original closure must be reviewed before root launch.",
     "HTTP GET counts record observed loopback deliveries and are not attributed to a particular .NET PID.",
-    "Every observed inner evidence/caller and outer caller/Java/CRL/trust/private cleanup failure preserved alongside original owning failure in BaseExceptionGroup; no first-failure suppression. Every original drain attempted, no cleanup if disappearance unproven."
+    "Every observed inner evidence/caller and outer caller/Java/CRL/trust/private cleanup failure preserved alongside original owning failure in BaseExceptionGroup; no first-failure suppression. Every original drain attempted, no cleanup if disappearance unproven.",
+    "This new Home-owned ref is seeded by root from the successful Mail11 parent; it does not represent a prior Home failure. Root must first close every original Mail11 artifact and obtain complete package peers. No constructor/ref/dispatch performed by Worker1.",
+    "Full original178 owning/36 resource/12 regression cases plus current accepted18 owning/8 resource and four Home classes are mandatory. No old tuple, unfiltered Home/AI/runtime suite, native/TLS/PDB/restore/session/profile/drain guard is removed.",
+    "Actual compiled Home PE/PDB identity and complete reviewed source documents are mandatory; visible Home CUI resource/display and normal no-window DI refusal have original real fixture methods. Classic MainWindow activation and trusted CoreApi capability issuance remain unverified; display acknowledgement never grants authority or begins execution.",
+    "Historical predecessor-only local/failed-Mail qualifications remain preserved above. They are superseded for the Mail11 baseline by complete original737-member, 1736-pass zero-skip acceptance and independent root471/W4 replay, now pinned as inputs. The new Home successor remains uncompiled/unrun.",
+    "Normal27 exact29 accepted Mail products are byte-identical to this c6cb55 baseline and need no overlay. All accepted36 normal24 Shelf/Forms sources, current Writer26 workflow and current ledger are preserved. Every complete200 owning/44 resource/12 regression cohort and original native/TLS/source/PDB/task/restore/drain guard remains mandatory.",
+    "Root alone may seed this distinct Home-owned corrective ref to exact c6cb55, execute the unchanged constructor and dispatch after complete package peers. No prior Home failure, new runtime proof or classic native activation is inferred from this metadata successor.",
+    "Joined unaccepted exact Home prompt02/API01/host200 predecessor plus every canonical Sites8/preview1/consumer1 class=>210 owning,44 resource,12 regression. No old source/action/assertion/method/native/TLS/drain/restore/task/PDB guard removed.",
+    "Sites.Tests unfiltered independent restore/build/compiled target closure and PE/PDB exact full Sites producer/test documents required; actual mounted native consumer emits14 real CUI/canonical/Home cases. Recording HTML adapter verifies issued canonical output; actual native browser DOM/visible human prompt/classic lifecycle remain unverified.",
+    "Retained preview and component draft/error state are bound to full original actor/authentication/folder/project/source/page and current read permission. No cache grant, no model/free/local/access/pricing policy change, no shared credential/Worker authority edit or deployment.",
+    "Root seeds a dedicated corrective branch from the successful Mail11 c6 candidate, then alone reviews/constructs/pushes/dispatches. This package is source-only; existing full Mail acceptance does not imply joined Home/Sites runtime acceptance."
   ],
   "inputManifests": [
     {
@@ -66121,6 +66292,110 @@
     {
       "path": "/workspace/astra-source/worker2-mail10-actual-byte-preserving-attachment-webkit-drain-full-corrective11/freeze-full-package.py",
       "sha256": "485cbb999ae543eaf9d5e377579aa42b78ea62816c4b62f4677ee1b2e2d11f59"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint25-publication-local.json",
+      "sha256": "924553c09e69b3e8c3a91721b3cac93ce0b62c090d61dc903eafafcc1fb00849"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-full-hosted-caller-draft01/mapping.json",
+      "sha256": "277a7912749320bd528198de68942fdc4b530fecfe1327b9e2211b2bd068a8a9"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-full-hosted-caller-draft02-complete-current-cohorts/mapping.json",
+      "sha256": "8b0f3742860004a9583e0c4fbb5f9cb600be9b7b8d868f0bbd48d13ce128cc14"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-full-hosted-caller-draft02-complete-current-cohorts/map-accepted-union.py",
+      "sha256": "f560accf6f667c75ec66d4340ee6e815ec214961feec61f134f3b2da2f4031b4"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-current25-full-native-caller-package01/freeze-private-package.py",
+      "sha256": "781d7008ae177510e03e799e240af049bcfaffd4a471c4ab08701a64c66b49d4"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-home-prompt02-fullsemantic-native-wiring-peer01.json",
+      "sha256": "4499f1a1c1bfc033344c7ac9032c5f08d0c7867ba9a030c9aad27a837ad4fda0"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-home-core-api-original-snapshot-fence-source-peer132.json",
+      "sha256": "cf7fc178498eb0dbb3289d28d388c64e1e5ca00b3746f6bcfeb896a0d4473105"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-acknowledged-native-activation-source02-explicit-completion-test-presenter/manifest.json",
+      "sha256": "d55ea73697f9279305b457a3246318a0c62e1af5d6e83c4351a1fe1aa426a9c8"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-core-api-original-snapshot-fence-source01/manifest.json",
+      "sha256": "d23e86ab789612503436dc0e6fca351bb2ed80c153f35e7f59c0715e46ce8c09"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-host-composition-source01/manifest.json",
+      "sha256": "1172f5467a9445be3412b437d08e218d629ee22e13c0c000059bbe136eb0bc91"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-current25-full-native-caller-package01/manifest.json",
+      "sha256": "ab8cc9cf3dec4c423e986ac538bce65fda5a25bc76b1097a10a32b9068c74bd3"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint27-publication-local.json",
+      "sha256": "ed8d800a5d35acae7fcf6acc80a05db93c73cfe650d363de477862e390f067bf"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail11-full-three-original-acceptance01.json",
+      "sha256": "eada20cad3642e15cef014fdab4a1d4fc0d9b248e8f5910de6b518054c967db5"
+    },
+    {
+      "path": "/workspace/astra-source/root-mail11-full-three-original-replay471.json",
+      "sha256": "a8c20a33f463ef407050426ebc8577381affa3840c5ac4a8666a2b27df8bfccf"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-mail11-full-original-native-tls-custody-peer02-current26.json",
+      "sha256": "0f7107ba662c2909d3620e3206b2e31f75c0714b1366f931adaa6a3a4bc2892b"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-home-prompt-host-fixture01-source-api-peer01.json",
+      "sha256": "3b692ea8e291e0110fb08dfcc674c6ff99d985766f7ecfb0a43408b334580a20"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-current27-full-native-caller-package02/refresh-private-package.py",
+      "sha256": "5eb97e3e218db176ba3808bfdaea8d84a9da1b4444349569e8f9ba7fa51a09e8"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites-consumer-source06-unresolved-component-selection-purge/manifest.json",
+      "sha256": "7797c0a45e7e9b746ac7d3a1fe1b7c9a84c1a456d7736d217a8c7acaa8dc412b"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-prompt-current27-full-native-caller-package02/manifest.json",
+      "sha256": "ba08baa24cbfebe408f431fcd980926a0197f8bc6a6d377651542a201aaecb2e"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-sites-consumer06-complete-native-ui-authority-source-peer01.json",
+      "sha256": "f263158702e14142a2ff867e5a881b1d367961857208e341e44be265ca0c50c8"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites-consumer04-observed-binding-home-api-peer-extension01.json",
+      "sha256": "fc6c54bdc62dcf162326d6cf0e3eb3d14154d74abb0d27ca9bf8837a025a0e15"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-home-prompt-host-fixture01-source-api-peer01.json",
+      "sha256": "3b692ea8e291e0110fb08dfcc674c6ff99d985766f7ecfb0a43408b334580a20"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail11-full-three-original-acceptance01.json",
+      "sha256": "eada20cad3642e15cef014fdab4a1d4fc0d9b248e8f5910de6b518054c967db5"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-mail11-full-original-native-tls-custody-peer02-current26.json",
+      "sha256": "0f7107ba662c2909d3620e3206b2e31f75c0714b1366f931adaa6a3a4bc2892b"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint27-publication-local.json",
+      "sha256": "ed8d800a5d35acae7fcf6acc80a05db93c73cfe650d363de477862e390f067bf"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint26-publication-local.json",
+      "sha256": "3f37533c2d4fbb384287dfbfe81f1b757fd240c5ba11aca2f3c7fa335ffaeb10"
     }
   ],
   "sharedCakeIdContract": null

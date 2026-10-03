@@ -26,6 +26,7 @@ public sealed class ShelfOwnedLibraryEvidence(IVersionedSettingsStore settings) 
 public sealed class ShelfOwnedLibraryActionPolicies : IHomeActionPolicySource
 {
     public HomePermissionActionPolicy? TryGet(string appID, string actionID) =>
-        appID == "shelf" && actionID == HomeShelfLibraryOwner.ActionID
+        appID == "shelf" && (actionID == HomeShelfLibraryOwner.ActionID
+            || actionID == HomeShelfLibraryOwner.ItemEditActionID || actionID == HomeShelfLibraryOwner.CollectionActionID || actionID == HomeShelfLibraryOwner.MembershipActionID)
             ? new(HavenOS.Home.PermissionsTrustNotifications.HomePermissionRisk.High, true, false, true) : null;
 }

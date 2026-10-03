@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CakeOS.Cui.Language;
 using CakeOS.Cui.Runtime;
 using CakeOS.Cui;
@@ -72,6 +73,31 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         });
     }
 
+    /// <summary>Records actual native visibility of this exact request. Navigation or initialization alone is not display.</summary>
+    public async Task<bool> AcknowledgeDisplayedRequestAsync(CancellationToken cancellationToken = default)
+    {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        var shown = await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            TopLevel.GetTopLevel(this)?.UpdateLayout();
+            return IsPromptVisible() ? CurrentRequest : null;
+        }, DispatcherPriority.Render);
+        if (shown is null) return false;
+        var digest = Digest(shown);
+        await RequireActorAsync(linked.Token).ConfigureAwait(false);
+        var stillShown = await Dispatcher.UIThread.InvokeAsync(() =>
+            IsPromptVisible() && CurrentRequest is { } current && Digest(current) == digest && _shownDigest == digest,
+            DispatcherPriority.Render);
+        if (!stillShown) return false;
+        var result = await permissions.AcknowledgePromptDisplayedAsync(shown.RequestId, digest, linked.Token).ConfigureAwait(false);
+        await RequireActorAsync(linked.Token).ConfigureAwait(false);
+        return result.Succeeded;
+    }
+
+    private bool IsPromptVisible() => !_disposed && _host.Availability?.State == CuiSceneAvailabilityState.Ready &&
+        IsEffectivelyVisible && _host.IsEffectivelyVisible && Bounds.Width > 0 && Bounds.Height > 0 &&
+        TopLevel.GetTopLevel(this) is { IsVisible: true } root && root.IsEffectivelyVisible;
+
     private async ValueTask<CuiSceneAvailability> CheckAsync(CancellationToken cancellationToken)
     {
         var actor = await profiles.GetCurrentAsync(cancellationToken).ConfigureAwait(false);
@@ -116,6 +142,11 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         _model.Set("PendingCount", $"Pending requests: {snapshot.PendingRequests.Count}");
         _model.Set("HasPending", request is not null);
         _model.Set("Caller", request is null ? "" : "Requested by " + CallerName(request.Caller));
+        _model.Set("Identity", request is null ? "" : $"Caller ID: {request.Caller.CallerId}. Origin: {request.Caller.Origin ?? "unavailable"}. Identity: {(request.Caller.IsVerified ? "verified" : "unverified")}.");
+        _model.Set("Target", request is null ? "" : "Target app: " + request.Scope.TargetAppId);
+        _model.Set("Action", request is null ? "" : "Action: " + request.Scope.ActionName);
+        _model.Set("Scope", request is null ? "" : request.Scope.IncludesAllObjects ? "Scope: all objects in the displayed target action." :
+            request.Scope.Objects.Count == 0 ? "Scope: no specific object IDs supplied." : "Scope: " + string.Join(", ", request.Scope.Objects.Select(item => item.ObjectType + ":" + item.ObjectId)));
         _model.Set("Preview", request?.Impact.ChangePreview ?? "The change preview is unavailable. Review the impact carefully.");
         _model.Set("Impact", request is null ? "" : request.Impact.IsUnknown
             ? "The affected objects are unknown." : $"Affected objects: {request.Impact.AffectedObjectCount?.ToString(CultureInfo.CurrentCulture) ?? "unknown"}. " +
@@ -155,6 +186,11 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
         {
             await RequireActorAsync(linked.Token).ConfigureAwait(false);
             if (command == "Refresh") { await RefreshAsync(linked.Token).ConfigureAwait(false); return; }
+            if (command == "BackFromTrustWarning")
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => { _warningRequest = null; Update(); });
+                return;
+            }
             if (command.StartsWith("Previous", StringComparison.Ordinal) || command.StartsWith("Next", StringComparison.Ordinal))
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
@@ -187,10 +223,19 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
                 var shown = CurrentRequest ?? throw new InvalidOperationException("No pending request is selected.");
                 var fresh = (await permissions.GetSnapshotAsync(cancellationToken: linked.Token).ConfigureAwait(false)).PendingRequests.SingleOrDefault(item => item.RequestId == shown.RequestId);
                 if (fresh is null || Digest(fresh) != _shownDigest) throw new InvalidOperationException("The request changed. Refresh and review it again.");
+                if (!await AcknowledgeDisplayedRequestAsync(linked.Token).ConfigureAwait(false))
+                    throw new InvalidOperationException("The exact Home prompt is not visibly displayed. Reopen it before deciding.");
                 if (command == "ShowTrustWarning")
                 {
+                    await Dispatcher.UIThread.InvokeAsync(() => { _warningRequest = shown.RequestId; Update(); }, DispatcherPriority.Render);
+                    var warningVisible = await Dispatcher.UIThread.InvokeAsync(() => IsPromptVisible() &&
+                        CurrentRequest?.RequestId == shown.RequestId && _warningRequest == shown.RequestId &&
+                        this.GetVisualDescendants().OfType<TextBlock>().Any(text => text.Name == "approval-trust-warning" && text.IsEffectivelyVisible),
+                        DispatcherPriority.Render);
+                    if (!warningVisible) throw new InvalidOperationException("The extended trust warning could not be displayed.");
+                    await RequireActorAsync(linked.Token).ConfigureAwait(false);
                     result = await permissions.MarkAlwaysTrustWarningShownAsync(shown.RequestId, linked.Token).ConfigureAwait(false);
-                    if (result.Succeeded) _warningRequest = shown.RequestId;
+                    if (!result.Succeeded) _warningRequest = null;
                 }
                 else
                 {
@@ -242,7 +287,7 @@ public class HomeApprovalCuiSurface(HomeCoreRuntime runtime, HomeLocalProfileIde
     {
         public ValueTask DispatchAsync(string command, object? parameter, CancellationToken cancellationToken = default) => owner.DispatchAsync(command, cancellationToken);
         public bool HasAction(string command) => command is "Refresh" or "PreviousRequest" or "NextRequest" or "PreviousGrant" or "NextGrant" or "PreviousBlocked" or "NextBlocked" or
-            "Accept" or "Trust" or "Decline" or "DeclineBlock" or "ShowTrustWarning" or "ConfirmAlwaysTrust" or "TemporaryDuration" or "TemporaryActions" or "RevokeGrant" or "UnblockCaller";
+            "Accept" or "Trust" or "Decline" or "DeclineBlock" or "ShowTrustWarning" or "BackFromTrustWarning" or "ConfirmAlwaysTrust" or "TemporaryDuration" or "TemporaryActions" or "RevokeGrant" or "UnblockCaller";
         public bool? IsActionAvailable(string command) => HasAction(command);
     }
 }

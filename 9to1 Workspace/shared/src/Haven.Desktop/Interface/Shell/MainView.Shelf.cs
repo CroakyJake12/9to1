@@ -46,7 +46,7 @@ public sealed partial class MainView
                 throw new UnauthorizedAccessException("The original Shelf host or actor changed before mount.");
             token.ThrowIfCancellationRequested();
             AddOrSelectTab("shelf-library-" + Guid.NewGuid().ToString("N"), "Shelf library", candidate,
-                closeable: true, surface: HavenSurface.Home, forceNewTab: true);
+                closeable: true, surface: HavenSurface.Shelf, forceNewTab: true);
             candidate = null;
         }
         finally

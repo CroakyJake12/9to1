@@ -310,6 +310,78 @@
       "sha256": "b736d09401c2f8e2277f7906d8ef93e2a19090afb95596b639f54d32ab4bc95c",
       "origin": "Mandatory actual accepted current Root21 resource whole-class pin",
       "source": "e1644a16b989255528fea449a32c0cc9b31fc7e8:9to1 Workspace/Forms/Tests/CUI/FormNativePreviewViewportTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionCommitAdmissionTests.cs",
+      "class": "ShelfCollectionCommitAdmissionTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.ShelfCollectionCommitAdmissionTests",
+      "sha256": "f8ac45dd265db5f2450c8b4945679178e6b82ed9ef22ec59b681f28cabe7b126",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfCollectionCommitAdmissionTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs",
+      "class": "HomeLocalReadCompositionTests",
+      "namespace": "HavenOS.Home.Tests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalReadCompositionTests",
+      "sha256": "9963f0bf45b9c723a8fa51f448c56e39f0357999761011f08a83aed32c3abe0a",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/Home/Tests/HomeLocalReadCompositionTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs",
+      "class": "ShelfMapsFinalClaimFenceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.ShelfMapsFinalClaimFenceTests",
+      "sha256": "e9e39c4bcbd5c762edb5ecbca8ddd8810b9f2d088d0f42ff7089611c7629e4ea",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfMapsFinalClaimFenceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs",
+      "class": "ShelfNativeWorkspaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.ShelfNativeWorkspaceTests",
+      "sha256": "8b7da98e9b93f676b34085b2320bcd023ff70f6a2665b0fba4e505efdfa89327",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Desktop.Tests/ShelfNativeWorkspaceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs",
+      "class": "MapsJourneyLibraryPanelTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.MapsJourneyLibraryPanelTests",
+      "sha256": "3df4e1a2258026ab11bc40b978753f2d39f8b5aec4b8e42b393e1386fc0ca6bf",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Desktop.Tests/MapsJourneyLibraryPanelTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataReferenceLookupSourceTests.cs",
+      "class": "FormDataReferenceLookupSourceTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
+      "sha256": "e5484d027d1a3f7c3a471fa5a75ae9ff01cb90692c6184d74ece4b0d00882bf3",
+      "origin": "Actual c7b7 fixture-only two required IAppPaths properties; all cases/assertions retained",
+      "source": "/workspace/astra-source/worker3-shelf37-actual-c7b7-reference-path-contract-corrective01/FormDataReferenceLookupSourceTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs",
+      "class": "HavenAppRoutePolicyTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.HavenAppRoutePolicyTests",
+      "sha256": "418f6364ea75ebb16b35b83a27fcb56d203ad454a5d16ba0ca4b778549e55d12",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Desktop.Tests/HavenAppRoutePolicyTests.cs"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfItemEditCommitAdmissionTests.cs",
+      "class": "ShelfItemEditCommitAdmissionTests",
+      "namespace": "Haven.Infrastructure.Tests",
+      "fullClass": "Haven.Infrastructure.Tests.ShelfItemEditCommitAdmissionTests",
+      "sha256": "6c303875d44e1aea93a76c8c7acfe9f6c4d99d9d4fc38a5539788016a23ef76e",
+      "origin": "Root20 plus accepted Maps27 plus reviewed preferred37 exact winner",
+      "source": "/workspace/astra-source/worker3-shelf37-current20-full-owning-package02/sources/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ShelfItemEditCommitAdmissionTests.cs"
     }
   ],
   "consoleHarness": {

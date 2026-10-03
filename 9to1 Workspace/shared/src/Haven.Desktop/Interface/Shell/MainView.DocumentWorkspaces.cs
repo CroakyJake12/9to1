@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Threading;
 using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Services;
@@ -8,6 +9,9 @@ using Haven.Desktop.Views.Pages.Canvas;
 using Haven.Desktop.Views.Pages.Data;
 using Haven.Desktop.Views.Pages.Present;
 using Haven.Desktop.Views.Pages.Write;
+using Haven.Desktop.Views.Pages.Sites;
+using HavenOS.Apps.Sites.Application;
+using HavenOS.Home.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Haven.Desktop.Views.Shell;
@@ -23,7 +27,8 @@ public sealed partial class MainView
         || key.Equals("data", StringComparison.OrdinalIgnoreCase)
         || key.Equals("data-database", StringComparison.OrdinalIgnoreCase)
         || key.Equals("data-spreadsheet", StringComparison.OrdinalIgnoreCase)
-        || key.Equals("boards", StringComparison.OrdinalIgnoreCase);
+        || key.Equals("boards", StringComparison.OrdinalIgnoreCase)
+        || key.Equals("sites", StringComparison.OrdinalIgnoreCase);
 
     private Control CreateDocumentWorkspace(string key)
     {
@@ -40,10 +45,29 @@ public sealed partial class MainView
             "present" => new PresentPage(_bus, services.GetRequiredService<IPresentRepository>(),
                 services.GetRequiredService<IPresentExportService>(), services.GetRequiredService<IPresentImportService>()),
             "data" or "data-database" or "data-spreadsheet" => CreateDataDocumentWorkspace(_bus, services),
+            "sites" => CreateSitesDocumentWorkspace(services),
             "boards" => new BoardsPage(_bus, services.GetRequiredService<IBoardsWorkspaceService>(),
                 services.GetService<INotesAttachmentStore>()),
             _ => throw new InvalidOperationException($"{key} is not a direct document workspace.")
         };
+    }
+
+    private NativeSitesPage CreateSitesDocumentWorkspace(IServiceProvider originalServices) =>
+        CreateSitesDocumentWorkspace(originalServices, async (requestId, originalActor, ct) =>
+        {
+            // Site writes retain the original host/provider and actor while actual Home displays the exact request.
+            var review = await Dispatcher.UIThread.InvokeAsync<Task>(() =>
+                ReviewHomeRequestForOriginalHostAsync(requestId, originalServices, originalActor, ct));
+            await review;
+        });
+
+    internal static NativeSitesPage CreateSitesDocumentWorkspace(IServiceProvider services,
+        Func<string, AuthenticatedResourceActor, CancellationToken, Task> reviewHomeRequest, ISitePreviewSurface? previewSurface = null)
+    {
+        var session = new SiteNativeAuthoringSession(services.GetRequiredService<ISiteNativeWorkspaceAuthority>(),
+            services.GetRequiredService<ResourceAuthorizationService>(), services.GetRequiredService<HomeResourceOperationBroker>(),
+            services.GetRequiredService<SiteNativeWriteCoordinator>(), reviewHomeRequest);
+        return previewSurface is null ? new(session) : new(session, previewSurface);
     }
 
     internal static DataPage CreateDataDocumentWorkspace(HavenEventBus bus, IServiceProvider services) =>

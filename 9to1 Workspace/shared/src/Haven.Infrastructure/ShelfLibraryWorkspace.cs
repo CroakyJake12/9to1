@@ -80,6 +80,34 @@ public sealed class ShelfLibraryWorkspace : IDisposable
         lock (_gate) _reviews.Add(new(issued));
         return issued.RequestID;
     }
+    public async Task<string> ReviewEditItemAsync(Haven.Application.Shelf.ShelfItemEdit proposed, CancellationToken token = default)
+    {
+        ObjectDisposedException.ThrowIf(IsClosed, this);
+        IShelfLibraryDisplay selected; lock (_gate) selected = _display.Selection;
+        var issued = await _owner.ReviewEditItemAsync(selected, proposed, token).ConfigureAwait(false);
+        lock (_gate) _reviews.Add(new(issued)); return issued.RequestID;
+    }
+    public async Task<string> ReviewCreateCollectionAsync(ShelfCollection proposed, CancellationToken token = default)
+    {
+        ObjectDisposedException.ThrowIf(IsClosed, this);
+        IShelfLibraryDisplay selected; lock (_gate) selected = _display.Selection;
+        var issued = await _owner.ReviewCreateCollectionAsync(selected, proposed, token).ConfigureAwait(false);
+        lock (_gate) _reviews.Add(new(issued)); return issued.RequestID;
+    }
+    public async Task<string> ReviewCreateSmartCollectionAsync(Haven.Core.Shelf.ShelfCollection proposed, CancellationToken token = default)
+    {
+        ObjectDisposedException.ThrowIf(IsClosed, this);
+        IShelfLibraryDisplay selected; lock (_gate) selected = _display.Selection;
+        var issued = await _owner.ReviewCreateSmartCollectionAsync(selected, proposed, token).ConfigureAwait(false);
+        lock (_gate) _reviews.Add(new(issued)); return issued.RequestID;
+    }
+    public async Task<string> ReviewAddMembershipAsync(Guid collectionID, Guid itemID, int order = 0, CancellationToken token = default)
+    {
+        ObjectDisposedException.ThrowIf(IsClosed, this);
+        IShelfLibraryDisplay selected; lock (_gate) selected = _display.Selection;
+        var issued = await _owner.ReviewAddMembershipAsync(selected, collectionID, itemID, order, token).ConfigureAwait(false);
+        lock (_gate) _reviews.Add(new(issued)); return issued.RequestID;
+    }
     public async Task<ShelfLibraryCommit> ApplyOrRecoverAsync(string requestID, CancellationToken token = default)
     {
         Entry entry;

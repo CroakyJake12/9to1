@@ -12,7 +12,7 @@ public sealed class ShelfOwnedLibraryAccessResolver(ShelfLibraryService library,
         ResourceScope scope, CancellationToken token)
     {
         ResourceAccessDecision Deny() => new(false, "PermissionDenied", actor.ActorId, scope.Revision, actor.OrganisationId);
-        if (scope.Kind != ResourceKind || scope.Access != ResourceAccess.Write || actionID != HomeShelfLibraryOwner.ActionID
+        if (scope.Kind != ResourceKind || scope.Access != ResourceAccess.Write || (actionID != HomeShelfLibraryOwner.ActionID && actionID != HomeShelfLibraryOwner.CollectionActionID && actionID != HomeShelfLibraryOwner.MembershipActionID && actionID != HomeShelfLibraryOwner.ItemEditActionID)
             || actor.AccountId is not null || actor.OrganisationId is not null || ownership is not IResourceStoreOwnershipReceiptAuthority receipts
             || !Guid.TryParse(scope.Id, out var storeID) || !long.TryParse(scope.Revision, NumberStyles.None,
                 CultureInfo.InvariantCulture, out var revision) || revision < 0) return Deny();

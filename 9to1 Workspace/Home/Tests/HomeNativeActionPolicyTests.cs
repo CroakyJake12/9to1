@@ -62,8 +62,9 @@ public sealed class HomeNativeActionPolicyTests
         try
         {
             var fault = new CompletionFaultStore(new FileHomeCoreStateStore(Path.Combine(root, "home.json")));
+            var presenter = new ControlledCompletionPresenter();
             var service = new HomeAppAiServices(new ModelProviderRegistry([]), fault,
-                new("profile", "Native profile", "os", "session", true), new Graph(), new Invocations(), [new Policy()]);
+                new("profile", "Native profile", "os", "session", true), new Graph(), new Invocations(), [new Policy()], promptPresenter: presenter);
             var arguments = System.Text.Json.JsonSerializer.SerializeToElement(new { exact = "payload" });
             var context = new AppAiContextSnapshot("files", "test", "file-1", "Controlled owner", null,
                 new Dictionary<string, System.Text.Json.JsonElement>(), AppAiDataSensitivity.UserContent, DateTimeOffset.UtcNow);
@@ -78,6 +79,7 @@ public sealed class HomeNativeActionPolicyTests
             }
             Assert.NotNull(requestId);
             Assert.True((await service.Permissions.DecideAsync(requestId!, HomeApprovalChoice.Accept, cancellationToken: lifetime.Token)).Succeeded);
+            presenter.Displayed.TrySetResult(true);
             var decision = await approval;
             var request = new AppAiActionRequest("files", "files.save", arguments, decision.ApprovalToken, "case", AppAiAccessMode.Write);
             var unknown = await service.CompleteRejectedVerificationAsync(request with { ApprovalToken = "not-issued" }, lifetime.Token);
@@ -119,6 +121,42 @@ public sealed class HomeNativeActionPolicyTests
             Assert.Single(audit, entry => entry.ResultCode == "HOME_ACTION_SUCCEEDED");
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Actual_ai_bridge_without_presenter_returns_required_and_never_begins_execution()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "astra-ai-missing-presenter-" + Guid.NewGuid().ToString("N"));
+        using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        try
+        {
+            var service = new HomeAppAiServices(new ModelProviderRegistry([]),
+                new FileHomeCoreStateStore(Path.Combine(root, "home.json")),
+                new("profile", "Native profile", "os", "session", true), new Graph(), new Invocations(), [new Policy()]);
+            var context = new AppAiContextSnapshot("files", "test", "file-1", "Controlled owner", null,
+                new Dictionary<string, System.Text.Json.JsonElement>(), AppAiDataSensitivity.UserContent, DateTimeOffset.UtcNow);
+            var descriptor = new AppAiActionDescriptor("files.save", "Save", "Controlled save", AppAiActionRisk.ReversibleChange,
+                true, "{\"type\":\"object\"}", AffectedObjectIds: ["file-1"]);
+            var decision = await service.RequestAsync(new("profile", context, descriptor, true, true, "Save", null, "case"), lifetime.Token);
+            Assert.Equal(AppAiApprovalOutcome.Pending, decision.Outcome);
+            Assert.Null(decision.ApprovalToken); Assert.Equal("HOME_PERMISSION_REQUIRED", decision.Code);
+            var snapshot = await service.Permissions.GetSnapshotAsync(cancellationToken: lifetime.Token);
+            var pending = Assert.Single(snapshot.PendingRequests);
+            Assert.Equal(HomePermissionRequestState.PendingApproval, pending.State);
+            Assert.False((await service.Permissions.BeginExecutionAsync(pending.RequestId, lifetime.Token)).IsAllowed);
+            Assert.DoesNotContain(snapshot.RecentAuditEvents,
+                entry => entry.Kind is HomePermissionAuditKind.ApprovalPromptShown or HomePermissionAuditKind.DecisionMade or HomePermissionAuditKind.ExecutionStarted);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    // Controlled frontend observation for this unit completion test only. It cannot decide,
+    // acknowledge display or execute; genuine mounted native display is tested separately.
+    private sealed class ControlledCompletionPresenter : IHomeApprovalPromptPresenter
+    {
+        internal readonly TaskCompletionSource<bool> Displayed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async ValueTask<bool> ShowPendingRequestAsync(string requestId, CancellationToken ct) =>
+            await Displayed.Task.WaitAsync(ct);
     }
 
     private sealed class CompletionFaultStore(IHomeCoreStateStore inner) : IHomeCoreStateStore

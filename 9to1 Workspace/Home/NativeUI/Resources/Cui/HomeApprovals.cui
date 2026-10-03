@@ -7,6 +7,10 @@
       <TextBlock text="{Binding PendingCount}" margin="0,16,0,8" />
       <StackPanel is-visible="{Binding HasPending}">
         <TextBlock text="{Binding Caller}" font-weight="SemiBold" />
+        <TextBlock id="approval-identity" text="{Binding Identity}" text-wrapping="Wrap" />
+        <TextBlock id="approval-target" text="{Binding Target}" text-wrapping="Wrap" />
+        <TextBlock id="approval-action" text="{Binding Action}" text-wrapping="Wrap" />
+        <TextBlock id="approval-scope" text="{Binding Scope}" text-wrapping="Wrap" />
         <TextBlock id="approval-preview" text="{Binding Preview}" text-wrapping="Wrap" />
         <TextBlock text="{Binding Impact}" text-wrapping="Wrap" />
         <TextBlock text="{Binding Risk}" text-wrapping="Wrap" />
@@ -22,7 +26,8 @@
         </WrapPanel>
         <Button id="approval-warning" action="ShowTrustWarning" content="Review extended trust options" min-height="44" />
         <StackPanel is-visible="{Binding WarningVisible}" margin="0,12,0,0">
-          <TextBlock text="Extended trust allows this caller to repeat the approved action within this scope. Future approval requirements still apply. Review the caller and affected objects carefully; you can revoke trust below." text-wrapping="Wrap" />
+          <TextBlock id="approval-trust-warning" text="Always Trust can allow this caller to read, modify or destroy user data within the displayed action and scope without asking again. Review the caller and affected objects carefully. You can go back without granting trust, and revoke granted trust below." font-weight="SemiBold" text-wrapping="Wrap" />
+          <Button id="approval-warning-back" action="BackFromTrustWarning" content="Go back" min-height="44" />
           <Button id="approval-always" action="ConfirmAlwaysTrust" content="I understand — accept and always trust" min-height="44" />
           <TextBlock text="Temporary trust: choose a duration or an action limit." text-wrapping="Wrap" />
           <TextBox id="approval-minutes" text="{Binding Minutes, Mode=TwoWay}" accessible-name="Temporary trust duration in minutes" placeholder-text="Minutes" />

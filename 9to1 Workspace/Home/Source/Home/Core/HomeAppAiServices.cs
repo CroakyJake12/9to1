@@ -28,9 +28,10 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
     private readonly ConcurrentDictionary<string, CompletionEntry> _executingTargets = new();
     private readonly ModelRouteRegistry _routes;
     private readonly HomePersonalModelRoutes? _personalRoutes;
+    private readonly HomeApprovalPromptFlow _prompts;
     public HomePermissionTrustService Permissions { get; }
 
-    public HomeAppAiServices(IModelProviderRegistry providers, IHomeCoreStateStore store, HomePermissionCallerIdentity authenticatedCaller, IExecutionEventRepository graph, IInvocationResolver invocations, IEnumerable<IHomeActionPolicySource>? actionPolicies = null, HomePersonalModelRoutes? personalRoutes = null)
+    public HomeAppAiServices(IModelProviderRegistry providers, IHomeCoreStateStore store, HomePermissionCallerIdentity authenticatedCaller, IExecutionEventRepository graph, IInvocationResolver invocations, IEnumerable<IHomeActionPolicySource>? actionPolicies = null, HomePersonalModelRoutes? personalRoutes = null, IHomeApprovalPromptPresenter? promptPresenter = null)
     {
         _personalRoutes = personalRoutes;
         _providers = providers; _store = store; _graph = graph; _invocations = invocations;
@@ -47,6 +48,7 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
             if (declared.Length == 0) return contextual;
             return contextual is null || contextual == declared[0] ? declared[0] : null;
         });
+        _prompts = new(Permissions, promptPresenter);
     }
 
     public FloatingAiBarState Create(IAppAiContext context, IAppAiActions actions, IAppAiDatabaseMutationGuard? databaseGuard = null) =>
@@ -136,11 +138,8 @@ public sealed class HomeAppAiServices : IAppAiCoordinatorFactory, IDulcheAppClie
             new(["artifact-object"], request.ImpactUnknown ? null : targets.Length, targets, request.ImpactUnknown,
                 request.ChangePreview, request.BackupId, request.Arguments is { } arguments
                     ? Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(arguments.GetRawText()))) : null)), cancellationToken).ConfigureAwait(false);
-        while (result.State == HomePermissionRequestState.PendingApproval)
-        {
-            await Task.Delay(TimeSpan.FromMilliseconds(150), cancellationToken).ConfigureAwait(false);
-            result = await Permissions.GetAuthorizationAsync(result.RequestId, cancellationToken).ConfigureAwait(false);
-        }
+        if (result.State == HomePermissionRequestState.PendingApproval)
+            result = await _prompts.ReviewPendingAsync(result.RequestId, cancellationToken).ConfigureAwait(false);
         if (result.IsAllowed) _approvalTargets[result.RequestId] = (request.Context.AppId, request.Action.Id, request.Arguments is { } boundArguments ? Digest(boundArguments) : null);
         return new(result.IsAllowed ? AppAiApprovalOutcome.Approved : result.State == HomePermissionRequestState.PendingApproval ? AppAiApprovalOutcome.Pending : AppAiApprovalOutcome.Denied,
             result.IsAllowed ? result.RequestId : null, result.Code, result.Message);

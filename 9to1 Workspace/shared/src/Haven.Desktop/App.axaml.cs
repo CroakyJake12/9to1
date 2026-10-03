@@ -71,6 +71,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddHavenInfrastructure();
         collection.AddHavenPlannerInfrastructure();
         collection.AddHavenDesktopCallServices();
+        collection.AddSingleton<HavenOS.Home.Core.IHomeApprovalPromptPresenter>(provider => new NativeHomeApprovalPromptPresenter(provider));
         collection.AddSingleton<SpaceRegistry>();
         collection.AddFilesNativeHost();
         collection.AddHavenFormsPublication(new HavenOS.Forms.FormNativePublicationValidator());
