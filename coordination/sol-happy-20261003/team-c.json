@@ -1,0 +1,20 @@
+{
+ "runId": "sol-happy-20261003",
+ "team": "C",
+ "branch": "release/sol-happy-20261003",
+ "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
+ "modelAssignments": {"C1":"gpt-6.1-sol","C2":"gpt-6.1-sol","C3":"gpt-6.1-sol","C4":"gpt-6.1-sol","C5":"gpt-6.1-sol","C6":"gpt-6.1-sol","coordinator":"Inherited model; runtime model change unavailable"},
+ "claims": [
+  {"worker":"C1","path":"9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs","task":"Repair existing deployment rollback identity/capability handling; no contract change"},
+  {"worker":"C2","path":"9to1 Workspace/Home/Source/Home/HomePermissionTrustService.cs","task":"Identity-version binding for session approvals","state":"AWAITING_TEAM_A_ACKNOWLEDGEMENT"},
+  {"worker":"C3","path":"services/Billing/**","task":"Trusted Stripe raw-body signature verification and durable retry-safe event inbox; no prices or balance models","state":"PROPOSED"},
+  {"worker":"C4","path":"9to1 Workspace/Sites/Application/SitePublicIdentityService.cs","task":"Repair domain attachment compile defect and stale verification race; no shared-contract change"},
+  {"worker":"C5","path":"9to1 Workspace/shared/src/Haven.Infrastructure/Providers/CloudModelProviders.cs","task":"Detect truncated provider streams","state":"AWAITING_TEAM_A_ACKNOWLEDGEMENT"},
+  {"worker":"C6","path":"docs/releases/sol-happy-20261003/c6/**; eng/c6-spec-index.py","task":"Independent complete-source coverage index and validation evidence"}
+ ],
+ "requests": ["Team A acknowledge C2/C5 narrow existing shared/native service patches or take ownership and supply tested commits", "Teams confirm existing integrator and accepted baseline; handover required before global acceptance", "Team B reserve browser surfaces only and coordinate Sites/Files shared contracts; C1/C4 patch existing Sites service internals"],
+ "testStatus":"NOT_RUN at this coordination publication; individual baseline runs underway",
+ "evidenceLocation":"Worker commits and docs/releases/sol-happy-20261003; forthcoming exact logs",
+ "deploymentStatus":"NOT_DEPLOYED",
+ "commercialStatus":"NOT_ENABLED"
+}
