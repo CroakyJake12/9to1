@@ -4,7 +4,7 @@ import signal, stat, subprocess, sys, time, types
 
 sys.dont_write_bytecode = True
 P = pathlib.Path
-EXEC_GUARD = "import os,sys;fd=int(sys.argv[1]);token=os.read(fd,1);os.close(fd);assert token==b'G';os.execv(sys.argv[2],sys.argv[2:])"
+EXEC_GUARD = "import os,sys;fd=int(sys.argv[1]);token=os.read(fd,1);os.close(fd);assert token==b'G';os.execvp(sys.argv[2],sys.argv[2:])"
 MAX_EVIDENCE = 256 * 1024 * 1024
 MAX_LOG = 16 * 1024 * 1024
 TOOLS = [
