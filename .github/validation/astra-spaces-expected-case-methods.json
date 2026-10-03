@@ -1,0 +1,3027 @@
+{
+  "status": "Original actual passed tuple preservation plus explicit current source methods; actual passed testId-bound execution mandatory, no source-only execution inference",
+  "originalTRX": [
+    {
+      "path": "trx/ai.trx",
+      "sha256": "3f18a32f37683d3b3dc5f3b4e8ae2ba7a7f66f3f28b0ef12fa2dfe3404962e55",
+      "uniqueMethodTuples": 27
+    },
+    {
+      "path": "trx/application.trx",
+      "sha256": "7d19cc710011fa0c72b20d4088228b47cac40f6c5646c8a02f19d4c7498677d9",
+      "uniqueMethodTuples": 3
+    },
+    {
+      "path": "trx/core.trx",
+      "sha256": "5d848ce2c80abb18ff291880323a00550aa7bd260713a8cbb8ffede6db376502",
+      "uniqueMethodTuples": 78
+    },
+    {
+      "path": "trx/desktop.trx",
+      "sha256": "db71881cc9a93efce12253b86304b121efabfcafe588c6a9e880f54bf8df585d",
+      "uniqueMethodTuples": 173
+    },
+    {
+      "path": "trx/home.trx",
+      "sha256": "ba5ec6ecc83bb121eeb32b03aa714970d128d516f082e3359bf55f1178e07da9",
+      "uniqueMethodTuples": 238
+    },
+    {
+      "path": "trx/infrastructure.trx",
+      "sha256": "139c7d6737d94bb6a56a63bfd1b340d15c2db5f2d8f74ae56b0d8078bd396817",
+      "uniqueMethodTuples": 108
+    },
+    {
+      "path": "trx/mail.trx",
+      "sha256": "9074843c9660dd64eaf136a17dc6766e13242419fcba80cb57b2e5c4b02506ee",
+      "uniqueMethodTuples": 10
+    },
+    {
+      "path": "trx/runtime.trx",
+      "sha256": "6265bf96e370c17d76d578ab536598fca417eb5a9b0f57d87156300603557c4d",
+      "uniqueMethodTuples": 95
+    },
+    {
+      "path": "trx/studio.trx",
+      "sha256": "808253dac2c7adec18313ab36c6399d2dc68c3db565803b8f22df52c895dc152",
+      "uniqueMethodTuples": 1
+    },
+    {
+      "path": "trx/files-desktop.trx",
+      "sha256": "e39ee9d565dc0a910c3c1f4969fc483fd6347543e3bb0aff0f622dfdbef78801",
+      "uniqueMethodTuples": 26
+    },
+    {
+      "path": "trx/files-os.trx",
+      "sha256": "2cb0cbe287109d3e8f813bb70b4872a4875de261de85a7493cb1f59aebed3d81",
+      "uniqueMethodTuples": 33
+    }
+  ],
+  "suites": {
+    "core": [
+      {
+        "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+        "method": "DeleteContextEntryRefusesProtectedCompactSummaryAndKeepsRow"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+        "method": "DeleteContextEntryRemovesRemovableRowAndReturnsTrue"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+        "method": "DeleteContextEntryReturnsFalseForUnknownId"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationScopeTests",
+        "method": "ScopeFactoryPreservesChatAndTeachBoundaries"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationScopeTests",
+        "method": "ScopesMatchOnlyTheirExactConversationHistory"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Chat_AllowsProjectTransition"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Chat_KeepsModeCapabilityInCurrentChat"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Go_RoutesGenericConversationToChat"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Go_RoutesStrongModeIntentToMode"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "ProjectCreation_CarriesCreatorDestinationAndReason"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Built_in_graphs_are_protected_and_custom_graphs_are_validated"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Built_in_spaces_cannot_be_deleted"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Deleting_current_custom_space_returns_to_unscoped_chat"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Files_store_normalized_path_and_explicit_permission"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "First_load_seeds_built_ins_as_normal_space_records"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Fork_copies_configuration_but_gets_independent_identity"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Layout_documents_are_snapshotted_and_forked_independently"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Lifecycle_create_rename_archive_unarchive_and_delete_is_persisted"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Moving_and_archiving_preserve_sibling_positions_and_protect_children"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Reorder_and_nesting_keep_stable_ids_and_reject_cycles"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Update_uses_expected_revision_and_built_in_identity_is_protected"
+      }
+    ],
+    "infrastructure": [
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "DraftBookmarkSearchAndExportsRoundTrip"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "ExistingUnscopedConversationRemainsUnscoped"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "LegacyUnscopedDetachCannotChangeCanonicalMembership"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "NewBranchEditPreservesOriginalBranchAndProjectsEditedContent"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "OverwriteEditStoresRecoverySnapshotBeforeMakingNewVersionCurrent"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "ProductionSchemaIsCreatedForEveryDatabaseInstance"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "RecentAttachmentsAreReturnedAcrossChatsNewestFirstAndBounded"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "SpaceMembershipRoundTripsAndQueriesOnlyMatchingSpace"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSafetyServiceTests",
+        "method": "LockedConversationBlocksRepositoryAndDirectSqlMutationButAllowsErasure"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSafetyServiceTests",
+        "method": "ThreeDistinctConfirmedFlagsLockAtomicallyAndDuplicatesDoNotCount"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Actual_home_binding_and_exact_sql_rows_preserve_content_and_reject_stale_duplicate_or_foreign_root"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Batch_conflict_and_final_denial_roll_back_all_rows_and_caller_list_cannot_retarget"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Home_binding_revocation_during_final_space_check_rolls_back_uncommitted_sql_assignment"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Membership_pages_include_archived_and_temporary_rows_pin_actual_root_and_never_mutate"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Ordinary_cached_content_saves_cannot_reattach_or_remove_guarded_membership"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Real_sql_writer_wait_does_not_preserve_changed_home_session_or_binding"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+        "method": "Actual_graph_resolves_single_owning_stores_and_guards_without_implicitly_binding_existing_data"
+      }
+    ],
+    "application": [
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Actual_committed_checkpoint_with_lost_return_recovers_only_same_operation_receipt_without_another_native_call_or_write"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Actual_metadata_pause_resume_reopen_preserves_same_run_and_controlled_original_handle"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Competing_matching_progress_without_original_operation_receipt_cannot_be_adopted_as_own_checkpoint_commit"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Context_retirement_after_actual_success_preserves_native_and_canonical_ack_but_denies_future_controls"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Native_ack_is_retained_during_actual_settings_lock_cancel_and_metadata_retry_does_not_replay_control"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Returned_original_media_identity_is_retained_after_start_retirement_without_live_control_or_resynthesis"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Saved_offset_cannot_start_replacement_synthesis_and_retired_original_cannot_control_or_erase_pending_ack"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Independently_opened_services_cannot_overwrite_confirmed_playback_progress"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Original_continuation_reads_the_exact_reopened_checkpoint_without_replaying_or_writing"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Plan_progress_pause_and_resume_reopen_the_same_canonical_run_and_conversation"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Stale_foreign_rewind_invalid_and_terminal_commands_preserve_actual_persisted_plan"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Awaited_create_and_update_capture_nested_languages_sources_and_resume_outline"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Continuous_visual_frames_cannot_be_marked_durable"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Create_and_update_preserve_session_identity_and_enforce_revision"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Exhausted_persisted_session_revision_returns_conflict_and_preserves_exact_metadata"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Independent_surfaces_cannot_both_commit_the_same_revision"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Live_listener_defaults_to_ephemeral_audio_and_transcript_retention"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Live_mode_does_not_inherit_conversational_transcript_retention"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Mode_change_captures_selected_languages_before_awaited_canonical_session_read"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Multilingual_session_accepts_more_than_two_locales_and_requires_three"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Public_action_catalog_covers_required_api_names_with_security_metadata"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Reconnecting_session_does_not_claim_the_microphone_is_listening"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Repeated_state_commits_a_revision_without_claiming_new_capture_or_changing_session_metadata"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Same_state_command_cannot_overwrite_a_competing_surface_after_its_original_read"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_requires_opt_in_timestamp_for_ambient_retention"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_service_maps_stale_revision_to_structured_conflict"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_service_requires_explicit_opt_in_before_retaining_ambient_transcript"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_service_starts_on_the_canonical_conversation_with_ephemeral_defaults"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Unsupported_capture_state_and_missing_translation_language_set_never_replace_metadata"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Unsupported_schema_is_rejected_without_overwriting_saved_metadata"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.PlannerAssignmentMutationTests",
+        "method": "Completion_requires_override_and_reopening_required_work_preserves_identity"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.WriteNamedStyleOperationsTests",
+        "method": "Missing_run_materializes_existing_plain_text_without_replacing_block_identity"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.WriteNamedStyleOperationsTests",
+        "method": "Named_style_materializes_formatting_preserves_run_identity_and_editor_undo"
+      }
+    ],
+    "files-desktop": [
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesArtifactIdentityTests",
+        "method": "Owner_identity_survives_restart_and_rename_but_hidden_artifacts_are_unavailable"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesCompatibilityPackageContentSourceTests",
+        "method": "Actual_native_Files_binding_bounds_immutable_package_bytes_and_rechecks_revision_and_Home_ownership"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesExistingStoreHostAuthorityTests",
+        "method": "Actual_Home_configuration_and_existing_UUID_reads_refuse_substitution_without_rewriting_or_adopting"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesHistoricalContentTests",
+        "method": "Retained_content_proof_survives_replacement_restart_but_never_crosses_item_or_trash"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesMediaAssetSourceResolverTests",
+        "method": "Canonical_file_lease_survives_rename_restart_and_original_mutation_then_releases_its_bytes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserAuthorityTests",
+        "method": "Actual_Home_bound_browser_and_folder_read_lease_retain_original_actor_and_deny_stale_or_revoked_sources"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
+        "method": "Native_CUI_lists_canonical_folders_routes_original_package_selection_and_clears_revoked_Home_sources"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
+        "method": "Native_Up_uses_canonical_parent_after_nested_navigation_and_denies_stale_original_folder_without_writes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesNativeChildFolderReadTests",
+        "method": "Actual_Home_canonical_child_ancestry_and_trusted_mapping_keep_original_store_root_and_project_receipts"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesNativeHostCompositionTests",
+        "method": "Native_apps_share_one_actual_Home_authority_graph_and_configuration_only_setup_view"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.FilesStoreEvidenceTests",
+        "method": "Actual_state_UUID_creation_proof_is_stable_and_never_claims_reopened_legacy_or_foreign_data"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeFilesMediaOriginalStoreTests",
+        "method": "Retained_media_read_denies_replaced_store_and_foreign_actor_without_rewriting_original_source"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeFilesSetupCuiSurfaceTests",
+        "method": "Actual_Cui_setup_click_uses_native_choice_and_real_Home_new_empty_binding_without_fake_account"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeFilesSetupCuiSurfaceTests",
+        "method": "Disposing_during_native_picker_cancels_dispatch_without_creating_storage"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeFilesSetupCuiSurfaceTests",
+        "method": "Restored_existing_Files_requires_actual_Home_approval_before_native_Cui_finish_can_bind_it"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeFilesWorkspaceServiceTests",
+        "method": "Explicit_empty_native_Files_setup_persists_real_profile_folders_and_revoked_ownership_denies_Sites"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeFilesWorkspaceServiceTests",
+        "method": "Setup_denies_final_configuration_publication_after_trusted_principal_changes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+        "method": "Delete_dispatch_captures_displayed_revision_instead_of_rereading_a_newer_space"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+        "method": "Delete_dispatches_once_and_denied_refresh_clears_loaded_space_projection"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+        "method": "Missing_owning_delete_callback_disables_native_action_and_preserves_canonical_settings"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Actual_two_owned_stores_preserve_chat_fields_and_reject_changed_space_or_stale_row"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Assignment_preserves_existing_system_managed_conversation_restrictions"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Deletion_recovery_reads_archived_and_temporary_memberships_then_preserves_another_selection"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Destination_archived_while_actual_sql_writer_lease_is_held_denies_assignment"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "New_chat_requires_separate_explicit_SQL_binding_and_preserves_canonical_identity_on_replay"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Pending_deletion_survives_restart_blocks_edits_and_detaches_exact_archived_chat"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Schema_two_discovery_is_read_only_and_explicit_guarded_deletion_preserves_space_identity"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Shared_membership_writer_returns_exact_acknowledged_rows_through_actual_Space_service"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpacesWorkspaceTests",
+        "method": "Actual_two_native_setup_actions_open_one_actor_bound_workspace_without_auto_binding"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+        "method": "Surface_inputs_must_be_a_json_object"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+        "method": "Unknown_fields_are_rejected_instead_of_ignored"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+        "method": "Unsupported_surface_template_is_rejected"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+        "method": "Unsupported_thinking_mode_is_rejected"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+        "method": "Valid_plan_returns_only_reviewable_draft_fields"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceFilesCanvasJourneyTests",
+        "method": "Actual_profile_Space_reference_opens_same_Files_Canvas_after_restart_and_read_only_denies_save"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceFilesGamesJourneyTests",
+        "method": "Actual_Space_Games_inspector_preserves_Moved_project_and_disables_unapproved_writes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceFilesPictureJourneyTests",
+        "method": "Actual_Space_Picture_mount_steps_sandboxed_animation_after_Move_and_revocation_clears_display"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceFilesWriteJourneyTests",
+        "method": "Actual_Space_Write_package_mount_preserves_rich_paragraph_identity_after_Move"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceGeneratedSurfaceRendererTests",
+        "method": "Checklist_space_renders_through_trusted_genui_and_dispose_removes_instance"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceGeneratedSurfaceRendererTests",
+        "method": "Inputs_are_bounded_and_must_be_a_json_object"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Agent_spaces_route_to_tasks_mode_chat_workspaces_with_high_effort"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Non_study_spaces_route_to_configured_workspaces"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Registered_context_preserves_space_instructions_examples_and_declared_file_permissions"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Study_spaces_route_to_the_native_study_product_even_when_forked"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLayoutEditorAdapterTests",
+        "method": "Space_layout_round_trips_through_the_canonical_node_editor_document"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceProductivityArtifactReferenceResolverTests",
+        "method": "Shared_reference_reads_actual_owners_after_Move_and_rejects_stale_or_changed_authority"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Existing_snapshot_does_not_seed_or_reconcile_the_canonical_store"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Revoked_Home_actor_while_waiting_for_actual_settings_lease_cannot_publish_Space_change"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Selection_cannot_commit_after_its_Space_is_archived_between_validation_and_publication"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Two_actual_store_instances_rebase_distinct_creates_from_the_same_captured_registry"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+        "method": "Deactivated_space_cannot_adopt_pending_actual_conversation_read"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+        "method": "Original_native_chat_click_cannot_navigate_after_actual_read_returns_to_retired_selection"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+        "method": "Returning_to_same_space_cannot_adopt_older_actual_conversation_read"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Compact_layout_stacks_picker_and_editor_and_can_restore_desktop_layout"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Conversations_render_real_navigation_rows"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Delete_uses_anchored_popup_and_built_ins_cannot_be_deleted"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Picker_and_editor_expose_real_space_configuration_and_save_draft"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Suggested_space_edits_change_the_draft_but_do_not_save_until_explicitly_requested"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+        "method": "Inspection_does_not_bind_and_explicit_setup_requires_same_displayed_local_actor"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+        "method": "Mounted_setup_inspection_preserves_empty_store_until_explicit_native_button"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+        "method": "Session_keeps_acknowledged_ownership_and_retries_only_failed_audit"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.TasksSpaceHavenSceneTests",
+        "method": "Tasks_space_is_haven_native_and_emits_one_off_work_actions"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactBridgeTests",
+        "method": "Foreign_app_and_artifact_type_are_rejected_before_native_package_IO_even_with_bad_host_policy"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactBridgeTests",
+        "method": "Real_local_profile_package_survives_restart_and_denies_readonly_and_changed_bytes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactBridgeTests",
+        "method": "Replaced_Files_root_directory_is_denied_before_package_writes"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactSnapshotTests",
+        "method": "Save_denies_changed_authenticated_session_while_waiting_for_Files_commit_lease"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactSnapshotTests",
+        "method": "Save_publishes_the_validated_snapshot_when_editor_mutates_during_package_IO"
+      }
+    ],
+    "os": [
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "ActualCanonicalHomeFrameworkChoiceRechecksPolicyAndUsesPrivateRenderedRows"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "ActualNativeManagerMountUsesCanonicalReadAuthorityAndRejectsForeignPrincipal"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "ClosedChooserCancelsActualHeldOwnerWithoutPublishingReturnedFrameworks"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "DefaultSameHomeRegistrationMakesOriginalGoFrameworkActionReachNativeManager"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "ExplicitIneligibleChoiceNeverSubstitutesAnEligibleFrameworkOrOverridesTrust"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "LyingBackendCountIsBoundedByActualEnumerationBeforePublication"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "MissingOriginalRegistryPortDeniesWithoutLegacyResolveOrBackendObservation"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "RenderedKeyboardCloseReleasesOriginalManagerEvenAfterPrincipalRevocation"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "SuspendedOwningBackendObservationCannotAdoptForeignPrincipal"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+        "method": "UnknownOwningRuntimeRemainsUnavailableThenRefreshesWithoutGrantingLaunch"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "ApkHasDeclaredPackageAndMultipleAbisWithoutTrustOrExtensionAuthority"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "BinaryIdentityCannotHideMalformedTrailingChunks"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "BinaryIdentityRequiresMatchingCompleteRoot"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "DuplicateManifestCannotChooseAnArbitraryApplicationIdentity"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "ReadsActualBinaryAndroidStringPoolAndRootAttribute"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "RecognisesMsiDatabaseButDoesNotInventItsUnresolvedArchitecture"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+        "method": "XmlExternalEntitiesAreNotPackageMetadata"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageHealthNativeTests",
+        "method": "ActualFilesOwnedPackageCheckDisplaysActionableHealthWithoutExecuting"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageHealthNativeTests",
+        "method": "FailedFormatStatusDoesNotAdoptReplacedHomePrincipalOnRetry"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "ChangedHomeSessionAfterInspectionRejectsAndReleasesLease"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "ContentDigestMismatchAndDllNeverProducePackageProposal"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "FilesStoreSubstitutionDuringLeaseRevalidationDeniesInspection"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "ForeignOriginalActorIsDeniedBeforeOwnerRead"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "InspectorForwardsExactOriginalActorToContentOwner"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "InspectsActualHeaderAndCanonicalDigestThenDisposesFilesLease"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "MissingOrForeignFilesStoreCannotReadOrExposePackageBytes"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "PeMagicWithoutRequiredOptionalHeaderDoesNotEstablishExecutableFormat"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "SubstitutedFileRevisionIsRejectedBeforeReadingBytes"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+        "method": "UnrecognisedPackageAndOutsideHeaderOffsetFailWithoutExecution"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
+        "method": "IneligiblePreferenceDoesNotSilentlySwitchAndPolicyTrustFailClosed"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
+        "method": "OwnerCannotSubstituteAppAndStaleCanonicalRevisionNeverReachesOwner"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
+        "method": "RetainedProposalCopiesBackendEvidenceAndStillRequiresHumanReview"
+      },
+      {
+        "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
+        "method": "SessionChangedDuringOwnerObservationRejectsProposal"
+      }
+    ],
+    "studio": [
+      {
+        "fullClass": "HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests",
+        "method": "Registered_tool_assertions_require_originating_binding_and_fresh_owning_row"
+      }
+    ],
+    "ai": [
+      {
+        "fullClass": "ActionSchemaTests",
+        "method": "InvalidTypedArgumentsFailClosed"
+      },
+      {
+        "fullClass": "ActionSchemaTests",
+        "method": "SupportedSchemaAcceptsValidInputAndUnsupportedKeywordCannotBeIgnored"
+      },
+      {
+        "fullClass": "InvocationComposeTests",
+        "method": "ComputerUseRequiresExplicitTokenAndExcludesGameAndUnknownTargets"
+      },
+      {
+        "fullClass": "InvocationComposeTests",
+        "method": "EditingTokenRevokesItsInvocationButEditingOutsidePreservesIt"
+      },
+      {
+        "fullClass": "InvocationComposeTests",
+        "method": "EmptyComposeAndTokenDeletionHaveNoHiddenState"
+      },
+      {
+        "fullClass": "InvocationComposeTests",
+        "method": "SearchAndInsertPreserveStableIdentityAtCaret"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "ActionCannotCrossApplicationBoundary"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Boolean_only_legacy_verifier_never_claims_durable_completion"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Compact_selection_is_bar_scoped_never_persists_and_rechecks_availability_before_dispatch"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Confirmed_owner_result_retains_audit_only_finish_without_reexecuting"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "DataMutationAlwaysRequiresPerActionApprovalAndBackupForLiveDatabase"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Delayed_finish_acknowledges_audit_without_overwriting_newer_or_disposed_view"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Finish_of_older_audit_never_replaces_an_already_newer_response"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "FloatingBarStreamsAndCanBeReused"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Legacy_audit_transport_failure_preserves_owner_success_without_inventing_handle"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "LiveDatabaseMutationDoesNotRunWithoutRecoverableBackup"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "MissingHomeApprovalFailsClosed"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Model_requested_action_retains_only_coordinator_issued_audit_observation"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "Post_owner_graph_failure_preserves_observed_success_and_audit_handle"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "ReadOnlyModeIsDefaultAndCannotInvokeTypedMutations"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "ReviewedMutationUsesHomeApprovalTokenAndActionGraph"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "SharedBarKeepsPersistentModeControlAndSemanticModelPickerInCui"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiCoordinatorTests",
+        "method": "StaleRevisionAfterApprovalDoesNotRunAction"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiOwnerApprovalTests",
+        "method": "Descriptor_flag_cannot_enable_owner_delegation_without_real_adapter_or_truthful_review_flags"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiOwnerApprovalTests",
+        "method": "Explicit_owner_delegation_preserves_review_metadata_strips_token_and_waits_for_owner_result"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiOwnerApprovalTests",
+        "method": "Owner_path_still_rejects_readonly_stale_and_changed_context_before_dispatch"
+      },
+      {
+        "fullClass": "NineToOne.Cui.AI.Tests.AppAiOwnerApprovalTests",
+        "method": "Shared_bar_retries_exact_host_action_without_model_regeneration_and_honours_current_readonly_mode"
+      }
+    ],
+    "home-full": [
+      {
+        "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+        "method": "Draft_preview_is_detached_read_only_and_rejects_concurrent_Agent_change"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+        "method": "ReducedMotionAndMissingAnimationAssetsRetainAccessibleStaticIdentityAndActivity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+        "method": "SameCanonicalAgentSurvivesSerializationAndReactsToObservedPresentationEvents"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+        "method": "Save_cannot_persist_assets_injected_while_authorization_is_waiting"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+        "method": "Snapshot_detaches_caller_collections_and_rejects_corrupt_shape"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+        "method": "UnknownSchemaAndAmbiguousTransitionsAreRejected"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Attachment_uses_bytes_captured_before_awaited_owner_authorization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Newly_created_Den_metadata_and_blob_files_are_private_on_Unix"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Owner_revocation_at_blob_publication_leaves_no_blob_or_reference"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Owner_revocation_at_reference_publication_denies_even_when_reference_write_remains_allowed"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Purge_checks_current_Admin_under_lease_and_before_actual_deletion"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Quota_requires_current_Admin_at_final_Save_not_just_Write"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+        "method": "Read_revocation_after_blob_materialization_denies_delivery"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenCommitAuthorityTests",
+        "method": "Interrupted_transaction_blocks_new_writes_until_owning_recovery_runs"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenCommitAuthorityTests",
+        "method": "Revocation_at_admission_or_publication_does_not_commit_or_leave_a_recoverable_replay"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenCommitAuthorityTests",
+        "method": "Submitted_record_is_detached_before_waiting_for_authorization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenModelInstallationAuthorityTests",
+        "method": "Current_Den_model_registration_remains_verifiable_device_local_evidence"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenModelInstallationAuthorityTests",
+        "method": "Den_rechecks_model_write_catalogue_revision_and_quota_at_actual_registration_publication"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenModelInstallationAuthorityTests",
+        "method": "Final_registration_authority_denial_preserves_existing_evidence_and_removes_staging"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+        "method": "Concurrent_first_creation_cannot_replace_the_winning_Den_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+        "method": "Independent_manifest_writer_reloads_revision_before_CAS"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+        "method": "Namespace_admin_revocation_preserves_manifest_and_drops_private_staging"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+        "method": "Read_revoked_during_materialization_does_not_return_record"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+        "method": "Cancellation_while_file_lease_is_held_releases_process_writer_gate"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+        "method": "Denied_object_is_not_materialized_even_when_its_private_file_is_corrupt"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+        "method": "Export_rechecks_current_read_after_snapshot_materialization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+        "method": "List_filters_an_earlier_object_revoked_while_later_objects_are_read"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+        "method": "Shared_blob_collection_requires_current_Den_admin_through_publication"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+        "method": "Fresh_sharing_manifest_and_current_source_read_are_required_on_reopened_peer"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+        "method": "Guarded_sync_retains_two_way_copy_disjoint_merge_and_explicit_conflict_history"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+        "method": "Independent_handles_to_same_root_cannot_enter_sync"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+        "method": "Independent_instances_keep_same_root_writer_exclusion_and_revision_conflict"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+        "method": "Source_read_or_sharing_revocation_at_destination_publication_prevents_copy"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Guard_refusal_and_CAS_conflict_never_notify_observer"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Lost_actual_write_acknowledgement_preserves_bytes_and_stale_retry_does_not_republish"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Observer_reads_actual_persisted_record_without_FileHome_lock_reentry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeArtifactReferenceObjectsTests",
+        "method": "Display_requires_exact_acquired_reference_preserves_unknowns_and_cannot_clone"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeArtifactReferenceObjectsTests",
+        "method": "Preparation_rejects_different_owner_result_and_canceled_acquisition"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeArtifactReferenceObjectsTests",
+        "method": "Unattached_object_cannot_fabricate_a_backed_artifact_reference"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeAutomationDefinitionCommitFenceTests",
+        "method": "Another_definition_or_revision_cannot_use_original_claim_and_Files_config_stays_required"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeAutomationDefinitionCommitFenceTests",
+        "method": "Original_SQL_definition_claim_holds_actual_Home_block_until_owner_releases"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeAutomationDefinitionCommitFenceTests",
+        "method": "Original_receipt_substitution_and_retired_SQL_lifetime_deny_final_acquisition"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+        "method": "Actual_claimed_individual_tuple_lease_holds_revocation_and_checks_without_recursive_permission_reads"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+        "method": "Actual_persisted_full_original_tuple_substitution_denies_without_regrant"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+        "method": "Actual_recorded_owner_outcome_retires_attestation_without_claim_or_effect_replay"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+        "method": "Foreign_issuer_and_changed_actual_principal_cannot_borrow_original_attestation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Actual_caller_revocation_before_final_acquisition_denies_without_reclaim"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Actual_original_ownership_receipt_substitution_before_final_acquisition_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Final_claimed_fence_holds_actual_Home_revocation_until_explicit_owner_release"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Original_configuration_swap_between_capture_and_final_acquisition_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Retired_original_lifetime_or_disposed_fence_never_reacquires_authority"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCompletionAuditRecoveryTests",
+        "method": "Recovery_retains_exact_detached_owner_outcome_across_audit_publication_fault"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreStateStoreTests",
+        "method": "Store_creates_versioned_records_and_rejects_stale_revision"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeCoreStateStoreTests",
+        "method": "Store_reports_corruption_without_replacing_the_original_file"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardCancellationTests",
+        "method": "Install_publishes_observed_success_when_cancellation_races_with_completion"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardCancellationTests",
+        "method": "Refresh_does_not_publish_a_late_result_after_cancellation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardDisposeTests",
+        "method": "Dispose_during_install_preserves_the_backend_outcome"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardDisposeTests",
+        "method": "Dispose_during_refresh_preserves_the_backend_outcome"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardRecoveryTests",
+        "method": "Install_failure_preserves_rows_marks_state_stale_and_requires_refresh_before_retry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardRecoveryTests",
+        "method": "Refresh_failure_keeps_last_observed_rows_but_marks_them_stale_and_blocks_install"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+        "method": "Backend_install_failure_preserves_the_last_observed_updates"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+        "method": "Backend_refresh_failure_is_exposed_as_an_error_without_claiming_inventory"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+        "method": "CUI_exposes_unavailable_backend_state_and_disables_install_all"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+        "method": "CUI_loads_the_authored_surface_and_routes_typed_intent_to_the_domain"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+        "method": "Default_backend_is_observably_unavailable_and_cannot_install"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+        "method": "Refresh_and_install_all_use_the_backend_and_only_observed_inventory"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "A_provider_failure_is_reported_without_hiding_other_catalogues"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "Compare_reports_missing_models_without_collapsing_provider_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "Duplicate_provider_registrations_are_rejected"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "Provider_actions_require_advertised_support_and_preserve_structured_result"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "Search_keeps_provider_scoped_identity_and_unknown_metadata"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "Search_uses_bounded_stable_cursors_and_rejects_stale_provider_revisions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+        "method": "Voice_recommendations_are_mode_specific_and_require_measured_evidence"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+        "method": "AI_layout_requires_opt_in_provenance_and_sources_and_respects_protected_tiles"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+        "method": "Events_keep_authoritative_source_provenance_and_never_invent_records"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+        "method": "Json_layout_and_library_pin_stores_survive_service_recreation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+        "method": "Layout_mutations_are_revisioned_and_AI_controls_are_independent"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+        "method": "Library_filters_permissions_paginates_and_rechecks_before_open"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+        "method": "Navigation_retains_destination_state_and_uses_the_canonical_feature_route_id"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEquationObjectTests",
+        "method": "Canonical_equation_projection_and_source_edit_retain_ids_unknowns_and_noncache_fields"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEquationObjectTests",
+        "method": "Canonical_identity_source_and_bounds_are_required_without_deserializing_new_ids"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeEquationObjectTests",
+        "method": "Nonempty_visual_graph_cannot_be_silently_discarded_by_source_edit_or_generic_clone"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationOriginalActorTests",
+        "method": "Replaced_original_host_principal_denies_before_platform_observation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationOriginalActorTests",
+        "method": "Suspended_platform_observation_cannot_publish_under_replacement_principal"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Actor_change_while_actual_store_lease_is_held_does_not_publish_registry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Canonical_ids_survive_reopen_profile_duplicate_labels_and_quiet_profiles_cannot_launch"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Changed_actual_platform_profile_still_publishes_guarded_revision_and_keeps_original_application_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Duplicate_or_conflicting_stable_keys_preserve_durable_registry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Historical_multiple_entries_are_not_merged_or_selected_by_package"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Native_invocation_source_omits_unknown_games_and_revoked_platform_entries"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Original_launch_resolution_preserves_actual_id_and_denies_switched_session"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Original_refresh_mismatch_denies_before_provider_and_never_initializes_foreign_registry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Original_refresh_provider_suspension_switch_preserves_actual_prior_registry_bytes"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Same_actual_inventory_refresh_and_launch_resolution_preserve_Home_bytes_without_guarded_publication"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Sole_entry_update_retains_canonical_id_and_invalidates_old_launch_revision"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Unchanged_historical_schema_still_migrates_through_actual_guarded_write"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Unknown_authority_duplicate_provider_and_actor_switch_fail_closed"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInvocationCatalogueTests",
+        "method": "Actual_catalogue_requires_canonical_operability_and_rejects_game_anticheat_unknown"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Actual_profile_UUID_replacement_and_remote_actor_fields_deny_original_lease"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Actual_same_path_writer_and_exclusive_process_lock_stay_held_until_disposal"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Cancellation_while_waiting_for_original_gate_does_not_release_someone_elses_lease"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Cancelled_acquisition_guard_releases_both_actual_locks_without_publication"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Dispose_revokes_suspended_actual_guard_before_completion_and_serializes_release"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Observed_out_of_protocol_profile_replacement_never_adopts_new_root"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+        "method": "Same_path_different_store_instance_and_foreign_principal_never_issue_a_lease"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Current_displayed_actor_can_bind_explicit_new_empty_store"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Displayed_setup_actor_cannot_retarget_binding_or_import_after_session_change"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Existing_store_needs_explicit_revision_bound_import_and_new_empty_store_can_bind"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Guard_rejection_preserves_primary_and_reopen"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Initial_profile_principal_change_does_not_publish_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Real_host_principal_is_observed_without_environment_username_claims"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Receipt_recheck_never_reads_owner_evidence_and_rejects_binding_revision_change"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+        "method": "Stable_profile_reopens_but_new_process_session_does_not_inherit_account_or_org"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalReadCompositionTests",
+        "method": "Exact_read_composition_is_pure_and_foreign_components_do_not_create_or_change_Home"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeLocalStoreSetupEvidenceTests",
+        "method": "Inspection_offers_empty_binding_only_for_exact_accessible_evidence_and_never_binds"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Approval_displays_exact_candidate_order_enabled_state_and_before_after_privacy_policy"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Approved_route_does_not_commit_if_real_principal_changes_while_Home_lease_waits"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Confirmed_route_save_retains_exact_audit_retry_without_repeating_guarded_CAS"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Foreign_scope_unsupported_owner_and_changed_approved_arguments_cannot_write"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Legacy_unowned_route_is_preserved_and_never_claimed_by_the_current_profile"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Local_only_filters_before_catalogue_discovery_and_does_not_invent_artifact_versions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "New_profile_is_a_real_owned_draft_and_save_requires_exact_Home_approval_then_disk_CAS"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Original_route_actor_port_creates_only_same_actor_exact_review"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Original_route_actor_port_denies_changed_principal_before_creating_review"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+        "method": "Original_route_input_bounded_actual_enumeration_denies_before_Home_review"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Audit_pending_is_visible_and_finish_dispatches_only_retained_audit"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "CUI_controller_dispatches_category_selection_and_updates_surface_state"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "CUI_document_exposes_all_model_categories_and_accessible_route_actions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "CUI_surface_queues_only_well_formed_typed_candidate_actions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Catalogue_projection_keeps_stable_identity_and_does_not_guess_provider_availability"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Current_provider_model_revision_is_preserved_without_inventing_an_artifact_revision"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Failed_revision_save_preserves_the_draft_for_conflict_recovery"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Invalid_provider_snapshots_fail_closed_and_do_not_become_editable"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Missing_route_candidate_and_invalid_position_return_structured_errors"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Refresh_selects_first_route_and_exposes_empty_state_without_inventing_a_default"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Reorder_and_enable_edits_are_saved_as_one_revision_checked_operation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Resolution_preview_is_delegated_and_trace_is_retained_verbatim"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+        "method": "Unsaved_edits_block_route_switch_refresh_and_preview_until_explicit_resolution"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Exact_original_completion_recovers_audit_without_execution_replay"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Local_only_home_factory_never_discovers_remote_catalogue"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+        "method": "Native_catalogue_operates_without_model_session_and_duplicate_owner_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeControlledLaunchTests",
+        "method": "Unconfigured_launch_authority_cannot_accept_even_a_current_process_or_claimed_host_role"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeDiscoverySessionTests",
+        "method": "Discovery_requires_installed_attestation_service_allowlist_and_current_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeDiscoverySessionTests",
+        "method": "Real_socket_client_requires_designated_host_role_and_revalidates_receipt"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativePeerObservationTests",
+        "method": "Accepted_socket_reports_kernel_peer_pid_and_principal_not_payload_claims"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativePeerObservationTests",
+        "method": "Actual_discovery_transport_denies_forged_identity_and_oversized_frame"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeServiceHostTests",
+        "method": "Process_host_reuses_actual_composition_and_never_grants_missing_required_service"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeSessionLeaseTests",
+        "method": "Real_os_lease_prevents_concurrent_host_and_releases_on_close"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "A_duplicate_owner_registered_during_capture_prevents_original_surface_delivery"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Current_verified_owner_resource_revision_actor_and_live_lifetime_are_all_required"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Malformed_or_duplicate_declarations_are_rejected_and_duplicate_live_owners_are_ambiguous"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Owner_change_during_registration_or_resource_check_denies_delivery"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Registration_captures_mutable_metadata_before_await_and_returns_immutable_collections"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Runtime_capture_rechecks_original_actor_owner_and_resources_after_endpoint_await"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Runtime_capture_uses_same_unique_entry_bounds_and_detached_authored_data"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Runtime_disconnect_cancels_active_and_serialized_waiting_capture_without_delivering_stale_surface"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Unavailable_verifier_never_promotes_declared_widget_or_copied_locator_to_live_owner"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+        "method": "Engine_exposes_all_five_existing_Notes_families_and_rejects_identity_disagreement"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+        "method": "Heading_keeps_canonical_ID_rich_runs_unknown_fields_and_typed_formatting"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+        "method": "Rich_paragraph_version_coexists_with_legacy_without_flattening_or_implicit_upgrade"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+        "method": "Table_and_checklist_edit_canonical_children_and_paste_remaps_nested_IDs_together"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+        "method": "Clear_dismisses_filtered_items_and_retains_history"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+        "method": "Publication_fails_closed_when_source_is_not_authorized"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+        "method": "Publish_history_read_and_deep_link_use_persistent_typed_records"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+        "method": "Resolve_rejects_consequential_action_names_and_unregistered_routes"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeObservedRejectedClaimAuditTests",
+        "method": "Consumed_claim_failure_is_audited_without_issuing_or_restoring_owner_permission"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+        "method": "Compare_and_write_rejects_stale_revision_without_overwriting"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+        "method": "Duplicate_package_ids_and_journal_keys_are_rejected_before_write"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+        "method": "Save_and_read_use_versioned_canonical_device_local_record"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+        "method": "Stale_snapshot_and_oversized_journal_are_rejected_without_truncation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+        "method": "Accept_is_session_scoped_and_exact_scope_is_required_after_restart"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+        "method": "Always_trust_requires_warning_and_trust_is_revoked_before_dispatch"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+        "method": "Block_denies_caller_and_execution_attempts_are_separately_audited"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+        "method": "Ordinary_trust_lasts_thirty_days_but_does_not_cover_elevated_actions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+        "method": "Temporary_action_limit_rolls_down_only_when_user_selected_it"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+        "method": "Unknown_action_policy_fails_closed_and_is_audited"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+        "method": "Actual_new_Den_requires_Home_binding_then_personal_records_work_without_Admin_or_Execute"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+        "method": "Existing_even_empty_Den_is_not_automatically_claimed_as_new"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+        "method": "Ownership_observation_rejects_linked_storage_instead_of_claiming_external_bytes"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+        "method": "Retained_session_observes_namespace_sharing_changed_by_another_real_store"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+        "method": "Retained_session_rejects_changed_Home_binding_receipt"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+        "method": "Retained_session_rejects_changed_authentication_revision_without_new_grants"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Actual_durable_full_tuple_tamper_cannot_recover_a_binding"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Actual_scope_enumeration_stops_at_existing_resource_ceiling_before_any_Home_authorization"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Cancelled_first_attempt_remains_observation_only_and_never_creates_another_request"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Foreign_actual_broker_cannot_submit_or_observe_the_original_opaque_prepared_handle"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Lost_actual_pending_publication_return_recovers_full_original_intent_without_second_authorization_or_Begin"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Original_scope_array_is_detached_and_readonly_observation_cannot_mutate_durable_metadata"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+        "method": "Preparation_and_unattempted_observation_have_no_durable_side_effect"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+        "method": "Bundle_round_trip_preserves_unknown_optional_properties_and_stable_styles"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+        "method": "Compatibility_and_typed_actions_report_conflicts_without_silent_loss"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+        "method": "Concrete_shared_formatting_requires_artifact_execution_and_preserves_optional_properties"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+        "method": "Opaque_owner_revisions_are_compared_without_synthetic_sequence_conversion"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+        "method": "Owner_dispatch_rejects_unsupported_surface_and_partial_atomic_success_preserves_observed_outcome"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+        "method": "Selection_and_paste_detach_unknown_extensions_and_asset_lists"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+        "method": "Case_aliases_cannot_ambiguously_replace_envelope_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+        "method": "Invalid_known_object_content_does_not_claim_paste_support_or_mint_replacement_ids"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+        "method": "Malformed_canonical_collections_fail_explicitly_without_creating_new_ids"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+        "method": "Unknown_bundle_metadata_round_trips_but_paste_cannot_silently_discard_it"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+        "method": "Unknown_style_or_source_metadata_is_explicitly_rejected_instead_of_lost"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Ambiguous_or_incomplete_geometry_rejects_without_rewriting_source"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Explicit_local_and_document_composition_produce_different_correct_placements"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Explicit_pivot_is_fixed_and_unknown_properties_identity_content_and_bounds_survive"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Nonfinite_and_unbounded_transform_values_are_rejected_before_mutation"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Picture_clockwise_rotation_and_flip_match_actual_document_pixel_convention"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Projection_does_not_add_a_second_case_alias_for_existing_geometry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+        "method": "Unknown_geometry_versions_and_implicit_geometry_are_not_reinterpreted"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityInsertionTests",
+        "method": "Insertion_passes_exact_captured_new_IDs_and_preserves_uncertain_commit"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityInsertionTests",
+        "method": "Invalid_or_unsupported_insertion_never_calls_owner"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityRasterTests",
+        "method": "Frame_detaches_source_and_each_reader_and_preserves_row_stride"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityRasterTests",
+        "method": "Frame_rejects_partial_overflow_and_unbounded_dimensions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityStyleTransferTests",
+        "method": "Copy_keeps_only_referenced_definition_closure_and_document_local_identity"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeProductivityStyleTransferTests",
+        "method": "Missing_or_cyclic_named_style_cannot_be_silently_dropped_from_copy"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeRejectedBeginAuditTests",
+        "method": "Admission_store_failure_never_issues_owner_capability_and_recovery_only_records_negative_outcome"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeRejectedClaimAuditTests",
+        "method": "Consumed_claim_failure_is_audited_without_issuing_or_restoring_owner_permission"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Approval_cannot_preserve_changed_actor_revision_acl_or_arguments"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Canonical_resource_access_and_explicit_approval_are_both_required_and_one_use"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Completion_requires_original_issuer_successful_claim_and_reports_actual_outcome_once"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Concurrent_observed_claims_issue_exactly_one_owner_claim"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Missing_actor_unknown_resource_and_duplicate_authorities_fail_closed"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Observed_actor_rejection_is_consumed_and_audit_retry_never_reclaims"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Observed_foreign_handle_is_unavailable_and_does_not_consume_original"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Observed_resolver_exception_preserves_exception_and_only_negative_audit_recovery"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Observed_wrong_input_does_not_consume_and_corrected_retry_claims_once"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Original_actor_admission_denies_switched_actor_before_creating_any_Home_request"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Original_actor_admission_preserves_same_actor_review_and_existing_one_use_claim"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Owner_capability_is_bound_to_issuer_exact_operation_and_claimed_once"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Owner_claim_rechecks_current_actor_acl_and_revision_after_approval_consumption"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Owner_terminal_failures_are_not_relabelled_as_success"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+        "method": "Rejected_owner_claim_cannot_manufacture_completion_and_records_no_execution_success"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+        "method": "Actual_owned_settings_receipt_substitution_before_final_acquisition_denies"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+        "method": "Actual_settings_claim_without_Home_provider_configuration_holds_raw_revocation_until_owner_release"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+        "method": "Completion_between_capture_and_actual_owner_entry_denies_without_reacquiring"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+        "method": "Completion_cannot_reserve_local_terminal_outcome_while_actual_owner_fence_is_held"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+        "method": "Settings_original_lifetime_failure_only_denies_and_disposal_never_reacquires"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+        "method": "Settings_variant_cannot_bypass_mandatory_Files_config_or_match_foreign_UUID_or_issuer"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeStoreImportAuditTests",
+        "method": "Acknowledged_binding_survives_audit_failure_and_retry_never_rebinds"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeTerminalAdviceTests",
+        "method": "Model_action_request_is_rejected_without_execution_or_approval"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeTerminalAdviceTests",
+        "method": "Shared_route_advice_only_receives_selected_context_and_returns_inert_suggestions"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeUnclaimedExecutionAbortTests",
+        "method": "Abort_audit_failure_retains_only_same_negative_outcome_before_or_after_actual_publication"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeUnclaimedExecutionAbortTests",
+        "method": "Actual_claim_removal_wins_before_async_authority_check_and_abort_cannot_report_no_claim"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeUnclaimedExecutionAbortTests",
+        "method": "Issuer_abort_consumes_unclaimed_handle_and_blocks_late_claim_forged_completion_and_foreign_audit"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeVectorShapeObjectTests",
+        "method": "Canonical_shape_projects_same_ids_and_pure_fill_retains_unknown_fields_and_geometry"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeVectorShapeObjectTests",
+        "method": "Insertion_uses_canonical_id_mapping_without_normalizing_retained_geometry_or_names"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeVectorShapeObjectTests",
+        "method": "Missing_nested_identity_foreign_root_unknown_enum_and_nonfinite_geometry_are_not_repaired"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeVersionedNodeGraphRepositoryTests",
+        "method": "Shared_graph_CAS_preserves_active_revision_through_draft_edits_reopen_and_owner_conflict"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+        "method": "Actual_completion_rejection_preserves_known_outcome_without_false_audit_acknowledgement_or_redispatch"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+        "method": "Actual_executing_full_resource_tuple_replacement_before_entry_denies_even_with_same_profile"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+        "method": "Actual_individual_approval_claim_and_held_Home_lease_serialize_canonical_profile_replacement"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+        "method": "Changed_actual_principal_after_claim_denies_final_entry_and_releases_actual_Home_lock"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+        "method": "First_known_correlated_outcome_survives_cancelled_audit_wait_and_finishes_only_original_audit_after_actor_change"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpOriginalActorApprovalTests",
+        "method": "Changed_actual_OS_principal_after_preparation_cannot_create_pending_review_or_dispatch"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpOriginalActorApprovalTests",
+        "method": "Different_same_path_store_or_permission_producer_cannot_be_substituted_for_actual_graph"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeWebMcpOriginalActorApprovalTests",
+        "method": "Preparation_retains_exact_private_request_before_any_Home_submission_and_no_owner_is_inferred"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
+        "method": "Non_origins_never_reach_approval"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
+        "method": "Observed_supported_origin_and_valid_arguments_are_eligible_for_home_approval"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
+        "method": "Unsupported_browser_or_schema_and_invalid_arguments_fail_closed"
+      }
+    ],
+    "runtime": [
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.BackendReferenceTests",
+        "method": "Invalid_cast_does_not_increment_or_dispose_the_existing_counter"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.BackendReferenceTests",
+        "method": "Source_backend_cast_clones_share_real_counter_and_dispose_resource_exactly_once"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiActionCompletionObservationTests",
+        "method": "Actual_click_snapshot_awaits_dispatcher_cleanup_after_disposal_and_retained_click_is_inert"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiActionCompletionObservationTests",
+        "method": "Snapshot_does_not_dispatch_or_wait_for_a_future_click"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiAuthoredAiBarTests",
+        "method": "Packaged_authored_bar_renders_and_submit_uses_host_dispatcher"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiDynamicActionLifetimeTests",
+        "method": "Disposed_scene_cancels_inflight_action_and_retained_button_cannot_dispatch"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiDynamicActionLifetimeTests",
+        "method": "Failed_action_has_safe_visible_status_without_private_exception_text"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiDynamicActionLifetimeTests",
+        "method": "Removed_conditional_branch_cannot_dispatch_and_new_branch_is_wired_once"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiDynamicActionLifetimeTests",
+        "method": "Removed_repeat_button_cannot_dispatch_and_new_item_is_wired_once"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiNativeRenderingTests",
+        "method": "Native_primitive_templates_render_and_pointer_hit_testing_dispatches_action"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiRepeatLayoutTests",
+        "method": "Grid_repeat_places_stable_wrappers_and_updates_bound_coordinates"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiRepeatLayoutTests",
+        "method": "Nested_repeat_collection_changes_retain_captured_parent_scope"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiRepeatLayoutTests",
+        "method": "Repeated_items_have_distinct_layout_and_live_enabled_state"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiSceneAppearanceTests",
+        "method": "Scene_surface_and_canonical_appearance_reach_native_templates"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiSceneHostTests",
+        "method": "Failed_handshake_shows_real_status_without_mounting_authorised_actions"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiSceneHostTests",
+        "method": "Native_window_uses_owning_scene_object_renderer"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiSceneHostTests",
+        "method": "Real_retained_scene_bindings_actions_and_disposal_run_on_native_headless_backend"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Accent_override_replaces_surface_hues_while_off_keeps_them"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Accent_palette_has_three_tiers"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Accessibility_defaults_include_interface_and_code_font_fallbacks"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Accessibility_profile_applies_high_contrast_reduced_motion_and_display_scaling"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Accessibility_semantics_apply_name_description_role_focus_order_and_shortcut"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Accessibility_settings_reject_invalid_display_scales"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "All_four_appearances_resolve_for_each_theme"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "All_theme_names_resolve_correctly"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "All_thirteen_accent_palettes_resolve_for_both_appearance_families"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Applying_global_theme_updates_active_theme_for_subsequent_surface_loads"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Bubble_theme_has_translucent_panels"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Cinematic_theme_has_heavier_shadows"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Contrast_correction_meets_requested_ratio_without_changing_background"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Contrast_critical_palettes_keep_safe_relationships"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Custom_theme_catalog_rejects_shadowing_unknown_bases_and_inheritance_cycles"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Custom_theme_inheritance_merges_element_and_type_defaults_base_first"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "DefaultTheme_Glow_resolves_to_Glow_regardless_of_global"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "DefaultTheme_element_is_parsed_as_theme_scope"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "DefaultTheme_element_loads_and_applies_theme_via_control_loader"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "DefaultTheme_resolves_to_global_default"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "DefaultTheme_with_attribute_value_is_parsed"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Every_theme_resolves_for_every_surface_and_appearance"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Glow_baseline_radius_values_match_original"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Glow_palette_matches_the_pre_theme_baseline"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "High_contrast_palette_has_distinct_nontransparent_focus_and_readable_text_in_every_appearance"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Invalid_theme_name_falls_back_to_global_default"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Loader_reads_global_theme_at_load_time_and_preserves_explicit_scope"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Localization_context_formats_culture_and_selects_rtl_flow_direction"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Native_hosts_read_the_existing_Haven_theme_preference_without_writing_it"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Nested_DefaultTheme_scopes_load_correctly"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Nested_theme_scopes_inherit_and_restore"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Non_glow_themes_change_interaction_treatment_without_changing_text_colours"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Null_or_empty_theme_name_uses_global_default"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Playful_theme_has_opaque_panels"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Retro_theme_has_sharper_corners"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "SurfacePaletteCatalog_For_with_explicit_theme_override_works"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "ThemeScopeStack_cannot_pop_below_initial"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "ThemeScopeStack_push_pop_restores_parent"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Theme_expression_values_are_distinct_per_theme"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Theme_expressions_scale_geometry_motion_and_shadow_distinctly"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Theme_name_catalog_returns_correct_names"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Theme_scope_uses_supplied_default_instead_of_process_global"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Unknown_accent_names_do_not_enable_override"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Unknown_numeric_theme_names_do_not_escape_the_fallback"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiThemeTests",
+        "method": "Unknown_theme_names_fall_back_to_glow"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Authored_component_ids_remain_named_and_automatable_in_the_control_tree"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Axaml_rejected_by_CuiProjectItems"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Binding_values_produce_binding_controls"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Classes_apply_to_Avalonia_controls"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Compact_CUI_elements_lower_to_native_Avalonia_controls"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Compiler_and_runtime_share_the_canonical_component_and_property_registry"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Complex_chat_space_structure_loads"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Container_types_lower_to_their_declared_native_layout_type"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Direct_Page_root_is_valid_CUI_markup"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Effect_blur_uses_native_element_effect_and_backdrop_blur_fails_explicitly"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Grid_attached_coordinates_do_not_replace_a_nested_grids_definitions"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Invalid_markup_produces_diagnostics"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Invalid_parser_diagnostics_prevent_partial_runtime_lowering"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Invalid_two_way_input_preserves_the_source_and_exposes_validation_state"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Layer_order_is_signed_and_inherited_by_descendants"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Linear_and_radial_gradient_values_produce_native_gradient_brushes"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Live_if_condition_switches_branches_when_its_binding_changes"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Missing_document_root_is_rejected"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Named_action_dispatches_its_typed_parameter"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Nested_layout_produces_correct_control_tree"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Object_requires_a_registered_specialised_renderer"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "ParseValue_detects_binding_syntax"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Properties_apply_to_Avalonia_controls"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Resource_references_resolve"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Reused_loader_does_not_resolve_resources_from_a_previous_document"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Runtime_surface_keeps_last_tree_on_failure_and_preserves_input_on_success"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Scrolling_container_uses_native_scroll_viewer"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Selector_collection_snapshots_and_two_way_index_do_not_write_host_refreshes_back"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Selector_rejects_string_or_two_way_items_sources_instead_of_enumerating_characters"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Simple_page_loads_as_Avalonia_Panel"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Transform_components_compose_and_lifecycle_properties_lower"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Two_way_text_input_updates_the_host_value_and_notifies_live_bindings"
+      },
+      {
+        "fullClass": "CakeOS.Cui.Runtime.Tests.CuiToAvaloniaPipelineTests",
+        "method": "Unknown_component_types_fail_with_a_source_mapped_runtime_diagnostic"
+      }
+    ]
+  },
+  "sourceSupplement": {
+    "core": [
+      {
+        "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+        "method": "DeleteContextEntryRemovesRemovableRowAndReturnsTrue",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationRepositoryContextDeleteTests.cs",
+        "sourceSHA256": "1fb90e6e5fbca403891d7822a459b8fac0f17c4d94c6e45880f0f7341d07fdb5"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+        "method": "DeleteContextEntryRefusesProtectedCompactSummaryAndKeepsRow",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationRepositoryContextDeleteTests.cs",
+        "sourceSHA256": "1fb90e6e5fbca403891d7822a459b8fac0f17c4d94c6e45880f0f7341d07fdb5"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+        "method": "DeleteContextEntryReturnsFalseForUnknownId",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationRepositoryContextDeleteTests.cs",
+        "sourceSHA256": "1fb90e6e5fbca403891d7822a459b8fac0f17c4d94c6e45880f0f7341d07fdb5"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationScopeTests",
+        "method": "ScopesMatchOnlyTheirExactConversationHistory",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationScopeTests.cs",
+        "sourceSHA256": "20ab4d48b6a1d17de399129a4d08e58b2c075d71028a0baf2185cc92b3fc9cd6"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.ConversationScopeTests",
+        "method": "ScopeFactoryPreservesChatAndTeachBoundaries",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationScopeTests.cs",
+        "sourceSHA256": "20ab4d48b6a1d17de399129a4d08e58b2c075d71028a0baf2185cc92b3fc9cd6"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Go_RoutesGenericConversationToChat",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
+        "sourceSHA256": "472ed60edda684d3b51fa2c9b46b7f70b1f11630512661536f1a5e13a9f23852"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Go_RoutesStrongModeIntentToMode",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
+        "sourceSHA256": "472ed60edda684d3b51fa2c9b46b7f70b1f11630512661536f1a5e13a9f23852"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Chat_KeepsModeCapabilityInCurrentChat",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
+        "sourceSHA256": "472ed60edda684d3b51fa2c9b46b7f70b1f11630512661536f1a5e13a9f23852"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "Chat_AllowsProjectTransition",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
+        "sourceSHA256": "472ed60edda684d3b51fa2c9b46b7f70b1f11630512661536f1a5e13a9f23852"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+        "method": "ProjectCreation_CarriesCreatorDestinationAndReason",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
+        "sourceSHA256": "472ed60edda684d3b51fa2c9b46b7f70b1f11630512661536f1a5e13a9f23852"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "First_load_seeds_built_ins_as_normal_space_records",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Lifecycle_create_rename_archive_unarchive_and_delete_is_persisted",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Fork_copies_configuration_but_gets_independent_identity",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Files_store_normalized_path_and_explicit_permission",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Layout_documents_are_snapshotted_and_forked_independently",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Deleting_current_custom_space_returns_to_unscoped_chat",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Built_in_spaces_cannot_be_deleted",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Built_in_graphs_are_protected_and_custom_graphs_are_validated",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Reorder_and_nesting_keep_stable_ids_and_reject_cycles",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Moving_and_archiving_preserve_sibling_positions_and_protect_children",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      },
+      {
+        "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+        "method": "Update_uses_expected_revision_and_built_in_identity_is_protected",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+        "sourceSHA256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828"
+      }
+    ],
+    "infrastructure": [
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "NewBranchEditPreservesOriginalBranchAndProjectsEditedContent",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "OverwriteEditStoresRecoverySnapshotBeforeMakingNewVersionCurrent",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "DraftBookmarkSearchAndExportsRoundTrip",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "RecentAttachmentsAreReturnedAcrossChatsNewestFirstAndBounded",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "ProductionSchemaIsCreatedForEveryDatabaseInstance",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "SpaceMembershipRoundTripsAndQueriesOnlyMatchingSpace",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "LegacyUnscopedDetachCannotChangeCanonicalMembership",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+        "method": "ExistingUnscopedConversationRemainsUnscoped",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+        "sourceSHA256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSafetyServiceTests",
+        "method": "ThreeDistinctConfirmedFlagsLockAtomicallyAndDuplicatesDoNotCount",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSafetyServiceTests.cs",
+        "sourceSHA256": "5343fc75e0fc50422aa604a877d341e8185378153aec6193276c1b0bea0c7a66"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSafetyServiceTests",
+        "method": "LockedConversationBlocksRepositoryAndDirectSqlMutationButAllowsErasure",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSafetyServiceTests.cs",
+        "sourceSHA256": "5343fc75e0fc50422aa604a877d341e8185378153aec6193276c1b0bea0c7a66"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Ordinary_cached_content_saves_cannot_reattach_or_remove_guarded_membership",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+        "sourceSHA256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Membership_pages_include_archived_and_temporary_rows_pin_actual_root_and_never_mutate",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+        "sourceSHA256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Actual_home_binding_and_exact_sql_rows_preserve_content_and_reject_stale_duplicate_or_foreign_root",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+        "sourceSHA256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Batch_conflict_and_final_denial_roll_back_all_rows_and_caller_list_cannot_retarget",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+        "sourceSHA256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Real_sql_writer_wait_does_not_preserve_changed_home_session_or_binding",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+        "sourceSHA256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb"
+      },
+      {
+        "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+        "method": "Home_binding_revocation_during_final_space_check_rolls_back_uncommitted_sql_assignment",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+        "sourceSHA256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb"
+      }
+    ],
+    "application": [
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Actual_metadata_pause_resume_reopen_preserves_same_run_and_controlled_original_handle",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Native_ack_is_retained_during_actual_settings_lock_cancel_and_metadata_retry_does_not_replay_control",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Saved_offset_cannot_start_replacement_synthesis_and_retired_original_cannot_control_or_erase_pending_ack",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Actual_committed_checkpoint_with_lost_return_recovers_only_same_operation_receipt_without_another_native_call_or_write",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Competing_matching_progress_without_original_operation_receipt_cannot_be_adopted_as_own_checkpoint_commit",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Context_retirement_after_actual_success_preserves_native_and_canonical_ack_but_denies_future_controls",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+        "method": "Returned_original_media_identity_is_retained_after_start_retirement_without_live_control_or_resynthesis",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+        "sourceSHA256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Plan_progress_pause_and_resume_reopen_the_same_canonical_run_and_conversation",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
+        "sourceSHA256": "ae720cd89e1fa41a23e8166761b55d91b16e5659090491e69121c19ce5d9519e"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Stale_foreign_rewind_invalid_and_terminal_commands_preserve_actual_persisted_plan",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
+        "sourceSHA256": "ae720cd89e1fa41a23e8166761b55d91b16e5659090491e69121c19ce5d9519e"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Original_continuation_reads_the_exact_reopened_checkpoint_without_replaying_or_writing",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
+        "sourceSHA256": "ae720cd89e1fa41a23e8166761b55d91b16e5659090491e69121c19ce5d9519e"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+        "method": "Independently_opened_services_cannot_overwrite_confirmed_playback_progress",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
+        "sourceSHA256": "ae720cd89e1fa41a23e8166761b55d91b16e5659090491e69121c19ce5d9519e"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Live_listener_defaults_to_ephemeral_audio_and_transcript_retention",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Multilingual_session_accepts_more_than_two_locales_and_requires_three",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Continuous_visual_frames_cannot_be_marked_durable",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_requires_opt_in_timestamp_for_ambient_retention",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Reconnecting_session_does_not_claim_the_microphone_is_listening",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Live_mode_does_not_inherit_conversational_transcript_retention",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Public_action_catalog_covers_required_api_names_with_security_metadata",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Create_and_update_preserve_session_identity_and_enforce_revision",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Unsupported_schema_is_rejected_without_overwriting_saved_metadata",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_service_starts_on_the_canonical_conversation_with_ephemeral_defaults",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_service_requires_explicit_opt_in_before_retaining_ambient_transcript",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Session_service_maps_stale_revision_to_structured_conflict",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Independent_surfaces_cannot_both_commit_the_same_revision",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Awaited_create_and_update_capture_nested_languages_sources_and_resume_outline",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Unsupported_capture_state_and_missing_translation_language_set_never_replace_metadata",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Mode_change_captures_selected_languages_before_awaited_canonical_session_read",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Repeated_state_commits_a_revision_without_claiming_new_capture_or_changing_session_metadata",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Same_state_command_cannot_overwrite_a_competing_surface_after_its_original_read",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      },
+      {
+        "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+        "method": "Exhausted_persisted_session_revision_returns_conflict_and_preserves_exact_metadata",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+        "sourceSHA256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b"
+      }
+    ],
+    "files-desktop": [
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+        "method": "Delete_dispatches_once_and_denied_refresh_clears_loaded_space_projection",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeSpacesPageTests.cs",
+        "sourceSHA256": "f4e635690a9cd34d13d418ff7d7b4d3476c408af4cc7312ec2490f5f2361123d"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+        "method": "Missing_owning_delete_callback_disables_native_action_and_preserves_canonical_settings",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeSpacesPageTests.cs",
+        "sourceSHA256": "f4e635690a9cd34d13d418ff7d7b4d3476c408af4cc7312ec2490f5f2361123d"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+        "method": "Delete_dispatch_captures_displayed_revision_instead_of_rereading_a_newer_space",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeSpacesPageTests.cs",
+        "sourceSHA256": "f4e635690a9cd34d13d418ff7d7b4d3476c408af4cc7312ec2490f5f2361123d"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Actual_two_owned_stores_preserve_chat_fields_and_reject_changed_space_or_stale_row",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Destination_archived_while_actual_sql_writer_lease_is_held_denies_assignment",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "New_chat_requires_separate_explicit_SQL_binding_and_preserves_canonical_identity_on_replay",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Pending_deletion_survives_restart_blocks_edits_and_detaches_exact_archived_chat",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Deletion_recovery_reads_archived_and_temporary_memberships_then_preserves_another_selection",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Schema_two_discovery_is_read_only_and_explicit_guarded_deletion_preserves_space_identity",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Assignment_preserves_existing_system_managed_conversation_restrictions",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+        "method": "Shared_membership_writer_returns_exact_acknowledged_rows_through_actual_Space_service",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+        "sourceSHA256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.OwnedSpacesWorkspaceTests",
+        "method": "Actual_two_native_setup_actions_open_one_actor_bound_workspace_without_auto_binding",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpacesWorkspaceTests.cs",
+        "sourceSHA256": "4c82bda9e15141b0a49e0965029fc24d8b2347213826a56286c5121bb006bb7a"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceGeneratedSurfaceRendererTests",
+        "method": "Checklist_space_renders_through_trusted_genui_and_dispose_removes_instance",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceGeneratedSurfaceRendererTests.cs",
+        "sourceSHA256": "65a5829fb29bfc800c1895ca934062370f24b053cab51577cb38979a8a8c2dcb"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceGeneratedSurfaceRendererTests",
+        "method": "Inputs_are_bounded_and_must_be_a_json_object",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceGeneratedSurfaceRendererTests.cs",
+        "sourceSHA256": "65a5829fb29bfc800c1895ca934062370f24b053cab51577cb38979a8a8c2dcb"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Study_spaces_route_to_the_native_study_product_even_when_forked",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLaunchPolicyTests.cs",
+        "sourceSHA256": "968764678a10287dc58d5a47a4ef1305c08f466c42feff39caa8d9e8b7cbd528"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Non_study_spaces_route_to_configured_workspaces",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLaunchPolicyTests.cs",
+        "sourceSHA256": "968764678a10287dc58d5a47a4ef1305c08f466c42feff39caa8d9e8b7cbd528"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Agent_spaces_route_to_tasks_mode_chat_workspaces_with_high_effort",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLaunchPolicyTests.cs",
+        "sourceSHA256": "968764678a10287dc58d5a47a4ef1305c08f466c42feff39caa8d9e8b7cbd528"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+        "method": "Registered_context_preserves_space_instructions_examples_and_declared_file_permissions",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLaunchPolicyTests.cs",
+        "sourceSHA256": "968764678a10287dc58d5a47a4ef1305c08f466c42feff39caa8d9e8b7cbd528"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceLayoutEditorAdapterTests",
+        "method": "Space_layout_round_trips_through_the_canonical_node_editor_document",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLayoutEditorAdapterTests.cs",
+        "sourceSHA256": "fc432a53c92c0ceb93cb59668fd56684076bb20570eaee97cfa71ee6c4cb1fc8"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceProductivityArtifactReferenceResolverTests",
+        "method": "Shared_reference_reads_actual_owners_after_Move_and_rejects_stale_or_changed_authority",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceProductivityArtifactReferenceResolverTests.cs",
+        "sourceSHA256": "1554936f3eeab15465390b23a1fc8e1cc0d5e71a748b415642a93cb6c2918137"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Existing_snapshot_does_not_seed_or_reconcile_the_canonical_store",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceRegistryCommitTests.cs",
+        "sourceSHA256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Two_actual_store_instances_rebase_distinct_creates_from_the_same_captured_registry",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceRegistryCommitTests.cs",
+        "sourceSHA256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Selection_cannot_commit_after_its_Space_is_archived_between_validation_and_publication",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceRegistryCommitTests.cs",
+        "sourceSHA256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+        "method": "Revoked_Home_actor_while_waiting_for_actual_settings_lease_cannot_publish_Space_change",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceRegistryCommitTests.cs",
+        "sourceSHA256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+        "method": "Returning_to_same_space_cannot_adopt_older_actual_conversation_read",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+        "sourceSHA256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+        "method": "Deactivated_space_cannot_adopt_pending_actual_conversation_read",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+        "sourceSHA256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+        "method": "Original_native_chat_click_cannot_navigate_after_actual_read_returns_to_retired_selection",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+        "sourceSHA256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Picker_and_editor_expose_real_space_configuration_and_save_draft",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
+        "sourceSHA256": "c21d0be9142ed79e5bc6706f5550b92a3a4127eb0d6c1cae4ac22dbb767b9bb4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Delete_uses_anchored_popup_and_built_ins_cannot_be_deleted",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
+        "sourceSHA256": "c21d0be9142ed79e5bc6706f5550b92a3a4127eb0d6c1cae4ac22dbb767b9bb4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Conversations_render_real_navigation_rows",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
+        "sourceSHA256": "c21d0be9142ed79e5bc6706f5550b92a3a4127eb0d6c1cae4ac22dbb767b9bb4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Compact_layout_stacks_picker_and_editor_and_can_restore_desktop_layout",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
+        "sourceSHA256": "c21d0be9142ed79e5bc6706f5550b92a3a4127eb0d6c1cae4ac22dbb767b9bb4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+        "method": "Suggested_space_edits_change_the_draft_but_do_not_save_until_explicitly_requested",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
+        "sourceSHA256": "c21d0be9142ed79e5bc6706f5550b92a3a4127eb0d6c1cae4ac22dbb767b9bb4"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+        "method": "Inspection_does_not_bind_and_explicit_setup_requires_same_displayed_local_actor",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesStorageSetupSessionTests.cs",
+        "sourceSHA256": "0a6746bf2683821bdee7741502f2ba01b75d3ca9783bf0f8f3af8ca420d9e9da"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+        "method": "Mounted_setup_inspection_preserves_empty_store_until_explicit_native_button",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesStorageSetupSessionTests.cs",
+        "sourceSHA256": "0a6746bf2683821bdee7741502f2ba01b75d3ca9783bf0f8f3af8ca420d9e9da"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+        "method": "Session_keeps_acknowledged_ownership_and_retries_only_failed_audit",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesStorageSetupSessionTests.cs",
+        "sourceSHA256": "0a6746bf2683821bdee7741502f2ba01b75d3ca9783bf0f8f3af8ca420d9e9da"
+      },
+      {
+        "fullClass": "Haven.Desktop.Tests.TasksSpaceHavenSceneTests",
+        "method": "Tasks_space_is_haven_native_and_emits_one_off_work_actions",
+        "sourcePath": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/TasksSpaceHavenSceneTests.cs",
+        "sourceSHA256": "15190a5214fc2c3d8528f201d45a68d76e0f5715bb57e7c82ee760fc4180cf04"
+      }
+    ],
+    "os": [],
+    "studio": [],
+    "ai": [],
+    "home-full": [
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Observer_reads_actual_persisted_record_without_FileHome_lock_reentry",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+        "sourceSHA256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Lost_actual_write_acknowledgement_preserves_bytes_and_stale_retry_does_not_republish",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+        "sourceSHA256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+        "method": "Guard_refusal_and_CAS_conflict_never_notify_observer",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+        "sourceSHA256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Final_claimed_fence_holds_actual_Home_revocation_until_explicit_owner_release",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+        "sourceSHA256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Original_configuration_swap_between_capture_and_final_acquisition_denies",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+        "sourceSHA256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Retired_original_lifetime_or_disposed_fence_never_reacquires_authority",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+        "sourceSHA256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Actual_original_ownership_receipt_substitution_before_final_acquisition_denies",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+        "sourceSHA256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+        "method": "Actual_caller_revocation_before_final_acquisition_denies_without_reclaim",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+        "sourceSHA256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Original_refresh_mismatch_denies_before_provider_and_never_initializes_foreign_registry",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+        "sourceSHA256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Original_refresh_provider_suspension_switch_preserves_actual_prior_registry_bytes",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+        "sourceSHA256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Original_launch_resolution_preserves_actual_id_and_denies_switched_session",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+        "sourceSHA256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Same_actual_inventory_refresh_and_launch_resolution_preserve_Home_bytes_without_guarded_publication",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+        "sourceSHA256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Changed_actual_platform_profile_still_publishes_guarded_revision_and_keeps_original_application_identity",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+        "sourceSHA256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+        "method": "Unchanged_historical_schema_still_migrates_through_actual_guarded_write",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+        "sourceSHA256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Runtime_capture_uses_same_unique_entry_bounds_and_detached_authored_data",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+        "sourceSHA256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Runtime_capture_rechecks_original_actor_owner_and_resources_after_endpoint_await",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+        "sourceSHA256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "Runtime_disconnect_cancels_active_and_serialized_waiting_capture_without_delivering_stale_surface",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+        "sourceSHA256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390"
+      },
+      {
+        "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+        "method": "A_duplicate_owner_registered_during_capture_prevents_original_surface_delivery",
+        "sourcePath": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+        "sourceSHA256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390"
+      }
+    ],
+    "runtime": []
+  },
+  "qualification": "Unique method tuples, not theory outcomes; all selected wholeclasses unfiltered by method and zeroSkip mandatory."
+}

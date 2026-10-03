@@ -1,0 +1,1084 @@
+{
+  "ownerManifestSha256": "f843d5152461ea3a1b2ccfbcfdebd56be91d69d0bb22fcc2af3d9cbc364aa361",
+  "classes": [
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueOriginalPlaybackTests.cs",
+      "namespace": "Haven.Application.Tests",
+      "class": "MonologueOriginalPlaybackTests",
+      "fullClass": "Haven.Application.Tests.MonologueOriginalPlaybackTests",
+      "sha256": "b7241e41c5054de5fc795983ab1db9d87151ee7a2199c35c854671f48211a3d4",
+      "origin": "Entire actual current22 Application project, unfiltered"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MonologueSessionWorkflowTests.cs",
+      "namespace": "Haven.Application.Tests",
+      "class": "MonologueSessionWorkflowTests",
+      "fullClass": "Haven.Application.Tests.MonologueSessionWorkflowTests",
+      "sha256": "ae720cd89e1fa41a23e8166761b55d91b16e5659090491e69121c19ce5d9519e",
+      "origin": "Entire actual current22 Application project, unfiltered"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/MultimodalSessionStoreTests.cs",
+      "namespace": "Haven.Application.Tests",
+      "class": "MultimodalSessionStoreTests",
+      "fullClass": "Haven.Application.Tests.MultimodalSessionStoreTests",
+      "sha256": "395da7d64d31a2af7dae8649fa85785eb0b6834e5d245da954142e38e33e5c6b",
+      "origin": "Entire actual current22 Application project, unfiltered"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/PlannerAssignmentMutationTests.cs",
+      "namespace": "Haven.Application.Tests",
+      "class": "PlannerAssignmentMutationTests",
+      "fullClass": "Haven.Application.Tests.PlannerAssignmentMutationTests",
+      "sha256": "62b763d731db0b609c713091ebad56098525a1059569c0eeeeebf37d4605d9b0",
+      "origin": "Entire actual current22 Application project, unfiltered"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Application.Tests/WriteNamedStyleOperationsTests.cs",
+      "namespace": "Haven.Application.Tests",
+      "class": "WriteNamedStyleOperationsTests",
+      "fullClass": "Haven.Application.Tests.WriteNamedStyleOperationsTests",
+      "sha256": "14b672630f80455b052179d95a01ccb510cd8837ef3dc85845bf37f0452b61f8",
+      "origin": "Entire actual current22 Application project, unfiltered"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationRepositoryContextDeleteTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "ConversationRepositoryContextDeleteTests",
+      "fullClass": "Haven.Core.Tests.ConversationRepositoryContextDeleteTests",
+      "sha256": "1fb90e6e5fbca403891d7822a459b8fac0f17c4d94c6e45880f0f7341d07fdb5",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/ConversationScopeTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "ConversationScopeTests",
+      "fullClass": "Haven.Core.Tests.ConversationScopeTests",
+      "sha256": "20ab4d48b6a1d17de399129a4d08e58b2c075d71028a0baf2185cc92b3fc9cd6",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/HavenConversationRoutingTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "HavenConversationRoutingTests",
+      "fullClass": "Haven.Core.Tests.HavenConversationRoutingTests",
+      "sha256": "472ed60edda684d3b51fa2c9b46b7f70b1f11630512661536f1a5e13a9f23852",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Core.Tests/SpaceRegistryTests.cs",
+      "namespace": "Haven.Core.Tests",
+      "class": "SpaceRegistryTests",
+      "fullClass": "Haven.Core.Tests.SpaceRegistryTests",
+      "sha256": "88a2f5dc164866e279fe227c8098ecc48c777d15e5ca377cd3e72eebdcb33828",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesArtifactIdentityTests.cs",
+      "class": "FilesArtifactIdentityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesArtifactIdentityTests",
+      "sha256": "63d166eea2214a8673e56d6df83f7a61a2bd3e23a7a1089aa110540b82e482f2",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesCompatibilityPackageContentSourceTests.cs",
+      "class": "FilesCompatibilityPackageContentSourceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesCompatibilityPackageContentSourceTests",
+      "sha256": "97bf566c0cd09b2620fed3a6a042218894de89080ce0f05b6e5bed1f5e839d51",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesExistingStoreHostAuthorityTests.cs",
+      "class": "FilesExistingStoreHostAuthorityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesExistingStoreHostAuthorityTests",
+      "sha256": "f543be9db16d9c4ce51da890896380bac4db5c30193b203e94917754bbf206d6",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesHistoricalContentTests.cs",
+      "class": "FilesHistoricalContentTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesHistoricalContentTests",
+      "sha256": "ff146baaa534019f90e3ade0bc8fa0b57e8924cb5f4f81b6cea15d94213ddfa8",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesMediaAssetSourceResolverTests.cs",
+      "class": "FilesMediaAssetSourceResolverTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesMediaAssetSourceResolverTests",
+      "sha256": "2b61eb1bfd1880a33bfa484bb2e508614958c79f71af4210e9389a55b781021c",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserAuthorityTests.cs",
+      "class": "FilesNativeBrowserAuthorityTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserAuthorityTests",
+      "sha256": "48d095641a6328aee39b053417ec527428bacb7760108280fdb742f4a68c69e4",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeBrowserSurfaceTests.cs",
+      "class": "FilesNativeBrowserSurfaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeBrowserSurfaceTests",
+      "sha256": "7a419351e0fca150127511f870c842705e99c7903df30617936919492e89afb6",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeChildFolderReadTests.cs",
+      "class": "FilesNativeChildFolderReadTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeChildFolderReadTests",
+      "sha256": "deafffd9402fe03385d6dba4c4152e3222a475e124db653cf248b46f0f1bf4fe",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesNativeHostCompositionTests.cs",
+      "class": "FilesNativeHostCompositionTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesNativeHostCompositionTests",
+      "sha256": "c482f6c160b8ca00f38ed8c3eedeb0fc50c922769830a7472820bdffe81b36fd",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FilesStoreEvidenceTests.cs",
+      "class": "FilesStoreEvidenceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.FilesStoreEvidenceTests",
+      "sha256": "f0455a7789926cfe4425a6fd308300462e5fb78da48111ee6481b2bab001bba1",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesMediaOriginalStoreTests.cs",
+      "class": "NativeFilesMediaOriginalStoreTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.NativeFilesMediaOriginalStoreTests",
+      "sha256": "1f152922cd67edf5f0bf0707a22aaeb11d7d47b1770bc9c01a6c67c3c5615798",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesSetupCuiSurfaceTests.cs",
+      "class": "NativeFilesSetupCuiSurfaceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.NativeFilesSetupCuiSurfaceTests",
+      "sha256": "06d8378d21b903e00c965d6d72a5c8a1f8f144fcbd4728a7401ab196b775b10f",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeFilesWorkspaceServiceTests.cs",
+      "class": "NativeFilesWorkspaceServiceTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.NativeFilesWorkspaceServiceTests",
+      "sha256": "90be6702d475d2831a230b9792d8492a533657304891d8d44c958c714e3dabbf",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/NativeSpacesPageTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "NativeSpacesPageTests",
+      "fullClass": "Haven.Desktop.Tests.NativeSpacesPageTests",
+      "sha256": "f4e635690a9cd34d13d418ff7d7b4d3476c408af4cc7312ec2490f5f2361123d",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpaceConversationsTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "OwnedSpaceConversationsTests",
+      "fullClass": "Haven.Desktop.Tests.OwnedSpaceConversationsTests",
+      "sha256": "6d61d2133f06a983f5b266a8c14848ef9c975fdee9be7b31ded36cd6c83032ca",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/OwnedSpacesWorkspaceTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "OwnedSpacesWorkspaceTests",
+      "fullClass": "Haven.Desktop.Tests.OwnedSpacesWorkspaceTests",
+      "sha256": "4c82bda9e15141b0a49e0965029fc24d8b2347213826a56286c5121bb006bb7a",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceEditPlannerTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceEditPlannerTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceEditPlannerTests",
+      "sha256": "7cbddd9b84d7b4f458a87d9282333747544020f1d55097e383322ddb0b202d65",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesCanvasJourneyTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceFilesCanvasJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesCanvasJourneyTests",
+      "sha256": "e14bb8f7733136c509b9819e8f00c992dd47a1ec3793f97109effb6e5e8f1820",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesGamesJourneyTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceFilesGamesJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesGamesJourneyTests",
+      "sha256": "1bd7c637a05425ef03fedcc2bd215dbf773abcd2142080062e49c3a3d3af8600",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesPictureJourneyTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceFilesPictureJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesPictureJourneyTests",
+      "sha256": "60318f8a2b16188708579534ee53a9c192f1ebea3f6cd6f79891ec2ae1079fd1",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceFilesWriteJourneyTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceFilesWriteJourneyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceFilesWriteJourneyTests",
+      "sha256": "3c8a849f7b06ea8dd36069509662918ed0bd46c3d02d8c9465f260a45eeb59f6",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceGeneratedSurfaceRendererTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceGeneratedSurfaceRendererTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceGeneratedSurfaceRendererTests",
+      "sha256": "65a5829fb29bfc800c1895ca934062370f24b053cab51577cb38979a8a8c2dcb",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLaunchPolicyTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceLaunchPolicyTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceLaunchPolicyTests",
+      "sha256": "968764678a10287dc58d5a47a4ef1305c08f466c42feff39caa8d9e8b7cbd528",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceLayoutEditorAdapterTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceLayoutEditorAdapterTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceLayoutEditorAdapterTests",
+      "sha256": "fc432a53c92c0ceb93cb59668fd56684076bb20570eaee97cfa71ee6c4cb1fc8",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceProductivityArtifactReferenceResolverTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceProductivityArtifactReferenceResolverTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceProductivityArtifactReferenceResolverTests",
+      "sha256": "1554936f3eeab15465390b23a1fc8e1cc0d5e71a748b415642a93cb6c2918137",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpaceRegistryCommitTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpaceRegistryCommitTests",
+      "fullClass": "Haven.Desktop.Tests.SpaceRegistryCommitTests",
+      "sha256": "df052efb97ab25d961fad7088f6ae296f870c397ca9bdec23af1dec70de441f4",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesConversationRefreshTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpacesConversationRefreshTests",
+      "fullClass": "Haven.Desktop.Tests.SpacesConversationRefreshTests",
+      "sha256": "6d84eaebff2bdb3263914a5fef89b7ee75fdfecff17bc66b6eab6bfafa74319a",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesHavenSceneTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpacesHavenSceneTests",
+      "fullClass": "Haven.Desktop.Tests.SpacesHavenSceneTests",
+      "sha256": "c21d0be9142ed79e5bc6706f5550b92a3a4127eb0d6c1cae4ac22dbb767b9bb4",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SpacesStorageSetupSessionTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "SpacesStorageSetupSessionTests",
+      "fullClass": "Haven.Desktop.Tests.SpacesStorageSetupSessionTests",
+      "sha256": "0a6746bf2683821bdee7741502f2ba01b75d3ca9783bf0f8f3af8ca420d9e9da",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/TasksSpaceHavenSceneTests.cs",
+      "namespace": "Haven.Desktop.Tests",
+      "class": "TasksSpaceHavenSceneTests",
+      "fullClass": "Haven.Desktop.Tests.TasksSpaceHavenSceneTests",
+      "sha256": "15190a5214fc2c3d8528f201d45a68d76e0f5715bb57e7c82ee760fc4180cf04",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteFilesArtifactBridgeTests.cs",
+      "class": "WriteFilesArtifactBridgeTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactBridgeTests",
+      "sha256": "9389639759a458044f6a326c1b9d6dd09f6497169296c1c922f21c3477788798",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WriteFilesArtifactSnapshotTests.cs",
+      "class": "WriteFilesArtifactSnapshotTests",
+      "namespace": "Haven.Desktop.Tests",
+      "fullClass": "Haven.Desktop.Tests.WriteFilesArtifactSnapshotTests",
+      "sha256": "f2c269791e42d47e49b81295d14a353f503d60f6e0c3f203cec63c33e9ccc2a6",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationProductionRepositoryTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "ConversationProductionRepositoryTests",
+      "fullClass": "Haven.Infrastructure.Tests.ConversationProductionRepositoryTests",
+      "sha256": "9cf37ef3710e9ba14c0fedf7a4dff64f390e4ce750e8689665db72dfd9138421",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSafetyServiceTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "ConversationSafetyServiceTests",
+      "fullClass": "Haven.Infrastructure.Tests.ConversationSafetyServiceTests",
+      "sha256": "5343fc75e0fc50422aa604a877d341e8185378153aec6193276c1b0bea0c7a66",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/ConversationSpaceCommitTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "ConversationSpaceCommitTests",
+      "fullClass": "Haven.Infrastructure.Tests.ConversationSpaceCommitTests",
+      "sha256": "033d473a7506206c9ae725e081d17382f20cdba1c7945c69c7e50a575ab5d7cb",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "path": "9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/HomeDataConversationRegistrationTests.cs",
+      "namespace": "Haven.Infrastructure.Tests",
+      "class": "HomeDataConversationRegistrationTests",
+      "fullClass": "Haven.Infrastructure.Tests.HomeDataConversationRegistrationTests",
+      "sha256": "6fca97fe0e3e3dd1447d0e752aefcb3e070a65cc4eb6ec3328fabbc109690d13",
+      "origin": "Entire reviewed Spaces06 family with current22 continuity"
+    },
+    {
+      "class": "StudioRegisteredToolEvidenceTests",
+      "fullClass": "HavenOS.AIStudio.Tests.StudioRegisteredToolEvidenceTests",
+      "path": "9to1 Workspace/Studio/Tests/HavenOS.AIStudio.Tests/StudioRegisteredToolEvidenceTests.cs",
+      "sha256": "a2dbc881dafd126e9d019ee43ae60f005e29821a33701ce98469b3dd6133e3f9",
+      "namespace": "HavenOS.AIStudio.Tests",
+      "origin": "Complete accepted DesktopMail93 + Files24 + canonical Mail whole new fixtures + unfiltered current Home; exact Root21/winning source"
+    },
+    {
+      "class": "AgentPresentationTests",
+      "fullClass": "HavenOS.Home.Tests.AgentPresentationTests",
+      "path": "9to1 Workspace/Home/Tests/AgentPresentationTests.cs",
+      "sha256": "a9acba0ef14e7bb2f1ce4ff94c8b09216b2c96e38e9b480edec997bbae839794",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "DenAttachmentCommitAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenAttachmentCommitAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenAttachmentCommitAuthorityTests.cs",
+      "sha256": "d93b65278cd5f9eabb39b7c63c3882f259aedde82cad7ffb8e33e5df57ec467d",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "DenCommitAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenCommitAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenCommitAuthorityTests.cs",
+      "sha256": "63809eb238e9fbbb51a0252fd7c9c33b39526eb0e3911206a6bc2bf61f5e4641",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "DenModelInstallationAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenModelInstallationAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenModelInstallationAuthorityTests.cs",
+      "sha256": "8c9ea0ecef02316f0472060619ee629ae0958bf18b80d25b604668195fafda27",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "DenNamespaceAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenNamespaceAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenNamespaceAuthorityTests.cs",
+      "sha256": "8d3060c46cfec2b49b6a24bde384d42ec47e3a1f09ec8338bef8f2342c393ac4",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "DenReadLifetimeTests",
+      "fullClass": "HavenOS.Home.Tests.DenReadLifetimeTests",
+      "path": "9to1 Workspace/Home/Tests/DenReadLifetimeTests.cs",
+      "sha256": "79c90568eed41f1cc6fa66357e8ca9beb930ec29669694e8d1ace09a84b52e0f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "DenSyncAuthorityTests",
+      "fullClass": "HavenOS.Home.Tests.DenSyncAuthorityTests",
+      "path": "9to1 Workspace/Home/Tests/DenSyncAuthorityTests.cs",
+      "sha256": "092eb5e700f92bf95eb1412c5572adffcac65271341d5ea29ce09c67b26d726d",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeActualPersistedWriteObserverTests",
+      "fullClass": "HavenOS.Home.Tests.HomeActualPersistedWriteObserverTests",
+      "path": "9to1 Workspace/Home/Tests/HomeActualPersistedWriteObserverTests.cs",
+      "sha256": "3039752729c10a52003589f075b8da6e4a5c181d505d5d63ce12d29c09da7c8f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeArtifactReferenceObjectsTests",
+      "fullClass": "HavenOS.Home.Tests.HomeArtifactReferenceObjectsTests",
+      "path": "9to1 Workspace/Home/Tests/HomeArtifactReferenceObjectsTests.cs",
+      "sha256": "9a3c72d47d9e5c1cbb2eb20ea361a08380d1d9fba7f9a88dea379eefa422a732",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeAutomationDefinitionCommitFenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeAutomationDefinitionCommitFenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeAutomationDefinitionCommitFenceTests.cs",
+      "sha256": "a451c2bc42aff224d1eeb93db8b6695e6072c8a1393ea9d53a2c6df4a74fd46b",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeClaimedResourceAttestationTests",
+      "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceAttestationTests",
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceAttestationTests.cs",
+      "sha256": "e2928008f1b90c8973b512c1723f4d382a9e8e52d7f8e473169db8fef86ad678",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeClaimedResourceCommitFenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeClaimedResourceCommitFenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeClaimedResourceCommitFenceTests.cs",
+      "sha256": "c93b8f72c118370ef4f6eca5317c06acb0a3eee0f3961972f7ad4e4a4ae6b97f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeCompletionAuditRecoveryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeCompletionAuditRecoveryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeCompletionAuditRecoveryTests.cs",
+      "sha256": "7593abefe2723da0f53fdcd0eb8e5e306a638afb8a6b74bc35748f01db42bfb2",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeCoreStateStoreTests",
+      "fullClass": "HavenOS.Home.Tests.HomeCoreStateStoreTests",
+      "path": "9to1 Workspace/Home/Tests/HomeCoreStateStoreTests.cs",
+      "sha256": "dec11ee5d8bda50d3df996ed8a9e0facc6cd21f6e193b0b27eb6254e351d6f62",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeDashboardCancellationTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardCancellationTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardCancellationTests.cs",
+      "sha256": "a1fbe20d3bf2b812381ead353bc74207aac83d37f2882410151821770aa86399",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeDashboardDisposeTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardDisposeTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardDisposeTests.cs",
+      "sha256": "b69aca31d85997770c2db67119169d741a6f0d7cd5b6d0279d81db4c6f889711",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeDashboardRecoveryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardRecoveryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardRecoveryTests.cs",
+      "sha256": "dbab86c7aeec2a3fb2756225f21a072433b57b5c279333e5fe6217a2aae568dd",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeDashboardTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDashboardTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDashboardTests.cs",
+      "sha256": "517a15011c5957c3b723b59d368fd27f74d5b3f302342b0c9c160c3dec3f1851",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeDiscoverCatalogTests",
+      "fullClass": "HavenOS.Home.Tests.HomeDiscoverCatalogTests",
+      "path": "9to1 Workspace/Home/Tests/HomeDiscoverCatalogTests.cs",
+      "sha256": "92df8c2bce6f21c649a54e6c3c0410a7694224b18a67c209607e02478bed3538",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeEcosystemTests",
+      "fullClass": "HavenOS.Home.Tests.HomeEcosystemTests",
+      "path": "9to1 Workspace/Home/Tests/HomeEcosystemTests.cs",
+      "sha256": "f03145592df32dfc3686e442ad97bae599f012b31196f28e4a515d2f0ef0b168",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeEquationObjectTests",
+      "fullClass": "HavenOS.Home.Tests.HomeEquationObjectTests",
+      "path": "9to1 Workspace/Home/Tests/HomeEquationObjectTests.cs",
+      "sha256": "e1409d8c3ab5d4b6fc8c5929c0dc9ae98b22a5f24116447a62914e367477fe96",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeInstalledApplicationOriginalActorTests",
+      "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationOriginalActorTests",
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationOriginalActorTests.cs",
+      "sha256": "77288eb44b5f0bff47a268f29972d0873b7989cb47f3b8c4b0f5d71ba59c2aa3",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeInstalledApplicationRegistryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeInstalledApplicationRegistryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeInstalledApplicationRegistryTests.cs",
+      "sha256": "415e21ae8e0bd62cc1ae3ff40df3d83ec89666a2400bb2a61a2d4d0301d81c28",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeInvocationCatalogueTests",
+      "fullClass": "HavenOS.Home.Tests.HomeInvocationCatalogueTests",
+      "path": "9to1 Workspace/Home/Tests/HomeInvocationCatalogueTests.cs",
+      "sha256": "251884877db0b43ca2c930d4fc8e6634d0588456106b294cf83297c723c8f48e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeLocalOperationLeaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalOperationLeaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalOperationLeaseTests.cs",
+      "sha256": "3fd5e1edf1e3ac8087941b8a1272218a8cd1d436356a7ade6652169afb8b291c",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeLocalProfileIdentityTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalProfileIdentityTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalProfileIdentityTests.cs",
+      "sha256": "24fa34ab4d2042dfed22432618e4a4ae2d5bb23d5fa01df8cfdb722ee14e34be",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeLocalStoreSetupEvidenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeLocalStoreSetupEvidenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeLocalStoreSetupEvidenceTests.cs",
+      "sha256": "709959ba007efc61463e614e76809e9e295ae94a39db6871ea72957ef1cf328e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeModelPickerFeatureProviderTests",
+      "fullClass": "HavenOS.Home.Tests.HomeModelPickerFeatureProviderTests",
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerFeatureProviderTests.cs",
+      "sha256": "d20f6502e6a557eb24a10721d4a9118e2666ea0d9a9589218627af356dd51a15",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeModelPickerRouteEditorTests",
+      "fullClass": "HavenOS.Home.Tests.HomeModelPickerRouteEditorTests",
+      "path": "9to1 Workspace/Home/Tests/HomeModelPickerRouteEditorTests.cs",
+      "sha256": "28ed79511d0a6ba5f1cb958e6e608ae3b94b318d195292c452c36dce025652df",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativeActionPolicyTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeActionPolicyTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeActionPolicyTests.cs",
+      "sha256": "40bb4eb12a376d51d45d79704522947d8d24d7b9f8e5644733582b015d3b7567",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativeControlledLaunchTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeControlledLaunchTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeControlledLaunchTests.cs",
+      "sha256": "64a4b5c768dfe85138297ed31a28de90c1b9e1dfa399789d52c8b040d7201e12",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativeDiscoverySessionTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeDiscoverySessionTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeDiscoverySessionTests.cs",
+      "sha256": "9f31eb55a44f51a8a9ab2579daac621237dc5dbb0dc7f4ddbb9492e057657939",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativePeerObservationTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativePeerObservationTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativePeerObservationTests.cs",
+      "sha256": "0ef3f4160e43d4f2f56f14a490261fa7ddcff275500eea412e3c722d89fbcc80",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativeServiceHostTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeServiceHostTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeServiceHostTests.cs",
+      "sha256": "59dc16cedcfee5eaff81096305babce87e9754104a5fd5c98d6b6bef4b77b959",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativeSessionLeaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeSessionLeaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeSessionLeaseTests.cs",
+      "sha256": "3d70dc1c706d5fed878ba0379cfa4f625edf61b8019297238becf4d05fb94d95",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNativeWidgetRegistryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNativeWidgetRegistryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNativeWidgetRegistryTests.cs",
+      "sha256": "72a14fa3a5bd14bafa1302da128e1b92e1bc85822fbc3a6f35c1a52a53219390",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNotesSharedObjectsTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNotesSharedObjectsTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNotesSharedObjectsTests.cs",
+      "sha256": "d00cb9c718e2f349446f1ef6c885a58549dd8a2480731e9f564502379f6756a8",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeNotificationFeatureProviderTests",
+      "fullClass": "HavenOS.Home.Tests.HomeNotificationFeatureProviderTests",
+      "path": "9to1 Workspace/Home/Tests/HomeNotificationFeatureProviderTests.cs",
+      "sha256": "f07e4cb806ce5fecc49c52ce37357f3299c9a7797927c3a32354815d593bc27b",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeObservedRejectedClaimAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeObservedRejectedClaimAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeObservedRejectedClaimAuditTests.cs",
+      "sha256": "1a831cf38faecfa8297adb621065d21866d4e29984b68d77b17a60868e3be62a",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomePackageDatabaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomePackageDatabaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomePackageDatabaseTests.cs",
+      "sha256": "a83beef4622e658068b8ba43a1d1102f832e1cb760e5b3ba75b8b3d96c248ced",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomePermissionTrustServiceTests",
+      "fullClass": "HavenOS.Home.Tests.HomePermissionTrustServiceTests",
+      "path": "9to1 Workspace/Home/Tests/HomePermissionTrustServiceTests.cs",
+      "sha256": "7d8b9e5e5db1b9e4987c5e283a9cbe6813960f22c0d20a1745e6a62866bb42aa",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomePersonalDenFactoryTests",
+      "fullClass": "HavenOS.Home.Tests.HomePersonalDenFactoryTests",
+      "path": "9to1 Workspace/Home/Tests/HomePersonalDenFactoryTests.cs",
+      "sha256": "2ec848a3509e5254d82b31e319a3a1ef535a064fa057913456c54497f1ce79bb",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomePreparedResourceReviewTests",
+      "fullClass": "HavenOS.Home.Tests.HomePreparedResourceReviewTests",
+      "path": "9to1 Workspace/Home/Tests/HomePreparedResourceReviewTests.cs",
+      "sha256": "19944ccfde1371bcc2dd9a6c8a4749548301151cefc9f531f86e8c30dfaf5e4e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeProductivityEngineTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityEngineTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEngineTests.cs",
+      "sha256": "77f007be4e841daacb097f733d15104e685cfc428a4a5a78fe91c7db6894554f",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeProductivityEnvelopeTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityEnvelopeTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityEnvelopeTests.cs",
+      "sha256": "8d2b4ba935a34fe104ad4783827ed13258e433c3b38fb806076b618413d30cf4",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeProductivityGeometryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityGeometryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityGeometryTests.cs",
+      "sha256": "1c47a86ee2036f0f17db517c1ee4eb187a5b8dfe221ea806b86c8de019507d6c",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeProductivityInsertionTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityInsertionTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityInsertionTests.cs",
+      "sha256": "b7a07b981753f8b79a00976645cdac2a1455d3de899cf7a3650c9709a21c106e",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeProductivityRasterTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityRasterTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityRasterTests.cs",
+      "sha256": "0e9875a5cde5b4b40c932585d8e907429053a0fa6d70b0cda1de45a7588da2c6",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeProductivityStyleTransferTests",
+      "fullClass": "HavenOS.Home.Tests.HomeProductivityStyleTransferTests",
+      "path": "9to1 Workspace/Home/Tests/HomeProductivityStyleTransferTests.cs",
+      "sha256": "5c0debb5acd891076aad4321be12b2ef4d2e5ebfd3187b84f9d41fe68a6e3007",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeRejectedBeginAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeRejectedBeginAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedBeginAuditTests.cs",
+      "sha256": "41a1fcd6c4b737b141d882e0d8bc6a12df9e0496271fe4b38176f01b6dbee2ff",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeRejectedClaimAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeRejectedClaimAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeRejectedClaimAuditTests.cs",
+      "sha256": "09ef37406c726e512651e8f9d1ee2a637fe5b468920087c7573ad5bf41a6f525",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeResourceOperationBrokerTests",
+      "fullClass": "HavenOS.Home.Tests.HomeResourceOperationBrokerTests",
+      "path": "9to1 Workspace/Home/Tests/HomeResourceOperationBrokerTests.cs",
+      "sha256": "76e58f338927449f62e5570d23d96c7c0e9ea970c407b73146a6c7336d6357a7",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeSettingsClaimedResourceCommitFenceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeSettingsClaimedResourceCommitFenceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeSettingsClaimedResourceCommitFenceTests.cs",
+      "sha256": "8dadc77796cd400636913622716f78248dc4df6e9e7e82340453432f5053ad41",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeStoreImportAuditTests",
+      "fullClass": "HavenOS.Home.Tests.HomeStoreImportAuditTests",
+      "path": "9to1 Workspace/Home/Tests/HomeStoreImportAuditTests.cs",
+      "sha256": "ac549b92f504917d9183cf28abaa54a317b098e01a0afb5ca40ea700427ded31",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeTerminalAdviceTests",
+      "fullClass": "HavenOS.Home.Tests.HomeTerminalAdviceTests",
+      "path": "9to1 Workspace/Home/Tests/HomeTerminalAdviceTests.cs",
+      "sha256": "9f8aa7f07244e52f8b4e14ac4e6187eb919f1ea2593f76b70bbbdf074114f7af",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeUnclaimedExecutionAbortTests",
+      "fullClass": "HavenOS.Home.Tests.HomeUnclaimedExecutionAbortTests",
+      "path": "9to1 Workspace/Home/Tests/HomeUnclaimedExecutionAbortTests.cs",
+      "sha256": "8c1832ce23dd8ecb041936b581ed6e1cabd2c92aec99cb9061b99c777c03d4b0",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeVectorShapeObjectTests",
+      "fullClass": "HavenOS.Home.Tests.HomeVectorShapeObjectTests",
+      "path": "9to1 Workspace/Home/Tests/HomeVectorShapeObjectTests.cs",
+      "sha256": "eb7ac43e027b462ecbd9c82846b56774c005539175e45dbbc5d4738766e63bd0",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeVersionedNodeGraphRepositoryTests",
+      "fullClass": "HavenOS.Home.Tests.HomeVersionedNodeGraphRepositoryTests",
+      "path": "9to1 Workspace/Home/Tests/HomeVersionedNodeGraphRepositoryTests.cs",
+      "sha256": "dfb20fca453c42eb41bf01351f5feaf6711e26f4fc2123d36996ddf2d85fc742",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeWebMcpBrowserLeaseTests",
+      "fullClass": "HavenOS.Home.Tests.HomeWebMcpBrowserLeaseTests",
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpBrowserLeaseTests.cs",
+      "sha256": "4c80be51e057179794edd3e09381e5e30109feb3019abb8b0d85851f0285efca",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "HomeWebMcpOriginalActorApprovalTests",
+      "fullClass": "HavenOS.Home.Tests.HomeWebMcpOriginalActorApprovalTests",
+      "path": "9to1 Workspace/Home/Tests/HomeWebMcpOriginalActorApprovalTests.cs",
+      "sha256": "dd346d2fa3e8d072bf370c98b2b650bdb4ef3e483200e5c222951813d411b4f6",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "class": "WebMcpInvocationTests",
+      "fullClass": "HavenOS.Home.Tests.WebMcpInvocationTests",
+      "path": "9to1 Workspace/Home/Tests/WebMcpInvocationTests.cs",
+      "sha256": "242adfc44883887f116f4f86e1dabc9e4ef1a70f934ddaf693c7054a94261b60",
+      "namespace": "HavenOS.Home.Tests",
+      "origin": "Entire actual current22 Home61 project, unfiltered"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityOriginalFrameworkChoiceTests.cs",
+      "class": "CompatibilityOriginalFrameworkChoiceTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityOriginalFrameworkChoiceTests",
+      "sha256": "99ca7b90ecbcce7e184c4e930f58e5329a60dcea1ed3241e2b01afd0d5015d26",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageFormatTests.cs",
+      "class": "CompatibilityPackageFormatTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageFormatTests",
+      "sha256": "6ae36418075cda03999a00e48389fd0d4a0c09f839da9ad9d2af8007b1f4bc03",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageHealthNativeTests.cs",
+      "class": "CompatibilityPackageHealthNativeTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageHealthNativeTests",
+      "sha256": "926b4323aa17fa03169940626d252608e3d15e2bd7943fa58f311a27f4b4bc44",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityPackageInspectorTests.cs",
+      "class": "CompatibilityPackageInspectorTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityPackageInspectorTests",
+      "sha256": "7fe86989b79785b183a11ac6d794de1b545e63354e90e161fa3b9ab9872db381",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    },
+    {
+      "path": "9to1 OS/tests/NineToOne.Os.Shell.Tests/CompatibilityRoutingTests.cs",
+      "class": "CompatibilityRoutingTests",
+      "namespace": "NineToOne.Os.Shell.Tests",
+      "fullClass": "NineToOne.Os.Shell.Tests.CompatibilityRoutingTests",
+      "sha256": "a30ab4945b7d57e6997947bae066db33352e8cec4dfea297b637349ba8e91b55",
+      "origin": "Actual current22 retained entire accepted Files14 owning family"
+    }
+  ],
+  "consoleHarness": {
+    "path": "9to1 Workspace/Files/CUI.Tests/Program.cs",
+    "sha256": "b837c0a84fc24fff5e9093577e46147bb8690a74b9d3530a8aea75767f9e050d",
+    "requiredMessage": "Files CUI domain contract checks passed, including actual interprocess lease/CAS/cancellation/recovery."
+  },
+  "data22Manifest": "/workspace/astra-source/worker3-data-native-fixtures-final04/joined-source22.json",
+  "data22ManifestSha256": "1747fee9e62509924a802f25d6c7cabb3349f066912ef2dd0d360600a50f0715",
+  "forms25Manifest": "/workspace/astra-source/worker3-forms-final-join25-04/joined-source25.json",
+  "forms25ManifestSha256": "3e3e7b9563d97d4ab9d3767f7f5caceb332c21b0d4bbcb2be7a7f9b02b2bba62",
+  "forms26ManifestSha256": "3b5faebb8af1cfaed20c643b94ad5d3a1b3336a9f8fd60571decd7d9419e66db",
+  "forms26OwnerRows": [
+    {
+      "source": "/workspace/astra-source/worker3-forms-host-session-successor/FormPublicationService.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormPublicationService.cs",
+      "sha256": "2ebf75539a820f00197ec80891a114eda5e868174986c59f505e3b8037f31438",
+      "expectedOriginalSHA256": "2cff1f4665082ea77555214b57b1a990343d0d55c452c32f1507d8ba3be05d2c"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-final-join25-03/FormPublicationOriginatingActorTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationOriginatingActorTests.cs",
+      "sha256": "aa7b95558251c295f849b0ea38c36033f42419812f0d1f4f1fd456ca877bfc01",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormPublicationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationTests.cs",
+      "sha256": "e926b6c3e26dc93155f32066b7c9730694510b54ac380491e674ecf284d5efdf",
+      "expectedOriginalSHA256": "5593e48f4bd171baeb404f2137a2ade823262bc6640861f90f1d52212566cdc8"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormAuthoringWorkflowTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormAuthoringWorkflowTests.cs",
+      "sha256": "6ad0808410c7b8c15394bc90da8a0b0fed95ef937ab4e0b6b6d1601e669a483e",
+      "expectedOriginalSHA256": "d8aa664848bde41d2807f1058a044449fad80f92b96fadd3b546cca5807e3c54"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormGraphReferenceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormGraphReferenceTests.cs",
+      "sha256": "efec344e536f3cbcb98633e9726df8364da703310071aa680c3ad3eb5f9f4c72",
+      "expectedOriginalSHA256": "986a418eda078e75c9fe3a23b4cf5715666c443713c0c97007c6e3c4cc834582"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormResponseSessionTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormResponseSessionTests.cs",
+      "sha256": "a9ab42186095b5cdf65644dc20962da0013eafce9d0c0b58009dbce5b6b8d7da",
+      "expectedOriginalSHA256": "2809a8d5e3edb80938540f19f015f8bd7b40a85867ce3253db8be90e5d5decc9"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormLocalStoreAuthorityTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormLocalStoreAuthorityTests.cs",
+      "sha256": "deb0abb8824be3a78a8e3fe2b88c2f89843b34c69d4be6dd97ce071b88a1ddc8",
+      "expectedOriginalSHA256": "2696e13f498e05e7c6c9344c940d76dc6b1d892c05f1e3eb4c3630542bbf76d6"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormDataPreparationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormDataPreparationTests.cs",
+      "sha256": "dcf0bf4ec33978f7f21b00fe551142e1609cf1bf5cb47e1e83bae4986fcd75f9",
+      "expectedOriginalSHA256": "7e32eed3aa978f26c4f96b8b5166cad3c07027a2968c201f332cb9212ddb685d"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspaceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormsCuiWorkspaceTests.cs",
+      "sha256": "2d86ab1d7dbc5626f0b346d839775c8a828e490434f7453ded17883fcaa8477a",
+      "expectedOriginalSHA256": "da30f7d47779e89dd90d8366470db1d0dd052a85f6d0e86e48b289a438f0145f"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeResponseSurfaceTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativeResponseSurfaceTests.cs",
+      "sha256": "3115d29f06cea487aca5b677ea0cc76c2e80968d95bea86c9345c7ee440c4d83",
+      "predecessorSource": "/workspace/astra-source/worker3-next-forms-publication-actor/FormNativeResponseSurfaceTests.cs",
+      "predecessorSha256": "7052236c16fb85b9ca7c9a15ff6d2f0b758937b404032038320443df9f7b2c7d",
+      "expectedOriginalSHA256": "1fe6768e4dc3fb2cb33eae1429ec0d88cc9a2f9413860bcb09fdff54e546fd5e"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormResponseSessionService.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormResponseSessionService.cs",
+      "sha256": "bd31e5f85d504eb0518ef63dbe61139092708816bd81cf3c6e4e044b83caede2",
+      "expectedOriginalSHA256": "b78a1f14a6435829038a06829cd7ddccab15d3cca28a40cdacbac50eeff692e9"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsCuiWorkspace.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
+      "sha256": "cf9ab455ad0f1a14fd06bbf6efa09566d7ce4679b84b2ccaad96e7f8add7c2b8",
+      "predecessorSource": "/workspace/9to1/9to1 Workspace/Forms/CUI/FormsCuiWorkspace.cs",
+      "predecessorSha256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381",
+      "expectedOriginalSHA256": "5e8d398b2a72375749a5818f23d6845ea1dc9575838433bcf5bdf72abcf0c381"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-coherent-owner/FormsWorkspace.cui",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
+      "sha256": "1eac413aa482a06099a6cf20b683ccfc946e7f99e22f4df82e1f538a45259703",
+      "predecessorSource": "/workspace/9to1/9to1 Workspace/Forms/CUI/UI/FormsWorkspace.cui",
+      "predecessorSha256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749",
+      "expectedOriginalSHA256": "725b59680ea53babd543b6fb8f02dc4ffb43ea1dfcb0f9144b9c098efd333749"
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-final-join25-04/FormNativePageOrderOwnerTests.cs",
+      "sha256": "b93c46adbcad0a5a2e7f1b14fbbc1a1f070e6049e5b5920563db135a37168139",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativePageOrderOwnerTests.cs",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativeHomePublicationResponseTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativeHomePublicationResponseTests.cs",
+      "sha256": "47df8c65fe3a5c943236df4c750cedb882a5e0ea8152d82003d18422e89bd580",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker3-forms-host-session-lifetime-03/FormHostSession.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Application/Forms/FormHostSession.cs",
+      "sha256": "0865b32c1275e3f1227f42875d7ea98930b33cd03564549a33221212c31d54b6",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker1-forms-publication-di-owner16-lifetime03/FormPublicationServiceCollectionExtensions.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Infrastructure/DI/FormPublicationServiceCollectionExtensions.cs",
+      "sha256": "7d8d37345354d9af1181473b3917463db47cec1cb75b3ef43f338b781d807d90",
+      "expectedOriginalSHA256": null,
+      "owner": "worker1_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker1-forms-publication-di-owner16-lifetime03/FormPublicationRegistrationTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Infrastructure.Tests/FormPublicationRegistrationTests.cs",
+      "sha256": "4737ee8b8fc4c1d91a34250e98606ef812469bb1d050362880a7ebd3418d06d8",
+      "expectedOriginalSHA256": null,
+      "owner": "worker1_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/App.axaml.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
+      "sha256": "70e64e5f4fae4994ac934d2d3ebd0a9a1d12e87a4f6cae10943640c5b3dd38e5",
+      "expectedOriginalSHA256": "07023b77e901d035a787878ed50335e52f942618bbda11d731873b14da4a0aa5"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/MainView.Forms.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Interface/Shell/MainView.Forms.cs",
+      "sha256": "bd1eeb4bb1ee79ebd5ea8143cdd2cef9e47de438604114f72d992b6e6c91f090",
+      "expectedOriginalSHA256": "279749fa7613019998899bc59a7db49d99486cdad3cccc15f2524c5283de23ae"
+    },
+    {
+      "source": "/workspace/astra-source/worker2-next-forms-native-host-05/FormsNativeWorkspaceHost.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Forms/FormsNativeWorkspaceHost.cs",
+      "sha256": "1e8c8d84c957149bfe9e112f56bdc0ed09f8e3cd53ec29762089548bd7b0d87a",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker2-forms-closed-response-fixture-06/FormsNativeWorkspaceHostTests.cs",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsNativeWorkspaceHostTests.cs",
+      "sha256": "a512944ebee45dd09dc2f93eb0a024b3b81f52902c27a1675521172553660c49",
+      "expectedOriginalSHA256": null
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-owning-home-metadata-draft/HavenOS.Forms.CUI.Tests.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/HavenOS.Forms.CUI.Tests.csproj",
+      "sha256": "41dbfd35a57ca4be65f18cab872af621512e1285073480cb04fd3766ea01824c",
+      "expectedOriginalSHA256": "340549aa066e889dd6bd3bf124a18e575c2ae935602e896a0b9985ea0df9107a",
+      "owner": "worker4_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-desktop-metadata-draft-sol1/Haven.Desktop.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/shared/src/Haven.Desktop/Haven.Desktop.csproj",
+      "sha256": "9f51ce2d56a58a32a4c4a2af1ead840c0240b803044344c885ba276eef209519",
+      "expectedOriginalSHA256": "381476901cccff57fcb9f461c6d4f272ae8122ea65fa6d4fd8dfed32ef632798",
+      "owner": "worker4_sol"
+    },
+    {
+      "source": "/workspace/astra-source/worker4-forms-desktop-metadata-draft-sol1/Haven.Desktop.Tests.csproj.source",
+      "target": "/workspace/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+      "sha256": "6f1b27741cf838ca69b32b00872aa44f18a5c95c302bafcecbff73bb8db34064",
+      "expectedOriginalSHA256": "5df3a3ae97cba561edcdc20fab14283cc8ce563f8fbcb57e21d5a5533abcde9e",
+      "owner": "worker4_sol"
+    },
+    {
+      "target": "/workspace/9to1/9to1 Workspace/Forms/Tests/CUI/FormNativePreviewTests.cs",
+      "expectedOriginalSHA256": "95d6c2024cac10f79132526adf8a67de9698006dd946697eba3e4de165345fc6",
+      "source": "/workspace/astra-source/worker3-forms-native-awaited-successor-06/FormNativePreviewTests.cs",
+      "sha256": "f123db0393fbb5dc30d1498d6d68a40c5853150ce85e31ac77abf38cb616ad36"
+    }
+  ],
+  "joined95": "joined-source95.json",
+  "dependencyPins": [],
+  "status": "SOURCE ONLY UNRUN current22 Spaces25 + full acceptedFiles24 + currentHome61 + Application5 + Studio1 exact union",
+  "sourceComparisons": []
+}
