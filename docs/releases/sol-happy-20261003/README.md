@@ -219,6 +219,28 @@ coverage. Shared Dashboard overlap and missing painted-control accessibility
 semantics remain failed, alongside services, cross-client and full browser gates.
 This browser source is not incorporated into the release branch.
 
+The [Home proposal review](c6/home-proposal-review/review.json) verifies Team B's
+exact two-line Dashboard grouping proposal and preserved eight layout assertions.
+Its owning red/green results remain source-bound evidence. C6 independently ran
+the unchanged accessibility runner against the same immutable browser output:
+five required cases failed and three keyboard cases remained NOT_RUN, with no
+startup error and all 180 output hashes unchanged. Real painted controls are
+absent from Chromium's accessibility tree. Owner source adoption and the new
+independent headless layout replay remain pending; mouse success does not close
+these accessibility failures.
+
+The reusable maintained Worker fixture is now source-bound at
+`aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on
+`team-c/sol-happy-c2-browser-fixture`. C1 independently passed nine real process
+controls and actual Workerd/D1 bootstrap, with five kernel-owned child reaps,
+strict disappearance, temporary-secret removal and released ports. The preceding
+unsupported launcher failure remains retained. Each receiver launches its own
+isolated fixture and generates its own private credentials. The supported web
+callback is `https://client.example.test:5096/callback`, using isolated HTTPS and
+browser-local host resolution; issuer/API use loopback 8798. Actual browser OAuth,
+profile/session journeys and the .NET signing/authentication-revision contract
+remain unverified. These fixture files do not change production issuer bytes.
+
 The requested [original custody followup](c6/custody-followup/README.md)
 verifies Graph02, Forms12, Home14 part05 and Canvas11 part00. Root repeated all
 four outer/member CRC/SHA checks with zero errors. Graph02's original Desktop
