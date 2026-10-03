@@ -1,0 +1,31 @@
+{
+  "head": "fe96d5004a8a608967186000da1f5deda31df470",
+  "base": "640f63e08f83a2da6a28e3f370199438d0430003",
+  "files": [
+    {
+      "path": ".github/scripts/astra-organisation-full-owning.py",
+      "bytes": 29147,
+      "sha256": "a06a6b127c815ec6a83d9b7110538b7c19db1fd446c67c754324311522b4f9e9"
+    },
+    {
+      "path": ".github/scripts/astra-original-native-session-drain.py",
+      "bytes": 6448,
+      "sha256": "c36fe2e48e35fe3c90826e5ac01daafaa8178856b619ae6ef5fba517a4a61ac6"
+    },
+    {
+      "path": ".github/scripts/astra-original-session-subreaper-tests.py",
+      "bytes": 9290,
+      "sha256": "00a9fce72580ae7ee9d24b54a619d18a2e190c55ce2be4ef031621367c3b2168"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6807,
+      "sha256": "9d12b9b8b6f9ff92356b1223f313d3a9dd53f6c949037255471581d7c65b71a9"
+    }
+  ],
+  "command": "ASTRA_SUBREAPER_TEST_EVIDENCE=/workspace/team-c/evidence/c3/admin-sdk03/subreaper-controls-attempt4 python3 .github/scripts/astra-original-session-subreaper-tests.py",
+  "exitCode": 0,
+  "unitControlsExecuted": 8,
+  "logSha256": "346bf285662409be2a030757d5eab57a8790e62d1c1b0756152d353f270bc8a7",
+  "qualification": "Real Linux tooling controls only; original complete SDK/PDB/source/runtime checks preserved, no fullSDK run at proposal, existingcut stale pendingreviewedsuccessor/rootexternalpin. Historicalfailures untouched."
+}
