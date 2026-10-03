@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using System.Text;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Haven.Application;
 
@@ -16,6 +17,15 @@ public interface IHomeNativeWidgetRuntimeEndpoint
 {
     ValueTask<HomeNativeWidgetSurface?> CaptureAsync(HomeNativeWidgetCaptureRequest request,
         CancellationToken cancellationToken);
+}
+
+/// <summary>Actual owner backend preserves the exact authenticated actor throughout its data reads.
+/// A connected native owner client requires this port and independently authenticates the original
+/// actor and declared source scopes; wire identity fields alone never grant access. No ambient fallback.</summary>
+public interface IHomeNativeWidgetOriginalActorRuntimeEndpoint : IHomeNativeWidgetRuntimeEndpoint
+{
+    ValueTask<HomeNativeWidgetSurface?> CaptureForActorAsync(HomeNativeWidgetCaptureRequest request,
+        AuthenticatedResourceActor expectedActor, CancellationToken cancellationToken);
 }
 
 /// <summary>Detached bounded owner-authored data. This is not a renderer or action capability. The
@@ -46,6 +56,15 @@ public sealed class HomeNativeWidgetSurface
         if (entries.Length > 256 || entries.Any(pair => string.IsNullOrWhiteSpace(pair.Key) ||
             pair.Key.Length > 256 || pair.Value.ValueKind == JsonValueKind.Undefined))
             throw new InvalidDataException("Widget binding data must be bounded and explicit.");
+        // Callers must keep source documents alive throughout capture, including Clone below.
+        // Inspect raw UTF-8 lengths without materializing strings or cloning unbounded owner values.
+        long rawValueBytes = 0;
+        foreach (var pair in entries)
+        {
+            rawValueBytes += JsonMarshal.GetRawUtf8Value(pair.Value).Length;
+            if (rawValueBytes > 262144)
+                throw new InvalidDataException("Widget binding data exceeds the surface bound.");
+        }
         var detached = entries.ToDictionary(pair => pair.Key, pair => pair.Value.Clone(), StringComparer.Ordinal);
         var bytes = JsonSerializer.SerializeToUtf8Bytes(detached);
         if (bytes.Length > 262144) throw new InvalidDataException("Widget binding data exceeds the surface bound.");
