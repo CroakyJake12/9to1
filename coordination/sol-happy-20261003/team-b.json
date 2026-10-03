@@ -3,7 +3,7 @@
   "team": "B",
   "thread": "Terra-Form",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
-  "branch": "team-b/sol-happy-browser-20261003",
+  "branch": "team-b/astra-browser-validation-20261003",
   "baseline": "98a08827c9fbc486fe987da73f4aee8398120d31",
   "baselineAcceptance": "UNVERIFIED; verified remote main identity, acceptedHead remains null",
   "specification": {
@@ -90,30 +90,46 @@
     "Team C independent reviews reproduced3P2 holds; B-owned fixes now published f38ffac+d4c1816 on team-b/astra-browser-validation-20261003@830f747 atop provisionala63. Please independentlyreview fixed commits/tests before preparatory integration; original4b/a915 hold evidence remains superseded history, not hidden. Final exact committed publish/browser evidence to follow.",
     "Team C: review newerB9697281 nativeinputguards andc74c73c realSDKkeepalive changes atop acknowledged830f747 fixes; actuallocalruntime nowloads, but pointer/layout/accessibility and realservices/finalbrowseracceptance remainblocked. No globalintegration/acceptedhead claim.",
     "Team A precise sharedHome/CUI request: actualbuiltChromiumHomeDashboard childpanels overlap. Unchangeda63 CuiControlLoader.cs476 createsPanel and482-483 addsdirectsiblings; Home.cui27 DashboardIf containsmultipleunwrappedchildren. Loader1088-1090 appliespadding onlyDecorator, ignoringauthoredStackPanelpadding. Resolvecanonicalgroup/layoutsemantics withcross-clientregression; BwillnotforkHome/renderer. Ownerblobidentities: loader86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3; Home132c00e736139c3ea0a73d7d453d758298572e55.",
-    "Team A/browser owner seam: actualpaintednavigation/search/actioncontrols absentfrom browserARIA tree (onlystatus+main). Pleaseprovideapproved sharedCUI/browser semanticcontrol projection and accessibilitytests. Existingbinding availability or screenshotappearance doesnotestablishaccessiblebutton/input/disabledstate."
+    "Team A/browser owner seam: actualpaintednavigation/search/actioncontrols absentfrom browserARIA tree (onlystatus+main). Pleaseprovideapproved sharedCUI/browser semanticcontrol projection and accessibilitytests. Existingbinding availability or screenshotappearance doesnotestablishaccessiblebutton/input/disabledstate.",
+    "Team C final B handoff: current source team-b/astra-browser-validation-20261003@83c24b2f0033fb2828169921fc905a327120143b; documentation/evidence-only 1356a1346f9d6ea948c202b2dd920b3b29869b77 on team-b/sol-happy-browser-20261003. All 411 evidence/review files are Git-sealed; full acceptance remains blocked. Preserve held original B source history; integrate reviewed current fixes rather than cherry-picking held source alone.",
+    "The prior c74 Library pointer failure is now CLOSED by owning 83 position:relative host fix: actual native/canvas boxes align; implementer 14/14 and unchanged independent pointer runner 5/5 pass. Controlled CSS diagnostic was not acceptance; all original red artifacts retained.",
+    "A1 maintained theme/font API and exact Runtime dependency ACK received in 5f945e3. C independently reviewed 969 native inputs and c74 keep-alive source at 06c75ec; these source acknowledgements do not accept full runtime/native/provider/product behavior. Please review the new 83 host pointer fix and actual local evidence before global integration.",
+    "Team A outstanding owner request remains actual Dashboard branch overlap and missing browser control semantics. Exact unchanged a63 renderer/Home identities and latest 83 reproduction are separately versioned in the handoff. Supply owner corrections and populated cross-client visual/accessibility regression evidence."
   ],
-  "testStatus": "Original3P2 sourceholds independentlyCclosed830f747. Currentc74 exact32/22/28/7 localchecksPASS; actualB1published12/B6own9 startup/fragment/historyPASS; actualpointerLibraryFAIL underB investigation; sharedDashboardvisualFAIL/controlaccessibilitynotaccepted. No deployed/fullapp/nativecrossclient/provider acceptance.",
-  "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003; candidate branch source, versioned evidence and reviewed commit IDs pending final browser adapter review.",
+  "testStatus": "Exact 83 local fixture/source checks 32 validator / 22 route / 28 account / 7 platform pass; B1 actual published browser 14/14 and B6 unchanged trusted-pointer replay 5/5 pass. Shared Home visual layout FAIL; accessible controls absent/unaccepted. No complete deployed app, authenticated cross-client workflow or full browser matrix verified. Earlier failures and corrected erroneous fixtures retained.",
+  "evidenceLocation": {
+    "branch": "team-b/sol-happy-browser-20261003",
+    "commit": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
+    "path": "docs/releases/sol-happy-20261003/team-b",
+    "README": "docs/releases/sol-happy-20261003/team-b/README.md",
+    "manifest": "docs/releases/sol-happy-20261003/team-b/package-manifest.json",
+    "manifestSha256": "ffb18478052b8b537fb3280591910b2ce8f07871d359af1114c37672be18c124",
+    "evidenceFiles": 405,
+    "evidenceBytes": 99633057,
+    "totalGitFiles": 411,
+    "scope": "405 evidence artifacts plus 3 manifest/root documents and 3 separately Git-sealed independent audit reports. Old source on this history is held; use the current code branch, or cherry-pick this documentation-only commit."
+  },
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
   "blockers": [
-    "Sandbox plugin/skill/Operating Contract unavailable after exhaustive capability discovery",
-    "Authenticated backend/staging/deployment identities absent",
-    "SH-13 browser/runtime/operational decisions OPEN",
-    "Accepted release head remains unset; final integrated acceptance pending",
-    "Full mandatory/default-SHOULD/donor/platform decomposition incomplete; no semantic completion denominator",
-    "Shared owner runtime includes desktop platform assemblies:1 WASM0001 warning retained; source build compiled, actual browser runtime/deployment/native continuity remain pending."
+    "Shared Home conditional branch layout and browser control accessibility semantics require owner corrections and real regressions.",
+    "No supplied real authenticated staging frontend/backend/configuration identities, hosted Files byte-reference/revision transport, service owner adapters, isolated test accounts or tested native counterpart for continuity.",
+    "Current issuer/.NET signing and genuine authentication-revision producer contracts remain unverified; qualified resource/envelope fixes do not supply staging.",
+    "SH-13 supported browser/platform/isolation/performance/recovery and relevant operational decisions remain OPEN.",
+    "Sandbox plugin/skill/Operating Contract not callable after exhaustive discovery.",
+    "Complete semantic/default-SHOULD/donor applicability/test denominator remains incomplete; deployed populated app, cross-client, permission/revocation/conflict/recovery and measured workload gates remain unverified.",
+    "Team C must review current 83 pointer fix and actual package, reconcile the qualified A63 source and rerun exact final integrated frontend/backend/schema/configuration acceptance."
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T18:50:28.567667+00:00",
+  "updatedUTC": "2026-10-03T19:14:41.989545+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
-  "candidateStatus": "ISOLATED_PARTIAL_BROWSER_SOURCE; FULL_ACCEPTANCE_BLOCKED; POINTER_FAILURE_UNDER_ACTIVE_B_OWNER_INVESTIGATION",
+  "candidateCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+  "candidateStatus": "PARTIAL_BROWSER_FOUNDATION_VERIFIED_LOCALLY; FULL_PRODUCT_PARITY_BLOCKED; NOT_GLOBAL_RELEASE",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -128,12 +144,12 @@
     "oldRuntimeEvidenceRelabelled": false,
     "currentAcceptanceValidator": "INCOMPLETE exit1;10558 defects including3 STALE_SOURCE; no product acceptance"
   },
-  "coordinationState": "A REGISTERED and shared owner acknowledges apps/Web and eng/browser; explicit existing Astra integrator handover acknowledged by C; C sole release integrator; acceptedHead null",
+  "coordinationState": "A_REGISTERED; C_SOLE_GLOBAL_INTEGRATOR; B_FINAL_PARTIAL_HANDOFF_PUBLISHED; ACCEPTED_HEAD_REMAINS_OWNER_CONTROLLED_NULL",
   "handoffEvidenceClaim": {
     "owner": "Team B root",
     "path": "docs/releases/sol-happy-20261003/team-b/**",
-    "state": "PACKAGING; no overlap with C6 evidence",
-    "code": "23 B-owned files reviewed; no shared/model/vendor source edits"
+    "state": "COMMITTED_PUSHED_REMOTE_HEAD_VERIFIED",
+    "code": "25 current B-owned source files reviewed; 23 original source hashes retained; no shared/model/vendor source edits"
   },
   "incomingAstraValidation": {
     "candidate": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -151,30 +167,96 @@
       "f38ffac525e555921d580776086ceb37182ec681",
       "d4c18169ac52fee2bd0ad47e39da8de7a2a001a0",
       "830f747b70df07797c586f6124890fa5028452b2"
-    ]
+    ],
+    "currentBrowserCodeCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+    "currentStatus": "Real isolated compile/publish and bounded local browser behavior pass. Parent A63 and global/native/full-product acceptance remain provisional."
   },
   "reviewHoldRepairs": {
     "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2\u2192green2/2. Incorrect originalfixture revision1\u21922 corrected with acknowledged Worker SQL CAS and independent review.",
     "homeDispatch": "d4c1816: actual production selector now used by BrowserApplication prefers registeredowner for all canonicalHome routes; owner denial/error/unavailable never fallback. Originalpriorselector fails newownercontrol after16oldpass; fixed22/22/root+B6pass. SDK10 static asset sourcecontract/GL export wiring and sharedCUI primitives/fonts fixed; missing generatedJS actualtarget failure provesguard.",
-    "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED"
+    "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED",
+    "status": "THREE_ORIGINAL_P2_SOURCE_DEFECTS_C_INDEPENDENTLY_CLOSED_AT_830F747; ORIGINAL_FAILURES_PRESERVED",
+    "currentCodeCommit": "83c24b2f0033fb2828169921fc905a327120143b"
   },
   "actualLocalBrowserValidation": {
     "branch": "team-b/astra-browser-validation-20261003",
-    "commit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+    "commit": "83c24b2f0033fb2828169921fc905a327120143b",
     "parentDependency": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
-    "scope": "Actual unchanged source-owned CUI/Avalonia browser build, native package libraries and locked owner JS; no fake APIs/rendered replacement",
-    "runtime": "Chromium151.0.7922.173; SDK10.0.401/runtime10.0.12",
-    "publish": "fresh180files35,340,129bytes;0exit; per-fileSHAmanifest",
-    "startupFailuresRetained": [
-      "830f747: Skia init failed/nativeflags excluded actuallibraries",
-      "9697281:dotnet.run exited persistent UI; blackcanvas; runner serializationoverflow preserved"
+    "scope": "Actual source-owned CUI/Avalonia published browser and real SDK native inputs/locked owner JS. No fake service or replacement renderer.",
+    "runtime": "Debian 13 linux-x64; Chromium 151.0.7922.173 with isolated headless SwiftShader profiles; SDK 10.0.401/runtime 10.0.12",
+    "publish": {
+      "exitCode": 0,
+      "files": 180,
+      "bytes": 35339902,
+      "identity": "docs/releases/sol-happy-20261003/team-b/evidence/coordinator/pointer-container-correction/browser-publish.json",
+      "postRuntimeAllHashesUnchanged": true
+    },
+    "regressionFixtures": {
+      "validator": "32/32",
+      "actualSourceRouteRegistryDispatcher": "22/22 custom checks",
+      "accountTransport": "28/28",
+      "platformNode": "7 custom checks; one Node test file",
+      "testedCommit": "83c24b2f0033fb2828169921fc905a327120143b",
+      "scope": "Local source/fixture regressions only; no deployed/backend/semantic parity claim."
+    },
+    "implementerActualBrowser": {
+      "executed": 14,
+      "passed": 14,
+      "failed": 0,
+      "scope": "Startup, real enabled/disabled pointer, live/cold typed fragment routes, error status, history and no runtime errors."
+    },
+    "independentActualBrowser": {
+      "executed": 5,
+      "passed": 5,
+      "failed": 0,
+      "runnerSha256": "ff152d4f0547a133b938c5021643edcf1933d8835af5eea4a609626538569dbf",
+      "scope": "Exact unchanged original failing pointer runner passes on fresh production 83. Library and Events mouse clicks navigate and show corresponding unavailable content; Studio remains disabled."
+    },
+    "failuresPreserved": [
+      "830f747: Skia startup exception because native inputs were excluded",
+      "9697281: .NET UI runtime exited after dotnet.run; black canvas; separate runner serialization overflow",
+      "c74c73c: real Library pointer test fails; native input host and canvas origins differ",
+      "Isolated CSS-mutated diagnostic confirms coordinate cause, but is not acceptance"
     ],
     "fixes": [
-      "9697281a71a0e32dc761c2c53fd06c72a98ccb43: realnativeinputs+requiredguards",
-      "c74c73c94a0d548653790a1e9d2a899df88e67b3: actualSDKrunMain keepalive"
+      "9697281: real native input guards and SDK-selected libraries",
+      "c74c73c: runtime.runMain keeps UI alive",
+      "83c24b2: positioned owned root aligns actual canvas/native input coordinates"
     ],
-    "localTests": "exactc74 32validator/22route/28account/7platform pass; B1 actualpublished12local route/status tests pass; B6 own9 pass cold/livefragment/history/runtime; realpointerLibrary FAIL. No fullappacceptance.",
-    "visual": "Root/B6 actualscreenshots HomeDashboard overlaps; Library/Events readableunavailableviews. ControlARIAonlystatus+main, no semanticcontrols; accessibilitynotaccepted; realBFCacheNOTobserved.",
-    "state": "B investigatingownedhost hit-testing; TeamA sharedlayout/accessibility request below; durable fullpackagebeingprepared."
+    "currentFailedOrUnverified": [
+      "Home Dashboard overlapping shared panels: visual FAIL",
+      "No semantic painted controls in accessibility tree: accessibility not accepted",
+      "Native pageshow persisted=false; authenticated BFCache restore NOT-RUN",
+      "Real provider/authentication/persistence/cross-client/full-app workflow acceptance NOT-RUN"
+    ],
+    "scopeStatus": "PARTIAL_LOCAL_BOOTSTRAP_ONLY; NO_COMPLETE_APP_ACCEPTANCE"
+  },
+  "finalIndependentPackaging": {
+    "verdict": "HANDOFF_PACKAGE_CONSISTENT_RELEASE_ACCEPTANCE_BLOCKED",
+    "defects": 0,
+    "review": "docs/releases/sol-happy-20261003/team-b/independent-review.json",
+    "reviewSha256": "0a405e1b44070de2f650e55e6c4cabd6d9b84668681c1a477dddf0a8f8c85dcc",
+    "initialAndCorrectionsRequiredReportsRetained": true,
+    "allPrior401ArtifactBytesRetained": true,
+    "currentSourceHashCount": 25,
+    "originalSourceHashCount": 23,
+    "manifestSha256": "ffb18478052b8b537fb3280591910b2ce8f07871d359af1114c37672be18c124",
+    "auditScope": "405 hashed artifacts and README/inventory/manifest; separately copied original/rejected/revised review sidecars are sealed by exact Git commit and their hashes, not circular self-hashes. ZIP trace scan was bounded; large failed trace was not fully decompressed/parsed."
+  },
+  "localCompiledArtifact": {
+    "path": "/workspace/team-b-artifacts/browser-83c24b2/local-bootstrap-83c24b2.zip",
+    "sha256": "0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b",
+    "bytes": 21686097,
+    "identity": "docs/releases/sol-happy-20261003/team-b/evidence/updates/ba473d1e11a6/coordinator/pointer-container-correction/local-artifact.json",
+    "scope": "Local compiled bootstrap archive only; not staged, complete product or accepted release. Archive is separate from Git evidence. Standalone build/cache artifacts excluded; required traces retain captured published resources."
+  },
+  "semanticCoverage": {
+    "assignedSections": 34,
+    "defaultBrowserRequiredSections": 33,
+    "exactMiniComputerExemptions": 1,
+    "completeDeployedAppsVerified": 0,
+    "fullMandatoryShouldDonorPlatformDenominator": null,
+    "semanticInventoryComplete": false,
+    "warning": "Section/paragraph/procedure/unit counts are not a conformance percentage. Shared frameworks, Variants/accounts and inherited obligations remain additional."
   }
 }
