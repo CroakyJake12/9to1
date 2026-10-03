@@ -31,12 +31,12 @@ def until(action):
 
 class Fixture:
  def __init__(self,name):
-  self.name=name;self.root=None;self.records=None;self.readfd=None;self.writefd=None;self.process=None;self.creator=None;self.session=None;self.ready=False;self.child=None;self.row=None;self.foreign=None;self.foreignfd=None;self.release=False;self.cleanup=[];self.primary=None
+  self.name=name;self.root=None;self.records=None;self.readfd=None;self.writefd=None;self.process=None;self.creator=None;self.session=None;self.ready=False;self.child=None;self.row=None;self.foreign=None;self.foreignfd=None;self.release=False;self.cleanup=[];self.primary=None;self.gone=False;self.proofPhase=False
  def close(self,field):
   fd=getattr(self,field);setattr(self,field,None)
   if fd is not None:
    os.close(fd)
-   if self.name=='setup-close' and field in ('readfd','creator'):os.close(fd) # actual EBADF after same-handle close
+   if self.name.startswith('setup-close') and field in ('readfd','creator'):os.close(fd) # actual EBADF after same-handle close
  def reap_escape(self):
   if self.child is None or self.row is None:raise RuntimeError('Escaped original fixture identity not captured; retain data')
   fd=os.pidfd_open(self.child)
@@ -56,6 +56,10 @@ class Fixture:
   if self.foreign.poll() is None:
    if self.foreignfd is not None:signal.pidfd_send_signal(self.foreignfd,signal.SIGKILL)
   self.foreign.wait(timeout=5)
+ def prove_disappearance(self):
+  self.gone=False;self.proofPhase=True
+  try:self.gone=self.process is not None and self.process.returncode is not None and Session.stat(self.process.pid) is None
+  finally:self.proofPhase=False
  def run(self,body):
   try:
    self.root=pathlib.Path(tempfile.mkdtemp(prefix='original-custody-'));self.records=self.root/'records';self.records.mkdir()
@@ -79,12 +83,12 @@ class Fixture:
     if self.name=='escape':collect(self.cleanup,self.reap_escape) # preserves original false SDK seal
     else:collect(self.cleanup,self.session.drain)
    collect(self.cleanup,lambda:self.close('foreignfd'));collect(self.cleanup,lambda:self.close('creator'))
-   gone=self.process is not None and self.process.returncode is not None and Session.stat(self.process.pid) is None
+   collect(self.cleanup,self.prove_disappearance)
    if self.records is not None:
-    summary={'scenario':self.name,'launcherReleased':self.release,'creatorWaitProven':gone,'primary':repr(self.primary),'cleanup':[repr(x) for x in self.cleanup],'retainedData':str(self.root),'sessionInitialized':self.ready}
+    summary={'scenario':self.name,'launcherReleased':self.release,'creatorWaitProven':self.gone,'primary':repr(self.primary),'cleanup':[repr(x) for x in self.cleanup],'retainedData':str(self.root),'sessionInitialized':self.ready}
     collect(self.cleanup,lambda:keep_receipts(self.records,self.name+'-final',summary))
    # Refused/ambiguous fixture data remains available. Never delete on a mere timeout.
-   if self.primary is None and not self.cleanup and self.ready and self.name!='escape' and gone:
+   if self.primary is None and not self.cleanup and self.ready and self.name!='escape' and self.gone:
     collect(self.cleanup,lambda:shutil.rmtree(self.root))
   finish(self.primary,self.cleanup)
 
@@ -174,13 +178,20 @@ def scenario(name):
    return
   raise AssertionError('Unenrolled owner accepted')
  Session.enroll_subreaper();assert read_flag()==1;fixture=Fixture(name)
- if name in ('setup-close','setup-acquire'):
-  try:fixture.run(body)
-  except BaseException as error:errors=flatten(error)
-  else:raise AssertionError('Setup failure not retained')
+ if name in ('setup-close','setup-close-proof','setup-acquire'):
+  proof_failure=BodyFailure('Injected final disappearance fact read failure');real_stat=Session.stat
+  def proof_stat(pid):
+   if name=='setup-close-proof' and fixture.proofPhase and pid==fixture.process.pid:
+    real_stat(pid);raise proof_failure
+   return real_stat(pid)
+  with patch.object(Session,'stat',staticmethod(proof_stat)):
+   try:fixture.run(body)
+   except BaseException as error:errors=flatten(error)
+   else:raise AssertionError('Setup failure not retained')
   assert fixture.process.returncode is not None and Session.stat(fixture.process.pid) is None
-  if name=='setup-close':assert errors[0] is fixture.primary and len([x for x in errors if isinstance(x,OSError) and x.errno==9])==2
+  if name.startswith('setup-close'):assert errors[0] is fixture.primary and len([x for x in errors if isinstance(x,OSError) and x.errno==9])==2
   else:assert any('Injected setup failure' in str(x) for x in errors)
+  if name=='setup-close-proof':assert any(x is proof_failure for x in errors) and fixture.gone is False
   assert not fixture.release and fixture.root.exists();return
  fixture.run(body)
 
@@ -199,6 +210,7 @@ class Controls(unittest.TestCase):
  def test_actual_wait_and_close_failures_both_retained(self):self.run_scenario('wait-close')
  def test_actual_receipt_and_close_failures_both_retained(self):self.run_scenario('write-close')
  def test_actual_setup_and_creator_close_failures_both_retained(self):self.run_scenario('setup-close')
+ def test_actual_final_proof_failure_retains_setup_and_close_errors(self):self.run_scenario('setup-close-proof')
  def test_actual_created_child_settled_after_acquisition_failure(self):self.run_scenario('setup-acquire')
 if __name__=='__main__':
  if len(sys.argv)==3 and sys.argv[1]=='--scenario':scenario(sys.argv[2])
