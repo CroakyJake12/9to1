@@ -1,0 +1,26 @@
+name: Sites Noble WPE prerequisites only
+on:
+  workflow_dispatch:
+  push:
+    branches: [validation/astra-sites-wpe-prerequisites01]
+permissions:
+  contents: read
+jobs:
+  prerequisite-files:
+    if: github.ref == 'refs/heads/validation/astra-sites-wpe-prerequisites01'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record exact distro packages and owned linker files
+        shell: bash
+        run: |
+          python3 .github/scripts/astra-sites-wpe-prerequisite-preflight.py --root "$GITHUB_WORKSPACE" --out "$GITHUB_WORKSPACE/astra-sites-wpe-prerequisite-evidence" --normal "$GITHUB_SHA" --helper-sha "0a98736299184e5f34fa2b384d0555cfd174cdde8c3d671172c9504c1610f1be" --self-sha "6ce09eaed9c4852bf5ddd66182d4d5e54dd2d6bf8c9e72075859c884971264f3"
+      - name: Retain complete prerequisite observations and refusals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-sites-wpe-prerequisites-${{ github.sha }}
+          path: astra-sites-wpe-prerequisite-evidence
+          if-no-files-found: error
+          retention-days: 14
