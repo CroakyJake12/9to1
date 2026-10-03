@@ -96,7 +96,7 @@ public sealed class FormsCanonicalMathematicsNativeTests
             Click(secondDialog, "forms-math-cancel"); await cancelled.WaitAsync(token);
             Assert.Equal(beforeCancel, await File.ReadAllBytesAsync(Path.Combine(root,"settings.json"),token));
             host.Dispose();
-            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await Assert.ThrowsAsync<ObjectDisposedException>(async () =>
                 await mounted.Workspace.DispatchAsync("9to1.Forms.EditMathematics", null, token));
             Assert.Equal(beforeCancel, await File.ReadAllBytesAsync(Path.Combine(root,"settings.json"),token));
         }

@@ -470,9 +470,9 @@
       "class": "FormsCanonicalMathematicsNativeTests",
       "namespace": "Haven.Desktop.Tests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/FormsCanonicalMathematicsNativeTests.cs",
-      "sha256": "a46b2d777bb3b9448ef371761347a258fa186241923be1b6b856db2936d3495a",
-      "source": "/workspace/astra-source/worker3-forms08-actual-owning-settings-identity-fixture-source11/manifest.json",
-      "origin": "Actual Forms08 original runtime correction: SAME owning settings identity"
+      "sha256": "330ba5d626f52895c7d2415fb3ac4f28de3935e81d88fb3fd8239295d29cb7e2",
+      "source": "/workspace/astra-source/worker3-forms09-actual-retired-host-exception-fixture-source12/manifest.json",
+      "origin": "Actual Forms09 precise retired-host ObjectDisposedException expectation; same refusal and persisted-store assertions retained"
     }
   ],
   "consoleHarness": {
