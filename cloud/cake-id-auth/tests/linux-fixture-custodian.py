@@ -36,6 +36,12 @@ def enroll():
     fd = os.pidfd_open(os.getpid())
     try:
         signal.pidfd_send_signal(fd, 0)
+        try:
+            os.waitid(os.P_PIDFD, fd, os.WEXITED | os.WNOHANG)
+        except ChildProcessError:
+            pass  # Self is not our child: recognized pidfd wait authority returns ECHILD.
+        else:
+            raise RuntimeError('Unexpected self-pidfd wait result')
     finally:
         os.close(fd)
 
