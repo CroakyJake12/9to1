@@ -1,5 +1,5 @@
 {
-  "recordedUTC": "2026-10-03T23:02:29.218323+00:00",
+  "recordedUTC": "2026-10-03T23:37:50.389812+00:00",
   "releaseStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "acceptedHead": null,
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
@@ -136,5 +136,76 @@
     "restorePairsUnchanged": 6,
     "errors": 0,
     "payloadRerun": false
+  },
+  "nativeOriginalsFollowup": {
+    "linux19RootRecords": {
+      "sourceCommit": "bb6472f22c25edb50155f1b0f86a67e2d7f06b4f",
+      "files": 4,
+      "bytes": 36528,
+      "hashErrors": 0,
+      "completeRootTestLogSha256": "3bc806db746dd1d89824e13fedbd3d86bcc017e2d7f6d946ae9eae6d9d3cb46e",
+      "qualification": "Original12socket cancellation failures/unknown startup predicate retained; no local payload rerun."
+    },
+    "canvas03": {
+      "sourceCommit": "e83cc9ea",
+      "wholeFilesVerified": 295,
+      "piecesVerified": 284,
+      "publishedPayloadsVerified": 40,
+      "originalAliasesVerified": 34,
+      "rootReadOnlyReplayErrors": 0,
+      "inspectionBytes": 101324067,
+      "inspectionCapBytes": 536870912,
+      "completeCanvasLogSha256": "9c38a04d79027589cb3cea924f375e40c74be43be9a219dfc512d95b73977eca",
+      "originalOutcomes": {
+        "executed": 96,
+        "passed": 94,
+        "failed": 2,
+        "skipped": 0
+      },
+      "qualification": "Complete logs/TRX/receipt/all10session records; keyed and exact numerical failures retained. No standalone per-command ledger in complete295file manifest. Unknown cause/task-settlement/full native/installed/source-symbol acceptance remains. No payload executed or tests rerun."
+    }
+  },
+  "formsPresentSourceReview": {
+    "sourceCommit": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+    "reviewCommit": "a57175d17da8baab3776da8a9055801cf678057c",
+    "verifiedPins": {
+      "Forms": 11,
+      "Present": 4
+    },
+    "missingFormsBodies": [
+      "apps/Web/Forms/FormsBrowserRoute.cs",
+      "apps/Web/Forms/FormsBrowserSession.cs"
+    ],
+    "qualification": "Exact both requests read/hashed; missing bodies in both declared baseline and delivered source prevent complete adapter ACK. No new approved C-owned executable contract, implementation or runtime acceptance."
+  },
+  "receiverFixtureRecovery": {
+    "originalRequest": "0dce1cd6d94ef4632119429ae399c5fcde7395d7",
+    "originalToolSession": 63118,
+    "originalState": "HELD: B8798/private state retained without strict receipt; original kernel handles/reap authority unavailable. No foreign numeric-ID recovery or state deletion. Exact cause of tool loss unknown.",
+    "candidate": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "candidateStatus": "REVIEWED exact11 fixture test/helper files adopted; independent finalEF fresh8799 Workerd/D1 smoke exit0, strict5 reaps/originals disappeared, owned secrets removed/portreleased. Known original-session stop newline/EOF/SIGINT/TERM/HUP and disposal controls pass. Public evidence publication/audit pending. No oldBfixture recovery/fullbrowser/provider acceptance.",
+    "reviewedRuntimeSource": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "independentReview": "715e9098",
+    "freshLocalSmoke": {
+      "port": 8799,
+      "exitCode": 0,
+      "strictReaped": true,
+      "originalsDisappeared": true,
+      "kernelReaps": 5,
+      "ownedSecretsRemoved": true,
+      "portReleased": true,
+      "command": [
+        "node",
+        "tests/browser-fixture.mjs"
+      ],
+      "env": {
+        "XDG_CONFIG_HOME": "/workspace/team-c/evidence/c1/xdg",
+        "CAKE_BROWSER_FIXTURE_PORT": "8799",
+        "CAKE_BROWSER_FIXTURE_SMOKE": "1"
+      },
+      "scope": "Actual local Workerd/D1 bootstrap with two fictional accounts/exact client; no browser callback or external services.",
+      "source": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+      "qualification": "Final smoke completed before transient root exec transport loss; original tool exit0/strict receipt and secret-absence readback preserved. Root transport then recovered; no cause inferred."
+    }
   }
 }

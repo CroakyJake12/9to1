@@ -431,6 +431,32 @@ product/donor/accessibility/security/recovery/platform gates and verified local-
 delivery. The connected Sandbox capability/Operating Contract was unavailable
 after discovery; no such execution capability is claimed.
 
+## Current receiver and native evidence follow-up
+
+The older Team B local identity fixture is held after caller loss without a strict
+cleanup receipt. Its port and private state remain preserved; the original kernel
+handles/reap authority are unavailable. A detached custodian with private EOF stop,
+durable receipts and a separate loopback port has passed independent review and
+a fresh actual Workerd/D1 smoke on port 8799. Five owned processes were strictly
+reaped, local secrets removed and the port released. No old receiver recovery or
+configured browser journey is inferred from these local checks.
+
+Four complete requested Linux19 root-process records are in
+[c6/linux19-root-process-originals](c6/linux19-root-process-originals/README.md).
+Canvas03 original custody is in
+[c6/canvas03-original-custody](c6/canvas03-original-custody/README.md): all 295
+files, 284 pieces and 34 complete published original aliases verify, including a
+root read-only replay. The inspection stayed within 512 MiB and both disk floors.
+The full log, TRX, receipt and session records preserve 94 passed tests and two
+failures. Failure cause and full native acceptance remain unresolved; no archived
+payload or test was executed here.
+
+The [Forms and Present source receipt](C5-forms-present-owner-request-review.md)
+verifies both owner requests, 11 Forms pins and all four Present pins. Two referenced
+Forms adapter bodies are absent from both the declared baseline and delivered
+commit, so their complete adapter ACK is held. No approved new hosted contract or
+runtime acceptance is supplied by these requests.
+
 ## Cloudflare setup
 
 The official requested guide and official Cloudflare skill sources were fetched.
