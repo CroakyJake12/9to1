@@ -122,6 +122,7 @@ public sealed class HomePermissionTrustService
                     ScopeEquals(item.Scope, scope) && item.SessionId == submission.SessionId);
             }
             else if (_sessionApprovals.Any(item => item.CallerId == caller.CallerId &&
+                item.IdentityVersion == caller.IdentityVersion &&
                 item.SessionId == submission.SessionId.Trim() && ScopeEquals(item.Scope, scope)))
             {
                 request = request with
@@ -218,7 +219,7 @@ public sealed class HomePermissionTrustService
                         "HOME_CALLER_BLOCKED", "The request was declined and the caller was blocked.", null);
                     break;
                 case HomeApprovalChoice.Accept:
-                    _sessionApprovals.Add(new SessionApproval(request.Caller.CallerId, request.SessionId, request.Scope));
+                    _sessionApprovals.Add(new SessionApproval(request.Caller.CallerId, request.Caller.IdentityVersion, request.SessionId, request.Scope));
                     request = FinishDecision(request, HomePermissionRequestState.Approved,
                         "HOME_PERMISSION_ACCEPTED", "This exact action and scope was approved for the current session.", HomeTrustLevel.Session);
                     break;
@@ -696,7 +697,7 @@ public sealed class HomePermissionTrustService
         left.IncludesAllObjects == right.IncludesAllObjects && left.Objects.Count == right.Objects.Count &&
         left.Objects.All(right.Objects.Contains);
 
-    private sealed record SessionApproval(string CallerId, string SessionId, HomePermissionScope Scope);
+    private sealed record SessionApproval(string CallerId, string? IdentityVersion, string SessionId, HomePermissionScope Scope);
 
     private sealed class PersistedState
     {
