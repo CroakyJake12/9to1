@@ -23,18 +23,25 @@
       "sha256": "d3681c1578ba683a40f200028bd567fd7d21b47643053adccb08cbdac5624ee3"
     },
     {
+      "path": ".github/scripts/astra-embedded-symbol-tests.py",
+      "mode": "100644",
+      "object": "efe9ed874362ad3af5698030eca542174aedb5cc",
+      "bytes": 6823,
+      "sha256": "2aa9aa59ba8728d7a85e80d5df8383e93c31fbe04e11579ee612013663bdc998"
+    },
+    {
       "path": ".github/scripts/astra-home-portable-pdb.py",
       "mode": "100644",
-      "object": "a9e335f25dc1cc3936ff0952a46f79c4aa6f7b64",
-      "bytes": 3680,
-      "sha256": "f7f4ac108d287f211eb43e26c5602a2646f149382af0bc8f3fcfff9c4a1d98c8"
+      "object": "9c32b792de31e9d6b5b9efd493639aa885c4dc77",
+      "bytes": 7571,
+      "sha256": "ec5248af05db98dc7b255be95d5656055cc4ec4c75fcae1300efb4b3f0577f17"
     },
     {
       "path": ".github/scripts/astra-organisation-full-owning.py",
       "mode": "100644",
-      "object": "6170d1ab2e61eaa65e9c74363b9efa7e8cd35dcb",
-      "bytes": 29147,
-      "sha256": "a06a6b127c815ec6a83d9b7110538b7c19db1fd446c67c754324311522b4f9e9"
+      "object": "8b909706d39fdee29ec2866a6a3685705841520e",
+      "bytes": 30359,
+      "sha256": "cdb3728370aacd06d23d039922f105ff92f9fa05e7110fd549d143285d041fe2"
     },
     {
       "path": ".github/scripts/astra-original-native-session-drain.py",
@@ -60,9 +67,9 @@
     {
       "path": ".github/validation/astra-organisation-owning-sources.json",
       "mode": "100644",
-      "object": "4765b5c8554db36cca0af5850bd8e7beda7f089d",
+      "object": "3e3db869cbc9f277dd952fb59a4b57c58b8039fd",
       "bytes": 6807,
-      "sha256": "9d12b9b8b6f9ff92356b1223f313d3a9dd53f6c949037255471581d7c65b71a9"
+      "sha256": "f0dbc59748d19eb63fdab066946de721e05e23ecf88e0520f06ea45cf0436683"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -65041,9 +65048,9 @@
     {
       "path": "handoff/team-a/admin-sdk03/receiving-validation-provenance.json",
       "mode": "100644",
-      "object": "a888df21464d45cb907149fddbdc1394f784c3dc",
-      "bytes": 21257,
-      "sha256": "6065bbc9c78aacf5ee4c8fa0714895694d3037864043fe90ccc268ed00f832c8"
+      "object": "5ba83121533e0712874f931773fa7fa06c51a923",
+      "bytes": 26104,
+      "sha256": "f4c82f076a334620914c0252c820c172b362e9e66709f42b57f6db978a3f57dd"
     },
     {
       "path": "handoff/team-a/reviewed-source-delivery-manifest.json",
@@ -66183,91 +66190,113 @@
   "gitlinks": [
     {
       "path": "9to1 OS/compatibility/winboat/Source/WinBoat",
-      "commit": "b9a2df2cc33b2a5e2dc95b3f0472d832f44e86d3"
+      "commit": "b9a2df2cc33b2a5e2dc95b3f0472d832f44e86d3",
+      "mode": "160000"
     },
     {
       "path": "9to1 OS/compatibility/wine/Source/Wine",
-      "commit": "1977760e3745c58ee9c2b8aeb93e54e5fe7f14e2"
+      "commit": "1977760e3745c58ee9c2b8aeb93e54e5fe7f14e2",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Boards/Source/AppFlowyBoard",
-      "commit": "804d7898ac0becabf73e45527baf5d5c573cd6bb"
+      "commit": "804d7898ac0becabf73e45527baf5d5c573cd6bb",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Browse/Source/FirefoxGecko",
-      "commit": "5836a062726f715fda621338a17b51aff30d0a8c"
+      "commit": "5836a062726f715fda621338a17b51aff30d0a8c",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Canvas/Source/Rnote",
-      "commit": "1a728d6a85db3528f9c79dc0990700e91b22696f"
+      "commit": "1a728d6a85db3528f9c79dc0990700e91b22696f",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Connect/Source/element-web",
-      "commit": "f19cfd9030429240a4209bf5175b372175cf0464"
+      "commit": "f19cfd9030429240a4209bf5175b372175cf0464",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Data/Source/DuckDB",
-      "commit": "12633c226f827d4328a83e820d3d6a3f16195207"
+      "commit": "12633c226f827d4328a83e820d3d6a3f16195207",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Data/Source/LibreOffice",
-      "commit": "d3fca73f81dfb19a72a0da41598b7390eaf5845b"
+      "commit": "d3fca73f81dfb19a72a0da41598b7390eaf5845b",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Dev/Source/CodeOSS",
-      "commit": "4212437dd11e9c7e728caa26a269540c87343930"
+      "commit": "4212437dd11e9c7e728caa26a269540c87343930",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Dev/Source/VSCodium",
-      "commit": "5a73682ca091082675b10c9dc3f348c1d824d94f"
+      "commit": "5a73682ca091082675b10c9dc3f348c1d824d94f",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Home/Source/Dulche/Source/llama.cpp",
-      "commit": "53ed051ce5e8193652e449f43216ca3859454f49"
+      "commit": "53ed051ce5e8193652e449f43216ca3859454f49",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Launcher/Source/Lawnchair",
-      "commit": "126b2250d76c6d17c04d45e691d57b67860395a1"
+      "commit": "126b2250d76c6d17c04d45e691d57b67860395a1",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Picture/Source/glycin",
-      "commit": "84bed7782d1ae4486068a9ffbde691290c119909"
+      "commit": "84bed7782d1ae4486068a9ffbde691290c119909",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Picture/Source/loupe",
-      "commit": "228003cb8755098bcb9859b3c8f2ded618633d47"
+      "commit": "228003cb8755098bcb9859b3c8f2ded618633d47",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Planner/Source/EvolutionDataServer",
-      "commit": "ab6a103668edaf1d0e6ff999055a5be0982ee2a5"
+      "commit": "ab6a103668edaf1d0e6ff999055a5be0982ee2a5",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Planner/Source/libical",
-      "commit": "2d447a5fe8c0b2c406ad47d7a2e37406e53712bc"
+      "commit": "2d447a5fe8c0b2c406ad47d7a2e37406e53712bc",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Sites/Source/cake-plugin",
-      "commit": "68bf982c1766035f70734bdcc164ffd7eb792701"
+      "commit": "68bf982c1766035f70734bdcc164ffd7eb792701",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Terminal/Source/libvterm",
-      "commit": "934bc2fbf21800ac3458a499df8820ca5fb45fd3"
+      "commit": "934bc2fbf21800ac3458a499df8820ca5fb45fd3",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Wave/Source/GES",
-      "commit": "fc34303569d2e522f261498f4351e4fc6f610302"
+      "commit": "fc34303569d2e522f261498f4351e4fc6f610302",
+      "mode": "160000"
     },
     {
       "path": "9to1 Workspace/Wave/Source/GStreamer",
-      "commit": "83e7df9168dd73f5dcd1caa60195a9d9dce558b4"
+      "commit": "83e7df9168dd73f5dcd1caa60195a9d9dce558b4",
+      "mode": "160000"
     },
     {
       "path": "framework/CUI/vendor/Avalonia/external/Avalonia.DBus",
-      "commit": "864a05282841bf04006890f04d11d60d1a046aa9"
+      "commit": "864a05282841bf04006890f04d11d60d1a046aa9",
+      "mode": "160000"
     },
     {
       "path": "framework/CUI/vendor/Avalonia/external/XamlX",
-      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52"
+      "commit": "009d4815470cf4bf71d1adbb633a5d81dcb2bb52",
+      "mode": "160000"
     }
   ],
   "materializedGitlinks": [
