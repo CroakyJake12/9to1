@@ -19,11 +19,16 @@
     <NativeFileReference Remove="@(NativeFileReference->WithMetadataValue('DefiningProjectName', 'Avalonia.Browser'))" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Tests/**/*.cs" />
+    <Compile Remove="**/Tests/**/*.cs;Wave/Engine/**/*.cs;Write/**/*.cs;Files/**/*.cs;Sites/**/*.cs;Picture/**/*.cs;Media/BrowserPictureMedia.cs;Media/IPictureBrowserMedia.cs" />
     <ProjectReference Include="../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="../../framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/Avalonia.Browser.csproj" />
     <ProjectReference Include="../../9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <ProjectReference Include="Wave/Engine/NineToOne.Wave.BrowserEngine.csproj" />
     <EmbeddedResource Include="../../9to1 Workspace/Home/UI/Home.cui" LogicalName="NineToOne.Web.Home.cui" />
+    <EmbeddedResource Include="Wave/Wave.cui" LogicalName="NineToOne.Web.Wave.cui" />
+    <EmbeddedResource Include="Accounts/Accounts.cui" LogicalName="NineToOne.Web.Accounts.cui" />
+    <Content Include="Media/wave-browser.js" Link="wwwroot/wave-browser.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Services/account-service.js" Link="wwwroot/account-service.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RequirePinnedBrowserAssets" BeforeTargets="ResolveStaticWebAssetsInputs">
     <Error Condition="!Exists('$(PinnedBrowserProject)/staticwebassets/avalonia.js') or !Exists('$(PinnedBrowserProject)/staticwebassets/storage.js')" Text="The pinned Avalonia browser runtime assets have not been built. Build the adapter's locked webapp sources before publishing this host." />

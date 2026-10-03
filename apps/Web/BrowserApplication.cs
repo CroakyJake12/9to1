@@ -14,9 +14,11 @@ public sealed class BrowserApplication : Application, IDisposable
 {
     private readonly ContentControl _view = new();
     private readonly BrowserSurfaceRegistry _surfaces = new();
+    private readonly BrowserAccessibilityBridge _accessibility = new();
     private CancellationTokenSource? _navigationCancellation;
     private CuiControlLoader? _loader;
     private IDisposable? _surfaceLifetime;
+    private BrowserActionAvailability.Observation? _availability;
     private BrowserHomeContext? _home;
     private CuiDocument? _homeDocument;
     private readonly Dictionary<string, Vector> _scrollOffsets = new(StringComparer.Ordinal);
@@ -27,6 +29,17 @@ public sealed class BrowserApplication : Application, IDisposable
     /// <summary>Registration is supplied by the composition root after obtaining real authenticated owner adapters.</summary>
     public BrowserSurfaceRegistry Surfaces => _surfaces;
 
+    internal string ReadAccessibility()
+    {
+        _availability?.Refresh();
+        return _accessibility.ReadSnapshot();
+    }
+    internal bool PerformAccessibility(string id, string operation, string? value)
+    {
+        _availability?.Refresh();
+        return _accessibility.Perform(id, operation, value);
+    }
+
     public override void Initialize() => CuiNativeHost.InitialisePrimitiveTheme(this, "Home");
 
     public override void OnFrameworkInitializationCompleted()
@@ -35,6 +48,7 @@ public sealed class BrowserApplication : Application, IDisposable
             throw new InvalidOperationException("A browser single-view lifetime is required.");
         lifetime.MainView = _view;
         Program.Attach(this);
+        BrowserFeatureComposition.Register(_surfaces);
         base.OnFrameworkInitializationCompleted();
     }
 
@@ -122,7 +136,8 @@ public sealed class BrowserApplication : Application, IDisposable
             Program.ShowStatus("HomeServiceIncompatible", "This view requires an incompatible runtime. Your previous view has been preserved.");
             return false;
         }
-        var candidate = new CuiControlLoader();
+        var candidate = surface.ControlRegistry is null ? new CuiControlLoader() : new CuiControlLoader(surface.ControlRegistry);
+        BrowserActionAvailability.Observation? candidateAvailability = null;
         var transferred = false;
         try
         {
@@ -135,14 +150,9 @@ public sealed class BrowserApplication : Application, IDisposable
                 return false;
             }
             candidate.WireBindings(root);
+            candidateAvailability = BrowserActionAvailability.Observe(root, candidate, surface.Document, surface.Actions, surface.Bindings);
             foreach (var control in root.GetLogicalDescendants().OfType<Control>().Prepend(root))
             {
-                var descriptor = candidate.Inspect(control);
-                if (control is Button button && descriptor is not null && button.Tag is string command)
-                {
-                    button.IsEnabled = (surface.Actions as ICuiActionAvailability)?.IsActionAvailable(command) == true;
-                    if (!button.IsEnabled) ToolTip.SetTip(button, "This action requires an available account service or browser capability.");
-                }
                 if (control is TextBox input && ReferenceEquals(surface.Bindings, _home))
                 {
                     input.IsEnabled = false;
@@ -151,6 +161,7 @@ public sealed class BrowserApplication : Application, IDisposable
             }
             var previousLoader = _loader;
             var previousLifetime = _surfaceLifetime;
+            var previousAvailability = _availability;
             if (_currentAddress is not null && _view.Content is ScrollViewer previousScroll)
             {
                 if (!_scrollOffsets.ContainsKey(_currentAddress) && _scrollOffsets.Count >= 256)
@@ -161,20 +172,30 @@ public sealed class BrowserApplication : Application, IDisposable
             if (_scrollOffsets.TryGetValue(address, out var offset))
                 scroll.Loaded += (_, _) => scroll.Offset = offset;
             _view.Content = scroll;
+            _accessibility.Bind(root);
             _loader = candidate;
             _surfaceLifetime = surface.Lifetime;
+            _availability = candidateAvailability;
             _currentAddress = address;
             transferred = true;
-            previousLoader?.Dispose();
-            previousLifetime?.Dispose();
+            try { previousAvailability?.Dispose(); }
+            finally
+            {
+                try { previousLoader?.Dispose(); }
+                finally { previousLifetime?.Dispose(); }
+            }
             return true;
         }
         finally
         {
             if (!transferred)
             {
-                candidate.Dispose();
-                surface.Lifetime?.Dispose();
+                try { candidateAvailability?.Dispose(); }
+                finally
+                {
+                    try { candidate.Dispose(); }
+                    finally { surface.Lifetime?.Dispose(); }
+                }
             }
         }
     }
@@ -182,26 +203,44 @@ public sealed class BrowserApplication : Application, IDisposable
     /// <summary>Account/session/organisation changes must clear prior private presentation before new adapters load.</summary>
     public void ResetPrivateContext()
     {
-        _navigationCancellation?.Cancel();
         ++_navigationVersion;
-        _view.Content = null;
-        _loader?.Dispose();
+        var loader = _loader;
+        var lifetime = _surfaceLifetime;
+        var availability = _availability;
         _loader = null;
-        _surfaceLifetime?.Dispose();
         _surfaceLifetime = null;
+        _availability = null;
         _home = null;
         _homeDocument = null;
-        _surfaces.Clear();
         _scrollOffsets.Clear();
         _currentAddress = null;
+        List<Exception>? errors = null;
+        Remove(() => _navigationCancellation?.Cancel());
+        Remove(_accessibility.Clear);
+        Remove(() => _view.Content = null);
+        Remove(() => availability?.Dispose());
+        Remove(() => loader?.Dispose());
+        Remove(() => lifetime?.Dispose());
+        Remove(_surfaces.ClearPrivateContext);
+        if (errors is not null) throw new AggregateException("Private browser presentation was removed with teardown failures.", errors);
+
+        void Remove(Action cleanup)
+        {
+            try { cleanup(); }
+            catch (Exception error) { (errors ??= []).Add(error); }
+        }
     }
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
-        ResetPrivateContext();
-        _navigationCancellation?.Dispose();
-        _navigationCancellation = null;
+        try { ResetPrivateContext(); }
+        finally
+        {
+            _navigationCancellation?.Dispose();
+            _navigationCancellation = null;
+            _surfaces.Clear();
+        }
     }
 }

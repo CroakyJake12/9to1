@@ -5,8 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Program.cs" />
     <Compile Include="../BrowserRouteCodec.cs" Link="Production/BrowserRouteCodec.cs" />
     <Compile Include="../BrowserSurfaceRegistry.cs" Link="Production/BrowserSurfaceRegistry.cs" />
     <Compile Include="../BrowserRouteDispatcher.cs" Link="Production/BrowserRouteDispatcher.cs" />
@@ -14,6 +16,7 @@
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeFeatureContracts.cs" Link="Owner/HomeFeatureContracts.cs" />
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/HomeDashboard.cs" Link="Owner/HomeDashboard.cs" />
     <ProjectReference Include="../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
   </ItemGroup>
   <ItemGroup Condition="Exists('../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs')">
     <Compile Include="../../../9to1 Workspace/Home/Source/Home/Core/HomeStateCommitActorGuard.cs" Link="Owner/HomeStateCommitActorGuard.cs" />

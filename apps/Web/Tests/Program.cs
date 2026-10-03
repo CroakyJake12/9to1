@@ -175,8 +175,52 @@ await RunAsync("B1-DISPATCH-06-cancelled-home-no-fallback", async () =>
     catch (OperationCanceledException) { }
     Check(fallbackCalls == 0);
 });
-Console.WriteLine($"Discovered: 22; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
-return executed == 22 ? 0 : 1;
+await RunAsync("B1-LIFETIME-01-private-reset-retains-device-local-owner", async () =>
+{
+    var registry = new BrowserSurfaceRegistry();
+    var privateDisposals = 0; var localDisposals = 0; var localCalls = 0;
+    registry.Register(new DisposableHandler("app.files", request => Task.FromResult(Success(request)), () => privateDisposals++), _ => FixtureSurface());
+    registry.Register(new DisposableHandler("app.wave", request => { localCalls++; return Task.FromResult(Success(request)); }, () => localDisposals++), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    registry.ClearPrivateContext();
+    var blocked = await registry.OpenAsync(new("app.files"), default);
+    var local = await registry.OpenAsync(new("app.wave"), default);
+    Check(privateDisposals == 1 && localDisposals == 0 && localCalls == 1 && registry.AvailableRoutes.Count == 1);
+    Check(!blocked.Result.Succeeded && blocked.Surface is null && local.Result.Succeeded && local.Surface is not null);
+});
+await RunAsync("B1-LIFETIME-02-reset-invalidates-pending-local-presentation", async () =>
+{
+    var registry = new BrowserSurfaceRegistry();
+    var pending = new TaskCompletionSource<HomeFeatureNavigationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+    var renders = 0; var disposals = 0;
+    registry.Register(new DisposableHandler("app.wave", _ => pending.Task, () => disposals++), _ => { renders++; return FixtureSurface(); }, BrowserSurfaceScope.DeviceLocal);
+    var request = new HomeFeatureNavigationRequest("app.wave");
+    var opening = registry.OpenAsync(request, default);
+    registry.ClearPrivateContext();
+    pending.SetResult(Success(request));
+    var stale = await opening;
+    Check(stale.Result.Code == "PermissionDenied" && stale.Surface is null && renders == 0 && disposals == 0);
+    Check((await registry.OpenAsync(request, default)).Result.Succeeded && renders == 1);
+});
+await Run("B1-LIFETIME-03-close-disposes-every-owner-once", () =>
+{
+    var registry = new BrowserSurfaceRegistry();
+    var privateDisposals = 0; var localDisposals = 0;
+    registry.Register(new DisposableHandler("app.files", request => Task.FromResult(Success(request)), () => privateDisposals++), _ => FixtureSurface());
+    registry.Register(new DisposableHandler("app.wave", request => Task.FromResult(Success(request)), () => localDisposals++), _ => FixtureSurface(), BrowserSurfaceScope.DeviceLocal);
+    registry.Clear(); registry.Clear();
+    Check(privateDisposals == 1 && localDisposals == 1 && registry.AvailableRoutes.Count == 0);
+});
+await Run("B1-LIFETIME-04-failing-disposal-still-removes-and-disposes-all", () =>
+{
+    var registry = new BrowserSurfaceRegistry(); var otherDisposals = 0;
+    registry.Register(new DisposableHandler("app.files", request => Task.FromResult(Success(request)), () => throw new InvalidOperationException("UNIT teardown fault")), _ => FixtureSurface());
+    registry.Register(new DisposableHandler("app.write", request => Task.FromResult(Success(request)), () => otherDisposals++), _ => FixtureSurface());
+    try { registry.Clear(); throw new Exception("Owner failure was suppressed."); }
+    catch (AggregateException error) { Check(error.InnerExceptions.Count == 1 && error.InnerExceptions[0].Message == "UNIT teardown fault"); }
+    Check(otherDisposals == 1 && registry.AvailableRoutes.Count == 0);
+});
+Console.WriteLine($"Discovered: 26; executed: {executed}; passed: {executed}; failed: 0. Backend/browser acceptance: NOT-RUN.");
+return executed == 26 ? 0 : 1;
 
 async Task Run(string id, Action test)
 {
@@ -204,6 +248,12 @@ sealed class Handler(string routeId, Func<HomeFeatureNavigationRequest, Task<Hom
 {
     public string RouteId => routeId;
     public Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request, CancellationToken cancellationToken = default) => open(request);
+}
+sealed class DisposableHandler(string routeId, Func<HomeFeatureNavigationRequest, Task<HomeFeatureNavigationResult>> open, Action dispose) : IHomeFeatureRouteHandler, IDisposable
+{
+    public string RouteId => routeId;
+    public Task<HomeFeatureNavigationResult> OpenAsync(HomeFeatureNavigationRequest request, CancellationToken cancellationToken = default) => open(request);
+    public void Dispose() => dispose();
 }
 sealed class FixtureContext : ICuiBindingContext, ICuiActionDispatcher
 {

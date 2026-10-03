@@ -39,6 +39,12 @@ public static partial class Program
     public static void CloseShell() => Application?.Dispose();
 
     [JSExport]
+    public static string ReadAccessibility() => Application?.ReadAccessibility() ?? "{\"generation\":0,\"elements\":[],\"unsupported\":[]}";
+
+    [JSExport]
+    public static bool PerformAccessibility(string id, string operation, string? value) => Application?.PerformAccessibility(id, operation, value) == true;
+
+    [JSExport]
     public static void PrivateContextInvalidated()
     {
         Application?.ResetPrivateContext();
