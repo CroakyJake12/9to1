@@ -1,3 +1,4 @@
+import { finishIntegrationCleanup } from "./integration-lifecycle.mjs";
 import { launchFixtureCustodian } from "./fixture-launch.mjs";
 import { fixturePort as parseFixturePort, assertFixturePortFree } from "./fixture-network.mjs";
 import assert from "node:assert/strict";
@@ -59,6 +60,7 @@ await assertFixturePortFree(fixturePort);
 mkdirSync(persistPath, { recursive: true, mode: 0o700 });
 writeFileSync(varsPath, devVars, { flag: "wx", mode: 0o600 });
 
+let mainFailure;
 let worker;
 let workerStartupError;
 let custodyReceipt = "";
@@ -248,13 +250,16 @@ try {
   }
   if (process.env.CAKE_BROWSER_FIXTURE_SMOKE !== "1") await released;
 } catch (error) {
+  mainFailure = error;
   console.error(`Local browser fixture failed: ${error?.message ?? "unknown error"}`);
   process.exitCode = 1;
 } finally {
   // A cleanup error deliberately skips all state removal and remains an observable nonzero failure.
+  await finishIntegrationCleanup(mainFailure, async () => {
   await stopWorker();
   globalThis.fetch = realFetch;
   delete globalThis.window;
   if (existsSync(varsPath) && readFileSync(varsPath, "utf8") === devVars) rmSync(varsPath);
   rmSync(persistPath, { recursive: true, force: true });
+  });
 }

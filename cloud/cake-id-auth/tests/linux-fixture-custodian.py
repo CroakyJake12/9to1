@@ -211,6 +211,16 @@ def preflight(command=None):
     return receipt
 
 
+def publish_receipt(fd, data):
+    remaining = memoryview(data)
+    while remaining:
+        written = os.write(fd, remaining)
+        if written <= 0:
+            raise RuntimeError('Durable receipt write incomplete; fixture held')
+        remaining = remaining[written:]
+    os.fsync(fd)
+
+
 def main():
     if sys.argv[1:] == ['--check']:
         preflight()
@@ -244,8 +254,7 @@ def main():
     receipt = custody.drain()
     data = (json.dumps(receipt) + '\n').encode()
     if journal is not None:
-        os.write(journal, data)
-        os.fsync(journal)
+        publish_receipt(journal, data)
     try:
         os.write(3, data)
     except BrokenPipeError:
