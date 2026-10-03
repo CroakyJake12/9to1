@@ -10,5 +10,5 @@
   "variance": "Linux-only preflight, pidfd custodian launch/drain, spawn error handling and private directory permissions only; all domain helpers, fixtures and assertions unchanged; lifecycle collector retains original exception alongside cleanup failure",
   "assertionBodyBytes": 27783,
   "assertionBodySha256": "e9406fdb224761e57d0ec5a03e31720025caac04da96a5eddff453141e0e9bc1",
-  "domainBodyComparison": "Prior proof includes catch output; current assertions body remains byte-identical, catch gains only mainFailure assignment"
+  "domainBodyComparison": "27982-byte original domain-and-catch region is identical after removing only added mainFailure = error assignment; 27783-byte assertion body is literally byte-identical."
 }

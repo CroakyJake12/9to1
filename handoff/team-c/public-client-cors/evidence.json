@@ -1,0 +1,86 @@
+{
+  "runtimeCandidate": "4d94626ae3f0cb50939eea318f41b325a1a74116",
+  "fullSuiteImmutableHead": "de3506973eec8f6014a3d1c617ef18a607219e56",
+  "baselineFixture": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+  "ownerRequest": "c2234f0d0306b10c628b4edae5feeed67761f819",
+  "independentRuntimePeer": "8b797d69ebb81a89135bb2175e207c00aa11b001",
+  "sourceSha256": {
+    "src/index.ts": "f803356ce069e50d642ba02c6e4c3ab0d5d0b2a3869c61f3c6eb93ac20d302fc",
+    "src/auth.ts": "2a6c5baacb77ac4480e11f0ddcb86e0005ea627e569931ea6478cf1faf6f9576",
+    "src/resource-api.ts": "fb1f07df39e95094accf4bfef906ce0476efd099600fe64367f9a74d50ce0bb7",
+    "src/local.ts": "b92fe0bcdd82d243b4b00d15def21eac6e6198eee79d257eee7f7928a0423155",
+    "tests/integration.mjs": "0ce6579e115e1879e8dc8d7595f4e0aa6a3146e8329517012c744b7c21077363",
+    "tests/integration-custody.mjs": "5c5d92a3cb531e9d32ea48f8f5d320ca2bc75401236ee9fa3e639fe6a96169ac",
+    "tests/integration-lifecycle.mjs": "86dedd7c95b91756b4b335b283f42faa36815755351aca1c7468b747b91d4836",
+    "tests/linux-fixture-custodian.py": "f078219ca4dbc6c0eedce942cdc1bcc71958db48a79d54d5b6825d3de30e2fa2",
+    "tests/public-cors.mjs": "58545b7051fd3f357d503efaa837186d7e0bd0157c418b3736e637bfe72d99e3",
+    "tests/browser-fixture.mjs": "11bcd9581d8616b95ff43e79826ef210a4dae094b9c7f673b5a11eaa3a706a3f",
+    "package-lock.json": "0afc67b7fd504d62df49adc8075792952ad5b3cb2fccc940b3e9e7fe0cbaa098"
+  },
+  "rawSha256": {
+    "public-cors-typecheck.log": "caea6e6bd05485f623ac1a107a8ae3976e5b249070f2301187f3a82702dbaeb2",
+    "public-cors-original-negative.log": "1c45cc522cf8ba70038a47e26b33cd0ab0365ff9c7e2ec4a9c6a7ab317c9b618",
+    "public-cors-fixed-runtime-second.log": "0ed50d765ad73f3832bb359b4214edbaa69da011e6047760d76aef55a0e79c36",
+    "public-cors-npm-ci.log": "164ec9a18702f66eb076d1d5d738bfbaa8141a04a8a5c059ff026c39259e4b3e",
+    "public-cors-maintained-regression-de350.log": "69e3c0767360ebecd466111de794c914daccf59a822e43db3378dc5c60b4d4a2",
+    "public-cors-typecheck-final.log": "361020da676192c9b0f13a944334995c3356720b8359af6ff3a21209ca972010",
+    "public-cors-schema-final.log": "d6a9b2ae361185972cd0ba6d06116dcd5ba4133a2dae78111bb0ccb01c818945",
+    "public-cors-fixed-runtime-first.log": "4e714561bcb8aa27f297d9f60ce6fa149acab377c476b8052a72c4b55acd6627",
+    "public-cors-typecheck-fixed.log": "361020da676192c9b0f13a944334995c3356720b8359af6ff3a21209ca972010",
+    "original-to-adapted.diff": "cb08438fb5f0ca8a00f530b97ec2f648fd5a5e5c8cf72b902c3ef7c8ddca9f99",
+    "public-cors-final-runtime.log": "0d798581c5023e5f5607a2a7b34ed8f700a24b69edb908476466c6ed09f9cbc2",
+    "public-cors-fixed-first.log": "8acb815baeaa4b901c79cd7a25c072f56e19925a985bdb747cfa9a61444b9016",
+    "c1-independent-4d946-runtime.log": "0197d94d16eaba2705b446d0c84615dc951acd4e48d94afd18591a6c8d1f9b37",
+    "public-cors-exact-4d946-runtime.log": "b8a308605dd5848ef35c6079e9bb2fe0c58a0da931584df5e181d013ec77a0d9",
+    "public-cors-custody-nine-final.log": "fb93185b8bf4dd0c1e7892bdb7d2921c54375ca1ab10a08c5928b894fd6235e0"
+  },
+  "results": [
+    {
+      "case": "original actual discovery missing ACAO",
+      "exit": 1,
+      "assertion": "ACAO null instead of exact allowed origin",
+      "cleanup": "strict true, 5 reaps"
+    },
+    {
+      "case": "exact4d946 public paths + real OAuth/account/CSRF",
+      "assertions": 117,
+      "exit": 0,
+      "cleanup": "strict true, 4 reaps"
+    },
+    {
+      "case": "C1 independent exact4d946",
+      "assertions": 117,
+      "exit": 0,
+      "cleanup": "strict true, 5 reaps"
+    },
+    {
+      "case": "complete maintained identity regression with custody adapter",
+      "assertions": 222,
+      "exit": 0,
+      "cleanup": "strict true, 5 reaps"
+    },
+    {
+      "case": "reviewed custodian negative controls",
+      "controls": 9,
+      "exit": 0
+    },
+    {
+      "case": "typecheck and schema validation",
+      "exit": 0
+    }
+  ],
+  "commands": {
+    "cwd": "/workspace/team-c/c2-public-cors/cloud/cake-id-auth",
+    "newPaths": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg CAKE_BROWSER_FIXTURE_SMOKE=1 CAKE_BROWSER_FIXTURE_PUBLIC_CORS_TEST=1 node tests/browser-fixture.mjs",
+    "maintainedSuite": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg node tests/integration-custody.mjs",
+    "controls": "python3 -B tests/linux-fixture-custodian.test.py",
+    "lifecycleControl": "node tests/integration-lifecycle.test.mjs"
+  },
+  "originalSuiteVariance": "Original integration.mjs and npm test entry untouched. Separate adapter changes Linux preflight/launch/strict stop, spawn error handling, directory mode, and independent failure preservation only. Domain assertion body 27783 bytes remains identical; no assertion changes/skips. Not literal npm test argv.",
+  "cleanup": "No .dev.vars or .local-run remains. Ports8798/5096 connect_ex111 and SO_REUSEADDR bind success. Immediate plain bind had TIME_WAIT address-in-use; no listener or process custody failure inferred.",
+  "limitations": [
+    "Node transport actual local Worker/D1 only; full browser callback/composition/journey remains B-owned/unrun",
+    "No deployment/provider/real mail/reserved Jacob identity acceptance",
+    "Strict .NET RSA/auth_revision contracts unresolved; no fabricated revision or weakened consumer"
+  ]
+}
