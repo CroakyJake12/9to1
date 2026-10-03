@@ -11,3 +11,5 @@ ASTRA_CONTEXT_EVIDENCE_ROOT=/workspace/team-c/evidence/c3/admin-sdk03 ASTRA_CONT
 ```
 
 SDK10.0.401 variance persists. No original Web/Release/provider/native/actualHTTPS or global acceptance. New independent source/map review and root external pins precede full owning rerun.
+
+Test-only successor074420b9c4e1a2d66b5081d742e191be16bf2f92 strengthens the symlink negative: its actual symlink points within the valid SDK owner root, so only the raw symlink rule rejects it. Runtime helper/driver/catalogue remain byte-identical to df819. Final10controls pass in attempt2.log; independent C5 review7aeeb2f613599ebd998e5eebfabd03bc5b740322 binds both revisions and independently rehashes all2480 before/current artifacts.
