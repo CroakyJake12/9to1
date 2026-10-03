@@ -229,6 +229,11 @@ try {
   console.log(JSON.stringify({ status: "ready", fixtureOnly: true, manifestPath, issuer: discovery.issuer,
     apiResource: resource, browserOrigin, redirectUri: callback, accounts: accounts.length,
     credentials: "private file only; never print or commit", email: "local D1 capture only", port5095: "unused" }));
+  if (process.env.CAKE_BROWSER_FIXTURE_PUBLIC_CORS_TEST === "1") {
+    const { testPublicCors } = await import("./public-cors.mjs");
+    await testPublicCors({ authClient, response, jsonRequest, realFetch, cookies, baseURL, authPath,
+      resource, browserOrigin, callback, clientId: client.client_id, testAccount: accounts[0], discovery });
+  }
   if (process.env.CAKE_BROWSER_FIXTURE_SMOKE !== "1") await released;
 } catch (error) {
   console.error(`Local browser fixture failed: ${error?.message ?? "unknown error"}`);
