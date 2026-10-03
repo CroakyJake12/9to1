@@ -1,0 +1,160 @@
+{
+  "baseHarness": "/workspace/astra-source/worker6-linux-atomic-spawn19-harness-cleanup-failure-evidence/test_atomic_spawn.py",
+  "baseSha256": "0f7759111d54a0efde49ee38eb0c5238e1fc70efbfd97808d055b42db926ec5d",
+  "extractedMaintainedActions": [
+    {
+      "function": "capture_refusal",
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn05/test_additional.py",
+      "sourceSha256": "df0a1b09f75c7e022dec466b8309783083f8ffdb612e5a111eb1e1e2b6d9f2f8",
+      "sourceLines": [
+        33,
+        34
+      ]
+    },
+    {
+      "function": "healthy",
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn05/test_additional.py",
+      "sourceSha256": "df0a1b09f75c7e022dec466b8309783083f8ffdb612e5a111eb1e1e2b6d9f2f8",
+      "sourceLines": [
+        35,
+        36
+      ]
+    },
+    {
+      "function": "no_go",
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn07-startup-deadline/test_startup_deadline.py",
+      "sourceSha256": "cb2021bf46ff1054562b7e686009a22653e297a3b87957f4f41b109786af81b2",
+      "sourceLines": [
+        33,
+        34
+      ]
+    },
+    {
+      "function": "preexec_death",
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn11-preexec-death/test_preexec_death.py",
+      "sourceSha256": "bd4cbea8371f66c9565c6c9397b8308b8de95e07492e12c0aac3ac82dc708a17",
+      "sourceLines": [
+        33,
+        57
+      ]
+    },
+    {
+      "function": "escalation",
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn13-term-escalation/test_term_escalation.py",
+      "sourceSha256": "c08cf97fcfdde51247f6919ee303ae1dae798e0a6dd5daab49d297179901c5f5",
+      "sourceLines": [
+        33,
+        43
+      ]
+    },
+    {
+      "function": "nonparent",
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn16-root-nonparent/test_nonparent.py",
+      "sourceSha256": "2f985cfdbb6565ffbc33ee048f50afb87c903c8dcdd7fb714dcd60790f574dae",
+      "sourceLines": [
+        33,
+        42
+      ]
+    },
+    {
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn03-tests/deny-clone3.c",
+      "target": "deny-clone3.c",
+      "sourceSha256": "a25794c85ea8dd5f65d145add921307081db681e05a8504e4883500aa0a926a4"
+    },
+    {
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn05/ignore-child-signal.c",
+      "target": "ignore-child-signal.c",
+      "sourceSha256": "8427c0daa3e4cb267a98c7c99f31f7575b4a6a3689ef71e8a6aa0e80081c5a6b"
+    },
+    {
+      "source": "/workspace/astra-source/worker6-linux-atomic-spawn13-term-escalation/ignore-term.c",
+      "target": "ignore-term.c",
+      "sourceSha256": "cdf7e1fd0276309f4aaa584fb9120ea2f7215b5f82cdf425a94fad1d9f48ddd3"
+    }
+  ],
+  "caseIds": [
+    "exec_exit",
+    "eof_before_go",
+    "eof_after_exec",
+    "malformed_go",
+    "exec_error",
+    "stop",
+    "supervisor_death",
+    "descriptor_capture_refusal",
+    "healthy_lifetime",
+    "kernel_forced_ENOSYS",
+    "inherited_SIGCHLD_ignored",
+    "no_GO_startup_deadline",
+    "SCM_RIGHTS_receive_EMFILE_noFD",
+    "preexec_death_errorpipe_EOF_is_not_exec",
+    "actual_TERM_ignored_then_pidfd_KILL",
+    "root_nonparent_ECHILD_but_original_pidfd_poll"
+  ],
+  "normativeInventorySha256": "60a2f8b9fee11e47fdd6f2dfc99ca47a9644b990227939b2bb7e750b5ac5ca57",
+  "cases": [
+    {
+      "case": "exec_exit",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "eof_before_go",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "eof_after_exec",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "malformed_go",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "exec_error",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "stop",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "supervisor_death",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "descriptor_capture_refusal",
+      "qualification": "rootOriginalPidfdExitOrNoChild"
+    },
+    {
+      "case": "healthy_lifetime",
+      "qualification": "rootOriginalPidfdExitOrNoChild"
+    },
+    {
+      "case": "kernel_forced_ENOSYS",
+      "qualification": "rootOriginalPidfdExitOrNoChild"
+    },
+    {
+      "case": "inherited_SIGCHLD_ignored",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "no_GO_startup_deadline",
+      "qualification": "rootOriginalPidfdExit"
+    },
+    {
+      "case": "SCM_RIGHTS_receive_EMFILE_noFD",
+      "qualification": "nativeWaitidReceiptNoRootFd"
+    },
+    {
+      "case": "preexec_death_errorpipe_EOF_is_not_exec",
+      "qualification": "rootOriginalPidfdExit_STARTEDNotExec"
+    },
+    {
+      "case": "actual_TERM_ignored_then_pidfd_KILL",
+      "qualification": "rootOriginalPidfdExit_ActualTermIgnoreThenKill"
+    },
+    {
+      "case": "root_nonparent_ECHILD_but_original_pidfd_poll",
+      "qualification": "rootNonparentECHILD_IndependentOriginalPidfdExitOnly"
+    }
+  ]
+}

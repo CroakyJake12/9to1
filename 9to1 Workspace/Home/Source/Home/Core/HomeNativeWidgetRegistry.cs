@@ -34,27 +34,47 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
 
     public ValueTask<IDisposable?> RegisterAsync(HomeNativeObservedPeer observed,
         IReadOnlyList<HomeNativeWidgetDefinition> definitions, CancellationToken ct = default) =>
-        RegisterCoreAsync(observed, definitions, null, ct);
+        RegisterCoreAsync(observed, definitions, null, null, ct);
 
     public ValueTask<IDisposable?> RegisterRuntimeAsync(HomeNativeObservedPeer observed,
         IReadOnlyList<HomeNativeWidgetDefinition> definitions, IHomeNativeWidgetRuntimeEndpoint endpoint,
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
-        return RegisterCoreAsync(observed, definitions, endpoint, ct);
+        return RegisterCoreAsync(observed, definitions, endpoint, null, ct);
+    }
+
+    /// <summary>Trusted transport captures this actor before reading the registration frame.
+    /// Observed peer and endpoint must originate from that same actual connection, never frame JSON.</summary>
+    public ValueTask<IDisposable?> RegisterForActorAsync(HomeNativeObservedPeer observed,
+        IReadOnlyList<HomeNativeWidgetDefinition> definitions, AuthenticatedResourceActor expectedActor,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return RegisterCoreAsync(observed, definitions, null, expectedActor, ct);
+    }
+
+    public ValueTask<IDisposable?> RegisterRuntimeForActorAsync(HomeNativeObservedPeer observed,
+        IReadOnlyList<HomeNativeWidgetDefinition> definitions, IHomeNativeWidgetRuntimeEndpoint endpoint,
+        AuthenticatedResourceActor expectedActor, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        return RegisterCoreAsync(observed, definitions, endpoint, expectedActor, ct);
     }
 
     private async ValueTask<IDisposable?> RegisterCoreAsync(HomeNativeObservedPeer observed,
         IReadOnlyList<HomeNativeWidgetDefinition> definitions, IHomeNativeWidgetRuntimeEndpoint? endpoint,
-        CancellationToken ct)
+        AuthenticatedResourceActor? expectedActor, CancellationToken ct)
     {
+        if (verifier is not IHomeNativeInstalledPeerOriginalActorVerifier originalVerifier) return null;
         if (observed is null || observed.ProcessId <= 0 || !Text(observed.OperatingSystemPrincipalId) || definitions is null)
             return null;
         var snapshot = Snapshot(definitions);
         var actor = await actors.GetCurrentAsync(ct).ConfigureAwait(false);
-        if (actor is null || !Text(actor.ActorId) || !Text(actor.ProfileId) || !Text(actor.AuthenticationRevision)) return null;
-        var owner = Copy(await verifier.VerifyAsync(observed, ct).ConfigureAwait(false));
-        if (owner is null) return null;
+        if (actor is null || expectedActor is not null && actor != expectedActor || !Text(actor.ActorId) || !Text(actor.ProfileId) || !Text(actor.AuthenticationRevision)) return null;
+        var owner = Copy(await originalVerifier.VerifyForActorAsync(observed, actor, ct).ConfigureAwait(false));
+        if (owner is null || await actors.GetCurrentAsync(ct).ConfigureAwait(false) != actor) return null;
         var entry = new Entry(observed, owner, actor, snapshot, endpoint, new());
         var added = false;
         try
@@ -80,13 +100,21 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
     {
         var actor = await actors.GetCurrentAsync(ct).ConfigureAwait(false);
         if (actor is null) return [];
+        return await ListForActorAsync(actor, ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<IReadOnlyList<HomeNativeWidgetResolution>> ListForActorAsync(AuthenticatedResourceActor actor,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(actor);
+        if (await actors.GetCurrentAsync(ct).ConfigureAwait(false) != actor) return [];
         var result = new List<HomeNativeWidgetResolution>();
         foreach (var (id, entry) in _entries.ToArray())
         {
-            if (!await CurrentAsync(entry, ct).ConfigureAwait(false)) continue;
+            if (!await CurrentForActorAsync(entry, actor, ct).ConfigureAwait(false)) continue;
             foreach (var definition in entry.Definitions)
             {
-                if (!await CanReadAsync(entry, definition, ct).ConfigureAwait(false)) continue;
+                if (!await CanReadForActorAsync(entry, definition, actor, ct).ConfigureAwait(false)) continue;
                 if (!_entries.TryGetValue(id, out var current) || !ReferenceEquals(current, entry)) break;
                 result.Add(new(Reference(entry.Owner, definition), definition));
             }
@@ -97,7 +125,7 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         var currentResults = new List<HomeNativeWidgetResolution>();
         foreach (var item in result.Where(item => !duplicate.Contains(item.Reference)))
         {
-            var current = await ResolveAsync(item.Reference, ct).ConfigureAwait(false);
+            var current = await ResolveForActorAsync(item.Reference, actor, ct).ConfigureAwait(false);
             if (current is not null) currentResults.Add(current);
         }
         if (actor != await actors.GetCurrentAsync(ct).ConfigureAwait(false)) return [];
@@ -107,14 +135,22 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
     public async ValueTask<HomeNativeWidgetResolution?> ResolveAsync(HomeNativeWidgetReference reference,
         CancellationToken ct = default)
     {
-        if (reference is null) return null;
+        var actor = await actors.GetCurrentAsync(ct).ConfigureAwait(false);
+        return actor is null ? null : await ResolveForActorAsync(reference, actor, ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<HomeNativeWidgetResolution?> ResolveForActorAsync(HomeNativeWidgetReference reference,
+        AuthenticatedResourceActor actor, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(actor);
+        if (reference is null || await actors.GetCurrentAsync(ct).ConfigureAwait(false) != actor) return null;
         var matches = _entries.ToArray().SelectMany(pair => pair.Value.Definitions
             .Where(definition => Reference(pair.Value.Owner, definition) == reference)
             .Select(definition => (pair.Key, Entry: pair.Value, Definition: definition))).Take(2).ToArray();
         if (matches.Length != 1) return null;
         var match = matches[0];
-        if (!await CanReadAsync(match.Entry, match.Definition, ct).ConfigureAwait(false) ||
-            !_entries.TryGetValue(match.Key, out var current) || !ReferenceEquals(current, match.Entry)) return null;
+        if (match.Entry.Actor != actor || !await CanReadForActorAsync(match.Entry, match.Definition, actor, ct).ConfigureAwait(false) ||
+            !StillUnique(reference, match.Key, match.Entry)) return null;
         return new(reference, match.Definition);
     }
 
@@ -128,6 +164,7 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         if (reference is null || !Size(gridSize) || !double.IsFinite(viewportWidth) ||
             !double.IsFinite(viewportHeight) || viewportWidth <= 0 || viewportHeight <= 0 ||
             viewportWidth > 16384 || viewportHeight > 16384) return null;
+        if (await actors.GetCurrentAsync(ct).ConfigureAwait(false) != expectedActor) return null;
         var matches = Matches(reference);
         if (matches.Length != 1) return null;
         var match = matches[0];
@@ -142,14 +179,14 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         {
             linked.Token.ThrowIfCancellationRequested();
             if (!StillUnique(reference, match.Key, match.Entry) ||
-                !await CanReadAsync(match.Entry, match.Definition, linked.Token).ConfigureAwait(false)) return null;
+                !await CanReadForActorAsync(match.Entry, match.Definition, expectedActor, linked.Token).ConfigureAwait(false)) return null;
             var request = new HomeNativeWidgetCaptureRequest(reference, match.Definition.SurfaceReference,
                 gridSize, viewportWidth, viewportHeight);
             var surface = await match.Entry.Endpoint.CaptureAsync(request, linked.Token).ConfigureAwait(false);
             linked.Token.ThrowIfCancellationRequested();
             if (surface is null || surface.Schema != HomeNativeWidgetSurface.SchemaVersion ||
                 surface.Reference != reference || surface.SurfaceReference != match.Definition.SurfaceReference ||
-                !await CanReadAsync(match.Entry, match.Definition, linked.Token).ConfigureAwait(false) ||
+                !await CanReadForActorAsync(match.Entry, match.Definition, expectedActor, linked.Token).ConfigureAwait(false) ||
                 !StillUnique(reference, match.Key, match.Entry)) return null;
             return HomeNativeWidgetSurface.Capture(surface.Reference, surface.SurfaceReference, surface.AuthoredCui, surface.Data);
         }
@@ -166,21 +203,26 @@ public sealed class HomeNativeWidgetRegistry(IHomeNativeInstalledPeerVerifier ve
         return matches.Length == 1 && matches[0].Key == id && ReferenceEquals(matches[0].Entry, entry);
     }
 
-    private async ValueTask<bool> CanReadAsync(Entry entry, HomeNativeWidgetDefinition definition, CancellationToken ct)
+    private async ValueTask<bool> CanReadForActorAsync(Entry entry, HomeNativeWidgetDefinition definition,
+        AuthenticatedResourceActor actor, CancellationToken ct)
     {
-        if (!await CurrentAsync(entry, ct).ConfigureAwait(false)) return false;
+        if (!await CurrentForActorAsync(entry, actor, ct).ConfigureAwait(false)) return false;
         if (definition.DataScopes.Count > 0 &&
-            await resources.AuthorizeAsync(RenderActionId, definition.DataScopes, ct).ConfigureAwait(false) != entry.Actor) return false;
-        return await CurrentAsync(entry, ct).ConfigureAwait(false);
+            await resources.AuthorizeForActorAsync(actor, RenderActionId, definition.DataScopes, ct).ConfigureAwait(false) != actor) return false;
+        return await CurrentForActorAsync(entry, actor, ct).ConfigureAwait(false);
     }
-    private async ValueTask<bool> CurrentAsync(Entry entry, CancellationToken ct)
+    private async ValueTask<bool> CurrentForActorAsync(Entry entry, AuthenticatedResourceActor actor, CancellationToken ct)
     {
-        var peer = Copy(await verifier.VerifyAsync(entry.Observed, ct).ConfigureAwait(false));
+        if (verifier is not IHomeNativeInstalledPeerOriginalActorVerifier originalVerifier) return false;
+        if (entry.Actor != actor || await actors.GetCurrentAsync(ct).ConfigureAwait(false) != actor) return false;
+        var peer = Copy(await originalVerifier.VerifyForActorAsync(entry.Observed, actor, ct).ConfigureAwait(false));
+        if (await actors.GetCurrentAsync(ct).ConfigureAwait(false) != actor) return false;
         return peer is not null && peer.AppId == entry.Owner.AppId &&
             peer.InstalledApplicationId == entry.Owner.InstalledApplicationId &&
-            peer.InstallationRevision == entry.Owner.InstallationRevision && peer.ExecutableIdentity == entry.Owner.ExecutableIdentity &&
-            await actors.GetCurrentAsync(ct).ConfigureAwait(false) == entry.Actor;
+            peer.InstallationRevision == entry.Owner.InstallationRevision && peer.ExecutableIdentity == entry.Owner.ExecutableIdentity;
     }
+    private ValueTask<bool> CurrentAsync(Entry entry, CancellationToken ct)
+        => CurrentForActorAsync(entry, entry.Actor, ct);
     private static HomeNativeInstalledPeer? Copy(HomeNativeInstalledPeer? peer) => peer is null ||
         !Text(peer.AppId) || peer.InstalledApplicationId == Guid.Empty || !Text(peer.InstallationRevision) ||
         !Text(peer.ExecutableIdentity) || peer.AllowedServiceIds is null || !peer.AllowedServiceIds.Contains(ServiceId)
