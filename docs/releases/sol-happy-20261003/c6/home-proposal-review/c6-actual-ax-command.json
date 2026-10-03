@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "/workspace/team-c/evidence/c6/home-proposal-review/run-home-accessibility.cjs",
+    "/workspace/team-c/evidence/c6/browser83-runtime/wwwroot",
+    "/workspace/team-c/evidence/c6/home-proposal-review/c6-actual-ax",
+    "83c24b2f0033fb2828169921fc905a327120143b"
+  ],
+  "startUTC": "2026-10-03T20:45:15.008847+00:00",
+  "runnerEdited": false,
+  "exitCode": 1,
+  "endUTC": "2026-10-03T20:45:18.706813+00:00"
+}

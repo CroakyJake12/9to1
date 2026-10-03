@@ -1,0 +1,18 @@
+--- a/9to1 Workspace/Home/UI/Home.cui
++++ b/9to1 Workspace/Home/UI/Home.cui
+@@ -25,6 +25,7 @@
+         </Border>
+         <StackPanel id="home-content" orientation="Vertical">
+           <If Condition="{Binding IsDashboard}">
++            <StackPanel id="dashboard-page" orientation="Vertical">
+           <TextBlock id="welcome-heading" text="Welcome to 9-1" font-size="32" font-weight="Bold" foreground="{Resource CuiTextBrush}" />
+           <TextBlock id="welcome-copy" text="Your day across 9-1" font-size="15" foreground="{Resource CuiTextSoftBrush}" margin="0 6 0 18" />
+           <StackPanel id="dashboard-brief" orientation="Vertical" margin="0 0 0 18">
+@@ -99,6 +100,7 @@
+               </StackPanel>
+             </StackPanel>
+           </Border>
++            </StackPanel>
+           </If>
+           <If Condition="{Binding IsLibrary}">
+             <StackPanel id="library-page" orientation="Vertical">
