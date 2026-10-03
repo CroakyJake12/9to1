@@ -131,5 +131,7 @@
     "5096": "available"
   },
   "privateSecretsRemoved": true,
-  "noAuthProductionSourceChanged": true
+  "noAuthProductionSourceChanged": true,
+  "receiverIsolation": "Each receiver launches this exact source in its own environment. Assigned loopback ports apply per isolated receiver; C private files/server are not cross-chat credentials or shared hosted access.",
+  "rootOwnerReview": "Root confirmed complete custodian/Node/controls/docs review and C1 exact runtime ACK before this final handoff"
 }

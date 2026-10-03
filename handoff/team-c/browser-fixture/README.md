@@ -1,6 +1,6 @@
 # Receiver-owned local Worker fixture handoff
 
-Source and runtime custody ACK: `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on `team-c/sol-happy-c2-browser-fixture`. C1 independently reviewed the source, passed nine real Linux controls, and ran the actual Worker/D1 bootstrap with strict kernel reaping. This is ready for each receiver to launch its own isolated fixture. It is not completed browser/provider/native/.NET acceptance. No fixture listener, credential or database is delivered by this record.
+Source and runtime custody ACK: `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on `team-c/sol-happy-c2-browser-fixture`. C1 independently reviewed the source, passed nine real Linux controls, and ran the actual Worker/D1 bootstrap with strict kernel reaping. This is ready for each receiver to launch its own isolated fixture. It is not completed browser/provider/native/.NET acceptance. No fixture listener, credential or database is delivered by this record. Port numbers are assigned per isolated receiver environment; C's loopback server and private filesystem are not accessible across chats/hosts. Each receiver must start its own exact fixture and read its own generated credentials.
 
 Fetch that exact ref and create a receiver-owned detached worktree. Source paths and SHA256 are in `evidence.json`; never substitute earlier `4111`/`843` helpers. Read `cloud/cake-id-auth/BROWSER_FIXTURE.md` at that commit. In its `cloud/cake-id-auth` directory:
 

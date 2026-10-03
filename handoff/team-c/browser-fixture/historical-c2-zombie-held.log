@@ -1,0 +1,10 @@
+{"status":"ready","fixtureOnly":true,"manifestPath":"/workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/.local-run/d0401a5ca11e80d8/browser-fixture-private.json","issuer":"http://127.0.0.1:8798/api/auth","apiResource":"http://127.0.0.1:8798","browserOrigin":"https://client.example.test:5096","redirectUri":"https://client.example.test:5096/callback","accounts":2,"credentials":"private file only; never print or commit","email":"local D1 capture only","port5095":"unused"}
+file:///workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/tests/browser-fixture.mjs:90
+  if (groupAlive() || !(await waitForWorkerExit())) throw new Error("Original Wrangler/Workerd group did not drain; fixture state retained");
+                                                          ^
+
+Error: Original Wrangler/Workerd group did not drain; fixture state retained
+    at stopWorker (file:///workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/tests/browser-fixture.mjs:90:59)
+    at async file:///workspace/team-c/c2-browser-fixture/cloud/cake-id-auth/tests/browser-fixture.mjs:236:3
+
+Node.js v24.19.0
