@@ -94,9 +94,9 @@
     "cwd": "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth",
     "pty": "python3 -B tests/fixture-pty.test.py",
     "disposal": "node tests/fixture-control.test.mjs",
-    "actualSmoke": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg CAKE_BROWSER_FIXTURE_PORT=8799 CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs",
     "receiverPersistent": "XDG_CONFIG_HOME=<receiver-writable-config> CAKE_BROWSER_FIXTURE_PORT=8799 node tests/browser-fixture.mjs",
-    "receiverStop": "write_stdin original fresh session exact stop newline"
+    "receiverStop": "write_stdin original fresh session exact stop newline",
+    "receiverSmokeExample": "XDG_CONFIG_HOME=<receiver-writable-config> CAKE_BROWSER_FIXTURE_PORT=8799 CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs"
   },
   "pythonExecutable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
   "initialControlFailure": "First harmless payload used unresolved python3 argv0 for execve; four actual readiness assertions failed and outer owned cleanup completed. Corrected to actual sys.executable, no assertion changes. Initial raw preserved.",
@@ -113,5 +113,38 @@
     "Actual original B tool cause unknown; baseline is actual old custodian/shared session topology with harmless workload, not B-host reproduction",
     "No production/provider/real email/Jacob identity or org claims; no fabricated auth_revision or weakened .NET RSA/Files contracts",
     "Original/private state remains held if no stable original authority; force-killed custodian cannot recover its authority"
+  ],
+  "actualC1Smoke": {
+    "sourceCommit": "ef6bf2c5ccc5d880f3d0ddb6b307c6458cc87635",
+    "toolSession": 43999,
+    "cwd": "/workspace/team-c/c2-fixture-recovery/cloud/cake-id-auth",
+    "argv": [
+      "node",
+      "tests/browser-fixture.mjs"
+    ],
+    "explicitEnvironment": {
+      "XDG_CONFIG_HOME": "/workspace/team-c/evidence/c1/xdg",
+      "CAKE_BROWSER_FIXTURE_PORT": "8799",
+      "CAKE_BROWSER_FIXTURE_SMOKE": "1"
+    },
+    "otherEnvironment": "inherited",
+    "shellCommand": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c1/xdg CAKE_BROWSER_FIXTURE_PORT=8799 CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs > /workspace/team-c/evidence/c1/public-cors-review/recovery-ef6-8799-smoke.log 2>&1",
+    "exit": 0,
+    "confirmation": "C1 confirmed exact original argv/environment/cwd/source after publication; no rerun"
+  },
+  "metadataCorrections": [
+    {
+      "priorPublicationCommit": "56f971e5dd99413257b2e02c80cbb9ccb1b34128",
+      "priorIndexSha256": "85e05b945c50a80a808abdbcac96ef221694a1504a4078ac19326efd927932c1",
+      "field": "commands.actualSmoke",
+      "supersededValue": "XDG_CONFIG_HOME=/workspace/team-c/evidence/c2/xdg CAKE_BROWSER_FIXTURE_PORT=8799 CAKE_BROWSER_FIXTURE_SMOKE=1 node tests/browser-fixture.mjs",
+      "reason": "C2 example config directory was incorrectly labeled actual C1 invocation. Exact C1 actual execution now recorded separately; source/results/raw bytes unchanged."
+    },
+    {
+      "field": "raw patch whitespace attribute",
+      "reason": "Preserved exactly6 original patch whitespace warnings at lines37,42,490,491,543,544; narrow file-specific -whitespace attribute only, no normalization/global ignore.",
+      "path": "handoff/team-c/browser-fixture-recovery/raw/original-to-final-fixture.patch",
+      "rawSha256": "ae257d285807cba56dc05e560c135ab3c657cb23df51e8fc7a07ce47d16c0198"
+    }
   ]
 }
