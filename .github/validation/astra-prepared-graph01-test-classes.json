@@ -417,9 +417,9 @@
       "fullClass": "Haven.Desktop.Tests.SharedPreparedGraphTests",
       "namespace": "Haven.Desktop.Tests",
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedPreparedGraphTests.cs",
-      "sha256": "b7e4d3f5558bfafad62ac9c66ce717fbea7a5b7b707fb736372c68231a213636",
-      "origin": "Prepared graph source03; exact original tasks, restricted observational rational/explicit-y display, source-only pending whole current30 gate",
-      "source": "/workspace/astra-source/worker3-shared-prepared-graph-source03-typed-original-native-session/manifest.json",
+      "sha256": "7e2058de372f03b20a193d9546b693cc6494d4740e9f8ce7f99a7904ee589e04",
+      "origin": "Actual6755 fixture-only explicit synchronous retired Action; all original16 methods30 outcomes retained, unrun",
+      "source": "/workspace/astra-source/worker3-shared-prepared-graph-source05-actual-synchronous-retirement-assertion/manifest.json",
       "expectedMethods": {
         "Original_product_divisor_roots_split_three_paths_inside_the_declared_domain": 1,
         "Exact_nonzero_decimal_denominator_keeps_values_and_multiple_series_bind_exact_versions": 1,

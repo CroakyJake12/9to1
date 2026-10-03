@@ -338,7 +338,7 @@ public sealed class SharedPreparedGraphTests
                 Assert.Contains(cleanup.InnerExceptions, error => ReferenceEquals(error, failure));
                 Assert.All(cleanup.InnerExceptions, error => Assert.Same(failure, error));
                 Assert.Same(drain, view.OriginalDisposalTask); Assert.Null(view.Content); Assert.Null(view.Prepared);
-                Assert.Throws<ObjectDisposedException>(() => view.SetSourceAsync(graph, TestContext.Current.CancellationToken));
+                Assert.Throws<ObjectDisposedException>(() => { view.SetSourceAsync(graph, TestContext.Current.CancellationToken); });
                 verifiedExpectedFailures = true;
             }
             catch (Exception error) { primary = error; }

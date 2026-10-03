@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "b8956d78aa4bc065331e898aa4ebe5eedada3bf1",
-  "programTree": "3e5b29d029fb8e3a67504b3734f019bcdce1df23",
+  "baselineCommit": "6755d1660ed5d438a8d45c1f55bcde1ef6811374",
+  "programTree": "c2153ccefcfe5cdfff6487514c058ac8bb657395",
   "currentNormalCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
   "kind": "corrective",
   "files": [
@@ -71,16 +71,16 @@
     {
       "path": ".github/validation/astra-prepared-graph01-resource-classes.json",
       "mode": "100644",
-      "object": "74ab67767b9a1a8f43ff5f1291287ea055965228",
-      "bytes": 44242,
-      "sha256": "b73d082f8483582b94446a5da6945890bc1e3854e0a0414a767cd7b87b4c1955"
+      "object": "158660b316560ec6ea275770e23293a526c3fc01",
+      "bytes": 44221,
+      "sha256": "4c5d5cd5469122c0869f2df1f7ebd362a07711ce7a509695101d59bddb31d65d"
     },
     {
       "path": ".github/validation/astra-prepared-graph01-test-classes.json",
       "mode": "100644",
-      "object": "0dc9c1e5782766517c794a09cee87e2beb4df2ff",
-      "bytes": 29697,
-      "sha256": "1b88234f41c03f23d2a77000e28c20aecd21c159d9479d1cf783868cb0543ed0"
+      "object": "904ac4120cc4064bfef02a58822cbeaf8a9a8dea",
+      "bytes": 29676,
+      "sha256": "6512eaaf68d69961913bd436836870575f0650ec19e061aef7978dc87463d5a2"
     },
     {
       "path": ".github/workflows/apply-beta-chat-orchestration.yml",
@@ -40874,9 +40874,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedPreparedGraphTests.cs",
       "mode": "100644",
-      "object": "b90889812d59910f4074a63e60b4ad159877d559",
-      "bytes": 35510,
-      "sha256": "b7e4d3f5558bfafad62ac9c66ce717fbea7a5b7b707fb736372c68231a213636"
+      "object": "06e8085a21e570d33aa6c6e59efccaccabdb9a7d",
+      "bytes": 35515,
+      "sha256": "7e2058de372f03b20a193d9546b693cc6494d4740e9f8ce7f99a7904ee589e04"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/SharedRationalExpressionEvaluatorTests.cs",
@@ -66271,7 +66271,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-prepared-graph01-cut.json",
-  "limits": "Whole accepted Math06 owning46/resource48/regression12 classes and original helpers/workflow/restore/native/source-built tasks/session/drain/full-suite guards preserved; additive real evaluator Desktop class31 exact method/case outcomes produces47/49/12. All original22 Math outcomes retained. Actual five pinned maintained package identities and runtime DLL/package-byte binding plus original Core/Application/Desktop PE/PDB retention required; full final source/document/native/original-task/restore/drain acceptance remains mandatory. Source-only restricted exact rational original-domain capability; no sampled/float marking proof, general symbolic/domain-equivalence oracle, hard CPU/memory/wall-time cap, App/DI/Forms policy activation, function/equation/inequality plotting or whole current Pass1/platform completion. Original current30 Android/IMAP and unrelated product source inherited unchanged. No cloud/provider/account/credential migration. Logical first-party Core/Application/Desktop producer requirements are unchanged; the actual pinned Desktop AssemblyName Haven is mapped explicitly to original Haven.dll/Haven.pdb, with truthful pair byte/SHA receipts. Actual Rational02 failed resource204 original proves31 new evaluator and22 old Math passes plus13 legacy native typeface casts; no full3 acceptance. This sole resource caller selects the existing TestAppBuilder Skia branch only for the actual desktop-owning child, retaining exact created0700 capture directory/environment/process birth witnesses/emitted ordinary SHA inventory and SAME strict original session drain. Parent environment and green owning/regression bodies remain exact. No vendor/static cache patch, source/case deselection or first-initialization ordering claim. The SAME output/session process objects are retained; independent identity-deduplicated original body, exact session initializer/drain, seal, capture-finalization and output-close failures survive together. No adopted/recreated process or omitted strict custody failure. Sole command-function wrapper/body adapter reverses to complete03; all positive scenarios/renderer scope/timeout/source guards unchanged. Graph source03 adds 30 meaningful restricted observational preparation/native task/pixel outcomes on the same canonical graph/expression identities. Full48/50/12 class inventories, all original53 mathematics/rational outcomes and legacy native cases remain required. Samples are display-only and cannot establish symbolic grading or general domain equivalence. No App/DI/Forms/product activation, implicit/nonrational/general function completion, hard runtime supervision or whole Pass1 completion is claimed. Exact Graph02 producer-only compiler correction: direct SAME null-checked MathExpressionReference class members and SAME original token checked before unchanged operation-budget increment. All source03 graph30 plus all original53 and full48/50/12/method/native/PE-PDB/package/task/restore/drain guards retained. No warnings suppression or runtime acceptance.",
+  "limits": "Whole accepted Math06 owning46/resource48/regression12 classes and original helpers/workflow/restore/native/source-built tasks/session/drain/full-suite guards preserved; additive real evaluator Desktop class31 exact method/case outcomes produces47/49/12. All original22 Math outcomes retained. Actual five pinned maintained package identities and runtime DLL/package-byte binding plus original Core/Application/Desktop PE/PDB retention required; full final source/document/native/original-task/restore/drain acceptance remains mandatory. Source-only restricted exact rational original-domain capability; no sampled/float marking proof, general symbolic/domain-equivalence oracle, hard CPU/memory/wall-time cap, App/DI/Forms policy activation, function/equation/inequality plotting or whole current Pass1/platform completion. Original current30 Android/IMAP and unrelated product source inherited unchanged. No cloud/provider/account/credential migration. Logical first-party Core/Application/Desktop producer requirements are unchanged; the actual pinned Desktop AssemblyName Haven is mapped explicitly to original Haven.dll/Haven.pdb, with truthful pair byte/SHA receipts. Actual Rational02 failed resource204 original proves31 new evaluator and22 old Math passes plus13 legacy native typeface casts; no full3 acceptance. This sole resource caller selects the existing TestAppBuilder Skia branch only for the actual desktop-owning child, retaining exact created0700 capture directory/environment/process birth witnesses/emitted ordinary SHA inventory and SAME strict original session drain. Parent environment and green owning/regression bodies remain exact. No vendor/static cache patch, source/case deselection or first-initialization ordering claim. The SAME output/session process objects are retained; independent identity-deduplicated original body, exact session initializer/drain, seal, capture-finalization and output-close failures survive together. No adopted/recreated process or omitted strict custody failure. Sole command-function wrapper/body adapter reverses to complete03; all positive scenarios/renderer scope/timeout/source guards unchanged. Graph source03 adds 30 meaningful restricted observational preparation/native task/pixel outcomes on the same canonical graph/expression identities. Full48/50/12 class inventories, all original53 mathematics/rational outcomes and legacy native cases remain required. Samples are display-only and cannot establish symbolic grading or general domain equivalence. No App/DI/Forms/product activation, implicit/nonrational/general function completion, hard runtime supervision or whole Pass1 completion is claimed. Exact Graph02 producer-only compiler correction: direct SAME null-checked MathExpressionReference class members and SAME original token checked before unchanged operation-budget increment. All source03 graph30 plus all original53 and full48/50/12/method/native/PE-PDB/package/task/restore/drain guards retained. No warnings suppression or runtime acceptance. Actual Graph03 sole fixture Action binding corrects CS0619/xUnit2014 without changing synchronous ObjectDisposedException, original token, any30+53 outcome, full48/50/12, caller/workflow/helper/native/source-PDB/task/restore/session/drain guard. Source-only correction; all three exact original gates remain required.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -67164,6 +67164,30 @@
     {
       "path": "/workspace/astra-source/worker3-graph04-a1-verbatim-source-api-extension-peer01.json",
       "sha256": "487deadb210bb9260f7bf967c1a5f9dc831221d83e2643f4052688f3161f6e5c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-shared-prepared-graph-source05-actual-synchronous-retirement-assertion/manifest.json",
+      "sha256": "a2448fc30a339f0feffb556efc11a8949885b01931b8b6016b18cc92fa45f93c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-prepared-graph02-actualb895-current30-class-reference-original-cancellation/manifest.json",
+      "sha256": "96ed171abceb6cfab843121a74a1c5330b95f2f04558fb9bd22d1015fbe5603d"
+    },
+    {
+      "path": "/workspace/astra-source/root-graph02-original-regression-admission857.json",
+      "sha256": "083eef02632ebb968a8908652cdc67cf1de29657d7a87de096e11634a4b86427"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-graph02-regression131-original-exact-synchronous-retirement-assertion-closure01.json",
+      "sha256": "168bd362e5e67ef421eaf0a696326319c34c49f70e24bbfb71273cb93d19dfd0"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-graph-source05-A1-complete-synchronous-refusal-RAM-peer01.json",
+      "sha256": "f099c322989fc21617c8f994f11f49670a0d8b03be53390b0d2f2f14426b63ab"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-graph-source05-synchronous-original-retirement-assertion-source-extension-peer01.json",
+      "sha256": "c5d77fb63328e92b8ae6c0a73a4d2e2db82d3723e06ecc9f4f7f57595b773317"
     }
   ],
   "sharedCakeIdContract": null
