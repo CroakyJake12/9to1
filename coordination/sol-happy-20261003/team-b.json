@@ -8,9 +8,12 @@
   "baselineAcceptance": "UNVERIFIED; verified remote main identity, acceptedHead remains null",
   "specification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
-    "revision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
-    "modifiedTime": "2026-10-03T17:00:26.970Z",
-    "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1"
+    "revision": "AHj4eMQl824SuBBKBvwCR6ZfrA4oyUVDhaRiEtMBoSr1lma7echZsZ8KYgIXSTJRAeRBcMwnv3T8eAAAwYWZXSiwEsRUy63_D_UB8ayC4dQ",
+    "modifiedTime": "2026-10-03T19:49:34.339Z",
+    "paragraphExtractionSha256": "312aa23a8398286c2a02a06ecc4a7c1581f0a29208a0b4d5db76535327790a50",
+    "readStartedUTC": "2026-10-03 19:51:00 UTC",
+    "readCompletedUTC": "2026-10-03 19:51:27 UTC",
+    "scope": "Fresh live paragraph extraction; no retroactive relabelling of historical acceptance evidence"
   },
   "modelAssignments": {
     "B1": "gpt-6.1-sol",
@@ -25,56 +28,62 @@
     {
       "worker": "B1",
       "paths": [
-        "apps/Web/** except Auth/"
+        "apps/Web/browser foundation, Home composition, wwwroot and Tests excluding delegated app directories"
       ],
-      "task": "Browser entry/bootstrap adapter using existing CUI/Avalonia.Browser; preserve canonical Home/domain",
-      "state": "PARTIAL_IMPLEMENTED_UNVERIFIED",
-      "restriction": "No shared contract/vendor edits without owning Team A acknowledgement",
-      "handover": "Auth subtree explicitly handed to B5; browser bootstrap/route/registry remain B1."
+      "task": "Real native automation-peer accessibility bridge; actual canonical Home layout regression and bounded shared-owner proposal",
+      "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
+      "restriction": "Shared models/CUI/vendor and hosted adapters remain with A/C; root is sole B source committer"
     },
     {
       "worker": "B2",
       "paths": [
-        "team-b evidence: b2 productivity requirement maps"
+        "apps/Web/Write/**",
+        "apps/Web/Productivity/**"
       ],
-      "task": "Write/Present/Canvas/Boards/Data/Forms full browser operation and donor map",
-      "state": "MAPPED_BLOCKED_UNVERIFIED"
+      "task": "Real Write editor/repository/native package create/edit/save/restart and retained renderer integration; remaining productivity scope continues",
+      "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
+      "restriction": "Shared models/CUI/vendor and hosted adapters remain with A/C; root is sole B source committer"
     },
     {
       "worker": "B3",
       "paths": [
-        "team-b evidence: b3 specialist requirement maps"
+        "apps/Web/Wave/**",
+        "apps/Web/Media/**"
       ],
-      "task": "Mail/Games/Planner/Picture/Wave/Motion/Dev/Stacks/Terminal/MiniComputer/Browse/Maps/Launcher/Shelf browser map",
-      "state": "MAPPED_BLOCKED_UNVERIFIED"
+      "task": "Canonical Wave engine, original sources, IndexedDB transaction/history and real playback/export; remaining specialist scope continues",
+      "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
+      "restriction": "Shared models/CUI/vendor and hosted adapters remain with A/C; root is sole B source committer"
     },
     {
       "worker": "B4",
       "paths": [
-        "team-b evidence: b4 Files/Sites/Terra-form maps"
+        "apps/Web/Files/**",
+        "apps/Web/TerraForm/**"
       ],
-      "task": "Files/Sites/Link/Prototype/Paths/Replay/Variants browser operation and contract map",
-      "state": "MAPPED_BLOCKED_UNVERIFIED"
+      "task": "Actual IFilesProvider route/controller and durable restart/ACL/CAS/retry; hosted transport and Terra owner seams",
+      "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
+      "restriction": "Shared models/CUI/vendor and hosted adapters remain with A/C; root is sole B source committer"
     },
     {
       "worker": "B5",
       "paths": [
         "apps/Web/Auth/**",
-        "team-b evidence: b5 AI/account maps"
+        "apps/Web/Accounts/**",
+        "apps/Web/Services/**"
       ],
-      "task": "Thin browser account/profile/session adapter over acknowledged existing CAKE ID Worker wire protocol; no identity/model/entitlement replacement. Full AI/account browser maps.",
-      "state": "PARTIAL_IMPLEMENTED_UNVERIFIED",
-      "protocolSource": "codex/cake-id-auth-backup-20261002@7cc52df0411e0e9e617918f6c5158283cc3199fc:cloud/cake-id-auth/{README.md,src/contract.ts,src/resource-api.ts}"
+      "task": "Existing acknowledged account client with real CUI profile/session controls and truthful injected service configuration",
+      "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
+      "restriction": "Shared models/CUI/vendor and hosted adapters remain with A/C; root is sole B source committer"
     },
     {
       "worker": "B6",
       "paths": [
-        "eng/browser/validate-acceptance-evidence.py",
-        "eng/browser/README.md",
-        "eng/browser/tests/test_acceptance_evidence.py"
+        "eng/browser/**",
+        "independent continuation evidence"
       ],
-      "task": "Independent strict requirement/evidence gate and negative controls; independent browser foundation review",
-      "state": "LOCAL_VALIDATOR_TESTED; FULL_PARITY_REJECTED"
+      "task": "Independent criterion-to-test review; unchanged actual browser AX and real durable workflow reproduction",
+      "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
+      "restriction": "Shared models/CUI/vendor and hosted adapters remain with A/C; root is sole B source committer"
     }
   ],
   "requests": [
@@ -96,7 +105,7 @@
     "A1 maintained theme/font API and exact Runtime dependency ACK received in 5f945e3. C independently reviewed 969 native inputs and c74 keep-alive source at 06c75ec; these source acknowledgements do not accept full runtime/native/provider/product behavior. Please review the new 83 host pointer fix and actual local evidence before global integration.",
     "Team A outstanding owner request remains actual Dashboard branch overlap and missing browser control semantics. Exact unchanged a63 renderer/Home identities and latest 83 reproduction are separately versioned in the handoff. Supply owner corrections and populated cross-client visual/accessibility regression evidence."
   ],
-  "testStatus": "Exact 83 local fixture/source checks 32 validator / 22 route / 28 account / 7 platform pass; B1 actual published browser 14/14 and B6 unchanged trusted-pointer replay 5/5 pass. Shared Home visual layout FAIL; accessible controls absent/unaccepted. No complete deployed app, authenticated cross-client workflow or full browser matrix verified. Earlier failures and corrected erroneous fixtures retained.",
+  "testStatus": "Historical83 subset preserved. Resumed actual AX baseline fails5 with3 NOT_RUN; native automation source fixture13 PASS, navigation regression running; durable Write/Files and account CUI queued. No full app/deployment acceptance.",
   "evidenceLocation": {
     "branch": "team-b/sol-happy-browser-20261003",
     "commit": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
@@ -122,14 +131,14 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T19:14:41.989545+00:00",
+  "updatedUTC": "2026-10-03T19:52:45.343520+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
   "candidateCommit": "83c24b2f0033fb2828169921fc905a327120143b",
-  "candidateStatus": "PARTIAL_BROWSER_FOUNDATION_VERIFIED_LOCALLY; FULL_PRODUCT_PARITY_BLOCKED; NOT_GLOBAL_RELEASE",
+  "candidateStatus": "RESUMED_EXECUTABLE_BROWSER_IMPLEMENTATION; FULL_PARITY_UNVERIFIED; NOT_GLOBAL_RELEASE",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -144,7 +153,7 @@
     "oldRuntimeEvidenceRelabelled": false,
     "currentAcceptanceValidator": "INCOMPLETE exit1;10558 defects including3 STALE_SOURCE; no product acceptance"
   },
-  "coordinationState": "A_REGISTERED; C_SOLE_GLOBAL_INTEGRATOR; B_FINAL_PARTIAL_HANDOFF_PUBLISHED; ACCEPTED_HEAD_REMAINS_OWNER_CONTROLLED_NULL",
+  "coordinationState": "A_REGISTERED; C_SOLE_GLOBAL_INTEGRATOR; B_RESUMED; ACCEPTED_HEAD_OWNER_CONTROLLED",
   "handoffEvidenceClaim": {
     "owner": "Team B root",
     "path": "docs/releases/sol-happy-20261003/team-b/**",
@@ -258,5 +267,85 @@
     "fullMandatoryShouldDonorPlatformDenominator": null,
     "semanticInventoryComplete": false,
     "warning": "Section/paragraph/procedure/unit counts are not a conformance percentage. Shared frameworks, Variants/accounts and inherited obligations remain additional."
+  },
+  "priorPartialCheckpoint": {
+    "code": "83c24b2f0033fb2828169921fc905a327120143b",
+    "evidence": {
+      "branch": "team-b/sol-happy-browser-20261003",
+      "commit": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
+      "path": "docs/releases/sol-happy-20261003/team-b",
+      "README": "docs/releases/sol-happy-20261003/team-b/README.md",
+      "manifest": "docs/releases/sol-happy-20261003/team-b/package-manifest.json",
+      "manifestSha256": "ffb18478052b8b537fb3280591910b2ce8f07871d359af1114c37672be18c124",
+      "evidenceFiles": 405,
+      "evidenceBytes": 99633057,
+      "totalGitFiles": 411,
+      "scope": "405 evidence artifacts plus 3 manifest/root documents and 3 separately Git-sealed independent audit reports. Old source on this history is held; use the current code branch, or cherry-pick this documentation-only commit."
+    },
+    "state": "PARTIAL_BROWSER_FOUNDATION_VERIFIED_LOCALLY; FULL_PRODUCT_PARITY_BLOCKED; NOT_GLOBAL_RELEASE",
+    "preserved": true
+  },
+  "continuation": {
+    "userScope": "Explicit full active browser scope resume; six existing workers recovered, no duplicate team; historical checkpoint preserved",
+    "sourceBase": "83c24b2f0033fb2828169921fc905a327120143b",
+    "draftState": "Uncommitted browser-owned adapters under root review; no shared edits",
+    "independentBaseline": "Unchanged actual 83 Chromium AX: eight cases, five absent-control failures and three dependent keyboard NOT_RUN; no startup error",
+    "localExecution": "Native automation bridge13 checks PASS; navigation22 running; actual durable Write/Files and Accounts CUI source suites queued",
+    "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation"
+  },
+  "continuationRequests": [
+    {
+      "owner": "A1 Home/CUI",
+      "request": "ACK or provide owner fix for exact two-line canonical Dashboard grouping proposal below. Actual unchanged canonical Home layout8 assertions all FAIL with children Y56; same assertions on evidence-only grouping PASS8/8. No shared source applied by B. Public native AutomationPeer consumption in B adapter does not replace Home/CUI.",
+      "sourceBase": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+      "patch": "--- a/9to1 Workspace/Home/UI/Home.cui\n+++ b/9to1 Workspace/Home/UI/Home.cui\n@@ -25,6 +25,7 @@\n         </Border>\n         <StackPanel id=\"home-content\" orientation=\"Vertical\">\n           <If Condition=\"{Binding IsDashboard}\">\n+            <StackPanel id=\"dashboard-page\" orientation=\"Vertical\">\n           <TextBlock id=\"welcome-heading\" text=\"Welcome to 9-1\" font-size=\"32\" font-weight=\"Bold\" foreground=\"{Resource CuiTextBrush}\" />\n           <TextBlock id=\"welcome-copy\" text=\"Your day across 9-1\" font-size=\"15\" foreground=\"{Resource CuiTextSoftBrush}\" margin=\"0 6 0 18\" />\n           <StackPanel id=\"dashboard-brief\" orientation=\"Vertical\" margin=\"0 0 0 18\">\n@@ -99,6 +100,7 @@\n               </StackPanel>\n             </StackPanel>\n           </Border>\n+            </StackPanel>\n           </If>\n           <If Condition=\"{Binding IsLibrary}\">\n             <StackPanel id=\"library-page\" orientation=\"Vertical\">\n",
+      "patchSha256": "4e0343b3ccb5f427699ea3b2f9898aa21acb9970a40bcab540a335bdce979349",
+      "requiredTest": "Same canonical runtime layout plus browser real AX/Tab/Enter/Space; cross-client regression by owner"
+    },
+    {
+      "owner": "A1 shared rendering",
+      "request": "Write browser needs exact existing HavenSceneControl/WriteDocumentSurface source and genuine DefaultTheme/font asset composition in browser. HavenPlatform has no Web; use Unknown pending owner seam, no Windows claim, invented palette/font fallback or copied replacement editor. Please ACK bounded source-link/packaged resource composition."
+    },
+    {
+      "owner": "A2 Wave engine",
+      "request": "Provide or ACK browser-portable canonical Wave engine module. Current Wave.csproj references native Haven.Infrastructure; portable public engine is in unchanged Program.cs prefix plus WaveProject/WaveProjectEdits/annotations. Request owner portable extraction or ACK mechanical build-time exact source extraction with source hashes; no manually maintained engine fork."
+    },
+    {
+      "owner": "C2/C3 maintained account backend",
+      "request": "Supply exact maintained local Worker/D1 fixture commit, supported startup commands, isolated test-account provisioning, client/redirect/resource configuration, ports custody (proposed8798/5095/5096) and endpoint mapping for actual browser AccountApiClient. Preserve real issuer/JWKS algorithm/sid/genuine auth_revision. Local real-backend acceptance may proceed separately from staging once exact contract supplied; do not require a hosted account for local durable tests."
+    },
+    {
+      "owner": "C4 Files hosted adapter",
+      "request": "Provide authenticated real IFilesProvider folder List/Get/Create/Rename/Move/Delete/Restore browser adapter or hosted fixture over actual DurableDriveProvider. Actor identity must be resolved by server; use canonical IDs, expected revision, operation key and authoritative Committed/ResultRevisionId. Existing FilesWebDomain List/Get has no mutation or byte transport. Browser controller and real durable11-case fixture proceed independently."
+    },
+    {
+      "owner": "A Write domain",
+      "request": "Clarify retained Write renderer busy/read-only and owner async dirty save/close lifecycle; source-linked actual session does not establish backend ACL. Cross-process CAS/layout/Section model gaps remain owner seams, no alternate browser schema."
+    },
+    {
+      "owner": "C independent browser validator",
+      "request": "Immutable compiled83 artifact request received. B will deliver exact21686097-byte SHA0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b via fetchable artifact Git branch with original publish manifest/runner, without rebuilt substitution."
+    }
+  ],
+  "blockerClassification": {
+    "B_owned_executable": [
+      "Native browser accessibility and keyboard projection",
+      "Per-app real durable workflows, browser media/storage adapters and error recovery",
+      "Owned composition/lifetime/test project closure"
+    ],
+    "A_owned": [
+      "Canonical Home Dashboard layout; exact two-line proposal supplied",
+      "Retained Write renderer theme/font/browser platform contract",
+      "Portable canonical Wave engine boundary; Write layout/section/CAS model seams"
+    ],
+    "C_owned": [
+      "Maintained real account fixture/config/account custody",
+      "Authenticated real Files mutation and bytes transport",
+      "Staging endpoints and genuine auth_revision/signing contracts"
+    ],
+    "missing_capability_or_decision": [
+      "Connected Sandbox development tool/Operating Contract absent although Cloudflare SDK skills exist",
+      "SH-13 browser/support/performance decisions and desktop continuity counterpart"
+    ]
   }
 }
