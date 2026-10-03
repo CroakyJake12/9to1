@@ -8,11 +8,32 @@ namespace HavenOS.Home.Core;
 
 /// <summary>Profile-bound durable platform index. Inaccessible profiles retain identity but never expose launch authority.</summary>
 public sealed class HomeInstalledApplicationRegistry(IHomeCoreStateStore store, IAuthenticatedResourceActorSource actors,
-    IEnumerable<IInstalledApplicationObservationProvider> providers) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry
+    IEnumerable<IInstalledApplicationObservationProvider> providers) : IInstalledApplicationRegistry, IInstalledApplicationOriginalActorRegistry, IInstalledApplicationOriginalReadRegistry
 {
     private readonly IInstalledApplicationObservationProvider[] _providers = providers.ToArray();
     private sealed record State(string ProfileId, IReadOnlyList<InstalledApplicationReference> Applications);
     private static readonly AppOperability Unknown = new(AppOperabilityClassification.Unknown, AppOperabilityPath.TypedApi);
+
+    /// <summary>Observes only existing canonical inventory; metadata is not resource authorization.</summary>
+    public async ValueTask<InstalledApplicationReadSnapshot?> ReadExistingForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        if (!Text(expectedActor.ActorId) || !Text(expectedActor.ProfileId) || !Text(expectedActor.AuthenticationRevision) ||
+            expectedActor.AccountId == Guid.Empty || expectedActor.OrganisationId is not null)
+            throw new UnauthorizedAccessException("A verified personal Home profile is required.");
+        if (expectedActor != await actors.GetCurrentAsync(ct).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The originating installed application actor changed.");
+        var read = await store.ReadAsync(ct).ConfigureAwait(false);
+        if (expectedActor != await actors.GetCurrentAsync(ct).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The originating installed application actor changed during registry read.");
+        if (!read.IsSuccess) throw new InvalidDataException("Installed application state requires recovery.");
+        var id = "home.installed-apps." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(expectedActor.ProfileId)));
+        var record = read.State!.Records.SingleOrDefault(r => r.RecordId == id);
+        if (record is null) return null;
+        var state = Read(record, expectedActor.ProfileId);
+        return new InstalledApplicationReadSnapshot(record.RecordId, record.Revision,
+            Array.AsReadOnly(state.Applications.ToArray()));
+    }
 
     public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshAsync(CancellationToken ct) => RefreshCoreAsync(null, ct);
     public ValueTask<IReadOnlyList<InstalledApplicationReference>> RefreshForActorAsync(AuthenticatedResourceActor expectedActor, CancellationToken ct)
