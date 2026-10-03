@@ -1,9 +1,9 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "24531d46f2179096e53556070f61edaa47c93955",
-  "programTree": "4cdec1ce4290340d0d15013fd10b875616005a6f",
-  "currentNormalCommit": "24531d46f2179096e53556070f61edaa47c93955",
-  "kind": "initial",
+  "baselineCommit": "5a9fb66bfcc8e3b3b8e0e2ed664c9f10db6fb25e",
+  "programTree": "aa133900f782493daa9af09a6bc40f0bd6abcfac",
+  "currentNormalCommit": "17e5d86e4f44684a36e10dd1baf8c4eeea44d859",
+  "kind": "corrective",
   "files": [
     {
       "path": ".editorconfig",
@@ -30808,9 +30808,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProject.cs",
       "mode": "100644",
-      "object": "e18228b93e125dd8a843e501bd64156061240355",
-      "bytes": 18219,
-      "sha256": "0cb4f99b0022d294cf815230ee5ad377ecca13724981cf336c1d3c19686959e8"
+      "object": "ade26118ddb775312f06c66116cab171fa81469b",
+      "bytes": 18229,
+      "sha256": "e7b79f3bec2eaee586bf3a51f6b7ac3fc9785a88e11a57b75b40617faf07947d"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Core/Forms/FormProjectEditor.cs",
@@ -66327,7 +66327,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-forms-math01-cut.json",
-  "limits": "Exact current normal27 full source/root index protected. Complete inherited Math06 owning46/resource48/regression12 classes and original full/filtered suites retained. Add full Home prerequisites and Forms classes to53/55/15 with exact source/method pins. Every original task/build-task/restore/package/native/compiled/PDB/Xvfb/session/pidfd/zero-skip/final-source guard preserved. Actual original classic App/DI/factory/CUI/owning-settings/edit/save/reopen/publish/respond/mark scenario uses fresh0700 XDG/HAVEN_DATA_DIR without HOME changes; original async callbacks/App shutdown, direct native process/maps/Skia/profile inode/witness custody and strictdrains must prove separately. Diagnostics are conditional validation only and excluded from future product publication. No cloud/backend/default provider/billing/WP/data import/global scope claim. Full02 changes only three complete presenter/Home-observer/Forms-observer source files through exact Avalonia.Application.Current qualifications. Tests/classes/counts/callers/workflow/native/restore/drain/App707c and original54ac constructor remain byte-exact full01. Known actual Sites03 presenter CS0234 is fixed as source only; Home/Forms observer bindings are preventive/unreached until actual native run. Full03 refreshes only normal28 metadata/class provenance and binds the four already accepted IMAP sources inherited without overlays. Whole53/55/15 class identities, SHA, ordering and method coverage are retained; no selected Mail suite exists, so no unrelated Inbox suite is introduced. All actual App707c, selected source bodies, full native/caller/workflow/restore/task/session/PE-PDB/profile/drain guards are byte-exact02.",
+  "limits": "Exact current normal27 full source/root index protected. Complete inherited Math06 owning46/resource48/regression12 classes and original full/filtered suites retained. Add full Home prerequisites and Forms classes to53/55/15 with exact source/method pins. Every original task/build-task/restore/package/native/compiled/PDB/Xvfb/session/pidfd/zero-skip/final-source guard preserved. Actual original classic App/DI/factory/CUI/owning-settings/edit/save/reopen/publish/respond/mark scenario uses fresh0700 XDG/HAVEN_DATA_DIR without HOME changes; original async callbacks/App shutdown, direct native process/maps/Skia/profile inode/witness custody and strictdrains must prove separately. Diagnostics are conditional validation only and excluded from future product publication. No cloud/backend/default provider/billing/WP/data import/global scope claim. Full02 changes only three complete presenter/Home-observer/Forms-observer source files through exact Avalonia.Application.Current qualifications. Tests/classes/counts/callers/workflow/native/restore/drain/App707c and original54ac constructor remain byte-exact full01. Known actual Sites03 presenter CS0234 is fixed as source only; Home/Forms observer bindings are preventive/unreached until actual native run. Full03 refreshes only normal28 metadata/class provenance and binds the four already accepted IMAP sources inherited without overlays. Whole53/55/15 class identities, SHA, ordering and method coverage are retained; no selected Mail suite exists, so no unrelated Inbox suite is introduced. All actual App707c, selected source bodies, full native/caller/workflow/restore/task/session/PE-PDB/profile/drain guards are byte-exact02. Forms04 sole actual Core CS0136 correction renames the field.Graph local and its Validate use. Original53/55/15 whole classes, all35 outcomes, source/PDB/native/task/restore/drain/strict original callbacks and all callers/workflow are unchanged03. Tables retain original actual28 source provenance because no class body/source bytes change. Current29 metadata inherits acceptedMath publication with no source/table regeneration. Root alone constructs/pushes/dispatches.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-maps-current20-coherent96-full-owning-gate21/manifest.json",
@@ -67000,6 +67000,38 @@
     {
       "path": "/workspace/astra-source/worker2-mail-imap-inbox-original-task-cleanup-source04/MailKitInboxReconciliationTests.cs",
       "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-canonical-math-consumer-source09-actual-core-pattern-variable/manifest.json",
+      "sha256": "5a35ca383d30ecceb551d842a96deb6cae77879aaf0b9e6dd52646b729c3600c"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms-math-current28-full-three-original-native-caller-package03-inherited-imap/manifest.json",
+      "sha256": "4b4abd6c240521af60bd86f745b657985b89f5e6723dc9cb0c35e6be2f3bf2c1"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-forms03-full3-original-cs0136-failure-closure01.json",
+      "sha256": "95a2c55c071f0895e67ee64225309f64814c465a7bc6faad189b1c364de16af0"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-forms-consumer09-actual-core-pattern-source-api-peer01.json",
+      "sha256": "322c558df4340fa870fb2f1b72bed1d08a9d4dee7a2d1fb404e7b95862f59da6"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint29-publication-local.json",
+      "sha256": "77429ce9dd285c10d48ece85d5d75b5c321e7952c4f0d70483c11b3c8edc5298"
+    },
+    {
+      "path": "/workspace/astra-source/root-forms03-original-failure-admission579.json",
+      "sha256": "b6c725ab24acf7889b2200d6efe1bba80153f969ce672af7dfe92cce2e707c5a"
+    },
+    {
+      "path": "/workspace/astra-source/spec-20261003-075358-substantive-additions581.json",
+      "sha256": "252c268a32f8157d27c0e48bf672956c0dcb9f2a6fc7c545e39dcb5464c61c1d"
+    },
+    {
+      "path": "/workspace/attachments/c6cb889e-d0b8-47fa-953e-c3414b6c5adb/9to1 Development Specification.txt",
+      "sha256": "88d1f3d0c438f4b79e4d169b077de70943752af4c6c58198736cb92912f9d0ec"
     }
   ],
   "sharedCakeIdContract": null

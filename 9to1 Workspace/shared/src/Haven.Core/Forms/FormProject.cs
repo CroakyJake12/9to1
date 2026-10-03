@@ -144,10 +144,10 @@ public static class FormProjectCodec
                 Require(field.Kind == FormFieldKind.Mathematical, "Math expression belongs only to mathematical fields.");
                 MathObjectCodec.Validate(expression);
             }
-            if (field.Graph is { } graph)
+            if (field.Graph is { } fieldGraph)
             {
                 Require(field.Kind == FormFieldKind.Graph, "Graph belongs only to graph fields.");
-                MathObjectCodec.Validate(graph);
+                MathObjectCodec.Validate(fieldGraph);
             }
             if (field.Assessment is { } marking)
             {
