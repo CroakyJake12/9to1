@@ -1,0 +1,75 @@
+{
+  "status": "NARROW_SHARED_HOME_LAYOUT_SOURCE_OWNER_ACK_NO_BROWSER_OR_RUNTIME_ACCEPTANCE",
+  "reviewer": "Team A A1",
+  "repository": "CroakyJake12/9to1",
+  "proposalCommit": "28b3fa6d8a8099fc5ee01c9ff479e34eabaa89c3",
+  "proposalParent": "bc04bd3608f2fa29d5cfcb9c5ea86ac054d4bec3",
+  "normalOwnerBase": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+  "target": "9to1 Workspace/Home/UI/Home.cui",
+  "original": {
+    "bytes": 11861,
+    "sha256": "13c80c592b71831a21cfe9bec065f901c6d7d3df35575ff77def6c079e0a59fc"
+  },
+  "proposal": {
+    "remotePath": "docs/releases/sol-happy-20261003/team-b-home-proposal/Home.cui.proposed",
+    "bytes": 11955,
+    "sha256": "00589e2603a73dd6016cb9d8fc47d17cf2292aab354fbf3079d5767bb9533571"
+  },
+  "patch": {
+    "remotePath": "docs/releases/sol-happy-20261003/team-b-home-proposal/home-dashboard-sequential.patch",
+    "bytes": 919,
+    "sha256": "4e0343b3ccb5f427699ea3b2f9898aa21acb9970a40bcab540a335bdce979349"
+  },
+  "wholeInverse": "Exactly remove the sole dashboard-page vertical StackPanel opening and its matching added close. Entire proposed bytes reconstruct exact original Home.cui SHA; all prior IDs/actions/text/bindings/route conditionals retained.",
+  "sourceCause": "Actual CuiControlLoader.BuildConditionalBranch474-489 creates generic Panel and adds direct If siblings without sequential layout. One vertical wrapper groups all dashboard siblings; no loader/framework semantic replacement.",
+  "apiPins": [
+    {
+      "path": "framework/CUI/Core/CuiRuntimeContracts.cs",
+      "bytes": 1441,
+      "sha256": "3fc6935ae8e607cfd5637b5f0ad766906aaa4a7a328ae368fdbf328a5a9fd8b4"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiControlLoader.cs",
+      "bytes": 90322,
+      "sha256": "11af1474c675e3a9359e5359d42987c4835772ae96c09650677c5120a7e21da3"
+    },
+    {
+      "path": "framework/CUI/Runtime/CuiViewModel.cs",
+      "bytes": 3770,
+      "sha256": "4dbf9dc3b3290e77313d0b893fa7bff33adca6ed3d0ecfb29319da6221518251"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeCuiScene.cs",
+      "bytes": 35989,
+      "sha256": "8e11204af4df7677f698b1f18faa4856eb68ab390ccb5bced58c70cf59673806"
+    },
+    {
+      "path": "9to1 Workspace/Home/Source/Home/HomeDashboard.cs",
+      "bytes": 14373,
+      "sha256": "6631e03a072f32c7922d87ebebdf3d64af604df359d3211b7635af054b10d9b9"
+    }
+  ],
+  "currentCapabilityHook": {
+    "interface": "CakeOS.Cui.ICuiActionAvailability.IsActionAvailable(string command) -> bool?; null is unknown.",
+    "observation": "CuiControlLoader.Inspect127 observes host availability. Existing CuiViewModel.SetActionAvailability stores an optional observation.",
+    "executionLimit": "Loader does not automatically disable or veto actions from that signal. Native control IsEnabled is an independent existing live binding; owning DispatchAsync must recheck actual current service/actor/permissions.",
+    "actualBrowserContext": {
+      "path": "apps/Web/BrowserHomeContext.cs",
+      "commit": "28b3fa6d8a8099fc5ee01c9ff479e34eabaa89c3",
+      "bytes": 3127,
+      "sha256": "58095e50ed08cc6708387e59bfada9cf07a819bfe132bf8b1d95701ac5c1b2d8",
+      "available": "Only NavigateDashboard/NavigateLibrary/NavigateEvents local shell routes. Every absent account-dependent command reports false; dispatch returns HomeServiceUnavailable.",
+      "notGranted": "No Home startup/current actor/account provider/model/runtime permission established."
+    },
+    "normalHomeGap": "HomeCuiSurface.CanInstallAll is actual dashboard snapshot observation and RequestInstallAll refuses false, but TryGetValue omits it and HomeCuiActionDispatcher does not implement ICuiActionAvailability. No registered global-search capability/owner route found; cannot invent enabled flags or use anonymous metadata as authorization."
+  },
+  "reviewedReportedEvidence": {
+    "layoutReportSha256": "6f4fa70f4e3e4a84da1145868f218e9d363b0bcc9dd402caf01e7445720e5d54",
+    "fixtureSha256": "6b600d186c3ecf8af4a47652796c9601e14835bf039ce7d85ed331cba41f8477",
+    "scope": "Source-referenced actual CUI/Skia/fonts headless layout, same eight real bounds assertions. Reported original0/8 vs proposed8/8; reviewer did not rerun.",
+    "limitations": "Harness Window setters before protected retention and await-using session error replacement are not complete native lifetime proof.",
+    "browser": "Actual immutable83 browser AX remains five FAIL and three NOT_RUN; unchanged control semantics/keyboard/installed startup remain pending."
+  },
+  "action": "ACK exact two-line authoring proposal for reviewed delivery/isolated validation. Root/Team C owns integration; no source/branch/build/download/default capability change by A1.",
+  "remaining": "Actual installed readiness/provider/actor/current mutation/native ACK/accessibility gates remain separate and required."
+}
