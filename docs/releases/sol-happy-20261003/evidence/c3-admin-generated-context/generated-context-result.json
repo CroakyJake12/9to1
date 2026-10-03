@@ -1,0 +1,62 @@
+{
+  "scope": "isolated tooling only; original attempt5 remains refused",
+  "actualQueries": 2,
+  "controls": 10,
+  "all2480OriginalOutputFilesUnchanged": true,
+  "rows": [
+    {
+      "project": "/workspace/team-c/c3-admin-compile-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Base/Avalonia.Base.csproj",
+      "compileInputs": 1237,
+      "pdbDocumentsVerified": 1284,
+      "symbolIdentity": {
+        "kind": "external-portable-pdb",
+        "origin": {
+          "physicalPeSha256": "202cb65d21d3235f93bb6bbc671b8b5156c0bd631a5b34d38ac52acba5e0a008"
+        },
+        "bytes": 1055180,
+        "sha256": "b34b625ff7ecf9952593f6c17347a2432ec51ad4729b3658c162c1145e76e27f",
+        "identity": {
+          "portablePdbId": "539916c245b9c246b063c132eded91682fdef5e3",
+          "codeViewGuid": "c2169953-b945-46c2-b063-c132eded9168",
+          "codeViewStamp": 3824541231
+        }
+      },
+      "canonicalGeneratedContext": {
+        "artifactsPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build",
+        "projectOwnerRoot": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Avalonia.Base",
+        "intermediateOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Avalonia.Base/debug_net10.0_linux-x64",
+        "compilerGeneratedFilesOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Avalonia.Base/GeneratedFiles"
+      }
+    },
+    {
+      "project": "/workspace/team-c/c3-admin-compile-validation/framework/CUI/vendor/Avalonia/src/Avalonia.Build.Tasks/Avalonia.Build.Tasks.csproj",
+      "compileInputs": 219,
+      "pdbDocumentsVerified": 221,
+      "symbolIdentity": {
+        "kind": "embedded-portable-pdb",
+        "origin": {
+          "physicalPeSha256": "b20bbfa1e690944d3c5635e9bdf125748f3047ac9348f94f5aded5f01cd31bf0",
+          "debugRecordOffset": 687268,
+          "debugRecordBytes": 137280,
+          "debugRecordSha256": "76218af1fe62629fb380b30a42692f8ca43f3b13f98ddb469ce1806e0bb8271f",
+          "declaredSymbolBytes": 293888
+        },
+        "bytes": 293888,
+        "sha256": "469c21e899de940e1889bb6b25dab99ecbeb9d08702b5c2a00d3a0bee556e488",
+        "identity": {
+          "portablePdbId": "305aea6cb48aa14c942fab03ea6c6659457d6699",
+          "codeViewGuid": "6cea5a30-8ab4-4ca1-942f-ab03ea6c6659",
+          "codeViewStamp": 2573630789
+        }
+      },
+      "canonicalGeneratedContext": {
+        "artifactsPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks",
+        "projectOwnerRoot": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks",
+        "intermediateOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/debug",
+        "compilerGeneratedFilesOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-host-build-tasks/obj/Avalonia.Build.Tasks/debug/generated"
+      }
+    }
+  ],
+  "oldGuard": "configuration IntermediateOutputPath containment wrongly rejects original explicit per-project sibling",
+  "newGuard": "selected actual ArtifactsPath plus matching queried project SDK owner base/extensions root; generated under that exact owner root, symlinks/foreign project/path escape refused"
+}

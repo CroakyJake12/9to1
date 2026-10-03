@@ -1,0 +1,277 @@
+[
+  {
+    "path": "debug/compiled/9to1 Workspace/Sites/bin/HavenOS.Sites/debug_linux-x64/HavenOS.Sites.dll",
+    "bytes": 384512,
+    "sha256": "8156d70f5d34d111c8d555b3eab4ae6fa531c7949d8f6cabe0cd134de5d0d892"
+  },
+  {
+    "path": "debug/compiled/9to1 Workspace/Sites/bin/HavenOS.Sites/debug_linux-x64/HavenOS.Sites.pdb",
+    "bytes": 80340,
+    "sha256": "70a3b9f61c41009ccef3776a614875927708246b6a3606c865e5e1b89f660b32"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "bytes": 826880,
+    "sha256": "b20bbfa1e690944d3c5635e9bdf125748f3047ac9348f94f5aded5f01cd31bf0"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs.dll",
+    "bytes": 141824,
+    "sha256": "c5221be29efe1eaa28a959e5036fdb530519e9f16c7239078772dbdad447a6bf"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Accounts.Specs/debug_linux-x64/Accounts.Specs.pdb",
+    "bytes": 36784,
+    "sha256": "e2d870f2c12be57094748ee0b9ae759546847227ab656da05091fccc83db9b79"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Avalonia/debug_net10.0_linux-x64/Avalonia.dll",
+    "bytes": 3584,
+    "sha256": "e75cad1457a4b0752703603433842ed19aada348881b66e5f94f354abc6e77a8"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Avalonia/debug_net10.0_linux-x64/Avalonia.pdb",
+    "bytes": 12468,
+    "sha256": "592d64c37b833c89328bcab06503612b7abba5772a0fef99fe7e49df9f8b603f"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Core/debug_linux-x64/CakeOS.Cui.Core.dll",
+    "bytes": 80384,
+    "sha256": "30caba02584a57527885b4f47792f62b07d341f44e76d3e14909396ca091ca18"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Core/debug_linux-x64/CakeOS.Cui.Core.pdb",
+    "bytes": 32936,
+    "sha256": "5afaf3d0c4d75c759d3cfe6bd15c32434e34d5e6dbd269694ac0208e21452984"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Language/debug_linux-x64/CakeOS.Cui.Language.dll",
+    "bytes": 11776,
+    "sha256": "dad4067d2eeb0c2d13e91968a56b3d5a475560b5f8a3e8414164e69ead86f9b9"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Language/debug_linux-x64/CakeOS.Cui.Language.pdb",
+    "bytes": 13744,
+    "sha256": "87de0c15e738c164a0d16cc69426a5e9d81727cda94ecfa50b3da706f99675a8"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime/debug_linux-x64/CakeOS.Cui.Runtime.dll",
+    "bytes": 159744,
+    "sha256": "67fed9028fd32a477d5b9195f77bdd79ad94f02b4fbdca36fcd3c929f7c97632"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Runtime/debug_linux-x64/CakeOS.Cui.Runtime.pdb",
+    "bytes": 53544,
+    "sha256": "0cdd70b78763f2c3a5996438f6aeaf644d178dc8cf0535ec15ce2997d829e24c"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Themes/debug_linux-x64/CakeOS.Cui.Themes.dll",
+    "bytes": 92160,
+    "sha256": "e5627280a390d3c12ccc20319985a464af9187669e58eb4e067539fdd7fde40d"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/CakeOS.Cui.Themes/debug_linux-x64/CakeOS.Cui.Themes.pdb",
+    "bytes": 29452,
+    "sha256": "701357f8cf3a89e8c275640bd146abe946690650625fda104693eefa802b4469"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Den/debug_linux-x64/Den.dll",
+    "bytes": 336384,
+    "sha256": "3d90018ca5fc45993cdb4ade7c07b2a4febca8e7aacf148fd0c3bae31c06c6d5"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Den/debug_linux-x64/Den.pdb",
+    "bytes": 72836,
+    "sha256": "8de1ae2d0f2e8368b80f241b3eb798d67e50f4397bf8366c69bc9ddedd5d0834"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Dulche.Runtime/debug_linux-x64/Dulche.Runtime.dll",
+    "bytes": 747520,
+    "sha256": "a4188deacc63209855295bc55fa324214b2e9c4030566d77587920575747ef18"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Dulche.Runtime/debug_linux-x64/Dulche.Runtime.pdb",
+    "bytes": 132212,
+    "sha256": "e4b0d7a20abcc259c7db100dc08a4f1be55c6c854e0ae9f3ed964f5298bacaf6"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Haven.Application/debug_linux-x64/Haven.Application.dll",
+    "bytes": 4350464,
+    "sha256": "fe9afe8f1ad7bf14e0763ee4ab6e344dac81b1f941621f95af4c05f663d81a39"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Haven.Application/debug_linux-x64/Haven.Application.pdb",
+    "bytes": 865848,
+    "sha256": "0c98dbfb1ba73dbe0b35e528d859640a8ba815ddc883581a4bd8f268c212c535"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Haven.Core/debug_linux-x64/Haven.Core.dll",
+    "bytes": 1885184,
+    "sha256": "4dc4f1376ba1a6187b8ecc7ad4f4a7dd50e3430b0ad9f30fe591545fa5d0b31e"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Haven.Core/debug_linux-x64/Haven.Core.pdb",
+    "bytes": 346676,
+    "sha256": "8178cd1a033ac16cb0bd51569a747cc2dffda453dd9336d77e92cbca032265f3"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Haven.UI/debug_linux-x64/Haven.UI.dll",
+    "bytes": 434176,
+    "sha256": "2040c1338f0da7b74b886819c2ed2d15e5ff16f135db87f6eba33e98b30ad1f3"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Haven.UI/debug_linux-x64/Haven.UI.pdb",
+    "bytes": 140320,
+    "sha256": "53879b93879a11b4965aa1bed266da096ec900e3662fe4cd76e2d7d2f3d03b44"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/HavenOS.Files.CUI/debug_linux-x64/HavenOS.Files.CUI.dll",
+    "bytes": 330752,
+    "sha256": "6c347a3aabede37c7915f0f91806ba31eeb8a342fa0607c89ef3c29c132f3778"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/HavenOS.Files.CUI/debug_linux-x64/HavenOS.Files.CUI.pdb",
+    "bytes": 65612,
+    "sha256": "3aaf4d5f4c9ab248b76a7c4fe0d22ad79dad8cd632e12f0ac4a35690a4b2eebf"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/HavenOS.Home/debug_linux-x64/HavenOS.Home.dll",
+    "bytes": 1399296,
+    "sha256": "ec5b06fcd20d19ab34dfabee284034b5181c35f060935a605b051365955bc38f"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/HavenOS.Home/debug_linux-x64/HavenOS.Home.pdb",
+    "bytes": 263852,
+    "sha256": "8a908f3c1d26f0b126829013160757549e43b96789fbf3dfd730c7e44e684e7e"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/HavenOS.Home.NativeUI/debug_linux-x64/HavenOS.Home.NativeUI.dll",
+    "bytes": 230400,
+    "sha256": "e25bfa549171bfdfd3687ce49d608644be78b326ec9112a372bda257fe84f47a"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/HavenOS.Home.NativeUI/debug_linux-x64/HavenOS.Home.NativeUI.pdb",
+    "bytes": 33964,
+    "sha256": "d7a7104bc055de7d52fc0e5180214185d3b41e99d8f7b55696e5f0f73e5e952c"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Accounts/debug_linux-x64/NineToOne.Accounts.dll",
+    "bytes": 410624,
+    "sha256": "52494b4e22c544390aba7858ef7837ec3148129ab29c8fde82d3b31c45b6ce85"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Accounts/debug_linux-x64/NineToOne.Accounts.pdb",
+    "bytes": 87492,
+    "sha256": "78938d1fd091052fae1c77a12343ea8b19127fd403ab830a219bf57c7da2e44b"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Accounts.Remote/debug_linux-x64/NineToOne.Accounts.Remote.dll",
+    "bytes": 58368,
+    "sha256": "560e4e5a218ae7a58c437f4f6cb74f4051c539ad94511d2bbdfd0e41e310bfc3"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Accounts.Remote/debug_linux-x64/NineToOne.Accounts.Remote.pdb",
+    "bytes": 21880,
+    "sha256": "1c10b2fdecf103ac5d67f5c5f08bbcb3e406f90ae6301fd2e0452f4669c1d8ed"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Admin/debug_linux-x64/NineToOne.Admin.dll",
+    "bytes": 43520,
+    "sha256": "25e3c4072200707f77cd4564b4e210f006bbf446fec979a4ec4cb1e949d91e91"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Admin/debug_linux-x64/NineToOne.Admin.pdb",
+    "bytes": 19940,
+    "sha256": "61b6a6c684dbfaba65320ac73512c3bb7fced9a1ac6323810abbbad5a50164a2"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Cui.AI/debug_linux-x64/NineToOne.Cui.AI.dll",
+    "bytes": 130048,
+    "sha256": "270a5b97fbdb6212dfa84397cae5fc1c04932d3d4194d3b7287a54b768ae8527"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Cui.AI/debug_linux-x64/NineToOne.Cui.AI.pdb",
+    "bytes": 37740,
+    "sha256": "483724172b30fca7d9025013eebce5c3796759836568a2072cc78e41e59d3709"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Web/debug_linux-x64/NineToOne.Web.dll",
+    "bytes": 125952,
+    "sha256": "5434b35fe9c72247747701ff2884e24b23a5c0295a8338d2560b826037556d68"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/NineToOne.Web/debug_linux-x64/NineToOne.Web.pdb",
+    "bytes": 42572,
+    "sha256": "26b72b2279a43aff02a4d3cdc28899df074465cb1c648a3faf32ce6b088dd6a3"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/OrgPools.Specs/debug_linux-x64/OrgPools.Specs.dll",
+    "bytes": 40960,
+    "sha256": "44a18cb010b0b553012983ce2e35f6661d28cad9af161d55475d1574bf03e17b"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/OrgPools.Specs/debug_linux-x64/OrgPools.Specs.pdb",
+    "bytes": 16920,
+    "sha256": "df9c3a8788d5ddd22779dedcc2cd179e82bcfc6bfb223f151d8ba92ac878bc1f"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Web.Specs/debug_linux-x64/Web.Specs.dll",
+    "bytes": 65024,
+    "sha256": "ca9bcde535a339ede084f4d4d9ccbd08d3d88a369bf08d291aca232bde5f1131"
+  },
+  {
+    "path": "debug/compiled/artifacts/root14-managed-build/bin/Web.Specs/debug_linux-x64/Web.Specs.pdb",
+    "bytes": 30568,
+    "sha256": "706d6ad8516889037cd95bcd01a5238b321621f0b2f14ee022295b56d9ed6c65"
+  },
+  {
+    "path": "debug/embedded-symbols/b20bbfa1e690944d3c5635e9bdf125748f3047ac9348f94f5aded5f01cd31bf0.portable-pdb",
+    "bytes": 293888,
+    "sha256": "469c21e899de940e1889bb6b25dab99ecbeb9d08702b5c2a00d3a0bee556e488"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "bytes": 826880,
+    "sha256": "b20bbfa1e690944d3c5635e9bdf125748f3047ac9348f94f5aded5f01cd31bf0"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Microsoft.Build.Framework.dll",
+    "bytes": 47848,
+    "sha256": "a7fbda5d26340af8443e388e57bfa5d0a3ebec904947ac2fcfd7a56a237a297b"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.Mdb.dll",
+    "bytes": 39936,
+    "sha256": "28cb367972bdc1cd43e4006306af2fd96d37f4ed4b239ee90e1dc7237a93af7f"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.Pdb.dll",
+    "bytes": 90112,
+    "sha256": "a332332633fbcb20e8d50e49b4db7bd1557721417122cf0c5f4c42f2332391d0"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.Rocks.dll",
+    "bytes": 27136,
+    "sha256": "bf992f3dce364ebcc3200fa7832ef07e20b4e2dbc3a8a6213ce44e3d239db984"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.dll",
+    "bytes": 361472,
+    "sha256": "831dca77470d85cb6ffbea3072daa7a3df5b7c9fcfd9c3f43674a9be99d4bfcf"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/System.Numerics.Vectors.dll",
+    "bytes": 159496,
+    "sha256": "a87fc942c07846ca9b53119dc300a935d67f05578909987d19645f1d02764417"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/System.Threading.Thread.dll",
+    "bytes": 22400,
+    "sha256": "f3d77354a2b2c3b01cb24369c076b9568b95f52c28349541707741658aa173dd"
+  },
+  {
+    "path": "debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/System.Threading.dll",
+    "bytes": 50016,
+    "sha256": "74e07f71df0cc4b67b6bf32f7dd6a10d3f82ae8b5feefa45759ceea78e6aa301"
+  }
+]

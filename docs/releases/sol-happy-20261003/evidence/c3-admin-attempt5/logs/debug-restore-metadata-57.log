@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-compile-validation/9to1 Models/Dulche Alpha/Den.csproj",
+    "MSBuildProjectName": "Den",
+    "MSBuildProjectFile": "Den.csproj",
+    "Configuration": "Debug",
+    "Platform": "AnyCPU",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Den/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Den/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-compile-validation/artifacts/root14-managed-build/obj/Den/"
+  }
+}
