@@ -1,0 +1,73 @@
+{
+  "reviewer": "C5",
+  "proposal": "c814daac45b3e371e90312fa77889aa236d8c377",
+  "parent": "87eb96e1afbe2d46f97e80acdef4f08c1684a3da",
+  "result": "bounded source ACK; no actionable new regression found",
+  "sourceBindings": [
+    {
+      "path": ".github/scripts/astra-home-portable-pdb.py",
+      "bytes": 11602,
+      "sha256": "7054a88565c33e62ad002ee2cd794adc7000fb08cac9153dd0a0dc9e9c4d484a"
+    },
+    {
+      "path": ".github/scripts/astra-symbol-persistence-error-tests.py",
+      "bytes": 3668,
+      "sha256": "8270e3ee4b4755804460afd2e1a3ee8ada4251cd223863c046ea830e24368e5c"
+    },
+    {
+      "path": ".github/validation/astra-organisation-owning-sources.json",
+      "bytes": 6808,
+      "sha256": "bd35f4a99dd73e9c5063659e673f5f66b03f61d9574b374a497f2a3aec3925f6"
+    }
+  ],
+  "independentTests": [
+    {
+      "discovered": 4,
+      "passed": 4,
+      "exitCode": 0,
+      "log": "/workspace/team-c/evidence/c5/symbol-errors-c814-review.log"
+    },
+    {
+      "discovered": 18,
+      "passed": 18,
+      "exitCode": 0,
+      "log": "/workspace/team-c/evidence/c5/symbol-errors-c814-prior18.log"
+    },
+    {
+      "discovered": 17,
+      "passed": 17,
+      "exitCode": 0,
+      "log": "/workspace/team-c/evidence/c5/symbol-errors-c814-sites17.log"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/workspace/team-c/evidence/c5/symbol-errors-c814-review.log",
+      "sha256": "1a2abfc9cd018ab803ebf1ac7ca7fe2120ed35a0b854c167edcc54b52eb02e12"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/symbol-errors-c814-prior18.log",
+      "sha256": "035fd3e011a4d35d96a294f791dee278656a4ec37313074f7dd477b3317fce9c"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c5/symbol-errors-c814-sites17.log",
+      "sha256": "c53d84ce00df3b6389a5a2f21bbf89fb891dc7c7ca605222078fb3e2429433c7"
+    },
+    {
+      "path": "/workspace/team-c/evidence/c3/admin-sdk03/symbol-persistence-before-attempt2.log",
+      "sha256": "7b318e8db574bb2f6a149f440ad6df42869f4447cf385ff7733185b7e434fd01"
+    }
+  ],
+  "conclusions": [
+    "Actual exclusive handle acquisition remains fail-fast; body write/flush/fsync and same-handle close failures independently retained. Single error rethrows original object; simultaneous failures form BaseExceptionGroup with body first.",
+    "Unchanged budget, raw symlink/ancestor/nonregular/changedexisting guards, exclusive fresh creation, flush/fsync and readback; no durability success asserted after a failure.",
+    "Four actual retained compiler-symbol controls cover success/identical existing, native fsync plus native close EBADF retaining exact original body identity, fsync-only exact original object, and close-only refusal.",
+    "All18 embedded/producer/size/security controls and17 Sites/source-owner/sourcehash/output controls independently passed.",
+    "Old helper negative supplied log retained four tests with one lost-original-body assertion failure; inspected rather than replayed."
+  ],
+  "qualifications": [
+    "Earlier C5 symbol review did not identify this exception replacement; this proposal addresses the A3 actionable hold explicitly.",
+    "Injected failure hooks use genuine compiler symbols and the actual exclusive file handle; local fault controls only.",
+    "SDK7 NOT_RUN, de683 cut held/unissued, superseding external pin and adoption remain separate."
+  ]
+}
