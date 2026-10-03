@@ -67,10 +67,10 @@
     "Unaccepted isolated merge rehearsal tree674bd79202e3ce531ad0601d94b479353c6f813a with incominga63 and reviewed hosted overlays independently passes normalcore386/386 and normalSites66/66; tree unchangedbeforeafter. Source incorporation pending review; do not relabel as accepted commit."
   ],
   "testStatus": "Exact a44ca3a local actual-source subset Sites39,billing12,auth222 PASS plus type/schema/UI. Incoming a63 normalcore386 PASS; isolated rehearsal normalcore386/Sites66 PASS. Original98a compile/fallback failures historical ONLY. IndependentBvalidator32 PASS; Browser app/account source held on three reproduced P2 findings despite existing16/7/21 checks passing. No deployed/full-release acceptance.",
-  "evidenceLocation": "Worker commits and docs/releases/sol-happy-20261003; forthcoming exact logs",
+  "evidenceLocation": "docs/releases/sol-happy-20261003 in exact remote release branch;19 raw artifacts versioned and hash-verified",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
-  "candidateCommit": "136631c2dbfc6d56a39f5f20530cb4202cc23977",
+  "candidateCommit": "67e14195595df827bc8d71743be823a5c7e4f0f6",
   "existingAuthSource": {
     "branch": "codex/cake-id-auth-backup-20261002",
     "commit": "7cc52df0411e0e9e617918f6c5158283cc3199fc",
@@ -121,5 +121,25 @@
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586": "Reviewed all603 lines by root/C3;32/32 independent unit PASS. Bounded evidence-integrity tooling approved for preparatory integration only; no semantic/runtime truth proof.",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
+  },
+  "updatedUTC": "2026-10-03T18:07:49.980436+00:00",
+  "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
+  "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
+  "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
+  "deliveryStatus": "LOCAL_PC_DESTINATION_AND_DELIVERY_NOT_VERIFIED",
+  "finalEvidence": {
+    "serviceTestedCommit": "a44ca3a10a538afd0715f3ad3dcd8d83931c2f70",
+    "sites": "39 discovered/executed/passed;0failed/skipped",
+    "billing": "12 discovered/executed/passed;0failed/skipped",
+    "identity": "1 local LinuxWorkerd/D1 program;222 executed assertions;0exit;no externaldelivery/deployment",
+    "browserValidator": "32/32 at136631c2dbfc6d56a39f5f20530cb4202cc23977; recordintegrityONLY, semantic probes show manualreview remainsrequired",
+    "retainedFailure": "firstauthstartup exit1 before readiness protectedWrangler logdir; samehead supported log/configoverride retry222PASS",
+    "sourceContinuity": "51 recorded tracked service files unchanged;README proseonly; later additions documentation/evidence and separatelytestedvalidator",
+    "independentFinalPackaging": "C6 original31294690b931aa6bb05c3e4d1dc2ea9f780ce2e6, descendant192e99f2a62485be5d3860697218b09e00a52e64;19 trackedartifact hashes match"
+  },
+  "semanticCoverage": {
+    "scopedRecords": 228,
+    "VERIFIED": 0,
+    "warning": "Scoped hosted records overlap inherited criteria; not global denominator. Full8344source-clause decomposition/A-B-C/platform reconciliation incomplete."
   }
 }
