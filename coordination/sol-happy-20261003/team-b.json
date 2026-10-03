@@ -58,7 +58,8 @@
       "worker": "B4",
       "paths": [
         "apps/Web/Files/**",
-        "apps/Web/TerraForm/**"
+        "apps/Web/TerraForm/**",
+        "apps/Web/Sites/**"
       ],
       "task": "Actual IFilesProvider route/controller and durable restart/ACL/CAS/retry; hosted transport and Terra owner seams",
       "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
@@ -69,7 +70,8 @@
       "paths": [
         "apps/Web/Auth/**",
         "apps/Web/Accounts/**",
-        "apps/Web/Services/**"
+        "apps/Web/Services/**",
+        "apps/Web/Write/Storage/** (explicit B2 transfer acknowledged)"
       ],
       "task": "Existing acknowledged account client with real CUI profile/session controls and truthful injected service configuration",
       "state": "RESUMED_IMPLEMENTATION_AND_VALIDATION",
@@ -131,7 +133,7 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T20:00:44.726097+00:00",
+  "updatedUTC": "2026-10-03T20:15:12.301475+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
@@ -290,8 +292,9 @@
     "sourceBase": "83c24b2f0033fb2828169921fc905a327120143b",
     "draftState": "Uncommitted browser-owned adapters under root review; no shared edits",
     "independentBaseline": "Unchanged actual 83 Chromium AX: eight cases, five absent-control failures and three dependent keyboard NOT_RUN; no startup error",
-    "localExecution": "Native13/navigation22 PASS; actual Write seed23 plus fresh-process verify40 assertions PASS; actual Files durable11 cases PASS; Accounts presentation13 PASS. These are bounded source/local-provider evidence; independent review found further recovery/lifecycle defects under repair.",
-    "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation"
+    "localExecution": "B6 independently reproduced actual Write65 assertions (fresh seed23+verify40+subscriber2); Accounts13 scripted-transport/CUI parse reproduce. Files historical11 realprovider PASS with5 independent recovery corrections +1 subscriber control authored,17 current awaiting rerun. Canonical portable Waveengine10/10 PASS; native initialavailability17 PASS. Actual retained scene firstbuild failed MSB3755; exact owning buildtask ref corrected, revalidation pending.",
+    "noGlobalBlock": "Absent staging does not block real local persistence, canonical engine integration, error recovery or native accessibility implementation",
+    "inProgress": "Real this-browser INotesRepository IndexedDB adapter over actual NotesDocument/validator with atomic CAS/history; retained Write scene; Wave actual browser persistent profile/media/CAS runner; canonical Sites workflow; independent source/lifecycle review."
   },
   "continuationRequests": [
     {
@@ -325,6 +328,14 @@
     {
       "owner": "C independent browser validator",
       "request": "Immutable compiled83 artifact request received. B will deliver exact21686097-byte SHA0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b via fetchable artifact Git branch with original publish manifest/runner, without rebuilt substitution."
+    },
+    {
+      "owner": "A1/CUI binding runtime",
+      "request": "Browser initial authored-enabled AND capability gating now consumes actual typed Action.Command alias. Actual owner OnBindingPropertyChanged\u2192ApplyObservedBinding\u2192IsEnabled assignment can later replace initial capability clamp; request acknowledged runtime binding coercion/policy hook, preserve declared authored state and live capability. Owner dispatcher still enforces authorization. Native exact-source failing reproduction being delivered."
+    },
+    {
+      "owner": "A native Boards/Canvas",
+      "request": "B2 inspected concrete filesystem-backed RichBoardSession/JsonFileHavenBoardStore constructor without injectable durable browser contract; request owner store seam instead of InMemory fallback. Canvas actual RnoteCanvasEngine uses cake_canvas native ABI; require owner-supported browser WASM donor ABI and canonical Files/native codec transport; legacy Notes Canvas model is not substitute."
     }
   ],
   "blockerClassification": {
@@ -355,6 +366,18 @@
     "archiveBytes": 21686097,
     "archiveSha256": "0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b",
     "verification": "All180 original ZIP members reverified against exact publish manifest35339902 bytes; unchanged independent pointer runner and command/runtime/viewport included",
-    "request": "C6 fetch immutable original compiled bytes and independently replay; no rebuilt substitution, deployed/provider/full acceptance inferred"
+    "request": "C6 fetch immutable original compiled bytes and independently replay; no rebuilt substitution, deployed/provider/full acceptance inferred",
+    "currentArtifactBranchHead": "28b3fa6"
+  },
+  "homeReproductionDelivery": {
+    "branch": "artifact/team-b-browser-83c24b2",
+    "commit": "28b3fa6",
+    "sourceTests": [
+      "apps/Web/Tests/HomeLayout.Tests.csproj",
+      "apps/Web/Tests/HomeLayoutRegression.cs"
+    ],
+    "evidencePath": "docs/releases/sol-happy-20261003/team-b-home-proposal",
+    "scope": "Exact actual8-case canonical red and same-assertion green with two-line grouping; original immutable83 nativeAX failures, runner, screenshot and source/hash manifest delivered. No Home shared edit applied.",
+    "request": "A1 review remotely fetchable precise Home proposal/test and provide bounded ACK or owner fix; B remains implementing owned real peer bridge."
   }
 }
