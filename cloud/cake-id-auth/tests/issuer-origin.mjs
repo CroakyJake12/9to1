@@ -113,7 +113,7 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
       assert.equal(actual.error, "invalid_grant");
       assert.equal(actual.acao, null, "issuer origin needs no cross-origin CORS grant");
     }
-    const grant = await authorizationCode(discovery, clientId, "openid cake:account:read", false);
+    const grant = await authorizationCode(discovery, clientId, "openid cake:account:read cake:sessions:read", false);
     const tokenReply = await globalThis.fetch(discovery.token_endpoint, { method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ grant_type: "authorization_code", code: grant.code, client_id: clientId,
@@ -127,7 +127,10 @@ async function authorizationCode(discovery, clientId, scopes, useSessionCookie) 
     assert.ok(access.sid);
     const current = await response("/api/account/current", { headers: { authorization: `Bearer ${token.access_token}` } });
     assert.equal(current.status, 200);
-    assert.equal((await current.json()).sessionId, access.sid);
+    assert.equal((await current.json()).accountId, access.sub);
+    const sessions = await response("/api/account/sessions", { headers: { authorization: `Bearer ${token.access_token}` } });
+    assert.equal(sessions.status, 200);
+    assert.ok((await sessions.json()).sessions.some(row => row.sessionId === access.sid && row.accountId === access.sub));
     console.log(JSON.stringify({ result: "issuer_origin_passed", assertionsExecuted: count,
       environment: "actual Workerd/D1 with only client origin configured; genuine issuer-origin cookie/PKCE preserved" }));
   } finally { globalThis.window = savedWindow; }
