@@ -1,0 +1,163 @@
+[
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteActionAuthorization.cs",
+    "bytes": 852,
+    "digest": "432d43f464575d1a6dac0eaa9d030e861b8eaa5161b4cc1396f2464250a6cbce",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteArtifactAuthoringService.cs",
+    "bytes": 2143,
+    "digest": "bd4a5fb680e61f31c4d1c4a16690d9a427be72e4c868d81f25a9da57828bf07f",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteAuthoringService.cs",
+    "bytes": 9127,
+    "digest": "61b33ac84e4b6cb73782e9c25164b2101bd0b890e9408d0494a5686eef3fba1f",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteContentSelectionAuthoringService.cs",
+    "bytes": 5169,
+    "digest": "495c2e80ffa67be1c2da707d3cd6a9e9bd5242b4cecdc86517a6e38f92c4ec31",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteHtmlContentImporter.cs",
+    "bytes": 6789,
+    "digest": "ee22b4337a263952694848c5d53964aa9a5e6454ca575c6e02491d6f930e8c73",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteNameVerificationService.cs",
+    "bytes": 11451,
+    "digest": "47e296ee20fe3d3fa06e5ef897748777f4b0921fc67c0fdf8e250f71b7c40a41",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteNativeActionPolicies.cs",
+    "bytes": 625,
+    "digest": "e34d9e40a1eb0fbbbff8d3d2f73878edef5160f040ca4591b3b1bc3dae51c6f5",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteNativeProjectAccessResolver.cs",
+    "bytes": 2817,
+    "digest": "2bcffc7c432fbbd0a01e55a8b69f17cfe2633893ddeb7d914735d0450621f48e",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteNativeWorkspaceAuthority.cs",
+    "bytes": 880,
+    "digest": "4a9824534d37503d5c370c8824d90b231af340a80ab833e70150c338148f2b66",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteNativeWriteCoordinator.cs",
+    "bytes": 18076,
+    "digest": "e1fe109c3217f25f3f4f7072d9d881e76addfdaebeee9a9964efac78aed829c0",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SiteProjectService.cs",
+    "bytes": 9018,
+    "digest": "dfd3af09e3027fe6ca8816f695b353de741ad35a618867f7c54bbe1420cfa2c9",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Application/SitePublicIdentityService.cs",
+    "bytes": 28055,
+    "digest": "f3c9d5b71d95a7a42e8b62f3670dac7c3ba491d2d2fe41a23e583a75c4807897",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Domain/SiteModels.cs",
+    "bytes": 8654,
+    "digest": "109ef4bcf9912aac6ff4fa07b53bde2e32e7ec2e110a0ca8a1a8aab2dc2e2a6c",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Domain/SiteSlug.cs",
+    "bytes": 5341,
+    "digest": "dd8f404e2871f40bccbe08071d16e2939607d26a0557479ac467cf6817810641",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Hosting/NativeSiteBuildPipeline.cs",
+    "bytes": 7715,
+    "digest": "018911b7132747bed3b3b04ad69191527205725beca9a294ab901831f1ccbf69",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Hosting/SiteDeploymentService.cs",
+    "bytes": 27211,
+    "digest": "fe154610329537d49ac6ddae80534f9249af4674d471750817c17399ca085e51",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Hosting/SiteHostingContracts.cs",
+    "bytes": 4280,
+    "digest": "c73dae05f5714f9ec680214e7cb83a216d6d147941d049abd263629432c8d5e1",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Infrastructure/FileSiteWorkspaceStore.cs",
+    "bytes": 10005,
+    "digest": "e3ec22beb78ca0240c317b9e30db2fceeb2a3cd928ff27a051a2a666a1dc876c",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/Runtime/SiteDocumentRenderer.cs",
+    "bytes": 13403,
+    "digest": "fb8c52cb0798ac28f68cb3a1f054dd7d5af51bd16c1eb5ba9e5f62c83ab862e8",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/obj/HavenOS.Sites/debug_linux-x64/HavenOS.Sites.GlobalUsings.g.cs",
+    "bytes": 231,
+    "digest": "8f86a2cbf00ff3eee0bda2bc0eb5e1fc19c8544d5dc650c53d0132325956b592",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/obj/HavenOS.Sites/debug_linux-x64/.NETCoreApp,Version=v10.0.AssemblyAttributes.cs",
+    "bytes": 196,
+    "digest": "f79c1ad9a9fc76110b3655f5bfb5ff4e3168e9addceff05b937c0796f0ec34eb",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/obj/HavenOS.Sites/debug_linux-x64/HavenOS.Sites.AssemblyInfo.cs",
+    "bytes": 991,
+    "digest": "8a60ce91b478322d4905578e50f4c313eb91d3474596e4656f90cef9abe998dc",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  },
+  {
+    "document": "/workspace/team-c/c3-admin-custody-validation/9to1 Workspace/Sites/obj/HavenOS.Sites/debug_linux-x64/generated/System.Text.RegularExpressions.Generator/System.Text.RegularExpressions.Generator.RegexGenerator/RegexGenerator.g.cs",
+    "bytes": 11845,
+    "digest": "8349813188c493e2ba72f08a48777414ae2484b343585965ac7dea8f0030dfa2",
+    "algorithm": "8829d00f-11b8-4213-878b-770e8597ac16",
+    "hashName": "sha256"
+  }
+]
