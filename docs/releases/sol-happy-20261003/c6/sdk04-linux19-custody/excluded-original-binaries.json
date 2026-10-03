@@ -1,0 +1,345 @@
+[
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+    "bytes": 826880,
+    "sha256": "e9bbd7c54271c813e14ac0ed721362c18866ac4e94bf1c646ed4307b9f665484",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Microsoft.Build.Framework.dll",
+    "bytes": 47848,
+    "sha256": "a7fbda5d26340af8443e388e57bfa5d0a3ebec904947ac2fcfd7a56a237a297b",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.Mdb.dll",
+    "bytes": 39936,
+    "sha256": "28cb367972bdc1cd43e4006306af2fd96d37f4ed4b239ee90e1dc7237a93af7f",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.Pdb.dll",
+    "bytes": 90112,
+    "sha256": "a332332633fbcb20e8d50e49b4db7bd1557721417122cf0c5f4c42f2332391d0",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.Rocks.dll",
+    "bytes": 27136,
+    "sha256": "bf992f3dce364ebcc3200fa7832ef07e20b4e2dbc3a8a6213ce44e3d239db984",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Mono.Cecil.dll",
+    "bytes": 361472,
+    "sha256": "831dca77470d85cb6ffbea3072daa7a3df5b7c9fcfd9c3f43674a9be99d4bfcf",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/System.Numerics.Vectors.dll",
+    "bytes": 159496,
+    "sha256": "a87fc942c07846ca9b53119dc300a935d67f05578909987d19645f1d02764417",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/System.Threading.Thread.dll",
+    "bytes": 22400,
+    "sha256": "f3d77354a2b2c3b01cb24369c076b9568b95f52c28349541707741658aa173dd",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/debug/original-source-tasks/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/System.Threading.dll",
+    "bytes": 50016,
+    "sha256": "74e07f71df0cc4b67b6bf32f7dd6a10d3f82ae8b5feefa45759ceea78e6aa301",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/native/glycin-image-rs",
+    "bytes": 8622120,
+    "sha256": "ed7077ccb809866afe741c7fd60140aef6b46eab16878f912ea9e9c801f06bd4",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/native/libcakeos_canvas_rnote_poc.so",
+    "bytes": 14415464,
+    "sha256": "3bf1542fa5c4bc461f66d411c80106302faa6cf2cf18bef16ba0b23eb907b1b8",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "joint-sdk/native/libglycin.so",
+    "bytes": 6097704,
+    "sha256": "03fd981c50a7d78330107639fe908a95c2678b8767584958589293f5ad76f4fb",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "joint",
+    "path": "mail-owned-public-crl.der",
+    "bytes": 576,
+    "sha256": "8264bfa67ab7824af9c0e45ec13c72b04b25be95ba7776bbd548841fb5e2e71f",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "bytes": 754176,
+    "sha256": "e44defe6b73486ad7272979d3295c11398be87e8f06d8834f8d0a544a1b7fd24",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/Microsoft.Build.Framework.dll",
+    "bytes": 47848,
+    "sha256": "a7fbda5d26340af8443e388e57bfa5d0a3ebec904947ac2fcfd7a56a237a297b",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Mdb.dll",
+    "bytes": 39936,
+    "sha256": "28cb367972bdc1cd43e4006306af2fd96d37f4ed4b239ee90e1dc7237a93af7f",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Pdb.dll",
+    "bytes": 90112,
+    "sha256": "a332332633fbcb20e8d50e49b4db7bd1557721417122cf0c5f4c42f2332391d0",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Rocks.dll",
+    "bytes": 27136,
+    "sha256": "bf992f3dce364ebcc3200fa7832ef07e20b4e2dbc3a8a6213ce44e3d239db984",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.dll",
+    "bytes": 361472,
+    "sha256": "831dca77470d85cb6ffbea3072daa7a3df5b7c9fcfd9c3f43674a9be99d4bfcf",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/System.Numerics.Vectors.dll",
+    "bytes": 159496,
+    "sha256": "a87fc942c07846ca9b53119dc300a935d67f05578909987d19645f1d02764417",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/System.Threading.Thread.dll",
+    "bytes": 22400,
+    "sha256": "f3d77354a2b2c3b01cb24369c076b9568b95f52c28349541707741658aa173dd",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/avalonia-build-tasks/System.Threading.dll",
+    "bytes": 50016,
+    "sha256": "74e07f71df0cc4b67b6bf32f7dd6a10d3f82ae8b5feefa45759ceea78e6aa301",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/cui-domain/HavenOS.Files.CUI.Tests.dll",
+    "bytes": 114688,
+    "sha256": "147df1034f544ab9469fc27b800bbb03d416610daba271af418f8e800f1170de",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/cui-domain/HavenOS.Files.CUI.Tests.pdb",
+    "bytes": 27516,
+    "sha256": "caff58c2ba1ab8b0e3f81a24f290d6889b5d98f216d194fb99705dfaf5736cd5",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/mail-full/HavenOS.Mail.Tests.dll",
+    "bytes": 82944,
+    "sha256": "5708a14ba790e938abb5619c77b17990ddc462625dc51653b8496f8068e0bf19",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "compiled/mail-full/HavenOS.Mail.Tests.pdb",
+    "bytes": 25944,
+    "sha256": "458ac751b83170a99196fea34ede838b2554a1f6173dc113716d873013aa4cba",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "mail-owned-public-crl.der",
+    "bytes": 576,
+    "sha256": "659caa78619d723ed216c6dc4c95aa622fc0633196f1add4de4bbe20fcfe813c",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "native/glycin-image-rs",
+    "bytes": 8622120,
+    "sha256": "ed7077ccb809866afe741c7fd60140aef6b46eab16878f912ea9e9c801f06bd4",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "native/libcakeos_canvas_rnote_poc.so",
+    "bytes": 14415464,
+    "sha256": "3bf1542fa5c4bc461f66d411c80106302faa6cf2cf18bef16ba0b23eb907b1b8",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "owning",
+    "path": "native/libglycin.so",
+    "bytes": 6097704,
+    "sha256": "03fd981c50a7d78330107639fe908a95c2678b8767584958589293f5ad76f4fb",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "atomic-spawn",
+    "bytes": 21912,
+    "sha256": "32aa1b04efe362142a77d280b06026f0f01aea2d52f98d581815efd66f800ceb",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/Avalonia.Build.Tasks.dll",
+    "bytes": 754176,
+    "sha256": "cd454c59c27ccf8f1c4f8b9fd24a5608eaa778b5c3b527365c14ac4ab16c43f3",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/Microsoft.Build.Framework.dll",
+    "bytes": 47848,
+    "sha256": "a7fbda5d26340af8443e388e57bfa5d0a3ebec904947ac2fcfd7a56a237a297b",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Mdb.dll",
+    "bytes": 39936,
+    "sha256": "28cb367972bdc1cd43e4006306af2fd96d37f4ed4b239ee90e1dc7237a93af7f",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Pdb.dll",
+    "bytes": 90112,
+    "sha256": "a332332633fbcb20e8d50e49b4db7bd1557721417122cf0c5f4c42f2332391d0",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.Rocks.dll",
+    "bytes": 27136,
+    "sha256": "bf992f3dce364ebcc3200fa7832ef07e20b4e2dbc3a8a6213ce44e3d239db984",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/Mono.Cecil.dll",
+    "bytes": 361472,
+    "sha256": "831dca77470d85cb6ffbea3072daa7a3df5b7c9fcfd9c3f43674a9be99d4bfcf",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/System.Numerics.Vectors.dll",
+    "bytes": 159496,
+    "sha256": "a87fc942c07846ca9b53119dc300a935d67f05578909987d19645f1d02764417",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/System.Threading.Thread.dll",
+    "bytes": 22400,
+    "sha256": "f3d77354a2b2c3b01cb24369c076b9568b95f52c28349541707741658aa173dd",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/avalonia-build-tasks/System.Threading.dll",
+    "bytes": 50016,
+    "sha256": "74e07f71df0cc4b67b6bf32f7dd6a10d3f82ae8b5feefa45759ceea78e6aa301",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/home/HavenOS.Home.Tests.dll",
+    "bytes": 824832,
+    "sha256": "7fe158192182a5f6310f08c6335f76f022714a3664b4001ac6c87fc78ecd997f",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/home/HavenOS.Home.Tests.pdb",
+    "bytes": 139300,
+    "sha256": "389b335dbe6bd9780e68f8417af28d05aff085ade3824d0ae6159b96d48c524d",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/os/NineToOne.Os.Shell.Tests.dll",
+    "bytes": 649216,
+    "sha256": "04ad92827447ceda306a6c94797e9b084ea51d9b679cb64913981b9bcba20b14",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/os/NineToOne.Os.Shell.Tests.pdb",
+    "bytes": 130220,
+    "sha256": "35d43bec8aabbd8ad7006551438f883e8e23d01ae656029e4b3b2e5f39104121",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/root/NineToOne.Os.Supervisor.Root.Tests.dll",
+    "bytes": 132608,
+    "sha256": "8bea747f22830168d31cf96928bcaed126bc6a071da15e21651451d51d7baebf",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "compiled/root/NineToOne.Os.Supervisor.Root.Tests.pdb",
+    "bytes": 38476,
+    "sha256": "7d735cd332220916ac78776dc9896094efbade5ddba4745d1128c78692bc2ab4",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "native-required16/deny-clone3",
+    "bytes": 16064,
+    "sha256": "bae1a819e3ffab4f4a125036131a06bf821d54960ea37574c20cebbf35245fa5",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "native-required16/ignore-child-signal",
+    "bytes": 16016,
+    "sha256": "55c5b7b10a9d92288241f280fddc5e4ccb4c73199d193922e7b746d448891817",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  },
+  {
+    "group": "linux19",
+    "path": "native-required16/ignore-term",
+    "bytes": 16008,
+    "sha256": "26118d576fb9cf520c3efa032f28a82bec942b1150886f744417d6ce5a65194a",
+    "reason": "Retained original binary outside Git, custody hash verified; no execution"
+  }
+]

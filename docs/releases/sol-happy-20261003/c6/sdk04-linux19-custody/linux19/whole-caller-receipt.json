@@ -1,0 +1,9 @@
+{
+  "cohort": "owning",
+  "commit": "7c8c2e4a2692c4e662da4dfd021cf330aff0ea93",
+  "manifestSha256": "0c45798ae7e9729a1939eece7d95b3dffac4aa73a71eea0a6e1b32e5e7fa87fd",
+  "managedExit": 1,
+  "protectedStateCleanup": "removed-after-known-original-drain",
+  "status": "FAILED",
+  "qualification": "Actual known original test/setup sessions only; no guarantee of unobserved escaped descendants"
+}
