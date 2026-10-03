@@ -189,9 +189,15 @@ acknowledgement and integration. Installed SDK 10.0.401 differs from the workflo
 That run entered the original source/PDB phase and refused the actual build-task
 DLL's configured embedded symbols because no adjacent PDB existed; no suite ran.
 An isolated embedded-symbol proposal verifies the same physical PE's identity
-and preserves all source-hash checks. Independent review finds two genuine
-generator documents were not saved by the original build, so full symbol/source
-closure remains blocked. No producer configuration or source assertion was waived.
+and preserves all source-hash checks. Two genuine generator documents were not
+saved by the original build. Supported compiler output retention now verifies all
+221 task documents, with independent actual-producer and refusal checks.
+[Attempt 4](evidence/c3-admin-attempt4/README.md) then passed all 114 commands and
+strict drains and executed the complete original Debug Accounts and OrgPools
+suites. Web source verification refused an empty pre-target Compile query despite
+a genuine generated source document in its PDB. Web execution and Release remain
+unrun. Post-target input collection is under separate review; no empty-input
+exemption, invented source or source-hash waiver was introduced.
 
 Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
 Both requested outer ZIP hashes and all 159 included indexed pieces match. The
@@ -275,6 +281,27 @@ remain unresolved. The current text specifies a sidebar default with a Settings
 choice. The interim export captured a partially edited sentence and remains
 historical. Full native text, hashes and the independent review are retained in
 [specification-update/manifest.json](specification-update/manifest.json).
+
+The newer atomic 21:04 snapshot, revision
+`ANLCKQlZuLSuopoik2qJHrWoQxliYXJ0xjJfH2ncI9frS-Tm7sLiDFLwVdoLZ3-gbZ4aB1qDkX6j9nGYYpvqrgULBc32eKABkwDZNo2d3v8`,
+adds detailed shipping contracts LE-01–15. Its 8,534 paragraphs and exact delta are
+retained in [specification-update-2104/manifest.json](specification-update-2104/manifest.json).
+Root and C4 read the complete change; the first 8,336 lines and all 63 earlier C4
+quotations are unchanged. The latest defaults and explicit fixed-Spaces-layout
+supersession govern future work. Cards, canonical chat placement/privacy,
+Study/Bank, Burrows and modular package behavior add shipping obligations.
+Droid is explicitly post-release; Training Lab stays excluded. The source adds
+no production authority or deadline. The [bounded owner map](semantic/c4-lunar-eclipse-2104-review.md)
+records 25 action/test groups as NOT_RUN, with no full atomic denominator or old
+runtime relabelling. LE-12 requires versioned owner schemas before consumers.
+
+The [usage and placement catalogue review](semantic/c5-le06-le07-owner-catalogue.md)
+binds actual allocation, accounting, quota and metric declarations. These do not
+yet supply the acknowledged operation combining paid entitlement, strictly more
+than 10,000,000,000 allocated bytes, separate storage reservation, revocation and
+transfer/local-copy preservation. That dependent hook remains blocked; no private
+ledger or guessed policy was created. Files mutation custody also still requires
+the owner-defined async session/store lease contract.
 
 These clause counts are not requirement counts. The prior hosted scoped maps
 contain 228 semantic records and zero VERIFIED results; they overlap inherited
