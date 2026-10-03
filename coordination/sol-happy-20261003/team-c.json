@@ -72,7 +72,8 @@
     "Team B: maintained CUI theme/font API and exact Runtime dependency owner ACK received from A1 in5f945e3c. Your three prior P2 source fixes are independently closed at830f747; source incorporation and actual published/mounted browser/provider/full product acceptance remain pending.",
     "Team A/C6: original Home14, Canvas11 and requested Linux18 artifacts recovered through authenticated connector, exact outer/inner hashes and indexed byte custody verified. Published bounded original evidence at c6/original-custody and c6/linux18-custody on release aebaa831. Home810B native acknowledgement failure and Canvas5 failures preserved. Linux435pieces/454descriptors and recorded Home340/OS199 passes are custody only; pending drains, native16 qualifications and compiled/PDB receipt limits remain unaccepted. No payload executed or whole native failure cause invented.",
     "Admin SDK03 peer-complete record received, bounded source-transfer/review scope acknowledged. Remote delivery still needed: exact reviewed commit/17 source bodies, full path-byte-hash manifests, actual SDK/Web drivers and original peer/evidence bytes. Local Astra paths and manifest hashes alone remain inaccessible here; no testing/integration ACK or competing hosted implementation is claimed.",
-    "Team B newer native-input/startup source9697281+c74c73c independently reviewed by C1; no actionable bounded regression or replacement runtime. Prior root-published flag inference explicitly corrected and original review retained. Full published/mounted runtime, pointer/layout/accessibility/browser matrix/provider acceptance remain owner-held; source is not incorporated."
+    "Team B newer native-input/startup source9697281+c74c73c independently reviewed by C1; no actionable bounded regression or replacement runtime. Prior root-published flag inference explicitly corrected and original review retained. Full published/mounted runtime, pointer/layout/accessibility/browser matrix/provider acceptance remain owner-held; source is not incorporated.",
+    "Team B immutable artifact delivery request: C1 independently source-reviewed 83c24b2 host CSS and C6 independently verified all405 listed evidence hashes,2 rootdocs,25 current and23 original source hashes at sealed1356a1346f9d6ea948c202b2dd920b3b29869b77. Recorded B1 actual14/14 and unchanged B6 pointer5/5 are bounded B observations, not independent C runtime. Please deliver the exact local-bootstrap-83c24b2.zip (21686097 bytes; SHA256 0d4bd734f71e9f4273d27483742211ad70d3011661eeab9ae7f0013d9551e72b) through an authorized retrievable shared artifact/file ID or GitHub artifact/asset mapping, with the existing180-file/35339902-byte publish manifest and exact command/runtime/viewport pins. Your local Team B path is inaccessible here. Chromium/Playwright are available in C; C6 can independently replay the unchanged runner against those immutable bytes after delivery. No rebuilt substitute, full browser acceptance, deployed service or shared Home/accessibility correction is inferred."
   ],
   "testStatus": "Local partial validation only. Original service a44ca3a: Sites39/billing12/auth222 pass. Incoming B830f747: 22 route/28 account pass; three historical P2 closed. Separate current-A63 proposals: Home b73a45b4 normal331 pass with unchanged-source two failures; provider54766d2a actual Infrastructure-project closure35 Debug/Release and exact-head Release pass with unchanged-source10fail/14pass; full normal test project fails before discovery due XamlX. OIDC542aca10 two controlled maintained-source executables pass; C1 independently repeats both. No adopted shared source, real issuer/provider, installed/native full release or PC delivery acceptance.",
   "evidenceLocation": "docs/releases/sol-happy-20261003 on remote release:19 original final hashes,7 browser review hashes (six prior preserved + one newer review),40 shared proposal hashes, original Home/Canvas/Linux custody/replays. Runtime service source unchanged.",
@@ -119,21 +120,23 @@
   "cloudflareSetup": {
     "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
     "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
-    "state": "PRIVATE_PLUGIN_SAVED_BACKEND_READBACK_VERIFIED; host reports installed; subsequent marketplace selection still exposes noCloudflare tools/skills; OAuth/account access UNVERIFIED",
+    "state": "16_SKILLS_LOADED; Cloudflare account tools absent; OAuth/account access UNVERIFIED",
     "sourceGuide": "https://developers.cloudflare.com/agent-setup/prompt.md",
     "skills": 16,
     "mcpServers": 5,
     "resourcesProvisioned": false,
     "userSelectedReference": "cloudflare@openai-curated-remote",
     "equivalenceToPrivatePlugin": "UNESTABLISHED",
-    "currentEnvironment": "observedrev6 enforced/current; no capabilities,secrets,outboundidentities; noCloudflare endpointallowances"
+    "currentEnvironment": "observedrev11 enforced/current/running/connected; no capabilities,secrets,runtimevariables,outboundidentities; no Cloudflare endpointallowances",
+    "cloudflareSkillsDiscovered": 16,
+    "cloudflareToolsExposed": 0
   },
   "browserSourceReview": {
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586": "Reviewed all603 lines by root/C3;32/32 independent unit PASS. Bounded evidence-integrity tooling approved for preparatory integration only; no semantic/runtime truth proof.",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2": "HISTORICAL originalP2, superseded by owningd4c1816 sourcefix and independent22/22 at830f747. Original:HOLD P2: BrowserApplication.cs67-72 intercepts home.dashboard/library/events before registered owner handler; registered authenticated Home route never executes. Existing registry tests bypass application dispatch. B owner must route registered handlers before unavailable fallback and test actual dispatch.",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4": "HISTORICAL original2P2, superseded by owningf38ffac sourcefix and independent28/28 plus unchangedoriginalprobes at830f747. Original:HOLD P2 x2: AccountApiClient.updateProfile75 retains caller fields until async token acquisition/request155; reproduced caller mutation changes dispatched edit. Snapshot validated scalar fields before await. updateProfile76 accepts unchanged response revision despite expected CAS+1; reproduced revision1 success for expected1, existing test fixture uses false success. Require exact next revision and test rejection."
   },
-  "updatedUTC": "2026-10-03T19:01:50.368519+00:00",
+  "updatedUTC": "2026-10-03T19:41:06.253383+00:00",
   "candidateStatus": "BLOCKED_PREPARATORY_SOURCE_HANDOFF",
   "pullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "pullRequestState": "DRAFT_OPEN; head verified through GitHub API",
@@ -215,5 +218,13 @@
     "correction": "Prior claim that false native flags preserved transitive native packages is withdrawn: those shared flags gated the real inputs too. New source restores actual SDK-selected inputs and uses public runMain; historical Skia/exited-runtime failures retained.",
     "currentOwningTeamReport": "B reports startup/fragment/history subset passes but Library pointer fails, Dashboard overlap and control accessibility unaccepted. Full raw package not delivered for independent verification.",
     "evidence": "docs/releases/sol-happy-20261003/browser-review-update/runtime-source-review.md"
+  },
+  "browserPointerReview": {
+    "sourceHead": "83c24b2f0033fb2828169921fc905a327120143b",
+    "evidenceHead": "1356a1346f9d6ea948c202b2dd920b3b29869b77",
+    "source": "C1 BOUNDED_SOURCE_ACK; one owned CSS containing-block correction; not incorporated",
+    "sealedEvidence": "C6 405 listed artifacts plus rootdocs/source hashes match; recorded B1 14/14 and B6 5/5 inspected; failed c74 baseline retained",
+    "independentRuntime": "BLOCKED_IMMUTABLE_COMPILED_ARTIFACT_NOT_DELIVERED",
+    "pending": "Actual immutable output delivery/replay; shared Dashboard layout/control accessibility; providers/cross-client/full product acceptance"
   }
 }
