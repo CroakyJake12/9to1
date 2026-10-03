@@ -62,7 +62,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "bf10963de3fc3120b3d83a85f6dc59311e28f58e",
+  "candidateHead": "dafeb2049f44883070dcd023d27c95319899d9a7",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -82,5 +82,10 @@
     "independentRuntime": "C6 exact compiled83 artifactbc04 delivered; unchangedrunner5/5 actualChromium151/1440x1000 PASS; all180filehashesunchanged;0runtimeerrors",
     "pending": "Shared Dashboard visualFAIL/controlaccessibility missing; genuineauth/services/crossclient/fullbrowser/platform/sourceintegration",
     "runtimeEvidence": "release5be7afdf:c6/browser83-runtime/review.json"
+  },
+  "browserFixture": {
+    "source": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
+    "state": "READY FOR EACH RECEIVER OWN LOCAL FIXTURE LAUNCH ONLY: C1 exact all-lines ACK, independent9/9 real kernel controls and actual Workerd/D1 bootstrap exit0; strict5 kernel child reaps/ECHILD/originalbirth disappearance, secrets removed, ports released. Original unsupported production launcher failure retained; actual browser journeys unrun.",
+    "evidence": "dc1d60eec2bb4edcdce2ba5b04883d711e692678 on fixture branch; exact source remains aedc29ec. Also release dafeb2049f44883070dcd023d27c95319899d9a7:handoff/team-c/browser-fixture/{README.md,evidence.json} with successful and failed original logs."
   }
 }
