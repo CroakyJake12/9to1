@@ -237,3 +237,8 @@ This is bounded application acceptance. Native fixtures do not establish install
 ## Checkpoint 25 — restore Writer source-built XAML dependency
 
 The complete normal24 Writer gate failed at the maintained Avalonia.Build.Tasks compiler because its exact pinned XamlX Gitlink was not materialized. Adds only targeted source checkout and HEAD/clean/project-path assertions before the original restore. Every preexisting workflow line and both native/runtime gate jobs remain unchanged. Independent whole-workflow inverse/source/pin review passed; runtime remains pending. All36 accepted Shelf/Forms product files and all earlier normal product sources are unchanged. The other five normal24 workflows succeeded. No package/compiler substitution, test removal, installed/platform acceptance, cloud/credential/provider change or main merge.
+
+
+## Checkpoint 26 — restore Writer native accessibility dependency
+
+The complete normal25 Writer gate passed exact XamlX materialization and restore, then failed at the maintained Avalonia.FreeDesktop.AtSpi compiler because its exact pinned Avalonia.DBus Gitlink was not materialized. Adds only targeted source checkout and HEAD/clean/project-path assertions before original restore. Every preexisting workflow line, including XamlX, and both native/runtime gate jobs remain unchanged. Independent whole-workflow inverse and maintained pinned provider/consumer source review passed; runtime remains pending. All36 accepted Shelf/Forms product files and all earlier normal product sources are unchanged. No compiler/package substitution, test removal, cloud/backend/credential/provider change or main merge.
