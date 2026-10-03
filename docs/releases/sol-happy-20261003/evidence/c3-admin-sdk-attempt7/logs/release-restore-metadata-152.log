@@ -1,0 +1,14 @@
+{
+  "Properties": {
+    "MSBuildProjectFullPath": "/workspace/team-c/c3-admin-symbol-errors-validation/9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj",
+    "MSBuildProjectName": "HavenOS.Home.NativeUI",
+    "MSBuildProjectFile": "HavenOS.Home.NativeUI.csproj",
+    "Configuration": "Release",
+    "Platform": "AnyCPU",
+    "TargetFramework": "net10.0",
+    "RuntimeIdentifier": "linux-x64",
+    "MSBuildProjectExtensionsPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/HavenOS.Home.NativeUI/",
+    "ProjectAssetsFile": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/HavenOS.Home.NativeUI/project.assets.json",
+    "RestoreOutputPath": "/workspace/team-c/c3-admin-symbol-errors-validation/artifacts/root14-managed-build/obj/HavenOS.Home.NativeUI/"
+  }
+}
