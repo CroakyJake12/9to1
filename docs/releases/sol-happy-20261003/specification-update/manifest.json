@@ -1,0 +1,31 @@
+{
+  "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
+  "revisionId": "AHj4eMQdy-bFUoMrCqGybqoEO_G5Z1JnTxVEl03pJVillty8itZgguU-bcLZz2GHEt6DzYfY-fMNSVeS8-eyKzYBo_BoN9gK2NvcK9zBIlI",
+  "capture": "Atomic native get_document_text response; every returned paragraph included, in order, with one newline separator and final newline. API paragraph indices/styles retained in original local response, not manufactured text offsets.",
+  "paragraphs": 8358,
+  "nonblankClauses": 8358,
+  "countMeaning": "Source clauses, not requirements, denominator or completion percentage",
+  "priorRevision": "AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0",
+  "priorSha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+  "comparison": "Exact nonblank text comparison preserves every nonblank character; raw export format and blank separators differ. Two changed text regions at final pass headings/notes.",
+  "review": "C4 independently verified all63 C4 quote bodies; pass timing/platform/API/transport/acceptance and duplicate Pass4 remain unresolved. No historical runtime evidence relabeled.",
+  "acceptance": "GLOBAL_SEMANTIC_DENOMINATOR_INCOMPLETE; maps retain originalrevision and original line refs; fresh whole-map reconciliation pending",
+  "artifactHashes": {
+    "native-text.txt": {
+      "bytes": 1342924,
+      "sha256": "9eb6e32f293aab39f5f45f06b56afb1f051751d103d3e7db1a5e4dd31c1fe87c"
+    },
+    "nonblank.diff": {
+      "bytes": 2072,
+      "sha256": "c1322ca1a7a64b2bb03a04a88624c98903dc8e803e9c5d044adfe3ba9ed0bb22"
+    },
+    "../semantic/c4-spec-native-dy-review.json": {
+      "bytes": 16253,
+      "sha256": "67b9ea6e31f5f631526e2e2d40d139cc0701de3309d540b8238b1f2d16011501"
+    },
+    "../semantic/c4-spec-native-dy-review.md": {
+      "bytes": 2143,
+      "sha256": "fddfbb04df7a04e40de57930c9acdfb8c424bca550790e8b08468b7739d04c6d"
+    }
+  }
+}

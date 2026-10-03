@@ -186,16 +186,26 @@ This browser source is not incorporated into the release branch.
 
 ## Specification and remaining gates
 
-The canonical document is `1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg`, revision
-`AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0`,
-last rechecked unchanged after local validation. The change from the earlier
-snapshot adds Study App text at source line 10002; it remains unresolved.
+The canonical document is `1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg`.
+Existing maps and historical validation retain revision
+`AHj4eMQyVp2mJyiR-7I0WS7iJcwSYMmwoEkTb7sm6ijqRk99EaQHJbJWrLy37ObunOyOJESw8FHvgyJNClwj6QdcNpG8weoklA97x6a9tG0`
+and its 8,344 nonblank source clauses. A newly captured atomic native revision
+`AHj4eMQdy-bFUoMrCqGybqoEO_G5Z1JnTxVEl03pJVillty8itZgguU-bcLZz2GHEt6DzYfY-fMNSVeS8-eyKzYBo_BoN9gK2NvcK9zBIlI`
+contains 8,358 paragraphs. Its exact nonblank comparison changes two final-pass
+regions: Spaces/Dev quality-of-life notes and pass headings replace the former
+Android/Study future-pass notes. C4 verifies all 63 C4 quote bodies unchanged;
+pass timing, duplicate Pass4, platform/API/transport and acceptance interpretation
+remain unresolved. The current text specifies a sidebar default with a Settings
+choice. The interim export captured a partially edited sentence and remains
+historical. Full native text, hashes and the independent review are retained in
+[specification-update/manifest.json](specification-update/manifest.json).
 
-The lossless inventory retains 8,344 nonblank source clauses. That is not a
-requirement count. The hosted scoped maps contain 228 semantic records and zero
-VERIFIED results; they overlap inherited criteria and do not form a global
-denominator. Full mandatory/default-SHOULD/donor/platform decomposition and A/B/C
-reconciliation remain incomplete. Every deployed SH-12 journey remains NOT-RUN.
+These clause counts are not requirement counts. The prior hosted scoped maps
+contain 228 semantic records and zero VERIFIED results; they overlap inherited
+criteria and do not form a global denominator. Their original source line refs
+are preserved. Fresh whole-map reconciliation and full mandatory/default-SHOULD/
+donor/platform decomposition remain incomplete. Every deployed SH-12 journey
+remains NOT-RUN. Historical runtime results are not relabelled to the new revision.
 
 Windows, 9to1-OS, browser and other canonically declared product platforms still
 need their exact owning installed/runtime/provider evidence. Linux local checks
