@@ -1,0 +1,870 @@
+{
+  "runId": "sol-happy-20261003",
+  "reviewer": "C4 independent exact-export comparison",
+  "old": {
+    "path": "/workspace/team-c/spec-fresh.txt",
+    "bytes": 1344156,
+    "sha256": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+    "lines": 10011
+  },
+  "new": {
+    "path": "/workspace/attachments/6c605d8a-48a6-4d50-8c60-b8db700e770c/9to1 Development Specification.txt",
+    "bytes": 1361181,
+    "sha256": "35e81c00f4f7ed50974623a2b59bfe83719c523eba16b661ff6378fc68375386",
+    "lines": 11678
+  },
+  "new_native_revision_reported_by_coordinator": "AHj4eMQhK_pJtVDxp8Tb9PdNnwLWVyyj8GqDUPwpZDWHz4uAUDK0trhaimnowNEh-lMdmRx8wRludNgOuLFU6a1wpkLM9v359k6vKlLLSYY",
+  "new_modified_time_reported_by_coordinator": "2026-10-03T19:43:30.873Z",
+  "revision_provenance": "Native revision/time supplied in coordinator assignment; C4 independently read and hashed actual authorised export bytes, did not call native Docs API.",
+  "comparison_method": "Raw UTF-8 bytes hashed; normalized comparison strips BOM/leading-trailing whitespace, drops blank lines and leading * list marker only. Preserves content, numbering, punctuation, order and wording. Three remaining diff regions fully listed. Raw files not edited.",
+  "normalized_diff_regions": [
+    {
+      "kind": "replace",
+      "old": [
+        {
+          "line": 328,
+          "text": "The work is suitable for production use within the requested scope."
+        },
+        {
+          "line": 329,
+          "text": "All specifically requested features are implemented."
+        },
+        {
+          "line": 330,
+          "text": "The implementation passes the Subjective Test."
+        },
+        {
+          "line": 331,
+          "text": "The implementation passes the Objective Test."
+        },
+        {
+          "line": 332,
+          "text": "Required integrations function rather than existing only as UI."
+        },
+        {
+          "line": 333,
+          "text": "Relevant regressions have been checked."
+        },
+        {
+          "line": 334,
+          "text": "Known blockers or limitations that prevent completion have been resolved."
+        },
+        {
+          "line": 335,
+          "text": "Appropriate validation has been performed."
+        },
+        {
+          "line": 336,
+          "text": "The agent has sufficient evidence to reasonably conclude that the requested outcome has been achieved."
+        }
+      ],
+      "new": [
+        {
+          "line": 416,
+          "text": "1. The work is suitable for production use within the requested scope."
+        },
+        {
+          "line": 417,
+          "text": "2. All specifically requested features are implemented."
+        },
+        {
+          "line": 418,
+          "text": "3. The implementation passes the Subjective Test."
+        },
+        {
+          "line": 419,
+          "text": "4. The implementation passes the Objective Test."
+        },
+        {
+          "line": 420,
+          "text": "5. Required integrations function rather than existing only as UI."
+        },
+        {
+          "line": 421,
+          "text": "6. Relevant regressions have been checked."
+        },
+        {
+          "line": 422,
+          "text": "7. Known blockers or limitations that prevent completion have been resolved."
+        },
+        {
+          "line": 423,
+          "text": "8. Appropriate validation has been performed."
+        },
+        {
+          "line": 424,
+          "text": "9. The agent has sufficient evidence to reasonably conclude that the requested outcome has been achieved."
+        }
+      ]
+    },
+    {
+      "kind": "replace",
+      "old": [
+        {
+          "line": 9997,
+          "text": "Pass 4: Lunandroid"
+        }
+      ],
+      "new": [
+        {
+          "line": 11627,
+          "text": "Pass 4: Lunar Eclipse"
+        },
+        {
+          "line": 11628,
+          "text": "// Finishing pass"
+        },
+        {
+          "line": 11629,
+          "text": "Spaces QOL"
+        },
+        {
+          "line": 11630,
+          "text": "User Interface"
+        },
+        {
+          "line": 11631,
+          "text": "Screenshots taken from ChatGPT for reference"
+        },
+        {
+          "line": 11632,
+          "text": "Sidebar"
+        },
+        {
+          "line": 11633,
+          "text": "Spaces sidebar - Replaces the dropdown switcher"
+        },
+        {
+          "line": 11636,
+          "text": "Dropdown switcher remains an option in s"
+        },
+        {
+          "line": 11639,
+          "text": "Horizontal Tabs"
+        },
+        {
+          "line": 11640,
+          "text": "Horizontal tabs in spaces app for multiple chats, open windows, etc."
+        },
+        {
+          "line": 11643,
+          "text": "Other 9to1 apps (e.g. browse) can be embedded into spaces via a tab, as well as things like chats and images. Thanks to a shared ui framework, the design should be able to adapt to fit seamlessly with the rest of the spaces interface."
+        },
+        {
+          "line": 11646,
+          "text": "Local Chats"
+        },
+        {
+          "line": 11651,
+          "text": "Send local chat directly to another device"
+        },
+        {
+          "line": 11654,
+          "text": "Dev QOL"
+        },
+        {
+          "line": 11655,
+          "text": "Dev sidebar"
+        },
+        {
+          "line": 11658,
+          "text": "Horizontal tabs in dev app"
+        },
+        {
+          "line": 11665,
+          "text": "Pass 4: Droid"
+        }
+      ]
+    },
+    {
+      "kind": "delete",
+      "old": [
+        {
+          "line": 10001,
+          "text": "Pass 5: O Yes"
+        },
+        {
+          "line": 10002,
+          "text": "// Study App Pass - App dedicated to studying (separate to the study space - more for things like building papers, interactive practice questions, etc). Shares subjects/context, etc, with the study space."
+        }
+      ],
+      "new": []
+    }
+  ],
+  "classification": [
+    {
+      "region": "old328-336/new416-424",
+      "class": "FORMAT_ONLY",
+      "reason": "Identical nine implementation-completeness criteria acquire 1..9 list numbering; no wording/obligation change."
+    },
+    {
+      "region": "old9997/new11627-11665",
+      "class": "SUBSTANTIVE_NEW_PASS4_UI_AND_CROSS_DEVICE_BEHAVIOUR_PLUS_PASS_INDEX_RENAME",
+      "new_behavior": [
+        "Spaces sidebar replaces dropdown switcher; dropdown remains an option but sentence is incomplete (in s).",
+        "Spaces horizontal tabs for multiple chats/open windows; embedding other apps including Browse, chats and images with shared-framework visual adaptation.",
+        "Send local chat directly to another device.",
+        "Dev sidebar and horizontal tabs."
+      ],
+      "not_specified": [
+        "Complete dropdown-option text/settings location",
+        "Local-chat transport/auth/account/privacy/durability/receiver conflict behavior and supported platform matrix",
+        "Complete sidebar/tab UI/API schemas, acceptance, scope/timing and screenshot assets"
+      ],
+      "owner_dependency": "Team A Spaces/Dev/shared UI and permission/model owners; Team B browser tabs/embeds; C5 potential local-chat delivery/session dependency after owner contract. No new C4 Files/Sites service authority follows.",
+      "donor_change": "None stated",
+      "platform_change": "No explicit changed supported-platform matrix or existing exception; cross-device operation is new, platform/transport unspecified.",
+      "index_change": "Lunandroid renamed to Lunar Eclipse finishing pass and another Pass4 Droid Android ROM heading; duplicate Pass4 numbering needs canonical resolution, not implicit scope exclusion."
+    },
+    {
+      "region": "old10001-10002/deleted",
+      "class": "REMOVED_PASS_INDEX_AND_FUTURE_PRODUCT_COMMENT",
+      "reason": "Pass5 O Yes and study-app planning comment removed; no change found to existing study-space/app detailed product requirements or their acceptance. Do not infer removal of existing requirements from deleting a planning heading."
+    }
+  ],
+  "c4_impact": {
+    "semantic_records": [
+      {
+        "id": "C4-F-HOST",
+        "old_line": 9903,
+        "new_matching_lines": [
+          11530
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-IDENTITY",
+        "old_line": 9904,
+        "new_matching_lines": [
+          11531
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-METADATA",
+        "old_line": 1895,
+        "new_matching_lines": [
+          2267
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-REPLICA",
+        "old_line": 1897,
+        "new_matching_lines": [
+          2270
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-ACCESS",
+        "old_line": 9905,
+        "new_matching_lines": [
+          11532
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-DELIVERY",
+        "old_line": 9906,
+        "new_matching_lines": [
+          11533
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-TRANSFER-ID",
+        "old_line": 9907,
+        "new_matching_lines": [
+          11534
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-RESUME",
+        "old_line": 1987,
+        "new_matching_lines": [
+          2403
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-INTEGRITY",
+        "old_line": 1989,
+        "new_matching_lines": [
+          2406
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-COMMIT",
+        "old_line": 9907,
+        "new_matching_lines": [
+          11534
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-RECONCILE",
+        "old_line": 9907,
+        "new_matching_lines": [
+          11534
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-QUOTA",
+        "old_line": 9908,
+        "new_matching_lines": [
+          11535
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-QUOTA-UI",
+        "old_line": 1933,
+        "new_matching_lines": [
+          2322
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-PUSH",
+        "old_line": 9909,
+        "new_matching_lines": [
+          11536
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-CURSOR",
+        "old_line": 1939,
+        "new_matching_lines": [
+          2331
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-IDEMPOTENT",
+        "old_line": 1941,
+        "new_matching_lines": [
+          2334
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-CONFLICT",
+        "old_line": 1977,
+        "new_matching_lines": [
+          2388
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-RAW-CONFLICT",
+        "old_line": 1889,
+        "new_matching_lines": [
+          2258
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-OFFLINE",
+        "old_line": 1969,
+        "new_matching_lines": [
+          2376
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-HYDRATE",
+        "old_line": 1957,
+        "new_matching_lines": [
+          2358
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-EVICT",
+        "old_line": 1971,
+        "new_matching_lines": [
+          2379
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-VERSIONS",
+        "old_line": 1995,
+        "new_matching_lines": [
+          2415
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-TRASH",
+        "old_line": 2001,
+        "new_matching_lines": [
+          2424
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-CASCADE",
+        "old_line": 2003,
+        "new_matching_lines": [
+          2427
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-ACL",
+        "old_line": 2007,
+        "new_matching_lines": [
+          2433
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-INHERIT",
+        "old_line": 2009,
+        "new_matching_lines": [
+          2436
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-SHARED",
+        "old_line": 2011,
+        "new_matching_lines": [
+          2439
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-LINK",
+        "old_line": 2013,
+        "new_matching_lines": [
+          2442
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-READ-PARITY",
+        "old_line": 9910,
+        "new_matching_lines": [
+          11537
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-PROVIDERS",
+        "old_line": 1903,
+        "new_matching_lines": [
+          2279
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-F-API",
+        "old_line": 1754,
+        "new_matching_lines": [
+          2093
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-CLOUDFLARE",
+        "old_line": 9912,
+        "new_matching_lines": [
+          11539
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "BLOCKED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-PROVENANCE",
+        "old_line": 9913,
+        "new_matching_lines": [
+          11540
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-ASSETS",
+        "old_line": 9914,
+        "new_matching_lines": [
+          11541
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-ROUTES",
+        "old_line": 9914,
+        "new_matching_lines": [
+          11541
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-SERVER",
+        "old_line": 9914,
+        "new_matching_lines": [
+          11541
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-BUILD-ISOLATION",
+        "old_line": 9915,
+        "new_matching_lines": [
+          11542
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-CREDENTIAL-ISOLATION",
+        "old_line": 9915,
+        "new_matching_lines": [
+          11542
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-FAILURE",
+        "old_line": 9916,
+        "new_matching_lines": [
+          11543
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-ROLLBACK",
+        "old_line": 9916,
+        "new_matching_lines": [
+          11543
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-NAMESPACE",
+        "old_line": 9917,
+        "new_matching_lines": [
+          11544
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-SLUG",
+        "old_line": 7291,
+        "new_matching_lines": [
+          8592
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-NAME",
+        "old_line": 7296,
+        "new_matching_lines": [
+          8596
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-DOMAIN-CHALLENGE",
+        "old_line": 7304,
+        "new_matching_lines": [
+          8603
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-DOMAIN-TAKEOVER",
+        "old_line": 7305,
+        "new_matching_lines": [
+          8604
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-DNS-SCOPE",
+        "old_line": 7307,
+        "new_matching_lines": [
+          8606
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "BLOCKED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-TLS",
+        "old_line": 7244,
+        "new_matching_lines": [
+          8545
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-MANUAL-DNS",
+        "old_line": 7308,
+        "new_matching_lines": [
+          8607
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-ORIGIN",
+        "old_line": 9918,
+        "new_matching_lines": [
+          11545
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "BLOCKED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-LIMITS",
+        "old_line": 9919,
+        "new_matching_lines": [
+          11546
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-INACTIVITY-EARLY",
+        "old_line": 1314,
+        "new_matching_lines": [
+          1519
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-INACTIVITY-LATE",
+        "old_line": 1314,
+        "new_matching_lines": [
+          1519
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-SOURCE",
+        "old_line": 7312,
+        "new_matching_lines": [
+          8610
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-DERIVED",
+        "old_line": 7319,
+        "new_matching_lines": [
+          8616
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-RECOVERY",
+        "old_line": 7321,
+        "new_matching_lines": [
+          8618
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-SECRET",
+        "old_line": 7263,
+        "new_matching_lines": [
+          8564
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-PREVIEW",
+        "old_line": 7373,
+        "new_matching_lines": [
+          8668
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-S-DYNAMIC-OWNERS",
+        "old_line": 7401,
+        "new_matching_lines": [
+          8696
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-X-STATE-TRANSACTION",
+        "old_line": 9870,
+        "new_matching_lines": [
+          11497
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "BLOCKED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-X-FIRSTPARTY-ISOLATION",
+        "old_line": 9871,
+        "new_matching_lines": [
+          11498
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "BLOCKED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-X-BACKUP",
+        "old_line": 9952,
+        "new_matching_lines": [
+          11579
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "MISSING",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-X-PRIVACY",
+        "old_line": 9953,
+        "new_matching_lines": [
+          11580
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "BLOCKED",
+        "runtime_evidence_relabelled": false
+      },
+      {
+        "id": "C4-X-COMPAT",
+        "old_line": 9954,
+        "new_matching_lines": [
+          11581
+        ],
+        "semantic_change": false,
+        "prior_state_preserved": "IMPLEMENTED-UNVERIFIED",
+        "runtime_evidence_relabelled": false
+      }
+    ],
+    "findings": "All63 C4 source quotations still match after export-format normalization; SH07/SH08/Files/Sites/provider/security/Free-inactivity semantics unchanged. Their one-based source line references and canonical revision witness differ and need explicit new mapping, not mutation of historical evidence.",
+    "runtime_evidence": "Existing9-test local source/fake-DNS evidence remains at its tested old revision/commit; this comparison is read-only requirements evidence, not a fresh runtime acceptance run.",
+    "global_mapping": "New Pass4 Spaces/Dev/local-chat behavior must enter full owner/semantic ledger; no full denominator/completion claim.",
+    "unresolved": "Incomplete new prose, duplicate Pass4 index and unknown transport/platform/schema remain visible; no invented behavior."
+  },
+  "unchanged_exclusion": "Training Lab explicitly OUT OF SCOPE text remains present and unchanged after formatting normalization.",
+  "verification": {
+    "exact_old_sha_match": "117677d224cbd1d3f909cd63d47b137b04d5ed4cb7e97a7c012b5443a92baca1",
+    "all63_existing_C4_quotes_matched": true,
+    "raw_files_modified": false,
+    "code_changed": false
+  }
+}
