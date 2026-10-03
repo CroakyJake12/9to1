@@ -1,0 +1,1 @@
+{"drained": true, "launcherPid": 70487, "launcherTuple": [70165, 70487, 70487, "1675916", "R"], "observedMembers": {"70487": [70165, 70487, 70487, "1675916", "S"], "70505": [70487, 70487, 70487, "1675998", "R"], "70526": [70487, 70487, 70487, "1676121", "R"]}, "reapedOwnedChildren": {}, "subreaperOwnerPid": 70165, "subreaperOwnerStartTicks": "1674249"}
