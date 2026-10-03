@@ -16,7 +16,7 @@ try {
     unsubscribe = platform.subscribe(exports.NineToOne.Web.Program.LocationChanged,
         () => { unsubscribe(); exports.NineToOne.Web.Program.CloseShell(); },
         exports.NineToOne.Web.Program.PrivateContextInvalidated);
-    await dotnet.run();
+    await runtime.runMain(config.mainAssemblyName, []);
 } catch (error) {
     console.error('9to1 browser startup failed.', error);
     platform.showStatus(isCompatible ? 'BrowserRuntimeUnavailable' : 'BrowserCapabilityUnavailable',
