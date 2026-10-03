@@ -61,3 +61,7 @@ SDK6 generated-context successor4472a4fd9730c4f432570e12a2d86b6b16fc7cb1 indepen
 
 
 SDK6 issuance HOLD update: root explicitly did NOT authorize4472 execution after fresh A peer ef1a11f7 held fe96 helper/control exception preservation (finally pidfdclose masking body errors and acquisition/cleanup failure paths). Valid physical mapping is source custody proof only, not external issuance or runtime acceptance. C3 prepares separate owner correction/fresh peer/cut;4472 remains HELD. Original source/map evidence retained unchanged.
+
+### Fresh corrected custody cut 9b29
+
+Independent complete physical audit of `9b29cae76576554d09b10e644d818fad2cdca71a`: cut SHA256 `a9603361f13b4fce0742d1da008936de2582e251a8272e3d9228b69bd5688cb1`, 2,841,722 bytes; exactly 9,457 tracked physical blobs plus22gitlinks with only self-cut excluded. All physical modes, Git objects, lengths and byte SHA256 match. Three materialized dependencies have exact commits and clean tracked status. All23 provenance rows map to actual receiving root, preserve independently checked original bytes/hash; four additional control pins match physical source. All17original products and28original delivery rows unchanged; frozenmetadata diffempty. Entire tree differs from reviewed proposal4e64e3576ba817bcff5a018c9dc031318b8c8f25 only by cut and receiving sidecar. Evidence /workspace/team-c/evidence/c1/admin-custody-map/audit.json. Source custody ACK only: SDK6 NOT_RUN; root external issuance and owner adoption remain separate. Prior4472HOLD and failed attempts remain historical evidence.
