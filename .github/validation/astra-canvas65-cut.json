@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "3d1b1e2de97dec16f548ada4cbdc04469d726654",
-  "programTree": "ffc9445a604790487313e27ef85746863f5f733e",
-  "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
+  "baselineCommit": "cb6c25f31de0528d0fc68a33eb6155d9ed13857b",
+  "programTree": "e4ab535b2a457b9da199869864a19d198165e995",
+  "currentNormalCommit": "24531d46f2179096e53556070f61edaa47c93955",
   "kind": "corrective",
   "files": [
     {
@@ -5433,9 +5433,9 @@
     {
       "path": "9to1 Workspace/Canvas/rnote-poc/src/lib.rs",
       "mode": "100644",
-      "object": "003b8200b75b9e3163284c9cacf822a0dcd2883c",
-      "bytes": 75176,
-      "sha256": "df1698bcbcb590de1cf0fa274165d97f1650438318976189f0019b7572a3b50c"
+      "object": "7bbda18166db9d59180c82d52088dd46c9856abc",
+      "bytes": 78596,
+      "sha256": "9f7e3ce7c7da835daed0e844ab0b3e6af09ae0d6deae18f93f3dcc8375795e69"
     },
     {
       "path": "9to1 Workspace/Canvas/tools/README.md",
@@ -24704,16 +24704,16 @@
     {
       "path": "9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
       "mode": "100644",
-      "object": "4c09beb83e955567ee60c26a8aa12b7897b01387",
-      "bytes": 21260,
-      "sha256": "904101d7d62f40879bde24682d90dbc55a5e70c8e9314ca9aea5099e949e1990"
+      "object": "03c3c221985185c30dcff5d7d674b2576995f490",
+      "bytes": 24270,
+      "sha256": "0d16249681e399f362a70eecb72e81d0f40a7e0a94fe1f999c5be9ddfe8e14e7"
     },
     {
       "path": "9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
       "mode": "100644",
-      "object": "ce224297e2b09b672d031b57c97d31afdb2ab564",
-      "bytes": 1820,
-      "sha256": "2a2c63141d78f9749e5055262fafa6d9209c4b7bc2048b2ccd9610d5b1d70de2"
+      "object": "3b2e00945ca8b55f9980b50150b5066234d6341c",
+      "bytes": 2650,
+      "sha256": "c85f5af76b193dea519dbb80dbdd844af0bb0769983e2ee09002792d16e9c9af"
     },
     {
       "path": "9to1 Workspace/Mail/README.md",
@@ -24725,9 +24725,9 @@
     {
       "path": "9to1 Workspace/Mail/Services/MailDomainService.cs",
       "mode": "100644",
-      "object": "65bcc0873ab071c90d6965859ee147b5f9888d2d",
-      "bytes": 38519,
-      "sha256": "91bf2a0e8898abc7277d3ff03a51c87006c924e3cff6fbde2d3e6f94031481a5"
+      "object": "1d3ccc93c9cbca5374f1717d3089f4ef38ff6b1a",
+      "bytes": 48046,
+      "sha256": "2c0fdc2b726f17d20a6f1fd55a8a69c560d0db0cd9cb7980d99677e719e9f76e"
     },
     {
       "path": "9to1 Workspace/Mail/Services/MailHtmlSanitizer.cs",
@@ -24770,6 +24770,13 @@
       "object": "5e3848bd93ec412f2f4ae647cd63ae793b1a9add",
       "bytes": 13408,
       "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs",
+      "mode": "100644",
+      "object": "a5d0fb2ca89d47bd9deab1c71f216d4173a60e41",
+      "bytes": 28386,
+      "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8"
     },
     {
       "path": "9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
@@ -66341,7 +66348,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-canvas65-cut.json",
-  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact.",
+  "limits": "Current22 exact graph49 only:56 immutable owning source bindings/55changedproducttargets, full93 test-bearing provenance +partial companions, unfiltered currentHome/Canvas/NativeUI and exact old105 Passed(Class,Method,testName) tuple preservation. Require every actual compiled discovered case passed zeroSkip under source-bound xunit3.1.5 normalization/configuration, all19exactCargoIDs and old ABI/witnesses+newrank/renderexports. Fullcurrent12regression/36resource retained. ActualofficialSDK completearchive/all-node/type/mode/hash inventory beforefirstcompiler and afterowning, actualcompiledPE metadata/providerVMR/source, exacttargetdotnet/testhost/nativeSO witness and sampled original-session cleanup required. FullSDKarchive retained separately in bounded originals. Future normalCUI85/defaultactivation/authority grants excluded. No atomic filelease/unobserved-descendant-completeness or source-only runtime acceptance claim. Current23 coherent exact four accepted Spaces/Home sources retained; two Home files already byte-identical selected04, two Spaces files explicitly overlaid. Required canonical selector dependencies are additive only: all prior93 whole classes preserved plus Canvas dependency1/Spaces current23 class1 =95; all prior19 exact Cargo IDs plus two selector IDs =21. Exact symbols and actual selector capability1 required. Official fresh SDK rooted at issued unique /opt path is protected from ordinary runner writes before each complete unchanged archive guard; no node exception/deletion. Regression12/resource36 and prior105 actual tuple guards unchanged. Preferred06 replaces the failed05 /opt private SDK path with exact fresh /astra-canvas-sdk-10.0.301-{run}-{attempt} directly below original /. Strict observed parent metadata/nonwrite/rootownership refuses before download/extraction; every original full descendant/archive/source/provider guard remains. Coherent accepted normal24 Shelf/catalog36 source deltas and exact normal25 Writer metadata are retained. Whole95/native21/current12/36, old105 tuples, PDB/compiled-source/native original-process/task/restores/drain assertions remain byte exact actual05 and mandatory. Actual05 reg/resource pass alone is not owning/native acceptance. Preferred07 binds exact169 consumer serde_json float_roundtrip and failure-only bounded fallible numeric diagnostic, preserving all21 exact assertions and original panic. Parser causality is unverified until the fresh exact save/reopen run. Actual06 owning originals prove20/21 Rust passes and one exact SVG failure; actual06 regression/resource statuses SUCCESS have outstanding unadmitted raw original closure. No inferred whole-three/native acceptance. Coherent accepted normal27 Mail and normal26 Writer bytes retained; actual06 Native Files provider capture pair stays exact because removing only that pair gives complete normal27 bytes. Complete original95/12/36/native21, strict protected-root SDK155/full official archive/member/type/mode/source/VMR/provider/PDB/task/restores/old105 tuples/actual processes/drains remain mandatory and byte exact. Preferred08 is a failure-only diagnostic on actual07/current28. All21 exact native assertions, retained original19 IDs, whole95/12/36, strict SDK155 complete archive/source/provider/PE/PDB/task/restores and original process/drain caller bytes remain unchanged. Actual07 owns complete26-file original closure190 and still fails exact SVG20/21; its126 serialized bits are equal after maintained dp3 rounding and do not measure live geometry. Source193 adds read-only direct public BrushStroke raw f64 bits/exact start-equality evidence only. No production donor correction or parser/geometry cause claim. Actual07 regression/resource statuses are SUCCESS but their original archives remain unreviewed; this diagnostic does not claim their full original closure. Four source-reviewed, actual IMAP16 accepted normal28 Mail bytes are copied exactly; no other canonical source merge or runtime guard change.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/checkpoint22-publication-local.json",
@@ -66598,6 +66605,38 @@
     {
       "path": "/workspace/astra-source/root-mail11-full-three-original-replay471.json",
       "sha256": "a8c20a33f463ef407050426ebc8577381affa3840c5ac4a8666a2b27df8bfccf"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas06-current27-serde-float-roundtrip-full-corrective07/manifest.json",
+      "sha256": "e9e4a63f8b5c19446dcefec60a4c134d64d9fa2a97e5a67abc90251c41924fbf"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint28-publication-local.json",
+      "sha256": "1aa5f2709c8686cee25c2c90fa31eb6fe54ccc2de509aff4bb606f6add281c6b"
+    },
+    {
+      "path": "/workspace/astra-source/root-imap16-full-three-original-replay524.json",
+      "sha256": "34168156bbe2a02a3c46b470658af0d3770cd3c7243c81e535dfc65de52e8c1c"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas07-direct-live-brush-geometry-failure-diagnostic-source193/manifest.json",
+      "sha256": "5976b5e3ea941183c18eee38bc596c6424a64292743f187a0bc18589e3561fc7"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas193-public-penpath-color-api-provenance195/manifest.json",
+      "sha256": "a6633f8f994d448ae40e109802629360339dcb32d81096e8759f587c819be618"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-canvas193-live-brush-diagnostic-source-api-peer01.json",
+      "sha256": "10e15275190e60763b50bc5ec62dd7727678a9edd03d5f650d4753e712dccf3a"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-canvas07-actual-owning-original-closure190/receipt.json",
+      "sha256": "21a50b59a4b29500fd00ed833f3bcfd3b58e73c004f21f4ae91a29cc6bae4d90"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-canvas193-live-brush-geometry-maintained-api-source-peer01.json",
+      "sha256": "a7fd8a850b7867840e7a6eebd78d4cfcb078565e17a706d43c20d38c426410fd"
     }
   ],
   "sharedCakeIdContract": null,

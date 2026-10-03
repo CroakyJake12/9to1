@@ -41,30 +41,50 @@ public sealed class MailKitImapSmtpProvider : IMailProviderAdapter
             var inbox = client.Inbox;
             await inbox.OpenAsync(FolderAccess.ReadOnly, cancellationToken).ConfigureAwait(false);
             var priorUid = ParseCursor(changeCursor, inbox.UidValidity);
-            var uids = priorUid == 0
-                ? await inbox.SearchAsync(SearchQuery.All, cancellationToken).ConfigureAwait(false)
-                : await inbox.SearchAsync(SearchQuery.Uids(new UniqueIdRange(new UniqueId(priorUid + 1), UniqueId.MaxValue)), cancellationToken).ConfigureAwait(false);
-            var summaries = uids.Count == 0
+            // New-UID-only queries miss flag changes and expunges. Read live membership
+            // and flags, while keeping body hydration limited to new UIDs.
+            var uids = await inbox.SearchAsync(SearchQuery.All, cancellationToken).ConfigureAwait(false);
+            var summaryItems = MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.Flags |
+                MessageSummaryItems.InternalDate | MessageSummaryItems.BodyStructure | MessageSummaryItems.Size;
+            if (inbox.Supports(FolderFeature.ModSequences)) summaryItems |= MessageSummaryItems.ModSeq;
+            IList<IMessageSummary> summaries = uids.Count == 0
                 ? []
-                : await inbox.FetchAsync(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.Flags |
-                    MessageSummaryItems.InternalDate | MessageSummaryItems.BodyStructure | MessageSummaryItems.ModSeq | MessageSummaryItems.Size, cancellationToken).ConfigureAwait(false);
+                : await inbox.FetchAsync(uids, summaryItems, cancellationToken).ConfigureAwait(false);
+            var requestedIds = uids.Select(uid => uid.Id).ToHashSet();
+            if (summaries.Count != requestedIds.Count
+                || summaries.Any(summary => summary.UniqueId.Id == 0 || !requestedIds.Contains(summary.UniqueId.Id))
+                || summaries.Select(summary => summary.UniqueId.Id).Distinct().Count() != summaries.Count)
+                throw new MailProviderException(MailErrorCode.SyncFailed,
+                    "The Inbox changed while its complete membership was being read. Cached mail was preserved; retry sync.", true);
             var messages = new List<MailMessage>(summaries.Count);
+            var states = new List<MailProviderMessageState>(summaries.Count);
             foreach (var summary in summaries)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                if (summary.Flags is null)
+                    throw new MailProviderException(MailErrorCode.SyncFailed, "The server did not return requested message flags. Cached mail was preserved.", true);
+                var flags = summary.Flags.Value;
+                states.Add(new(account.AccountId, MessageId(account, inbox, summary.UniqueId),
+                    summary.UniqueId.Id.ToString(CultureInfo.InvariantCulture), inbox.FullName,
+                    flags.HasFlag(MessageFlags.Seen), flags.HasFlag(MessageFlags.Flagged),
+                    flags.HasFlag(MessageFlags.Answered), flags.HasFlag(MessageFlags.Deleted),
+                    ObservedRevision(inbox, summary)));
+                if (priorUid != 0 && summary.UniqueId.Id <= priorUid) continue;
                 var mime = await inbox.GetMessageAsync(summary.UniqueId, cancellationToken).ConfigureAwait(false);
                 messages.Add(ConvertMessage(account, inbox, summary, mime));
             }
             var maxUid = uids.Count == 0 ? priorUid : Math.Max(priorUid, uids.Max(uid => (uint)uid.Id));
             return new MailProviderSyncBatch(account.AccountId, folders, messages,
                 $"{inbox.UidValidity.ToString(CultureInfo.InvariantCulture)}:{maxUid.ToString(CultureInfo.InvariantCulture)}",
-                priorUid > 0, DateTimeOffset.UtcNow);
+                priorUid > 0, DateTimeOffset.UtcNow, states,
+                [new(account.AccountId, inbox.FullName, uids.Select(uid => MessageId(account, inbox, uid)).ToArray())]);
         }
         catch (OperationCanceledException) { throw; }
         catch (MailProviderException) { throw; }
         catch (MailKit.Security.AuthenticationException ex) { throw new MailProviderException(MailErrorCode.AuthenticationRequired, "The provider rejected Mail authentication. Reconnect the account and retry sync.", false, ex); }
         catch (MailKit.Security.SslHandshakeException ex) { throw new MailProviderException(MailErrorCode.CertificateError, "The provider's TLS certificate could not be verified.", false, ex); }
         catch (MailKit.Net.Imap.ImapCommandException ex) { throw new MailProviderException(MailErrorCode.SyncFailed, "The IMAP server rejected a sync command.", true, ex); }
+        catch (MailKit.MessageNotFoundException ex) { throw new MailProviderException(MailErrorCode.SyncFailed, "A message disappeared while its original MIME body was being read. Cached mail was preserved; retry sync.", true, ex); }
         catch (Exception ex) when (ex is IOException or SocketException or TimeoutException or MailKit.ServiceNotConnectedException)
         { throw new MailProviderException(MailErrorCode.ProviderUnavailable, "The mail provider could not be reached. Cached messages remain available.", true, ex); }
         finally
@@ -229,7 +249,7 @@ public sealed class MailKitImapSmtpProvider : IMailProviderAdapter
     private MailMessage ConvertMessage(MailAccount account, IMailFolder folder, IMessageSummary summary, MimeMessage message)
     {
         var providerId = summary.UniqueId.Id.ToString(CultureInfo.InvariantCulture);
-        var messageId = StableId(account.AccountId, $"imap:{folder.FullName}:{folder.UidValidity}:{providerId}");
+        var messageId = MessageId(account, folder, summary.UniqueId);
         var threadIdentity = message.References.FirstOrDefault() ?? message.InReplyTo ?? message.MessageId ?? providerId;
         var threadId = StableId(account.AccountId, "thread:" + threadIdentity);
         var attachments = new List<Guid>();
@@ -245,8 +265,24 @@ public sealed class MailKitImapSmtpProvider : IMailProviderAdapter
             folder.FullName, [], received, message.Date, ToAddress(sender), ToAddresses(message.To), ToAddresses(message.Cc),
             message.Subject ?? string.Empty, MakePreview(plainBody), plainBody, safeHtmlBody,
             summary.Flags?.HasFlag(MessageFlags.Seen) == true, summary.Flags?.HasFlag(MessageFlags.Flagged) == true,
-            summary.Flags?.HasFlag(MessageFlags.Answered) == true, summary.ModSeq?.ToString(CultureInfo.InvariantCulture), attachments,
-            ReadAuthenticationHeaders(message), RemoteContentPolicy.Blocked, IsLocalThreadGrouping: true);
+            summary.Flags?.HasFlag(MessageFlags.Answered) == true, ObservedRevision(folder, summary), attachments,
+            ReadAuthenticationHeaders(message), RemoteContentPolicy.Blocked, IsLocalThreadGrouping: true,
+            IsDeleted: summary.Flags?.HasFlag(MessageFlags.Deleted) == true);
+    }
+
+    private static Guid MessageId(MailAccount account, IMailFolder folder, UniqueId uid) =>
+        StableId(account.AccountId, $"imap:{folder.FullName}:{folder.UidValidity}:{uid.Id.ToString(CultureInfo.InvariantCulture)}");
+
+    private static string ObservedRevision(IMailFolder folder, IMessageSummary summary)
+    {
+        var scope = folder.UidValidity.ToString(CultureInfo.InvariantCulture) + ":" + summary.UniqueId.Id.ToString(CultureInfo.InvariantCulture);
+        if (summary.ModSeq is { } revision) return scope + ":modseq:" + revision.ToString(CultureInfo.InvariantCulture);
+        // Without CONDSTORE this is a local observation of real server flags, not
+        // a provider-issued change token or a promise of lossless intermediate history.
+        // Recent is session/server managed and can disappear on a later SELECT
+        // without any user-visible message mutation. It must not invent a conflict.
+        var persistentFlags = (summary.Flags ?? MessageFlags.None) & ~MessageFlags.Recent;
+        return scope + ":observed-flags:" + ((uint)persistentFlags).ToString(CultureInfo.InvariantCulture);
     }
 
     private static MessageAuthenticationResults ReadAuthenticationHeaders(MimeMessage message)

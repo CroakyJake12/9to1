@@ -1442,6 +1442,54 @@ mod tests {
                 _ => {},
             }
         }
+        // Read live public brush fields directly. Serializing the snapshot first
+        // would round coordinates, control points, pressure and width to dp3.
+        fn raw_brush_geometry(snapshot: &EngineSnapshot) -> serde_json::Value {
+            fn position_bits(out: &mut std::collections::BTreeMap<String,u64>, path: &str, pos: Vector2) {
+                out.insert(format!("{path}/x"),pos[0].to_bits());
+                out.insert(format!("{path}/y"),pos[1].to_bits());
+            }
+            fn element_bits(out: &mut std::collections::BTreeMap<String,u64>, path: &str, element: &Element) {
+                position_bits(out,path,element.pos);
+                out.insert(format!("{path}/pressure"),element.pressure.to_bits());
+            }
+            let mut bits = std::collections::BTreeMap::new();
+            let mut end_equals_start = std::collections::BTreeMap::new();
+            let mut brush_keys = Vec::new();
+            let mut non_brush_keys = Vec::new();
+            for (key,stroke) in snapshot.stroke_components.iter() {
+                let key = key.data().as_ffi();
+                let rnote_engine::strokes::Stroke::BrushStroke(brush) = stroke.as_ref() else {
+                    non_brush_keys.push(key);
+                    continue;
+                };
+                brush_keys.push(key);
+                let base = format!("/brush/{key}");
+                element_bits(&mut bits,&format!("{base}/start"),&brush.path.start);
+                bits.insert(format!("{base}/style/stroke_width"),brush.style.stroke_width().to_bits());
+                if let Some(color) = brush.style.stroke_color() {
+                    for (channel,value) in [("r",color.r),("g",color.g),("b",color.b),("a",color.a)] {
+                        bits.insert(format!("{base}/style/stroke_color/{channel}"),value.to_bits());
+                    }
+                }
+                for (index,segment) in brush.path.segments.iter().enumerate() {
+                    let path = format!("{base}/segments/{index}");
+                    element_bits(&mut bits,&format!("{path}/end"),&segment.end());
+                    end_equals_start.insert(path.clone(),segment.end().pos == brush.path.start.pos);
+                    match segment {
+                        rnote_compose::penpath::Segment::LineTo { .. } => {},
+                        rnote_compose::penpath::Segment::QuadBezTo { cp, .. } => position_bits(&mut bits,&format!("{path}/cp"),*cp),
+                        rnote_compose::penpath::Segment::CubBezTo { cp1,cp2, .. } => {
+                            position_bits(&mut bits,&format!("{path}/cp1"),*cp1);
+                            position_bits(&mut bits,&format!("{path}/cp2"),*cp2);
+                        },
+                    }
+                }
+            }
+            serde_json::json!({"schemaVersion":1,"liveBrushKeys":brush_keys,"nonBrushKeys":non_brush_keys,
+                "rawF64BitsByPublicField":bits,"segmentEndExactlyEqualsPathStart":end_equals_start,
+                "qualification":"Direct public live BrushStroke fields measured with f64::to_bits before serde serialization; read-only controlled fixture evidence, no authority or assertion replacement."})
+        }
         // Capture only controlled fixture data; emit bounded numeric evidence only
         // if an original assertion panics, then propagate that exact panic.
         let mut reopen_failure_diagnostic: Option<serde_json::Value> = None;
@@ -1487,6 +1535,8 @@ mod tests {
                         "nativeCompressedBytes":bytes.len(),"originalNativeHex":native_hex,
                         "originalSnapshot":original_snapshot,"reopenedSnapshot":reopened_snapshot,
                         "originalFloatBitsByJsonPointer":original_bits,"reopenedFloatBitsByJsonPointer":reopened_bits,
+                        "originalRawBrushGeometry":raw_brush_geometry(&canvas.engine.take_snapshot()),
+                        "reopenedRawBrushGeometry":raw_brush_geometry(&restored.engine.take_snapshot()),
                         "qualification":"Controlled synthetic native snapshot data only; exact original SVG equality and all other assertions remain authoritative."}));
                 }
             }
