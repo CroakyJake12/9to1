@@ -178,7 +178,7 @@ public sealed partial class OrganisationService
     }
     private static void ValidateLifecycleKey(string key)
     {
-        if (string.IsNullOrWhiteSpace(key) || key.Length > 256) throw new ArgumentException("bounded_idempotency_key_required");
+        if (string.IsNullOrWhiteSpace(key) || key.Length > 256 || key.Any(char.IsControl)) throw new ArgumentException("bounded_idempotency_key_required");
     }
     private static void ValidateOwnershipTransfers(OrganisationState state)
     {
