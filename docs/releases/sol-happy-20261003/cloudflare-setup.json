@@ -29,10 +29,10 @@
   "fileCount": 356,
   "zipSha256": "b1d3fdaa9665c19e7a3d91e635d80a0fc1a22cc7a1b3ee78c4b328e01625ff6b",
   "zipBytes": 579874,
-  "state": "PACKAGED_UNCONNECTED",
+  "state": "SKILLS_LOADED_ACCOUNT_TOOLS_UNAVAILABLE",
   "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
   "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
-  "status": "PRIVATE_PLUGIN_SAVED_AND_BACKEND_READBACK_VERIFIED; host reports installed; no Cloudflare MCP tools exposed or OAuth/account access verified",
+  "status": "16 official Cloudflare skills now exposed; no Cloudflare MCP/account tools exposed or OAuth/account access verified",
   "resourcesProvisioned": false,
   "selectionFollowup": {
     "userSelectedReference": "cloudflare@openai-curated-remote",
@@ -46,5 +46,24 @@
     "environmentOutboundIdentities": [],
     "nextPrerequisite": "Host must load selected plugin tools and complete connection; official guide requires agent restart after MCP registration",
     "pluginOrSettingsChanged": false
+  },
+  "loadedFollowup": {
+    "checkedUTC": "2026-10-03T19:42:27.575768+00:00",
+    "cloudflareSkillsDiscovered": 16,
+    "cloudflareToolsExposed": 0,
+    "oauthAccountAccess": "UNVERIFIED",
+    "skillsPackageRoot": "skill://plugins_6ac139c43c988191aef5c01e99c9f7d4",
+    "userSelectedReference": "cloudflare@openai-curated-remote",
+    "equivalenceToPrivatePlugin": "UNESTABLISHED",
+    "environmentObservedRevision": 11,
+    "environmentObservationsCurrent": true,
+    "environmentNetworkState": "enforced/restricted",
+    "environmentCapabilities": [],
+    "environmentSecrets": [],
+    "environmentRuntimeVariables": [],
+    "environmentOutboundIdentities": [],
+    "pluginOrSettingsChanged": false,
+    "resourcesProvisioned": false,
+    "nextPrerequisite": "Host must expose callable account tools and complete connection before OAuth/account verification; skill loading alone does not prove connection"
   }
 }

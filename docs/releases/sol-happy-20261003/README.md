@@ -169,6 +169,21 @@ fresh execution here. Native16 qualifications, pending drains, source/PDB receip
 limits and the absence of a proven full native cause remain explicit. Original
 byte custody does not establish installed, signed or physical-device acceptance.
 
+The newer browser pointer source `83c24b2f0033fb2828169921fc905a327120143b`
+adds `position: relative` to the owned browser root. C1 independently reviewed
+that complete change and the actual pinned native canvas/input contract. C6
+verified the sealed `1356a134` package: all 405 listed artifact hashes, two root
+documents and current/original source hashes match. The inspected owning results
+record B1 14/14 and unchanged B6 pointer 5/5 at 1440×1000; the earlier c74 timeout
+remains retained. These results are Team B observations, with no runtime replay
+by Team C. The exact 180-file compiled output is still inaccessible here; its
+21,686,097-byte archive and SHA-256 were requested through the shared coordination
+branch. [Pointer review](browser-pointer-review/manifest.json) and
+[C6 package audit](c6/browser411-review.json) retain identities and limits.
+Shared Dashboard overlap and missing painted-control accessibility semantics
+remain blocked, alongside services, cross-client and full browser acceptance.
+This browser source is not incorporated into the release branch.
+
 ## Specification and remaining gates
 
 The canonical document is `1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg`, revision
@@ -206,11 +221,13 @@ account access and deployed-provider acceptance remain unverified.
 
 The user's subsequently selected `cloudflare@openai-curated-remote` reference is
 distinct from the saved private plugin ID; equivalence was not established. After
-that selection, complete tool/skill discovery still exposed no Cloudflare tools or
-skills, and current managed-environment observations contained no provider identity
-or credentials. Host connection and tool loading must succeed before account
-verification can run. The official guide requires an agent restart to load newly
-configured MCP servers. No credentials belong in chat. The saved private package
+that selection, an earlier discovery exposed neither Cloudflare tools nor skills.
+The latest discovery now exposes all 16 official Cloudflare skills, while callable
+account tools remain absent. Current managed-environment revision 11 is observed
+and enforced, with no provider identity, credentials or runtime variables. Skill
+loading does not prove OAuth or account access. Account tools and connection must
+become available before account verification can run. The official guide requires
+an agent restart to load newly configured MCP servers. The saved private package
 is [Cloudflare](https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4);
 assembly provenance and status are in [cloudflare-setup.json](cloudflare-setup.json).
 
