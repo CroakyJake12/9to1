@@ -387,6 +387,22 @@ try {
   assert.match(String(accessClaims.scope), /cake:profile:read/, "API token carries the explicit requested scope");
   assert.doesNotMatch(String(accessClaims.scope), /business|entitlement|role/i, "tokens do not embed plans or roles");
 
+  const refreshed = await globalThis.fetch(discovery.token_endpoint, {
+    method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: profileToken.refresh_token, client_id: client.client_id, resource }),
+  });
+  assert.equal(refreshed.status, 200, "active session can refresh its public-client token");
+  const refreshedTokens = await refreshed.json();
+  assert.ok(refreshedTokens.access_token && refreshedTokens.refresh_token, "refresh returns access and rotated refresh tokens");
+  assert.notEqual(refreshedTokens.refresh_token, profileToken.refresh_token, "successful refresh rotates its refresh token");
+  const { payload: refreshedClaims } = await jwtVerify(refreshedTokens.access_token, jwks, { issuer: discovery.issuer, audience: resource });
+  assert.equal(refreshedClaims.sub, testAccount.id, "refreshed token preserves canonical account identity");
+  assert.equal(refreshedClaims.sid, accessClaims.sid, "refreshed token remains bound to the same live session");
+  const refreshedCurrent = await response("/api/account/current", { headers: { authorization: `Bearer ${refreshedTokens.access_token}` } });
+  assert.equal(refreshedCurrent.status, 200, "rotated access token works through the production resource route");
+  assert.equal((await refreshedCurrent.json()).accountId, testAccount.id);
+  profileToken.refresh_token = refreshedTokens.refresh_token;
+
   const current = await response("/api/account/current", { headers: { authorization: `Bearer ${profileToken.access_token}` } });
   assert.equal(current.status, 200, `current account API matches the 9to1 contract: ${await current.clone().text()}`);
   assert.equal((await current.json()).accountId, testAccount.id, "current account binds to canonical token subject");
@@ -466,6 +482,30 @@ try {
   });
   assert.equal(crossAccountRevoke.status, 404, "even privileged first account cannot revoke another account session");
   assert.equal((await response("/api/account/current")).status, 200, "cross-account denial preserves the other live session");
+
+  const previousOtherCookies = new Map(cookies);
+  const anotherOtherLogin = await authClient.signIn.email({ email: otherAccount.email, password: otherAccount.password });
+  assert.equal(anotherOtherLogin.error, null, "same account can inspect multiple independent sessions");
+  const currentOtherSession = await (await response(`${authPath}/get-session`)).json();
+  assert.notEqual(currentOtherSession.session.id, otherSession.session.id, "new sign-in receives a distinct canonical session identity");
+  const currentOtherCookies = new Map(cookies);
+  const beforeOtherRevocation = await (await response("/api/account/sessions")).json();
+  assert.ok(beforeOtherRevocation.sessions.some((session) => session.sessionId === otherSession.session.id), "older session is present before revocation");
+  assert.ok(beforeOtherRevocation.sessions.some((session) => session.sessionId === currentOtherSession.session.id), "current session is present before revocation");
+  const revokedOthers = await jsonRequest("/api/account/revoke-other-sessions", "POST");
+  assert.equal(revokedOthers.status, 204, "revoke-other-sessions uses the authenticated account route");
+  const afterOtherRevocation = await (await response("/api/account/sessions")).json();
+  assert.equal(afterOtherRevocation.sessions.length, 1, "only the requesting current session remains");
+  assert.equal(afterOtherRevocation.sessions[0].sessionId, currentOtherSession.session.id);
+  cookies.clear();
+  for (const [name, value] of previousOtherCookies) cookies.set(name, value);
+  assert.equal((await response("/api/account/current")).status, 401, "revoked older cookie cannot authorize account access");
+  cookies.clear();
+  for (const [name, value] of currentOtherCookies) cookies.set(name, value);
+  assert.equal((await response("/api/account/current")).status, 200, "revoke-other preserves the current authenticated session");
+  const signedOut = await jsonRequest("/api/account/signout", "POST");
+  assert.equal(signedOut.status, 204, "sign-out goes through the authenticated canonical account route");
+  assert.equal((await response("/api/account/current")).status, 401, "sign-out immediately removes current session authority");
 
   const sessions = await response("/api/account/sessions", { headers: { authorization: `Bearer ${sessionToken.access_token}` } });
   assert.equal(sessions.status, 200, `session listing checks its scope: ${await sessions.clone().text()}`);
