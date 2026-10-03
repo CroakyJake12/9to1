@@ -181,7 +181,12 @@ public sealed class FormDataReferenceLookupSourceTests
                 : new FormsCuiWorkspace(fixture.Publications, new FormAuthoringService(fixture.Publications), () => fixture.FormID, _ => true,
                     responseSessions: fixture.Responses, showResponse: PresentAsync);
             await workspace.DispatchAsync("9to1.Forms.Open", null);
-            await workspace.DispatchAsync("9to1.Forms.Respond", null);
+            if (configured) await workspace.DispatchAsync("9to1.Forms.Respond", null);
+            else
+            {
+                var unavailable = await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.DispatchAsync("9to1.Forms.Respond", null));
+                Assert.Equal("CapabilityUnavailable", unavailable.Message);
+            }
             if (configured)
             {
                 Assert.Equal(1, shown); Assert.NotNull(originalResponseID);
@@ -194,7 +199,13 @@ public sealed class FormDataReferenceLookupSourceTests
                 Assert.Equal(0, shown); Assert.True(workspace.TryGetValue("Status", out var status));
                 Assert.Contains("CapabilityUnavailable", Assert.IsType<string>(status));
             }
-            var afterFirst = fixture.Bytes(); await workspace.DispatchAsync("9to1.Forms.Respond", null);
+            var afterFirst = fixture.Bytes();
+            if (configured) await workspace.DispatchAsync("9to1.Forms.Respond", null);
+            else
+            {
+                var unavailable = await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.DispatchAsync("9to1.Forms.Respond", null));
+                Assert.Equal("CapabilityUnavailable", unavailable.Message);
+            }
             Assert.Equal(configured ? 2 : 0, shown); AssertBytes(afterFirst, fixture.Bytes());
             return true;
         }, default);
