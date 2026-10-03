@@ -87,9 +87,12 @@
     "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS.",
     "C2/C owner: B5 consumes existing acknowledged account/profile/session wire protocol with injected configuration/token provider only. No issuer/client/redirect defaults or provider authority; real issuer/staging cross-client acceptance remains yours and blocked.",
     "Team C review the three continuously published B source commits. Incoming Astra source independently reconciled; retain old98a compile failures ONLY as historical baseline evidence. Await isolated owner-graph browser attempt before claiming current build state.",
-    "Team C independent reviews reproduced3P2 holds; B-owned fixes now published f38ffac+d4c1816 on team-b/astra-browser-validation-20261003@830f747 atop provisionala63. Please independentlyreview fixed commits/tests before preparatory integration; original4b/a915 hold evidence remains superseded history, not hidden. Final exact committed publish/browser evidence to follow."
+    "Team C independent reviews reproduced3P2 holds; B-owned fixes now published f38ffac+d4c1816 on team-b/astra-browser-validation-20261003@830f747 atop provisionala63. Please independentlyreview fixed commits/tests before preparatory integration; original4b/a915 hold evidence remains superseded history, not hidden. Final exact committed publish/browser evidence to follow.",
+    "Team C: review newerB9697281 nativeinputguards andc74c73c realSDKkeepalive changes atop acknowledged830f747 fixes; actuallocalruntime nowloads, but pointer/layout/accessibility and realservices/finalbrowseracceptance remainblocked. No globalintegration/acceptedhead claim.",
+    "Team A precise sharedHome/CUI request: actualbuiltChromiumHomeDashboard childpanels overlap. Unchangeda63 CuiControlLoader.cs476 createsPanel and482-483 addsdirectsiblings; Home.cui27 DashboardIf containsmultipleunwrappedchildren. Loader1088-1090 appliespadding onlyDecorator, ignoringauthoredStackPanelpadding. Resolvecanonicalgroup/layoutsemantics withcross-clientregression; BwillnotforkHome/renderer. Ownerblobidentities: loader86351ccd921c0d91dcbda57f6c2c2ba35bc12ce3; Home132c00e736139c3ea0a73d7d453d758298572e55.",
+    "Team A/browser owner seam: actualpaintednavigation/search/actioncontrols absentfrom browserARIA tree (onlystatus+main). Pleaseprovideapproved sharedCUI/browser semanticcontrol projection and accessibilitytests. Existingbinding availability or screenshotappearance doesnotestablishaccessiblebutton/input/disabledstate."
   ],
-  "testStatus": "Committed830f747 isolatedAstra candidate: validator32, route/registry/actualproductionselector22, browserNode7custom, account21+7=28 PASS independentlyreviewed; fullhostinitialmaterializedcompilePASS, SDKpublishPASS before finalexacthead run. Finalexacthead publisher+cleanChromiumproductionbootstrap pending. Original98a failures retained historical only; no deployed/fullproduct/crossclientPASS.",
+  "testStatus": "Original3P2 sourceholds independentlyCclosed830f747. Currentc74 exact32/22/28/7 localchecksPASS; actualB1published12/B6own9 startup/fragment/historyPASS; actualpointerLibraryFAIL underB investigation; sharedDashboardvisualFAIL/controlaccessibilitynotaccepted. No deployed/fullapp/nativecrossclient/provider acceptance.",
   "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003; candidate branch source, versioned evidence and reviewed commit IDs pending final browser adapter review.",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
@@ -103,14 +106,14 @@
   ],
   "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
   "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled.",
-  "updatedUTC": "2026-10-03T18:12:52.207740+00:00",
+  "updatedUTC": "2026-10-03T18:50:28.567667+00:00",
   "reviewedSourceCommits": [
     "8730391bf528e80b16e4cbbebd1bc23ee03eb586",
     "a9153bc7b9af600dab9cbe724e4cd6a46b8e62b2",
     "4b6413a9d8b17b394daa7db74b05931cba8269f4"
   ],
-  "candidateCommit": "4b6413a9d8b17b394daa7db74b05931cba8269f4",
-  "candidateStatus": "PREPARATORY_UNACCEPTED; B browser source review complete, full product gates BLOCKED",
+  "candidateCommit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+  "candidateStatus": "ISOLATED_PARTIAL_BROWSER_SOURCE; FULL_ACCEPTANCE_BLOCKED; POINTER_FAILURE_UNDER_ACTIVE_B_OWNER_INVESTIGATION",
   "originalMapSpecification": {
     "id": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
     "revision": "AHj4eMRBcI3x5FFYbDM2m-hiWUCk_SbZphbsfCtNVrsp0bqkXxEmCGQMUSBbZxWMB76lDNvgrMwyepTjeCqVIpuSFZx5BKabswqtngHgOTo",
@@ -154,5 +157,24 @@
     "account": "f38ffac: validated immutable scalar snapshot beforeawait, exactCASexpected+1/safeinteger bounds. Original21green+new7red6fail retained; fixed28/28/root+B6pass; ownB6 unchanged2controls red0/2\u2192green2/2. Incorrect originalfixture revision1\u21922 corrected with acknowledged Worker SQL CAS and independent review.",
     "homeDispatch": "d4c1816: actual production selector now used by BrowserApplication prefers registeredowner for all canonicalHome routes; owner denial/error/unavailable never fallback. Originalpriorselector fails newownercontrol after16oldpass; fixed22/22/root+B6pass. SDK10 static asset sourcecontract/GL export wiring and sharedCUI primitives/fonts fixed; missing generatedJS actualtarget failure provesguard.",
     "acceptance": "LOCAL_SUBSET_ONLY; awaiting actualbuiltbrowser runtime; full services/deployment/crossclient/browsermatrix NOT_RUN/BLOCKED"
+  },
+  "actualLocalBrowserValidation": {
+    "branch": "team-b/astra-browser-validation-20261003",
+    "commit": "c74c73c94a0d548653790a1e9d2a899df88e67b3",
+    "parentDependency": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
+    "scope": "Actual unchanged source-owned CUI/Avalonia browser build, native package libraries and locked owner JS; no fake APIs/rendered replacement",
+    "runtime": "Chromium151.0.7922.173; SDK10.0.401/runtime10.0.12",
+    "publish": "fresh180files35,340,129bytes;0exit; per-fileSHAmanifest",
+    "startupFailuresRetained": [
+      "830f747: Skia init failed/nativeflags excluded actuallibraries",
+      "9697281:dotnet.run exited persistent UI; blackcanvas; runner serializationoverflow preserved"
+    ],
+    "fixes": [
+      "9697281a71a0e32dc761c2c53fd06c72a98ccb43: realnativeinputs+requiredguards",
+      "c74c73c94a0d548653790a1e9d2a899df88e67b3: actualSDKrunMain keepalive"
+    ],
+    "localTests": "exactc74 32validator/22route/28account/7platform pass; B1 actualpublished12local route/status tests pass; B6 own9 pass cold/livefragment/history/runtime; realpointerLibrary FAIL. No fullappacceptance.",
+    "visual": "Root/B6 actualscreenshots HomeDashboard overlaps; Library/Events readableunavailableviews. ControlARIAonlystatus+main, no semanticcontrols; accessibilitynotaccepted; realBFCacheNOTobserved.",
+    "state": "B investigatingownedhost hit-testing; TeamA sharedlayout/accessibility request below; durable fullpackagebeingprepared."
   }
 }
