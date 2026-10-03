@@ -276,7 +276,7 @@
       "class": "FormDataReferenceLookupSourceTests",
       "namespace": "Haven.Infrastructure.Tests",
       "fullClass": "Haven.Infrastructure.Tests.FormDataReferenceLookupSourceTests",
-      "sha256": "e629dbf355e0a5d5ccf03b9c7f0337f3b9e839a6f9ed0746c946e13621a866d0",
+      "sha256": "e5484d027d1a3f7c3a471fa5a75ae9ff01cb90692c6184d74ece4b0d00882bf3",
       "origin": "Actual c7b7 fixture-only two required IAppPaths properties; all cases/assertions retained",
       "source": "/workspace/astra-source/worker3-shelf37-actual-c7b7-reference-path-contract-corrective01/FormDataReferenceLookupSourceTests.cs"
     },

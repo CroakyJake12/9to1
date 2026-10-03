@@ -184,7 +184,7 @@ public sealed class FormDataReferenceLookupSourceTests
             if (configured) await workspace.DispatchAsync("9to1.Forms.Respond", null);
             else
             {
-                var unavailable = await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.DispatchAsync("9to1.Forms.Respond", null));
+                var unavailable = await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.DispatchAsync("9to1.Forms.Respond", null).AsTask());
                 Assert.Equal("CapabilityUnavailable", unavailable.Message);
             }
             if (configured)
@@ -203,7 +203,7 @@ public sealed class FormDataReferenceLookupSourceTests
             if (configured) await workspace.DispatchAsync("9to1.Forms.Respond", null);
             else
             {
-                var unavailable = await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.DispatchAsync("9to1.Forms.Respond", null));
+                var unavailable = await Assert.ThrowsAsync<InvalidOperationException>(() => workspace.DispatchAsync("9to1.Forms.Respond", null).AsTask());
                 Assert.Equal("CapabilityUnavailable", unavailable.Message);
             }
             Assert.Equal(configured ? 2 : 0, shown); AssertBytes(afterFirst, fixture.Bytes());
