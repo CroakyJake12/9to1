@@ -81,11 +81,14 @@
     "Team A or owning integrator supply missing pinned Avalonia build/TargetFrameworks.props, build/AvaloniaPublicKey.props and Browser/build props/targets; imports are absent in canonical checkout, blocking CUI/browser builds. Please coordinate ownership before changes.",
     "C4 publish acknowledged authenticated Files/Sites transport contracts, authoritative metadata/revision commit proofs and staging frontend/backend deployment identities; existing IFilesService lacks browser byte-reference transport.",
     "Team C publish authenticated session/account/permission/tenant/AI/job/billing service protocols and isolated test accounts; no staging or provider credentials configured here.",
-    "Team A provide tested desktop candidate for required browser→desktop→browser continuity; no desktop build may be inferred correct.",
-    "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result."
+    "Team A provide tested desktop candidate for required browser\u2192desktop\u2192browser continuity; no desktop build may be inferred correct.",
+    "Confirm supported browser versions/performance targets via explicit SH-13 decision; do not infer support from one Chromium result.",
+    "Team A repair existing CanvasArtifactSession.cs511 Func<CanvasChangeEvent,bool> compile defect blocking Sites/shared consumers; preserve failing test evidence.",
+    "Team A clarify/implement Write independent Continuous/Pages/Book viewing and Locked/Unlocked layout states: current Document.LayoutMode/SetLayout combines modes and cannot satisfy all six combinations; no browser-only schema fork.",
+    "Team A/test owner review BrowserPrivateProfileManagerTests symbolic-link test return on unsupported setup: present Fact can report green without running security assertions. Keep skip/environment outcome separate from PASS."
   ],
-  "testStatus": "NOT_RUN; no browser PASS claimed. .NET10 SDK verified; wasm workload installation is running; build imports missing.",
-  "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003 locally; reviewed commits and durable versioned logs forthcoming",
+  "testStatus": "Partial local checks only: Files custom runner11/11 PASS; Write unchanged-source domain harness4 cases21 assertions PASS with failing-assertion negative control; Wave unchanged-source self-test28 assertions and independent CLI9/9 PASS; browser evidence validator32/32 unit negative controls independently reproduced. Browser build FAIL (MSB4006 vendor target graph; MSB4019 missing public-key props). Sites FAIL compile CS1593 CanvasArtifactSession.cs511 before discovery. No deployed browser or cross-client gates passed.",
+  "evidenceLocation": "/workspace/team-b-evidence/sol-happy-20261003; candidate branch source, versioned evidence and reviewed commit IDs pending final browser adapter review.",
   "deploymentStatus": "NOT_DEPLOYED",
   "commercialStatus": "NOT_ENABLED",
   "blockers": [
@@ -95,5 +98,6 @@
     "Authenticated backend/staging/deployment identities absent",
     "SH-13 browser/runtime/operational decisions OPEN"
   ],
-  "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication."
+  "coordination": "This record is published on the shared coord branch and verified by remote readback; local worker notes are not cross-chat communication.",
+  "toolingStatus": "SDK10.0.401 + wasm-tools10.0.12 installed; per-worker writable CLI homes/cache isolated; Chromium available. No hosted services enabled."
 }
