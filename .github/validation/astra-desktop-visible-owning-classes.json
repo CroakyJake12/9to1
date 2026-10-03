@@ -1,5 +1,5 @@
 {
-  "status": "HELD PRIVATE IMAP04 FULL CURRENT27 ACCEPTED SOURCE/CASE REFRESH; UNCOMPILED/UNRUN; INDEPENDENT PROVIDER AND FULL METADATA PEERS REQUIRED",
+  "status": "FULL198_WHOLE_OWNING_CLASSES_UNRUN_ALL197_ACCEPTED_IMAP16_RETAINED_PLUS_IDLED05_REAL_TLS_FACT",
   "classes": [
     {
       "class": "PlannerAssignmentMutationTests",
@@ -1580,6 +1580,14 @@
       "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8",
       "namespace": "HavenOS.Mail.Tests",
       "origin": "Additive IMAP04 two actual TLS facts with original-task cleanup retention; uncompiled/unrun, original178 and exact accepted Shelf/Forms cases retained."
+    },
+    {
+      "class": "MailKitIdleWakeupTests",
+      "fullClass": "HavenOS.Mail.Tests.MailKitIdleWakeupTests",
+      "path": "9to1 Workspace/Mail/Tests/MailKitIdleWakeupTests.cs",
+      "sha256": "6dd9d47c535b2338216756a3a149130b5014dc4e274bc1b54985dc782f5087b4",
+      "namespace": "HavenOS.Mail.Tests",
+      "origin": "Additive IDLE05 real TLS arrival/original task cleanup; full predecessor197 cases retained, runtime pending."
     }
   ],
   "consoleHarness": {

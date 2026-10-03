@@ -3134,6 +3134,10 @@
       {
         "fullClass": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests",
         "method": "Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit"
+      },
+      {
+        "fullClass": "HavenOS.Mail.Tests.MailKitIdleWakeupTests",
+        "method": "Actual_TLS_IDLE_original_folder_arrival_completes_before_timer_and_pending_wait_is_drained"
       }
     ],
     "runtime": [

@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "c6cb55f5f5ef6fbbbd55f8d18969b1e891c84c75",
-  "programTree": "503a583a9266424368c360a816e33c088ba78b0a",
-  "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
+  "baselineCommit": "d657f2ae64ef4c08440f31affa84ddd1b04d60c1",
+  "programTree": "9862f6a783bbd61b183fcb1026c72b3fe52d950e",
+  "currentNormalCommit": "24531d46f2179096e53556070f61edaa47c93955",
   "kind": "corrective",
   "files": [
     {
@@ -113,9 +113,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "9259fe65202b7bfcab554a7d327b6d9a57577705",
-      "bytes": 99372,
-      "sha256": "b381e4302c22a53047296cedc65c6919d5a686c084ad498b2c7df1e72af4b392"
+      "object": "28908437671a771880114cb3b7936962175fbd43",
+      "bytes": 99768,
+      "sha256": "03c12e2d90568584ea774c0a99d335b227456c7e64e47a4ab4e7e1207500e0fa"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -134,9 +134,9 @@
     {
       "path": ".github/validation/astra-mail-expected-case-methods.json",
       "mode": "100644",
-      "object": "fac801375bd9bd88964452e3bcfa3c207b910856",
-      "bytes": 167666,
-      "sha256": "deb6b839af7b10c39782872044e86684821d8b03fee1885041a783f340919c5a"
+      "object": "7574b73f2fe8fb3094b998e2744eddd60fe59798",
+      "bytes": 167860,
+      "sha256": "624cafbc11e9044adcf597651c8b35b9ad3020c5c15d9fa5b1a221e99a6662a3"
     },
     {
       "path": ".github/validation/astra-mail-resource-expected-case-methods.json",
@@ -24445,9 +24445,9 @@
     {
       "path": "9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
       "mode": "100644",
-      "object": "03c3c221985185c30dcff5d7d674b2576995f490",
-      "bytes": 24270,
-      "sha256": "0d16249681e399f362a70eecb72e81d0f40a7e0a94fe1f999c5be9ddfe8e14e7"
+      "object": "a6a564e9ec291ace62c0d8a1b0bdfcb07433510d",
+      "bytes": 25441,
+      "sha256": "6ac3f98e75a36f47a8028c96eabe9ae5028ece8083edf50facde7711389478a8"
     },
     {
       "path": "9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
@@ -24511,6 +24511,13 @@
       "object": "5e3848bd93ec412f2f4ae647cd63ae793b1a9add",
       "bytes": 13408,
       "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailKitIdleWakeupTests.cs",
+      "mode": "100644",
+      "object": "f84a9a14c6e189602bf9559c86cd9952750af446",
+      "bytes": 5582,
+      "sha256": "6dd9d47c535b2338216756a3a149130b5014dc4e274bc1b54985dc782f5087b4"
     },
     {
       "path": "9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs",
@@ -66073,7 +66080,8 @@
     "Bounded local OpenSSL HTTP download, complete signed chain CRL, missing CRL rejection, revoked certificate rejection and original helper drain verified; no .NET, MailKit, Java or OS trust acceptance inferred.",
     "Full owning native launch/inner true seal remains required; no cleanup exemption. Exact failed actual6d and all-three original closure must be reviewed before root launch.",
     "HTTP GET counts record observed loopback deliveries and are not attributed to a particular .NET PID.",
-    "Every observed inner evidence/caller and outer caller/Java/CRL/trust/private cleanup failure preserved alongside original owning failure in BaseExceptionGroup; no first-failure suppression. Every original drain attempted, no cleanup if disappearance unproven."
+    "Every observed inner evidence/caller and outer caller/Java/CRL/trust/private cleanup failure preserved alongside original owning failure in BaseExceptionGroup; no first-failure suppression. Every original drain attempted, no cleanup if disappearance unproven.",
+    "IDLE05 only: full accepted IMAP16 source/classes/methods/runtime guards retained; real arrival Fact unrun. No scheduler/reconnect/default-provider activation or other event outcome acceptance. Exact inherited private validation ledger remains historical and is excluded from product publication."
   ],
   "inputManifests": [
     {
@@ -66259,6 +66267,42 @@
     {
       "path": "/workspace/astra-source/worker4-imap02-provider-api-fixture04-peer01.json",
       "sha256": "c7adcb6f380429dcf07125b9f5aa9961c3470573ab66c27139205ad35767bffb"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint28-publication-local.json",
+      "sha256": "1aa5f2709c8686cee25c2c90fa31eb6fe54ccc2de509aff4bb606f6add281c6b"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail-imap-idle-original-cancel-and-await-cleanup-source05/manifest.json",
+      "sha256": "cc20d248555bb1b2ab893df24ba9fbd4cbbedc825bbd1f72142ce214552ceef4"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-imap16-full-three-original-acceptance01.json",
+      "sha256": "d3a9b2cdeab37a53c9a3d72c36b54df6c1bd45f8a02677cbb340da7deeb3a28e"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-imap16-full-original-native-tls-custody-peer01.json",
+      "sha256": "acff42a7ad70200e0fdbb784916eda3b6d855a7048cb9fc3d45781d5316752fd"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-mail-idle-source05-independent-cancel-await-peer01.json",
+      "sha256": "4388debf5ea114f5175cb51a544762947318e1c3af786b4cc6488a0ef885afb4"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail-imap-inbox-reconciliation-full-caller16-exact-four-product-paths/manifest.json",
+      "sha256": "0ab91814440642754c2d91d0210c8da4a368c997eb0f6e17e3ebb7fd4eda3f64"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail-idle-full-caller17-producer02-canonical-class-schema/freeze.py",
+      "sha256": "5fed730857cb833ab78b92c8b7a55cff9a5291aebc0762af0433c40950359ae1"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail-idle-full-caller17-producer02-canonical-class-schema/owning-classes.json",
+      "sha256": "03c12e2d90568584ea774c0a99d335b227456c7e64e47a4ab4e7e1207500e0fa"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-mail-idle-full-caller17-producer02-canonical-class-schema/expected-case-methods.json",
+      "sha256": "624cafbc11e9044adcf597651c8b35b9ad3020c5c15d9fa5b1a221e99a6662a3"
     }
   ],
   "sharedCakeIdContract": null

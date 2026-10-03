@@ -186,8 +186,32 @@ public sealed class MailKitImapSmtpProvider : IMailProviderAdapter
             await client.Inbox.OpenAsync(FolderAccess.ReadOnly, cancellationToken).ConfigureAwait(false);
             if (!client.Capabilities.HasFlag(ImapCapabilities.Idle))
                 throw new MailProviderException(MailErrorCode.ProviderCapabilityUnsupported, "This IMAP server does not support IDLE; use the configured incremental polling fallback.", false);
+            // MailKit IDLE keeps reading unsolicited responses until its done
+            // token is cancelled. A timer alone would delay real changes for
+            // 25 minutes. Complete this wait on the original folder's events;
+            // the canonical owner decides when/how to synchronize afterwards.
+            var inbox = client.Inbox;
             using var done = new CancellationTokenSource(TimeSpan.FromMinutes(25));
-            await client.IdleAsync(done.Token, cancellationToken).ConfigureAwait(false);
+            void Changed(object? sender, EventArgs args) => done.Cancel();
+            inbox.CountChanged += Changed;
+            inbox.MessageFlagsChanged += Changed;
+            inbox.MessageExpunged += Changed;
+            inbox.MessagesVanished += Changed;
+            inbox.UidValidityChanged += Changed;
+            try
+            {
+                await client.IdleAsync(done.Token, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                // Retain the captured folder: cancelling IDLE can disconnect
+                // the client, making a later client.Inbox access unavailable.
+                inbox.UidValidityChanged -= Changed;
+                inbox.MessagesVanished -= Changed;
+                inbox.MessageExpunged -= Changed;
+                inbox.MessageFlagsChanged -= Changed;
+                inbox.CountChanged -= Changed;
+            }
         }
         catch (OperationCanceledException) { throw; }
         catch (MailProviderException) { throw; }
