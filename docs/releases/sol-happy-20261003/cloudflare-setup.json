@@ -1,0 +1,37 @@
+{
+  "upstreamCommit": "41e0d19858946d18af9ee2c2feebbe2e11d829ff",
+  "guideRevision": "36706c5fd9c704ca10e440bab9ed0d58521577b9",
+  "skills": [
+    "agents-sdk",
+    "basin",
+    "cloudflare",
+    "cloudflare-email-service",
+    "cloudflare-one",
+    "cloudflare-one-migrations",
+    "durable-objects",
+    "k2",
+    "nextjs-on-cloudflare",
+    "sandbox-migrate-to-next",
+    "sandbox-next",
+    "sandbox-stable",
+    "turnstile-spin",
+    "web-perf",
+    "workers-best-practices",
+    "wrangler"
+  ],
+  "mcpEndpoints": {
+    "cloudflare": "https://mcp.cloudflare.com/mcp",
+    "cloudflare-docs": "https://docs.mcp.cloudflare.com/mcp",
+    "cloudflare-bindings": "https://bindings.mcp.cloudflare.com/mcp",
+    "cloudflare-builds": "https://builds.mcp.cloudflare.com/mcp",
+    "cloudflare-observability": "https://observability.mcp.cloudflare.com/mcp"
+  },
+  "fileCount": 356,
+  "zipSha256": "b1d3fdaa9665c19e7a3d91e635d80a0fc1a22cc7a1b3ee78c4b328e01625ff6b",
+  "zipBytes": 579874,
+  "state": "PACKAGED_UNCONNECTED",
+  "pluginID": "plugins_6ac139c43c988191aef5c01e99c9f7d4",
+  "pluginURL": "https://chatgpt.com/plugins/plugins_6ac139c43c988191aef5c01e99c9f7d4",
+  "status": "PRIVATE_PLUGIN_SAVED_AND_BACKEND_READBACK_VERIFIED; host reports installed; no Cloudflare MCP tools exposed or OAuth/account access verified",
+  "resourcesProvisioned": false
+}
