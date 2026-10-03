@@ -22,7 +22,7 @@ using Haven.Core;
 namespace Haven.Infrastructure;
 
 /// <summary>IMapService implementation backed by Nominatim (search/geocoding) and OSRM (routing).</summary>
-public sealed class OpenStreetMapService : IMapService
+public sealed class OpenStreetMapService : IMapService, IMapRoutingCapabilities
 {
     /// <summary>Name of the shared HttpClient used by every Maps provider integration.</summary>
     public const string HttpClientName = "Haven.Maps";
@@ -43,6 +43,7 @@ public sealed class OpenStreetMapService : IMapService
     private readonly HttpClient _client;
     private readonly NominatimRateLimiter _rateLimiter = new();
     private readonly OsrmRoutingService _routing;
+    public IReadOnlySet<MapTravelProfile> SupportedProfiles => _routing.SupportedProfiles;
 
     /// <summary>Creates the service over the shared named HttpClient and an OSRM routing delegate.</summary>
     public OpenStreetMapService(IHttpClientFactory httpClientFactory, OsrmRoutingService routing)

@@ -1,4 +1,4 @@
-name: HavenOS cohort packages
+name: HavenOS standalone package admission
 
 on:
   workflow_dispatch:
@@ -8,6 +8,8 @@ on:
       - "9to1 Workspace/Present/present-engine/**"
       - "9to1 OS/compatibility/wine/**"
       - "9to1 OS/packaging/cohort/**"
+      - "9to1 OS/packaging/llamacpp/cohort-artifact.lock.json"
+      - "9to1 OS/release/package-preload-manifest.json"
       - ".github/workflows/cohort-packages.yml"
 
 permissions:
@@ -15,6 +17,7 @@ permissions:
 
 jobs:
   package:
+    name: Standalone admission metadata (no package build)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -29,24 +32,29 @@ jobs:
         run: dotnet build "9to1 Workspace/Data/App/HavenOS.Data.App.csproj" -c Release --nologo
       - name: Build Present worker
         run: cmake -S "9to1 Workspace/Present/present-engine" -B build/present -DCMAKE_BUILD_TYPE=Release && cmake --build build/present --parallel
-      - name: Build cohort Debian artifacts
-        run: VERSION="0.1.${GITHUB_RUN_NUMBER}" PRESENT_BUILD_DIR="$PWD/build/present" bash "9to1 OS/packaging/cohort/build-debs.sh" artifacts/cohort
-      - name: Verify clean extraction and runtime contracts
-        run: bash "9to1 OS/packaging/cohort/verify-debs.sh" artifacts/cohort
-      - name: Upload immutable cohort
-        id: upload
+      - name: Verify source-carrier builder remains retired
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/admission
+          bash -n "9to1 OS/packaging/cohort/build-debs.sh" "9to1 OS/packaging/cohort/verify-debs.sh"
+          status=0
+          bash "9to1 OS/packaging/cohort/build-debs.sh" artifacts/rejected-source-carriers > artifacts/admission/retired-builder.log 2>&1 || status=$?
+          test "$status" -eq 2
+          test ! -e artifacts/rejected-source-carriers
+          printf 'retired_source_carrier_exit=%s\n' "$status" > artifacts/admission/admission-record.txt
+      - name: Validate immutable standalone artifact admission metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "9to1 OS/packaging/cohort/verify-admission.py" | tee artifacts/admission/metadata-validation.log
+          cp "9to1 OS/packaging/llamacpp/cohort-artifact.lock.json" artifacts/admission/
+          cp "9to1 OS/release/package-preload-manifest.json" artifacts/admission/
+          printf 'scope=retirement and immutable admission metadata only\npackage_bytes_verified=false\npackages_built=false\nrelease_state=BLOCKED\n' >> artifacts/admission/admission-record.txt
+      - name: Preserve admission metadata evidence
         uses: actions/upload-artifact@v4
         with:
-          name: havenos-cohort-${{ github.sha }}
-          path: artifacts/cohort
+          name: havenos-standalone-admission-metadata-${{ github.sha }}
+          path: artifacts/admission
           if-no-files-found: error
           retention-days: 30
-      - name: Publish artifact identity
-        run: |
-          printf 'artifact_id=%s\nartifact_digest=%s\n' \
-            '${{ steps.upload.outputs.artifact-id }}' \
-            '${{ steps.upload.outputs.artifact-digest }}' >> artifacts/cohort/package-release-record.txt
-      - uses: actions/upload-artifact@v4
-        with:
-          name: havenos-cohort-release-record-${{ github.sha }}
-          path: artifacts/cohort/package-release-record.txt

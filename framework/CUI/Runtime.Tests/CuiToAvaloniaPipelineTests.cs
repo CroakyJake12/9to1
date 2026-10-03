@@ -8,6 +8,7 @@ using Xunit;
 
 namespace CakeOS.Cui.Runtime.Tests;
 
+[Collection("CuiNativeBackend")]
 public class CuiToAvaloniaPipelineTests
 {
     [Fact]
@@ -426,6 +427,55 @@ public class CuiToAvaloniaPipelineTests
         Assert.Equal("forty two", input.Text);
         Assert.True(CuiInputValidationProperties.GetHasError(input));
         loader.Dispose();
+    }
+
+    [Theory]
+    [InlineData("ComboBox")]
+    [InlineData("ListBox")]
+    public async Task Selector_collection_snapshots_and_two_way_index_do_not_write_host_refreshes_back(string element)
+    {
+        await RunOnAvaloniaThread(() =>
+        {
+            var viewModel = new CuiViewModel();
+            viewModel.Set("Options", new[] { "First", "Second" });
+            viewModel.Set("Selected", 1);
+            var loader = new CuiControlLoader(); loader.SetBindingContext(viewModel);
+            var (root, diagnostics) = loader.LoadMarkup($"<Cui><{element} SelectedIndex=\"{{Binding Selected, mode=TwoWay, type=int}}\" ItemsSource=\"{{Binding Options}}\" /></Cui>");
+            Assert.Empty(diagnostics);
+            var selector = Assert.IsAssignableFrom<Avalonia.Controls.Primitives.SelectingItemsControl>(root);
+            Assert.Equal(2, selector.Items.Count);
+            Assert.Equal(1, selector.SelectedIndex);
+            selector.SelectedIndex = 0;
+            Assert.Equal(0, viewModel.Get("Selected"));
+            viewModel.Set("Selected", 1);
+            Assert.Equal(1, selector.SelectedIndex);
+            viewModel.Set("Options", new[] { "Replacement" });
+            Assert.Single(selector.Items);
+            Assert.Equal(1, viewModel.Get("Selected")); // native reset cannot overwrite the owning option selection
+            viewModel.Set("Selected", 0);
+            Assert.Equal(0, selector.SelectedIndex);
+            Assert.Throws<CuiRuntimeLoadException>(() => viewModel.Set("Options", "invalid replacement"));
+            Assert.Empty(selector.Items);
+            Assert.Equal(0, viewModel.Get("Selected"));
+            viewModel.Set("Options", new[] { "Restored" });
+            Assert.Equal(0, selector.SelectedIndex);
+            loader.Dispose();
+            selector.SelectedIndex = -1;
+            Assert.Equal(0, viewModel.Get("Selected"));
+        });
+    }
+
+    [Fact]
+    public void Selector_rejects_string_or_two_way_items_sources_instead_of_enumerating_characters()
+    {
+        var viewModel = new CuiViewModel(); viewModel.Set("Options", "not a collection");
+        using var loader = new CuiControlLoader(); loader.SetBindingContext(viewModel);
+        var (_, diagnostics) = loader.LoadMarkup("<Cui><ComboBox ItemsSource=\"{Binding Options}\" /></Cui>");
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Code == "CUIR007");
+        using var second = new CuiControlLoader();
+        var other = new CuiViewModel(); other.Set("Options", new[] { "One" }); second.SetBindingContext(other);
+        var (_, twoWayDiagnostics) = second.LoadMarkup("<Cui><ComboBox ItemsSource=\"{Binding Options, mode=TwoWay}\" /></Cui>");
+        Assert.Contains(twoWayDiagnostics, diagnostic => diagnostic.Code == "CUIR007");
     }
 
     [Fact]

@@ -253,8 +253,12 @@ internal sealed partial class PresentHavenScene
             empty.SetValue(HavenProperties.Padding, HavenThickness.Parse("16px"));
             empty.SetValue(HavenProperties.Gap, HavenLength.Px(4));
             var isPinned = gallery.Name?.Contains("Pinned", StringComparison.Ordinal) == true;
-            empty.Add(new HavenText(isPinned ? "No pinned presentations yet" : "No recent presentations yet") { Level = TextLevel.H4 });
-            var hint = new HavenText(isPinned ? "Pin a deck to keep it here." : "Create or import a presentation and it will appear here.") { Level = TextLevel.Caption };
+            var filtering = _libraryFilter.Length != 0;
+            empty.Add(new HavenText(filtering
+                ? isPinned ? "No matching pinned presentations" : "No matching presentations"
+                : isPinned ? "No pinned presentations yet" : "No recent presentations yet") { Level = TextLevel.H4 });
+            var hint = new HavenText(filtering ? "Try another title or clear your search."
+                : isPinned ? "Pin a deck to keep it here." : "Create or import a presentation and it will appear here.") { Level = TextLevel.Caption };
             hint.SetValue(HavenProperties.Foreground, "TextSecondary");
             empty.Add(hint);
             gallery.Add(empty);

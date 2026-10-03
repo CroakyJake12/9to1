@@ -1,0 +1,108 @@
+<Cui id="os.shell" version="1">
+  <Actions>
+    <Action name="GoSectionOpen" command="OpenGoHomeSection" parameter="{Binding goSection}" />
+    <Action name="GoSectionEarlierAction" command="GoSectionEarlier" parameter="{Binding goSection}" />
+    <Action name="GoSectionLaterAction" command="GoSectionLater" parameter="{Binding goSection}" />
+    <Action name="GoSectionVisibilityAction" command="GoSectionVisibility" parameter="{Binding goSection}" />
+    <Action name="GoSectionSizeAction" command="GoSectionSize" parameter="{Binding goSection}" />
+    <Action name="GoSectionGroupAction" command="GoSectionGroup" parameter="{Binding goSection}" />
+    <Action name="Files" command="Files" />
+    <Action name="InvokeOwnerAction" command="InvokeGoAction" parameter="{Binding ownerAction}" />
+    <Action name="OpenApp" command="Open" parameter="{Binding app}" />
+    <Action name="PinApp" command="Pin" parameter="{Binding app}" />
+    <Action name="OpenPinned" command="OpenItem" parameter="{Binding item}" />
+    <Action name="UnpinItem" command="Unpin" parameter="{Binding item}" />
+    <Action name="PinPageApp" command="PinPage" parameter="{Binding app}" />
+    <Action name="OpenDesktopItem" command="OpenPageItem" parameter="{Binding desktopItem}" />
+    <Action name="RemoveDesktopItem" command="RemovePageItem" parameter="{Binding desktopItem}" />
+    <Action name="ArrangeDesktopItem" command="SelectPageItem" parameter="{Binding desktopItem}" />
+  </Actions>
+  <ScrollViewer id="shell-scroll">
+    <StackPanel id="shell" margin="20">
+      <TextBlock text="9to1 OS" font-size="28" />
+      <TextBlock text="{Binding SpaceTitle}" font-size="20" accessible-name="Current Desktop Space" />
+      <StackPanel orientation="Horizontal">
+        <Button content="Previous Desktop Space" action="PreviousSpace" />
+        <Button content="Next Desktop Space" action="NextSpace" />
+      </StackPanel>
+      <TaskbarLayer id="taskbar-layer" padding="{Binding LayerPadding}" corner-radius="{Binding LayerRadius}" opacity="{Binding LayerOpacity}" min-height="{Binding LayerHeight}" margin="0,12">
+        <StackPanel>
+          <StackPanel orientation="Horizontal">
+            <Button content="Previous layer" action="PreviousLayer" />
+            <TextBlock text="{Binding LayerPosition}" accessible-name="Taskbar layer position" margin="12,4" />
+            <TextBlock text="{Binding LayerTitle}" margin="12,4" />
+            <Button content="Next layer" action="NextLayer" />
+          </StackPanel>
+          <Repeat Source="{Binding Items}" As="item" Key="{Binding item.Id}" orientation="Horizontal">
+            <StackPanel orientation="Horizontal" margin="{Binding ItemSpacing}"><Button content="{Binding item.Label}" action="OpenPinned" is-enabled="{Binding item.CanOpen}" accessible-name="{Binding item.Label}" /><Button content="Remove from layer" action="UnpinItem" /></StackPanel>
+          </Repeat>
+        </StackPanel>
+      </TaskbarLayer>
+      <TextBlock text="{Binding PageTitle}" font-size="20" accessible-name="Current Desktop Page" />
+      <TextBlock text="{Binding PageScope}" />
+      <StackPanel orientation="Horizontal"><Button content="Previous page" action="PreviousPage" /><TextBlock text="{Binding PagePosition}" margin="12,4" /><Button content="Next page" action="NextPage" /></StackPanel>
+      <Repeat Source="{Binding PageItems}" As="desktopItem" Key="{Binding desktopItem.Id}" Panel="Grid" columns="{Binding PageColumns}" rows="{Binding PageRows}" ItemColumn="{Binding desktopItem.Column}" ItemRow="{Binding desktopItem.Row}" ItemColumnSpan="{Binding desktopItem.ColumnSpan}" ItemRowSpan="{Binding desktopItem.RowSpan}"><StackPanel margin="4"><Button content="{Binding desktopItem.Label}" action="OpenDesktopItem" is-enabled="{Binding desktopItem.CanOpen}" /><StackPanel orientation="Horizontal"><Button content="Arrange" action="ArrangeDesktopItem" /><Button content="Remove" action="RemoveDesktopItem" /></StackPanel></StackPanel></Repeat>
+      <TextBlock text="Go" font-size="20" />
+      <Repeat Source="{Binding GoVisibleSections}" As="goSection" Key="{Binding goSection.Id}" orientation="Horizontal">
+        <StackPanel width="{Binding GoHomeWidth}" margin="4"><TextBlock text="{Binding goSection.Group}" /><Button content="{Binding goSection.Label}" font-size="{Binding goSection.FontSize}" accessible-name="{Binding goSection.Label}" action="GoSectionOpen" is-enabled="{Binding goSection.CanOpen}" /></StackPanel>
+      </Repeat>
+      <TextBlock text="Customize Go home" font-size="18" />
+      <TextBlock text="{Binding GoLayout}" />
+      <WrapPanel><Button content="Compact search layout" action="GoLayout.CompactSearch" /><Button content="Start menu layout" action="GoLayout.StartMenu" /><Button content="Dashboard layout" action="GoLayout.Dashboard" /></WrapPanel>
+      <TextBox text="{Binding GoGroup, Mode=TwoWay}" placeholder-text="Group name (blank removes group)" accessible-name="Go section group" />
+      <Repeat Source="{Binding GoHomeSettings}" As="goSection" Key="{Binding goSection.Id}">
+        <WrapPanel><TextBlock text="{Binding goSection.Label}" /><Button content="{Binding goSection.EarlierLabel}" action="GoSectionEarlierAction" /><Button content="{Binding goSection.LaterLabel}" action="GoSectionLaterAction" /><Button content="{Binding goSection.VisibilityLabel}" action="GoSectionVisibilityAction" /><Button content="{Binding goSection.SizeLabel}" action="GoSectionSizeAction" /><Button content="{Binding goSection.GroupLabel}" action="GoSectionGroupAction" /></WrapPanel>
+      </Repeat>
+      <TextBlock text="{Binding GoHomeView}" accessible-name="Go view" />
+      <TextBlock id="go-query-status" text="{Binding GoQuerySummary}" accessible-name="Go query status" text-wrapping="Wrap" />
+      <TextBlock text="{Binding GoHomeAvailability}" /><TextBlock text="{Binding GoCategory}" accessible-name="Go search category" />
+      <StackPanel orientation="Horizontal">
+        <GoSearchInput id="go-query" text="{Binding Query, Mode=TwoWay}" placeholder-text="Search applications and desktop navigation" width="420" accessible-name="Go search" />
+        <Button content="Search" action="Search" />
+      </StackPanel>
+      <Repeat is-visible="{Binding ShowLinearGoResults}" Source="{Binding LinearGoResults}" As="app" Key="{Binding app.CanonicalDisplayKey}">
+        <StackPanel id="go-linear-result-1" margin="0,2"><TextBlock id="go-linear-result-2" text="{Binding app.Category}" /><StackPanel id="go-linear-result-3" orientation="Horizontal"><Button id="go-linear-result-4" content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" is-enabled="{Binding app.CanOpen}" /><Button id="go-linear-result-5" content="Pin to this layer" action="PinApp" is-enabled="{Binding app.CanPinApplication}" /><Button id="go-linear-result-6" content="Add to desktop page" action="PinPageApp" is-enabled="{Binding app.CanPinApplication}" /></StackPanel><Repeat id="go-linear-result-7" Source="{Binding app.OtherActions}" As="ownerAction" Key="{Binding ownerAction.Id}" orientation="Horizontal"><Button id="go-linear-result-8" content="{Binding ownerAction.Label}" action="InvokeOwnerAction" /></Repeat></StackPanel>
+      </Repeat>
+      <Repeat id="go-home-groups" Panel="Grid" columns="{Binding GoResultColumns}" rows="Auto,Auto,Auto,Auto" ItemColumn="{Binding goGroup.Column}" ItemRow="{Binding goGroup.Row}" is-visible="{Binding ShowGroupedGoResults}" Source="{Binding GoResultGroups}" As="goGroup" Key="{Binding goGroup.Id}">
+        <StackPanel width="{Binding GoHomeWidth}" margin="4"><TextBlock text="{Binding goGroup.Title}" font-size="{Binding goGroup.FontSize}" accessible-name="{Binding goGroup.Title}" /><TextBlock text="{Binding goGroup.Availability}" accessible-name="{Binding goGroup.Availability}" />
+          <Repeat Source="{Binding goGroup.Results}" As="app" Key="{Binding app.CanonicalDisplayKey}">
+        <StackPanel id="go-grouped-result-1" margin="0,2"><TextBlock id="go-grouped-result-2" text="{Binding app.Category}" /><StackPanel id="go-grouped-result-3" orientation="Horizontal"><Button id="go-grouped-result-4" content="{Binding app.Label}" action="OpenApp" accessible-name="{Binding app.Label}" is-enabled="{Binding app.CanOpen}" /><Button id="go-grouped-result-5" content="Pin to this layer" action="PinApp" is-enabled="{Binding app.CanPinApplication}" /><Button id="go-grouped-result-6" content="Add to desktop page" action="PinPageApp" is-enabled="{Binding app.CanPinApplication}" /></StackPanel><Repeat id="go-grouped-result-7" Source="{Binding app.OtherActions}" As="ownerAction" Key="{Binding ownerAction.Id}" orientation="Horizontal"><Button id="go-grouped-result-8" content="{Binding ownerAction.Label}" action="InvokeOwnerAction" /></Repeat></StackPanel>
+          </Repeat>
+        </StackPanel>
+      </Repeat>
+      <TextBlock text="Desktop Spaces, pages and taskbar settings" font-size="20" margin="0,20,0,8" />
+      <TextBox text="{Binding Name, Mode=TwoWay}" placeholder-text="Layer, Desktop Space or page name" accessible-name="Layer, Desktop Space or page name" />
+      <WrapPanel>
+        <Button content="Add layer" action="AddLayer" /><Button content="Rename layer" action="RenameLayer" /><Button content="Remove layer" action="RemoveLayer" />
+        <Button content="Move layer earlier" action="MoveLayerEarlier" /><Button content="Move layer later" action="MoveLayerLater" />
+      </WrapPanel>
+      <WrapPanel>
+        <Button content="Duplicate Desktop Space" action="DuplicateSpace" /><Button content="Rename Desktop Space" action="RenameSpace" /><Button content="Delete Desktop Space" action="RemoveSpace" />
+        <Button content="Move Desktop Space earlier" action="MoveSpaceEarlier" /><Button content="Move Desktop Space later" action="MoveSpaceLater" />
+        <Button content="Copy Desktop Space" action="CopySpace" /><Button content="Paste Desktop Space" action="PasteSpace" />
+      </WrapPanel>
+      <WrapPanel><Button content="Add page" action="AddPage" /><Button content="Rename page" action="RenamePage" /><Button content="Remove page" action="RemovePage" /><Button content="Move page earlier" action="MovePageEarlier" /><Button content="Move page later" action="MovePageLater" /></WrapPanel>
+      <WrapPanel><Button content="Pages for this Desktop Space" action="SpaceSpecificPages" /><Button content="Use global pages" action="GlobalPages" /><Button content="Reset desktop pages" action="ResetDesktop" /></WrapPanel>
+      <TextBlock text="Desktop grid" font-size="18" margin="0,12,0,4" />
+      <WrapPanel><TextBlock text="Columns" /><TextBox text="{Binding PageGridColumns, Mode=TwoWay}" width="70" accessible-name="Desktop grid columns" /><TextBlock text="Rows" /><TextBox text="{Binding PageGridRows, Mode=TwoWay}" width="70" accessible-name="Desktop grid rows" /><Button content="Preview grid size" action="PageGridSize" /></WrapPanel>
+      <TextBlock text="{Binding SelectedPageItemLabel}" accessible-name="Selected desktop shortcut" />
+      <WrapPanel><TextBlock text="Column" /><TextBox text="{Binding SelectedColumn, Mode=TwoWay}" width="70" accessible-name="Shortcut column" /><TextBlock text="Row" /><TextBox text="{Binding SelectedRow, Mode=TwoWay}" width="70" accessible-name="Shortcut row" /><TextBlock text="Width in cells" /><TextBox text="{Binding SelectedWidth, Mode=TwoWay}" width="70" accessible-name="Shortcut width in cells" /><TextBlock text="Height in cells" /><TextBox text="{Binding SelectedHeight, Mode=TwoWay}" width="70" accessible-name="Shortcut height in cells" /><Button content="Preview placement" action="PlaceDesktopItem" is-enabled="{Binding HasSelectedPageItem}" /><Button content="Remove selected" action="RemoveSelectedDesktopItem" is-enabled="{Binding HasSelectedPageItem}" /></WrapPanel>
+      <WrapPanel>
+        <TextBlock text="Height" /><TextBox text="{Binding Thickness, Mode=TwoWay}" width="70" accessible-name="Taskbar layer height" />
+        <TextBlock text="Spacing" /><TextBox text="{Binding Spacing, Mode=TwoWay}" width="70" accessible-name="Taskbar item spacing" />
+        <TextBlock text="Padding" /><TextBox text="{Binding Padding, Mode=TwoWay}" width="70" accessible-name="Taskbar layer padding" />
+        <TextBlock text="Radius" /><TextBox text="{Binding Radius, Mode=TwoWay}" width="70" accessible-name="Taskbar corner radius" />
+        <TextBlock text="Opacity" /><TextBox text="{Binding Opacity, Mode=TwoWay}" width="70" accessible-name="Taskbar opacity" />
+        <Button content="Preview presentation" action="Presentation" />
+      </WrapPanel>
+      <StackPanel orientation="Horizontal">
+        <Button content="Reset taskbar" action="ResetTaskbar" /><Button content="Restore previous" action="RestorePrevious" /><Button content="Preview safe defaults" action="SafeDefaults" />
+      </StackPanel>
+      <TextBlock id="transaction-status" text="{Binding Status}" accessible-name="Shell transaction status" text-wrapping="Wrap" margin="0,12" />
+      <StackPanel orientation="Horizontal"><Button id="keep" content="Keep" action="Keep" is-enabled="{Binding HasPreview}" /><Button id="revert" content="Revert" action="Revert" is-enabled="{Binding HasPreview}" /></StackPanel>
+      <TextBlock text="Go search categories" font-size="18" margin="0,12" />
+      <WrapPanel><Button content="All results" action="GoFilter.All" /><Button content="Apps" action="GoFilter.Apps" /><Button content="Desktop Spaces" action="GoFilter.Desktop Spaces" /><Button content="Desktop Pages" action="GoFilter.Desktop Pages" /><Button content="Taskbar Layers" action="GoFilter.Taskbar Layers" /></WrapPanel>
+      <WrapPanel><Button content="Files" action="Files" /><Button content="Personal AI models" action="Models" /><Button content="Ask Dulche" action="Dulche" /></WrapPanel>
+    </StackPanel>
+  </ScrollViewer>
+</Cui>

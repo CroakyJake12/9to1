@@ -4,7 +4,7 @@
     <RootNamespace>HavenOS.Apps.Browse</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefaultItemExcludes>$(DefaultItemExcludes);Source\**\*</DefaultItemExcludes>
-    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj')">$(MSBuildThisFileDirectory)..\..\9to1 OS\HUI\vendor\Haven.UI\Haven.UI.csproj</HavenUiProjectPath>
+    <HavenUiProjectPath Condition="'$(HavenUiProjectPath)' == '' and Exists('$(MSBuildThisFileDirectory)../shared/src/Haven.UI/Haven.UI.csproj')">$(MSBuildThisFileDirectory)../shared/src/Haven.UI/Haven.UI.csproj</HavenUiProjectPath>
   </PropertyGroup>
 
   <Target Name="RequireHavenUi" BeforeTargets="ResolveProjectReferences">
@@ -20,5 +20,21 @@
     <Compile Include="BrowseEnginePreferencesStore.cs" />
     <ProjectReference Include="..\shared\src\Haven.Browser\Haven.Browser.csproj" />
     <ProjectReference Include="$(HavenUiProjectPath)" Condition="'$(HavenUiProjectPath)' != '' and Exists('$(HavenUiProjectPath)')" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="BrowseWebMcpBinding.cs" /></ItemGroup>
+<Target Name="RequireCanonicalHavenUiHavenUiProjectPath" BeforeTargets="ResolveProjectReferences">
+    <PropertyGroup>
+      <CanonicalExpectedHavenUi>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)','../shared/src/Haven.UI/Haven.UI.csproj'))</CanonicalExpectedHavenUi>
+      <CanonicalSelectedHavenUi>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)','$(HavenUiProjectPath)'))</CanonicalSelectedHavenUi>
+    </PropertyGroup>
+    <Error Condition="'$(CanonicalSelectedHavenUi)' != '$(CanonicalExpectedHavenUi)'" Text="Active product graphs require the canonical shared Haven.UI project; alternate assembly inputs are unsupported." />
+  </Target>
+  <ItemGroup>
+    <Compile Include="BrowseOwnedDocumentRegistry.cs" />
+    <Compile Include="BrowseOwnedDocumentCatalogue.cs" />
+    <Compile Include="BrowseOwnedWebMcpBinding.cs" />
+    <Compile Include="BrowseOwnedToolWorkspace.cs" />
+    <Compile Include="BrowseOwnedToolsScene.cs" />
+    <Compile Include="BrowseWebMcpInvocationScripts.cs" />
   </ItemGroup>
 </Project>

@@ -184,6 +184,9 @@ public sealed class ModelRouterTests
         /// Gets or updates providers, the bindable or domain state represented by this property.
         /// </summary>
         public IReadOnlyList<IModelProvider> Providers => [];
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(ModelCataloguePolicy policy, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>(models.Where(m => (m.IsLocal ? policy.AllowLocal : policy.AllowRemote) &&
+                (policy.AllowedProviderIds is null || policy.AllowedProviderIds.Contains(m.ProviderId))).ToArray());
         /// <summary>
         /// Performs the find step owned by this component.
         /// </summary>

@@ -6,11 +6,18 @@
     <RootNamespace>HavenOS.Images</RootNamespace>
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**;Source\**\*</DefaultItemExcludes>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="Core/HavenOS.Images.Core.csproj" />
+    <ProjectReference Include="../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <ProjectReference Include="../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <EmbeddedResource Include="UI/PictureHost.cui" LogicalName="HavenOS.Images.UI.PictureHost.cui" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <Compile Include="Program.cs;App.axaml.cs;MainWindow.axaml.cs;ImageMetadataWindow.cs" />
   </ItemGroup>
 </Project>

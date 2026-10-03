@@ -4,16 +4,16 @@ using Microsoft.Win32.SafeHandles;
 namespace Haven.Infrastructure.Terminal;
 
 /// <summary>
-/// Unix adapter backed by forkpty(3). Windows support intentionally belongs in a separate ConPTY
+/// Unix adapter backed by a native PTY spawn shim. Windows support intentionally belongs in a separate ConPTY
 /// adapter; this class never substitutes redirected pipes for a PTY.
 /// </summary>
 public sealed class UnixPtyProcessFactory : IPtyProcessFactory
 {
     public bool IsSupported => OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
-    public string AdapterName => "Unix forkpty";
+    public string AdapterName => "Unix native PTY";
     public string? UnavailableReason => IsSupported
         ? null
-        : "Interactive PTY sessions require the Unix forkpty adapter. Windows requires a separate ConPTY adapter.";
+        : "Interactive PTY sessions require the Unix native PTY adapter. Windows requires a separate ConPTY adapter.";
 
     public Task<IPtyProcess> StartAsync(PtyProcessStartOptions options, CancellationToken cancellationToken = default)
     {
@@ -45,6 +45,7 @@ internal sealed class UnixPtyProcess : IPtyProcess
     private const int SigKill = 9;
     private readonly object _sync = new();
     private readonly FileStream _master;
+    private readonly FileStream _writer;
     private readonly CancellationTokenSource _readCancellation = new();
     private readonly SemaphoreSlim _writeGate = new(1, 1);
     private readonly TaskCompletionSource<PtyProcessExit> _exit = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -53,12 +54,42 @@ internal sealed class UnixPtyProcess : IPtyProcess
     private PtySize _size;
     private PtyProcessState _state = PtyProcessState.Running;
     private int _disposed;
+    private int _childReaped;
 
     private UnixPtyProcess(int processId, int masterFd, PtySize size)
     {
         ProcessId = processId;
         _size = size;
-        _master = new FileStream(new SafeFileHandle((IntPtr)masterFd, ownsHandle: true), FileAccess.ReadWrite, 4096, isAsync: true);
+        using var incoming = new SafeFileHandle((IntPtr)masterFd, ownsHandle: true);
+        SafeFileHandle? readHandle = null;
+        SafeFileHandle? writeHandle = null;
+        FileStream? reader = null;
+        FileStream? writer = null;
+        try
+        {
+            // Atomic close-on-exec duplication; ownership remains local until both streams exist.
+            var readFd = UnixNative.Dup(incoming);
+            if (readFd < 0) throw new IOException("The PTY read handle could not be duplicated.",
+                new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError()));
+            readHandle = new SafeFileHandle((IntPtr)readFd, ownsHandle: true);
+            reader = new FileStream(readHandle, FileAccess.ReadWrite, 4096, isAsync: false);
+            var writeFd = UnixNative.Dup(incoming);
+            if (writeFd < 0) throw new IOException("The PTY write handle could not be duplicated.",
+                new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError()));
+            writeHandle = new SafeFileHandle((IntPtr)writeFd, ownsHandle: true);
+            // Independent synchronization permits writes while a blocking PTY read is pending.
+            writer = new FileStream(writeHandle, FileAccess.Write, 4096, isAsync: false);
+            _master = reader;
+            _writer = writer;
+        }
+        catch
+        {
+            writer?.Dispose();
+            writeHandle?.Dispose();
+            reader?.Dispose();
+            readHandle?.Dispose();
+            throw;
+        }
         _readTask = ReadOutputAsync();
         _waitTask = Task.Run(WaitForChild);
     }
@@ -84,16 +115,26 @@ internal sealed class UnixPtyProcess : IPtyProcess
             allocations.Add(argv);
             Marshal.Copy(argumentPointers, 0, argv, argumentPointers.Length);
 
-            var window = new NativeWindowSize(options.InitialSize.Rows, options.InitialSize.Columns, 0, 0);
-            var pid = UnixNative.ForkPty(out var master, ref window);
-            if (pid == 0)
+            var environment = Environment.GetEnvironmentVariables().Cast<System.Collections.DictionaryEntry>()
+                .Select(item => $"{item.Key}={item.Value}").ToArray();
+            var environmentPointers = new IntPtr[environment.Length + 1];
+            for (var index = 0; index < environment.Length; index++)
+                environmentPointers[index] = AllocateUtf8(environment[index], allocations);
+            var envp = Marshal.AllocHGlobal(IntPtr.Size * environmentPointers.Length);
+            allocations.Add(envp);
+            Marshal.Copy(environmentPointers, 0, envp, environmentPointers.Length);
+            // All child-side PTY setup and exec stay in the native shim, never the CLR.
+            var pid = UnixNative.Spawn(executable, argv, workingDirectory, envp,
+                options.InitialSize.Rows, options.InitialSize.Columns, out var master);
+            if (pid < 0) throw new IOException("Native PTY spawn failed.", new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError()));
+            try { return new UnixPtyProcess(pid, master, options.InitialSize); }
+            catch
             {
-                if (UnixNative.Chdir(workingDirectory) != 0) UnixNative.Exit(126);
-                UnixNative.ExecVp(executable, argv);
-                UnixNative.Exit(127);
+                // Constructor owns/closes master even when stream setup fails. We still own
+                // the unreaped child here, including before it has established a process group.
+                UnixNative.Abort(pid);
+                throw;
             }
-            if (pid < 0) throw new IOException("forkpty failed.", new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError()));
-            return new UnixPtyProcess(pid, master, options.InitialSize);
         }
         finally
         {
@@ -109,8 +150,8 @@ internal sealed class UnixPtyProcess : IPtyProcess
         try
         {
             ThrowIfNotRunning();
-            await _master.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
-            await _master.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await _writer.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+            await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -171,31 +212,64 @@ internal sealed class UnixPtyProcess : IPtyProcess
 
     private void WaitForChild()
     {
-        var result = UnixNative.WaitPid(ProcessId, out var status, 0);
-        PtyProcessExit exit;
-        if (result < 0)
+        PtyProcessExit? observedExit = null;
+        IOException? failure = null;
+        while (observedExit is null && failure is null)
         {
-            exit = new(null, null, DateTimeOffset.UtcNow);
-            SetState(PtyProcessState.Faulted, "waitpid failed.");
+            lock (_sync)
+            {
+                // Reaping and signaling share one lock. While unreaped, this child's PID
+                // cannot be reused; once reaped, no later signal may target its numeric ID.
+                var result = UnixNative.WaitPid(ProcessId, out var status, 1); // WNOHANG
+                if (result == ProcessId)
+                {
+                    Volatile.Write(ref _childReaped, 1);
+                    var signal = status & 0x7f;
+                    observedExit = signal == 0
+                        ? new((status >> 8) & 0xff, null, DateTimeOffset.UtcNow)
+                        : new(null, signal, DateTimeOffset.UtcNow);
+                }
+                else if (result < 0)
+                {
+                    var error = Marshal.GetLastPInvokeError();
+                    if (error != 4) // EINTR is not process exit.
+                    {
+                        // ECHILD means this PID is no longer ours to signal.
+                        if (error != 10) UnixNative.Abort(ProcessId);
+                        Volatile.Write(ref _childReaped, 1);
+                        failure = new IOException("The PTY exit status could not be observed.",
+                            new System.ComponentModel.Win32Exception(error));
+                    }
+                }
+            }
+            if (observedExit is null && failure is null) Thread.Sleep(10);
+        }
+        // Publish callbacks outside the lifetime lock.
+        if (failure is not null)
+        {
+            SetState(PtyProcessState.Faulted, failure.Message);
+            _exit.TrySetException(failure);
         }
         else
         {
-            var signal = status & 0x7f;
-            exit = signal == 0
-                ? new((status >> 8) & 0xff, null, DateTimeOffset.UtcNow)
-                : new(null, signal, DateTimeOffset.UtcNow);
             SetState(PtyProcessState.Exited);
+            _exit.TrySetResult(observedExit!);
         }
-        _exit.TrySetResult(exit);
     }
 
     private void SignalProcessGroup(int signal)
     {
-        if (UnixNative.Kill(-ProcessId, signal) != 0)
+        lock (_sync)
         {
+            if (_childReaped != 0) return;
+            if (UnixNative.Kill(-ProcessId, signal) == 0) return;
             var error = Marshal.GetLastPInvokeError();
-            if (error != 3) // ESRCH: the child exited between the state check and signal.
-                throw new IOException("The PTY process group could not be signalled.", new System.ComponentModel.Win32Exception(error));
+            // Immediately after fork the child may not have executed setsid yet.
+            // The lock prevents our waiter reaping it during this positive-PID fallback.
+            if (error == 3 && UnixNative.Kill(ProcessId, signal) == 0) return;
+            error = Marshal.GetLastPInvokeError();
+            if (error != 3)
+                throw new IOException("The PTY process could not be signalled.", new System.ComponentModel.Win32Exception(error));
         }
     }
 
@@ -235,7 +309,7 @@ internal sealed class UnixPtyProcess : IPtyProcess
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-        if (!_exit.Task.IsCompleted)
+        if (Volatile.Read(ref _childReaped) == 0)
         {
             try { SignalProcessGroup(SigTerm); } catch (IOException) { }
             if (await Task.WhenAny(_exit.Task, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false) != _exit.Task)
@@ -246,6 +320,7 @@ internal sealed class UnixPtyProcess : IPtyProcess
         }
         _readCancellation.Cancel();
         _master.Dispose();
+        _writer.Dispose();
         try { await _readTask.ConfigureAwait(false); } catch { }
         try { await _waitTask.ConfigureAwait(false); } catch { }
         lock (_sync) _state = PtyProcessState.Disposed;
@@ -256,8 +331,10 @@ internal sealed class UnixPtyProcess : IPtyProcess
 
     private static IntPtr AllocateUtf8(string value, ICollection<IntPtr> allocations)
     {
-        var pointer = Marshal.StringToCoTaskMemUTF8(value);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(value + "\0");
+        var pointer = Marshal.AllocHGlobal(bytes.Length);
         allocations.Add(pointer);
+        Marshal.Copy(bytes, 0, pointer, bytes.Length);
         return pointer;
     }
 
@@ -272,20 +349,15 @@ internal sealed class UnixPtyProcess : IPtyProcess
 
     private static class UnixNative
     {
-        private delegate int ForkPtyDelegate(out int master, IntPtr name, IntPtr termios, ref NativeWindowSize window);
-        private static readonly ForkPtyDelegate ForkPtyImplementation = LoadForkPty();
+        [DllImport("haven_terminal_pty", EntryPoint = "haven_terminal_spawn", SetLastError = true)]
+        public static extern int Spawn(IntPtr file, IntPtr argv, IntPtr directory, IntPtr environment,
+            ushort rows, ushort columns, out int master);
 
-        public static int ForkPty(out int master, ref NativeWindowSize window) =>
-            ForkPtyImplementation(out master, IntPtr.Zero, IntPtr.Zero, ref window);
+        [DllImport("haven_terminal_pty", EntryPoint = "haven_terminal_dup", SetLastError = true)]
+        public static extern int Dup(SafeFileHandle file);
 
-        [DllImport("libc", EntryPoint = "chdir", SetLastError = true)]
-        public static extern int Chdir(IntPtr path);
-
-        [DllImport("libc", EntryPoint = "execvp", SetLastError = true)]
-        public static extern int ExecVp(IntPtr file, IntPtr argv);
-
-        [DllImport("libc", EntryPoint = "_exit")]
-        public static extern void Exit(int status);
+        [DllImport("haven_terminal_pty", EntryPoint = "haven_terminal_abort", SetLastError = true)]
+        public static extern int Abort(int processId);
 
         [DllImport("libc", EntryPoint = "ioctl", SetLastError = true)]
         public static extern int Ioctl(SafeFileHandle file, ulong request, ref NativeWindowSize window);
@@ -296,19 +368,5 @@ internal sealed class UnixPtyProcess : IPtyProcess
         [DllImport("libc", EntryPoint = "waitpid", SetLastError = true)]
         public static extern int WaitPid(int processId, out int status, int options);
 
-        private static ForkPtyDelegate LoadForkPty()
-        {
-            string[] libraries = OperatingSystem.IsMacOS()
-                ? ["libutil.dylib", "/usr/lib/libutil.dylib", "libc"]
-                : ["libutil.so.1", "libutil.so", "libc.so.6"];
-            foreach (var library in libraries)
-            {
-                if (!NativeLibrary.TryLoad(library, out var handle)) continue;
-                if (NativeLibrary.TryGetExport(handle, "forkpty", out var symbol))
-                    return Marshal.GetDelegateForFunctionPointer<ForkPtyDelegate>(symbol);
-                NativeLibrary.Free(handle);
-            }
-            throw new PlatformNotSupportedException("forkpty(3) was not found in the Unix runtime libraries.");
-        }
     }
 }

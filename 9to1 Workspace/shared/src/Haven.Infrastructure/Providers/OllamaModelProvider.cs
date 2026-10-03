@@ -33,7 +33,11 @@ public sealed class OllamaModelProvider(IOllamaClient client, IProviderConfigura
     /// <summary>
     /// Reports whether local applies to the current state.
     /// </summary>
-    public bool IsLocal => true;
+    public bool IsLocal => client.IsDeviceLocalTransportVerified && IsDeviceLocalEndpoint(client.TransportEndpoint);
+
+    internal static bool IsDeviceLocalEndpoint(Uri? endpoint) => endpoint is
+        { IsAbsoluteUri: true, IsLoopback: true } &&
+        endpoint.Scheme is "http" or "https" && string.IsNullOrEmpty(endpoint.UserInfo);
     /// <summary>
     /// Reports whether manage models applies to the current state.
     /// </summary>
@@ -72,7 +76,7 @@ public sealed class OllamaModelProvider(IOllamaClient client, IProviderConfigura
     {
         var configuration = await configurations.GetAsync(Id, cancellationToken).ConfigureAwait(false);
         if (configuration?.IsEnabled == false) return [];
-        var isLocal = configuration?.IsLocal ?? true;
+        var isLocal = IsLocal && configuration?.IsLocal != false;
         return (await client.GetModelsAsync(cancellationToken).ConfigureAwait(false))
             .Select(model => new ProviderModelDescriptor(Id, isLocal, model)).ToArray();
     }

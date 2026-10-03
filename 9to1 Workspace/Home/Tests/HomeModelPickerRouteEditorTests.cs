@@ -2,6 +2,7 @@ using System.Text.Json;
 using HavenOS.Home;
 using HavenOS.Home.Core;
 using CakeOS.Cui;
+using CakeOS.Cui.Language;
 using Xunit;
 
 namespace HavenOS.Home.Tests;
@@ -9,9 +10,50 @@ namespace HavenOS.Home.Tests;
 public sealed class HomeModelPickerRouteEditorTests
 {
     [Fact]
+    public async Task Audit_pending_is_visible_and_finish_dispatches_only_retained_audit()
+    {
+        var initial = Snapshot();
+        var saved = initial with { Revision = initial.Revision + 1, PendingAuditRequestId = "controlled-original-request" };
+        var provider = new FakeProvider(initial)
+        {
+            UpdateResult = new(true, "SavedAuditPending", "Saved; original audit pending.", saved)
+        };
+        var editor = new HomeModelPickerRouteEditor(provider);
+        Assert.True((await editor.RefreshAsync("global", "chat")).Succeeded);
+        var candidate = editor.Current.Candidates[0];
+        Assert.True(editor.SetCandidateEnabled(candidate.ProviderId, candidate.ModelId, candidate.ArtifactRevision, !candidate.Enabled).Succeeded);
+        Assert.True((await editor.SaveAsync()).Succeeded);
+        Assert.Equal("SavedAuditPending", editor.Current.StatusCode);
+        Assert.Equal(saved.PendingAuditRequestId, editor.Current.PendingAuditRequestId);
+        Assert.True(editor.Current.CanFinishAudit);
+        var originalEdit = provider.LastEdit;
+        Assert.Equal("AuditPending", (await editor.SaveAsync()).Code);
+        var document = new CuiRichParser().ParseFile(Path.Combine(AppContext.BaseDirectory, "UI", "ModelPicker.cui"));
+        var controller = new HomeModelPickerCuiController(editor, new(document));
+        Assert.True((await controller.ExecuteAsync(new(HomeModelPickerAction.FinishAudit))).Succeeded);
+        Assert.Null(editor.Current.PendingAuditRequestId);
+        Assert.False(editor.Current.CanFinishAudit);
+        Assert.Same(originalEdit, provider.LastEdit);
+        Assert.Equal(saved.PendingAuditRequestId, provider.LastAuditRequestId);
+    }
+
+    [Fact]
+    public async Task Current_provider_model_revision_is_preserved_without_inventing_an_artifact_revision()
+    {
+        var initial = Snapshot();
+        var route = initial.Routes[0] with { Candidates = [new("provider", "model", null, true, 0)] };
+        var editor = new HomeModelPickerRouteEditor(new FakeProvider(initial with { Routes = [route] }));
+        Assert.True((await editor.RefreshAsync("global", "chat")).Succeeded);
+        Assert.True(editor.SetCandidateEnabled("provider", "model", null, false).Succeeded);
+        Assert.Null(Assert.Single(editor.Current.Candidates).ArtifactRevision);
+        Assert.Equal("CandidateNotFound", editor.SetCandidateEnabled("provider", "model", "invented", true).Code);
+        Assert.Equal("InvalidModelIdentity", editor.SetCandidateEnabled("provider", "model", " ", true).Code);
+    }
+
+    [Fact]
     public void CUI_document_exposes_all_model_categories_and_accessible_route_actions()
     {
-        var path = Path.Combine(Environment.CurrentDirectory, "9to1 Workspace", "Home", "UI", "ModelPicker.cui");
+        var path = Path.Combine(AppContext.BaseDirectory, "UI", "ModelPicker.cui");
         var document = new CuiRichParser().ParseFile(path);
 
         Assert.Contains(document.RootProperties, property => property.Key == "id"
@@ -35,7 +77,11 @@ public sealed class HomeModelPickerRouteEditorTests
         Assert.False(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.SetCandidateEnabled,
             ProviderId: "provider", ModelId: "model", ArtifactRevision: "rev")));
         Assert.False(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.MoveCandidateUp,
+            ProviderId: "provider")));
+        Assert.True(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.MoveCandidateUp,
             ProviderId: "provider", ModelId: "model")));
+        Assert.True(surface.TryDequeueAction(out var currentVariant));
+        Assert.Null(currentVariant.ArtifactRevision);
         Assert.True(surface.Request(new HomeModelPickerActionRequest(HomeModelPickerAction.SetCandidateEnabled,
             ProviderId: "provider", ModelId: "model", ArtifactRevision: "rev", Enabled: false)));
         Assert.True(surface.TryDequeueAction(out var queued));
@@ -182,7 +228,7 @@ public sealed class HomeModelPickerRouteEditorTests
         var result = await editor.RefreshAsync("global", "chat");
 
         Assert.False(result.Succeeded);
-        Assert.Equal("HomeServiceUnavailable", editor.Current.StatusCode);
+        Assert.Equal("InvalidProviderResult", editor.Current.StatusCode);
         Assert.Null(editor.Current.SelectedRouteId);
     }
 
@@ -237,6 +283,9 @@ public sealed class HomeModelPickerRouteEditorTests
         public HomeCoreOperationResult<HomeModelPickerSnapshot>? UpdateResult { get; init; }
         public HomeCoreOperationResult<HomeModelRoutePreview>? PreviewResult { get; init; }
         public HomeModelRouteEdit? LastEdit { get; private set; }
+        public string? LastAuditRequestId { get; private set; }
+        public Task<HomeCoreOperationResult<object>> RetryAuditAsync(string requestId, CancellationToken ct = default)
+        { LastAuditRequestId = requestId; return Task.FromResult(new HomeCoreOperationResult<object>(true, "AuditRecorded", "Controlled audit acknowledgment.")); }
         public HomeModelRoutePreviewRequest? LastPreviewRequest { get; private set; }
 
         public Task<HomeCoreOperationResult<HomeModelCataloguePage>> GetCatalogueAsync(string? query = null,

@@ -32,7 +32,7 @@ public sealed class MainActivity : AvaloniaMainActivity
     {
         try
         {
-            AndroidHavenBootstrap.SetLaunchRequest(Intent);
+            AndroidHavenBootstrap.SetLaunchRequest(this, Intent);
             base.OnCreate(savedInstanceState);
             Window?.SetSoftInputMode(SoftInput.AdjustResize);
             AndroidRuntimePermissions.Attach(this, isForeground: true);
@@ -47,14 +47,14 @@ public sealed class MainActivity : AvaloniaMainActivity
     protected override void OnNewIntent(Intent? intent)
     {
         base.OnNewIntent(intent);
-        AndroidHavenBootstrap.ApplyLaunchRequest(intent);
+        AndroidHavenBootstrap.ApplyLaunchRequest(this, intent);
     }
 
     public override void OnConfigurationChanged(Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
         Window?.SetSoftInputMode(SoftInput.AdjustResize);
-        AndroidHavenBootstrap.NotifyConfigurationChanged();
+        AndroidHavenBootstrap.NotifyConfigurationChanged(this);
     }
 
     protected override void OnResume()
@@ -70,6 +70,14 @@ public sealed class MainActivity : AvaloniaMainActivity
         AndroidRuntimePermissions.SetForeground(this, isForeground: false);
         AndroidRuntimeDiagnostics.Detach(this);
         base.OnPause();
+    }
+
+    protected override void OnDestroy()
+    {
+        AndroidHavenBootstrap.DetachActivity(this);
+        AndroidRuntimePermissions.Detach(this);
+        AndroidRuntimeDiagnostics.Detach(this);
+        base.OnDestroy();
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, global::Android.Content.PM.Permission[] grantResults)

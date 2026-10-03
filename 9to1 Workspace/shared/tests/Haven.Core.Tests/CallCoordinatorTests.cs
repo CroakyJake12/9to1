@@ -82,6 +82,53 @@ public sealed class CallCoordinatorTests
             coordinator.StartAsync(new CallStartOptions(Model()), null, CancellationToken.None));
 
         Assert.Contains("already active", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.True(coordinator.IsActive);
+        Assert.NotNull(coordinator.CurrentSession);
+        await coordinator.SubmitTextAsync("Still connected", CancellationToken.None);
+        await coordinator.EndAsync(CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task ExistingSpaceConversationKeepsIdentityHistoryAndMembership()
+    {
+        await using var coordinator = CreateCoordinator(out var calls, out var conversations, out var model, out _, out _);
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Existing Space conversation",
+            null, null, false, false, now, now, SpaceId: Guid.NewGuid());
+        await conversations.UpsertConversationAsync(conversation, CancellationToken.None);
+        await conversations.AddMessageAsync(new ChatMessage(Guid.NewGuid(), conversation.Id, MessageRole.User,
+            "Earlier canonical context", null, null, null, now), CancellationToken.None);
+        var session = await coordinator.StartAsync(new CallStartOptions(Model(), ConversationId: conversation.Id), null, CancellationToken.None);
+        Assert.Equal(conversation, coordinator.CurrentConversation);
+        Assert.Equal(conversation.Id, session.ConversationId);
+        await coordinator.SubmitTextAsync("Continue by voice", CancellationToken.None);
+        Assert.Contains(model.LastRequest!.Messages, message => message.Content == "Earlier canonical context");
+        Assert.Single(conversations.Items);
+        Assert.Equal(conversation.SpaceId, conversations.Items[conversation.Id].SpaceId);
+        Assert.Equal(ConversationKind.Chat, conversations.Items[conversation.Id].Kind);
+        await coordinator.EndAsync(CancellationToken.None);
+        Assert.Equal(CallSessionStatus.Completed, calls.Items[session.Id].Status);
+    }
+
+    [Theory]
+    [InlineData(false, ConversationKind.AutomationRun)]
+    [InlineData(false, ConversationKind.Training)]
+    [InlineData(true, ConversationKind.Chat)]
+    public async Task UnavailableConversationNeverStartsAnotherSession(bool archived, ConversationKind kind)
+    {
+        await using var coordinator = CreateCoordinator(out var calls, out var conversations, out _, out _, out _);
+        var now = DateTimeOffset.UtcNow;
+        var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, kind, "Unavailable", null, null, false, false, now, now, IsArchived: archived);
+        await conversations.UpsertConversationAsync(conversation, CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => coordinator.StartAsync(
+            new CallStartOptions(Model(), ConversationId: conversation.Id), null, CancellationToken.None));
+        Assert.False(coordinator.IsActive);
+        Assert.Empty(calls.Items);
+        Assert.Single(conversations.Items);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => coordinator.StartAsync(
+            new CallStartOptions(Model(), ConversationId: Guid.NewGuid()), null, CancellationToken.None));
+        Assert.Empty(calls.Items);
+        Assert.Single(conversations.Items);
     }
 
     [Fact]

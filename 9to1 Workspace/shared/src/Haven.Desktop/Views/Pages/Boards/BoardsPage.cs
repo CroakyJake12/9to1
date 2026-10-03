@@ -69,6 +69,7 @@ public sealed partial class BoardsPage : UserControl, IDisposable
     internal DomainSection? CurrentSection => _section;
     internal DomainPage? CurrentPage => _page;
     internal NativeTabStrip PageTabs => _pageTabs;
+    internal TextBox? PageTitleInput => _editor.Children.OfType<TextBox>().FirstOrDefault();
 
     private void BuildShell()
     {
@@ -244,21 +245,34 @@ public sealed partial class BoardsPage : UserControl, IDisposable
         await RefreshLibraryAsync();
     }
 
+    private long _boardPickerGeneration;
+
     private async Task OpenBoardPickerAsync()
     {
+        try
+        {
+            var picker = await CreateBoardPickerAsync();
+            if (picker is null) return;
+            var flyout = new Flyout { Content = picker };
+            picker.Opened += (_, _) => flyout.Hide();
+            flyout.ShowAt(_boardSwitcher);
+        }
+        catch (Exception)
+        {
+            if (!_disposed) SetStatus("Couldn’t load the board picker. Try opening it again.");
+        }
+    }
+
+    internal async Task<BoardsNotebookPicker?> CreateBoardPickerAsync()
+    {
+        if (_disposed) return null;
+        var generation = ++_boardPickerGeneration;
+        var originalDisplay = _document;
         var boards = await _boards.ListNotebooksAsync(CancellationToken.None);
-        var picker = new MenuFlyout();
-        foreach (var summary in boards.OrderBy(value => value.Title, StringComparer.CurrentCultureIgnoreCase))
-        {
-            var item = new MenuItem { Header = (_document?.Id == summary.Id ? "✓ " : "") + summary.Title };
-            item.Click += async (_, _) => await OpenNotebookAsync(summary.Id);
-            picker.Items.Add(item);
-        }
-        if (boards.Count == 0)
-        {
-            picker.Items.Add(new MenuItem { Header = "No available boards", IsEnabled = false });
-        }
-        picker.ShowAt(_boardSwitcher);
+        if (_disposed || generation != _boardPickerGeneration || !ReferenceEquals(_document, originalDisplay)) return null;
+        return new BoardsNotebookPicker(boards, originalDisplay?.Id, id =>
+            TrySwitchNotebookAsync(id, null, null, CancellationToken.None,
+                () => !_disposed && generation == _boardPickerGeneration && ReferenceEquals(_document, originalDisplay)));
     }
 
     private void UpdateBoardSwitcher()
@@ -269,25 +283,15 @@ public sealed partial class BoardsPage : UserControl, IDisposable
             : $"Board switcher. Current board: {_document.Title}. Open board picker");
     }
 
-    public async Task<bool> OpenDeepLinkAsync(string value, CancellationToken cancellationToken = default)
+    public Task<bool> OpenDeepLinkAsync(string value, CancellationToken cancellationToken = default)
     {
-        if (!BoardsDeepLink.TryParse(value, out var link)) return false;
-        var notebook = await _boards.OpenNotebookAsync(link.NotebookId, cancellationToken);
-        if (notebook is null) return false;
-        ActivateNotebook(notebook, link.SectionId, link.PageId);
-        return true;
+        if (!BoardsDeepLink.TryParse(value, out var link)) return Task.FromResult(false);
+        return TrySwitchNotebookAsync(link.NotebookId, link.SectionId, link.PageId, cancellationToken);
     }
 
     private async Task OpenNotebookAsync(Guid id)
     {
-        SetStatus("Opening notebook...");
-        var notebook = await _boards.OpenNotebookAsync(id, CancellationToken.None);
-        if (notebook is null)
-        {
-            SetStatus("That Boards notebook is unavailable or no longer exists.");
-            return;
-        }
-        ActivateNotebook(notebook, null, null);
+        await TrySwitchNotebookAsync(id, null, null, CancellationToken.None);
     }
 
     private void ActivateNotebook(NotesDocument notebook, Guid? sectionId, Guid? pageId)

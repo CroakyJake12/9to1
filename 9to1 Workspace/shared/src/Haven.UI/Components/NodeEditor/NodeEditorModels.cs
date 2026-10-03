@@ -1,5 +1,8 @@
 namespace Haven.UI.Components;
 
+/// <summary>Visual authoring topology only; owning applications retain all persistence and execution authority.</summary>
+public enum NodeEditorTopologyPolicy { ExecutableDag = 0, RelationalAuthoring = 1 }
+
 public enum NodeEditorPortDirection
 {
     Input = 0,

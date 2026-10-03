@@ -25,6 +25,37 @@ jobs:
       - name: Check out pull request
         uses: actions/checkout@v6
 
+      - name: Materialize the pinned source-built XAML compiler dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          dependency=framework/CUI/vendor/Avalonia/external/XamlX
+          entry="$(git ls-tree HEAD -- "$dependency")"
+          test "$(printf '%s' "$entry" | awk '{print $1}')" = 160000
+          expected="$(printf '%s' "$entry" | awk '{print $3}')"
+          test "${#expected}" -eq 40
+          git submodule update --init --depth=1 -- "$dependency"
+          test "$(git -C "$dependency" rev-parse HEAD)" = "$expected"
+          git -C "$dependency" diff --exit-code
+          git -C "$dependency" diff --cached --exit-code
+          test -f "$dependency/src/XamlX/XamlX.csproj"
+          test -f "$dependency/src/XamlX.IL.Cecil/XamlX.IL.Cecil.csproj"
+
+      - name: Materialize the pinned native accessibility source dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          dependency=framework/CUI/vendor/Avalonia/external/Avalonia.DBus
+          entry="$(git ls-tree HEAD -- "$dependency")"
+          test "$(printf '%s' "$entry" | awk '{print $1}')" = 160000
+          expected="$(printf '%s' "$entry" | awk '{print $3}')"
+          test "${#expected}" -eq 40
+          git submodule update --init --depth=1 -- "$dependency"
+          test "$(git -C "$dependency" rev-parse HEAD)" = "$expected"
+          git -C "$dependency" diff --exit-code
+          git -C "$dependency" diff --cached --exit-code
+          test -f "$dependency/src/Avalonia.DBus/Avalonia.DBus.csproj"
+
       - name: Install .NET from global.json
         uses: actions/setup-dotnet@v6
         with:
@@ -98,6 +129,8 @@ jobs:
           cp "9to1 Workspace/Write/write-libreoffice-poc/run-ipc-probe.sh" \
             artifacts/write-libreoffice-poc/run-ipc-probe.sh
           chmod 0755 artifacts/write-libreoffice-poc/run-ipc-probe.sh
+          cp "9to1 Workspace/Write/write-libreoffice-poc/verify-source-reuse.sh" \
+            artifacts/write-libreoffice-poc/verify-source-reuse.sh
 
       - name: Upload standalone native probes
         uses: actions/upload-artifact@v7
@@ -372,6 +405,13 @@ jobs:
                   /io
               test -s /io/ipc-roundtrip.odt
 
+              SAL_USE_VCLPLUGIN=svp \
+              LO_PROGRAM_PATH=/usr/lib/libreoffice/program \
+              SEMANTIC_BINARY=/probe/lok_semantic_probe \
+              ENGINE_BINARY=/probe/haven_write_engine_poc \
+              CLIENT_BINARY=/probe/haven_write_engine_client \
+                bash /probe/verify-source-reuse.sh /io/source.odt /io/source-reuse
+
               dpkg-query -W -f="\${Package}\t\${Version}\n" \
                 libreoffice-core-nogui \
                 libreoffice-writer-nogui > /io/runtime-package-versions.txt
@@ -402,6 +442,13 @@ jobs:
           python3 artifacts/write-libreoffice-poc/verify-semantic-odt.py \
             "$RUNNER_TEMP/haven-write-runtime-only/ipc-roundtrip.odt" \
             HAVEN_WRITE_LOK_IPC_PROOF_20260907
+          python3 artifacts/write-libreoffice-poc/verify-semantic-odt.py \
+            "$RUNNER_TEMP/haven-write-runtime-only/source-reuse/semantic.odt"
+          for session in 1 2; do
+            python3 artifacts/write-libreoffice-poc/verify-semantic-odt.py \
+              "$RUNNER_TEMP/haven-write-runtime-only/source-reuse/session-$session.odt" \
+              HAVEN_WRITE_LOK_IPC_PROOF_20260907
+          done
 
       - name: Record runtime-only evidence summary
         if: always()

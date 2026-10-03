@@ -38,6 +38,10 @@ jobs:
       - name: Check out pull request
         uses: actions/checkout@v6
 
+      - name: Materialize pinned UI source dependencies
+        shell: bash
+        run: bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
+
       - name: Install .NET from global.json
         uses: actions/setup-dotnet@v6
         with:

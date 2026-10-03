@@ -14,7 +14,19 @@ public sealed record MailProviderSyncBatch(
     IReadOnlyList<MailMessage> Messages,
     string? NewChangeCursor,
     bool WasIncremental,
-    DateTimeOffset ContactedAt);
+    DateTimeOffset ContactedAt,
+    IReadOnlyList<MailProviderMessageState>? MessageStates = null,
+    IReadOnlyList<MailProviderFolderInventory>? FolderInventories = null);
+
+/// <summary>Observed server flags for an existing canonical message; cached body/attachments are not replaced.</summary>
+public sealed record MailProviderMessageState(Guid AccountId, Guid MessageId, string ProviderMessageId,
+    string FolderKey, bool IsRead, bool IsStarred, bool IsImportant, bool IsDeleted, string ProviderRevision);
+
+/// <summary>
+/// Complete UID membership observed for one selected account/folder. It is not an atomic server snapshot.
+/// Absence can retire an old canonical message; folders outside this inventory remain untouched.
+/// </summary>
+public sealed record MailProviderFolderInventory(Guid AccountId, string FolderKey, IReadOnlyList<Guid> MessageIds);
 
 public sealed record MailProviderSendResult(string ProviderMessageId, DateTimeOffset AcceptedAt);
 

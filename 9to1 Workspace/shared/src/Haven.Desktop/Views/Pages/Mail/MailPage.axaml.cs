@@ -16,15 +16,33 @@ public sealed partial class MailPage : UserControl, IDisposable
     private bool _showReadingOnNarrow;
     private bool _updatingComposeFromEditor;
     private bool _disposed;
+    private readonly FilesMailCanonicalAttachmentPicker? _canonicalAttachmentPicker;
+    private CancellationTokenSource? _attachmentLifetime;
+    internal Task PendingAttachmentSelection { get; private set; } = Task.CompletedTask;
 
-    public MailPage()
+    public MailPage() : this(RequireServices().GetRequiredService<IMailService>(),
+        RequireServices().GetRequiredService<IProviderModelClient>(),
+        RequireServices().GetRequiredService<IVersionedSettingsStore>(),
+        FilesMailCanonicalAttachmentPicker.FromServices(RequireServices())) { }
+
+    private static IServiceProvider RequireServices() => App.Services
+        ?? throw new InvalidOperationException("Haven services are not initialized.");
+
+    public MailPage(IMailService mail, IProviderModelClient models) : this(mail, models, null) { }
+
+    public MailPage(IMailService mail, IProviderModelClient models, IVersionedSettingsStore? preferences)
+        : this(mail, models, preferences, null) { }
+
+    public MailPage(IMailService mail, IProviderModelClient models, IVersionedSettingsStore? preferences,
+        FilesMailCanonicalAttachmentPicker? canonicalAttachmentPicker)
     {
         InitializeComponent();
-        var services = App.Services ?? throw new InvalidOperationException("Haven services are not initialized.");
-        _viewModel = new MailPageViewModel(
-            services.GetRequiredService<IMailService>(),
-            services.GetRequiredService<IProviderModelClient>());
+        _viewModel = new MailPageViewModel(mail, models);
         DataContext = _viewModel;
+        _canonicalAttachmentPicker = canonicalAttachmentPicker;
+        _viewModel.OriginalComposeRetired += CancelOriginalAttachmentSelection;
+        _readingPreferences = preferences;
+        PendingReadingPreference = LoadReadingPreferenceAsync();
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         ComposeEditor.ContentChanged += OnComposeEditorContentChanged;
@@ -40,6 +58,7 @@ public sealed partial class MailPage : UserControl, IDisposable
     public void ApplyResponsiveLayout(double width)
     {
         if (width <= 0) return;
+        ResetReadingPaneGeometry();
         var columns = MailboxGrid.ColumnDefinitions;
         var mode = MailResponsiveLayoutPolicy.Resolve(width);
         if (mode == MailResponsiveMode.Narrow)
@@ -58,7 +77,7 @@ public sealed partial class MailPage : UserControl, IDisposable
             return;
         }
 
-        _showReadingOnNarrow = false;
+        if (ReadingPanePlacement != MailReadingPanePlacement.Off) _showReadingOnNarrow = false;
         BackToListButton.IsVisible = false;
         MessagePanel.IsVisible = true;
         ReadingPanel.IsVisible = true;
@@ -82,6 +101,7 @@ public sealed partial class MailPage : UserControl, IDisposable
             columns[1].Width = new GridLength(390);
             columns[2].Width = new GridLength(1, GridUnitType.Star);
         }
+        ApplyChosenReadingPlacement();
     }
 
     private void OnSizeChanged(object? sender, SizeChangedEventArgs e) => ApplyResponsiveLayout(e.NewSize.Width);
@@ -92,7 +112,8 @@ public sealed partial class MailPage : UserControl, IDisposable
         _viewModel.SetMessageSelection(selected);
         _viewModel.NotifyMessageSelectionChanged();
 
-        if (ResponsiveMode != "narrow" || selected.Length != 1 || _viewModel.SelectedSummary is null) return;
+        if ((ResponsiveMode != "narrow" && ReadingPanePlacement != MailReadingPanePlacement.Off)
+            || selected.Length != 1 || _viewModel.SelectedSummary is null) return;
         _showReadingOnNarrow = true;
         ApplyResponsiveLayout(Bounds.Width);
     }
@@ -142,20 +163,50 @@ public sealed partial class MailPage : UserControl, IDisposable
 
     private async void OnAddAttachmentClick(object? sender, RoutedEventArgs e)
     {
-        var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
-        if (storage is null) return;
-        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        if (_disposed || !PendingAttachmentSelection.IsCompleted) return;
+        PendingAttachmentSelection = AddAttachmentToOriginalComposeAsync();
+        await PendingAttachmentSelection;
+    }
+
+    private void CancelOriginalAttachmentSelection() => _attachmentLifetime?.Cancel();
+
+    private async Task AddAttachmentToOriginalComposeAsync()
+    {
+        var original = _viewModel.CaptureOriginalComposeSelection();
+        if (_disposed || original is null) return;
+        _attachmentLifetime?.Dispose();
+        using var lifetime = new CancellationTokenSource(); _attachmentLifetime = lifetime;
+        bool Current() => !_disposed && !lifetime.IsCancellationRequested && original.IsCurrent;
+        try
         {
-            Title = "Attach files to email",
-            AllowMultiple = true
-        });
-        foreach (var file in files)
-        {
-            await using var stream = await file.OpenReadAsync();
-            using var memory = new MemoryStream();
-            await stream.CopyToAsync(memory);
-            _viewModel.AddComposeAttachment(file.Name, GuessContentType(file.Name), memory.ToArray());
+            if (_canonicalAttachmentPicker is not null)
+            {
+                var selected = await _canonicalAttachmentPicker.PickAsync(TopLevel.GetTopLevel(this) as Window,
+                    original.AccountId, original.DraftId, Current, lifetime.Token);
+                if (selected is not null && Current())
+                    _viewModel.TryAddOriginalComposeAttachment(original, selected.FileName, selected.MimeType, selected.Bytes.ToArray());
+                return;
+            }
+            // Retain the existing platform picker API when no canonical Files picker was explicitly composed.
+            var storage = TopLevel.GetTopLevel(this)?.StorageProvider;
+            if (storage is null) return;
+            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            { Title = "Attach files to email", AllowMultiple = true });
+            if (!Current()) return;
+            foreach (var file in files)
+            {
+                await using var stream = await file.OpenReadAsync();
+                if (!Current()) return;
+                using var memory = new MemoryStream();
+                await stream.CopyToAsync(memory, lifetime.Token);
+                if (!Current()) return;
+                _viewModel.AddComposeAttachment(file.Name, GuessContentType(file.Name), memory.ToArray());
+            }
         }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
+        { if (Current()) _viewModel.SetOriginalComposeAttachmentStatus(original, "The selected attachment is unavailable. Choose it again from Files."); }
+        finally { if (ReferenceEquals(_attachmentLifetime, lifetime)) _attachmentLifetime = null; }
     }
 
     private async void OnDownloadAttachmentClick(object? sender, RoutedEventArgs e)
@@ -201,6 +252,8 @@ public sealed partial class MailPage : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        CancelOriginalAttachmentSelection();
+        _viewModel.OriginalComposeRetired -= CancelOriginalAttachmentSelection;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         ComposeEditor.ContentChanged -= OnComposeEditorContentChanged;
         ComposeEditor.Dispose();

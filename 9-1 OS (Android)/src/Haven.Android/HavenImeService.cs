@@ -25,7 +25,8 @@
 //      remove that claim from this comment.
 //   4. The ONLY network path is HavenKeyboardAiController -> the executor wired
 //      at bootstrap, triggered solely by an explicit tap on an AI action while
-//      the field is non-secure, AI is enabled in settings and the network is up.
+//      the field is non-secure and AI is enabled. Device-local models work offline;
+//      cloud/remote disclosure additionally requires the keyboard's explicit consent.
 // ============================================================================
 
 using System.Globalization;
@@ -33,7 +34,6 @@ using System.Text;
 using Android.App;
 using Android.Content;
 using Android.Content.Res;
-using Android.Net;
 using Android.Provider;
 using Android.Text;
 using Android.Views;
@@ -304,15 +304,14 @@ public sealed class HavenImeService : InputMethodService
     {
         _aiAvailable = HavenKeyboardAiController.IsConfigured
             && Settings.AiEnabled
-            && !_profile.IsSecure
-            && IsNetworkAvailable();
+            && !_profile.IsSecure;
         _aiHint = !Settings.AiEnabled
             ? "AI is off - enable it in Haven Keyboard settings"
             : _profile.IsSecure
                 ? "AI is disabled in secure fields"
                 : !HavenKeyboardAiController.IsConfigured
                     ? "AI unavailable"
-                    : !_aiAvailable ? "AI offline" : null;
+                    : null;
     }
 
     private static string EnterLabel(int enterAction) => enterAction switch
@@ -563,6 +562,7 @@ public sealed class HavenImeService : InputMethodService
         {
             return;
         }
+        ComputeAiAvailability();
         if (_aiBusy || !_aiAvailable || CurrentInputConnection is not { } connection)
         {
             _strip.ShowStatus(_aiHint ?? "AI unavailable");
@@ -755,24 +755,6 @@ public sealed class HavenImeService : InputMethodService
     }
 
     // ---------------------------------------------------------------- helpers
-
-    private bool IsNetworkAvailable()
-    {
-        try
-        {
-            if (GetSystemService(Context.ConnectivityService) is not ConnectivityManager connectivity
-                || connectivity.ActiveNetwork is not { } network)
-            {
-                return false;
-            }
-            var capabilities = connectivity.GetNetworkCapabilities(network);
-            return capabilities?.HasCapability(NetCapability.Validated) == true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     private void StartNewGeneration()
     {

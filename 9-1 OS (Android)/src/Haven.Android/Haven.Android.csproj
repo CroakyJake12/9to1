@@ -29,6 +29,15 @@
     <HavenMicrosoftCalendarClientId Condition="'$(HavenMicrosoftCalendarClientId)' == ''">$(HAVEN_MICROSOFT_CALENDAR_CLIENT_ID)</HavenMicrosoftCalendarClientId>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../9to1 Workspace/Forms/CUI/HavenOS.Forms.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Picture/Core/HavenOS.Images.Core.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Launcher/Native/NineToOne.Launcher.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Games/CUI/HavenOS.Games.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />
+    <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Prefabs/**/*.hui" LogicalName="Haven.Desktop.Prefabs.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/**/*.hui" LogicalName="Haven.Desktop.DynamicUI.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="HavenGoogleCalendarClientId" Value="$(HavenGoogleCalendarClientId)" Condition="'$(HavenGoogleCalendarClientId)' != ''" />
     <AssemblyMetadata Include="HavenMicrosoftCalendarClientId" Value="$(HavenMicrosoftCalendarClientId)" Condition="'$(HavenMicrosoftCalendarClientId)' != ''" />
     <Using Include="System" />
@@ -41,6 +50,14 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Core/Haven.Core.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Canvas/HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Canvas/NativeUI/HavenOS.Canvas.NativeUI.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Sites/HavenOS.Sites.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Files/CUI/HavenOS.Files.CUI.csproj" />
+    <ProjectReference Include="../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Browser/Haven.Browser.csproj" />
@@ -48,6 +65,8 @@
     <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj" />
     <ProjectReference Include="../Haven.Android.Hui/Haven.Android.Hui.csproj" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
+    <PackageReference Include="ScottPlot.Avalonia" />
+    <EmbeddedResource Include="../../../9to1 Workspace/shared/src/Haven.Desktop/ThirdParty/ScottPlot/**/*" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Android" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
@@ -87,5 +106,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </AvaloniaXaml>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../9to1 Workspace/Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <Using Include="HavenOS.Files.NativeHost" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../9to1 Workspace/Browse/HavenOS.Apps.Browse.csproj" />
   </ItemGroup>
 </Project>

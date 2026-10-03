@@ -12,6 +12,51 @@ public sealed class DataProductionTests : IDisposable
     private readonly DataTestPaths _paths = new();
 
     [Fact]
+    public async Task Authored_schema_reopens_in_actual_workbook_and_xlsx_cannot_silently_discard_constraints()
+    {
+        var repository = new DataWorkbookRepository(_paths); var workbook = DataWorkbook.Create("Typed records");
+        var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "ID"); sheet.SetCell(1, 0, "1", kind: DataCellKind.Number);
+        var table = new DataTableDefinition { SheetId = sheet.Id, Range = new() { EndRow = 1 } };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table); workbook.Normalize();
+        var fieldID = table.Fields[0].FieldID; var recordID = table.Records[0].RecordID;
+        var key = new DataKeyDefinition(Guid.NewGuid(), "ID", DataKeyKind.Primary, [fieldID]);
+        workbook = DataTableDesign.SetSchema(workbook, table.Id, workbook.Version, workbook.RevisionId, null,
+            [new(fieldID, "ID", DataFieldType.Integer, false)], [key]).Workbook!;
+        // Repository format exercise; actual Home-approved owner publication is covered separately.
+        await repository.SaveAsync(workbook, "Typed format", CancellationToken.None);
+        var reopened = (await new DataWorkbookRepository(_paths).LoadAsync(workbook.Id, CancellationToken.None))!;
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, reopened.SchemaVersion);
+        Assert.Equal(key.KeyID, Assert.Single(reopened.Tables[0].RelationalSchema!.Keys).KeyID);
+        Assert.Equal(fieldID, Assert.Single(reopened.Tables[0].RelationalSchema!.Fields).FieldID);
+        Assert.Equal("1", DataTableIdentity.ReadCell(reopened, table.Id, recordID, fieldID)!.Value);
+        var destination = Path.Combine(_paths.DataDirectory, "keep.xlsx");
+        await File.WriteAllTextAsync(destination, "existing file");
+        var error = await Assert.ThrowsAsync<NotSupportedException>(() => new DataXlsxFormatService().ExportAsync(reopened, destination, CancellationToken.None));
+        Assert.StartsWith("XlsxRelationalProjectionUnavailable", error.Message);
+        Assert.Equal("existing file", await File.ReadAllTextAsync(destination));
+        Assert.Empty(Directory.EnumerateFiles(_paths.DataDirectory, "*.tmp"));
+    }
+
+    [Fact]
+    public async Task Canonical_record_identity_survives_actual_repository_reopen_and_sort_commit()
+    {
+        var repository = new DataWorkbookRepository(_paths); var workbook = DataWorkbook.Create("Canonical records");
+        var sheet = workbook.Sheets[0]; sheet.SetCell(0, 0, "Name"); sheet.SetCell(1, 0, "Zoe"); sheet.SetCell(2, 0, "Ada");
+        var table = new DataTableDefinition { SheetId = sheet.Id, Range = new() { EndRow = 2 }, HasHeaders = true };
+        DataTableIdentity.Initialize(workbook, table); workbook.Tables.Add(table);
+        var zoe = table.Records[0].RecordID; var field = table.Fields[0].FieldID;
+        await repository.SaveAsync(workbook, "Create canonical table", CancellationToken.None);
+        var loaded = (await new DataWorkbookRepository(_paths).LoadAsync(workbook.Id, CancellationToken.None))!;
+        DataSpreadsheetOperations.SortRange(loaded.Sheets[0], loaded.Tables[0].Range, 0, hasHeader: true);
+        var saved = await repository.SaveAsync(loaded, "Sort canonical records", CancellationToken.None);
+        var reopened = (await new DataWorkbookRepository(_paths).LoadAsync(workbook.Id, CancellationToken.None))!;
+        Assert.Equal(2, saved.Version); Assert.Equal(loaded.RevisionId, reopened.RevisionId);
+        Assert.Equal(table.Id, reopened.Tables[0].Id);
+        Assert.Equal(2, Assert.Single(reopened.Tables[0].Records, record => record.RecordID == zoe).SheetRow);
+        Assert.Equal("Zoe", DataTableIdentity.ReadCell(reopened, table.Id, zoe, field)!.Value);
+    }
+
+    [Fact]
     public void Infrastructure_registers_data_repository_format_and_query_services()
     {
         var services = new ServiceCollection();
@@ -92,6 +137,101 @@ public sealed class DataProductionTests : IDisposable
         Assert.NotNull(reopened);
         Assert.Equal("Recovered edit", reopened!.Title);
         Assert.False(reopened.Recovery.RecoveredFromBackup);
+    }
+
+    [Fact]
+    public async Task Independent_repository_instances_compare_expected_revision_and_preserve_conflicting_buffer()
+    {
+        var first = new DataWorkbookRepository(_paths);
+        var second = new DataWorkbookRepository(_paths);
+        var initial = DataWorkbook.Create("Original");
+        await first.SaveAsync(initial, "create", CancellationToken.None);
+        var left = (await first.LoadAsync(initial.Id, CancellationToken.None))!;
+        var right = (await second.LoadAsync(initial.Id, CancellationToken.None))!;
+        left.Title = "Left"; right.Title = "Right";
+        var oldTimestamp = right.UpdatedAt;
+        await first.SaveAsync(left, "winner", CancellationToken.None);
+        var conflict = await Assert.ThrowsAsync<DataWorkbookRevisionConflictException>(() => second.SaveAsync(right, "stale", CancellationToken.None));
+        Assert.Equal("RevisionConflict", conflict.Code);
+        Assert.Equal(1, right.Version);
+        Assert.Equal(oldTimestamp, right.UpdatedAt);
+        Assert.Equal("create", right.Metadata["lastSaveReason"]);
+        Assert.Equal("Right", right.Title);
+        var reopened = (await new DataWorkbookRepository(_paths).LoadAsync(initial.Id, CancellationToken.None))!;
+        Assert.Equal("Left", reopened.Title);
+        Assert.Equal(2, reopened.Version);
+    }
+
+    [Fact]
+    public async Task Concurrent_first_save_has_one_winner_and_caller_mutations_after_wait_do_not_retarget_snapshot()
+    {
+        var first = new DataWorkbookRepository(_paths);
+        var second = new DataWorkbookRepository(_paths);
+        var left = DataWorkbook.Create("First");
+        var right = DataWorkbook.Create("Second"); right.Id = left.Id;
+        async Task<bool> Save(DataWorkbookRepository repository, DataWorkbook value)
+        {
+            try { await repository.SaveAsync(value, "race", CancellationToken.None); return true; }
+            catch (DataWorkbookRevisionConflictException) { return false; }
+        }
+        var outcomes = await Task.WhenAll(Save(first, left), Save(second, right));
+        Assert.Single(outcomes, won => won);
+        var loaded = (await first.LoadAsync(left.Id, CancellationToken.None))!;
+        Assert.Equal(outcomes[0] ? "First" : "Second", loaded.Title);
+        var lockPath = Path.Combine(_paths.DataDirectory, "Data", "Workbooks", ".locks", left.Id.ToString("D") + ".lock");
+        Task<DataSaveResult> pending;
+        await using (var lease = new FileStream(lockPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            loaded.Title = "Reviewed snapshot";
+            pending = second.SaveAsync(loaded, "captured", CancellationToken.None);
+            Assert.False(pending.IsCompleted);
+            loaded.Title = "Later buffer edit";
+        }
+        await pending;
+        Assert.Equal("Reviewed snapshot", (await first.LoadAsync(left.Id, CancellationToken.None))!.Title);
+        Assert.Equal("Later buffer edit", loaded.Title);
+        Assert.Equal(2, loaded.Version);
+        await second.SaveAsync(loaded, "later", CancellationToken.None);
+        Assert.Equal("Later buffer edit", (await first.LoadAsync(left.Id, CancellationToken.None))!.Title);
+    }
+
+    [Fact]
+    public async Task Recovery_reuses_sequence_number_but_new_revision_identity_rejects_old_same_number_buffer()
+    {
+        var repository = new DataWorkbookRepository(_paths);
+        var workbook = DataWorkbook.Create("First");
+        await repository.SaveAsync(workbook, "first", CancellationToken.None);
+        workbook.Title = "Second";
+        var second = await repository.SaveAsync(workbook, "second", CancellationToken.None);
+        var stale = (await repository.LoadAsync(workbook.Id, CancellationToken.None))!;
+        await File.WriteAllTextAsync(second.CurrentPath, "{corrupt", CancellationToken.None);
+        var recovered = (await repository.LoadAsync(workbook.Id, CancellationToken.None))!;
+        recovered.Title = "Recovered";
+        await repository.SaveAsync(recovered, "recover", CancellationToken.None);
+        Assert.Equal(stale.Version, recovered.Version);
+        Assert.NotEqual(stale.RevisionId, recovered.RevisionId);
+        stale.Title = "Stale overwrite";
+        await Assert.ThrowsAsync<DataWorkbookRevisionConflictException>(() => repository.SaveAsync(stale, "stale", CancellationToken.None));
+        Assert.Equal("Recovered", (await repository.LoadAsync(workbook.Id, CancellationToken.None))!.Title);
+    }
+
+    [Fact]
+    public async Task Failed_atomic_publication_does_not_increment_caller_revision_or_replace_old_file()
+    {
+        var repository = new DataWorkbookRepository(_paths);
+        var workbook = DataWorkbook.Create("Original");
+        var initial = await repository.SaveAsync(workbook, "create", CancellationToken.None);
+        var bytes = await File.ReadAllBytesAsync(initial.CurrentPath, CancellationToken.None);
+        var before = workbook.UpdatedAt;
+        Directory.CreateDirectory(initial.BackupPath); // Deterministic publication failure after candidate verification.
+        workbook.Title = "Unsaved change";
+        var failure = await Record.ExceptionAsync(() => repository.SaveAsync(workbook, "must not commit", CancellationToken.None));
+        Assert.True(failure is IOException or UnauthorizedAccessException);
+        Assert.Equal(1, workbook.Version);
+        Assert.Equal(before, workbook.UpdatedAt);
+        Assert.Equal("create", workbook.Metadata["lastSaveReason"]);
+        Assert.Equal(bytes, await File.ReadAllBytesAsync(initial.CurrentPath, CancellationToken.None));
+        Assert.Empty(Directory.EnumerateFiles(Path.GetDirectoryName(initial.CurrentPath)!, "current-*.tmp"));
     }
 
     [Fact]

@@ -7,6 +7,8 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PlatformTarget">
   <PropertyGroup>
     <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <!-- Limit this host restore only; never retarget referenced compiler/build tools. -->
+    <TargetFrameworks Condition="'$(HavenLinuxPublish)' == 'true'">net10.0</TargetFrameworks>
     <Platforms>x64</Platforms>
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>
@@ -26,15 +28,33 @@
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../Forms/CUI/HavenOS.Forms.csproj" />
+    <ProjectReference Include="../../../Games/CUI/HavenOS.Games.csproj" />
+    <ProjectReference Include="../../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../../Terminal/NativeUI/HavenOS.Terminal.NativeUI.csproj" />
+    <ProjectReference Include="../../../Sites/HavenOS.Sites.csproj" />
+    <ProjectReference Include="../../../Picture/Core/HavenOS.Images.Core.csproj" />
+    <ProjectReference Include="../../../Canvas/HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../../Canvas/NativeUI/HavenOS.Canvas.NativeUI.csproj" />
+    <EmbeddedResource Include="Resources/Cui/*.cui" LogicalName="Haven.Desktop.Resources.Cui.%(Filename)%(Extension)" />
     <AssemblyMetadata Include="9to1.WindowsAppId" Value="$(ProductWindowsAppId)" />
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
     <ProjectReference Include="..\Haven.Core\Haven.Core.csproj" />
+    <ProjectReference Include="../../../Spaces/HavenOS.Spaces.csproj" />
+    <ProjectReference Include="../../../Files/CUI/HavenOS.Files.CUI.csproj" />
+    <ProjectReference Include="../../../Wave/HavenOS.Wave.csproj" />
+    <ProjectReference Include="../../../Motion/HavenOS.Motion.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/AI/NineToOne.Cui.AI.csproj" />
+    <ProjectReference Include="../../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
     <ProjectReference Include="..\Haven.Application\Haven.Application.csproj" />
     <ProjectReference Include="..\Haven.Infrastructure\Haven.Infrastructure.csproj" />
     <ProjectReference Include="..\Haven.Browser\Haven.Browser.csproj" />
     <!-- During Phase 2 this desktop project is the Avalonia backend/host for platform-neutral Haven.UI. -->
     <ProjectReference Include="..\Haven.UI\Haven.UI.csproj" />
     <!-- Legacy Haven.Automations project retired; scheduled Tasks live in Haven.Application. -->
+    <PackageReference Include="ScottPlot.Avalonia" />
+    <EmbeddedResource Include="ThirdParty/ScottPlot/**/*" />
+    <Content Include="ThirdParty/ScottPlot/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
@@ -66,5 +86,13 @@
     <Compile Update="Views\Pages\Home\NewDashboardPage.axaml.cs">
       <DependentUpon>NewDashboardPage.axaml</DependentUpon>
     </Compile>
+  </ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Resources/emoji-test-17.0.txt" LogicalName="Haven.Desktop.Resources.emoji-test-17.0.txt" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <Using Include="HavenOS.Files.NativeHost" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Browse/HavenOS.Apps.Browse.csproj" />
   </ItemGroup>
 </Project>

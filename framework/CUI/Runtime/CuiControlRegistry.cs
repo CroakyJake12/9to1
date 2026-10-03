@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using CakeOS.Cui.Language;
 using Avalonia.Layout;
 using System.Collections.Frozen;
 using CakeOS.Cui;
@@ -311,6 +312,9 @@ public sealed class CuiControlRegistry
                 "Audio" or "Video" or "Object" => common.ToFrozenSet(StringComparer.OrdinalIgnoreCase),
                 _ => legacy,
             };
+            properties = properties.Where(property =>
+                (property != "ItemsSource" || name is "ComboBox" or "ListBox" or "ItemsControl" or "TreeView" or "TabControl") &&
+                (property != "SelectedIndex" || name is "ComboBox" or "ListBox" or "TabControl")).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
             result[name] = new CuiRuntimeElementDescriptor(
                 name, aliases.ToFrozenSet(StringComparer.Ordinal), properties, specialized);
         }
@@ -319,10 +323,10 @@ public sealed class CuiControlRegistry
 
     private static IEnumerable<string> BuiltInPropertyNames() =>
     [
-        "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Padding",
+        "Panel", "ItemRow", "ItemColumn", "ItemRowSpan", "ItemColumnSpan", "Spacing", "Type", "Width", "Height", "MinWidth", "MinHeight", "MaxWidth", "MaxHeight", "Margin", "Padding",
         "Background", "Foreground", "Color", "BorderColor", "BorderWidth", "CornerRadius", "Opacity", "Active",
         "Hidden", "IsVisible", "IsEnabled", "Focusable", "TabIndex", "AccessibleName", "AccessibleDescription",
-        "Role", "Text", "Content", "Orientation", "HorizontalScrolling", "VerticalScrolling",
+        "Role", "Text", "Content", "ItemsSource", "SelectedIndex", "Orientation", "HorizontalScrolling", "VerticalScrolling",
         "Rotate", "Scale", "ScaleX", "ScaleY", "Skew", "SkewX", "SkewY", "Translate", "TranslateX", "TranslateY",
         "Effect", "Shadow", "Clip", "Cursor", "TextAlignment", "VerticalTextAlignment", "IsHitTestVisible",
         "BorderBrush", "BorderThickness", "Value", "Checked", "IsChecked", "ColumnDefinitions", "RowDefinitions",
@@ -336,6 +340,10 @@ public sealed class CuiControlRegistry
     {
         var entries = new (string Name, string LanguageType, Type RuntimeType, bool Writable)[]
         {
+            ("Panel", "symbol", typeof(string), false),
+            ("ItemRow", "integer", typeof(int), true), ("ItemColumn", "integer", typeof(int), true),
+            ("ItemRowSpan", "integer", typeof(int), true), ("ItemColumnSpan", "integer", typeof(int), true),
+            ("Spacing", "length", typeof(double), true),
             ("Type", "symbol", typeof(string), false),
             ("Width", "length", typeof(double), true), ("Height", "length", typeof(double), true),
             ("MinWidth", "length", typeof(double), true), ("MinHeight", "length", typeof(double), true),
@@ -352,6 +360,7 @@ public sealed class CuiControlRegistry
             ("TabIndex", "integer", typeof(int), true), ("AccessibleName", "text", typeof(string), true),
             ("AccessibleDescription", "text", typeof(string), true), ("Role", "symbol", typeof(string), true),
             ("Text", "text", typeof(string), true), ("Content", "content", typeof(object), true),
+            ("ItemsSource", "collection", typeof(System.Collections.IEnumerable), true), ("SelectedIndex", "integer", typeof(int), true),
             ("Value", "value", typeof(object), true), ("Checked", "boolean", typeof(bool), true),
             ("Orientation", "symbol", typeof(Orientation), true),
             ("ColumnDefinitions", "grid-definitions", typeof(Avalonia.Controls.ColumnDefinitions), true),

@@ -36,6 +36,9 @@ REQUIRED = {
     "Wine": {"wine"},
     "WinBoat": {"winboat"},
     "Files": {"files"},
+    "Connect": {"element-web"},
+    "Sites": {"cake-plugin"},
+    "Launcher": {"lawnchair"},
 }
 
 
@@ -69,7 +72,22 @@ def failures(local_only=False):
         if not path.startswith(owner + "/Source/"):
             errors.append(f"{app}/{donor}: source must be inside its owning Source/ tree")
             continue
-        source = ROOT / path
+        source_path = entry.get("sharedSourcePath", path)
+        if source_path != path:
+            binding_file = ROOT / path / "source.binding.json"
+            try:
+                binding = json.loads(binding_file.read_text(encoding="utf-8"))
+                if binding != {"schemaVersion": 1, "donor": donor, "canonicalSourcePath": source_path,
+                               "commit": record["commit"], "sourceRepository": record.get("sourceRepository", record.get("fork", record["repository"]))}:
+                    errors.append(f"{app}/{donor}: shared source binding disagrees with canonical registry")
+            except (OSError, ValueError):
+                errors.append(f"{app}/{donor}: missing/corrupt portable shared source binding")
+            if not local_only and (not git("ls-files", "--", str(binding_file.relative_to(ROOT))) or not git("show", "HEAD:" + str(binding_file.relative_to(ROOT)))):
+                errors.append(f"{app}/{donor}: portable shared binding not committed for fresh checkout")
+            if not any(b["path"] == source_path and b["donor"] == donor and not b.get("sharedSourcePath") for b in bindings):
+                errors.append(f"{app}/{donor}: shared source has no registered primary donor binding")
+                continue
+        source = ROOT / source_path
         if not source.is_dir() or not source.resolve().is_relative_to(ROOT.resolve()):
             errors.append(f"{app}/{donor}: no app-local source tree at {path}")
             continue
@@ -88,19 +106,20 @@ def failures(local_only=False):
             if git("diff", "--name-only", "--", path):
                 errors.append("Files: working source differs from the pinned imported snapshot")
         else:
-            if not record.get("repository", "").startswith("https://") or not record.get("fork", "").startswith("https://github.com/CroakyJake12/"):
-                errors.append(f"{app}/{donor}: missing canonical upstream or controlled fork")
-            if record.get("forkCommit") != commit:
+            source_repository = record.get("sourceRepository", record.get("fork", record.get("repository", "")))
+            if not record.get("repository", "").startswith("https://") or not source_repository.startswith("https://"):
+                errors.append(f"{app}/{donor}: missing canonical upstream or selected source provenance")
+            if record.get("fork") and record.get("forkCommit") != commit:
                 errors.append(f"{app}/{donor}: fork and upstream revisions disagree")
-            if paths_in_modules.get(path) != record.get("fork"):
+            if paths_in_modules.get(source_path) != source_repository:
                 errors.append(f"{app}/{donor}: .gitmodules URL/path disagrees with donor record")
             if git("rev-parse", "HEAD", cwd=source) != commit:
                 errors.append(f"{app}/{donor}: materialised source HEAD differs from pinned revision")
             if git("status", "--porcelain", cwd=source):
                 errors.append(f"{app}/{donor}: upstream source has unrecorded modifications")
             if not local_only:
-                stage = git("ls-files", "--stage", "--", path)
-                committed = git("ls-tree", "HEAD", "--", path)
+                stage = git("ls-files", "--stage", "--", source_path)
+                committed = git("ls-tree", "HEAD", "--", source_path)
                 if not stage or not stage.startswith("160000 ") or commit not in stage:
                     errors.append(f"{app}/{donor}: no matching gitlink in index (recursive checkout cannot materialise source)")
                 if not committed or not committed.startswith("160000 ") or commit not in committed:

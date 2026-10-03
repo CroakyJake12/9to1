@@ -36,6 +36,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Materialize pinned UI source dependencies
+        shell: bash
+        run: bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
+
       - name: Install .NET 10 SDK
         uses: actions/setup-dotnet@v4
         with:

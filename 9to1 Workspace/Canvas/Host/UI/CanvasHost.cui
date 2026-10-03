@@ -1,0 +1,24 @@
+<Cui id="9to1.Canvas.NativeHost" version="1">
+  <Grid id="canvas-native-host" rows="Auto,Auto,*,Auto" columns="2*,*" accessible-name="Canvas">
+    <WrapPanel orientation="Horizontal" grid-column-span="2">
+      <Button content="Refresh Canvases" action="canvas.host.refresh" is-enabled="{Binding CanNavigate}" />
+      <Button content="Set up Canvases" action="canvas.host.setup" is-enabled="{Binding CanSetup}" />
+      <Button content="Review Files ownership" action="canvas.host.reviewOwnership" is-enabled="{Binding CanReviewWorkspace}" />
+      <Button content="Create canvas" action="canvas.host.create" is-enabled="{Binding CanWrite}" />
+      <Button content="Finish approved request" action="canvas.host.finish" is-enabled="{Binding CanFinish}" />
+    </WrapPanel>
+    <StackPanel grid-row="1" grid-column-span="2" spacing="6">
+      <StackPanel orientation="Horizontal" spacing="8">
+        <Button content="Previous document" action="canvas.host.previous" is-enabled="{Binding CanPrevious}" />
+        <TextBlock text="{Binding SelectedName}" />
+        <Button content="Next document" action="canvas.host.next" is-enabled="{Binding CanNext}" />
+        <Button content="Open selected" action="canvas.host.open" is-enabled="{Binding CanOpen}" />
+        <Button content="Next page" action="canvas.host.page" is-enabled="{Binding CanPage}" />
+      </StackPanel>
+      <StackPanel orientation="Horizontal" spacing="8"><TextBlock text="New canvas name" /><TextBox id="canvas-host-new-name" text="{Binding NewName, Mode=TwoWay}" is-enabled="{Binding CanWrite}" accessible-name="New canvas name" /></StackPanel>
+    </StackPanel>
+    <CanvasHostContent id="canvas-native-content" grid-row="2" accessible-name="Canvas document and requests" />
+    <CanvasHostApprovals id="canvas-home-approvals" grid-row="2" grid-column="1" accessible-name="Home approvals" />
+    <TextBlock grid-row="3" grid-column-span="2" text="{Binding Status}" text-wrapping="Wrap" />
+  </Grid>
+</Cui>

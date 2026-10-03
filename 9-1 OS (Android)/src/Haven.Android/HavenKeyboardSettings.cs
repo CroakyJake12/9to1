@@ -72,13 +72,12 @@ internal sealed class HavenKeyboardSettings
     }
 
     /// <summary>
-    /// Reserved consent flag for future cloud-backed executors. It is irrelevant
-    /// while <see cref="AiEnabled"/> is false and while only local/model-router
-    /// executors are wired; the AI controller documents how it must gate clouds.
+    /// Explicit consent to disclose non-secure field text during a tapped AI
+    /// action. Canonical route/global privacy may narrow this further. Default: false.
     /// </summary>
     internal bool CloudAiAllowed
     {
-        get => Preferences.GetBoolean(KeyCloudAiAllowed, true);
+        get => Preferences.GetBoolean(KeyCloudAiAllowed, false);
         set => Preferences.Edit()?.PutBoolean(KeyCloudAiAllowed, value)?.Apply();
     }
 

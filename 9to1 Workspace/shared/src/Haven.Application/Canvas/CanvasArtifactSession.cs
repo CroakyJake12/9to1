@@ -1,3 +1,4 @@
+using Haven.Application.Canvas;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -92,11 +93,11 @@ public sealed record CanvasModeConversionPreview(
 /// persist committed snapshots through Files; this class owns document rules,
 /// semantic history, operation idempotency, and meaningful change events.
 /// </summary>
-public sealed class CanvasArtifactSession
+public sealed partial class CanvasArtifactSession
 {
+    private bool _applyingMutation;
     public const string CanonicalApiNamespace = "9to1.Canvas";
     public const int MaximumPageSize = 500;
-    private const int MaximumHistoryEntries = 128;
     private const int MaximumIdempotencyEntries = 512;
     private const int MaximumEventEntries = 2048;
 
@@ -109,12 +110,20 @@ public sealed class CanvasArtifactSession
     private readonly List<CanvasChangeEvent> _events = [];
     private CanvasArtifact _artifact;
     private long _eventCursor;
+    private long _discardedEarlierHistoryEntries;
 
     public CanvasArtifactSession(CanvasArtifact artifact)
     {
         ArgumentNullException.ThrowIfNull(artifact);
         var bytes = CanvasArtifactCodec.Serialize(artifact);
         _artifact = CanvasArtifactCodec.Deserialize(bytes);
+        if (_artifact.SemanticHistory is { } history)
+        {
+            _undoHistory.AddRange(history.Undo.Select(frame => Convert.FromBase64String(frame.PayloadBase64)));
+            _redoHistory.AddRange(history.Redo.Select(frame => Convert.FromBase64String(frame.PayloadBase64)));
+            _discardedEarlierHistoryEntries = history.DiscardedEarlierEntries;
+            _artifact.SemanticHistory = null;
+        }
     }
 
     public Guid ArtifactId
@@ -129,7 +138,44 @@ public sealed class CanvasArtifactSession
 
     public CanvasArtifact GetArtifactSnapshot()
     {
-        lock (_gate) return Clone(_artifact);
+        lock (_gate)
+        {
+            var snapshot = Clone(_artifact);
+            snapshot.SemanticHistory = CaptureHistory();
+            return snapshot;
+        }
+    }
+
+    private ProductivitySnapshotHistory CaptureHistory()
+    {
+        ProductivityHistorySnapshot Frame(byte[] bytes)
+        {
+            var snapshot = CanvasArtifactCodec.Deserialize(bytes);
+            return ProductivitySnapshotHistory.Capture(bytes, snapshot.RevisionId.ToString("D"));
+        }
+        return new ProductivitySnapshotHistory
+        {
+            OwnerFormat = CanvasArtifactFile.CanonicalFormat,
+            ArtifactId = _artifact.ArtifactId,
+            CurrentRevision = _artifact.RevisionId.ToString("D"),
+            CurrentSnapshotHash = Convert.ToHexString(SHA256.HashData(CanvasArtifactCodec.SerializeSnapshot(_artifact))),
+            Undo = Array.AsReadOnly(_undoHistory.Select(Frame).ToArray()),
+            Redo = Array.AsReadOnly(_redoHistory.Select(Frame).ToArray()),
+            DiscardedEarlierEntries = _discardedEarlierHistoryEntries
+        };
+    }
+
+    private void TrimHistory()
+    {
+        long bytes = _undoHistory.Sum(frame => (long)frame.Length) + _redoHistory.Sum(frame => (long)frame.Length);
+        while (_undoHistory.Count + _redoHistory.Count > ProductivitySnapshotHistory.MaximumEntries ||
+            bytes > ProductivitySnapshotHistory.MaximumPayloadBytes)
+        {
+            var source = _undoHistory.Count > 0 ? _undoHistory : _redoHistory;
+            bytes -= source[0].Length;
+            source.RemoveAt(0);
+            if (_discardedEarlierHistoryEntries < long.MaxValue) _discardedEarlierHistoryEntries++;
+        }
     }
 
     public CanvasApiResult<CanvasPageListResult> ListPages(int offset = 0, int pageSize = 100)
@@ -401,8 +447,9 @@ public sealed class CanvasArtifactSession
     public CanvasApiResult<CanvasMutationResult> AddStructuredStroke(
         CanvasMutationRequest request,
         Guid pageId,
-        CanvasInkStroke stroke) =>
-        Mutate(request, "Ink.CreateFromSamples", stroke?.StrokeId, stroke, artifact =>
+        CanvasInkStroke stroke,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings = null) =>
+        Mutate(request, "Ink.CreateFromSamples", stroke?.StrokeId, new { pageId, stroke }, artifact =>
         {
             var pageIndex = artifact.Pages.FindIndex(page => page.PageId == pageId);
             if (pageIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
@@ -414,21 +461,115 @@ public sealed class CanvasArtifactSession
                 return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink cannot be added to a locked layer.");
             if (page.Strokes.Any(item => item.StrokeId == stroke.StrokeId))
                 return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Stroke ID already exists on the page.");
-            var strokes = page.Strokes.Append(CloneStroke(stroke)).ToList();
-            artifact.Pages[pageIndex] = page with
+            CanvasInkStroke clonedStroke;
+            try { clonedStroke = CloneStroke(stroke); }
+            catch (CanvasArtifactFormatException)
+            { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Structured stroke failed semantic validation."); }
+            var candidate = CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.SerializeSnapshot(artifact));
+            if (clonedStroke.PathGeometry is not null) candidate.SchemaVersion = 2;
+            candidate.Pages[pageIndex] = page with
             {
-                Strokes = strokes,
-                StrokeOrder = page.StrokeOrder.Append(stroke.StrokeId).ToList(),
+                Strokes = page.Strokes.Append(clonedStroke).ToList(),
+                StrokeOrder = page.StrokeOrder.Append(clonedStroke.StrokeId).ToList(),
                 RevisionId = Guid.NewGuid()
             };
+            try { CanvasArtifactCodec.SerializeSnapshot(candidate); }
+            catch (Exception exception) when (exception is CanvasArtifactFormatException or JsonException)
+            { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "The complete stroke candidate failed validation before donor preparation."); }
+            var settings = captureAccompanyingDocumentSettings?.Invoke();
+            if (captureAccompanyingDocumentSettings is not null && settings is null)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Accompanying document settings are required.");
+            if (settings is not null)
+                candidate.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            CanvasArtifactCodec.SerializeSnapshot(candidate);
+            artifact.SchemaVersion = candidate.SchemaVersion;
+            artifact.Pages[pageIndex] = candidate.Pages[pageIndex];
+            artifact.DocumentSettings = candidate.DocumentSettings;
             return MutationChanged(pageId, stroke.StrokeId);
         });
 
-    public CanvasApiResult<CanvasMutationResult> Undo(CanvasMutationRequest request) =>
-        MutateHistory(request, "History.Undo", undo: true);
+    public CanvasApiResult<CanvasMutationResult> DeleteStructuredStroke(
+        CanvasMutationRequest request, Guid pageId, Guid strokeId,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings = null) =>
+        MutateStructuredStroke(request, "Ink.Delete", pageId, strokeId, null,
+            _ => null, captureAccompanyingDocumentSettings);
 
-    public CanvasApiResult<CanvasMutationResult> Redo(CanvasMutationRequest request) =>
-        MutateHistory(request, "History.Redo", undo: false);
+    public CanvasApiResult<CanvasMutationResult> TranslateStructuredStroke(
+        CanvasMutationRequest request, Guid pageId, Guid strokeId, double deltaX, double deltaY,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings = null) =>
+        MutateStructuredStroke(request, "Ink.Translate", pageId, strokeId, new { deltaX, deltaY },
+            stroke => stroke with
+            {
+                RevisionId = Guid.NewGuid(),
+                Samples = stroke.Samples.Select(sample => sample with
+                    { X = sample.X + deltaX, Y = sample.Y + deltaY }).ToList()
+            }, captureAccompanyingDocumentSettings,
+            double.IsFinite(deltaX) && double.IsFinite(deltaY), deltaX == 0 && deltaY == 0);
+
+    private CanvasApiResult<CanvasMutationResult> MutateStructuredStroke(
+        CanvasMutationRequest request, string action, Guid pageId, Guid strokeId, object? input,
+        Func<CanvasInkStroke, CanvasInkStroke?> edit,
+        Func<CanvasDocumentSettings>? captureAccompanyingDocumentSettings,
+        bool validInput = true, bool noChange = false) =>
+        Mutate(request, action, strokeId, new { pageId, input = validInput ? input : null }, artifact =>
+        {
+            if (!validInput)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Stroke translation must be finite.");
+            var pageIndex = artifact.Pages.FindIndex(page => page.PageId == pageId);
+            if (pageIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas page was not found.");
+            var page = artifact.Pages[pageIndex];
+            var strokeIndex = page.Strokes.FindIndex(stroke => stroke.StrokeId == strokeId);
+            if (strokeIndex < 0) return MutationFailure(CanvasApiErrorCode.NotFound, "Canvas stroke was not found.");
+            var stroke = page.Strokes[strokeIndex];
+            if (page.Layers.First(layer => layer.LayerId == stroke.LayerId).IsLocked)
+                return MutationFailure(CanvasApiErrorCode.PermissionDenied, "Ink on a locked layer cannot be edited.");
+            if (noChange) return MutationNoChange();
+            if (action == "Ink.Translate" && stroke.PathGeometry is not null)
+                return MutationFailure(CanvasApiErrorCode.UnsupportedFeature, "Authoritative donor paths require an exact owner path replacement; original Samples are provenance.");
+            CanvasInkStroke? replacement;
+            try
+            {
+                replacement = edit(stroke);
+                if (replacement is not null) replacement = CloneStroke(replacement);
+            }
+            catch (CanvasArtifactFormatException)
+            { return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Edited stroke failed semantic validation."); }
+            // No donor callback before revision, replay, lock and sample checks.
+            // The returned snapshot shares this mutation's revision/history boundary.
+            var settings = captureAccompanyingDocumentSettings?.Invoke();
+            if (captureAccompanyingDocumentSettings is not null && settings is null)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Accompanying document settings are required.");
+            var capturedSettings = settings is null ? null
+                : JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            var strokes = page.Strokes.ToList();
+            if (replacement is null) strokes.RemoveAt(strokeIndex);
+            else strokes[strokeIndex] = replacement;
+            artifact.Pages[pageIndex] = page with
+            {
+                Strokes = strokes,
+                StrokeOrder = replacement is null ? page.StrokeOrder.Where(id => id != strokeId).ToList() : page.StrokeOrder,
+                RevisionId = Guid.NewGuid()
+            };
+            if (capturedSettings is not null) artifact.DocumentSettings = capturedSettings;
+            return MutationChanged(pageId, strokeId);
+        });
+
+    public CanvasApiResult<CanvasMutationResult> UpdateDocumentSettings(CanvasMutationRequest request, CanvasDocumentSettings settings) =>
+        Mutate(request, "DocumentSettings.Update", _artifact.ArtifactId, settings, artifact =>
+        {
+            if (settings is null || settings.Properties is null)
+                return MutationFailure(CanvasApiErrorCode.InvalidArgument, "Document settings are required.");
+            artifact.DocumentSettings = JsonSerializer.Deserialize<CanvasDocumentSettings>(JsonSerializer.Serialize(settings))!;
+            return MutationChanged(artifact.ArtifactId);
+        });
+
+    /// <summary>Optional owning donor preparation runs against a detached proposed restored snapshot,
+    /// before canonical state/history changes. It conveys no permission and never runs on replay.</summary>
+    public CanvasApiResult<CanvasMutationResult> Undo(CanvasMutationRequest request, Action<CanvasArtifact>? prepareRestoredSnapshot = null) =>
+        MutateHistory(request, "History.Undo", undo: true, prepareRestoredSnapshot);
+
+    public CanvasApiResult<CanvasMutationResult> Redo(CanvasMutationRequest request, Action<CanvasArtifact>? prepareRestoredSnapshot = null) =>
+        MutateHistory(request, "History.Redo", undo: false, prepareRestoredSnapshot);
 
     public CanvasApiResult<CanvasModeConversionPreview> PreviewModeConversion(
         CanvasDocumentMode targetMode,
@@ -456,7 +597,7 @@ public sealed class CanvasArtifactSession
 
             var warnings = crossingObjects.Count + crossingStrokes.Count == 0
                 ? Array.Empty<string>()
-                : [$"{crossingObjects.Count} object(s) and {crossingStrokes.Count} stroke(s) extend beyond the proposed page bounds; their stored geometry will be preserved."];
+                : [$"{crossingObjects.Count} object(s) and {crossingStrokes.Count} stroke(s) may extend beyond the proposed page bounds (conservative geometry check); their stored geometry will be preserved."];
             return CanvasApiResult<CanvasModeConversionPreview>.Success(new CanvasModeConversionPreview(
                 Guid.NewGuid(),
                 _artifact.ArtifactId,
@@ -506,9 +647,17 @@ public sealed class CanvasArtifactSession
         {
             if (afterCursor < 0 || pageSize is < 1 or > MaximumPageSize)
                 return Failure<CanvasChangePage>(CanvasApiErrorCode.InvalidArgument, "Events.GetChanges", "Change cursor or page size is invalid.");
-            var matching = _events.Where((_, index) => index + 1 > afterCursor).Take(pageSize).ToArray();
-            var nextCursor = matching.Length == 0 ? afterCursor : _events.IndexOf(matching[^1]) + 1L;
-            var hasMore = _events.Any((_, index) => index + 1 > nextCursor);
+            // Retention may remove early entries, so cursors refer to the lifetime sequence,
+            // never the current list index. An expired cursor requires a fresh snapshot.
+            var firstRetainedCursor = _eventCursor - _events.Count;
+            if (afterCursor < firstRetainedCursor)
+                return Failure<CanvasChangePage>(CanvasApiErrorCode.RevisionConflict, "Events.GetChanges", "Change cursor expired; refresh the Canvas snapshot.", canRetry: true);
+            if (afterCursor > _eventCursor)
+                return Failure<CanvasChangePage>(CanvasApiErrorCode.InvalidArgument, "Events.GetChanges", "Change cursor is ahead of this Canvas session.");
+            var offset = checked((int)(afterCursor - firstRetainedCursor));
+            var matching = _events.Skip(offset).Take(pageSize).ToArray();
+            var nextCursor = afterCursor + matching.Length;
+            var hasMore = nextCursor < _eventCursor;
             return CanvasApiResult<CanvasChangePage>.Success(new CanvasChangePage(matching, nextCursor, hasMore));
         }
     }
@@ -524,6 +673,7 @@ public sealed class CanvasArtifactSession
         CanvasApiResult<CanvasMutationResult> result;
         lock (_gate)
         {
+            if (_applyingMutation) return Failure<CanvasMutationResult>(CanvasApiErrorCode.InvalidArgument, action, "A preparation callback cannot mutate the same canonical session.", targetId);
             var requestError = ValidateRequest(request, action, targetId);
             if (requestError is not null) return CanvasApiResult<CanvasMutationResult>.Failure(requestError);
             var fingerprint = Fingerprint(action, targetId, request.ActorContext.CallerId, input);
@@ -536,8 +686,19 @@ public sealed class CanvasArtifactSession
             if (request.BaseRevisionId != _artifact.RevisionId)
                 return Failure<CanvasMutationResult>(CanvasApiErrorCode.RevisionConflict, action, "Canvas revision changed before the mutation was applied.", targetId, canRetry: true);
 
-            var before = CanvasArtifactCodec.Serialize(_artifact);
-            var plan = apply(_artifact);
+            var before = CanvasArtifactCodec.SerializeSnapshot(_artifact);
+            MutationPlan plan;
+            try
+            {
+                _applyingMutation = true;
+                plan = apply(_artifact);
+            }
+            catch
+            {
+                _artifact = CanvasArtifactCodec.Deserialize(before);
+                throw;
+            }
+            finally { _applyingMutation = false; }
             if (plan.Error is not null)
             {
                 _artifact = CanvasArtifactCodec.Deserialize(before);
@@ -564,8 +725,8 @@ public sealed class CanvasArtifactSession
             }
 
             _undoHistory.Add(before);
-            if (_undoHistory.Count > MaximumHistoryEntries) _undoHistory.RemoveAt(0);
             _redoHistory.Clear();
+            TrimHistory();
             var mutation = new CanvasMutationResult(_artifact.RevisionId, plan.ChangedIds.Distinct().ToArray(), plan.Warnings);
             CacheOperation(request.OperationId, fingerprint, mutation);
             change = AddEvent(request, action, mutation);
@@ -574,11 +735,12 @@ public sealed class CanvasArtifactSession
         return result;
     }
 
-    private CanvasApiResult<CanvasMutationResult> MutateHistory(CanvasMutationRequest request, string action, bool undo)
+    private CanvasApiResult<CanvasMutationResult> MutateHistory(CanvasMutationRequest request, string action, bool undo, Action<CanvasArtifact>? prepareRestoredSnapshot)
     {
         CanvasApiResult<CanvasMutationResult> result;
         lock (_gate)
         {
+            if (_applyingMutation) return Failure<CanvasMutationResult>(CanvasApiErrorCode.InvalidArgument, action, "A preparation callback cannot mutate the same canonical session.", _artifact.ArtifactId);
             var requestError = ValidateRequest(request, action, _artifact.ArtifactId);
             if (requestError is not null) return CanvasApiResult<CanvasMutationResult>.Failure(requestError);
             var fingerprint = Fingerprint(action, _artifact.ArtifactId, request.ActorContext.CallerId, null);
@@ -596,11 +758,18 @@ public sealed class CanvasArtifactSession
             if (source.Count == 0)
                 return Failure<CanvasMutationResult>(CanvasApiErrorCode.HistoryUnavailable, action, undo ? "No Canvas change can be undone." : "No Canvas change can be redone.", _artifact.ArtifactId);
 
-            destination.Add(CanvasArtifactCodec.Serialize(_artifact));
-            var restoredBytes = source[^1];
+            var restored = CanvasArtifactCodec.Deserialize(source[^1]);
+            restored.RevisionId = Guid.NewGuid();
+            try
+            {
+                _applyingMutation = true;
+                prepareRestoredSnapshot?.Invoke(Clone(restored));
+            }
+            finally { _applyingMutation = false; }
+            destination.Add(CanvasArtifactCodec.SerializeSnapshot(_artifact));
             source.RemoveAt(source.Count - 1);
-            _artifact = CanvasArtifactCodec.Deserialize(restoredBytes);
-            _artifact.RevisionId = Guid.NewGuid();
+            TrimHistory();
+            _artifact = restored;
             var changedIds = EnumerateEntityIds(_artifact).Distinct().ToArray();
             var mutation = new CanvasMutationResult(_artifact.RevisionId, changedIds, []);
             CacheOperation(request.OperationId, fingerprint, mutation);
@@ -648,7 +817,7 @@ public sealed class CanvasArtifactSession
 
     private static CanvasPage ClonePage(CanvasPage page)
     {
-        var artifact = CanvasArtifact.Create();
+        var artifact = CanvasArtifact.Create(mode: page.Bounds is null ? CanvasDocumentMode.Infinite : CanvasDocumentMode.Paged);
         artifact.PageOrder = [page.PageId];
         artifact.Pages = [page];
         return CanvasArtifactCodec.Deserialize(CanvasArtifactCodec.Serialize(artifact)).Pages[0];
@@ -656,7 +825,8 @@ public sealed class CanvasArtifactSession
 
     private static CanvasInkStroke CloneStroke(CanvasInkStroke stroke)
     {
-        var page = CanvasArtifact.Create().Pages[0] with { Strokes = [stroke], StrokeOrder = [stroke.StrokeId] };
+        var layer = new CanvasLayer { LayerId = stroke.LayerId };
+        var page = new CanvasPage { Layers = [layer], LayerOrder = [layer.LayerId], Strokes = [stroke], StrokeOrder = [stroke.StrokeId] };
         var artifact = CanvasArtifact.Create();
         artifact.Pages = [page];
         artifact.PageOrder = [page.PageId];
@@ -680,6 +850,27 @@ public sealed class CanvasArtifactSession
 
     private static bool StrokeInsidePage(CanvasInkStroke stroke, CanvasPageBounds bounds)
     {
+        if (stroke.PathGeometry is { } path)
+        {
+            // Affine-transformed Bezier control hull is conservative centerline containment,
+            // not an exact painted brush/hitbox claim. Samples never render a fragment polyline.
+            var radians = (stroke.Transform.RotationDegrees % 360) * Math.PI / 180;
+            var cos = Math.Cos(radians); var sin = Math.Sin(radians);
+            bool Inside(double x, double y)
+            {
+                var sx = x * stroke.Transform.ScaleX; var sy = y * stroke.Transform.ScaleY;
+                var tx = sx * cos - sy * sin + stroke.Transform.TranslateX;
+                var ty = sx * sin + sy * cos + stroke.Transform.TranslateY;
+                return double.IsFinite(tx) && double.IsFinite(ty) && tx >= bounds.X && tx <= bounds.X + bounds.Width
+                    && ty >= bounds.Y && ty <= bounds.Y + bounds.Height;
+            }
+            if (!Inside(path.Start.X, path.Start.Y)) return false;
+            foreach (var segment in path.Segments)
+                if (!Inside(segment.End.X, segment.End.Y)
+                    || segment.Control1 is { } first && !Inside(first.X, first.Y)
+                    || segment.Control2 is { } second && !Inside(second.X, second.Y)) return false;
+            return true;
+        }
         if (stroke.Samples.Count == 0) return true;
         return stroke.Samples.All(sample => sample.X >= bounds.X && sample.X <= bounds.X + bounds.Width
             && sample.Y >= bounds.Y && sample.Y <= bounds.Y + bounds.Height);
@@ -716,5 +907,5 @@ public sealed class CanvasArtifactSession
 
     private sealed record MutationPlan(IReadOnlyList<Guid> ChangedIds, IReadOnlyList<string> Warnings, MutationError? Error);
     private sealed record MutationError(CanvasApiErrorCode Code, string Message, bool CanRetry, bool IsRecoverable = true);
-    private sealed record IdempotencyEntry(string Fingerprint, CanvasMutationResult Result);
+    private sealed record IdempotencyEntry(string Fingerprint, CanvasMutationResult Result, int? StructuredStrokeOrderCount = null);
 }

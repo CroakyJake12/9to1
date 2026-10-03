@@ -120,7 +120,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     private GoPage? _goPage;
     private NewChatPage? _newChatPage;
     private PlanPageViewModel? _planPage;
-    private TerminalPage? _terminalPage;
+    private HomeTerminalCuiPage? _terminalPage;
     private Haven.Desktop.Views.Pages.Mail.MailPage? _mailPage;
     private PlayPage? _playPage;
     private readonly DispatcherTimer _reminderTimer;
@@ -218,7 +218,8 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         IModeRegistry modeRegistry,
         IModeUsageRepository modeUsage,
         IPinRepository pins,
-        AgentTaskRuntimeService? agentRuntime = null)
+        AgentTaskRuntimeService? agentRuntime = null,
+        SpaceRegistry? spacesRegistry = null)
     {
         _eventBus = bus;
         _bus = bus;
@@ -272,6 +273,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         _dashboard = dashboard;
         _dashboardLayout = dashboardLayout;
         _versionedSettings = versionedSettings;
+        _spaceRegistry = spacesRegistry ?? new SpaceRegistry(versionedSettings);
         _playSessions = playSessions;
         _dashboardProviders = dashboardProviders.Providers;
         _callCoordinator = callCoordinator;
@@ -463,6 +465,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (!SetProperty(ref _currentPage, value)) return;
             if (PageContent is not null)
                 PageContent.Content = value;
+            if (NativeOverlayLayer is not null) RefreshContextualAiBar(value);
             RaisePropertyChanged(nameof(IsChatVisible));
             RaisePropertyChanged(nameof(IsPageVisible));
             RaisePropertyChanged(nameof(IsBrowseMode));
@@ -666,6 +669,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         HavenSurface.Mail => "Haven Mail",
         HavenSurface.Maps => "Haven Maps",
         HavenSurface.Forms => "Haven Forms",
+        HavenSurface.Shelf => "Haven Shelf",
         _ => "Haven"
     };
 
@@ -854,37 +858,6 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         AddOrSelectTab("mail", "Mail", _mailPage, false, HavenSurface.Mail);
         ApplyShellVisualState();
     }
-    private void OpenTerminal(bool forceNewTab = false, string? initialDirectory = null)
-    {
-        var hub = Haven.Desktop.App.Services?.GetService(typeof(TerminalCommandActivityHub)) as TerminalCommandActivityHub;
-        var sessionFactory = Haven.Desktop.App.Services?.GetService(typeof(ITerminalSessionFactory)) as ITerminalSessionFactory;
-        if (hub is null || sessionFactory is null)
-        {
-            _notifications.Show("Terminal unavailable", "The Terminal session runtime is not available.", ToastKind.Warning, TimeSpan.FromSeconds(5));
-            return;
-        }
-
-        var terminalFactory = sessionFactory;
-
-        TerminalPage page;
-        string key;
-        if (forceNewTab)
-        {
-            page = new TerminalPage(terminalFactory, _preferences, hub, initialDirectory);
-            key = "terminal-" + Guid.NewGuid().ToString("N")[..8];
-        }
-        else
-        {
-            _terminalPage ??= new TerminalPage(terminalFactory, _preferences, hub, initialDirectory);
-            page = _terminalPage;
-            key = "terminal";
-        }
-
-        AddOrSelectTab(key, "Terminal", page, forceNewTab, HavenSurface.Terminal, forceNewTab);
-        ApplyShellVisualState();
-        page.FocusCommandLine();
-    }
-
     private async Task OpenDashboardAsync()
     {
         _newDashboardPage ??= CreateNewDashboardPage();
@@ -959,6 +932,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             _customTemplate,
             Haven.Desktop.App.Services?.GetService<IMessageAttachmentService>(),
             Haven.Desktop.App.Services?.GetService<IConversationProductionRepository>());
+        page.ConfigureSpaceMembership(CreateOwnedSpaceChatAsync, AssignOwnedSpaceAsync);
         page.ModelChanged += OnNewChatModelChanged;
         page.ConversationStateChanged += OnNewChatConversationStateChanged;
         page.AddActionSelected += OnNewChatAddActionSelected;
@@ -1368,6 +1342,32 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
         var page = new BrowserPage(_bus, _browser, _browserData, _ollama, _preferences,
             App.Services?.GetService<NotesReadAloudController>());
         AddOrSelectTab("browse", "Browse", page, true);
+        _ = MountOwnedBrowserToolsAsync(page);
+    }
+
+    private async Task MountOwnedBrowserToolsAsync(BrowserPage page)
+    {
+        try
+        {
+            var services = App.Services ?? throw new InvalidOperationException("Haven services are unavailable.");
+            var actors = services.GetRequiredService<IAuthenticatedResourceActorSource>();
+            // Canonical display origin is retained before discovery or queued owner work.
+            var originalActor = await actors.GetCurrentAsync(CancellationToken.None)
+                ?? throw new UnauthorizedAccessException("The original Home actor is unavailable.");
+            var documents = services.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>();
+            var owner = services.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedWebMcpBinding>();
+            if (IsDisposed || page.IsOwnedToolsClosed || !OpenTabs.Any(tab => ReferenceEquals(tab.Page, page))) return;
+            if (await actors.GetCurrentAsync(CancellationToken.None) != originalActor)
+                throw new UnauthorizedAccessException("The original Home actor changed before mounting page tools.");
+            if (IsDisposed || page.IsOwnedToolsClosed || !OpenTabs.Any(tab => ReferenceEquals(tab.Page, page))) return;
+            page.MountOwnedTools(new HavenOS.Apps.Browse.BrowseOwnedToolsScene(documents, owner, originalActor,
+                async update => await Dispatcher.UIThread.InvokeAsync(update),
+                requestID => ReviewHomeRequestAsync(requestID, CancellationToken.None)));
+        }
+        catch (Exception error)
+        {
+            if (!IsDisposed && !page.IsOwnedToolsClosed) page.ReportBrowserError(error);
+        }
     }
 
     private void OpenTraining()
@@ -1691,6 +1691,10 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
             if (openInNewTab) AddNewTab();
             OpenMaps();
         }
+        else if (route.Kind == HavenAppRouteKind.Shelf)
+        {
+            await OpenShelfLibraryAsync(CancellationToken.None);
+        }
         else if (route.Kind == HavenAppRouteKind.Forms)
         {
             if (openInNewTab) AddNewTab();
@@ -1803,6 +1807,9 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
                     break;
                 case HavenSurface.Maps:
                     OpenMaps();
+                    break;
+                case HavenSurface.Shelf:
+                    await OpenShelfLibraryAsync(CancellationToken.None);
                     break;
                 case HavenSurface.Forms:
                     OpenForms();
@@ -3671,6 +3678,7 @@ public sealed partial class MainView : UserControl, INotifyPropertyChanged, IDis
     {
         if (IsDisposed) return;
         IsDisposed = true;
+        _terminalLifetime.Cancel();
         _reminderTimer.Stop();
         StopAutomationScheduler();
         lock (_goSuggestionRefreshes)

@@ -1,0 +1,12 @@
+<Cui id="9to1.Picture.PngExport" version="1">
+  <StackPanel id="picture-png-export" spacing="12" accessible-name="Export a separate PNG file">
+    <TextBlock text="Export a new PNG" font-size="20" />
+    <TextBlock text="The PNG contains the first frame with your edits applied. Animation and source metadata are not included. The editable Picture and original source remain available." text-wrapping="Wrap" />
+    <TextBox id="picture-export-name" text="{Binding FileName, Mode=TwoWay}" is-enabled="{Binding CanEdit}" accessible-name="New PNG file name in Pictures" />
+    <CheckBox id="picture-export-flatten" is-checked="{Binding FlattenAcknowledged, Mode=TwoWay}" is-enabled="{Binding CanEdit}" content="I want a flattened copy of the first frame without source metadata" />
+    <Button id="picture-export-prepare" action="9to1.Picture.Export.Prepare" is-enabled="{Binding CanPrepare}" content="Prepare export" />
+    <TextBlock id="picture-export-preview" text="{Binding PreparedSummary}" text-wrapping="Wrap" accessible-name="Prepared export preview" />
+    <Button id="picture-export-approval" action="9to1.Picture.Export.RequestApproval" is-enabled="{Binding CanRequestApproval}" content="Review in Home" />
+    <TextBlock id="picture-export-status" text="{Binding Status}" text-wrapping="Wrap" accessible-name="Export status" />
+  </StackPanel>
+</Cui>

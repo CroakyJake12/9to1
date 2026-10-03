@@ -15,11 +15,22 @@ public sealed class AgentTaskRuntimeService(
     CapabilityRegistryService capabilityRegistry,
     ChatSessionService chat,
     IPermissionDecisionEngine permissionEngine,
-    FloatingActivityStateStore? activityStore = null)
+    FloatingActivityStateStore? activityStore = null) : IRecordedAgentInvocationSource
 {
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _activeRuns = new();
+    private readonly ConcurrentDictionary<Guid, (AgentRun Expected, AgentActivityObservation Observation)> _recordedObservations = new();
 
     public event Action<AgentRun>? RunChanged;
+
+    public async Task<RecordedAgentInvocationEvidence?> GetRecordedInvocationEvidenceAsync(Guid runId, CancellationToken cancellationToken = default)
+    {
+        if (!_recordedObservations.TryGetValue(runId, out var recorded)) return null;
+        var current = await runs.GetAsync(runId, cancellationToken).ConfigureAwait(false);
+        if (current is null || current != recorded.Expected || current.Status != AgentRunStatus.Completed || !recorded.Observation.ObservationComplete)
+            return null;
+        return new(runId, current.AgentId, recorded.Observation);
+    }
+
 
     public async Task<AgentRun> RunAsync(
         Guid agentId,
@@ -131,7 +142,7 @@ public sealed class AgentTaskRuntimeService(
                         run = run with
                         {
                             Result = output.ToString(),
-                            ActivityJson = JsonSerializer.Serialize(activity),
+                            ActivityJson = JsonSerializer.Serialize(AgentActivityObservation.Capture(run.Id, activity, streamCompleted: false)),
                             ProgressPercent = Math.Min(90, 10 + (activity.Count * 10))
                         };
                         await PersistAsync(run, CancellationToken.None).ConfigureAwait(false);
@@ -152,11 +163,19 @@ public sealed class AgentTaskRuntimeService(
             {
                 Status = AgentRunStatus.Completed,
                 Result = output.ToString().Trim(),
-                ActivityJson = JsonSerializer.Serialize(activity),
+                ActivityJson = JsonSerializer.Serialize(AgentActivityObservation.Capture(run.Id, activity, streamCompleted: true)),
                 CompletedAt = DateTimeOffset.UtcNow,
                 ProgressPercent = 100
             };
             await PersistAsync(run, CancellationToken.None).ConfigureAwait(false);
+            var completedObservation = AgentActivityObservation.Capture(run.Id, activity, streamCompleted: true);
+            if (completedObservation.ObservationComplete)
+            {
+                _recordedObservations[run.Id] = (run, completedObservation);
+                // Evicted or restarted receipts remain unavailable; persisted schema stamps cannot recreate them.
+                foreach (var older in _recordedObservations.OrderByDescending(item => item.Value.Expected.CompletedAt).Skip(256))
+                    _recordedObservations.TryRemove(older.Key, out _);
+            }
             return run;
         }
         catch (OperationCanceledException) when (linked.IsCancellationRequested)
@@ -165,7 +184,7 @@ public sealed class AgentTaskRuntimeService(
             {
                 Status = AgentRunStatus.Cancelled,
                 Result = output.ToString().Trim(),
-                ActivityJson = JsonSerializer.Serialize(activity),
+                ActivityJson = JsonSerializer.Serialize(AgentActivityObservation.Capture(run.Id, activity, streamCompleted: false)),
                 Error = "Cancelled.",
                 CompletedAt = DateTimeOffset.UtcNow
             };
@@ -178,7 +197,7 @@ public sealed class AgentTaskRuntimeService(
             {
                 Status = AgentRunStatus.Failed,
                 Result = output.ToString().Trim(),
-                ActivityJson = JsonSerializer.Serialize(activity),
+                ActivityJson = JsonSerializer.Serialize(AgentActivityObservation.Capture(run.Id, activity, streamCompleted: false)),
                 Error = ex.Message,
                 CompletedAt = DateTimeOffset.UtcNow
             };

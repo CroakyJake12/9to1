@@ -4,6 +4,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Headless;
 using Avalonia.Controls;
 using Avalonia.Automation;
+using Avalonia.VisualTree;
 using System.Runtime.InteropServices;
 using Avalonia;
 using System.Reflection;
@@ -179,6 +180,55 @@ public sealed class ImageJourneyTests
         Assert.Equal(0, document.Revision);
     }
 
+    [AvaloniaFact]
+    public async Task RasterTransformGraphReplaysFromOriginalPixelsAfterSaveAndReopen()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"picture-transform-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "source.bmp");
+            var bytes = CreateTwoPixelBmp();
+            await File.WriteAllBytesAsync(path, bytes, TestContext.Current.CancellationToken);
+            var original = new PictureCropService().OpenSource(path);
+            var rotated = original.Rotate().Crop(0, 1, 1, 1);
+            using var source = new Bitmap(path);
+            using (var rendered = PictureCropService.Render(source, rotated))
+            {
+                Assert.Equal(new PixelSize(1, 1), rendered.PixelSize);
+                var pixel = ReadFirstPixel(rendered);
+                Assert.True(pixel.G > pixel.R, "Clockwise rotation followed by crop must select the original green pixel.");
+            }
+            var edited = original.Flip(horizontal: true).Crop(0, 0, 1, 1).Resize(4, 3).Rotate(-1);
+            var documentPath = Path.Combine(directory, "edit.picture.json");
+            await edited.SaveAsync(documentPath, TestContext.Current.CancellationToken);
+            var reopened = await PictureDocument.OpenAsync(documentPath, TestContext.Current.CancellationToken);
+            using var result = PictureCropService.Render(source, reopened);
+            Assert.Equal(new PixelSize(3, 4), result.PixelSize);
+            var first = ReadFirstPixel(result);
+            Assert.True(first.G > first.R);
+            Assert.Equal(original.DocumentId, reopened.DocumentId);
+            Assert.Equal(edited.Operations, reopened.Operations);
+            Assert.Equal(4, reopened.Revision);
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+            Assert.Equal(2, original.CanvasWidth);
+            Assert.Empty(original.Operations);
+        }
+        finally { Directory.Delete(directory, recursive: true); }
+    }
+
+    [Fact]
+    public void RasterResizeRejectsResourceOverflowAndNoOpRotatePreservesRevision()
+    {
+        var original = PictureDocument.Create(100, 80);
+        Assert.Same(original, original.Rotate(4));
+        Assert.Same(original, original.Resize(100, 80));
+        Assert.Throws<ArgumentOutOfRangeException>(() => original.Resize(32768, 32768));
+        Assert.Throws<ArgumentOutOfRangeException>(() => original.Resize(0, 10));
+        Assert.Empty(original.Operations);
+        Assert.Equal(0, original.Revision);
+    }
+
     [Fact]
     public async Task PictureDocumentRejectsUnknownSchemaInsteadOfGuessing()
     {
@@ -330,7 +380,13 @@ public sealed class ImageJourneyTests
             }
             using (var privateFile = TagLib.File.Create(privatePath))
             {
-                Assert.Equal(TagLib.TagTypes.None, privateFile.TagTypesOnDisk);
+                var pngTag = Assert.IsAssignableFrom<TagLib.Png.PngTag>(privateFile.GetTag(TagLib.TagTypes.Png, create: false));
+                Assert.Equal("Preserve this image title", pngTag.Title);
+                Assert.Equal("Preserve this non-location comment", pngTag.Comment);
+                var image = Assert.IsAssignableFrom<TagLib.Image.File>(privateFile);
+                Assert.Null(image.ImageTag.Latitude);
+                Assert.Null(image.ImageTag.Longitude);
+                Assert.Null(image.ImageTag.Altitude);
             }
             using (var stripped = TagLib.File.Create(strippedPath))
                 Assert.Null(stripped.GetTag(TagLib.TagTypes.Png, create: false));
@@ -344,59 +400,34 @@ public sealed class ImageJourneyTests
     }
 
     [AvaloniaFact]
-    public void CropEditorRendersAtNormalAndMinimumWindowSizesWithAccessibleEmptyState()
+    public void Owning_Cui_workspace_renders_accessible_disabled_empty_state_at_normal_and_minimum_sizes()
     {
-        var screenshotDirectory = Path.Combine(Path.GetTempPath(), "opencode", "picture-ui-qa");
-        Directory.CreateDirectory(screenshotDirectory);
-        var window = new MainWindow();
+        var registry = new CakeOS.Cui.Runtime.CuiControlRegistry();
+        registry.RegisterControlType("PictureRasterSurface", _ => new Image());
+        using var loader = new CakeOS.Cui.Runtime.CuiControlLoader(registry);
+        var bindings = new PictureCuiWorkspace((_, _) => throw new InvalidOperationException("An empty workspace cannot edit."), _ => false);
+        loader.SetBindingContext(bindings); loader.SetActionDispatcher(bindings);
+        var root = loader.Load(PictureCuiWorkspace.LoadDocument());
+        Assert.NotNull(root);
+        var window = new Window { Content = root, MinWidth = 800, MinHeight = 560 };
         try
         {
             window.Show();
-            var cropBounds = window.FindControl<TextBox>("CropBoundsBox")!;
-            var applyCrop = window.FindControl<Button>("ApplyCropButton")!;
-            var exportCrop = window.FindControl<Button>("ExportCropButton")!;
-            var info = window.FindControl<Button>("InfoButton")!;
-            Assert.Equal("Crop bounds in current image pixels", AutomationProperties.GetName(cropBounds));
-            Assert.False(applyCrop.IsEnabled);
-            Assert.False(exportCrop.IsEnabled);
-            Assert.False(info.IsEnabled);
-            Assert.Equal("View image metadata", AutomationProperties.GetName(info));
-            Assert.True(window.FindControl<StackPanel>("EmptyState")!.IsVisible);
-            cropBounds.Focus();
-            Assert.True(cropBounds.IsFocused);
-
-            foreach (var (width, height, name) in new[] { (1080d, 760d, "normal"), (720d, 520d, "minimum") })
+            var crop = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control => control.Name == "picture-crop");
+            var export = Assert.Single(window.GetVisualDescendants().OfType<Button>(), control => control.Name == "picture-export");
+            Assert.NotNull(crop); Assert.NotNull(export);
+            Assert.Equal("Crop Picture non-destructively", AutomationProperties.GetName(crop));
+            Assert.False(crop.IsEnabled); Assert.False(export.IsEnabled);
+            Assert.Equal("No Picture document is open", Assert.Single(window.GetVisualDescendants().OfType<TextBlock>(), control => control.Name == "picture-storage-status").Text);
+            foreach (var (width, height) in new[] { (1200d, 800d), (800d, 560d) })
             {
-                window.Width = width;
-                window.Height = height;
+                window.Width = width; window.Height = height;
                 using var frame = window.CaptureRenderedFrame();
                 Assert.NotNull(frame);
-                Assert.Equal((int)width, frame!.PixelSize.Width);
-                Assert.Equal((int)height, frame.PixelSize.Height);
-                using var output = File.Create(Path.Combine(screenshotDirectory, $"picture-{name}.png"));
-                frame.Save(output);
+                Assert.Equal((int)width, frame!.PixelSize.Width); Assert.Equal((int)height, frame.PixelSize.Height);
             }
-
-            var sourcePath = Path.Combine(screenshotDirectory, "qa-source.bmp");
-            File.WriteAllBytes(sourcePath, CreateTwoPixelBmp());
-            typeof(MainWindow).GetMethod("LoadLocalPath", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .Invoke(window, [sourcePath]);
-            Assert.True(applyCrop.IsEnabled);
-            Assert.False(exportCrop.IsEnabled);
-            Assert.True(info.IsEnabled);
-            cropBounds.Text = "not crop bounds";
-            applyCrop.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            var status = window.FindControl<TextBlock>("StatusText")!;
-            Assert.Contains("Enter crop bounds", status.Text);
-            using var errorFrame = window.CaptureRenderedFrame();
-            Assert.NotNull(errorFrame);
-            using var errorOutput = File.Create(Path.Combine(screenshotDirectory, "picture-error.png"));
-            errorFrame!.Save(errorOutput);
         }
-        finally
-        {
-            window.Close();
-        }
+        finally { window.Close(); }
     }
 
     [AvaloniaFact]

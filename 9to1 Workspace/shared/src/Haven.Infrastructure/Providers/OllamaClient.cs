@@ -21,9 +21,15 @@ namespace Haven.Infrastructure;
 /// </summary>
 public sealed class OllamaClient(HttpClient httpClient, ProviderUsageCaptureBuffer usageCapture) : IOllamaClient
 {
+    private bool _pinnedTransport;
+    internal static OllamaClient CreatePinned(HttpClient client, ProviderUsageCaptureBuffer usage)
+        => new(client, usage) { _pinnedTransport = true };
+    public bool IsDeviceLocalTransportVerified => _pinnedTransport && OllamaModelProvider.IsDeviceLocalEndpoint(httpClient.BaseAddress);
     /// <summary>
     /// Stores json options locally so this component can preserve the dependency, cache, or state between member calls.
     /// </summary>
+    public Uri? TransportEndpoint => httpClient.BaseAddress;
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     /// <summary>

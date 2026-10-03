@@ -239,6 +239,7 @@ class UnixHTTPConnection(http.client.HTTPConnection):
     def __init__(self, unix_path: pathlib.Path, timeout: float = 3600):
         super().__init__("localhost", timeout=timeout)
         self.unix_path = str(unix_path)
+        self._transport: socket.socket | None = None
 
     def connect(self) -> None:
         if not HAS_UNIX_SOCKETS:
@@ -247,9 +248,11 @@ class UnixHTTPConnection(http.client.HTTPConnection):
         sock.settimeout(self.timeout)
         sock.connect(self.unix_path)
         self.sock = sock
+        self._transport = sock
 
     def abort(self) -> None:
-        sock = self.sock
+        # HTTP/1.0 getresponse() clears connection.sock while its response file still owns the transport.
+        sock = self.sock or self._transport
         if sock is not None:
             try:
                 sock.shutdown(socket.SHUT_RDWR)
@@ -1220,12 +1223,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         conn = UnixHTTPConnection(worker.worker_socket)
         active = ActiveRequest(conn, request_id, worker.worker_socket)
         headers_sent = False
+        response: http.client.HTTPResponse | None = None
         try:
             if not worker.ready or worker.model is None:
                 raise BrokerError(f"slot {slot} has no ready llama.cpp model")
             payload["model"] = worker.model.model_id
             payload["stream"] = True
             conn.connect()
+            transport = conn.sock
+            if transport is None:
+                raise BrokerError("worker transport did not connect")
             with ACTIVE_LOCK:
                 if request_id in ACTIVE_REQUESTS:
                     raise BrokerError("request_id is already active")
@@ -1251,9 +1258,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             headers_sent = True
             while not active.cancelled.is_set():
-                if conn.sock is None:
-                    raise BrokerError("worker transport closed while streaming")
-                readable, _, _ = select.select((conn.sock,), (), (), 0.25)
+                if response.isclosed():
+                    break
+                readable, _, _ = select.select((transport,), (), (), 0.25)
                 if not readable:
                     continue
                 chunk = response.read1(4096)
@@ -1271,6 +1278,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     raise BrokerError(f"llama.cpp worker stream failed: {exc}") from exc
         finally:
             active.detach()
+            if response is not None:
+                response.close()
             conn.close()
             worker.end_turn()
             with ACTIVE_LOCK:

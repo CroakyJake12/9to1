@@ -92,7 +92,7 @@ function Invoke-RepositoryVerification {
     }
 
     Invoke-DotnetAction test
-    Invoke-Checked powershell @(
+    Invoke-Checked (Join-Path $PSHOME $(if ($IsWindows) { "pwsh.exe" } else { "pwsh" })) @(
         '-NoProfile',
         '-ExecutionPolicy', 'Bypass',
         '-File', (Join-Path $root '9to1 OS/release/tests/validate-package-preload.ps1'))
@@ -123,7 +123,7 @@ try {
             if ($Component -notin @('canvas', 'boards')) {
                 throw 'The current Windows package/smoke recipe covers only the legacy Canvas/Boards host.'
             }
-            Invoke-Checked powershell @(
+            Invoke-Checked (Join-Path $PSHOME $(if ($IsWindows) { "pwsh.exe" } else { "pwsh" })) @(
                 '-NoProfile',
                 '-ExecutionPolicy', 'Bypass',
                 '-File', (Join-Path $root '9to1 OS/tests/windows/publish-windows.ps1'))

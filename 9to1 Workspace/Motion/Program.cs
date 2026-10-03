@@ -179,8 +179,11 @@ internal static class MotionMediaInspector
 
 internal static class Program
 {
-    private static int Main(string[] args)
+    private static async Task<int> Main(string[] args)
     {
+        if (args.Length == 1 && string.Equals(args[0], "--native-render-test", StringComparison.Ordinal))
+            return await MotionNativeRenderWorkflowTest.RunAsync();
+
         if (args.Length == 1 && string.Equals(args[0], "--self-test", StringComparison.Ordinal))
             return MotionSurface.SelfTest();
 

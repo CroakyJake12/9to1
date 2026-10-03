@@ -27,6 +27,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include "native_runtime_environment.hxx"
+#include "native_document_snapshot.hxx"
 
 namespace
 {
@@ -126,10 +128,12 @@ public:
     EngineService(
         LibreOfficeKit* kit,
         std::filesystem::path socketPath,
-        std::filesystem::path ioRoot)
+        std::filesystem::path ioRoot,
+        std::filesystem::path profilePath)
         : m_kit(kit)
         , m_socketPath(std::move(socketPath))
         , m_ioRoot(std::filesystem::canonical(std::move(ioRoot)))
+        , m_profilePath(std::move(profilePath))
     {
     }
 
@@ -520,7 +524,7 @@ private:
             return;
         }
 
-        const auto url = fileUrl(*path);
+        const auto url = fileUrl(createNativeDocumentSnapshot(*path, m_profilePath));
         m_document = m_kit->pClass->documentLoadWithOptions
             ? m_kit->pClass->documentLoadWithOptions(m_kit, url.c_str(), "ReadOnly=false")
             : m_kit->pClass->documentLoad(m_kit, url.c_str());
@@ -648,6 +652,14 @@ private:
             {
                 std::cerr << "Selection fence completed but expected text was absent; selected bytes="
                           << selectedText.size() << '\n';
+                if (m_kit->pClass->getError)
+                    std::cerr << "Writer failed-insertion engine error: "
+                              << takeString(m_kit, m_kit->pClass->getError(m_kit)) << '\n';
+                if (LIBREOFFICEKIT_DOCUMENT_HAS(m_document, getCommandValues)
+                    && m_document->pClass->getCommandValues)
+                    std::cerr << "Writer failed-insertion read-only state: " << takeString(m_kit,
+                        m_document->pClass->getCommandValues(m_document, ".uno:ReadOnly")) << '\n';
+
                 sendResponse(static_cast<std::uint16_t>(pending.opcode), pending.requestId, Status::EngineFailure, "completed selection did not contain expected text");
                 return;
             }
@@ -758,6 +770,7 @@ private:
     LibreOfficeKitDocument* m_document = nullptr;
     std::filesystem::path m_socketPath;
     std::filesystem::path m_ioRoot;
+    std::filesystem::path m_profilePath;
     int m_listenFd = -1;
     int m_clientFd = -1;
     bool m_shutdown = false;
@@ -808,6 +821,7 @@ int main(int argc, char** argv)
         }
 
         const auto profileUrl = fileUrl(profilePath);
+        if (!configureNativeRuntimeData()) return 70;
         LibreOfficeKit* kit = lok_init_2(programPath.string().c_str(), profileUrl.c_str());
         if (!kit || !kit->pClass || !LIBREOFFICEKIT_HAS(kit, runLoop) || !kit->pClass->runLoop)
         {
@@ -815,7 +829,7 @@ int main(int argc, char** argv)
             return 67;
         }
 
-        EngineService service(kit, socketPath, ioRoot);
+        EngineService service(kit, socketPath, ioRoot, profilePath);
         if (!service.initialiseSocket())
             return 68;
 

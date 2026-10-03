@@ -1,0 +1,16 @@
+#!/bin/sh
+# Invoke the owning local model manager; the launcher implements no model policy.
+set -eu
+
+launcher_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+installed_module="$launcher_dir/../lib/haven/inference/modelctl.py"
+source_module="$launcher_dir/../../../9to1 Workspace/Home/Source/Dulche/llamacpp/modelctl.py"
+
+if [ -f "$installed_module" ]; then
+    exec python3 "$installed_module" "$@"
+fi
+if [ -f "$source_module" ]; then
+    exec python3 "$source_module" "$@"
+fi
+printf '%s\n' 'The local model manager is missing. Repair the inference runtime package.' >&2
+exit 69

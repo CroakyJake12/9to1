@@ -29,7 +29,8 @@ public sealed record CallStartOptions(
         "Prefer short spoken sentences and avoid headings or markdown unless the user requests them. " +
         "Do not claim to see a shared screen unless an image is attached to the current turn.",
     string? VoiceProfileId = null,
-    VoiceProfile? VoiceProfile = null);
+    VoiceProfile? VoiceProfile = null,
+    Guid? ConversationId = null);
 
 /// <summary>
 /// Represents call capabilities and keeps its related state and behavior together.

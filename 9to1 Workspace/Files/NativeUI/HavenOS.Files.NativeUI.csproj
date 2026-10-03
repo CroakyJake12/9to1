@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Files.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Files.NativeUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/FilesBrowser.cui" LogicalName="HavenOS.Files.NativeUI.UI.FilesBrowser.cui" />
+  </ItemGroup>
+</Project>

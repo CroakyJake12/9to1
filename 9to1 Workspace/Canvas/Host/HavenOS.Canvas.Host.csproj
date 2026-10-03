@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>HavenOS.Canvas.Host</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Canvas</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../NativeUI/HavenOS.Canvas.NativeUI.csproj" />
+    <ProjectReference Include="../../Files/NativeHost/HavenOS.Files.NativeHost.csproj" />
+    <ProjectReference Include="../../Home/NativeUI/HavenOS.Home.NativeUI.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Infrastructure/Haven.Infrastructure.csproj" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <EmbeddedResource Include="UI/CanvasHost.cui" LogicalName="HavenOS.Apps.Canvas.UI.CanvasHost.cui" />
+  </ItemGroup>
+</Project>

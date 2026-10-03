@@ -320,7 +320,8 @@ public sealed class NotesReadAloudControllerTests
     [Fact]
     public async Task PauseRetainsPositionAndResumeRespeaksCurrentChunk()
     {
-        var speech = new FakeSpeechOutputService { HoldPlayback = true };
+        var cancellationExit = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var speech = new FakeSpeechOutputService { HoldPlayback = true, CancellationExitGate = cancellationExit };
         var controller = new NotesReadAloudController(
             speech,
             new FakeCallCoordinator(),
@@ -344,6 +345,8 @@ public sealed class NotesReadAloudControllerTests
 
             await controller.ResumeAsync(TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+            // Force resume to precede completion of the old cancelled speech call.
+            cancellationExit.TrySetResult();
             await WaitForAsync(() => speech.SpokenTexts.Count >= 2, "the resumed chunk");
 
             Assert.False(controller.IsPaused);
@@ -356,6 +359,7 @@ public sealed class NotesReadAloudControllerTests
         }
         finally
         {
+            cancellationExit.TrySetResult();
             await controller.DisposeAsync();
         }
     }
@@ -455,6 +459,7 @@ public sealed class NotesReadAloudControllerTests
         /// Gets or updates hold playback, the bindable or domain state represented by this property.
         /// </summary>
         public bool HoldPlayback { get; init; }
+        public TaskCompletionSource? CancellationExitGate { get; init; }
         /// <summary>
         /// Gets or updates speak calls, the bindable or domain state represented by this property.
         /// </summary>
@@ -526,7 +531,14 @@ public sealed class NotesReadAloudControllerTests
             LastSpeakCancellation = cancellationToken;
             SpeakStarted.TrySetResult();
             if (HoldPlayback)
-                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            {
+                try { await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken); }
+                catch (OperationCanceledException)
+                {
+                    if (CancellationExitGate is not null) await CancellationExitGate.Task;
+                    throw;
+                }
+            }
         }
 
         /// <summary>

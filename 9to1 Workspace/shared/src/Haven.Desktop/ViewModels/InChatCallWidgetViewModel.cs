@@ -40,6 +40,8 @@ public sealed class InChatCallWidgetViewModel : ObservableObject, IDisposable
     private double _audioLevel;
     private VoiceInputStatus _inputStatus = new(VoiceInputState.Ready, "Microphone ready.");
 
+    internal bool IsBoundToCallOwner(ICallCoordinator expected) => ReferenceEquals(_callCoordinator, expected);
+
     public InChatCallWidgetViewModel(
         ICallCoordinator callCoordinator,
         IConversationRepository conversations,
@@ -424,7 +426,8 @@ public sealed class InChatCallWidgetViewModel : ObservableObject, IDisposable
                     VoiceName: SelectedVoice?.Name,
                     Effort: Effort,
                     VoiceProfileId: SelectedVoiceProfile?.Id,
-                    VoiceProfile: SelectedVoiceProfile),
+                    VoiceProfile: SelectedVoiceProfile,
+                    ConversationId: _parentConversationId),
                 null,
                 CancellationToken.None);
 

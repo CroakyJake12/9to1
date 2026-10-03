@@ -17,6 +17,10 @@ public enum MailUiState
 
 public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 {
+    private object _selectedMessageLifetime = new();
+    private bool _disposed;
+    internal Task Initialization { get; }
+    internal Task SelectedMessageLoad { get; private set; } = Task.CompletedTask;
     private readonly IMailService _mail;
     private readonly IProviderModelClient _models;
     private CancellationTokenSource? _loadCancellation;
@@ -74,7 +78,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         CloseAiCommand = new RelayCommand(() => IsAiPanelVisible = false);
         RemoveComposeAttachmentCommand = new RelayCommand<MailComposeAttachmentItem>(RemoveComposeAttachment);
 
-        _ = InitializeAsync();
+        Initialization = InitializeAsync();
     }
 
     public ObservableCollection<MailAccount> Accounts { get; } = [];
@@ -89,9 +93,19 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         set
         {
             if (!SetProperty(ref _selectedAccount, value)) return;
+            RetireOriginalCompose();
+            RetireSelectedMessage();
+            _loadCancellation?.Cancel();
+            // Retire old-account rows synchronously; never invoke folder loading before new access admission.
+            SetProperty(ref _selectedFolder, null, nameof(SelectedFolder));
+            RaisePropertyChanged(nameof(FolderLabel));
+            SelectedSummary = null;
+            Messages.Clear(); Folders.Clear(); LastLoadedAt = null; IsStale = false;
+            if (value is null)
+            { IsBusy = false; State = MailUiState.Empty; Status = "Select a Mail account."; RaiseStateProperties(); }
             RaisePropertyChanged(nameof(AccountLabel));
             RaiseCapabilityProperties();
-            _ = LoadAccountAsync();
+            MailboxLoad = LoadAccountAsync();
         }
     }
 
@@ -102,7 +116,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         {
             if (!SetProperty(ref _selectedFolder, value)) return;
             RaisePropertyChanged(nameof(FolderLabel));
-            _ = LoadMessagesAsync();
+            MailboxLoad = LoadMessagesAsync();
         }
     }
 
@@ -112,7 +126,8 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         set
         {
             if (!SetProperty(ref _selectedSummary, value)) return;
-            _ = LoadSelectedMessageAsync();
+            RetireSelectedMessage();
+            SelectedMessageLoad = LoadSelectedMessageAsync();
         }
     }
 
@@ -136,7 +151,15 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
     public bool IsBusy { get => _isBusy; private set { if (SetProperty(ref _isBusy, value)) RaiseStateProperties(); } }
     public DateTimeOffset? LastLoadedAt { get => _lastLoadedAt; private set { if (SetProperty(ref _lastLoadedAt, value)) RaisePropertyChanged(nameof(LastUpdatedLabel)); } }
     public bool IsStale { get => _isStale; private set => SetProperty(ref _isStale, value); }
-    public bool IsComposeOpen { get => _isComposeOpen; private set => SetProperty(ref _isComposeOpen, value); }
+    public bool IsComposeOpen
+    {
+        get => _isComposeOpen;
+        private set
+        {
+            if (!value && _isComposeOpen) RetireOriginalCompose();
+            SetProperty(ref _isComposeOpen, value);
+        }
+    }
     public bool IsSendConfirmationOpen { get => _isSendConfirmationOpen; private set => SetProperty(ref _isSendConfirmationOpen, value); }
     public string ComposeTo { get => _composeTo; set => SetProperty(ref _composeTo, value); }
     public string ComposeCc { get => _composeCc; set => SetProperty(ref _composeCc, value); }
@@ -205,6 +228,10 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+        RetireOriginalCompose();
+        RetireSelectedMessage();
         CancelDraftAutosave();
         _loadCancellation?.Cancel();
         _loadCancellation?.Dispose();
@@ -250,10 +277,15 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         await LoadAccountAsync();
     }
 
+    internal Task MailboxLoad { get; private set; } = Task.CompletedTask;
+
+    private bool IsCurrentMailboxLoad(MailAccount account, CancellationToken token) =>
+        !_disposed && !token.IsCancellationRequested && ReferenceEquals(SelectedAccount, account);
+
     private async Task LoadAccountAsync()
     {
         var account = SelectedAccount;
-        if (account is null) return;
+        if (account is null || _disposed) return;
         var cancellationToken = BeginLoad();
         try
         {
@@ -261,6 +293,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             State = MailUiState.Loading;
             Status = "Checking mailbox access…";
             var access = await _mail.CheckAccessAsync(account.AccountId, cancellationToken);
+            if (!IsCurrentMailboxLoad(account, cancellationToken)) return;
             if (!access.Succeeded)
             {
                 ApplyFailure(access);
@@ -268,6 +301,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             }
 
             var folders = await _mail.GetFoldersAsync(account.AccountId, cancellationToken);
+            if (!IsCurrentMailboxLoad(account, cancellationToken)) return;
             Folders.Clear();
             foreach (var folder in folders) Folders.Add(folder);
             RefreshMoveTargets();
@@ -278,17 +312,18 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
         catch (Exception ex)
         {
-            ApplyFailure(ex);
+            if (IsCurrentMailboxLoad(account, cancellationToken)) ApplyFailure(ex);
         }
         finally
         {
-            IsBusy = false;
+            if (IsCurrentMailboxLoad(account, cancellationToken)) IsBusy = false;
         }
     }
 
     private async Task LoadMessagesAsync()
     {
-        if (SelectedAccount is null) return;
+        var account = SelectedAccount;
+        if (account is null || _disposed) return;
         var cancellationToken = BeginLoad();
         try
         {
@@ -298,20 +333,22 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
         catch (Exception ex)
         {
-            ApplyFailure(ex);
+            if (IsCurrentMailboxLoad(account, cancellationToken)) ApplyFailure(ex);
         }
         finally
         {
-            IsBusy = false;
+            if (IsCurrentMailboxLoad(account, cancellationToken)) IsBusy = false;
         }
     }
 
     private async Task LoadMessagesCoreAsync(CancellationToken cancellationToken)
     {
         var account = SelectedAccount ?? throw new InvalidOperationException("No Mail account is selected.");
+        if (!IsCurrentMailboxLoad(account, cancellationToken)) return;
         Status = "Loading messages…";
         var page = await _mail.GetMessagesAsync(new MailQuery(
             account.AccountId, SelectedFolder?.Id, SearchText, UnreadOnly, FlaggedOnly), cancellationToken);
+        if (!IsCurrentMailboxLoad(account, cancellationToken)) return;
         Messages.Clear();
         foreach (var message in page.Messages) Messages.Add(message);
         SelectedSummary = Messages.FirstOrDefault();
@@ -322,35 +359,47 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         RaiseStateProperties();
     }
 
+    private void RetireSelectedMessage()
+    {
+        _selectedMessageLifetime = new();
+        SelectedMessage = null;
+        ThreadMessages.Clear();
+    }
+
     private async Task LoadSelectedMessageAsync()
     {
         var account = SelectedAccount;
         var summary = SelectedSummary;
-        if (account is null || summary is null)
-        {
-            SelectedMessage = null;
-            ThreadMessages.Clear();
-            return;
-        }
+        var originalLifetime = _selectedMessageLifetime;
+        bool Current() => !_disposed && ReferenceEquals(originalLifetime, _selectedMessageLifetime) &&
+            ReferenceEquals(account, SelectedAccount) && ReferenceEquals(summary, SelectedSummary);
+        if (account is null || summary is null || !Current()) return;
         try
         {
             var thread = await _mail.GetThreadAsync(account.AccountId, summary.ThreadId, CancellationToken.None);
-            ThreadMessages.Clear();
-            foreach (var message in thread.OrderBy(message => message.ReceivedAt)) ThreadMessages.Add(message);
-
-            SelectedMessage = ThreadMessages.FirstOrDefault(message => message.Id == summary.Id);
-            if (SelectedMessage is null)
+            if (!Current()) return;
+            var originalThread = thread.OrderBy(message => message.ReceivedAt).ToList();
+            var selected = originalThread.FirstOrDefault(message => message.Id == summary.Id);
+            if (selected is null)
             {
-                SelectedMessage = await _mail.GetMessageAsync(account.AccountId, summary.Id, CancellationToken.None);
-                ThreadMessages.Add(SelectedMessage);
+                selected = await _mail.GetMessageAsync(account.AccountId, summary.Id, CancellationToken.None);
+                if (!Current()) return;
+                originalThread.Add(selected);
             }
+            if (!Current()) return;
+            ThreadMessages.Clear();
+            foreach (var message in originalThread) ThreadMessages.Add(message);
+            SelectedMessage = selected;
 
-            if (SelectedMessage is { IsRead: false })
+            // The selected original message may already have an in-flight remote read acknowledgement.
+            // Retirement refuses its presentation; it does not claim to cancel that provider effect.
+            if (!selected.IsRead && Current())
             {
                 var result = await _mail.SetReadAsync(account.AccountId, summary.Id, true, CancellationToken.None);
+                if (!Current()) return;
                 if (result.Succeeded)
                 {
-                    SelectedMessage = SelectedMessage with { IsRead = true };
+                    SelectedMessage = selected with { IsRead = true };
                     var index = ThreadMessages.ToList().FindIndex(message => message.Id == summary.Id);
                     if (index >= 0) ThreadMessages[index] = SelectedMessage;
                 }
@@ -358,7 +407,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            ApplyFailure(ex, preserveMessages: true);
+            if (Current()) ApplyFailure(ex, preserveMessages: true);
         }
     }
 
@@ -421,7 +470,7 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             var result = await _mail.SaveDraftAsync(draft, CancellationToken.None);
             if (result.Succeeded)
             {
-                _composeLocalDraftId = result.LocalDraftId ?? _composeLocalDraftId;
+                SetOriginalComposeDraftId(result.LocalDraftId ?? _composeLocalDraftId);
                 _composeDraftId = result.ProviderId ?? _composeDraftId;
                 ComposeStatus = SafeFailureMessage(result);
             }
@@ -576,12 +625,13 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
             return null;
         }
         var hasHtml = !string.IsNullOrWhiteSpace(ComposeHtmlBody);
-        _composeLocalDraftId ??= Guid.NewGuid();
+        var draftId = _composeLocalDraftId ?? Guid.NewGuid();
+        SetOriginalComposeDraftId(draftId);
         return new MailDraft(
             SelectedAccount.AccountId, _composeDraftId, _composeResponseKind, _composeSourceMessageId, _composeThreadId,
             to, cc, bcc, ComposeSubject.Trim(), hasHtml ? ComposeHtmlBody : ComposeBody, hasHtml,
-            ComposeAttachments.Select(item => new MailDraftAttachment(item.FileName, item.ContentType, item.Content)).ToArray(),
-            LocalId: _composeLocalDraftId.Value, Provider: SelectedAccount.Provider);
+            ComposeAttachments.Select(item => new MailDraftAttachment(item.FileName, item.ContentType, item.Content, item.LocalId)).ToArray(),
+            LocalId: draftId, Provider: SelectedAccount.Provider);
     }
 
     private static IReadOnlyList<string> SplitAddresses(string value) => value
@@ -604,12 +654,13 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 
     private void ResetCompose()
     {
+        RetireOriginalCompose();
         CancelDraftAutosave();
         ComposeTo = ComposeCc = ComposeBcc = ComposeSubject = ComposeBody = string.Empty;
         ResetRichCompose();
         ComposeAttachments.Clear();
         _composeDraftId = null;
-        _composeLocalDraftId = null;
+        SetOriginalComposeDraftId(null);
         _composeResponseKind = MailResponseKind.New;
         _composeSourceMessageId = null;
         _composeThreadId = null;
@@ -704,12 +755,17 @@ public sealed partial class MailPageViewModel : ObservableObject, IDisposable
 public sealed class MailComposeAttachmentItem
 {
     public MailComposeAttachmentItem(string fileName, string contentType, byte[] content)
+        : this(fileName, contentType, content, Guid.NewGuid()) { }
+
+    public MailComposeAttachmentItem(string fileName, string contentType, byte[] content, Guid localId)
     {
+        LocalId = localId == Guid.Empty ? Guid.NewGuid() : localId;
         FileName = fileName;
         ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType;
         Content = content;
     }
 
+    public Guid LocalId { get; }
     public string FileName { get; }
     public string ContentType { get; }
     public byte[] Content { get; }

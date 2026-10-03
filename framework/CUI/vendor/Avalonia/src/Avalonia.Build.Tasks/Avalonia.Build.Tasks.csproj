@@ -1,5 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="TargetFramework;TargetFrameworks">
     <PropertyGroup>
+      <!-- Build-host tools keep their own framework when an app is published with -f. -->
+      <TargetFrameworks></TargetFrameworks>
       <TargetFramework>netstandard2.0</TargetFramework>
       <Nullable>enable</Nullable>
       <GenerateDocumentationFile>false</GenerateDocumentationFile>

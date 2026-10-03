@@ -11,9 +11,24 @@ namespace Haven.Desktop.Views.Pages.Boards;
 public sealed partial class BoardsPage
 {
     private bool _suppressEditorRebuild;
+    private long _nativeEditorGeneration;
+
+    private void BindCurrentNativeText(TextBox input, Action apply)
+    {
+        var generation = _nativeEditorGeneration;
+        var document = _document;
+        var page = _page;
+        input.PropertyChanged += (_, change) =>
+        {
+            if (change.Property != TextBox.TextProperty || _disposed || generation != _nativeEditorGeneration ||
+                !ReferenceEquals(_document, document) || !ReferenceEquals(_page, page)) return;
+            apply();
+        };
+    }
 
     private void RebuildEditor()
     {
+        ++_nativeEditorGeneration;
         _editor.Children.Clear();
         UpdatePageModePresentation();
         if (_page is null || _document is null)
@@ -24,14 +39,14 @@ public sealed partial class BoardsPage
 
         var title = new TextBox { Text = _page.Title, FontSize = 22 };
         AutomationProperties.SetName(title, "Page title");
-        title.TextChanged += (_, _) =>
+        BindCurrentNativeText(title, () =>
         {
             var next = string.IsNullOrWhiteSpace(title.Text) ? "Untitled page" : title.Text.Trim();
             if (_page.Title == next) return;
             _boards.RenamePage(_document, _page.Id, next);
             RebuildPageTabs();
             SetStatus("Unsaved page title");
-        };
+        });
         _editor.Children.Add(title);
         if (_freeformMode)
         {
@@ -129,7 +144,7 @@ public sealed partial class BoardsPage
             format.Children.Add(button);
         }
 
-        text.TextChanged += (_, _) =>
+        BindCurrentNativeText(text, () =>
         {
             if (_documentEditor is null || _suppressEditorRebuild) return;
             _suppressEditorRebuild = true;
@@ -143,7 +158,7 @@ public sealed partial class BoardsPage
             {
                 _suppressEditorRebuild = false;
             }
-        };
+        });
         host.Children.Add(format);
         host.Children.Add(text);
         return host;
@@ -168,11 +183,11 @@ public sealed partial class BoardsPage
             }
             var input = new TextBox { Text = item.Text };
             Grid.SetColumn(input, 1);
-            input.TextChanged += (_, _) =>
+            BindCurrentNativeText(input, () =>
             {
                 _boards.UpdateListItem(_document!, _page!.Id, block.Id, item.Id, text: input.Text ?? string.Empty);
                 SetStatus("Unsaved checklist changes");
-            };
+            });
             row.Children.Add(input);
             host.Children.Add(row);
         }
@@ -198,11 +213,11 @@ public sealed partial class BoardsPage
             AutomationProperties.SetName(input, $"Table cell {r + 1}, {c + 1}");
             Grid.SetRow(input, r);
             Grid.SetColumn(input, c);
-            input.TextChanged += (_, _) =>
+            BindCurrentNativeText(input, () =>
             {
                 _boards.UpdateTableCell(_document!, _page!.Id, block.Id, cell.Id, input.Text ?? string.Empty);
                 SetStatus("Unsaved table changes");
-            };
+            });
             grid.Children.Add(input);
         }
         host.Children.Add(grid);
@@ -281,12 +296,12 @@ public sealed partial class BoardsPage
                         _boards.UpdateComponentItem(_document!, component.Id, local.Id, value => value.Checked = check.IsChecked == true);
                         SetStatus("Live component updated across placements");
                     };
-                    input.TextChanged += (_, _) =>
+                    BindCurrentNativeText(input, () =>
                     {
                         if (input.Text == local.Text) return;
                         _boards.UpdateComponentItem(_document!, component.Id, local.Id, value => value.Text = input.Text ?? string.Empty);
                         SetStatus("Live component updated across placements");
-                    };
+                    });
                     Grid.SetColumn(input, 1);
                     row.Children.Add(check);
                     row.Children.Add(input);

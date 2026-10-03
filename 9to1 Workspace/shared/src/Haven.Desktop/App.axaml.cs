@@ -25,6 +25,25 @@ public sealed partial class App : Avalonia.Application
     private bool _exceptionHooksAttached;
     internal static IServiceProvider? Services { get; private set; }
 
+    internal static void AddOwnedBrowserTools(IServiceCollection collection)
+    {
+        collection.AddSingleton<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>();
+        collection.AddSingleton<ICanonicalResourceAccessResolver>(provider =>
+            provider.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>());
+        collection.AddHavenLocalWebMcpOwner();
+        collection.AddSingleton<HavenOS.Apps.Browse.BrowseOwnedWebMcpBinding>(provider => new(
+            provider.GetRequiredService<BrowserSessionService>(),
+            provider.GetRequiredService<IAuthenticatedResourceActorSource>(),
+            provider.GetRequiredService<IWebMcpOriginalActorApproval>(),
+            provider.GetRequiredService<HavenOS.Apps.Browse.BrowseOwnedDocumentRegistry>()));
+    }
+
+    internal static void AddAgentTaskRuntime(IServiceCollection collection)
+    {
+        collection.AddSingleton<AgentTaskRuntimeService>();
+        collection.AddSingleton<IRecordedAgentInvocationSource>(services => services.GetRequiredService<AgentTaskRuntimeService>());
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -40,12 +59,42 @@ public sealed partial class App : Avalonia.Application
         #endif
     }
 
+    internal static void AddOwnedShelfMapsLibraries(IServiceCollection collection)
+    {
+        collection.AddHavenShelfMapsLibraryOwnership();
+        collection.AddHomeOwnedLibraryCommitFences();
+    }
+
     public override void OnFrameworkInitializationCompleted()
     {
         var collection = new ServiceCollection();
         collection.AddHavenInfrastructure();
         collection.AddHavenPlannerInfrastructure();
         collection.AddHavenDesktopCallServices();
+        collection.AddSingleton<SpaceRegistry>();
+        collection.AddFilesNativeHost();
+        collection.AddHavenFormsPublication(new HavenOS.Forms.FormNativePublicationValidator());
+        HavenOS.Apps.Terminal.TerminalNativeComposition.AddTerminalNativeActions(collection);
+        collection.AddSingleton<HavenOS.Apps.Sites.Application.ISiteNativeWorkspaceAuthority, SitesNativeWorkspaceAuthority>();
+        collection.AddSingleton<ICanonicalResourceAccessResolver, HavenOS.Apps.Sites.Application.SiteNativeProjectAccessResolver>();
+        collection.AddSingleton<HavenOS.Home.Core.IHomeActionPolicySource, HavenOS.Apps.Sites.Application.SiteNativeActionPolicies>();
+        collection.AddSingleton<HavenOS.Apps.Sites.Application.SiteNativeWriteCoordinator>();
+        collection.AddSingleton<HavenOS.Home.Core.IHomeActionPolicySource, HavenOS.Images.PictureNativeActionPolicies>();
+        collection.AddSingleton<IWriteNativeDocumentPackageStore, Haven.Infrastructure.WriteNativeDocumentPackageStore>();
+        collection.AddSingleton<GamesCanonicalProjectSource>();
+        collection.AddSingleton<Haven.Application.Games.ICanonicalGamesSceneSource>(provider => provider.GetRequiredService<GamesCanonicalProjectSource>());
+        collection.AddSingleton<Haven.Application.Games.ICanonicalGamesProjectStore, GamesFilesArtifactBridge>();
+        collection.AddSingleton<Haven.Application.Games.GamesProjectEditorService>();
+        collection.AddSingleton<ICanonicalResourceAccessResolver>(provider => new Haven.Application.Games.GamesSceneResourceResolver(
+            () => provider.GetRequiredService<Haven.Application.Games.ICanonicalGamesSceneSource>(), provider.GetRequiredService<IAuthenticatedResourceActorSource>()));
+        collection.AddSingleton(provider => new Haven.Infrastructure.Games.GamesInstalledRuntimeResolver(
+            provider.GetService<Haven.Infrastructure.Games.GamesInstalledRuntimePackage>()));
+        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
+            new PlannerLocalStoreEvidenceProvider(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<ISqliteConnectionFactory>()));
+        collection.AddSingleton<HavenOS.Home.Core.IHomeLocalStoreEvidenceProvider>(provider =>
+            new SpacesLocalStoreEvidenceProvider(provider.GetRequiredService<IVersionedSettingsStore>(),
+                (IResourceStoreIdentitySource)provider.GetRequiredService<IVersionedSettingsStore>()));
+        AddOwnedShelfMapsLibraries(collection);
 #if ANDROID
         global::Haven.Android.AndroidServiceRegistration.AddHavenAndroidPlatformServices(collection);
 #endif
@@ -53,6 +102,7 @@ public sealed partial class App : Avalonia.Application
         collection.AddSingleton<ScheduledTaskScheduleCalculator>();
         collection.AddSingleton<ScheduledTaskRunner>();
         collection.AddSingleton<BrowserSessionService>();
+        AddOwnedBrowserTools(collection);
         collection.AddSingleton<BrowserDataService>();
         collection.AddSingleton<BrowserNavigationPolicy>();
         collection.AddSingleton<IBrowserNavigationPolicy>(provider => provider.GetRequiredService<BrowserNavigationPolicy>());
@@ -127,7 +177,7 @@ public sealed partial class App : Avalonia.Application
         
         collection.AddSingleton<FloatingActivityStateStore>();
         collection.AddSingleton<Haven.Desktop.Views.Pages.Imagine.VisionWorkspaceStateStore>();
-        collection.AddSingleton<AgentTaskRuntimeService>();
+        AddAgentTaskRuntime(collection);
 #if ANDROID
         collection.AddSingleton<IFloatingActivityHost, global::Haven.Android.Compatibility.AndroidFloatingActivityHost>();
 #else

@@ -153,6 +153,9 @@ public sealed class RuntimeTests
     private sealed class StubRegistry(IReadOnlyList<ProviderModelDescriptor> models) : IModelProviderRegistry
     {
         public IReadOnlyList<IModelProvider> Providers => [];
+        public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(ModelCataloguePolicy policy, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<ProviderModelDescriptor>>(models.Where(m => (m.IsLocal ? policy.AllowLocal : policy.AllowRemote) &&
+                (policy.AllowedProviderIds is null || policy.AllowedProviderIds.Contains(m.ProviderId))).ToArray());
         public IModelProvider? Find(string providerId) => null;
         public IModelProvider GetRequired(string providerId) => throw new NotSupportedException();
         public Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken) => Task.FromResult(models);

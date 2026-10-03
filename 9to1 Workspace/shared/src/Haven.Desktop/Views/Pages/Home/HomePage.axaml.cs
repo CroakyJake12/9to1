@@ -4,6 +4,11 @@ using Haven.Application;
 using Haven.Core;
 using Haven.Desktop.Controls;
 using Haven.Desktop.Events;
+using Microsoft.Extensions.DependencyInjection;
+using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
+using Haven.Desktop.Services;
+using Avalonia.Platform.Storage;
 
 namespace Haven.Desktop.Views.Pages.Home;
 
@@ -66,12 +71,137 @@ public sealed partial class HomePage : UserControl
 
     public void Deactivate()
     {
+        CloseHomeManager();
         _timer.Stop();
         _refreshCancellation?.Cancel();
     }
 
+    private IDisposable? _inlineHomeManager;
+    private CancellationTokenSource? _inlineHomeLifetime;
+    private TaskCompletionSource? _inlineApprovalClosed;
+
+    // An in-page host works on both desktop and Android; all manager and decision UI is Home-owned.
+    private async Task OpenHomeManagerAsync(bool models)
+    {
+        if (App.Services is not { } services) return;
+        CloseHomeManager();
+        var lifetime = new CancellationTokenSource();
+        _inlineHomeLifetime = lifetime;
+        var token = lifetime.Token;
+        var runtime = services.GetRequiredService<HomeCoreRuntime>();
+        var profiles = services.GetRequiredService<HomeLocalProfileIdentity>();
+        var permissions = services.GetRequiredService<HomePermissionTrustService>();
+        Control surface;
+        Func<Task> initialize;
+        if (models)
+        {
+            HavenOS.Home.NativeUI.HomeModelPickerCuiSurface? picker = null;
+            picker = new(runtime, profiles, services.GetRequiredService<IHomeModelPickerFeatureProvider>(), async (requestId, cancellationToken) =>
+            {
+                using var review = new HomeApprovalCuiSurface(runtime, profiles, permissions);
+                await review.InitializeAsync(cancellationToken);
+                if (!await review.FocusRequestAsync(requestId, cancellationToken))
+                    throw new InvalidOperationException("The pending Home request is no longer available.");
+                cancellationToken.ThrowIfCancellationRequested();
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _inlineApprovalClosed = closed;
+                HomeOwnedSurfaceHost.Content = review;
+                HomeOwnedSurfaceTitle.Text = "Home permissions";
+                CloseHomeOwnedSurfaceButton.Content = "Back to models";
+                try { await closed.Task.WaitAsync(cancellationToken); }
+                finally
+                {
+                    if (ReferenceEquals(_inlineApprovalClosed, closed)) _inlineApprovalClosed = null;
+                    if (ReferenceEquals(_inlineHomeLifetime, lifetime) && !token.IsCancellationRequested)
+                    {
+                        HomeOwnedSurfaceHost.Content = picker;
+                        HomeOwnedSurfaceTitle.Text = "Personal AI models";
+                        CloseHomeOwnedSurfaceButton.Content = "Back to Home";
+                    }
+                }
+            });
+            surface = picker;
+            _inlineHomeManager = picker;
+            initialize = () => picker.InitializeAsync(token);
+        }
+        else
+        {
+            var approvals = new HomeApprovalCuiSurface(runtime, profiles, permissions);
+            surface = approvals;
+            _inlineHomeManager = approvals;
+            initialize = () => approvals.InitializeAsync(token);
+        }
+        HomeDashboardContent.IsVisible = false;
+        HomeOwnedSurfacePanel.IsVisible = true;
+        HomeOwnedSurfaceTitle.Text = models ? "Personal AI models" : "Home permissions";
+        HomeOwnedSurfaceHost.Content = surface;
+        try { await initialize(); }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            if (ReferenceEquals(_inlineHomeLifetime, lifetime))
+            {
+                CloseHomeManager();
+                StatusText.Text = "Home manager could not open: " + error.Message;
+            }
+        }
+    }
+
+    private void CloseHomeManager()
+    {
+        var lifetime = _inlineHomeLifetime;
+        _inlineHomeLifetime = null;
+        lifetime?.Cancel();
+        _inlineApprovalClosed?.TrySetCanceled();
+        _inlineApprovalClosed = null;
+        HomeOwnedSurfaceHost.Content = null;
+        _inlineHomeManager?.Dispose();
+        _inlineHomeManager = null;
+        lifetime?.Dispose();
+        HomeOwnedSurfacePanel.IsVisible = false;
+        HomeDashboardContent.IsVisible = true;
+        CloseHomeOwnedSurfaceButton.Content = "Back to Home";
+    }
+
     private void WireEvents()
     {
+        FilesStorageButton.Click += async (_, _) =>
+        {
+            if (App.Services is not { } services || TopLevel.GetTopLevel(this) is not Window owner) return;
+            var window = new Window { Title = "Files storage", Width = 800, Height = 620, MinWidth = 360, MinHeight = 400 };
+            using var surface = new NativeFilesSetupCuiSurface(services.GetRequiredService<HomeCoreRuntime>(),
+                services.GetRequiredService<HomeLocalProfileIdentity>(), services.GetRequiredService<NativeFilesWorkspaceService>(),
+                services.GetRequiredService<NativeFilesWorkspaceAuthority>(), services.GetRequiredService<HomeLocalStoreOwnership>(),
+                async token =>
+                {
+                    var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                    { Title = "Choose an empty folder for your private Files workspace", AllowMultiple = false });
+                    token.ThrowIfCancellationRequested();
+                    return folders.SingleOrDefault()?.TryGetLocalPath();
+                }, async token =>
+                {
+                    using var permissions = new HomeApprovalCuiSurface(services.GetRequiredService<HomeCoreRuntime>(),
+                        services.GetRequiredService<HomeLocalProfileIdentity>(), services.GetRequiredService<HomePermissionTrustService>());
+                    var review = new Window { Title = "Home permissions", Width = 900, Height = 720, MinWidth = 360, MinHeight = 400, Content = permissions };
+                    await permissions.InitializeAsync(token);
+                    await review.ShowDialog(window);
+                });
+            window.Content = surface;
+            try
+            {
+                await surface.InitializeAsync(CancellationToken.None);
+                await window.ShowDialog(owner);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+            { StatusText.Text = "Files storage could not open: " + exception.Message; }
+        };
+        ApprovalsButton.Click += async (_, _) => await OpenHomeManagerAsync(models: false);
+        PersonalModelsButton.Click += async (_, _) => await OpenHomeManagerAsync(models: true);
+        CloseHomeOwnedSurfaceButton.Click += (_, _) =>
+        {
+            if (_inlineApprovalClosed is { } approval) approval.TrySetResult();
+            else CloseHomeManager();
+        };
         _bus.RegisterElement("Home.Header.CustomizeClick", CustomizeButton);
         _bus.WirePointerEvents("Home.Header.CustomizeClick", CustomizeButton);
         CustomizeButton.Click += (_, _) =>

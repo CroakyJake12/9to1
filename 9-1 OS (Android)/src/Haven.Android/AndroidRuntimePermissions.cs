@@ -38,9 +38,39 @@ internal static class AndroidRuntimePermissions
         ArgumentNullException.ThrowIfNull(activity);
         lock (Sync)
         {
-            if (_activity is null || !_activity.TryGetTarget(out var current) || !ReferenceEquals(current, activity)) _activity = new WeakReference<MainActivity>(activity);
-            _foreground = isForeground;
+            // An old Activity can pause after its replacement has resumed. Its
+            // callback must not make the new foreground Activity unavailable.
+            if (isForeground)
+            {
+                _activity = new WeakReference<MainActivity>(activity);
+                _foreground = true;
+            }
+            else if (_activity is not null && _activity.TryGetTarget(out var current)
+                     && ReferenceEquals(current, activity))
+                _foreground = false;
         }
+    }
+
+    public static void Detach(MainActivity activity)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        TaskCompletionSource<bool>? audio;
+        TaskCompletionSource<bool>? notifications;
+        lock (Sync)
+        {
+            if (_activity is null || !_activity.TryGetTarget(out var current)
+                || !ReferenceEquals(current, activity)) return;
+            _activity = null;
+            _foreground = false;
+            audio = _recordAudioRequest;
+            notifications = _notificationRequest;
+            _recordAudioRequest = null;
+            _notificationRequest = null;
+        }
+        // Permission dialogs belong to an Activity lifecycle. Fail closed when
+        // it is destroyed, so speech/notification startup cannot wait forever.
+        audio?.TrySetResult(false);
+        notifications?.TrySetResult(false);
     }
 
     public static Task<bool> EnsureRecordAudioPermissionAsync(CancellationToken cancellationToken)
@@ -72,6 +102,7 @@ internal static class AndroidRuntimePermissions
 
     private static Task<bool> RequestPermissionAsync(string permission, int requestCode, bool notificationRequest, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         MainActivity activity;
         TaskCompletionSource<bool> completion;
         lock (Sync)
@@ -85,7 +116,16 @@ internal static class AndroidRuntimePermissions
         }
         activity.RunOnUiThread(() =>
         {
-            try { activity.RequestPermissions([permission], requestCode); }
+            try
+            {
+                lock (Sync)
+                {
+                    if (!_foreground || _activity is null || !_activity.TryGetTarget(out var current)
+                        || !ReferenceEquals(current, activity) || activity.IsFinishing || activity.IsDestroyed)
+                        throw new InvalidOperationException("Permission request activity is no longer in the foreground");
+                }
+                activity.RequestPermissions([permission], requestCode);
+            }
             catch
             {
                 lock (Sync)

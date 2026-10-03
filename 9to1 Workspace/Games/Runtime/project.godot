@@ -1,0 +1,11 @@
+config_version=5
+
+[application]
+config/name="9to1 Games managed scene runtime"
+run/main_scene="res://Main.tscn"
+
+[dotnet]
+project/assembly_name="HavenOS.Games.Runtime"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"

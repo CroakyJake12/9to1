@@ -4,7 +4,7 @@ namespace Haven.UI;
 
 public enum HavenPointerKind { Mouse, Touch, Pen }
 public enum HavenPointerButton { Primary, Secondary, Middle }
-public enum HavenKey { Unknown, Enter, Space, Escape, Tab, Left, Right, Up, Down, Home, End, Backspace, Delete, A, C, D, F, V, X, Y, Z }
+public enum HavenKey { Unknown, Enter, Space, Escape, Tab, Left, Right, Up, Down, Home, End, Backspace, Delete, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z }
 
 public sealed class HavenInputRouter(HavenElement root)
 {
@@ -409,7 +409,24 @@ public sealed class HavenInputRouter(HavenElement root)
 
     public bool KeyUp(HavenKey key)
     {
-        if (_focused is IHavenKeyboardInputTarget custom && custom.KeyUp(new HavenKeyInput(key, HavenKeyModifiers.None))) return true;
+        if (_focused is IHavenKeyboardInputTarget custom)
+        {
+            var focusedBeforeKeyUp = _focused;
+            var wasPressed = focusedBeforeKeyUp.State.HasFlag(HavenElementState.Pressed);
+            if (custom.KeyUp(new HavenKeyInput(key, HavenKeyModifiers.None)))
+            {
+                // Canonical Button handles its own Enter/Space pressed state and Invoke(),
+                // so the router's generic Activate() path is not reached. Preserve pointer
+                // parity by executing the same declarative ClickActions after a successful
+                // keyboard activation, without invoking the button a second time.
+                if (focusedBeforeKeyUp is Button button
+                    && key is HavenKey.Enter or HavenKey.Space
+                    && wasPressed
+                    && !button.State.HasFlag(HavenElementState.Disabled))
+                    _actions.ExecuteClick(root, button);
+                return true;
+            }
+        }
         if (key == HavenKey.Tab) return true;
         if (_focused is Button tabButton && IsTabButton(tabButton) && key is (HavenKey.Left or HavenKey.Right or HavenKey.Home or HavenKey.End)) return true;
         if (_focused is Input && key is HavenKey.Enter or HavenKey.Space or HavenKey.Left or HavenKey.Right or HavenKey.Up or HavenKey.Down or HavenKey.Home or HavenKey.End or HavenKey.Backspace or HavenKey.Delete or HavenKey.A or HavenKey.C or HavenKey.V or HavenKey.X or HavenKey.Y or HavenKey.Z) return true;

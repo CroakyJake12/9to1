@@ -15,10 +15,13 @@ namespace Haven.Desktop.Views.Pages.Spaces;
 public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposable
 {
     private readonly SpaceRegistry _registry;
+    private readonly bool _allowDelete;
+    private readonly Func<CancellationToken, Task>? _requireCurrentAccess;
+    private readonly Func<SpaceDefinition, SpaceContextReference, Task>? _openCanonicalSource;
     private readonly IConversationRepository? _conversations;
     private readonly Func<Conversation, Task>? _openConversation;
     private readonly Func<SpaceDefinition, Task>? _launchSpace;
-    private readonly Func<Guid, Task>? _deleteSpace;
+    private readonly Func<SpaceDefinition, Task>? _deleteSpace;
     private readonly Func<SpaceDefinition, Task>? _manageLayout;
     private readonly SpaceGeneratedSurfaceRenderer? _generatedSurfaceRenderer;
     private readonly SpaceEditPlanner? _editPlanner;
@@ -28,6 +31,12 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private IReadOnlyList<SpaceDefinition> _spaces = [];
     private Guid? _selectedId;
     private bool _disposed;
+    private long _selectionGeneration;
+    private long _conversationGeneration;
+    private long _conversationOpenGeneration;
+    private bool _conversationOpenActive = true;
+    internal Task PendingSelection { get; private set; } = Task.CompletedTask;
+    internal Task PendingConversationOpen { get; private set; } = Task.CompletedTask;
 
     public NativeSpacesPage(
         SpaceRegistry registry,
@@ -44,11 +53,16 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         SpaceGeneratedSurfaceRenderer? generatedSurfaceRenderer,
         SpaceEditPlanner? editPlanner,
         Func<SpaceDefinition, Task>? launchSpace = null,
-        Func<Guid, Task>? deleteSpace = null,
+        Func<SpaceDefinition, Task>? deleteSpace = null,
         Func<SpaceDefinition, Task>? manageLayout = null,
         IConversationRepository? conversations = null,
-        Func<Conversation, Task>? openConversation = null)
+        Func<Conversation, Task>? openConversation = null,
+        Func<SpaceDefinition, SpaceContextReference, Task>? openCanonicalSource = null,
+        Func<CancellationToken, Task>? requireCurrentAccess = null, bool allowDelete = true)
     {
+        _allowDelete = allowDelete && deleteSpace is not null;
+        _requireCurrentAccess = requireCurrentAccess;
+        _openCanonicalSource = openCanonicalSource;
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _conversations = conversations;
         _openConversation = openConversation;
@@ -57,7 +71,9 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _launchSpace = launchSpace;
         _deleteSpace = deleteSpace;
         _manageLayout = manageLayout;
-        _scene = new SpacesHavenScene();
+        _scene = new SpacesHavenScene { CanonicalSourceNavigationAvailable = _openCanonicalSource is not null };
+        _scene.CanonicalSourceRequested += OnCanonicalSourceRequested;
+        _scene.SetDeleteAvailable(_allowDelete);
         _scene.SetLaunchAvailable(_launchSpace is not null);
         _scene.SetLayoutEditorAvailable(_manageLayout is not null);
         _scene.SetEditWithHavenAvailable(_editPlanner is not null);
@@ -87,9 +103,16 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     public HavenSceneControl Scene { get; }
 
-    public Task ActivateAsync(CancellationToken cancellationToken) => RefreshAsync(cancellationToken);
+    public Task ActivateAsync(CancellationToken cancellationToken)
+    { _conversationOpenActive = true; return RefreshAsync(cancellationToken); }
 
-    public void Deactivate() => Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
+    public void Deactivate()
+    {
+        _conversationOpenActive = false;
+        Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
+        Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
+    }
 
     internal Task RefreshNowAsync(CancellationToken cancellationToken = default) => RefreshAsync(cancellationToken);
 
@@ -105,9 +128,14 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         var token = refresh.Token;
         try
         {
+            await RequireCurrentAccessAsync(token).ConfigureAwait(false);
             var spaces = await _registry.GetAllAsync(_scene.IncludeArchived, token).ConfigureAwait(false);
+            await RequireCurrentAccessAsync(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
-            await Dispatcher.UIThread.InvokeAsync(() => ApplySpaces(spaces));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!_disposed && !token.IsCancellationRequested && ReferenceEquals(_refreshCancellation, refresh)) ApplySpaces(spaces);
+            });
             await RefreshConversationsAsync(token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -115,7 +143,12 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }
         catch (Exception exception) when (IsExpected(exception))
         {
-            await Dispatcher.UIThread.InvokeAsync(() => _scene.SetStatus($"Spaces could not refresh: {exception.Message}"));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_disposed || token.IsCancellationRequested || !ReferenceEquals(_refreshCancellation, refresh)) return;
+                if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+                _scene.SetStatus($"Spaces could not refresh: {exception.Message}");
+            });
         }
         finally
         {
@@ -126,15 +159,24 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async Task RefreshConversationsAsync(CancellationToken cancellationToken = default)
     {
-        if (_conversations is null || _selectedId is not { } spaceId)
+        var generation = Interlocked.Increment(ref _conversationGeneration);
+        var selection = _selectedId;
+        bool Current() => !_disposed && !cancellationToken.IsCancellationRequested &&
+            generation == Interlocked.Read(ref _conversationGeneration) && _selectedId == selection;
+        if (_conversations is null || selection is not { } spaceId)
         {
-            await Dispatcher.UIThread.InvokeAsync(() => _scene.SetConversations([]));
+            await Dispatcher.UIThread.InvokeAsync(() => { if (Current()) _scene.SetConversations([]); });
             return;
         }
 
+        await RequireCurrentAccessAsync(cancellationToken).ConfigureAwait(false);
         var conversations = await _conversations.GetBySpaceAsync(spaceId, 500, cancellationToken).ConfigureAwait(false);
+        await RequireCurrentAccessAsync(cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
-        await Dispatcher.UIThread.InvokeAsync(() => _scene.SetConversations(conversations));
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Current()) _scene.SetConversations(conversations);
+        });
     }
     private void ApplySpaces(IReadOnlyList<SpaceDefinition> spaces)
     {
@@ -164,27 +206,67 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
 
     private async void OnArchivedVisibilityChanged(object? sender, bool includeArchived) => await RefreshAsync();
 
-    private async void OnSpaceSelected(object? sender, Guid id)
+    private void OnSpaceSelected(object? sender, Guid id) => PendingSelection = SelectSpaceAsync(id);
+
+    private async Task SelectSpaceAsync(Guid id)
     {
-        _selectedId = id;
-        _scene.SetSpaces(_spaces, id);
-        var current = CurrentSpace();
-        _scene.SetSpace(current);
-        RefreshGeneratedPreview(current);
-        _scene.SetStatus(null);
-        try { await RefreshConversationsAsync(); }
-        catch (Exception exception) when (IsExpected(exception)) { _scene.SetStatus($"Chats could not refresh: {exception.Message}"); }
+        if (_disposed) return;
+        var generation = Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
+        bool Current() => !_disposed && generation == Interlocked.Read(ref _selectionGeneration);
+        try
+        {
+            await RequireCurrentAccessAsync(CancellationToken.None);
+            if (!Current()) return;
+            _selectedId = id;
+            _scene.SetSpaces(_spaces, id);
+            var current = CurrentSpace();
+            _scene.SetSpace(current);
+            RefreshGeneratedPreview(current);
+            _scene.SetStatus(null);
+            await RefreshConversationsAsync();
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (!Current()) return;
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Chats could not refresh: {exception.Message}");
+        }
     }
 
-    private async void OnConversationSelected(object? sender, Guid id)
+    private void OnConversationSelected(object? sender, Guid id) => PendingConversationOpen = OpenOriginalConversationAsync(id);
+
+    private async Task OpenOriginalConversationAsync(Guid id)
     {
-        if (_conversations is null || _openConversation is null) return;
-        await RunMutationAsync(async () =>
+        if (_disposed || !_conversationOpenActive || _conversations is null || _openConversation is null || CurrentSpace() is not { } originalSpace) return;
+        var generation = Interlocked.Increment(ref _conversationOpenGeneration);
+        var selection = Interlocked.Read(ref _selectionGeneration);
+        bool Current() => !_disposed && _conversationOpenActive && generation == Interlocked.Read(ref _conversationOpenGeneration) &&
+            selection == Interlocked.Read(ref _selectionGeneration) && ReferenceEquals(CurrentSpace(), originalSpace);
+        try
         {
+            await RequireCurrentAccessAsync(CancellationToken.None);
+            if (!Current()) return;
             var conversation = await _conversations.GetAsync(id, CancellationToken.None);
+            if (!Current()) return;
             if (conversation is null) { await RefreshConversationsAsync(); return; }
+            await RequireCurrentAccessAsync(CancellationToken.None);
+            if (!Current()) return;
+            if (conversation.SpaceId != originalSpace.Id)
+            {
+                _scene.SetStatus("This chat is no longer in the selected Space. Refresh its conversations.");
+                return;
+            }
+            // This permits invoking the original navigation only; it does not cancel
+            // a navigation already started or grant communication/transport access.
             await _openConversation(conversation);
-        }, "open Space chat");
+        }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (!Current()) return;
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Could not open Space chat: {exception.Message}");
+        }
     }
 
     private async void OnNewConversationRequested(object? sender, Guid id)
@@ -261,18 +343,18 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         }, current.IsArchived ? "restore Space" : "archive Space");
     }
 
-    private async void OnDeleteRequested(object? sender, Guid id)
+    private async void OnDeleteRequested(object? sender, Guid id) => await DeleteSpaceAsync(id);
+
+    internal Task DeleteSpaceAsync(Guid id)
     {
-        await RunMutationAsync(async () =>
+        // Freeze the displayed revision before any owner/admission await or projection refresh.
+        var displayed = _spaces.FirstOrDefault(space => space.Id == id);
+        return RunMutationAsync(async () =>
         {
-            if (_deleteSpace is not null) await _deleteSpace(id);
-            if (_deleteSpace is not null)
-                await _deleteSpace(id);
-            else
-            {
-                if (_conversations is not null) await _conversations.DetachSpaceAsync(id, CancellationToken.None);
-                await _registry.DeleteAsync(id, CancellationToken.None);
-            }
+            if (!_allowDelete) throw new NotSupportedException("Space deletion is not available in this view yet.");
+            if (_deleteSpace is null) throw new UnauthorizedAccessException("Open Home to recover owning Space deletion access.");
+            if (displayed is null) throw new InvalidOperationException("Refresh the displayed Space before deleting it.");
+            await _deleteSpace(displayed);
             if (_selectedId == id) _selectedId = null;
             await RefreshAsync();
         }, "delete Space");
@@ -333,7 +415,9 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         _scene.SetStatus("Planning safe Space changes…");
         try
         {
+            await RequireCurrentAccessAsync(CancellationToken.None);
             var result = await _editPlanner.PlanAsync(instruction, current, CancellationToken.None);
+            await RequireCurrentAccessAsync(CancellationToken.None);
             if (!result.Succeeded || result.Patch is null)
             {
                 _scene.SetStatus(result.Message);
@@ -345,10 +429,23 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
         {
             _scene.SetStatus("Space edit cancelled.");
         }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Space edit unavailable: {exception.Message}");
+        }
         finally
         {
             _scene.SetBusy(false);
         }
+    }
+
+    private async void OnCanonicalSourceRequested(object? sender, Guid contextId)
+    {
+        if (_disposed || _openCanonicalSource is null || CurrentSpace() is not { } space) return;
+        var source = space.ContextReferences?.SingleOrDefault(item => item.ContextId == contextId);
+        if (source is null) return;
+        await RunActionAsync(() => _openCanonicalSource(space, source), "open canonical source");
     }
 
     private async void OnManageLayoutRequested(object? sender, Guid id)
@@ -388,29 +485,51 @@ public sealed class NativeSpacesPage : UserControl, IActivatablePage, IDisposabl
     private async Task RunMutationAsync(Func<Task> operation, string action)
     {
         _scene.SetBusy(true);
-        try { await operation(); }
-        catch (Exception exception) when (IsExpected(exception)) { _scene.SetStatus($"Could not {action}: {exception.Message}"); }
+        try { await RequireCurrentAccessAsync(CancellationToken.None); if (!_disposed) await operation(); }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Could not {action}: {exception.Message}");
+        }
         finally { _scene.SetBusy(false); }
     }
 
     private async Task RunActionAsync(Func<Task> operation, string action)
     {
-        try { await operation(); }
-        catch (Exception exception) when (IsExpected(exception)) { _scene.SetStatus($"Could not {action}: {exception.Message}"); }
+        try { await RequireCurrentAccessAsync(CancellationToken.None); if (!_disposed) await operation(); }
+        catch (Exception exception) when (IsExpected(exception))
+        {
+            if (exception is UnauthorizedAccessException) ClearDeniedProjection();
+            _scene.SetStatus($"Could not {action}: {exception.Message}");
+        }
+    }
+
+    private Task RequireCurrentAccessAsync(CancellationToken token) => _requireCurrentAccess?.Invoke(token) ?? Task.CompletedTask;
+
+    private void ClearDeniedProjection()
+    {
+        Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
+        _spaces = []; _selectedId = null;
+        _scene.SetSpaces([], null); _scene.SetSpace(null); _scene.SetConversations([]);
+        RefreshGeneratedPreview(null);
     }
 
     private static bool IsExpected(Exception exception) =>
-        exception is IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or JsonException;
+        exception is NotSupportedException or IOException or InvalidOperationException or UnauthorizedAccessException or ArgumentException or JsonException;
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
+        Interlocked.Increment(ref _selectionGeneration);
+        Interlocked.Increment(ref _conversationGeneration);
         SizeChanged -= OnSizeChanged;
         Interlocked.Exchange(ref _refreshCancellation, null)?.Cancel();
         _scene.SetGeneratedPreview(null, null);
         _generatedSurfaceMount?.Dispose();
         _generatedSurfaceMount = null;
+        _scene.CanonicalSourceRequested -= OnCanonicalSourceRequested;
         _scene.CreateRequested -= OnCreateRequested;
         _scene.ArchivedVisibilityChanged -= OnArchivedVisibilityChanged;
         _scene.SpaceSelected -= OnSpaceSelected;

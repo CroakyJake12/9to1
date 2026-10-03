@@ -27,6 +27,13 @@ public sealed partial class CallPage : UserControl
 {
     private readonly HavenEventBus _bus;
     private readonly ICallCoordinator _coordinator;
+    private readonly CallMonologueNarrationRoute? _narrationRoute;
+    private NarrationAttachment? _narrationAttachment;
+    private Task _narrationPresentationDelay = Task.CompletedTask;
+    private readonly List<Task> _narrationPresentations = [];
+    public Task WhenOriginalNarrationPresentationIdleAsync() => Task.WhenAll(_narrationPresentations.ToArray());
+    public Exception? LastNarrationPresentationFailure { get; private set; }
+    private sealed class NarrationAttachment { public volatile bool Retired = false; }
     private readonly IOllamaClient _ollama;
     private readonly ISpeechModelManager _speechModels;
     private readonly VoiceProfileCatalog _voiceProfiles;
@@ -61,7 +68,15 @@ public sealed partial class CallPage : UserControl
         ISpeechModelManager speechModels,
         VoiceProfileCatalog voiceProfiles,
         UserPreferencesService preferences)
+        : this(bus, coordinator, ollama, speechModels, voiceProfiles, preferences, null) { }
+
+    public CallPage(HavenEventBus bus, ICallCoordinator coordinator, IOllamaClient ollama,
+        ISpeechModelManager speechModels, VoiceProfileCatalog voiceProfiles,
+        UserPreferencesService preferences, CallMonologueNarrationRoute? narrationRoute)
     {
+        if (narrationRoute is not null && !narrationRoute.IsBoundTo(coordinator))
+            throw new ArgumentException("Narration must retain this actual Call owner.", nameof(narrationRoute));
+        _narrationRoute = narrationRoute;
         _bus = bus;
         _coordinator = coordinator;
         _ollama = ollama;
@@ -80,9 +95,12 @@ public sealed partial class CallPage : UserControl
             reactionSource.VoiceReactionChanged += OnVoiceReactionChanged;
     }
 
+    private Task _setupTask = Task.CompletedTask;
+    public Task WhenSetupIdleAsync() => _setupTask;
     private async void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        await InitializeAsync();
+        _setupTask = InitializeAsync();
+        await _setupTask;
     }
 
     private async Task InitializeAsync()
@@ -588,7 +606,17 @@ public sealed partial class CallPage : UserControl
         UpdateWaveform(e.State is CallState.Listening or CallState.Transcribing or CallState.Speaking ? 0.35 : 0);
     });
 
-    private void OnTranscriptChanged(object? sender, CallTranscriptEventArgs e) => Dispatcher.UIThread.Post(() =>
+    private void OnTranscriptChanged(object? sender, CallTranscriptEventArgs e)
+    {
+        // Capture the exact owning reply before queueing native UI work. A later completed
+        // turn cannot substitute its narration when this event is finally displayed.
+        var originalAttachment = Volatile.Read(ref _narrationAttachment);
+        bool OriginalAttachmentCurrent() => originalAttachment is not null && !originalAttachment.Retired &&
+            ReferenceEquals(Volatile.Read(ref _narrationAttachment), originalAttachment);
+        var originalNarration = OriginalAttachmentCurrent() && e.IsFinal && e.Role == MessageRole.Assistant
+            ? _narrationRoute?.CaptureOriginalSelection(e.MessageId) : null;
+        var presentationDelay = _narrationPresentationDelay;
+        Dispatcher.UIThread.Post(() =>
     {
         if (!_transcriptById.TryGetValue(e.MessageId, out var entry))
         {
@@ -608,9 +636,44 @@ public sealed partial class CallPage : UserControl
             UpdateTranscriptBubble(entry);
         }
         entry.IsPartial = !e.IsFinal;
+        if (originalNarration is not null)
+        {
+            _narrationPresentations.RemoveAll(task => task.IsCompleted);
+            if (_narrationPresentations.Count < 128)
+                _narrationPresentations.Add(PresentOriginalNarrationAsync(originalNarration, OriginalAttachmentCurrent, presentationDelay));
+        }
         ExportTranscriptButton.IsEnabled = _transcript.Count > 0;
         TranscriptScroller.ScrollToEnd();
-    });
+        });
+    }
+
+    private async Task PresentOriginalNarrationAsync(CallOriginalNarrationSelection original, Func<bool> originalAttachmentCurrent,
+        Task presentationDelay)
+    {
+        try
+        {
+            // Default completed scheduling barrier; retaining the original attachment through
+            // any deferred native presentation is mandatory, regardless of why it was deferred.
+            await presentationDelay;
+            if (originalAttachmentCurrent() && _narrationRoute?.CreateOriginalHost(original, originalAttachmentCurrent) is { } narration)
+                TranscriptPanel.Children.Add(narration);
+        }
+        catch (Exception error) { LastNarrationPresentationFailure = error; }
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        if (_narrationAttachment is { } previous) previous.Retired = true;
+        Volatile.Write(ref _narrationAttachment, new NarrationAttachment());
+        base.OnAttachedToVisualTree(e);
+    }
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        // Retire before descendants detach. Queued old events cannot create a new live child
+        // after this native page has already left its original visual tree.
+        if (_narrationAttachment is { } original) original.Retired = true;
+        base.OnDetachedFromVisualTree(e);
+    }
 
     private void OnAudioLevelChanged(object? sender, CallAudioLevelEventArgs e) =>
         Dispatcher.UIThread.Post(() => UpdateWaveform(e.Level));

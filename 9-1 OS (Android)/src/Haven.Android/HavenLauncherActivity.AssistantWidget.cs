@@ -34,10 +34,10 @@ public sealed partial class HavenLauncherActivity
 
         var assistant = new TextView(this)
         {
-            Text = "Haven Assistant\nTap to open",
+            Text = "Dulche · Launcher\nTap to open",
             TextSize = 18,
             Gravity = GravityFlags.Center,
-            ContentDescription = "Open Haven Assistant",
+            ContentDescription = "Open Dulche for this launcher layout",
             LayoutParameters = new LinearLayout.LayoutParams(Dp(260), Dp(90))
             {
                 RightMargin = Dp(8)
@@ -56,11 +56,5 @@ public sealed partial class HavenLauncherActivity
         widgetStrip.AddView(assistant);
     }
 
-    private void OpenHavenAssistant()
-    {
-        var intent = new Intent(this, typeof(MainActivity));
-        intent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ClearTop);
-        intent.PutExtra("haven_surface", "assistant");
-        StartActivity(intent);
-    }
+    private void OpenHavenAssistant() => _ = ShowLauncherDulcheAsync();
 }

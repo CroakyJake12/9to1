@@ -189,8 +189,8 @@ public sealed class ConversationProductionRepositoryTests : IDisposable
         var other = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Other", null, null, false, false, now, now.AddMinutes(1), SpaceId: otherSpace);
         var unscoped = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Unscoped", null, null, false, false, now, now.AddMinutes(2));
 
-        await repository.UpsertConversationAsync(target, CancellationToken.None);
-        await repository.UpsertConversationAsync(other, CancellationToken.None);
+        await SeedExistingMembershipAsync(database, repository, target);
+        await SeedExistingMembershipAsync(database, repository, other);
         await repository.UpsertConversationAsync(unscoped, CancellationToken.None);
 
         var reopenedDatabase = new SqliteDatabase(_paths);
@@ -206,24 +206,24 @@ public sealed class ConversationProductionRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task DetachSpacePreservesConversationAndClearsMembership()
+    public async Task LegacyUnscopedDetachCannotChangeCanonicalMembership()
     {
         var database = await CreateDatabaseAsync();
         var repository = new ConversationRepository(database);
         var now = DateTimeOffset.UtcNow;
         var spaceId = Guid.NewGuid();
         var conversation = new Conversation(Guid.NewGuid(), HavenMode.Chat, ConversationKind.Chat, "Keep me", null, null, false, false, now, now, SpaceId: spaceId);
-        await repository.UpsertConversationAsync(conversation, CancellationToken.None);
+        await SeedExistingMembershipAsync(database, repository, conversation);
 
-        await repository.DetachSpaceAsync(spaceId, CancellationToken.None);
+        await Assert.ThrowsAsync<NotSupportedException>(() => repository.DetachSpaceAsync(spaceId, CancellationToken.None));
 
         var loaded = await repository.GetAsync(conversation.Id, CancellationToken.None);
         var rows = await repository.GetBySpaceAsync(spaceId, 50, CancellationToken.None);
         Assert.NotNull(loaded);
         Assert.Equal(conversation.Id, loaded!.Id);
         Assert.Equal("Keep me", loaded.Title);
-        Assert.Null(loaded.SpaceId);
-        Assert.Empty(rows);
+        Assert.Equal(spaceId, loaded.SpaceId);
+        Assert.Equal(conversation.Id, Assert.Single(rows).Id);
     }
 
     [Fact]
@@ -240,6 +240,19 @@ public sealed class ConversationProductionRepositoryTests : IDisposable
         Assert.NotNull(loaded);
         Assert.Null(loaded!.SpaceId);
     }
+    // Query/legacy-detach fixtures model an already populated SQL store. Actual guarded creation
+    // and stale-save denial are exercised with real Home admission in ConversationSpaceCommitTests.
+    private static async Task SeedExistingMembershipAsync(SqliteDatabase database, ConversationRepository repository, Conversation row)
+    {
+        await repository.UpsertConversationAsync(row with { SpaceId = null }, CancellationToken.None);
+        await using var connection = await database.OpenAsync(CancellationToken.None);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE conversations SET space_id=$space WHERE id=$id;";
+        command.Parameters.AddWithValue("$space", row.SpaceId!.Value.ToString("D"));
+        command.Parameters.AddWithValue("$id", row.Id.ToString("D"));
+        Assert.Equal(1, await command.ExecuteNonQueryAsync(CancellationToken.None));
+    }
+
     private async Task<SqliteDatabase> CreateDatabaseAsync()
     {
         var database = new SqliteDatabase(_paths);

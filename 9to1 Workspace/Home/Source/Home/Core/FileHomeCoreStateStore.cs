@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Haven.Application;
 using System.Text.Json.Serialization;
 using System.Collections.Concurrent;
 
@@ -8,7 +9,7 @@ namespace HavenOS.Home.Core;
 /// Crash-safe, revision-checked local Home state storage. A corrupt or newer file is reported
 /// without replacing it, so permission/device/package state can be repaired instead of erased.
 /// </summary>
-public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
+public sealed partial class FileHomeCoreStateStore : IHomeCoreStateStore, IHomeLocalOperationLeaseSource
 {
     public const int CurrentSchemaVersion = 1;
 
@@ -21,12 +22,19 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
 
     private readonly string _path;
     private readonly SemaphoreSlim _gate;
+    private readonly IHomePersistedWriteObserver? _persistedWriteObserver;
 
     public FileHomeCoreStateStore(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("A state file path is required.", nameof(path));
         _path = Path.GetFullPath(path);
         _gate = PathLocks.GetOrAdd(_path, static _ => new SemaphoreSlim(1, 1));
+    }
+
+    // Owning fixture seam only; never a substitute store or production admission service.
+    internal FileHomeCoreStateStore(string path, IHomePersistedWriteObserver persistedWriteObserver) : this(path)
+    {
+        _persistedWriteObserver = persistedWriteObserver ?? throw new ArgumentNullException(nameof(persistedWriteObserver));
     }
 
     public static FileHomeCoreStateStore CreateDefault()
@@ -51,16 +59,45 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         }
     }
 
-    public async Task<HomeStateWriteResult> WriteAsync(
+    public Task<HomeStateWriteResult> WriteGuardedAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        AuthenticatedResourceActor expectedActor, IHomeStateCommitActorGuard guard, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expectedActor);
+        ArgumentNullException.ThrowIfNull(guard);
+        return WriteCoreAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken);
+    }
+
+    public Task<HomeStateWriteResult> WriteAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        CancellationToken cancellationToken = default) => WriteCoreAsync(record, expectedRecordRevision, null, null, cancellationToken);
+
+    private async Task<HomeStateWriteResult> WriteCoreAsync(HomeCoreStateRecord record, long expectedRecordRevision,
+        AuthenticatedResourceActor? expectedActor, IHomeStateCommitActorGuard? guard, CancellationToken cancellationToken)
+    {
+        var result = await WriteCoreUnobservedAsync(record, expectedRecordRevision, expectedActor, guard, cancellationToken).ConfigureAwait(false);
+        // The actual atomic write has succeeded and its process/per-path locks have been released.
+        // A callback exception now represents a lost acknowledgement; it cannot roll back known bytes,
+        // reconstruct an admission, or turn a retry into a new effect.
+        if (result.IsSuccess && _persistedWriteObserver is not null)
+        {
+            var persisted = result.State!.Records.Single(item => item.RecordId == record.RecordId);
+            await _persistedWriteObserver.OnPersistedWriteAsync(persisted.RecordId, persisted.Revision,
+                cancellationToken).ConfigureAwait(false);
+        }
+        return result;
+    }
+
+    private async Task<HomeStateWriteResult> WriteCoreUnobservedAsync(
         HomeCoreStateRecord record,
         long expectedRecordRevision,
-        CancellationToken cancellationToken = default)
+        AuthenticatedResourceActor? expectedActor, IHomeStateCommitActorGuard? guard,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(record);
         if (expectedRecordRevision < 0)
             throw new ArgumentOutOfRangeException(nameof(expectedRecordRevision));
         var invalid = ValidateRecord(record);
         if (invalid is not null) return HomeStateWriteResult.Failed(invalid);
+        record = record with { Payload = record.Payload.Clone() };
 
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -81,11 +118,14 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
                     true,
                     "Read the latest record and retry with its revision."));
 
+            if (guard is not null && !await guard.CheckAsync(current, expectedActor!, HomeStateCommitPhase.Admission,
+                    cancellationToken).ConfigureAwait(false)) return HomeStateWriteResult.Failed(GuardDenied(record.RecordId));
+            cancellationToken.ThrowIfCancellationRequested();
             var updated = record with { Revision = checked(actualRevision + 1) };
             var records = current.Records.Where(item => item.RecordId != record.RecordId).Append(updated)
                 .OrderBy(item => item.RecordId, StringComparer.Ordinal).ToArray();
             var next = new HomeCoreStoredState(CurrentSchemaVersion, checked(current.Revision + 1), records);
-            var writeFailure = await WriteAtomicallyAsync(next, cancellationToken).ConfigureAwait(false);
+            var writeFailure = await WriteAtomicallyAsync(next, current, expectedActor, guard, cancellationToken).ConfigureAwait(false);
             return writeFailure is null
                 ? HomeStateWriteResult.Success(next)
                 : HomeStateWriteResult.Failed(writeFailure);
@@ -158,7 +198,7 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
     private async Task<FileStream> AcquireProcessLockAsync(CancellationToken cancellationToken)
     {
         var directory = Path.GetDirectoryName(_path)!;
-        Directory.CreateDirectory(directory);
+        CreatePrivateDirectory(directory);
         var lockPath = _path + ".lock";
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
         while (true)
@@ -166,8 +206,7 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
-                    1, FileOptions.Asynchronous);
+                return new FileStream(lockPath, PrivateFileOptions(FileMode.OpenOrCreate, FileAccess.ReadWrite, 1, FileOptions.Asynchronous));
             }
             catch (IOException) when (DateTime.UtcNow < deadline)
             {
@@ -180,15 +219,16 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
         }
     }
 
-    private async Task<HomeCoreFailure?> WriteAtomicallyAsync(HomeCoreStoredState state, CancellationToken cancellationToken)
+    private async Task<HomeCoreFailure?> WriteAtomicallyAsync(HomeCoreStoredState state, HomeCoreStoredState current,
+        AuthenticatedResourceActor? expectedActor, IHomeStateCommitActorGuard? guard, CancellationToken cancellationToken)
     {
         var directory = Path.GetDirectoryName(_path)!;
         var temporaryPath = Path.Combine(directory, $".{Path.GetFileName(_path)}.{Guid.NewGuid():N}.tmp");
         try
         {
-            Directory.CreateDirectory(directory);
-            await using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None,
-                             16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough))
+            CreatePrivateDirectory(directory);
+            await using (var stream = new FileStream(temporaryPath, PrivateFileOptions(FileMode.CreateNew, FileAccess.Write,
+                             16 * 1024, FileOptions.Asynchronous | FileOptions.WriteThrough)))
             {
                 await JsonSerializer.SerializeAsync(stream, state, JsonOptions, cancellationToken).ConfigureAwait(false);
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -197,6 +237,9 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
 
             // The temporary file is on the same volume. Replacing the destination leaves the old
             // committed document intact if the process stops before this operation.
+            if (guard is not null && !await guard.CheckAsync(current, expectedActor!, HomeStateCommitPhase.Publication,
+                    cancellationToken).ConfigureAwait(false)) return GuardDenied("9to1.Home.State");
+            cancellationToken.ThrowIfCancellationRequested();
             File.Move(temporaryPath, _path, overwrite: true);
             return null;
         }
@@ -222,6 +265,22 @@ public sealed class FileHomeCoreStateStore : IHomeCoreStateStore
             catch (IOException) { /* A stale temporary file is non-authoritative and never read on startup. */ }
             catch (UnauthorizedAccessException) { }
         }
+    }
+
+    private static HomeCoreFailure GuardDenied(string recordId) => new(HomeCoreErrorCode.PermissionDenied,
+        "The current identity no longer authorizes this Home state commit.", recordId, false);
+
+    private static void CreatePrivateDirectory(string directory)
+    {
+        if (OperatingSystem.IsWindows()) Directory.CreateDirectory(directory);
+        else Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    }
+
+    private static FileStreamOptions PrivateFileOptions(FileMode mode, FileAccess access, int bufferSize, FileOptions options)
+    {
+        var result = new FileStreamOptions { Mode = mode, Access = access, Share = FileShare.None, BufferSize = bufferSize, Options = options };
+        if (!OperatingSystem.IsWindows()) result.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        return result;
     }
 
     private static HomeCoreFailure? ValidateRecord(HomeCoreStateRecord record)

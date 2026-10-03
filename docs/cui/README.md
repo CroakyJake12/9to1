@@ -12,8 +12,4 @@ The former lightweight `NineToOne.Cui.Markup` parser is retired from active
 compilation. Do not add a second parser or reference historical
 `9to1 OS/HUI/Cui` project paths.
 
-The native runtime is not presently build-verified because the checked-in
-Avalonia vendor tree imports a missing build file and has restore-time target
-cycles. See
-`docs/MASTER-MIGRATION-STATUS.md` for the evidence ledger and
-`docs/architecture/cui.md` for the required runtime verification chain.
+The repository includes a native runtime and vendored framework source. Their current build, render, interaction and platform acceptance must be observed in this environment; historical build results do not establish present readiness. See [the Astra working ledger](../ASTRA-WORKING-LEDGER.md) for current evidence and [the CUI architecture reference](../architecture/cui.md) for technical context. The current Google Drive specification remains the product authority.

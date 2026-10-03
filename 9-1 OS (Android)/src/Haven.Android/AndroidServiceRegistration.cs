@@ -1,4 +1,7 @@
+using NineToOne.Launcher;
 using Haven.Application;
+using HavenOS.Home.Core;
+using Haven.Application.Go;
 using Haven.Application.Automations;
 using Haven.Desktop.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +14,19 @@ public static class AndroidServiceRegistration
     public static IServiceCollection AddHavenAndroidPlatformServices(IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+        services.AddSingleton<AndroidLauncherPlatformCatalog>(_ => new(global::Android.App.Application.Context));
+        services.AddSingleton<IInstalledApplicationObservationProvider>(provider => provider.GetRequiredService<AndroidLauncherPlatformCatalog>());
+        services.AddSingleton<ICanonicalResourceAccessResolver, AndroidInstalledApplicationResourceResolver>();
+        services.AddSingleton<AndroidInstalledApplicationsGoProvider>();
+        services.AddSingleton<AndroidInstalledApplicationShortcuts>();
+        services.AddSingleton<ICanonicalResourceAccessResolver, LauncherLayoutResourceResolver>();
+        services.AddSingleton<HomeLauncherLayoutStore>();
+        services.AddSingleton<HomeLauncherSession>();
+        services.AddSingleton<LauncherSemanticFeatureProvider>();
+        services.AddSingleton<IHomeActionPolicySource, LauncherSemanticActionPolicies>();
+        services.AddSingleton<IGoProvider>(provider => provider.GetRequiredService<AndroidInstalledApplicationsGoProvider>());
+        services.AddSingleton<IGoProvider, LauncherNavigationGoProvider>();
+        services.TryAddSingleton(provider => new GoService(provider.GetServices<IGoProvider>()));
         services.RemoveAll<IComputerToolService>();
         services.AddSingleton<IComputerToolService, AndroidComputerToolService>();
         for (var index = services.Count - 1; index >= 0; index--)

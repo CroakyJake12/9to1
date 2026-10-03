@@ -1,6 +1,71 @@
 # HavenOS / CakeOS Windows compatibility broker
 
-This directory contains the first implementation slice of the optional Windows compatibility layer for the current CakeOS repository. Historical HavenOS naming is retained where the surrounding platform interfaces have not yet been renamed.
+This directory contains the current broker substrate for the required unified
+9to1-OS Wine/WinBoat/APK Compatibility Framework. Its implemented and missing
+capabilities are recorded below; it is not a complete implementation of that
+framework. Historical HavenOS names remain in surrounding internal interfaces.
+
+The shared Application compatibility routing port uses Home's canonical
+`InstalledApplicationReference` Guid/revision and an owning runtime observation.
+It produces an immutable read-only framework proposal, rejects a changed Home
+session or installed entrypoint, and preserves an ineligible preferred backend
+instead of silently switching frameworks. Policy denial and unverified package
+trust never produce a proposed backend. Its observations and proposals are not
+execution permission or human approval. A production canonical runtime owner,
+permission admission, installation manager and execution adapter are still
+required; this port is not registered by the native shell. The Python registry
+below remains a development runtime substrate, not a second canonical Home
+application database or production installed-app authority.
+
+## Unified package inspection and routing
+
+The shared broker now exposes `listBackends`, `inspectPackage` and
+`setPackageBackend` through its authenticated same-user daemon. The development
+CLI exposes corresponding `list-backends`, `inspect-package PATH` and
+`set-package-backend PATH FRAMEWORK` commands (`reset` removes an association).
+These inspect and configure routing; they never install or execute a package.
+
+Inspection uses DOS/PE headers and machine type for Windows executables, the
+compound-file root Windows Installer CLSID for MSI databases, and a validated
+Android manifest inside ZIP packages for APKs. Android binary XML string pools
+in UTF-8 and UTF-16 are supported. Filename extensions do not establish format.
+DLLs, malformed/ambiguous manifests, encrypted/oversized manifests and arbitrary
+renamed files fail explicitly. MSI architecture remains unresolved and blocks
+backend selection until a real installer metadata adapter supplies it.
+
+APK associations use the stable `android:<package>` manifest identity, which
+survives installer moves, renames and version changes. Windows packages without
+verified application metadata use a clearly labelled content SHA-256 package
+identity; it survives moves/renames but **does not establish application identity
+across different installer versions**. This is not a claim of signed publisher
+identity. Inspection currently marks every package `unverified`, including APKs
+with signing records, because cryptographic publisher verification is not yet
+implemented. Such packages never receive a selected execution backend.
+
+Eligibility filters format, architecture/ABI, backend availability and managed
+policy before priority/default selection. An unavailable or ineligible preferred
+framework is reported explicitly; the broker does not silently switch it.
+Preferences persist atomically under the per-user compatibility directory with
+private directory/file modes. `wine`, `winboat` and `android` are typed backend
+descriptors. Wine availability depends on actual prerequisite audit; WinBoat
+and Android remain unavailable with explicit missing implementation reasons.
+
+Administrator compatibility policy is read on every routing/registration/launch
+operation from `/etc/9to1/compatibility-policy.json`. It must be a root-owned
+regular file without group/other write access. Missing policy means unmanaged
+defaults; malformed or unsafe policy fails closed. There is no user-facing
+policy mutation method. Schema 1 supports `enabled`, `allowedBackends`,
+`allowedIdentities` and `allowBackendPreferences`. Disabling compatibility or a
+backend also blocks legacy manifest registration and launch plans below those
+entry points. Application allowlists fail closed for legacy user-authored
+manifests, because a caller-chosen manifest ID is not a verified installed
+package identity. Existing applications may still be stopped for recovery.
+
+This increment does not provide the required unified CUI installation flow,
+desktop double-click/file associations, a Windows/Android runtime installation,
+trusted package acquisition or installed-app identity bindings. The complete
+Wine/WinBoat Framework remains incomplete until those workflows and real guest
+runtime acceptance are implemented and verified.
 
 ## Implemented
 

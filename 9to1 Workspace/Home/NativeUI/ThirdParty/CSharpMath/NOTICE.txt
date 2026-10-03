@@ -1,0 +1,14 @@
+CSharpMath 1.0.0-pre.1 equation layout dependency notices
+
+CSharpMath source: https://github.com/verybadcat/CSharpMath
+Commit: d6feac52d2cf4b186f1f275ca4c84fd7564cc470
+Typography linked source: https://github.com/LayoutFarm/Typography
+Commit: 5877180c7c5271091379a0eaf9f03ab6ebd256b3
+
+CSharpMath's MIT license and pinned upstream dependency license declarations are included. Typography-source-headers.txt retains the actual attribution/license headers of the compiled Typography source subset, including Adobe BSD and ICU notices. The linked Typography source uses MIT, Apache 2.0, FreeType and Unicode/ICU permissions; full texts and original attribution lists accompany this notice.
+
+Portions of this software are copyright © 2003–2016 The FreeType Project (www.freetype.org). All rights reserved.
+
+The three unmodified embedded font files retain their original copyright notices in Font-copyright-notices.txt. The pinned CSharpMath source declares the AMS Capital Blackboard Bold and Cyrillic Modern fonts under the SIL Open Font License, and Latin Modern Math under the GUST Font License. Those licenses and the LPPL terms referenced by GUST are included. The Latin Modern Math bytes were verified identical to the installed fonts-lmodern file accompanying the preserved GUST license, README and manifest.
+
+This notice bundle covers this pinned equation-layout dependency cohort. It does not state that the full 9to1 native runtime distribution, other dependencies, corresponding-source obligations, platform packages or font shaping parity are complete. No font bytes, native Skia binaries or native version pins were modified by this integration.

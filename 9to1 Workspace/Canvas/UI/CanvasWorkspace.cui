@@ -1,0 +1,72 @@
+<Cui id="9to1.Canvas.Workspace" version="1">
+  <Grid id="canvas-shell" rows="Auto,*,Auto" accessible-name="Canvas workspace">
+    <WrapPanel id="canvas-document-controls" orientation="Horizontal">
+      <Button id="canvas-open" action="9to1.Canvas.Artifact.Open" is-enabled="{Binding CanOpen}" content="Open" accessible-name="Open Canvas artifact through Files" />
+      <Button id="canvas-import" action="9to1.Canvas.Import" is-enabled="{Binding CanImport}" content="Import" accessible-name="Import Rnote or Xournal++ document" />
+      <TextBlock id="canvas-title" text="{Binding DisplayName}" accessible-name="Canvas document name" />
+      <Button id="canvas-save" action="9to1.Canvas.Artifact.Save" is-enabled="{Binding CanFlush}" content="Flush" accessible-name="Flush Canvas revision to Files" />
+      <Button id="canvas-undo" action="9to1.Canvas.History.Undo" is-enabled="{Binding CanUndo}" content="Undo" accessible-name="Undo Canvas document operation" />
+      <Button id="canvas-redo" action="9to1.Canvas.History.Redo" is-enabled="{Binding CanRedo}" content="Redo" accessible-name="Redo Canvas document operation" />
+      <Button id="canvas-fit" action="9to1.Canvas.View.Fit" is-enabled="{Binding CanFitView}" content="Fit" accessible-name="Fit the canvas in this view" />
+      <Button id="canvas-zoom-out" action="9to1.Canvas.View.ZoomOut" is-enabled="{Binding CanZoomOut}" content="−" accessible-name="Zoom out the canvas view" />
+      <Button id="canvas-zoom-in" action="9to1.Canvas.View.ZoomIn" is-enabled="{Binding CanZoomIn}" content="+" accessible-name="Zoom in the canvas view" />
+    </WrapPanel>
+    <CanvasSpatialSurface id="canvas-surface" grid-row="1" accessible-name="Editable Canvas drawing surface" />
+    <Button id="canvas-ai-indicator" grid-row="1" horizontal-alignment="Right" vertical-alignment="Top" margin="12"
+      action="9to1.Canvas.Tool.ai" is-enabled="{Binding CanAITool}" content="{Binding AiIndicatorLabel}" is-visible="{Binding AiIndicatorVisible}" accessible-name="Restore existing Canvas AI session" />
+    <StackPanel id="canvas-floating-tools" grid-row="1" horizontal-alignment="Center" vertical-alignment="Bottom" margin="12" spacing="8">
+      <Border id="canvas-tool-options" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="12" corner-radius="12" is-visible="{Binding ToolOptionsVisible}" accessible-name="Canvas contextual tool options">
+        <StackPanel spacing="4">
+          <TextBlock text="{Binding SelectedToolName}" accessible-name="Selected Canvas tool" />
+          <TextBlock text="{Binding ToolOptionsSummary}" text-wrapping="Wrap" accessible-name="Current tool options" />
+          <WrapPanel is-visible="{Binding EraserOptionsVisible}" orientation="Horizontal">
+            <Button action="9to1.Canvas.Erase.Natural" is-enabled="{Binding CanNaturalErase}" content="Natural" accessible-name="Natural eraser mode" />
+            <Button action="9to1.Canvas.Erase.Quick" is-enabled="{Binding CanQuickErase}" content="Quick" accessible-name="Quick eraser mode" />
+            <Button action="9to1.Canvas.Erase.Whole" is-enabled="{Binding CanWholeErase}" content="Whole stroke" accessible-name="Erase whole colliding strokes" />
+            <Button action="9to1.Canvas.Erase.Partial" is-enabled="{Binding CanPartialErase}" content="Partial stroke" accessible-name="Erase colliding stroke segments" />
+            <Button action="9to1.Canvas.Erase.Narrower" is-enabled="{Binding CanEditEraser}" content="Narrower" accessible-name="Decrease eraser width" />
+            <Button action="9to1.Canvas.Erase.Wider" is-enabled="{Binding CanEditEraser}" content="Wider" accessible-name="Increase eraser width" />
+          </WrapPanel>
+          <WrapPanel is-visible="{Binding EraserOptionsVisible}" orientation="Horizontal">
+            <Button action="9to1.Canvas.Erase.Previous" is-enabled="{Binding CanChooseEraseTarget}" content="Previous stroke" accessible-name="Choose previous stroke for Quick erasing" />
+            <Button action="9to1.Canvas.Erase.Next" is-enabled="{Binding CanChooseEraseTarget}" content="Next stroke" accessible-name="Choose next stroke for Quick erasing" />
+            <TextBlock text="{Binding EraseTargetSummary}" text-wrapping="Wrap" accessible-name="Chosen Quick eraser stroke" />
+            <Button action="9to1.Canvas.Erase.Chosen" is-enabled="{Binding CanEraseChosenTarget}" content="Erase chosen stroke" accessible-name="Review deletion of chosen stroke in Home" />
+          </WrapPanel>
+          <TextBlock is-visible="{Binding EraserOptionsVisible}" text="{Binding EraseInputStatus}" text-wrapping="Wrap" accessible-name="Eraser input status" />
+
+          <StackPanel orientation="Horizontal" spacing="4" is-visible="{Binding PenOptionsVisible}">
+            <Button action="9to1.Canvas.Ink.Solid" is-enabled="{Binding CanEditInk}" content="Solid" accessible-name="Use solid ink" />
+            <Button action="9to1.Canvas.Ink.Marker" is-enabled="{Binding CanEditInk}" content="Marker" accessible-name="Use marker ink" />
+            <Button action="9to1.Canvas.Ink.Black" is-enabled="{Binding CanEditInk}" content="Black" accessible-name="Use black ink" />
+            <Button action="9to1.Canvas.Ink.Red" is-enabled="{Binding CanEditInk}" content="Red" accessible-name="Use red ink" />
+            <Button action="9to1.Canvas.Ink.Blue" is-enabled="{Binding CanEditInk}" content="Blue" accessible-name="Use blue ink" />
+          </StackPanel>
+          <StackPanel orientation="Horizontal" spacing="4" is-visible="{Binding PenOptionsVisible}">
+            <Button action="9to1.Canvas.Ink.Narrower" is-enabled="{Binding CanEditInk}" content="Narrower" accessible-name="Decrease pen width" />
+            <Button action="9to1.Canvas.Ink.Wider" is-enabled="{Binding CanEditInk}" content="Wider" accessible-name="Increase pen width" />
+            <Button action="9to1.Canvas.Ink.LessOpaque" is-enabled="{Binding CanEditInk}" content="Less opaque" accessible-name="Decrease ink opacity" />
+            <Button action="9to1.Canvas.Ink.MoreOpaque" is-enabled="{Binding CanEditInk}" content="More opaque" accessible-name="Increase ink opacity" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+      <Border id="canvas-primary-toolbar" background="{Resource CuiPanelBrush}" border-brush="{Resource CuiLineBrush}" border-thickness="1" padding="12" corner-radius="12" accessible-name="Canvas primary tools">
+        <StackPanel orientation="Horizontal" spacing="8">
+          <Button id="canvas-tool-select" action="9to1.Canvas.Tool.select" is-enabled="{Binding CanSelectTool}" content="{Binding SelectToolLabel}" accessible-name="Select tool" />
+          <Button id="canvas-tool-pan" action="9to1.Canvas.Tool.pan" is-enabled="{Binding CanPanTool}" content="{Binding PanToolLabel}" accessible-name="Pan tool" />
+          <Button id="canvas-tool-pen" action="9to1.Canvas.Tool.pen" is-enabled="{Binding CanPenTool}" content="{Binding PenToolLabel}" accessible-name="Pen tool" />
+          <Button id="canvas-tool-eraser" action="9to1.Canvas.Tool.eraser" is-enabled="{Binding CanEraserTool}" content="{Binding EraserToolLabel}" accessible-name="Eraser tool" />
+          <Button id="canvas-tool-insert" action="9to1.Canvas.Tool.insert" is-enabled="{Binding CanInsertTool}" content="{Binding InsertToolLabel}" accessible-name="Insert tool" />
+          <Button id="canvas-tool-tools" action="9to1.Canvas.Tool.tools" is-enabled="{Binding CanToolsTool}" content="{Binding ToolsToolLabel}" accessible-name="Specialised tools" />
+          <Button id="canvas-tool-ai" action="9to1.Canvas.Tool.ai" is-enabled="{Binding CanAITool}" content="{Binding AIToolLabel}" accessible-name="Canvas contextual AI" />
+        </StackPanel>
+      </Border>
+      <TextBlock text="{Binding ToolCapabilityStatus}" text-wrapping="Wrap" accessible-name="Tool capability status" />
+    </StackPanel>
+    <StackPanel id="canvas-status" grid-row="2" spacing="4">
+      <TextBlock id="canvas-storage-status" text="{Binding PersistenceStatus}" accessible-name="Canvas persistence state" />
+      <TextBlock id="canvas-compatibility" text="{Binding CompatibilityStatus}" accessible-name="Canvas compatibility report" />
+      <TextBlock id="canvas-selection" text="{Binding SelectionSummary}" accessible-name="Canvas selected object information" />
+    </StackPanel>
+  </Grid>
+</Cui>

@@ -10,6 +10,8 @@ LOK_CALLBACK_UNO_COMMAND_RESULT path to prove SelectAll and Bold completion.
 
 Environment overrides:
   LO_PROGRAM_PATH         LibreOffice program directory (default /usr/lib/libreoffice/program)
+  LO_INCLUDE_PATH         LibreOfficeKit header root (default /usr/include)
+  LO_LANGTAG_DATA_PATH    isolated liblangtag data directory (optional)
   CXX                     C++ compiler (default c++)
   BUILD_DIR               disposable build directory (default under /tmp)
   SEMANTIC_PROBE_TIMEOUT  outer watchdog duration for coreutils timeout (default 30s)
@@ -28,6 +30,7 @@ fi
 
 source_document="$1"
 lo_program="${LO_PROGRAM_PATH:-/usr/lib/libreoffice/program}"
+lo_include="${LO_INCLUDE_PATH:-/usr/include}"
 cxx="${CXX:-c++}"
 build_dir="${BUILD_DIR:-/tmp/haven-write-lok-semantic-probe}"
 output_document="${2:-$build_dir/semantic-roundtrip.odt}"
@@ -53,8 +56,8 @@ if ! command -v timeout >/dev/null 2>&1; then
   exit 68
 fi
 
-if [[ ! -f /usr/include/LibreOfficeKit/LibreOfficeKit.h ]]; then
-  echo "FAIL: LibreOfficeKit headers are missing; expected libreofficekit-dev to provide /usr/include/LibreOfficeKit/LibreOfficeKit.h" >&2
+if [[ ! -f "$lo_include/LibreOfficeKit/LibreOfficeKit.h" ]]; then
+  echo "FAIL: LibreOfficeKit headers are missing under LO_INCLUDE_PATH=$lo_include" >&2
   exit 69
 fi
 
@@ -71,7 +74,7 @@ rm -f "$output_document"
 "$cxx" \
   -std=c++20 \
   -Wall -Wextra -Wpedantic -Werror \
-  -I/usr/include \
+  -I"$lo_include" \
   "$script_dir/lok_semantic_probe.cxx" \
   -ldl \
   -o "$probe_binary"

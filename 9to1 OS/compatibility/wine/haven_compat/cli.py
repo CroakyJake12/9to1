@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from .audit import audit_environment
-from .broker import CompatibilityBroker, load_manifest
+from .broker import CompatibilityBroker, CompatibilityError, load_manifest
 from .daemon import serve_forever
 
 
@@ -21,6 +21,12 @@ def main(argv: list[str] | None = None) -> int:
 
     subparsers.add_parser("capabilities", help="report the stable HUI-facing capability surface")
     subparsers.add_parser("list-apps", help="list registered Windows compatibility applications")
+    subparsers.add_parser("list-backends", help="report unified framework capabilities and availability")
+    inspect_parser = subparsers.add_parser("inspect-package", help="inspect package signature and routing without executing it")
+    inspect_parser.add_argument("package", type=Path)
+    preference_parser = subparsers.add_parser("set-package-backend", help="set an eligible framework association by stable package identity")
+    preference_parser.add_argument("package", type=Path)
+    preference_parser.add_argument("backend", help="framework ID, or 'reset' to remove the association")
 
     health_parser = subparsers.add_parser("health", help="report backend and supervisor health")
     health_parser.add_argument("--runtime-root", type=Path)
@@ -67,6 +73,20 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     broker = CompatibilityBroker()
+
+    if args.action == "list-backends":
+        print(json.dumps([backend.as_dict() for backend in broker.compatibility_backends()], indent=2))
+        return 0
+
+    if args.action in {"inspect-package", "set-package-backend"}:
+        try:
+            path = str(args.package.absolute())
+            result = broker.inspect_foreign_package(path) if args.action == "inspect-package" else broker.set_package_backend(path, None if args.backend == "reset" else args.backend)
+            print(json.dumps(result, indent=2))
+            return 0
+        except CompatibilityError as exc:
+            print(json.dumps({"ok": False, "error": {"code": "package_routing_error", "message": str(exc)}}))
+            return 2
 
     if args.action == "list-apps":
         print(json.dumps(broker.list_apps(), indent=2))

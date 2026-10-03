@@ -32,6 +32,8 @@ try
         return;
     }
 
+    if(args.Contains("--owned-signal-only")){await OwnedSignalSpecs.RunAsync();return;}
+    await TerminalEnvironmentSpecs.RunAsync();
     await TerminalAppSurfaceSpecs.RunAsync();
     await PtyProcessSpecs.RunAsync();
     Console.WriteLine("Terminal specs passed.");
@@ -51,9 +53,111 @@ internal static class TerminalAppSurfaceSpecs
         await AskPermissionRequiresApprovalWithoutExecutingAsync();
         await CommandTextIsPreservedForNativeShellExecutionAsync();
         await ApprovalUsesTheSamePersistentSessionAsync();
+        await ApprovalBindsDisplayedCommandAndDirectoryAsync();
         await WorkingDirectoryAndNewSessionUseHostSessionContractAsync();
         await FailedReplacementPreservesHealthySessionAsync();
         CreationFailureFailsClosedAndRedactsReason();
+        await AdviceNeverExecutesSuggestedCommandsAsync();
+        await AiResolutionCannotOutliveItsSessionContextAsync();
+        await RetainedAuditSurvivesCancellationAndSessionChangeWithoutActionReplayAsync();
+    }
+
+    private static async Task AiResolutionCannotOutliveItsSessionContextAsync()
+    {
+        var factory=new FakeSessionFactory();var broker=new DelayedActionBroker();
+        using var surface=new TerminalAppSurface(new(factory,()=>PermissionMode.FullAccess,NaturalLanguageActions:broker));
+        surface.SetMode(TerminalInputMode.AI);
+        var pending=surface.SubmitAsync("show files");surface.SetMode(TerminalInputMode.Command);broker.Complete();
+        Check((await pending).State==TerminalAppCommandState.Cancelled&&surface.ResolvedAction is null,"late AI result cannot resurrect after mode change");
+        surface.SetMode(TerminalInputMode.AI);
+        using(var cancelled=new CancellationTokenSource())
+        {
+            pending=surface.SubmitAsync("show files",cancelled.Token);cancelled.Cancel();broker.Complete();
+            try{await pending;throw new Exception("cancelled resolution published");}catch(OperationCanceledException){}
+            Check(surface.ResolvedAction is null,"broker ignoring cancellation cannot publish cancelled resolution");
+        }
+        surface.SetMode(TerminalInputMode.AI);pending=surface.SubmitAsync("show files");broker.Complete(foreign:true);
+        Check((await pending).State==TerminalAppCommandState.Cancelled&&surface.ResolvedAction is null,"foreign resolved session target rejected");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;var old=surface.ResolvedAction!;
+        Check(surface.NewSession(),"replacement native session created");
+        Check((await surface.ExecuteResolvedActionAsync(old.Id.ToString("D"),null)).State==TerminalAppCommandState.Unavailable&&broker.Executions==0,"old session AI action cannot dispatch after replacement");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;var current=surface.ResolvedAction!;
+        broker.Objects[0]="injected";Check(current.AffectedObjects.Single()=="fixture-file","resolved object scope detached from broker mutable list");
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),"fixture-home-verification")).State==TerminalAppCommandState.Succeeded,"current action delegated to canonical broker");
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),"fixture-home-verification")).State==TerminalAppCommandState.Unavailable&&broker.Executions==1,"resolved action consumed once");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
+        broker.RequireApproval = true;
+        var approval = await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"), null);
+        Check(approval.State == TerminalAppCommandState.RequiresApproval && surface.ResolvedAction?.Id == current.Id, "pending Home approval preserves exact draft without execution");
+        broker.RequireApproval = false;
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"), "home-request")).State == TerminalAppCommandState.Succeeded && surface.ResolvedAction is null, "approved retry consumes draft");
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
+        broker.RequireApproval = true;
+        broker.BeforeExecution = () => surface.SetMode(TerminalInputMode.Command);
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"), null)).State == TerminalAppCommandState.Unavailable && surface.ResolvedAction is null, "pending approval cannot restore after mode change");
+        broker.RequireApproval = false; broker.BeforeExecution = null; surface.SetMode(TerminalInputMode.AI);
+        pending=surface.SubmitAsync("show files");broker.Complete();await pending;current=surface.ResolvedAction!;
+        await surface.SetWorkingDirectoryAsync(Path.GetTempPath());
+        Check((await surface.ExecuteResolvedActionAsync(current.Id.ToString("D"),null)).State==TerminalAppCommandState.Unavailable,"directory transition invalidates resolved action");
+    }
+    private static async Task RetainedAuditSurvivesCancellationAndSessionChangeWithoutActionReplayAsync()
+    {
+        var broker = new DelayedActionBroker { PauseExecution = true };
+        using var surface = new TerminalAppSurface(new(new FakeSessionFactory(), () => PermissionMode.FullAccess, NaturalLanguageActions: broker));
+        surface.SetMode(TerminalInputMode.AI);
+        var resolution = surface.SubmitAsync("controlled first action"); broker.Complete(); await resolution;
+        var first = surface.ResolvedAction!;
+        using var cancellation = new CancellationTokenSource();
+        var execution = surface.ExecuteResolvedActionAsync(first.Id.ToString("D"), null, cancellation.Token);
+        resolution = surface.SubmitAsync("controlled later action"); broker.Complete(); await resolution;
+        var later = surface.ResolvedAction!;
+        Check((await surface.ExecuteResolvedActionAsync(later.Id.ToString("D"), null)).State == TerminalAppCommandState.Unavailable && broker.Executions == 1,
+            "another action cannot dispatch while the first owner outcome is pending");
+        cancellation.Cancel(); broker.CompleteExecution();
+        Check((await execution).State == TerminalAppCommandState.NeedsRecovery && surface.AuditRecoveryActionId == first.Id,
+            "cancellation after owning result cannot discard exact audit recovery");
+        Check(surface.NewSession(), "replacement session for audit boundary created");
+        surface.SetMode(TerminalInputMode.Command);
+        Check((await surface.RetryActionAuditAsync(Guid.NewGuid())).State == TerminalAppCommandState.Unavailable && broker.AuditRetries == 0,
+            "foreign displayed action cannot retry retained audit");
+        Check((await surface.RetryActionAuditAsync(first.Id)).State == TerminalAppCommandState.Succeeded && surface.AuditRecoveryActionId is null &&
+            broker.Executions == 1 && broker.AuditRetries == 1, "session change audit retry cannot redispatch the consumed owner action");
+    }
+
+    private sealed class DelayedActionBroker:ITerminalActionBroker
+    {
+        private TaskCompletionSource<TerminalResolvedAction> _pending=null!;private Guid _session;private TerminalEnvironmentId _environment;
+        public List<string> Objects {get;private set;}=[];public int Executions {get;private set;}
+        public bool RequireApproval { get; set; }
+        public bool PauseExecution; public int AuditRetries;
+        private readonly TaskCompletionSource<TerminalActionExecutionResult> _execution = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public void CompleteExecution() => _execution.TrySetResult(new(false, "NeedsRecovery", "Controlled owner outcome needs audit recovery."));
+        public Task<TerminalActionExecutionResult> RetryAuditAsync(Guid actionId, CancellationToken ct = default)
+        { AuditRetries++; return Task.FromResult(new TerminalActionExecutionResult(false, "AuditRecorded", "Controlled exact audit observed.")); }
+        public Action? BeforeExecution { get; set; }
+        public Task<TerminalResolvedAction> ResolveAsync(Guid session,TerminalEnvironmentId environment,string request,CancellationToken ct)
+        { _session=session;_environment=environment;_pending=new(TaskCreationOptions.RunContinuationsAsynchronously);Objects=["fixture-file"];return _pending.Task; }
+        public void Complete(bool foreign=false)=>_pending.SetResult(new(Guid.NewGuid(),foreign?Guid.NewGuid():_session,_environment,TerminalActionKind.TypedApi,"Files","List","Show files",Objects,TerminalActionRisk.ReadOnly,true,false));
+        public Task<TerminalActionExecutionResult> ExecuteAsync(TerminalResolvedAction action,string? verificationToken,CancellationToken ct)
+        { BeforeExecution?.Invoke(); if (RequireApproval) return Task.FromResult(new TerminalActionExecutionResult(false,"PermissionRequired","Review in Home", "home-request")); Executions++;return PauseExecution ? _execution.Task : Task.FromResult(new TerminalActionExecutionResult(true,"Executed","Fixture broker executed"));}
+    }
+
+    private static async Task AdviceNeverExecutesSuggestedCommandsAsync()
+    {
+        var factory=new FakeSessionFactory();var advice=new AdviceFixture();
+        using var surface=new TerminalAppSurface(new(factory,()=>PermissionMode.FullAccess,Advice:advice));
+        var result=await surface.SubmitAsync("$Ask how do I remove old files?");
+        Check(result.State==TerminalAppCommandState.Succeeded,"advice returned");
+        Check(factory.LastSession!.ExecuteCount==0,"suggested command never reaches native shell");
+        Check(advice.Question=="how do I remove old files?","reserved Ask prefix routed to advice");
+        var count=factory.CreateCount;surface.SetMode(TerminalInputMode.AI);surface.SetMode(TerminalInputMode.Command);
+        Check(factory.CreateCount==count,"mode switch preserves persistent PTY");
+    }
+    private sealed class AdviceFixture:ITerminalAdviceService
+    {
+        public string? Question {get;private set;}
+        public Task<TerminalAdviceResult> AskAsync(Haven.Application.TerminalAdviceContext context,string question,CancellationToken token)
+        {Question=question;return Task.FromResult(new TerminalAdviceResult("Suggested command: rm old-file (review first)",["rm old-file"]));}
     }
 
     private static async Task MissingSessionCapabilityFailsClosedAsync()
@@ -100,6 +204,39 @@ internal static class TerminalAppSurfaceSpecs
         Check(approvedSecond.State == TerminalAppCommandState.Succeeded, "second approved command should execute");
         Check(factory.CreateCount == 1, "multiple commands must reuse one persistent host session");
         Check(factory.LastSession!.ExecuteCount == 2, "both commands must execute through that session");
+    }
+
+    private static async Task ApprovalBindsDisplayedCommandAndDirectoryAsync()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "terminal-review-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var factory = new FakeSessionFactory();
+            using var surface = new TerminalAppSurface(new(factory, () => PermissionMode.Ask));
+            await surface.SubmitAsync("first-command");
+            var first = surface.PendingCommandId!.Value;
+            await surface.SubmitAsync("second-command");
+            var second = surface.PendingCommandId!.Value;
+            Check(first != second, "each manual review has its own stable identity");
+            Check((await surface.ApprovePendingAsync(first)).State == TerminalAppCommandState.Denied, "old review cannot approve replacement command");
+            surface.DenyPending(first);
+            Check(surface.PendingCommandId == second && factory.LastSession!.ExecuteCount == 0, "old deny cannot clear replacement review");
+            Check((await surface.ApprovePendingAsync(second)).State == TerminalAppCommandState.Succeeded && factory.LastSession!.LastCommand == "second-command", "exact displayed review executes once");
+            await surface.SubmitAsync("directory-sensitive");
+            var beforeDirectory = surface.PendingCommandId!.Value;
+            await surface.SetWorkingDirectoryAsync(directory);
+            Check(surface.PendingCommandId is null && (await surface.ApprovePendingAsync(beforeDirectory)).State != TerminalAppCommandState.Succeeded, "owner directory change invalidates pending review");
+            await surface.SubmitAsync("external-directory-sensitive");
+            var external = surface.PendingCommandId!.Value;
+            await factory.LastSession!.SetWorkingDirectoryAsync(Path.GetTempPath(), default);
+            Check((await surface.ApprovePendingAsync(external)).State == TerminalAppCommandState.Denied && factory.LastSession.ExecuteCount == 1, "external session directory change denies old review");
+            await surface.SubmitAsync("replaced-session");
+            var replaced = surface.PendingCommandId!.Value;
+            surface.NewSession();
+            Check((await surface.ApprovePendingAsync(replaced)).State != TerminalAppCommandState.Succeeded && factory.LastSession!.ExecuteCount == 0, "old review cannot target replacement shell");
+        }
+        finally { Directory.Delete(directory, true); }
     }
 
     private static async Task CommandTextIsPreservedForNativeShellExecutionAsync()
@@ -203,7 +340,7 @@ internal sealed class FakeSession : ITerminalSession
             TerminalSessionLifecycleState.Ready,
             DateTimeOffset.UtcNow,
             0,
-            false);
+            false) {EnvironmentId=new TerminalEnvironmentId("fixture-local")};
     }
 
     public int ExecuteCount { get; private set; }

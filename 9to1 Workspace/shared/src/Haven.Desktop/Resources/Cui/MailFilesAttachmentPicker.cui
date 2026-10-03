@@ -1,0 +1,13 @@
+<Cui>
+  <StackPanel margin="20" spacing="12">
+    <TextBlock text="Attach from Files" font-size="24" />
+    <TextBox id="mail-files-search" is-enabled="{Binding CanSearch}" text="{Binding Search, Mode=TwoWay}" accessible-name="Search the current Files folder" />
+    <Button id="mail-files-search-button" action="Search" is-enabled="{Binding CanSearch}" content="Search this folder" />
+    <ComboBox id="mail-files-row" is-enabled="{Binding CanSelect}" items-source="{Binding Rows}" selected-index="{Binding SelectedIndex, Mode=TwoWay}" accessible-name="Canonical Files item" />
+    <Button id="mail-files-enter" action="Enter" is-enabled="{Binding CanEnter}" content="Open selected folder" />
+    <Button id="mail-files-up" action="Up" is-enabled="{Binding CanUp}" content="Up to canonical parent" />
+    <Button id="mail-files-attach" action="Attach" is-enabled="{Binding CanAttach}" content="Attach selected file" />
+    <Button id="mail-files-cancel" action="Cancel" content="Cancel" />
+    <TextBlock text="{Binding Status}" text-wrapping="Wrap" />
+  </StackPanel>
+</Cui>

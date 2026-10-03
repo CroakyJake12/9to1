@@ -9,13 +9,16 @@
 
 using Haven.Application;
 using Haven.Core;
+using Haven.Application.Automations;
+using Microsoft.Data.Sqlite;
 
 namespace Haven.Infrastructure;
 
 /// <summary>
 /// Represents workspace state repository and keeps its related state and behavior together.
 /// </summary>
-public sealed class WorkspaceStateRepository(ISqliteConnectionFactory factory) : IWorkspaceStateRepository
+public sealed partial class WorkspaceStateRepository(ISqliteConnectionFactory factory, AutomationLocalStoreAuthority? ownerAuthority = null,
+    Func<AutomationLocalStoreAuthority>? ownerAuthorityAccessor = null) : IWorkspaceStateRepository, IReusableTaskOwnerRepository
 {
     /// <summary>
     /// Retrieves reusable_tasks async for the current operation.
@@ -31,8 +34,10 @@ public sealed class WorkspaceStateRepository(ISqliteConnectionFactory factory) :
         var result = new List<ReusableTaskDefinition>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            result.Add(new ReusableTaskDefinition(reader.Guid("id"), reader.String("name"), reader.String("description"), reader.String("instruction"),
-                reader.NullableGuid("container_id"), reader.Boolean("is_enabled"), reader.DateTimeOffset("created_at"), reader.DateTimeOffset("updated_at"), reader.NullableString("graph_json")));
+        {
+            var owned = ReadOwnedReusableTask(reader);
+            result.Add(owned.RequiresRecovery ? owned.Value with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention } : owned.Value);
+        }
         return result;
     }
 
@@ -41,15 +46,38 @@ public sealed class WorkspaceStateRepository(ISqliteConnectionFactory factory) :
     /// </summary>
     public async Task UpsertReusableTaskAsync(ReusableTaskDefinition macro, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(macro);
+        if (macro.Revision != 0 || macro.OwnerBinding is not null || macro.GraphBinding is not null ||
+            macro.Metadata is not null || macro.PublicationJournal is not null || macro.LastOwnerCommit is not null ||
+            macro.ArchivedAt is not null || macro.OperationalState != AutomationOperationalState.NeedsAttention)
+            throw new NotSupportedException("Protected reusable tasks require the owning Home-reviewed writer.");
         await using var connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var command = connection.CreateCommand();
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var storedID = macro.Id.ToString();
+        await using (var inspect = connection.CreateCommand())
+        {
+            inspect.Transaction = transaction;
+            inspect.CommandText = "SELECT revision,owner_binding_json,graph_binding_json,definition_metadata_json,publication_journal_json,owner_commit_receipt_json,archived_at,id FROM reusable_tasks WHERE lower(replace(replace(replace(id,'-',''),'{',''),'}',''))=lower(replace($id,'-',''));";
+            inspect.Parameters.AddWithValue("$id", macro.Id.ToString());
+            await using var row = await inspect.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            var matched = false;
+            while (await row.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                if (matched) throw new NotSupportedException("Ambiguous legacy identity requires explicit recovery.");
+                matched = true;
+                if (row.GetInt64(0) != 0 || Enumerable.Range(1, 6).Any(index => !row.IsDBNull(index)))
+                    throw new NotSupportedException("Ordinary saves cannot change an owned or recovering reusable task.");
+                storedID = row.GetString(7); // Retain actual legacy row spelling; never create a GUID alias row.
+            }
+        }
+        await using var command = connection.CreateCommand(); command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO reusable_tasks(id,name,description,instruction,container_id,is_enabled,created_at,updated_at,graph_json)
             VALUES($id,$name,$description,$instruction,$containerId,$isEnabled,$createdAt,$updatedAt,$graphJson)
             ON CONFLICT(id) DO UPDATE SET name=excluded.name,description=excluded.description,instruction=excluded.instruction,
               container_id=excluded.container_id,is_enabled=excluded.is_enabled,updated_at=excluded.updated_at,graph_json=excluded.graph_json;
             """;
-        command.Parameters.AddWithValue("$id", macro.Id.ToString());
+        command.Parameters.AddWithValue("$id", storedID);
         command.Parameters.AddWithValue("$name", macro.Name);
         command.Parameters.AddWithValue("$description", macro.Description);
         command.Parameters.AddWithValue("$instruction", macro.Instruction);
@@ -59,14 +87,16 @@ public sealed class WorkspaceStateRepository(ISqliteConnectionFactory factory) :
         command.Parameters.AddWithValue("$updatedAt", macro.UpdatedAt.ToString("O"));
         command.Parameters.AddWithValue("$graphJson", (object?)macro.GraphJson ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Performs delete macro asynchronously so I/O does not block the caller's thread.
     /// </summary>
-    public async Task DeleteReusableTaskAsync(Guid id, CancellationToken cancellationToken)
+    public Task DeleteReusableTaskAsync(Guid id, CancellationToken cancellationToken)
     {
-        await ExecuteDeleteAsync("reusable_tasks", id, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        throw new NotSupportedException("Reusable task deletion requires the owning recoverable archive operation.");
     }
 
     /// <summary>

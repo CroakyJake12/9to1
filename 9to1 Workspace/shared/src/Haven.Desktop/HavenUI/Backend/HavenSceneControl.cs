@@ -107,6 +107,9 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
         set
         {
             if (ReferenceEquals(_root, value)) return;
+            if (_root is not null)
+                foreach (var prefab in _root.DescendantsAndSelf().OfType<Prefab>().Where(item => item.PrefabID == "Chatbox"))
+                    Haven.Desktop.Prefabs.ChatComposerController.For(prefab).FocusRequested = null;
             ClearSubscriptions();
             _root = value;
             _input = value is null ? null : new HavenInputRouter(value);
@@ -119,6 +122,8 @@ public sealed class HavenSceneControl : Panel, IHavenMeasureContext
             {
                 _resources.ApplyClasses(_root);
                 RefreshSubscriptions();
+                foreach (var prefab in _root.DescendantsAndSelf().OfType<Prefab>().Where(item => item.PrefabID == "Chatbox"))
+                    Haven.Desktop.Prefabs.ChatComposerController.For(prefab).FocusRequested = input => FocusElement(input);
                 CaptureMotionState(_root, true);
             }
             InvalidateMeasure();

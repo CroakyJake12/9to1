@@ -73,6 +73,8 @@ public sealed record AppAiContextSnapshot(
     string? HostState = null,
     bool IsLiveDatabase = false);
 
+public enum AppAiApprovalFlow { Coordinator, OwningResourceBroker }
+
 public sealed record AppAiActionDescriptor(
     string Id,
     string DisplayName,
@@ -86,7 +88,11 @@ public sealed record AppAiActionDescriptor(
     bool HasExternalSideEffects = false,
     IReadOnlyList<string>? AffectedObjectIds = null,
     bool ImpactUnknown = true,
-    string? ImpactSummary = null);
+    string? ImpactSummary = null)
+{
+    /// <summary>Owner delegation preserves review metadata; it does not carry any grant or token.</summary>
+    public AppAiApprovalFlow ApprovalFlow { get; init; } = AppAiApprovalFlow.Coordinator;
+}
 
 public sealed record AppAiActionRequest(
     string AppId,
@@ -104,6 +110,12 @@ public sealed record AppAiActionResult(
     string? ErrorCode = null,
     bool CanRetry = false)
 {
+    /// <summary>In-process audit-only handle; never an action retry, persisted capability, or owner grant.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IAppAiAuditRecovery? AuditRecovery { get; init; }
+    public bool ActionGraphPending { get; init; }
+    public bool CompletionAuditPending { get; init; }
+
     public static AppAiActionResult Success(string summary, JsonElement? value = null) =>
         new(true, summary, value);
 
@@ -125,8 +137,40 @@ public interface IAppAiActions
         CancellationToken cancellationToken);
 }
 
+/// <summary>Trusted owning adapter with an actual Home resource-broker intent/claim/commit path.
+/// The implementation retains exact prepared intents across pending review and records the actual owner
+/// result. Generic coordinator tokens are never accepted as resource execution capabilities.</summary>
+public interface IAppAiResourceBrokerActions : IAppAiActions
+{
+    ValueTask<AppAiActionResult> ExecuteWithOwnedApprovalAsync(AppAiActionRequest request, CancellationToken cancellationToken);
+}
+
+public sealed record AppAiCompletionObservation(bool AuditRecorded, IAppAiAuditRecovery? Recovery = null);
+
+/// <summary>Issuer-bound audit-only completion. Implementations retain the first observed owner outcome.</summary>
+public interface IAppAiAuditRecovery
+{
+    ValueTask<AppAiCompletionObservation> FinishAsync(CancellationToken cancellationToken = default);
+}
+
 public interface IAppAiApprovalVerifier
 {
+    ValueTask<AppAiCompletionObservation> CompleteRejectedVerificationAsync(AppAiActionRequest request,
+        CancellationToken cancellationToken) => ValueTask.FromResult(new AppAiCompletionObservation(false));
+
+    async ValueTask<AppAiCompletionObservation> CompleteWithRecoveryAsync(AppAiActionRequest request,
+        AppAiActionResult result, CancellationToken cancellationToken)
+    {
+        await CompleteAsync(request, result, cancellationToken).ConfigureAwait(false);
+        // A legacy return has no issued durable completion evidence or recovery handle.
+        return new(false);
+    }
+
+    ValueTask CompleteAsync(AppAiActionRequest request, AppAiActionResult result, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+
+    ValueTask<bool> VerifyRequestAsync(AppAiActionRequest request, CancellationToken cancellationToken) =>
+        request.ApprovalToken is { } token ? VerifyAsync(request.AppId, request.ActionId, token, cancellationToken) : ValueTask.FromResult(false);
+
     ValueTask<bool> VerifyAsync(
         string appId,
         string actionId,
@@ -180,10 +224,11 @@ public sealed record AppAiPrompt(
     string CorrelationId,
     AppAiAccessMode AccessMode = AppAiAccessMode.ReadOnly,
     IReadOnlyList<AppAiActionDescriptor>? AvailableActions = null,
-    AppAiModelSelection? ModelSelection = null)
+    AppAiModelSelection? ModelSelection = null,
+    IReadOnlyList<InvocationToken>? Invocations = null)
 {
     public string SystemInstructions => AccessMode == AppAiAccessMode.ReadOnly
-        ? "Inspect only the supplied authorised semantic context. Do not request or perform app actions. You may describe proposed changes in your response. Do not infer private or off-scope information."
+        ? "Inspect only the supplied authorised semantic context; do not request or perform app actions. You may describe proposed changes in your response. Do not infer private or off-scope information."
         : "Use only the supplied authorised semantic context and listed typed app actions. Request mutations only through those actions and stable target IDs. The host app, Home permissions and its current edit/review state remain authoritative; Write mode does not bypass them. Do not use UI simulation or invent entities.";
 }
 
@@ -193,7 +238,12 @@ public sealed record AppAiRequestedAction(string ActionId, JsonElement Arguments
 public sealed record AppAiResponseChunk(
     string Text,
     bool IsFinal = false,
-    AppAiRequestedAction? RequestedAction = null);
+    AppAiRequestedAction? RequestedAction = null)
+{
+    // Only the coordinator supplies observed owner outcomes; model-originated chunks are stripped.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public AppAiActionResult? ActionObservation { get; init; }
+}
 
 public sealed record AppAiApprovalRequest(
     string CallerId,
@@ -203,7 +253,8 @@ public sealed record AppAiApprovalRequest(
     bool ForcePerActionApproval,
     string? ChangePreview,
     string? BackupId,
-    string CorrelationId);
+    string CorrelationId,
+    JsonElement? Arguments = null);
 
 public sealed record AppAiApprovalDecision(
     AppAiApprovalOutcome Outcome,
@@ -226,7 +277,8 @@ public sealed record AppAiActionGraphEvent(
     string CorrelationId,
     AppAiActionGraphStatus Status,
     string Summary,
-    DateTimeOffset Timestamp);
+    DateTimeOffset Timestamp,
+    IReadOnlyList<InvocationToken>? Invocations = null);
 
 public sealed record AppAiModelOption(string Id, string DisplayName, string ProviderId, bool IsLocal, bool IsAvailable);
 

@@ -34,6 +34,20 @@ def main() -> int:
             keyword_literal = worker.call("query", {"sql": "SELECT 'UPDATE is text, not SQL' AS note", "maxRows": 20})
             require(keyword_literal["rows"] == [["UPDATE is text, not SQL"]], "SQL words inside string literals were misclassified.")
 
+            # EXPLAIN ANALYZE is classified EXPLAIN but executes its nested plan.
+            # The engine must reject writes even when the parsed outer type passes.
+            for nested in (
+                "INSERT INTO \"WorkbookValues\" VALUES ('injected', '99')",
+                "UPDATE \"WorkbookValues\" SET \"value\" = '99'",
+                'DELETE FROM "WorkbookValues"',
+            ):
+                error = worker.expect_error("query", {"sql": "EXPLAIN ANALYZE " + nested, "maxRows": 20})
+                require("read-only" in error.lower(), "Nested mutation did not reach the engine read-only guard.")
+                unchanged = worker.call("query", {"sql": 'SELECT "label", "value" FROM "WorkbookValues" ORDER BY "label"', "maxRows": 20})
+                require(unchanged["rows"] == [["A", "2"], ["B", "3"]], "Rejected EXPLAIN ANALYZE mutated committed rows.")
+            explained = worker.call("query", {"sql": 'EXPLAIN ANALYZE SELECT * FROM "WorkbookValues"', "maxRows": 20})
+            require(bool(explained["rows"]), "Read-only EXPLAIN ANALYZE SELECT was rejected.")
+
             # Replacement is an internal typed operation, not exposed as raw DDL.
             worker.call(
                 "replaceTable",

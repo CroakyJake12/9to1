@@ -1,3 +1,4 @@
+using NineToOne.Launcher;
 using Android.App;
 using Android.Appwidget;
 using Android.Content;
@@ -9,62 +10,74 @@ namespace Haven.Android;
 
 public sealed partial class HavenLauncherActivity
 {
+    private LauncherPresentation CurrentPresentation => _layout?.Current.Presentation ?? new(
+        ShowLabels: Preferences.GetBoolean(LabelsKey, true), ShowPackages: Preferences.GetBoolean(PackagesKey, false));
+    private int MinimumTileWidth => Dp(Math.Max(64, CurrentPresentation.IconSizeDp + CurrentPresentation.HorizontalSpacingDp * 2));
+    private int TileHeight => Dp(Math.Max(78, CurrentPresentation.IconSizeDp +
+        (CurrentPresentation.ShowLabels ? CurrentPresentation.LabelSizeSp * 2 : 0) +
+        (CurrentPresentation.ShowPackages ? 16 : 0) + CurrentPresentation.VerticalSpacingDp * 2));
+
     private void ShowLauncherSettings()
     {
-        var container = new LinearLayout(this)
-        {
-            Orientation = Orientation.Vertical
-        };
+        var expected = _layout;
+        if (expected is null) return;
+        var originalSettingsSession = DisplayedLayouts.Require(expected);
+        var settingsRoot = _root; var settingsEpoch = _widgetRenderEpoch;
+        AlertDialog? settingsDialog = null;
+        bool OriginalSettingsCurrent() => _activityStarted && _homeReady && !_launcherLifetime.IsCancellationRequested &&
+            !IsFinishing && !IsDestroyed && settingsRoot is not null && settingsRoot.IsAttachedToWindow &&
+            ReferenceEquals(_root, settingsRoot) && ReferenceEquals(_layout, expected) && settingsEpoch == _widgetRenderEpoch &&
+            settingsDialog?.IsShowing == true && ReferenceEquals(_launcherSettingsDialog, settingsDialog);
+        CloseLauncherSettingsDialog();
+        var appearance = CurrentPresentation;
+        var container = new LinearLayout(this) { Orientation = Orientation.Vertical };
         container.SetPadding(Dp(18), Dp(8), Dp(18), 0);
-
-        var rows = new NumberPicker(this)
+        var rows = new NumberPicker(this) { MinValue = 3, MaxValue = 8, Value = expected.Current.Rows };
+        var columns = new NumberPicker(this) { MinValue = 3, MaxValue = 7, Value = expected.Current.Columns };
+        var icon = new NumberPicker(this) { MinValue = 24, MaxValue = 96, Value = appearance.IconSizeDp };
+        var labelSize = new NumberPicker(this) { MinValue = 10, MaxValue = 24, Value = appearance.LabelSizeSp };
+        var horizontal = new NumberPicker(this) { MinValue = 0, MaxValue = 24, Value = appearance.HorizontalSpacingDp };
+        var vertical = new NumberPicker(this) { MinValue = 0, MaxValue = 24, Value = appearance.VerticalSpacingDp };
+        var labels = new HavenNativeCheckBox(this) { Text = "Show app labels", Checked = appearance.ShowLabels };
+        var packages = new HavenNativeCheckBox(this) { Text = "Show package names", Checked = appearance.ShowPackages };
+        void Preset(LauncherPresentation preset)
         {
-            MinValue = 3,
-            MaxValue = 8,
-            Value = Math.Clamp(Preferences.GetInt(RowsKey, 5), 3, 8)
-        };
-        var columns = new NumberPicker(this)
+            icon.Value = preset.IconSizeDp; labelSize.Value = preset.LabelSizeSp;
+            horizontal.Value = preset.HorizontalSpacingDp; vertical.Value = preset.VerticalSpacingDp;
+            labels.Checked = preset.ShowLabels; packages.Checked = preset.ShowPackages;
+        }
+        var presets = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+        foreach (var (name, value) in new[] { ("Compact", LauncherPresentation.Compact), ("Comfortable", LauncherPresentation.Comfortable), ("Large", LauncherPresentation.Large) })
         {
-            MinValue = 3,
-            MaxValue = 7,
-            Value = Math.Clamp(Preferences.GetInt(ColumnsKey, 4), 3, 7)
-        };
-        var labels = new HavenNativeCheckBox(this)
+            var button = new Button(this) { Text = name }; button.Click += (_, _) => Preset(value); presets.AddView(button);
+        }
+        var presetScroll = new HorizontalScrollView(this); presetScroll.AddView(presets); container.AddView(presetScroll);
+        var defaultHome = new Button(this) { Text = "Choose default Home", ContentDescription = "Choose 9to1 Launcher as default Home" };
+        defaultHome.Click += (_, _) =>
         {
-            Text = "Show app labels",
-            Checked = Preferences.GetBoolean(LabelsKey, true)
+            if (defaultHome.IsAttachedToWindow && OriginalSettingsCurrent())
+                _ = RequestDefaultHomeForOriginalAsync(originalSettingsSession, OriginalSettingsCurrent);
         };
-        var packages = new HavenNativeCheckBox(this)
-        {
-            Text = "Show package names",
-            Checked = Preferences.GetBoolean(PackagesKey, false)
-        };
-        container.AddView(LabeledControl("Rows", rows));
-        container.AddView(LabeledControl("Columns", columns));
-        container.AddView(labels);
-        container.AddView(packages);
-
-        var dialog = new AlertDialog.Builder(this);
-        dialog.SetTitle("Haven Launcher");
-        dialog.SetView(container);
+        container.AddView(defaultHome);
+        container.AddView(LabeledControl("Home rows", rows)); container.AddView(LabeledControl("Home columns", columns));
+        container.AddView(LabeledControl("Icon size", icon)); container.AddView(LabeledControl("Label size", labelSize));
+        container.AddView(LabeledControl("Horizontal spacing", horizontal)); container.AddView(LabeledControl("Vertical spacing", vertical));
+        container.AddView(labels); container.AddView(packages);
+        var scroll = new ScrollView(this); scroll.AddView(container);
+        var dialog = new AlertDialog.Builder(this); dialog.SetTitle("9to1 Launcher"); dialog.SetView(scroll);
         dialog.SetPositiveButton("Save", (_, _) =>
         {
-            var editor = Preferences.Edit();
-            if (editor is not null)
-            {
-                editor.PutInt(RowsKey, rows.Value);
-                editor.PutInt(ColumnsKey, columns.Value);
-                editor.PutBoolean(LabelsKey, labels.Checked);
-                editor.PutBoolean(PackagesKey, packages.Checked);
-                editor.Apply();
-            }
-
-            _page = 0;
-            RenderPage();
+            if (!OriginalSettingsCurrent()) return;
+            var selected = new LauncherPresentation(icon.Value, labelSize.Value, horizontal.Value, vertical.Value, labels.Checked, packages.Checked);
+            var originalRows = rows.Value; var originalColumns = columns.Value;
+            _ = EditLayoutAsync(layout => LauncherLayoutEdits.SetPresentation(LauncherLayoutEdits.Reflow(layout, originalRows, originalColumns), selected), expected);
         });
-        dialog.SetNeutralButton("Wallpaper", (_, _) => ChooseWallpaper());
-        dialog.SetNegativeButton("Widgets", (_, _) => ShowWidgetMenu());
-        dialog.Show();
+        dialog.SetNeutralButton("Wallpaper", (_, _) => { if (OriginalSettingsCurrent()) ChooseWallpaper(); });
+        dialog.SetNegativeButton("Widgets", (_, _) => { if (OriginalSettingsCurrent()) ShowWidgetMenu(); });
+        settingsDialog = dialog.Show();
+        _launcherSettingsDialog = settingsDialog;
+        if (settingsDialog is not null) settingsDialog.DismissEvent += (_, _) =>
+        { if (ReferenceEquals(_launcherSettingsDialog, settingsDialog)) _launcherSettingsDialog = null; };
     }
 
     private View LabeledControl(string label, View control)
@@ -80,6 +93,7 @@ public sealed partial class HavenLauncherActivity
             LayoutParameters = new LinearLayout.LayoutParams(0, Dp(56), 1f),
             Gravity = GravityFlags.CenterVertical
         };
+        control.ContentDescription = label;
         row.AddView(text);
         row.AddView(control);
         return row;
@@ -96,19 +110,28 @@ public sealed partial class HavenLauncherActivity
         var dialog = new AlertDialog.Builder(this);
         dialog.SetTitle("Add widget");
         dialog.SetItems(
-            new[] { "Android widget", "Haven clock widget" },
+            new[] { "Android widget", "Haven clock widget", "Associate retained widget" },
             (_, args) =>
             {
                 if (args.Which == 0)
-                    PickAndroidWidget();
-                else
+                    _ = BeginWidgetPickAsync();
+                else if (args.Which == 1)
                     AddHavenWidget();
+                else
+                    _ = ShowRetainedWidgetsAsync();
             });
         dialog.Show();
     }
 
-    private void PickAndroidWidget()
+    private readonly AndroidLauncherWidgetSelectionPhase _widgetSelectionPhase = new();
+
+    private void PickAndroidWidgetCore()
     {
+        if (_pendingWidgetId != AppWidgetManager.InvalidAppwidgetId)
+        {
+            Toast.MakeText(this, "Finish or cancel the current widget selection first.", ToastLength.Short)?.Show();
+            return;
+        }
         var widgetHost = _widgetHost;
         if (widgetHost is null)
         {
@@ -119,6 +142,7 @@ public sealed partial class HavenLauncherActivity
         try
         {
             _pendingWidgetId = widgetHost.AllocateAppWidgetId();
+            _widgetSelectionPhase.Begin(_pendingWidgetId);
             var intent = new Intent(AppWidgetManager.ActionAppwidgetPick);
             intent.PutExtra(AppWidgetManager.ExtraAppwidgetId, _pendingWidgetId);
             StartActivityForResult(intent, PickWidgetRequest);
@@ -126,6 +150,9 @@ public sealed partial class HavenLauncherActivity
         catch (Exception exception)
         {
             var failedWidgetId = _pendingWidgetId;
+            _widgetSelectionPhase.Complete(failedWidgetId);
+            RetireOriginalWidgetSelection();
+            _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
             _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
             DeleteWidgetId(failedWidgetId);
             global::Android.Util.Log.Warn(
@@ -138,6 +165,12 @@ public sealed partial class HavenLauncherActivity
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
     {
         base.OnActivityResult(requestCode, resultCode, data);
+        if (CompleteDefaultHomeRoleRequest(requestCode)) return;
+        if (AndroidLauncherLayoutDocumentSelections.IsDocumentRequest(requestCode))
+        {
+            _ = CompleteLayoutDocumentAsync(requestCode, resultCode, data?.Data);
+            return;
+        }
 
         if (requestCode is not PickWidgetRequest and not ConfigureWidgetRequest)
             return;
@@ -146,9 +179,20 @@ public sealed partial class HavenLauncherActivity
             AppWidgetManager.ExtraAppwidgetId,
             _pendingWidgetId) ?? _pendingWidgetId;
 
-        if (widgetId == AppWidgetManager.InvalidAppwidgetId)
+        // A platform result may only complete the binding this activity allocated.
+        // Never release a binding ID supplied by an unrelated or stale result.
+        if (_pendingWidgetId == AppWidgetManager.InvalidAppwidgetId) return;
+        // Ignore a stale configure/pick phase without completing or deleting the current allocation.
+        if (!_widgetSelectionPhase.IsExpected(_pendingWidgetId, requestCode == ConfigureWidgetRequest)) return;
+        if (!OriginalWidgetSelectionCurrent(_pendingWidgetGeneration))
         {
-            _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
+            CompletePendingWidget(_pendingWidgetId, keep: false);
+            return;
+        }
+        if (widgetId != _pendingWidgetId)
+        {
+            CompletePendingWidget(_pendingWidgetId, keep: false);
+            Toast.MakeText(this, "Widget selection changed. Please choose the widget again.", ToastLength.Long)?.Show();
             return;
         }
 
@@ -166,6 +210,7 @@ public sealed partial class HavenLauncherActivity
                     ?? throw new InvalidOperationException("The selected widget provider is unavailable.");
                 if (info.Configure is not null)
                 {
+                    _widgetSelectionPhase.BeginConfiguration(widgetId);
                     _pendingWidgetId = widgetId;
                     var configure = new Intent(AppWidgetManager.ActionAppwidgetConfigure);
                     configure.SetComponent(info.Configure);
@@ -188,19 +233,26 @@ public sealed partial class HavenLauncherActivity
 
     private void CompletePendingWidget(int widgetId, bool keep)
     {
+        _widgetSelectionPhase.Complete(widgetId);
         _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
         if (keep)
         {
-            SaveWidgetId(widgetId);
-            RenderWidgets();
+            var session = _pendingWidgetSession; var authority = _pendingWidgetAuthority; var generation = _pendingWidgetGeneration;
+            _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
+            _ = SaveConfiguredWidgetAsync(widgetId, session, authority, originalSelectionGeneration: generation);
             return;
         }
 
+        RetireOriginalWidgetSelection();
+        _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
         DeleteWidgetId(widgetId);
     }
 
     private void FailPendingWidget(int widgetId, string message, Exception exception)
     {
+        _widgetSelectionPhase.Complete(widgetId);
+        RetireOriginalWidgetSelection();
+        _pendingWidgetSession = null; _pendingWidgetAuthority = null; _pendingWidgetGeneration = 0;
         _pendingWidgetId = AppWidgetManager.InvalidAppwidgetId;
         DeleteWidgetId(widgetId);
         global::Android.Util.Log.Warn(
@@ -248,57 +300,8 @@ public sealed partial class HavenLauncherActivity
             widgetStrip.AddView(clock);
         }
 
-        var widgetHost = _widgetHost;
-        var widgetManager = _widgetManager;
-        if (widgetHost is null || widgetManager is null)
-            return;
-
-        foreach (var widgetId in ReadWidgetIds().ToArray())
-        {
-            try
-            {
-                var info = widgetManager.GetAppWidgetInfo(widgetId);
-                if (info is null)
-                {
-                    DeleteWidgetId(widgetId);
-                    continue;
-                }
-
-                var hostView = widgetHost.CreateView(this, widgetId, info);
-                if (hostView is null)
-                {
-                    DeleteWidgetId(widgetId);
-                    continue;
-                }
-                hostView.SetAppWidget(widgetId, info);
-                hostView.LayoutParameters = new LinearLayout.LayoutParams(Dp(300), Dp(160))
-                {
-                    RightMargin = Dp(8)
-                };
-                hostView.LongClick += (_, args) =>
-                {
-                    var dialog = new AlertDialog.Builder(this);
-                    dialog.SetMessage("Remove this widget?");
-                    dialog.SetPositiveButton("Remove", (_, _) =>
-                    {
-                        DeleteWidgetId(widgetId);
-                        RenderWidgets();
-                    });
-                    dialog.SetNegativeButton("Cancel", (_, _) => { });
-                    dialog.Show();
-                    if (args is not null)
-                        args.Handled = true;
-                };
-                widgetStrip.AddView(hostView);
-            }
-            catch (Exception exception)
-            {
-                global::Android.Util.Log.Warn(
-                    "HavenLauncher",
-                    $"Widget {widgetId} could not be hosted: {exception.Message}");
-                DeleteWidgetId(widgetId);
-            }
-        }
+        // Android widget bodies are mounted from current Home placements in the page grid.
+        // Legacy unscoped IDs remain available only through explicit association.
     }
 
     private HashSet<int> ReadWidgetIds()

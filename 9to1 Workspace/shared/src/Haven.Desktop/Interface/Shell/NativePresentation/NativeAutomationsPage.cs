@@ -1,9 +1,11 @@
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Haven.Application;
 using Haven.Application.Automations;
 using Haven.Core;
+using Haven.Infrastructure;
 using Haven.Desktop.HavenUI.Backend;
 using Haven.Desktop.Views.Pages.Automations;
 
@@ -16,15 +18,22 @@ namespace Haven.Desktop.Views.Shell.NativePresentation;
 internal sealed class NativeAutomationsPage : ContentControl, IDisposable
 {
     private const string GraphHistorySettingsKey = "automations.graph-run-history.v1";
-    private readonly IWorkspaceStateRepository _tasks;
     private readonly IAutomationRepository _automations;
     private readonly Guid? _containerId;
     private readonly Func<Task> _startOneTimeTask;
     private readonly Func<string, Task> _runTask;
     private readonly DeviceActionRouter? _deviceActions;
     private readonly IAutomationGraphAiEditor? _graphAiEditor;
-    private readonly ReusableDeviceWorkflowRunner? _workflowRunner;
     private readonly IVersionedSettingsStore? _historySettings;
+    private readonly IAutomationDefinitionReviewCaller? _ownerCaller;
+    private readonly IAutomationDefinitionCallerSelection? _originalSelection;
+    private IAutomationDefinitionCallerReview? _pendingEditorReview;
+    private string? _pendingEditorFingerprint;
+    private readonly Dictionary<Guid, (string Fingerprint, IAutomationDefinitionCallerReview Review)> _pendingLibraryChanges = [];
+    private readonly AutomationLinkedDefinitionReviewCaller? _linkedOwnerCaller;
+    private readonly Dictionary<Guid, (string Fingerprint, AutomationLinkedDefinitionReview Review)> _pendingLinkedChanges = [];
+    private bool _definitionPageComplete;
+    private readonly SemaphoreSlim _definitionChanges = new(1, 1);
     private readonly AutomationsHavenScene _scene;
     private readonly HavenSceneControl _sceneHost;
     private readonly CancellationTokenSource _lifetime = new();
@@ -43,19 +52,22 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         Guid? containerId,
         Func<Task> startOneTimeTask,
         Func<string, Task> runTask,
-        IVersionedSettingsStore? versionedSettings = null)
+        IVersionedSettingsStore? versionedSettings = null,
+        IAutomationDefinitionReviewCaller? ownerCaller = null,
+        IAutomationDefinitionCallerSelection? originalSelection = null,
+        AutomationLinkedDefinitionReviewCaller? linkedOwnerCaller = null)
     {
-        _tasks = tasks ?? throw new ArgumentNullException(nameof(tasks));
+        ArgumentNullException.ThrowIfNull(tasks);
         _automations = automations ?? throw new ArgumentNullException(nameof(automations));
         _containerId = containerId;
+        _ownerCaller = ownerCaller;
+        _originalSelection = originalSelection;
+        _linkedOwnerCaller = linkedOwnerCaller;
         _startOneTimeTask = startOneTimeTask ?? throw new ArgumentNullException(nameof(startOneTimeTask));
         _runTask = runTask ?? throw new ArgumentNullException(nameof(runTask));
         _historySettings = versionedSettings ?? Haven.Desktop.App.Services?.GetService(typeof(IVersionedSettingsStore)) as IVersionedSettingsStore;
         _deviceActions = Haven.Desktop.App.Services?.GetService(typeof(DeviceActionRouter)) as DeviceActionRouter;
         _graphAiEditor = Haven.Desktop.App.Services?.GetService(typeof(IAutomationGraphAiEditor)) as IAutomationGraphAiEditor;
-        var deviceExecutor = Haven.Desktop.App.Services?.GetService(typeof(DeviceAutomationNodeExecutor)) as DeviceAutomationNodeExecutor;
-        var builtInExecutor = Haven.Desktop.App.Services?.GetService(typeof(BuiltInAutomationActionNodeExecutor)) as BuiltInAutomationActionNodeExecutor;
-        _workflowRunner = deviceExecutor is null && builtInExecutor is null ? null : new ReusableDeviceWorkflowRunner(deviceExecutor, builtInExecutor);
 
         _scene = new AutomationsHavenScene();
         _sceneHost = new HavenSceneControl { Root = _scene.Root };
@@ -78,7 +90,15 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         AttachedToVisualTree += OnAttached;
     }
 
+    public Task RequireCurrentAsync(AuthenticatedResourceActor expectedActor, CancellationToken token = default)
+    {
+        if (_disposed || _ownerCaller is null || _originalSelection is null || _originalSelection.Actor != expectedActor)
+            throw new UnauthorizedAccessException("Original automation page context is unavailable.");
+        return _ownerCaller.RequireCurrentAsync(_originalSelection, token);
+    }
     internal AutomationsHavenScene Scene => _scene;
+    private Task _lastLibraryAction = Task.CompletedTask;
+    internal Task WhenLibraryActionIdleAsync() => _lastLibraryAction;
     internal HavenSceneControl SceneHost => _sceneHost;
 
     private async void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -93,8 +113,8 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
     private void OnRunWorkflowRequested(Guid id) => _ = RunWorkflowAsync(id);
     private void OnEditWorkflowRequested(Guid id) => OpenWorkflow(id);
     private void OnTestWorkflowRequested(Guid id) => _ = TestWorkflowAsync(id);
-    private void OnDeleteWorkflowRequested(Guid id) => _ = DeleteWorkflowAsync(id);
-    private void OnSetWorkflowEnabledRequested(Guid id, bool enabled) => _ = SetWorkflowEnabledAsync(id, enabled);
+    private void OnDeleteWorkflowRequested(Guid id) => _lastLibraryAction = DeleteWorkflowAsync(id);
+    private void OnSetWorkflowEnabledRequested(Guid id, bool enabled) => _lastLibraryAction = SetWorkflowEnabledAsync(id, enabled);
     private void OnOpenScheduledRequested(Guid id) => OpenScheduled(id);
     private void OnBackRequested(object? sender, EventArgs e) => _scene.ShowDashboard();
     private void OnSaveRequested(object? sender, EventArgs e) => _ = SaveEditorAsync();
@@ -113,12 +133,15 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         try
         {
             _scene.SetStatus("Loading Automations…");
-            await EnsureHistoryLoadedAsync(_lifetime.Token);
-            var workflowTask = _tasks.GetReusableTasksAsync(_containerId, _lifetime.Token);
-            var scheduledTask = _automations.GetAllAsync(_lifetime.Token);
-            await Task.WhenAll(workflowTask, scheduledTask);
-            _workflows = workflowTask.Result;
-            _scheduled = scheduledTask.Result.Where(item => item.ContainerId == _containerId).ToArray();
+            // Legacy settings-backed graph history has no original SQL-store binding; preserve it for explicit migration.
+
+            if (_ownerCaller is null || _originalSelection is null)
+                throw new InvalidOperationException("Original automation ownership is unavailable.");
+            var library = await _ownerCaller.LoadLibraryAsync(_originalSelection, new(IncludeDisabled: true, Limit: 100), _lifetime.Token);
+            _definitionPageComplete = library.Definitions.NextCursor is null;
+            _workflows = library.Tasks.Items.Select(item => item.Value)
+                .Where(item => item.ContainerId is null || item.ContainerId == _containerId).ToArray();
+            _scheduled = library.Definitions.Items.Select(item => item.Value).Where(item => item.ContainerId == _containerId).ToArray();
 
             var runs = new List<AutomationsRunCard>();
             foreach (var definition in _scheduled)
@@ -149,7 +172,9 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
             }).ToArray();
             var scheduledCards = _scheduled.Select(item => new AutomationsScheduledCard(
                 item.Id, item.Name, item.NextRunAt is null ? "Waiting for trigger" : "Next " + item.NextRunAt.Value.LocalDateTime.ToString("g"), item.IsEnabled)).ToArray();
-            var graphHistory = AutomationGraphHistoryJournal.ForContainer(_history, _containerId, 50);
+            var graphHistory = AutomationGraphHistoryJournal.ForContainer(new(AutomationGraphHistoryJournal.CurrentVersion, []), _containerId, 50);
+            await _ownerCaller.RequireCurrentAsync(_originalSelection, _lifetime.Token);
+            if (_disposed) return;
             _scene.SetDashboardData(workflowCards, scheduledCards, runs.OrderByDescending(item => item.IsActive), graphHistory);
             _scene.SetStatus($"{_workflows.Count} reusable workflow{(_workflows.Count == 1 ? string.Empty : "s")} · {_scheduled.Count} scheduled automation{(_scheduled.Count == 1 ? string.Empty : "s")}");
         }
@@ -158,6 +183,8 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         }
         catch (Exception ex)
         {
+            _workflows = []; _scheduled = [];
+            _scene.SetDashboardData([], [], [], []); _scene.ShowDashboard();
             _scene.SetStatus("Automations could not be loaded: " + ex.Message, true);
         }
         finally
@@ -224,32 +251,52 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         }
 
         var graphJson = graph.Nodes.Count == 0 && graph.Edges.Count == 0 ? null : AutomationGraphCodec.Serialize(graph);
-        AutomationGraphScheduleBinding? scheduleBinding = null;
-        if (!string.IsNullOrWhiteSpace(graphJson) && !AutomationGraphScheduleBinder.TryBind(graph, DateTimeOffset.UtcNow, out scheduleBinding, out var scheduleError))
-        {
-            _scene.SetStatus(scheduleError ?? "The graph schedule is not ready to save.", true);
-            return;
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        var existing = _scene.EditingWorkflow;
-        var workflow = new ReusableTaskDefinition(
-            existing?.Id ?? Guid.NewGuid(),
-            _scene.WorkflowName,
-            _scene.WorkflowGoal,
-            _scene.BuildInstructions(),
-            _containerId,
-            existing?.IsEnabled ?? true,
-            existing?.CreatedAt ?? now,
-            now,
-            graphJson);
+        var workflowName = _scene.WorkflowName;
+        var workflowGoal = _scene.WorkflowGoal;
+        var workflowInstructions = _scene.BuildInstructions();
+        ReusableTaskDefinition? existing;
         try
         {
-            await _tasks.UpsertReusableTaskAsync(workflow, _lifetime.Token);
-            var scheduleDescription = await SyncScheduledGraphAsync(workflow, graphJson, scheduleBinding);
-            _scene.SetStatus(scheduleDescription is null ? $"Saved {workflow.Name}." : $"Saved {workflow.Name} · {scheduleDescription}.");
-            await RefreshAsync();
-            _scene.ShowDashboard();
+            existing = _scene.EditingWorkflow is { } displayed
+                ? JsonSerializer.Deserialize<ReusableTaskDefinition>(JsonSerializer.Serialize(displayed))
+                    ?? throw new InvalidDataException("Displayed workflow snapshot is unavailable.")
+                : null;
+        }
+        catch (Exception error) when (error is JsonException or InvalidDataException or NotSupportedException)
+        { _scene.SetStatus("Displayed workflow could not be captured: " + error.Message, true); return; }
+        if (!StringComparer.Ordinal.Equals(graphJson, existing?.GraphJson))
+        {
+            _scene.SetStatus("Canonical graph authoring and publication are unavailable; the original legacy graph is preserved.", true);
+            return;
+        }
+        var fingerprint = JsonSerializer.Serialize(new { ExistingId = existing?.Id, WorkflowName = workflowName, WorkflowGoal = workflowGoal,
+            Instructions = workflowInstructions, GraphJson = graphJson });
+        try
+        {
+            await _definitionChanges.WaitAsync(_lifetime.Token);
+            try
+            {
+                if (_ownerCaller is null || _originalSelection is null) throw new InvalidOperationException("Original automation ownership is unavailable.");
+                if (_pendingEditorReview is not null && _pendingEditorFingerprint != fingerprint)
+                    throw new InvalidOperationException("The original pending definition review must be finished or declined before editing this selection.");
+                if (_pendingEditorReview is null)
+                {
+                    var now = DateTimeOffset.UtcNow;
+                    var workflow = existing is null ? new ReusableTaskDefinition(Guid.NewGuid(), workflowName,
+                        workflowGoal, workflowInstructions, _containerId, false, now, now, graphJson)
+                        : existing with { Name = workflowName, Description = workflowGoal,
+                            Instruction = workflowInstructions, IsEnabled = false, UpdatedAt = now };
+                    _pendingEditorReview = await _ownerCaller.ReviewAsync(_originalSelection, workflow, existing?.Revision ?? 0,
+                        existing is null ? AutomationDefinitionChangeKind.Create : AutomationDefinitionChangeKind.Update, _lifetime.Token);
+                    _pendingEditorFingerprint = fingerprint;
+                }
+                var result = await _pendingEditorReview.FinishAsync(_lifetime.Token);
+                _scene.SetStatus(result.Committed == true ? $"Definition saved; {result.Code}. Run/publication authority is unavailable."
+                    : $"{result.Code}. Home request: {_pendingEditorReview.RequestId}. No save is replayed.", result.Committed != true);
+                if (result.Committed == true && result.Code == "DefinitionCommitted")
+                { _pendingEditorReview = null; _pendingEditorFingerprint = null; await RefreshAsync(); _scene.ShowDashboard(); }
+            }
+            finally { _definitionChanges.Release(); }
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
         {
@@ -274,20 +321,7 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         }
         _scene.SetStatus("Running non-destructive graph test…");
         var result = await AutomationGraphTestRunner.RunAsync(graph, _lifetime.Token);
-        var graphJson = AutomationGraphCodec.Serialize(graph);
-        var now = DateTimeOffset.UtcNow;
-        var existing = _scene.EditingWorkflow;
-        var draft = new ReusableTaskDefinition(
-            existing?.Id ?? Guid.Empty,
-            string.IsNullOrWhiteSpace(_scene.WorkflowName) ? "Unsaved workflow" : _scene.WorkflowName,
-            _scene.WorkflowGoal,
-            _scene.BuildInstructions(),
-            _containerId,
-            true,
-            existing?.CreatedAt ?? now,
-            now,
-            graphJson);
-        await RecordGraphHistoryAsync(draft, graphJson, result);
+        // Pure in-memory preview only; no canonical publication, external operation or unreviewed history write.
         _scene.SetGraphTestResult(result);
         _scene.SetStatus(result.Succeeded
             ? $"Test passed: {result.Trace.Count} node{(result.Trace.Count == 1 ? string.Empty : "s")} traced without external side effects."
@@ -329,101 +363,93 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
 
     private async Task RunWorkflowAsync(Guid id)
     {
-        var workflow = _workflows.FirstOrDefault(item => item.Id == id);
-        if (workflow is null)
-        {
-            _scene.SetStatus("That workflow no longer exists.", true);
-            return;
-        }
-        if (!workflow.IsEnabled)
-        {
-            _scene.SetStatus($"{workflow.Name} is paused. Resume it before running.", true);
-            return;
-        }
-        if (_workflowRunner is null)
-        {
-            if (string.IsNullOrWhiteSpace(workflow.GraphJson))
-            {
-                await InvokeTaskAsync(workflow.Instruction);
-                return;
-            }
-            _scene.SetStatus("The graph runtime is unavailable. Haven did not route this graph to Tasks or perform a substitute instruction.", true);
-            return;
-        }
-
-        _scene.SetStatus($"Running {workflow.Name}…");
-        try
-        {
-            var run = await _workflowRunner.RunAsync(workflow, permissionGranted: false, _lifetime.Token);
-            if (!run.Handled)
-            {
-                await InvokeTaskAsync(workflow.Instruction);
-                return;
-            }
-            if (run.GraphResult is not null && !string.IsNullOrWhiteSpace(workflow.GraphJson))
-                await RecordGraphHistoryAsync(workflow, workflow.GraphJson, run.GraphResult);
-            _scene.SetStatus(FormatWorkflowRunStatus(run), run.GraphResult is { Succeeded: false });
-            await RefreshAsync();
-        }
-        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
-        {
-        }
-        catch (Exception ex)
-        {
-            _scene.SetStatus("The workflow could not run: " + ex.Message, true);
-        }
+        await Task.CompletedTask;
+        _scene.SetStatus("Canonical graph/run owner admission is unavailable; no workflow is executed.", true);
     }
 
     private async Task SetWorkflowEnabledAsync(Guid id, bool enabled)
     {
-        var workflow = _workflows.FirstOrDefault(item => item.Id == id);
-        if (workflow is null)
+        if (enabled) { _scene.SetStatus("Canonical graph/run publication authority is unavailable.", true); return; }
+        await ReviewLibraryChangeAsync(id, AutomationDefinitionChangeKind.Disable);
+    }
+    private Task DeleteWorkflowAsync(Guid id) => ReviewLibraryChangeAsync(id, AutomationDefinitionChangeKind.Archive);
+    private async Task ReviewLibraryChangeAsync(Guid id, AutomationDefinitionChangeKind kind)
+    {
+        var original = _workflows.FirstOrDefault(item => item.Id == id);
+        if (original is null) return;
+        var linked = _scheduled.FirstOrDefault(item => item.Id == id);
+        // Capture both displayed immutable rows before waiting; never adopt later refreshed heads.
+        if (linked is not null)
         {
-            _scene.SetStatus("That workflow no longer exists.", true);
+            await ReviewLinkedLibraryChangeAsync(original, linked, kind);
             return;
         }
-
+        if (!_definitionPageComplete)
+        { _scene.SetStatus("Linked definition lookup is incomplete; no single-row change was admitted.", true); return; }
         try
         {
-            var now = DateTimeOffset.UtcNow;
-            await _tasks.UpsertReusableTaskAsync(workflow with { IsEnabled = enabled, UpdatedAt = now }, _lifetime.Token);
-
-            var linked = _scheduled.FirstOrDefault(item => item.Id == id);
-            if (linked is not null && ScheduledGraphAutomationPayloadCodec.IsPayload(linked.Instruction))
+            await _definitionChanges.WaitAsync(_lifetime.Token);
+            try
             {
-                var updated = linked with { IsEnabled = enabled, UpdatedAt = now, NextRunAt = null };
-                if (enabled)
-                    updated = updated with { NextRunAt = new ScheduledTaskScheduleCalculator().GetNextRun(updated, now.AddTicks(-1)) };
-                await _automations.UpsertAsync(updated, _lifetime.Token);
+                if (_ownerCaller is null || _originalSelection is null) throw new InvalidOperationException("Original automation ownership is unavailable.");
+                if (_pendingLinkedChanges.ContainsKey(id))
+                    throw new InvalidOperationException("Finish the original linked definition review first.");
+                var fingerprint = JsonSerializer.Serialize(new { kind, original.Id, original.Revision });
+                if (_pendingLibraryChanges.TryGetValue(id, out var retained) && retained.Fingerprint != fingerprint)
+                    throw new InvalidOperationException("The original library review is still retained; no substituted change is admitted.");
+                if (retained.Review is null)
+                {
+                    var proposal = original with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention };
+                    var review = await _ownerCaller.ReviewAsync(_originalSelection, proposal, original.Revision, kind, _lifetime.Token);
+                    retained = (fingerprint, review); _pendingLibraryChanges.Add(id, retained);
+                }
+                var result = await retained.Review.FinishAsync(_lifetime.Token);
+                _scene.SetStatus($"{result.Code}. Home request: {retained.Review.RequestId}.", result.Committed != true);
+                if (result.Committed == true && result.Code == "DefinitionCommitted")
+                { _pendingLibraryChanges.Remove(id); await RefreshAsync(); }
             }
-
-            await RefreshAsync();
-            _scene.SetStatus(enabled ? $"Resumed {workflow.Name}." : $"Paused {workflow.Name}.");
+            finally { _definitionChanges.Release(); }
         }
-        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
-        {
-        }
-        catch (Exception ex)
-        {
-            _scene.SetStatus($"{(enabled ? "Resume" : "Pause")} failed: {ex.Message}", true);
-        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        { _scene.SetStatus("Definition review unavailable: " + error.Message, true); }
     }
 
-    private async Task DeleteWorkflowAsync(Guid id)
+    private async Task ReviewLinkedLibraryChangeAsync(ReusableTaskDefinition original,
+        AutomationDefinition schedule, AutomationDefinitionChangeKind kind)
     {
-        var workflow = _workflows.FirstOrDefault(item => item.Id == id);
-        if (workflow is null) return;
+        var fingerprint = JsonSerializer.Serialize(new { kind, original.Id,
+            TaskRevision = original.Revision, ScheduleRevision = schedule.Revision });
         try
         {
-            await DeleteLinkedScheduledGraphAsync(id);
-            await _tasks.DeleteReusableTaskAsync(id, _lifetime.Token);
-            await RefreshAsync();
-            _scene.SetStatus($"Deleted {workflow.Name}.");
+            await _definitionChanges.WaitAsync(_lifetime.Token);
+            try
+            {
+                if (_disposed) return;
+                if (_linkedOwnerCaller is null || _originalSelection is null)
+                    throw new InvalidOperationException("Original linked definition ownership is unavailable.");
+                if (_pendingLibraryChanges.ContainsKey(original.Id))
+                    throw new InvalidOperationException("Finish the original single definition review first.");
+                if (_pendingLinkedChanges.TryGetValue(original.Id, out var retained) && retained.Fingerprint != fingerprint)
+                    throw new InvalidOperationException("The exact original linked pair review is still retained.");
+                if (retained.Review is null)
+                {
+                    var taskProposal = original with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention };
+                    var scheduleProposal = schedule with { IsEnabled = false, OperationalState = AutomationOperationalState.NeedsAttention };
+                    var review = await _linkedOwnerCaller.ReviewAsync(_originalSelection, taskProposal, scheduleProposal,
+                        original.Revision, schedule.Revision, kind, _lifetime.Token);
+                    retained = (fingerprint, review);
+                    _pendingLinkedChanges.Add(original.Id, retained);
+                }
+                var result = await retained.Review.FinishAsync(_lifetime.Token);
+                if (_disposed) return; // Keep exact issued handles even when their presentation closes.
+                _scene.SetStatus($"{result.Code}. Home requests: {string.Join(", ", retained.Review.RequestIDs)}.", result.Committed != true);
+                if (result.Committed == true && result.Code == "LinkedDefinitionsCommitted")
+                { _pendingLinkedChanges.Remove(original.Id); await RefreshAsync(); }
+            }
+            finally { _definitionChanges.Release(); }
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _scene.SetStatus("The workflow could not be deleted: " + ex.Message, true);
-        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        { if (!_disposed) _scene.SetStatus("Linked definition review unavailable: " + error.Message, true); }
     }
 
     private void OpenScheduled(Guid id)
@@ -461,33 +487,9 @@ internal sealed class NativeAutomationsPage : ContentControl, IDisposable
         _scene.SetStatus($"Opened captured scheduled graph {captured.Name}.");
     }
 
-    private async Task<string?> SyncScheduledGraphAsync(ReusableTaskDefinition workflow, string? graphJson, AutomationGraphScheduleBinding? binding)
-    {
-        var existing = (await _automations.GetAllAsync(_lifetime.Token)).FirstOrDefault(item => item.Id == workflow.Id);
-        if (binding is null || string.IsNullOrWhiteSpace(graphJson))
-        {
-            if (existing is not null && ScheduledGraphAutomationPayloadCodec.IsPayload(existing.Instruction))
-                await _automations.DeleteAsync(existing.Id, _lifetime.Token);
-            return null;
-        }
-        if (existing is not null && !ScheduledGraphAutomationPayloadCodec.IsPayload(existing.Instruction))
-            throw new InvalidOperationException("A legacy automation already uses this workflow ID. Haven left it unchanged instead of overwriting it.");
-        var now = DateTimeOffset.UtcNow;
-        var payload = ScheduledGraphAutomationPayloadCodec.Serialize(workflow.Id, binding.TriggerNodeId, workflow.Name, graphJson, binding.WatchCondition);
-        var definition = new AutomationDefinition(
-            workflow.Id, workflow.Name, HavenMode.Tasks, payload, binding.ScheduleKind, binding.ScheduleJson, null,
-            workflow.ContainerId, workflow.IsEnabled, existing?.CreatedAt ?? workflow.CreatedAt, now);
-        definition = definition with { NextRunAt = new ScheduledTaskScheduleCalculator().GetInitialRun(binding.ScheduleKind, binding.ScheduleJson, now) };
-        await _automations.UpsertAsync(definition, _lifetime.Token);
-        return binding.Description;
-    }
 
-    private async Task DeleteLinkedScheduledGraphAsync(Guid workflowId)
-    {
-        var existing = (await _automations.GetAllAsync(_lifetime.Token)).FirstOrDefault(item => item.Id == workflowId);
-        if (existing is not null && ScheduledGraphAutomationPayloadCodec.IsPayload(existing.Instruction))
-            await _automations.DeleteAsync(existing.Id, _lifetime.Token);
-    }
+
+
 
     private async Task EnsureHistoryLoadedAsync(CancellationToken cancellationToken)
     {

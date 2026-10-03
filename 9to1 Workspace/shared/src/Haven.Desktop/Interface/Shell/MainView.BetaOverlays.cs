@@ -112,6 +112,13 @@ public sealed partial class MainView
             _conversations);
 
         _globalCallWidget = new GlobalCallWidget(_globalCallViewModel);
+        // Explicit completed-reply admission only; construction performs no playback or metadata IO.
+        var narration = Haven.Desktop.Views.Pages.Call.CallMonologueNarrationRoute.ForActualOwner(
+            _callCoordinator, new Haven.Application.VisionVoiceSessionService(
+                new Haven.Application.Call.MultimodalSessionStore(_versionedSettings)));
+        if (narration is not null)
+            _globalCallWidget.BindOriginalNarrationRoute(_globalCallViewModel, _callCoordinator, narration);
+
         _globalCallWidget.DragDelta += OnGlobalCallDragDelta;
         _globalCallTranslation = new TranslateTransform();
         _globalCallWidget.HorizontalAlignment = HorizontalAlignment.Right;

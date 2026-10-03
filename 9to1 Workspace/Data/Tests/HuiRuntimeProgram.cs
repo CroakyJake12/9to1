@@ -36,6 +36,9 @@ static async Task ConvertCsvToOdsAsync(string csvPath, string outputDirectory)
         UseShellExecute = false,
         CreateNoWindow = true,
     };
+    // Each fixture owns its LibreOffice profile; never reuse or mutate the user profile.
+    var profile = Path.Combine(outputDirectory, "fixture-profile-" + Guid.NewGuid().ToString("N"));
+    startInfo.ArgumentList.Add("-env:UserInstallation=" + new Uri(profile + Path.DirectorySeparatorChar).AbsoluteUri);
     startInfo.ArgumentList.Add("--headless");
     startInfo.ArgumentList.Add("--convert-to");
     startInfo.ArgumentList.Add("ods");

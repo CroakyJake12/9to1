@@ -1,0 +1,107 @@
+{
+  "csharpMathCommit": "d6feac52d2cf4b186f1f275ca4c84fd7564cc470",
+  "typographyCommit": "5877180c7c5271091379a0eaf9f03ab6ebd256b3",
+  "packages": [
+    {
+      "package": "csharpmath.skiasharp",
+      "version": "1.0.0-pre.1",
+      "bytes": 37049,
+      "sha256": "52b05f74bd08fc0b48ac4d5584826b6afec6c760e87475ca98b5ededbfb1e7b2",
+      "sha512Base64": "m2W2jgMpzTD7MPHoiVxuTWZhfZMIZCLT7bex5dCFaZsXaKzBZkFpUWy3PdL6/vzqTNzDY/2Tgk2x9WVXwnR3lA==",
+      "catalog": "https://api.nuget.org/v3/catalog0/data/2026.02.13.08.37.38/csharpmath.skiasharp.1.0.0-pre.1.json"
+    },
+    {
+      "package": "csharpmath.rendering",
+      "version": "1.0.0-pre.1",
+      "bytes": 849264,
+      "sha256": "c6afb65d4bc8cd5d40963b9d30b76ae2af2c5cc8cceeb9ec0fd723e1b4847b08",
+      "sha512Base64": "AJyAItZvXPvsBbl3aZsGOoPWq7lYCkEwJNHHJ15dZqmnRcsg+DKnr9DAD/rvsX08frWo91Gf+Zp09kOdKDLzyQ==",
+      "catalog": "https://api.nuget.org/v3/catalog0/data/2026.02.13.08.38.12/csharpmath.rendering.1.0.0-pre.1.json"
+    },
+    {
+      "package": "csharpmath",
+      "version": "1.0.0-pre.1",
+      "bytes": 126604,
+      "sha256": "3a4500c49b005c78a2dd5f05f58794733cb8dcd743db10fb906b6afe7742f9c3",
+      "sha512Base64": "wUPWmgsjAfvYEJIk5qexoquql03DF3IMq9jXT9/P4OmYt3FXuGkFHtJzJ9ocYnUFvkXprH1+QRNTFWR4CaXsBQ==",
+      "catalog": "https://api.nuget.org/v3/catalog0/data/2026.02.13.08.37.38/csharpmath.1.0.0-pre.1.json"
+    }
+  ],
+  "files": [
+    {
+      "path": "CSharpMath-MIT.txt",
+      "sha256": "7c8f476bf7e35d9eaeb986eef4e77e9a71c31ca4f8b98a3b7378e26321ce23e3",
+      "bytes": 1087
+    },
+    {
+      "path": "CSharpMath-upstream-license-declarations.md",
+      "sha256": "7965122970372c7b294c2341a940c9ecba18515ffdafabdf5abb8f149d2d34f4",
+      "bytes": 4593
+    },
+    {
+      "path": "Font-copyright-notices.txt",
+      "sha256": "f378cfbd5178c319c12f30ac5c2aa070ab6b51655b00e212f4dd2c46c3075f7d",
+      "bytes": 996
+    },
+    {
+      "path": "FreeType-FTL.txt",
+      "sha256": "e4b7fdb18fc04b1e0197c41e1ce072cf49b2f5f4a8f5ed26768440d1c957156f",
+      "bytes": 6620
+    },
+    {
+      "path": "GUST-FONT-LICENSE.txt",
+      "sha256": "2bd69affc3da00715116f713f57eab9707e96daf3562ad0215987b15b9c16f73",
+      "bytes": 1456
+    },
+    {
+      "path": "ICU60-LICENSE.txt",
+      "sha256": "24c771ce37201a3ab604852e47d10d21595d0493269dd6c8a5e567e998e18c00",
+      "bytes": 19442
+    },
+    {
+      "path": "LPPL-1.3c.tex",
+      "sha256": "c3c7c49085d4c8d722ca98937b2378619b45dd0b5bd1456bcd61be95d8b954f1",
+      "bytes": 23386
+    },
+    {
+      "path": "LatinModern-Math-MANIFEST.txt",
+      "sha256": "1daa729f7922c42ba5ce8da7dfe4ecdc9e5c878ad86217fd6f32c4671505b007",
+      "bytes": 2186
+    },
+    {
+      "path": "LatinModern-Math-README.txt",
+      "sha256": "e6fdd5fb44b656146fa988d191f58901c09a347d3f4fbaa3b45b24a6ad7ec30b",
+      "bytes": 4588
+    },
+    {
+      "path": "NOTICE.txt",
+      "sha256": "e71767fe62fdad5c3fcb0b9df2bfcf577279f2f2198c7bee80c6cdbb979531fd",
+      "bytes": 1657
+    },
+    {
+      "path": "SIL-Open-Font-License-1.1.md",
+      "sha256": "d4274903cbedb0566531e9856e5353991818e84ff17b747d7d41cbdd4e736ff5",
+      "bytes": 4566
+    },
+    {
+      "path": "Typography-Apache-2.0.txt",
+      "sha256": "a22a0c495566ce9b09b25aa3feab8d54a5b12c6a26eb3dcb5324ead9a586da66",
+      "bytes": 11361
+    },
+    {
+      "path": "Typography-MIT.txt",
+      "sha256": "c72384e3fe4818ff9ee516f9e5d2ba579c6299856fde53d9fa37384df4343d4a",
+      "bytes": 1185
+    },
+    {
+      "path": "Typography-attributions.md",
+      "sha256": "e2449e386e85f43cd5ad20869d23653315d656ac0ffb8630143308a83bd79522",
+      "bytes": 2323
+    },
+    {
+      "path": "Typography-source-headers.txt",
+      "sha256": "f90dee3e11f6b139874f09f792eba0c389107a6d40db9ef6876cdeadeda55faf",
+      "bytes": 23603
+    }
+  ]
+}

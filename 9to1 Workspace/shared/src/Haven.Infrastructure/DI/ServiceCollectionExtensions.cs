@@ -9,8 +9,14 @@
 
 using System.Reflection;
 using Haven.Application;
+using Haven.Application.NodeGraph;
 using Haven.Core;
+using Dulche.Runtime;
+using HavenOS.Home.Core;
+using HavenOS.Home.PermissionsTrustNotifications;
+using NineToOne.Cui.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Haven.Infrastructure;
 
@@ -25,6 +31,66 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddHavenInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton<IAppPaths, AppPaths>();
+        services.TryAddSingleton<LocalMotionPreferencesService>(_ => LocalMotionPreferencesService.Current);
+        services.TryAddSingleton<IMotionPreferenceSource>(provider => provider.GetRequiredService<LocalMotionPreferencesService>());
+        services.TryAddSingleton<IMotionPreferences>(provider => provider.GetRequiredService<LocalMotionPreferencesService>());
+        services.AddSingleton<IHomeCoreStateStore>(_ => FileHomeCoreStateStore.CreateDefault());
+        services.TryAddSingleton<ITrustedHostPrincipalSource, OperatingSystemPrincipalSource>();
+        services.AddSingleton<HomeLocalProfileIdentity>();
+        services.TryAddSingleton<IAuthenticatedResourceActorSource>(provider => provider.GetRequiredService<HomeLocalProfileIdentity>());
+        services.AddSingleton<ResourceAuthorizationService>();
+        services.TryAddSingleton<IHomeNativeInstalledPeerVerifier, UnavailableHomeNativeInstalledPeerVerifier>();
+        services.TryAddSingleton<HomeNativeWidgetRegistry>();
+        services.AddSingleton<IHomeLocalStoreEvidenceSource, HomeLocalStoreEvidenceRegistry>();
+        services.AddSingleton<HomeLocalStoreOwnership>();
+        services.TryAddSingleton<HomeResourceStoreOwnershipAuthority>();
+        services.TryAddSingleton<IResourceStoreOwnershipAuthority>(provider => provider.GetRequiredService<HomeResourceStoreOwnershipAuthority>());
+        services.TryAddSingleton<IResourceStoreOwnershipReceiptAuthority>(provider => provider.GetRequiredService<IResourceStoreOwnershipAuthority>()
+            as IResourceStoreOwnershipReceiptAuthority ?? throw new InvalidOperationException("The configured ownership authority cannot recheck commit receipts."));
+        services.TryAddSingleton<IInstalledApplicationRegistry, HomeInstalledApplicationRegistry>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeInvocationResourceSource, HomeInstalledAppInvocationSource>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeCoreStateService>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeInstalledApplicationsService>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomePermissionsCoreService>());
+        services.TryAddSingleton<HomeProductivityEngine>(provider => new HomeProductivityEngine(
+            handlers: provider.GetServices<IHomeProductivityObjectHandler>(),
+            artifactActions: provider.GetServices<IHomeProductivityArtifactActionProvider>()));
+        services.TryAddSingleton<IHomeProductivityEngine>(provider => provider.GetRequiredService<HomeProductivityEngine>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeProductivityEngineService>());
+        services.TryAddSingleton<HomeCoreRuntime>();
+        services.TryAddSingleton<IVersionedModelRouteRepository, HomeVersionedModelRouteRepository>();
+        services.TryAddSingleton<HomePersonalModelRoutes>(provider => new(
+            provider.GetRequiredService<HomeLocalProfileIdentity>(), provider.GetRequiredService<IVersionedModelRouteRepository>(),
+            () => provider.GetRequiredService<ResourceAuthorizationService>()));
+        services.TryAddSingleton<NodeGraphSchemaRegistry>(provider => new(provider.GetServices<GraphNodeType>(), provider.GetServices<GraphCapabilityProfile>()));
+        services.TryAddSingleton<IVersionedNodeGraphRepository, HomeVersionedNodeGraphRepository>();
+        services.TryAddSingleton<NodeGraphRuntimeRegistry>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, HomeModelRouteOwner>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, HomeModelRouteProfileOwner>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, HomeModelRouteActionPolicies>());
+        services.TryAddSingleton<IHomeModelPickerFeatureProvider, HomeModelPickerFeatureProvider>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeCoreService, HomeModelPickerCoreService>());
+        services.AddSingleton<HomeResourceOperationBroker>();
+        services.AddSingleton<HomeInvocationCatalogue>();
+        services.AddSingleton<IInvocationCatalogue>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
+        services.AddSingleton<IInvocationResolver>(provider => provider.GetRequiredService<HomeInvocationCatalogue>());
+        services.AddSingleton<HomeAppAiServices>(provider =>
+        {
+            var actor = provider.GetRequiredService<HomeLocalProfileIdentity>().GetCurrentAsync(default).AsTask().GetAwaiter().GetResult()
+                ?? throw new UnauthorizedAccessException("The native Home caller requires verified operating-system profile authority.");
+            return new(provider.GetRequiredService<IModelProviderRegistry>(), provider.GetRequiredService<IHomeCoreStateStore>(),
+                new HomePermissionCallerIdentity(actor.ActorId, "9to1 native Home host", "os-bound-local-profile", actor.AuthenticationRevision, true),
+                provider.GetRequiredService<IExecutionEventRepository>(), provider.GetRequiredService<IInvocationResolver>(), provider.GetServices<IHomeActionPolicySource>(),
+                provider.GetRequiredService<HomePersonalModelRoutes>());
+        });
+        services.AddSingleton<IAppAiCoordinatorFactory>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IAppAiModelPicker>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IDulcheAppClient>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.TryAddSingleton<ITerminalAdviceService, HomeTerminalAdviceService>();
+        services.AddSingleton<IMcpInvocationAuthorizer>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IWebMcpInvocationAuthorizer>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<IComputerUseAdmission>(provider => provider.GetRequiredService<HomeAppAiServices>());
+        services.AddSingleton<HomePermissionTrustService>(provider => provider.GetRequiredService<HomeAppAiServices>().Permissions);
         services.AddSingleton<IBoardsWorkspaceService, BoardsWorkspaceService>();
         services.AddSingleton<PrivacyPreferenceStore>();
         services.AddSingleton<IPrivacyPreferenceStore>(provider => provider.GetRequiredService<PrivacyPreferenceStore>());
@@ -44,6 +110,23 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPresentImportService, PresentPptxImportService>();
         services.AddSingleton<IDocumentShapeGallery, DocumentShapeGalleryRepository>();
         services.AddSingleton<IDataWorkbookRepository, DataWorkbookRepository>();
+        services.TryAddSingleton<IDataWorkbookCommitAuthority, DataLocalStoreAuthority>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeLocalStoreEvidenceProvider, DataLocalStoreEvidenceProvider>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICanonicalResourceAccessResolver, DataWorkbookMutationAccessResolver>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeActionPolicySource, DataMutationActionPolicies>());
+        services.TryAddSingleton<DataHomeRecordUpdateOperation>();
+        services.TryAddSingleton<DataRecordMutationRecovery>();
+        services.TryAddSingleton<DataHomeRecordCreator>();
+        services.TryAddSingleton<IDataRecordCreator>(provider => provider.GetRequiredService<DataHomeRecordCreator>());
+        services.TryAddSingleton<DataHomeRecordCreateOperation>();
+        services.TryAddSingleton<DataRecordCreateRecovery>();
+        services.TryAddSingleton<IDataTableSchemaDesigner, DataHomeTableSchemaDesigner>();
+        services.TryAddSingleton<DataHomeTableSchemaUpdateOperation>();
+        services.TryAddSingleton<DataSchemaMutationRecovery>();
+        services.TryAddSingleton<IDataRelationshipDesigner, DataHomeRelationshipDesigner>();
+        services.TryAddSingleton<DataHomeRelationshipUpdateOperation>();
+        services.TryAddSingleton<DataRelationshipMutationRecovery>();
+        services.TryAddSingleton<IDataRecordMutationReceiptSource>(provider => provider.GetRequiredService<DataRecordMutationRecovery>());
         services.AddSingleton<IDataWorkbookFormatService, DataXlsxFormatService>();
         services.AddSingleton<IDataWorkbookQueryService, DataWorkbookQueryService>();
         services.AddSingleton<NotesAttachmentStore>();
@@ -66,6 +149,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SqliteDatabase>();
         services.AddSingleton<IAppDatabase, ConversationProductionDatabase>();
         services.AddSingleton<ISqliteConnectionFactory>(provider => provider.GetRequiredService<SqliteDatabase>());
+        services.AddSingleton<IResourceStoreIdentitySource>(provider => provider.GetRequiredService<SqliteDatabase>());
         services.AddSingleton<IExecutionEventRepository, ExecutionEventRepository>();
         services.AddSingleton<IActionFeedbackRepository, ActionFeedbackRepository>();
         services.AddSingleton<IRemediationRepository, RemediationRepository>();
@@ -91,6 +175,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProviderPricingService, ProviderPricingService>();
         services.AddSingleton<IModelUsageRepository, ModelUsageRepository>();
         services.AddSingleton<ConversationRepository>();
+        services.TryAddSingleton<IConversationSpaceCommitStore>(provider => provider.GetRequiredService<ConversationRepository>());
+        services.TryAddSingleton<ConversationLocalStoreAuthority>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IHomeLocalStoreEvidenceProvider, ConversationLocalStoreEvidenceProvider>());
         services.AddSingleton<UsageTrackingConversationRepository>();
         services.AddSingleton<IConversationRepository>(provider => provider.GetRequiredService<UsageTrackingConversationRepository>());
         services.AddSingleton<ConversationProductionRepository>();
@@ -178,14 +265,21 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Haven.Application.Automations.DeviceAutomationNodeExecutor>();
         services.AddSingleton<Haven.Application.Automations.BuiltInAutomationActionNodeExecutor>();
         services.AddSingleton<Haven.Application.Automations.IAutomationGraphAiEditor, Haven.Application.Automations.AutomationGraphAiEditor>();
-        services.AddHttpClient<OllamaClient>(client =>
+        var ollamaTransportAddress = Environment.GetEnvironmentVariable("OLLAMA_HOST")?.Trim();
+        if (string.IsNullOrWhiteSpace(ollamaTransportAddress)) ollamaTransportAddress = "http://127.0.0.1:11434/";
+        if (!ollamaTransportAddress.EndsWith("/", StringComparison.Ordinal)) ollamaTransportAddress += "/";
+        var ollamaTransportUri = new Uri(ollamaTransportAddress, UriKind.Absolute);
+        services.AddHttpClient("Haven.Ollama", client =>
         {
-            var endpoint = Environment.GetEnvironmentVariable("OLLAMA_HOST")?.Trim();
-            if (string.IsNullOrWhiteSpace(endpoint)) endpoint = "http://127.0.0.1:11434/";
-            if (!endpoint.EndsWith("/", StringComparison.Ordinal)) endpoint += "/";
-            client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+            client.BaseAddress = ollamaTransportUri;
             client.Timeout = Timeout.InfiniteTimeSpan;
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseProxy = !OllamaModelProvider.IsDeviceLocalEndpoint(ollamaTransportUri)
         });
+        services.AddSingleton<OllamaClient>(provider => OllamaClient.CreatePinned(
+            provider.GetRequiredService<IHttpClientFactory>().CreateClient("Haven.Ollama"), provider.GetRequiredService<ProviderUsageCaptureBuffer>()));
         services.AddSingleton<IOllamaClient>(provider => provider.GetRequiredService<OllamaClient>());
         services.AddSingleton<ILocalOllamaClient, LocalOllamaClientAdapter>();
 
@@ -263,6 +357,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ExtensionManager>();
         services.AddSingleton<PluginToolRuntime>();
         services.AddSingleton<IVersionedSettingsStore, VersionedAtomicSettingsStore>();
+        services.AddSingleton<IVersionedSettingsCompareExchange>(provider => (IVersionedSettingsCompareExchange)provider.GetRequiredService<IVersionedSettingsStore>());
         services.AddSingleton<IUpdatePreferenceStore, VersionedUpdatePreferenceStore>();
         services.AddSingleton(new Func<InstallationInfo>(WindowsInstallationDetector.DetectInstallationSource));
         services.AddSingleton(new Func<string>(CurrentExecutableVersion));

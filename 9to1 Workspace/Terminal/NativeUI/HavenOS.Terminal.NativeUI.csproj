@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>HavenOS.Terminal.NativeUI</AssemblyName>
+    <RootNamespace>HavenOS.Apps.Terminal.NativeUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../HavenOS.Terminal.csproj" />
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <EmbeddedResource Include="UI/TerminalWorkspace.cui" LogicalName="HavenOS.Terminal.NativeUI.UI.TerminalWorkspace.cui" />
+  </ItemGroup>
+  <PropertyGroup>
+    <TerminalScreenNativeHost Condition="$([MSBuild]::IsOSPlatform('Linux')) and ('$(RuntimeIdentifier)' == '' or '$(RuntimeIdentifier)' == 'linux-x64')">linux-x64</TerminalScreenNativeHost>
+    <TerminalScreenNativeSource>$(MSBuildProjectDirectory)/../Source/libvterm</TerminalScreenNativeSource>
+    <TerminalScreenNativeOutput>$(MSBuildProjectDirectory)/obj/terminal-screen/$(Configuration)/$(TerminalScreenNativeHost)/libhaven_terminal_screen.so</TerminalScreenNativeOutput>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TerminalScreenNativeHost)' != ''">
+    <TerminalScreenNativeInputs Include="$(TerminalScreenNativeSource)/src/**/*.c;$(TerminalScreenNativeSource)/src/**/*.h;$(TerminalScreenNativeSource)/src/**/*.inc;$(TerminalScreenNativeSource)/include/*.h;Native/terminal_screen.c" />
+    <None Include="$(TerminalScreenNativeOutput)" Link="libhaven_terminal_screen.so" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="$(TerminalScreenNativeSource)/LICENSE" Link="licenses/libvterm/LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildTerminalScreen" BeforeTargets="PrepareForBuild" Condition="'$(TerminalScreenNativeHost)' != ''" Inputs="@(TerminalScreenNativeInputs)" Outputs="$(TerminalScreenNativeOutput)">
+    <Error Condition="!Exists('$(TerminalScreenNativeSource)/include/vterm.h')" Text="The pinned libvterm source is required for the native Terminal viewport." />
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(TerminalScreenNativeOutput)'))" />
+    <Exec Command="cc -O2 -fPIC -shared -std=c99 -Wall -Wextra -I&quot;$(TerminalScreenNativeSource)/include&quot; -I&quot;$(TerminalScreenNativeSource)/src&quot; &quot;$(MSBuildProjectDirectory)/Native/terminal_screen.c&quot; &quot;$(TerminalScreenNativeSource)/src/&quot;*.c -o &quot;$(TerminalScreenNativeOutput)&quot;" />
+  </Target>
+</Project>

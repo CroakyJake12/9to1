@@ -39,6 +39,12 @@ public static class MultimodalSessionLifecycle
         out string? error)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (session.Revision == long.MaxValue)
+        {
+            updated = session;
+            error = "The session revision is exhausted; metadata was preserved.";
+            return false;
+        }
         if (session.Validate() is { } invalid)
         {
             updated = session;
@@ -53,7 +59,9 @@ public static class MultimodalSessionLifecycle
         }
         if (session.State == next)
         {
-            updated = session;
+            // An accepted command is still a revisioned CAS update. Preserve the actual device
+            // metadata: repeating a lifecycle state must not imply capture started or resumed.
+            updated = session with { Revision = checked(session.Revision + 1) };
             error = null;
             return true;
         }
@@ -84,6 +92,12 @@ public static class MultimodalSessionLifecycle
         out string? error)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (session.Revision == long.MaxValue)
+        {
+            updated = session;
+            error = "The session revision is exhausted; metadata was preserved.";
+            return false;
+        }
         if (session.State is MultimodalSessionState.Ended or MultimodalSessionState.Failed)
         {
             updated = session;

@@ -542,7 +542,7 @@ public sealed class HomeCoreLibraryPreferences(IHomeCoreStateStore stateStore) :
                     result.Failure?.Message ?? "Home state is unavailable.", result.Failure?.Retryable ?? true);
                 var state = result.State!;
                 var record = state.Records.FirstOrDefault(x => x.RecordId == RecordId);
-                var values = record is null ? new HashSet<string>(StringComparer.Ordinal) : ReadDocument(record.Payload);
+                var values = record is null ? new HashSet<string>(StringComparer.Ordinal) : ReadDocument(record.Payload).PinnedArtifactKeys.ToHashSet(StringComparer.Ordinal);
                 if (pinned) values.Add(key); else values.Remove(key);
                 var next = new HomeCoreStateRecord(RecordId, RecordType, SchemaVersion, HomeDataScope.DeviceLocal,
                     HomeRecordAuthority.LocalCanonical, 0, JsonSerializer.SerializeToElement(new HomeLibraryPreferenceDocument(1, values.OrderBy(x => x, StringComparer.Ordinal).ToArray())));
@@ -672,9 +672,9 @@ public sealed class HomeEventsService(IEnumerable<IHomeActivitySource> sources, 
             }
             catch (OperationCanceledException) { throw; }
             catch (HomeFeatureProviderException exception)
-            { return (source.SourceId, (IReadOnlyList<HomeActivityEvent>)[], new HomeActivitySourceStatus(source.SourceId, "unavailable", exception.Code, exception.Message, exception.Recoverable)); }
+            { return (Source: source.SourceId, Events: (IReadOnlyList<HomeActivityEvent>)[], Status: new HomeActivitySourceStatus(source.SourceId, "unavailable", exception.Code, exception.Message, exception.Recoverable)); }
             catch (Exception)
-            { return (source.SourceId, (IReadOnlyList<HomeActivityEvent>)[], new HomeActivitySourceStatus(source.SourceId, "unavailable", "SourceUnavailable", "An activity source could not be read.")); }
+            { return (Source: source.SourceId, Events: (IReadOnlyList<HomeActivityEvent>)[], Status: new HomeActivitySourceStatus(source.SourceId, "unavailable", "SourceUnavailable", "An activity source could not be read.")); }
         })).ConfigureAwait(false);
         var sourceStatus = read.Select(x => x.Status).ToArray();
         var records = read.SelectMany(x => x.Events.Select(e => (x.Source, Event: e)))

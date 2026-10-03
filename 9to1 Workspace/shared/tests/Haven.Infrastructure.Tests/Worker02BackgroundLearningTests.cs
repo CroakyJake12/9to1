@@ -203,7 +203,7 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
     [Fact]
     public async Task Knowledge_schema_migrates_existing_records_without_losing_metadata()
     {
-        var database = await CreateDatabaseAsync();
+        var database = new SqliteDatabase(_paths);
         var now = DateTimeOffset.UtcNow;
         var legacyId = Guid.NewGuid();
         await using (var connection = await database.OpenAsync(CancellationToken.None))
@@ -229,6 +229,8 @@ public sealed class Worker02BackgroundLearningTests : IDisposable
             command.Parameters.AddWithValue("$updated", now.ToString("O"));
             await command.ExecuteNonQueryAsync(CancellationToken.None);
         }
+
+        await database.InitializeAsync(CancellationToken.None);
 
         var privacy = new TestPrivacy(backgroundLearning: true);
         var scheduler = new BackgroundLearningScheduler(privacy, database);

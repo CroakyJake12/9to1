@@ -220,28 +220,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends jq libreoffice-calc-nogui python3-uno
 
-      - name: Stage exact accepted HUI platform contract
+      - name: Verify canonical UI platform source
         shell: bash
         run: |
           set -euo pipefail
-          ref="$(tr -d '[:space:]' < "9to1 Workspace/Data/Hui/hui-platform-reference.txt)"
-          test "$ref" = "2a578502c31973fbefa3b3f82efa22d7ad11db53"
-          platform="$RUNNER_TEMP/cakeos-hui-platform"
-          git fetch --no-tags --depth=1 origin "$ref"
-          git worktree add --detach "$platform" "$ref"
-          test "$(git -C "$platform" rev-parse HEAD)" = "$ref"
-          bash "$platform/HUI/stage-donor.sh"
-          donor="$(jq -r '.components.HUI.migrationDonor.revision' "$platform/havenos.lock")"
-          test "$donor" = "7c021082565b3e0ef9110bc4a1287ca3cc2c1fbb"
-          test "$(cat "$platform/HUI/vendor/.donor-revision")" = "$donor"
-          test -f "$platform/HUI/vendor/Haven.UI/Haven.UI.csproj"
-          echo "HUI_PLATFORM_REF=$ref" >> "$GITHUB_ENV"
-          echo "HAVEN_UI_PROJECT=$platform/HUI/vendor/Haven.UI/Haven.UI.csproj" >> "$GITHUB_ENV"
-          echo "Accepted HUI platform: $ref"
-          echo "Pinned Haven.UI donor: $donor"
+          bash "9to1 Workspace/shared/eng/prepare-cui-source.sh"
+          ui="$GITHUB_WORKSPACE/9to1 Workspace/shared/src/Haven.UI/Haven.UI.csproj"
+          test -f "$ui"
+          test -f "9to1 OS/HUI/Platform/CakeOS.Platform.csproj"
+          echo "HAVEN_UI_PROJECT=$ui" >> "$GITHUB_ENV"
+          echo "Canonical UI source: $(git rev-parse HEAD)"
 
-      - name: Prove accepted HUI platform smoke contract
-        run: dotnet run --project "$RUNNER_TEMP/cakeos-hui-platform/"HUI/Preview/CakeOS.HuiPreview.csproj" -c Release
+      - name: Prove canonical UI platform regression contract
+        run: dotnet test "9to1 Workspace/shared/tests/Haven.UI.Tests/Haven.UI.Tests.csproj" -c Release -p:RuntimeIdentifier=linux-x64 -p:RuntimeIdentifiers=linux-x64 -p:SelfContained=false -p:AvsSkipBuildingLegacyTargetFrameworks=True
+
+      - name: Prove Data registry and mountable UI contract
+        run: dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Hui.Registry.Runtime.csproj" -c Release -p:RuntimeIdentifier=linux-x64 -p:RuntimeIdentifiers=linux-x64 -p:SelfContained=false -p:AvsSkipBuildingLegacyTargetFrameworks=True
 
       - name: Enforce thin Data HUI adapter boundary
         run: |
@@ -249,10 +243,10 @@ jobs:
           test -z "$(grep -RIn --include='*.cs' 'com\.sun\.star\|\buno\.' "9to1 Workspace/Data/Hui" || true)"
           test -z "$(grep -n '<PackageReference' "9to1 Workspace/Data/Hui/HavenOS.Data.Hui.csproj" || true)"
 
-      - name: Build Data HUI adapter against accepted contract
-        run: dotnet build "9to1 Workspace/Data/Hui/HavenOS.Data.Hui.csproj" -c Release --nologo -p:HavenUiProject="$HAVEN_UI_PROJECT"
+      - name: Build Data HUI adapter against canonical contract
+        run: dotnet build "9to1 Workspace/Data/Hui/HavenOS.Data.Hui.csproj" -c Release -p:RuntimeIdentifier=linux-x64 -p:RuntimeIdentifiers=linux-x64 -p:SelfContained=false -p:AvsSkipBuildingLegacyTargetFrameworks=True --nologo -p:HavenUiProject="$HAVEN_UI_PROJECT"
 
       - name: Run Data HUI edit sort save-reopen integration
         env:
           HAVEN_DATA_PYTHON: /usr/bin/python3
-        run: dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Hui.Runtime.csproj" -c Release -p:HavenUiProject="$HAVEN_UI_PROJECT"
+        run: dotnet run --project "9to1 Workspace/Data/Tests/HavenOS.Data.Hui.Runtime.csproj" -c Release -p:RuntimeIdentifier=linux-x64 -p:RuntimeIdentifiers=linux-x64 -p:SelfContained=false -p:AvsSkipBuildingLegacyTargetFrameworks=True -p:HavenUiProject="$HAVEN_UI_PROJECT"

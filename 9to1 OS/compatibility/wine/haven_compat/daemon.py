@@ -60,6 +60,17 @@ def dispatch_request(broker: CompatibilityBroker, request: dict[str, Any]) -> An
     if method == "listApps":
         _require_no_params(params)
         return broker.list_apps()
+    if method == "listBackends":
+        _require_no_params(params)
+        return [backend.as_dict() for backend in broker.compatibility_backends()]
+    if method == "inspectPackage":
+        return broker.inspect_foreign_package(_require_package_path(params))
+    if method == "setPackageBackend":
+        path = _require_package_path(params, {"backend"})
+        if "backend" not in params or (params["backend"] is not None and
+                (not isinstance(params["backend"], str) or not params["backend"])):
+            raise RequestError("invalid_params", "backend must be a non-empty framework ID or null to reset")
+        return broker.set_package_backend(path, params["backend"])
     if method == "registerApp":
         if set(params) != {"manifest"}:
             raise RequestError("invalid_params", "registerApp accepts only params.manifest")
@@ -155,6 +166,15 @@ def serve_forever(socket_path: Path | None = None, broker: CompatibilityBroker |
 def _require_no_params(params: dict[str, Any]) -> None:
     if params:
         raise RequestError("invalid_params", "method does not accept parameters")
+
+
+def _require_package_path(params: dict[str, Any], allowed_extra: set[str] | None = None) -> str:
+    if set(params) - ({"path"} | (allowed_extra or set())):
+        raise RequestError("invalid_params", "unexpected package parameters")
+    path = params.get("path")
+    if not isinstance(path, str) or not path.startswith("/") or len(path) > 4096 or "\x00" in path:
+        raise RequestError("invalid_params", "path must be a bounded absolute package path")
+    return path
 
 
 def _require_app_id(params: dict[str, Any], allowed_extra: set[str] | None = None) -> str:

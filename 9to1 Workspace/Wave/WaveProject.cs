@@ -2,10 +2,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Security.Cryptography;
 using System.Text;
+using Haven.Core.Media;
 
 namespace HavenOS.Apps.Wave;
 
-internal sealed record WaveProject(
+public sealed record WaveProject(
     int SchemaVersion,
     Guid ProjectId,
     int SampleRate,
@@ -13,22 +14,36 @@ internal sealed record WaveProject(
     long Revision,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
-    List<WaveTrack> Tracks);
+    List<WaveTrack> Tracks)
+{
+    public List<WaveMarker> Markers { get; init; } = [];
+    public List<WaveRegion> Regions { get; init; } = [];
+}
 
-internal sealed record WaveTrack(Guid TrackId, string Name, List<WaveClip> Clips);
+public sealed record WaveTrack(Guid TrackId, string Name, List<WaveClip> Clips,
+    double Gain = 1, double Pan = 0, bool Mute = false, bool Solo = false, bool RecordArm = false);
 
-internal sealed record WaveClip(
+public sealed record WaveClip(
     Guid ClipId,
     Guid SourceReferenceId,
     string SourcePath,
     string SourceSha256,
     long SourceStartFrame,
     long FrameCount,
-    long TimelineStartFrame);
+    long TimelineStartFrame,
+    double Gain = 1,
+    long FadeInFrames = 0,
+    long FadeOutFrames = 0,
+    string? SourceFileID = null,
+    string? SourceRevisionID = null,
+    WaveAudioDerivation? AudioDerivation = null);
 
-internal static class WaveProjectStore
+/// <summary>Reproducibility evidence for ephemeral audio decoding; original Files bytes remain canonical.</summary>
+public sealed record WaveAudioDerivation(string DecodedSha256, string DecodeProfile, MediaAudioDecoderEvidence Runtime);
+
+public static class WaveProjectStore
 {
-    private const int CurrentSchemaVersion = 2;
+    private const int CurrentSchemaVersion = 6;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -53,7 +68,7 @@ internal static class WaveProjectStore
             ?? throw new InvalidDataException("TrackNotFound: the target track does not exist.");
         var preview = PcmWaveformReader.Decode(Path.GetFullPath(sourcePath));
         if (preview.SampleRate != project.SampleRate || preview.Channels != project.Channels)
-            throw new NotSupportedException($"CodecUnsupported: source is {preview.SampleRate} Hz/{preview.Channels} channel(s); this project slice requires {project.SampleRate} Hz/{project.Channels} channel(s).");
+            throw new NotSupportedException($"CodecUnsupported: source is {preview.SampleRate} Hz/{preview.Channels} channel(s); this project requires {project.SampleRate} Hz/{project.Channels} channel(s).");
         string sourceSha256;
         using (var source = File.OpenRead(preview.SourcePath))
             sourceSha256 = Convert.ToHexString(SHA256.HashData(source));
@@ -64,16 +79,29 @@ internal static class WaveProjectStore
             ? item with { Clips = [.. item.Clips, clip] }
             : item).ToList();
         var now = DateTimeOffset.UtcNow;
-        return project with { Tracks = tracks, Revision = checked(project.Revision + 1), ModifiedAt = now };
+        var updated = project with { Tracks = tracks, Revision = checked(project.Revision + 1), ModifiedAt = now };
+        Validate(updated);
+        return updated;
     }
 
-    public static void Save(string path, WaveProject project)
+    public static void Save(string path, WaveProject project, long? expectedRevision = null)
     {
         ArgumentNullException.ThrowIfNull(project);
         Validate(project);
         var fullPath = Path.GetFullPath(path);
         var directory = Path.GetDirectoryName(fullPath) ?? throw new IOException("Project destination has no parent directory.");
         Directory.CreateDirectory(directory);
+        using var commitLock = new FileStream(fullPath + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        if (expectedRevision is { } expected)
+        {
+            if (File.Exists(fullPath))
+            {
+                var persisted = Open(fullPath);
+                if (expected < 0 || persisted.ProjectId != project.ProjectId || persisted.Revision != expected)
+                    throw new InvalidOperationException("RevisionConflict");
+            }
+            else if (expected >= 0) throw new FileNotFoundException("ProjectNotFound", fullPath);
+        }
         var temporaryPath = Path.Combine(directory, $".{Path.GetFileName(fullPath)}.{Guid.NewGuid():N}.tmp");
         try
         {
@@ -99,6 +127,9 @@ internal static class WaveProjectStore
             using var stream = File.OpenRead(Path.GetFullPath(path));
             var project = JsonSerializer.Deserialize<WaveProject>(stream, JsonOptions)
                 ?? throw new InvalidDataException("Project file is empty or invalid.");
+            // v2 stored clip ranges without mixer/fade fields. Constructor defaults preserve
+            // its exact audible output while migration adds editable structured processing.
+            if (project.SchemaVersion is 2 or 3 or 4 or 5) project = project with { SchemaVersion = CurrentSchemaVersion };
             Validate(project);
             return project;
         }
@@ -108,39 +139,73 @@ internal static class WaveProjectStore
         }
     }
 
-    private static void Validate(WaveProject project)
+    public static void Validate(WaveProject project)
     {
+        ArgumentNullException.ThrowIfNull(project);
+        WaveTimelineAnnotations.Validate(project);
         if (project.SchemaVersion != CurrentSchemaVersion)
             throw new InvalidDataException($"Unsupported Wave project schema version {project.SchemaVersion}.");
         if (project.ProjectId == Guid.Empty || project.SampleRate <= 0 || project.Channels is < 1 or > 32 || project.Revision < 0
-            || project.Tracks is null || project.Tracks.Any(track => track.TrackId == Guid.Empty || string.IsNullOrWhiteSpace(track.Name) || track.Clips is null))
+            || project.Tracks is null || project.Tracks.Any(track => track is null || track.TrackId == Guid.Empty || string.IsNullOrWhiteSpace(track.Name) || track.Clips is null
+                || !double.IsFinite(track.Gain) || track.Gain is < 0 or > 64 || !double.IsFinite(track.Pan) || track.Pan is < -1 or > 1))
             throw new InvalidDataException("Wave project contains invalid required data.");
         if (project.Tracks.Select(track => track.TrackId).Distinct().Count() != project.Tracks.Count)
             throw new InvalidDataException("Wave project contains duplicate track identities.");
         var clips = project.Tracks.SelectMany(track => track.Clips).ToList();
-        if (clips.Any(clip => clip.ClipId == Guid.Empty || clip.SourceReferenceId == Guid.Empty || string.IsNullOrWhiteSpace(clip.SourcePath)
+        if (clips.Any(clip => clip is null || clip.ClipId == Guid.Empty || clip.SourceReferenceId == Guid.Empty || (string.IsNullOrWhiteSpace(clip.SourcePath) && string.IsNullOrWhiteSpace(clip.SourceFileID))
+            || (clip.SourceFileID is not null && (string.IsNullOrWhiteSpace(clip.SourceFileID) || string.IsNullOrWhiteSpace(clip.SourceRevisionID)))
+            || (clip.SourceFileID is null && clip.SourceRevisionID is not null)
             || clip.SourceSha256 is null || clip.SourceSha256.Length != 64 || !clip.SourceSha256.All(Uri.IsHexDigit)
-            || clip.SourceStartFrame < 0 || clip.FrameCount <= 0 || clip.TimelineStartFrame < 0))
+            || clip.SourceStartFrame < 0 || clip.FrameCount <= 0 || clip.TimelineStartFrame < 0
+            || clip.SourceStartFrame > long.MaxValue - clip.FrameCount || clip.TimelineStartFrame > long.MaxValue - clip.FrameCount
+            || !double.IsFinite(clip.Gain) || clip.Gain is < 0 or > 64
+            || clip.FadeInFrames < 0 || clip.FadeOutFrames < 0 || clip.FadeInFrames > clip.FrameCount || clip.FadeOutFrames > clip.FrameCount))
             throw new InvalidDataException("Wave project contains an invalid clip.");
         if (clips.Select(clip => clip.ClipId).Distinct().Count() != clips.Count)
             throw new InvalidDataException("Wave project contains duplicate clip identities.");
+        foreach (var clip in clips.Where(clip => clip.AudioDerivation is not null))
+        {
+            var derivation = clip.AudioDerivation!;
+            if (clip.SourceFileID is null || derivation.DecodedSha256 is null || derivation.DecodedSha256.Length != 64
+                || !derivation.DecodedSha256.All(Uri.IsHexDigit) || string.IsNullOrWhiteSpace(derivation.DecodeProfile)
+                || derivation.Runtime is null || string.IsNullOrWhiteSpace(derivation.Runtime.Engine)
+                || string.IsNullOrWhiteSpace(derivation.Runtime.ObservedVersion)
+                || derivation.Runtime.ExecutableSha256 is null || derivation.Runtime.ExecutableSha256.Length != 64
+                || !derivation.Runtime.ExecutableSha256.All(Uri.IsHexDigit))
+                throw new InvalidDataException("Wave project contains invalid decoding evidence.");
+        }
     }
 }
 
-internal static class WaveProjectExporter
+public static class WaveProjectExporter
 {
     private const int FramesPerBlock = 4096;
 
-    public static long ExportPcm16(WaveProject project, string outputPath)
+    public static long ExportPcm16(WaveProject project, string outputPath, CancellationToken cancellationToken = default) =>
+        ExportPcm16Core(project, outputPath, null, cancellationToken);
+
+    public static long ExportRegionPcm16(WaveProject project, Guid regionId, string outputPath, CancellationToken cancellationToken = default) =>
+        ExportPcm16Core(project, outputPath, WaveTimelineAnnotations.RegionRange(project, regionId), cancellationToken);
+
+    private static long ExportPcm16Core(WaveProject project, string outputPath, MediaTimeRange? selectedRange, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(project);
-        var clips = project.Tracks.SelectMany(track => track.Clips).ToList();
-        if (clips.Count == 0)
+        cancellationToken.ThrowIfCancellationRequested();
+        WaveProjectStore.Validate(project);
+        var rangeStart = selectedRange?.Start.Ticks ?? 0;
+        var rangeEnd = selectedRange?.End.Ticks ?? long.MaxValue;
+        var anySolo = project.Tracks.Any(track => track.Solo && !track.Mute);
+        var timelineClips = project.Tracks.SelectMany(track => track.Clips).ToList();
+        var clips = project.Tracks.Where(track => !track.Mute && (!anySolo || track.Solo)).SelectMany(track => track.Clips)
+            .Where(clip => selectedRange is null || clip.TimelineStartFrame < rangeEnd
+                && checked(clip.TimelineStartFrame + clip.FrameCount) > rangeStart).ToList();
+        if (timelineClips.Count == 0 && selectedRange is null)
             throw new InvalidDataException("The project has no clips to export.");
 
         var sources = new List<(WaveClip Clip, WaveformPreview Preview)>();
         foreach (var clip in clips)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!File.Exists(clip.SourcePath))
                 throw new FileNotFoundException($"SourceUnavailable: source for clip {clip.ClipId} is missing at its recorded path; relink is not available in this standalone slice.", clip.SourcePath);
             using var source = File.OpenRead(clip.SourcePath);
@@ -156,7 +221,7 @@ internal static class WaveProjectExporter
             sources.Add((clip, preview));
         }
 
-        var outputFrames = sources.Max(item => checked(item.Clip.TimelineStartFrame + item.Clip.FrameCount));
+        var outputFrames = selectedRange?.Duration.Ticks ?? timelineClips.Max(clip => checked(clip.TimelineStartFrame + clip.FrameCount));
         var blockAlign = checked((ushort)(project.Channels * sizeof(short)));
         var dataBytes = checked((ulong)outputFrames * blockAlign);
         if (dataBytes == 0 || dataBytes > uint.MaxValue - 36)
@@ -185,32 +250,45 @@ internal static class WaveProjectExporter
             writer.Write(Encoding.ASCII.GetBytes("data"));
             writer.Write((uint)dataBytes);
 
-            var mixed = new long[FramesPerBlock * project.Channels];
+            var mixed = new double[FramesPerBlock * project.Channels];
             var encoded = new byte[mixed.Length * sizeof(short)];
             for (long blockStart = 0; blockStart < outputFrames; blockStart += FramesPerBlock)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var blockFrames = (int)Math.Min(FramesPerBlock, outputFrames - blockStart);
+                var timelineBlockStart = checked(rangeStart + blockStart);
                 Array.Clear(mixed);
                 foreach (var item in sources)
                 {
                     var clip = item.Clip;
-                    var overlapStart = Math.Max(blockStart, clip.TimelineStartFrame);
-                    var overlapEnd = Math.Min(blockStart + blockFrames, checked(clip.TimelineStartFrame + clip.FrameCount));
+                    var track = project.Tracks.Single(track => track.Clips.Any(candidate => candidate.ClipId == clip.ClipId));
+                    var overlapStart = Math.Max(timelineBlockStart, clip.TimelineStartFrame);
+                    var overlapEnd = Math.Min(timelineBlockStart + blockFrames, checked(clip.TimelineStartFrame + clip.FrameCount));
                     if (overlapStart >= overlapEnd) continue;
                     using var source = File.OpenRead(clip.SourcePath);
                     source.Position = checked(item.Preview.DataOffset + (clip.SourceStartFrame + overlapStart - clip.TimelineStartFrame) * item.Preview.BlockAlign);
                     using var reader = new BinaryReader(source, Encoding.UTF8, leaveOpen: true);
                     for (var frame = overlapStart; frame < overlapEnd; frame++)
                     {
-                        var destinationFrame = checked((int)(frame - blockStart));
+                        var destinationFrame = checked((int)(frame - timelineBlockStart));
+                        var clipOffset = frame - clip.TimelineStartFrame;
+                        var fadeIn = clip.FadeInFrames == 0 ? 1 : Math.Min(1d, clipOffset / (double)clip.FadeInFrames);
+                        var fadeOut = clip.FadeOutFrames == 0 ? 1 : Math.Min(1d, (clip.FrameCount - 1 - clipOffset) / (double)clip.FadeOutFrames);
+                        var gain = track.Gain * clip.Gain * fadeIn * fadeOut;
                         for (var channel = 0; channel < project.Channels; channel++)
-                            mixed[destinationFrame * project.Channels + channel] += reader.ReadInt16();
+                        {
+                            var channelGain = project.Channels == 2 ? channel == 0 ? Math.Min(1, 1 - track.Pan) : Math.Min(1, 1 + track.Pan) : 1;
+                            var destination = destinationFrame * project.Channels + channel;
+                            mixed[destination] += PcmWaveformReader.ReadNormalizedSample(reader, item.Preview.FormatTag, item.Preview.BitsPerSample) * 32768d * gain * channelGain;
+                            if (!double.IsFinite(mixed[destination]))
+                                throw new InvalidDataException("Audio processing exceeded finite numeric range.");
+                        }
                     }
                 }
 
                 for (var sampleIndex = 0; sampleIndex < blockFrames * project.Channels; sampleIndex++)
                 {
-                    var sample = (short)Math.Clamp(mixed[sampleIndex], (long)short.MinValue, (long)short.MaxValue);
+                    var sample = (short)Math.Clamp(Math.Round(mixed[sampleIndex]), short.MinValue, short.MaxValue);
                     encoded[sampleIndex * 2] = (byte)sample;
                     encoded[sampleIndex * 2 + 1] = (byte)(sample >> 8);
                 }
@@ -225,6 +303,7 @@ internal static class WaveProjectExporter
                 if (!string.Equals(currentHash, item.Clip.SourceSha256, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException($"SourceChanged: source content for clip {item.Clip.ClipId} changed during export.");
             }
+            cancellationToken.ThrowIfCancellationRequested();
             return outputFrames;
         }
         catch

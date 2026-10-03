@@ -74,8 +74,31 @@ public sealed class DataSpreadsheetOperationsTests
         workbook.Tables.Add(new DataTableDefinition { SheetId = sheet.Id, Name = "Scores", Range = new DataCellRange { StartRow = 0, EndRow = 3, StartColumn = 0, EndColumn = 1 }, Filters = [new DataTableFilter { Column = 1, Operator = DataFilterOperator.GreaterThan, Value = "5" }] });
         workbook.Validations.Add(new DataValidationRule { SheetId = sheet.Id, Range = new DataCellRange { StartRow = 1, EndRow = 3, StartColumn = 1, EndColumn = 1 }, Kind = DataValidationKind.WholeNumber });
         workbook.Charts.Add(new DataChartDefinition { SheetId = sheet.Id, Title = "Scores", SourceRange = new DataCellRange { StartRow = 0, EndRow = 3, StartColumn = 0, EndColumn = 1 }, SeriesColumns = [1] });
+        workbook.RevisionId = Guid.NewGuid();
         workbook.Normalize(); var json = JsonSerializer.Serialize(workbook); var loaded = JsonSerializer.Deserialize<DataWorkbook>(json)!; loaded.Normalize();
-        Assert.Equal(3, loaded.SchemaVersion); Assert.Single(loaded.Tables); Assert.Single(loaded.Validations); Assert.Single(loaded.Charts); Assert.Equal("Scores", loaded.Charts[0].Title); Assert.Equal(DataFilterOperator.GreaterThan, loaded.Tables[0].Filters[0].Operator);
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, loaded.SchemaVersion); Assert.Equal(workbook.RevisionId, loaded.RevisionId); Assert.Single(loaded.Tables); Assert.Single(loaded.Validations); Assert.Single(loaded.Charts); Assert.Equal("Scores", loaded.Charts[0].Title); Assert.Equal(DataFilterOperator.GreaterThan, loaded.Tables[0].Filters[0].Operator);
+    }
+
+    [Fact]
+    public void Schema_three_workbook_migrates_without_inventing_a_persisted_revision()
+    {
+        var workbook = DataWorkbook.Create("Legacy named ranges");
+        var sheet = workbook.Sheets[0];
+        sheet.SetCell(0, 0, "12", kind: DataCellKind.Number);
+        workbook.NamedRanges.Add(new DataNamedRange { Name = "Amount", RefersTo = "=Sheet1!$A$1" });
+        var json = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(workbook))!.AsObject();
+        json["SchemaVersion"] = 3;
+        json.Remove("RevisionId");
+        var loaded = JsonSerializer.Deserialize<DataWorkbook>(json.ToJsonString())!;
+        Assert.Equal(3, loaded.SchemaVersion);
+        Assert.Equal(Guid.Empty, loaded.RevisionId);
+        loaded.Normalize();
+        Assert.Equal(DataWorkbook.CurrentSchemaVersion, loaded.SchemaVersion);
+        Assert.Equal(Guid.Empty, loaded.RevisionId); // The durable store allocates this only at successful persistence.
+        Assert.Equal(workbook.Id, loaded.Id);
+        Assert.Equal(sheet.Id, loaded.Sheets[0].Id);
+        Assert.Equal("12", loaded.Sheets[0].GetCell(0, 0)!.Value);
+        Assert.Equal("Sheet1!$A$1", Assert.Single(loaded.NamedRanges).RefersTo);
     }
 
     [Fact]

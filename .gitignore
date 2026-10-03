@@ -7,6 +7,9 @@ artifacts/**
 build/
 cache/
 **/bin/
+!9to1 OS/packaging/bin/
+9to1 OS/packaging/bin/*
+!9to1 OS/packaging/bin/haven-modelctl
 **/obj/
 **/obj-hui/
 **/obj-apk/
@@ -48,3 +51,8 @@ dist/
 *.userprefs
 
 
+# Pinned Avalonia source build metadata is source, not generated build output.
+!framework/CUI/vendor/Avalonia/build/
+!framework/CUI/vendor/Avalonia/build/**
+!framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/
+!framework/CUI/vendor/Avalonia/src/Browser/Avalonia.Browser/build/**

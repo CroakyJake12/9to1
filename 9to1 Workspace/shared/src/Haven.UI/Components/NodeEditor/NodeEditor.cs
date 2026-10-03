@@ -38,6 +38,18 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
         SetValue(HavenProperties.Clip, true);
     }
 
+    private NodeEditorTopologyPolicy _topologyPolicy;
+    /// <summary>Chosen by the owning editor at construction, never imported from graph content.</summary>
+    public NodeEditorTopologyPolicy TopologyPolicy
+    {
+        get => _topologyPolicy;
+        init
+        {
+            if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(value));
+            _topologyPolicy = value;
+        }
+    }
+
     public NodeEditorDocument Document
     {
         get => _document;
@@ -74,7 +86,8 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
 
     public bool TryActivate(long expectedRevision, out NodeEditorDocument activeGraph)
     {
-        if (_document.Revision != expectedRevision || ValidateDocument().Count != 0)
+        if (TopologyPolicy == NodeEditorTopologyPolicy.RelationalAuthoring ||
+            _document.Revision != expectedRevision || ValidateDocument().Count != 0)
         { activeGraph = _document; return false; }
         SetDocument(_document with { State = NodeEditorRevisionState.Active, Revision = checked(_document.Revision + 1) }, true);
         activeGraph = _document;
@@ -273,7 +286,7 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
 
     public bool CanConnect(Guid fromNodeId, string fromPortId, Guid toNodeId, string toPortId)
     {
-        if (fromNodeId == toNodeId) return false;
+        if (fromNodeId == toNodeId && TopologyPolicy != NodeEditorTopologyPolicy.RelationalAuthoring) return false;
         var from = FindNode(fromNodeId); var to = FindNode(toNodeId);
         if (from is null || to is null) return false;
         var fromPort = FindPort(from, fromPortId); var toPort = FindPort(to, toPortId);
@@ -282,7 +295,7 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
         if (_document.Edges.Any(edge => edge.FromNodeId == fromNodeId && edge.FromPortId == fromPortId && edge.ToNodeId == toNodeId && edge.ToPortId == toPortId)) return false;
         if (!fromPort.AllowsMultipleConnections && _document.Edges.Any(edge => edge.FromNodeId == fromNodeId && edge.FromPortId == fromPortId)) return false;
         if (!toPort.AllowsMultipleConnections && _document.Edges.Any(edge => edge.ToNodeId == toNodeId && edge.ToPortId == toPortId)) return false;
-        return !WouldCreateCycle(fromNodeId, toNodeId);
+        return TopologyPolicy == NodeEditorTopologyPolicy.RelationalAuthoring || !WouldCreateCycle(fromNodeId, toNodeId);
     }
 
     public string? CopySelection()
@@ -348,7 +361,7 @@ public sealed class NodeEditor : HavenElement, INodeEditorGraphApi, IHavenDrawCo
             if (fromPort.Direction != NodeEditorPortDirection.Output || toPort.Direction != NodeEditorPortDirection.Input) diagnostics.Add(new NodeEditorDiagnostic("port-direction", "Edges must connect output ports to input ports.", EdgeId: edge.Id));
             if (!string.Equals(fromPort.DataType, toPort.DataType, StringComparison.OrdinalIgnoreCase)) diagnostics.Add(new NodeEditorDiagnostic("port-type", "Connected ports must have matching data types.", EdgeId: edge.Id));
         }
-        if (HasCycle()) diagnostics.Add(new NodeEditorDiagnostic("cycle", "Graph contains a cycle."));
+        if (TopologyPolicy != NodeEditorTopologyPolicy.RelationalAuthoring && HasCycle()) diagnostics.Add(new NodeEditorDiagnostic("cycle", "Graph contains a cycle."));
         return diagnostics;
     }
 

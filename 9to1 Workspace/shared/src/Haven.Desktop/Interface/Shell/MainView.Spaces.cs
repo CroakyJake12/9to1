@@ -1,4 +1,8 @@
+using Avalonia.Controls;
 using Haven.Application;
+using Haven.Desktop.Controls;
+using HavenOS.Home.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Haven.Core;
 using Haven.Desktop.Services;
 using Haven.Desktop.Views.Pages.Spaces;
@@ -10,10 +14,13 @@ public sealed partial class MainView
     private NativeSpacesPage? _spacesPage;
     private SpaceRegistry? _spaceRegistry;
 
-    private SpaceRegistry SpacesRegistry => _spaceRegistry ??= new SpaceRegistry(_versionedSettings);
+    private SpaceRegistry SpacesRegistry => _spaceRegistry ??= new SpaceRegistry(_versionedSettings, CaptureSpaceWriteAdmissionAsync);
 
     private async Task OpenSpacesAsync()
     {
+        var workspace = await GetOwnedSpacesWorkspaceAsync(CancellationToken.None);
+        foreach (var pending in await workspace.Registry.ReadPendingDeletionsAsync(CancellationToken.None))
+            await workspace.Deletion.ResumeAsync(pending.OperationId, CancellationToken.None);
         _spacesPage ??= new NativeSpacesPage(
             SpacesRegistry,
             new SpaceGeneratedSurfaceRenderer(
@@ -31,11 +38,72 @@ public sealed partial class MainView
             DeleteSpaceAsync,
             OpenSpaceLayoutAsync,
             _conversations,
-            OpenSpaceConversationAsync);
+            OpenSpaceConversationAsync,
+            OpenSpaceCanonicalSourceAsync, workspace.RequireCurrentAccessAsync);
 
         AddOrSelectTab("spaces", "Spaces", _spacesPage, false, HavenSurface.Spaces);
         await _spacesPage.ActivateAsync(CancellationToken.None);
         ApplyShellVisualState();
+    }
+
+    private async Task OpenSpaceCanonicalSourceAsync(SpaceDefinition space, SpaceContextReference source)
+    {
+        if (source.HostedFileId is not { } fileId || source.Kind is not (SpaceContextReferenceKind.CanvasArtifact or SpaceContextReferenceKind.PictureArtifact or SpaceContextReferenceKind.GamesProject or SpaceContextReferenceKind.WriteArtifact))
+            throw new NotSupportedException("This source has no available native owning-app surface.");
+        var services = global::Haven.Desktop.App.Services ?? throw new InvalidOperationException("Home services are unavailable.");
+        var files = services.GetRequiredService<NativeFilesWorkspaceAuthority>();
+        var workspace = await files.GetCurrentAsync() ?? throw new UnauthorizedAccessException("Home has not authorised Files storage.");
+        var metadata = await workspace.Provider.GetAsync(new(fileId), CancellationToken.None);
+        if (!metadata.IsSuccess || metadata.Value!.CurrentRevisionId is not { } revision)
+            throw new InvalidOperationException("The canonical Files source is unavailable.");
+        var actors = services.GetRequiredService<IAuthenticatedResourceActorSource>();
+        var resources = services.GetRequiredService<ResourceAuthorizationService>();
+        var route = new SpaceFilesArtifactAction(space.Id, space.Revision, source.ContextId, fileId,
+            source.CanonicalEntityId, revision, false);
+        var router = new SpaceFilesArtifactActionRouter(SpacesRegistry, files, actors, resources);
+        var reader = services.GetRequiredService<NativeFilesArtifactContentReader>();
+        var home = services.GetRequiredService<HomeCoreRuntime>();
+        Control surface;
+        Func<Task> initialize;
+        if (source.Kind == SpaceContextReferenceKind.CanvasArtifact)
+        {
+            var canvas = new SpaceCanvasCuiSurface(route, router, reader, home, actors, resources);
+            surface = canvas;
+            initialize = () => canvas.InitializeAsync();
+        }
+        else if (source.Kind == SpaceContextReferenceKind.PictureArtifact)
+        {
+            var picture = new SpacePictureCuiSurface(route, router, reader,
+                services.GetRequiredService<NativeFilesMediaAssetSourceResolver>(), home, actors, resources,
+                services.GetRequiredService<IMotionPreferenceSource>());
+            surface = picture;
+            initialize = () => picture.InitializeAsync();
+        }
+        else if (source.Kind == SpaceContextReferenceKind.WriteArtifact)
+        {
+            var write = new SpaceWriteCuiSurface(route, router, files,
+                services.GetRequiredService<IWriteNativeDocumentPackageStore>(), home, actors, resources);
+            surface = write;
+            initialize = () => write.InitializeAsync();
+        }
+        else
+        {
+            var capability = await services.GetRequiredService<Haven.Infrastructure.Games.GamesInstalledRuntimeResolver>().ResolveAsync();
+            var sessions = capability.Runtime is { } runtime ? new Haven.Application.Games.GamesSceneSessionService(resources,
+                services.GetRequiredService<Haven.Application.Games.ICanonicalGamesSceneSource>(), runtime) : null;
+            var games = new SpaceGamesCuiSurface(route, router,
+                services.GetRequiredService<Haven.Application.Games.GamesProjectEditorService>(), sessions, home, actors, resources);
+            surface = games;
+            initialize = () => games.InitializeAsync();
+        }
+        try
+        {
+            await initialize();
+            AddOrSelectTab($"space-source-{space.Id:N}-{source.ContextId:N}-{Guid.NewGuid():N}", metadata.Value.Name,
+                surface, true, HavenSurface.Spaces, forceNewTab: true);
+            ApplyShellVisualState();
+        }
+        catch { ((IDisposable)surface).Dispose(); throw; }
     }
 
     private async Task LaunchSpaceAsync(SpaceDefinition space)
@@ -47,7 +115,6 @@ public sealed partial class MainView
             return;
         }
 
-        if (_nativeChatSidebar is not null)
         if (_nativeChatSidebar is not null)
         {
             _nativeChatSidebar.SetMode(HavenMode.Chat);
@@ -70,8 +137,7 @@ public sealed partial class MainView
         }
         else
         {
-            await _newChatPage.StartFreshConversationAsync(HavenMode.Chat, null);
-            await _newChatPage.AssignSpaceAsync(space.Id);
+            await _newChatPage.StartFreshConversationAsync(HavenMode.Chat, null, spaceId: space.Id);
             _newChatPage.ConfigureRegisteredContext(plan.RegisteredContext, plan.EffortOverride);
             if (plan.Files.Count > 0)
                 await _newChatPage.AddFilesAsync(plan.Files.Select(file => file.Path));
@@ -93,17 +159,18 @@ public sealed partial class MainView
         ApplyShellVisualState();
     }
 
-    private async Task DeleteSpaceAsync(Guid spaceId)
+    private async Task DeleteSpaceAsync(SpaceDefinition displayed)
     {
-        var conversations = await _conversations.GetRecentAsync(HavenMode.Chat, int.MaxValue, CancellationToken.None);
-        var now = DateTimeOffset.UtcNow;
-        foreach (var conversation in conversations.Where(item => item.SpaceId == spaceId))
-            await _conversations.UpsertConversationAsync(conversation with { SpaceId = null, UpdatedAt = now }, CancellationToken.None);
-
+        var workspace = await GetOwnedSpacesWorkspaceAsync(CancellationToken.None);
+        var spaceId = displayed.Id;
+        var operation = await workspace.Deletion.BeginAsync(spaceId, displayed.Revision, Guid.NewGuid(), CancellationToken.None);
+        if (operation.Stage != SpaceDeletionStage.Complete)
+            throw new InvalidOperationException("Space deletion remains pending. Reopen Spaces to resume recovery.");
         if (_newChatPage?.CurrentConversation.SpaceId == spaceId)
-            await _newChatPage.AssignSpaceAsync(null);
-
-        await SpacesRegistry.DeleteAsync(spaceId, CancellationToken.None);
+        {
+            var current = await _conversations.GetAsync(_newChatPage.CurrentConversation.Id, CancellationToken.None);
+            if (current is not null) await _newChatPage.LoadConversationAsync(current);
+        }
         if (_nativeChatSidebar is not null)
             await _nativeChatSidebar.ReloadSpaceScopeAsync();
     }

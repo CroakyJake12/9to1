@@ -41,12 +41,36 @@ public interface IModelProvider
 /// <summary>
 /// Defines the model provider registry contract so callers depend on a capability rather than one implementation.
 /// </summary>
+public sealed record ModelCataloguePolicy(bool AllowLocal = true, bool AllowRemote = true,
+    IReadOnlySet<string>? AllowedProviderIds = null);
+
 public interface IModelProviderRegistry
 {
     IReadOnlyList<IModelProvider> Providers { get; }
     IModelProvider? Find(string providerId);
     IModelProvider GetRequired(string providerId);
     Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken);
+    async Task<IReadOnlyList<ProviderModelDescriptor>> GetModelsAsync(ModelCataloguePolicy policy, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(policy);
+        cancellationToken.ThrowIfCancellationRequested();
+        var models = new List<ProviderModelDescriptor>();
+        foreach (var provider in Providers.Where(p => (p.IsLocal ? policy.AllowLocal : policy.AllowRemote) &&
+            (policy.AllowedProviderIds is null || policy.AllowedProviderIds.Contains(p.Id))))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                models.AddRange((await provider.GetModelsAsync(cancellationToken).ConfigureAwait(false))
+                    .Where(m => m.ProviderId.Equals(provider.Id, StringComparison.OrdinalIgnoreCase) &&
+                        (m.IsLocal && provider.IsLocal ? policy.AllowLocal : policy.AllowRemote))
+                    .Select(m => provider.IsLocal ? m : m with { IsLocal = false }));
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception ex) when (ex is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException) { }
+        }
+        return models.GroupBy(m => m.Key, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToArray();
+    }
 }
 
 /// <summary>

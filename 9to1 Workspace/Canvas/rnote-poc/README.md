@@ -1,6 +1,6 @@
 # CakeOS Canvas Rnote Proof of Concept
 
-This crate provides a renderer-neutral bridge between the Rnote 0.14.2 engine core and the CakeOS HUI layer. It deliberately depends on `rnote-engine` and `rnote-compose` with default features disabled — no GTK, Libadwaita, or `rnote-ui` is imported.
+This crate provides a renderer-neutral C ABI over controlled Rnote 0.15 under `../Source/Rnote`, revision `1a728d6a85db3528f9c79dc0990700e91b22696f`. Local `rnote-engine` and `rnote-compose` default features are disabled. GTK/Libadwaita UI is not required; native GLib/GIO, Cairo, Pango, fonts and libxml remain build/runtime dependencies. Preserve the donor GPL licence and provenance.
 
 ## Architecture
 
@@ -23,7 +23,7 @@ This crate provides a renderer-neutral bridge between the Rnote 0.14.2 engine co
 
 The stable C ABI (`include/cakeos_canvas.h`) exposes:
 
-- **Engine lifecycle**: `cake_canvas_engine_new`, `cake_canvas_engine_free`, `cake_canvas_engine_from_rnote`
+- **Engine lifecycle/import**: `cake_canvas_engine_new`, `cake_canvas_engine_free`, `cake_canvas_engine_from_rnote`, `cake_canvas_engine_from_xopp`
 - **Rnote tools**: `cake_canvas_set_stroke_tool` (pen, marker highlighter, eraser, selector/lasso, and shape), plus `cake_canvas_set_shape`
 - **Stroke events**: `begin_stroke`, `update_stroke`, `end_stroke`
 - **History**: `undo`, `redo`, `can_undo`, `can_redo`
@@ -36,15 +36,15 @@ All coordinates are in **Canvas document space** (Rnote's infinite coordinate sy
 ## Building
 
 ```bash
-cd apps/canvas/rnote-poc
-cargo build --release
-# Output: target/release/cakeos-canvas-rnote (cdylib + rlib)
+cd "9to1 Workspace/Canvas/rnote-poc"
+cargo build --locked --release
+# Linux output: target/release/libcakeos_canvas_rnote_poc.so (cdylib + rlib)
 ```
 
 ## Testing
 
 ```bash
-cargo test
+cargo test --locked
 ```
 
 The tests verify:
@@ -56,3 +56,8 @@ The tests verify:
 - Eraser trashing + history restoration
 - Camera zoom/pan with document-coordinate preservation
 - Atomic Rnote save → reopen round-trip with no retained temporary file
+- Genuine Xournal++ structured import and native rendering round trip
+
+Managed Canvas checks ABI 3 and owns handles/buffers with SafeHandle. Rnote's persisted generated geometry rounds to three decimals; import/preview uses durable donor precision and native `.9to1c` samples retain original pressure/tilt. SVG resource IDs are generated afresh; semantic comparisons normalize them while retaining geometry/style/reference topology.
+
+Linux tests/library builds do not establish full donor parity, accelerated spatial rendering or Windows/Android/web package support.

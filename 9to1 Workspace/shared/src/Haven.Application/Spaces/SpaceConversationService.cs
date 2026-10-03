@@ -5,7 +5,8 @@ namespace Haven.Application;
 /// <summary>Provides the canonical, typed conversation membership operations for Spaces.</summary>
 public sealed class SpaceConversationService(
     SpaceRegistry spaces,
-    IConversationRepository conversations)
+    IConversationRepository conversations,
+    ISpaceConversationWriter writer)
 {
     public async Task<IReadOnlyList<Conversation>> GetConversationsAsync(
         Guid spaceId,
@@ -38,9 +39,11 @@ public sealed class SpaceConversationService(
                 "Restore the conversation before assigning it to a Space.");
         if (conversation.SpaceId == spaceId) return conversation;
 
-        var updated = conversation with { SpaceId = space.Id, UpdatedAt = DateTimeOffset.UtcNow };
-        await conversations.UpsertConversationAsync(updated, cancellationToken).ConfigureAwait(false);
-        return updated;
+        var source = conversation.SpaceId is { } sourceId
+            ? await spaces.ReadExistingAsync(sourceId, cancellationToken).ConfigureAwait(false)
+                ?? throw new SpaceConversationException(SpaceConversationErrorCode.SpaceUnavailable, "The current source Space is unavailable.")
+            : null;
+        return await writer.AssignAsync(conversation, source, space, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Conversation> RemoveAsync(
@@ -56,9 +59,9 @@ public sealed class SpaceConversationService(
                 $"System-managed {conversation.Kind} conversations cannot be moved out of a Space.");
         if (conversation.SpaceId is null) return conversation;
 
-        var updated = conversation with { SpaceId = null, UpdatedAt = DateTimeOffset.UtcNow };
-        await conversations.UpsertConversationAsync(updated, cancellationToken).ConfigureAwait(false);
-        return updated;
+        var source = await spaces.ReadExistingAsync(conversation.SpaceId.Value, cancellationToken).ConfigureAwait(false)
+            ?? throw new SpaceConversationException(SpaceConversationErrorCode.SpaceUnavailable, "The current source Space is unavailable.");
+        return await writer.AssignAsync(conversation, source, null, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<SpaceDefinition> RequireActiveSpaceAsync(Guid spaceId, CancellationToken cancellationToken)

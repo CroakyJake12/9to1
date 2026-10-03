@@ -14,5 +14,6 @@ public sealed class ChatboxPrefab : HavenPrefabDefinition
         instruction.Accessibility.AccessibleName = "Ask Haven anything";
         instruction.SetValue(HavenProperties.FontWeight, 500);
         instance.GetComponent<Button>("Send").Accessibility.AccessibleName = "Send message";
+        _ = ChatComposerController.For(instance);
     }
 }

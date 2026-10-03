@@ -1,0 +1,10 @@
+<Cui id="shell-ai-review" version="1">
+  <StackPanel spacing="8">
+    <TextBlock text="Shell changes use a 30-second preview. Return to the shell and choose Keep to save, or Revert to discard." text-wrapping="Wrap" />
+    <WrapPanel>
+      <Button content="Review exact preview in Home" action="Review" is-enabled="{Binding HasPendingReview}" />
+      <Button content="Retry unchanged reviewed preview" action="Retry" is-enabled="{Binding HasPendingReview}" />
+      <Button content="Finish recording the result" action="RetryAudit" is-enabled="{Binding HasPendingAudit}" />
+    </WrapPanel>
+  </StackPanel>
+</Cui>

@@ -1,0 +1,35 @@
+<Cui id="9to1-admin" version="1">
+  <DefaultTheme value="Default">
+    <ScrollViewer>
+      <StackPanel padding="24" orientation="Vertical">
+        <TextBlock text="9to1 Admin" font-size="28" font-weight="Bold" />
+        <TextBlock text="{Binding AccountName}" accessible-name="Signed-in account" />
+        <TextBlock text="{Binding Status}" accessible-name="Admin status" text-wrapping="Wrap" margin="0 8 0 12" />
+        <Button action="Refresh" content="Refresh organisations" accessible-name="Refresh your organisations" />
+        <StackPanel items="{Binding Organisations}" item-template="organisation-row" empty-template="organisation-empty" margin="0 12 0 12" />
+        <StackPanel id="organisation-row" definition="true" margin="0 8 0 8">
+          <TextBlock text="{Binding Name}" font-weight="Bold" />
+          <TextBlock text="{Binding OrgID}" accessible-name="Organisation identifier" />
+          <TextBlock text="{Binding SeatSummary}" />
+          <TextBlock text="{Binding Status}" />
+        </StackPanel>
+        <StackPanel id="organisation-empty" definition="true"><TextBlock text="No organisations are available to your account." /></StackPanel>
+        <TextBlock text="Organisation ID" margin="0 12 0 4" />
+        <TextBox text="{Binding OrganisationID, mode=TwoWay, type=string}" accessible-name="Organisation ID from your organisations" />
+        <Button action="OpenOrganisation" content="Open organisation" accessible-name="Open the selected organisation" />
+        <TextBlock text="{Binding OrganisationName}" font-size="22" font-weight="Bold" margin="0 20 0 8" />
+        <Button action="RefreshBilling" content="Refresh billing and recovery status" accessible-name="Load authorised billing even when Business is suspended" />
+        <TextBlock text="{Binding BillingSummary}" text-wrapping="Wrap" />
+        <TextBlock text="Members" font-size="18" margin="0 20 0 8" />
+        <StackPanel items="{Binding Members}" item-template="member-row" />
+        <StackPanel id="member-row" definition="true" margin="0 6 0 6"><TextBlock text="{Binding AccountID}" /><TextBlock text="{Binding Roles}" /><TextBlock text="{Binding State}" /></StackPanel>
+        <TextBlock text="Organisation policy" font-size="18" margin="0 20 0 8" />
+        <StackPanel items="{Binding Policy}" item-template="policy-row" />
+        <StackPanel id="policy-row" definition="true" margin="0 6 0 6"><TextBlock text="{Binding Setting}" font-weight="Bold" /><TextBlock text="{Binding Value}" text-wrapping="Wrap" /></StackPanel>
+        <Button action="RefreshAudit" content="Refresh audit" accessible-name="Load the selected organisation audit" margin="0 20 0 8" />
+        <StackPanel items="{Binding Audit}" item-template="audit-row" />
+        <StackPanel id="audit-row" definition="true" margin="0 6 0 6"><TextBlock text="{Binding Action}" /><TextBlock text="{Binding At}" /></StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </DefaultTheme>
+</Cui>

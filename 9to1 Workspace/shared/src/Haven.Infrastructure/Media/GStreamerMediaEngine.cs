@@ -7,11 +7,18 @@ namespace Haven.Infrastructure.Media;
 public sealed class GStreamerMediaEngine : IMediaEngine
 {
     private readonly GStreamerNative? _native;
+    private readonly bool _headlessValidation;
 
-    public GStreamerMediaEngine()
+    public GStreamerMediaEngine() : this(false) { }
+
+    private GStreamerMediaEngine(bool headlessValidation)
     {
+        _headlessValidation = headlessValidation;
         _native = GStreamerNative.TryCreate();
     }
+
+    /// <summary>Explicit CI validation output; never selected as a production fallback.</summary>
+    public static GStreamerMediaEngine CreateHeadlessValidationEngine() => new(true);
 
     public Task<MediaEngineCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default)
     {
@@ -51,7 +58,7 @@ public sealed class GStreamerMediaEngine : IMediaEngine
 
         try
         {
-            var session = _native.Open(source.SourceUri);
+            var session = _native.Open(source.SourceUri, _headlessValidation);
             return Task.FromResult(MediaEngineResult<IMediaPlaybackSession>.Success(session));
         }
         catch (Exception exception)
@@ -78,7 +85,7 @@ public sealed class GStreamerMediaEngine : IMediaEngine
         private readonly GstObjectUnref _objectUnref;
         private readonly GstVersion _version;
         private readonly GErrorFree _errorFree;
-        private readonly GErrorGetMessage _errorMessage;
+        private readonly GstElementGetState _getState;
         private bool _disposed;
 
         internal string Version { get; }
@@ -95,7 +102,7 @@ public sealed class GStreamerMediaEngine : IMediaEngine
             _objectUnref = Load<GstObjectUnref>("gst_object_unref");
             _version = Load<GstVersion>("gst_version");
             _errorFree = Load<GErrorFree>("g_error_free");
-            _errorMessage = Load<GErrorGetMessage>("g_error_get_message");
+            _getState = Load<GstElementGetState>("gst_element_get_state");
             _init(0, 0);
             _version(out var major, out var minor, out var micro, out _);
             Version = $"{major}.{minor}.{micro}";
@@ -112,15 +119,17 @@ public sealed class GStreamerMediaEngine : IMediaEngine
             return null;
         }
 
-        internal PlaybackSession Open(Uri uri)
+        internal PlaybackSession Open(Uri uri, bool headlessValidation)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             var escaped = uri.AbsoluteUri.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
-            var description = $"playbin uri=\"{escaped}\"";
+            var description = $"playbin uri=\"{escaped}\"" + (headlessValidation ? " audio-sink=\"fakesink sync=true\" video-sink=\"fakesink sync=true\"" : "");
             var pipeline = _parseLaunch(description, out var error);
             if (error != 0)
             {
-                var message = Marshal.PtrToStringUTF8(_errorMessage(error)) ?? "Unknown GStreamer parse error.";
+                // GError is a public GLib ABI struct; there is no g_error_get_message export.
+                var nativeError = Marshal.PtrToStructure<GError>(error);
+                var message = Marshal.PtrToStringUTF8(nativeError.Message) ?? "Unknown GStreamer parse error.";
                 _errorFree(error);
                 if (pipeline != 0) _objectUnref(pipeline);
                 throw new InvalidOperationException(message);
@@ -142,12 +151,15 @@ public sealed class GStreamerMediaEngine : IMediaEngine
 
         internal sealed class PlaybackSession(GStreamerNative native, nint pipeline) : IMediaPlaybackSession
         {
+            private readonly object _gate = new();
             private nint _pipeline = pipeline;
             private MediaPlaybackState _state = MediaPlaybackState.Stopped;
             public MediaPlaybackState State => _state;
 
-            public Task<MediaEngineResult<MediaPlaybackState>> SetStateAsync(MediaPlaybackState state, CancellationToken cancellationToken = default)
+            public Task<MediaEngineResult<MediaPlaybackState>> SetStateAsync(MediaPlaybackState state, CancellationToken cancellationToken = default) => Task.Run(() =>
             {
+                lock (_gate)
+                {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (_pipeline == 0) return Task.FromResult(Fail<MediaPlaybackState>("Playback session is disposed."));
                 if (state is not (MediaPlaybackState.Playing or MediaPlaybackState.Paused or MediaPlaybackState.Stopped))
@@ -155,21 +167,30 @@ public sealed class GStreamerMediaEngine : IMediaEngine
                 var gstState = state switch { MediaPlaybackState.Playing => 4, MediaPlaybackState.Paused => 3, _ => 1 };
                 var result = native._setState(_pipeline, gstState);
                 if (result == 0) return Task.FromResult(Fail<MediaPlaybackState>("GStreamer rejected the requested playback state."));
+                var observed = native._getState(_pipeline, out var currentState, out _, 2_000_000_000);
+                if (observed == 0 || currentState != gstState)
+                    return Task.FromResult(Fail<MediaPlaybackState>("GStreamer did not reach the requested playback state. Check the source, codecs and output device."));
                 _state = state;
                 return Task.FromResult(MediaEngineResult<MediaPlaybackState>.Success(_state));
-            }
+                }
+            }, cancellationToken);
 
             public Task<MediaEngineResult<MediaTime>> GetPositionAsync(CancellationToken cancellationToken = default)
             {
+                lock (_gate)
+                {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (_pipeline == 0) return Task.FromResult(Fail<MediaTime>("Playback session is disposed."));
                 if (native._queryPosition(_pipeline, 3, out var position) == 0 || position < 0)
                     return Task.FromResult(Fail<MediaTime>("GStreamer could not report the current position."));
                 return Task.FromResult(MediaEngineResult<MediaTime>.Success(MediaTimebase.Nanoseconds.At(position)));
+                }
             }
 
             public Task<MediaEngineResult<MediaTime>> SeekAsync(MediaTime position, CancellationToken cancellationToken = default)
             {
+                lock (_gate)
+                {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (_pipeline == 0) return Task.FromResult(Fail<MediaTime>("Playback session is disposed."));
                 if (!position.IsValid || position.Ticks < 0) return Task.FromResult(Fail<MediaTime>("Seek position must be non-negative and valid."));
@@ -179,14 +200,18 @@ public sealed class GStreamerMediaEngine : IMediaEngine
                 if (native._seekSimple(_pipeline, 3, 1, nanoseconds) == 0)
                     return Task.FromResult(Fail<MediaTime>("GStreamer rejected the seek request."));
                 return Task.FromResult(MediaEngineResult<MediaTime>.Success(MediaTimebase.Nanoseconds.At(nanoseconds)));
+                }
             }
 
             public ValueTask DisposeAsync()
             {
+                lock (_gate)
+                {
                 var current = Interlocked.Exchange(ref _pipeline, 0);
                 if (current != 0) { native._setState(current, 1); native._objectUnref(current); }
                 _state = MediaPlaybackState.Stopped;
                 return ValueTask.CompletedTask;
+                }
             }
 
             private static MediaEngineResult<T> Fail<T>(string message) => MediaEngineResult<T>.Failure(new(
@@ -196,12 +221,13 @@ public sealed class GStreamerMediaEngine : IMediaEngine
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void GstInit(int argc, nint argv);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate nint GstParseLaunch([MarshalAs(UnmanagedType.LPUTF8Str)] string description, out nint error);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementSetState(nint element, int state);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementGetState(nint element, out int state, out int pending, ulong timeoutNanoseconds);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementQueryPosition(nint element, int format, out long position);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate int GstElementSeekSimple(nint element, int format, int flags, long position);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate nint GstElementFactoryFind([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void GstObjectUnref(nint instance);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void GstVersion(out uint major, out uint minor, out uint micro, out uint nano);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate void GErrorFree(nint error);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate nint GErrorGetMessage(nint error);
+        [StructLayout(LayoutKind.Sequential)] private struct GError { public uint Domain; public int Code; public nint Message; }
     }
 }

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Haven.Android/WindowsNaturalSpeechOutputService.Android.cs" Link="Production/WindowsNaturalSpeechOutputService.Android.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutDocumentReader.cs" Link="Production/AndroidLauncherLayoutDocumentReader.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherFolderNavigation.cs" Link="Production/AndroidLauncherFolderNavigation.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutDocumentSelections.cs" Link="Production/AndroidLauncherLayoutDocumentSelections.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherGestureInput.cs" Link="Production/AndroidLauncherGestureInput.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherPageNavigation.cs" Link="Production/AndroidLauncherPageNavigation.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherOriginalAppSelection.cs" Link="Production/AndroidLauncherOriginalAppSelection.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidInstalledApplicationsGoProvider.cs" Link="Production/AndroidInstalledApplicationsGoProvider.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidInstalledApplicationShortcuts.cs" Link="AndroidInstalledApplicationShortcuts.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherWidgetBindings.cs" Link="Production/AndroidLauncherWidgetBindings.cs" />
+    <Compile Include="../../src/Haven.Android/AndroidLauncherLayoutSessions.cs" Link="Production/AndroidLauncherLayoutSessions.cs" />
+    <ProjectReference Include="../../../9to1 Workspace/Launcher/Native/NineToOne.Launcher.csproj" />
+    <ProjectReference Include="../../../9to1 Workspace/Home/HavenOS.Home.csproj" />
+    <Compile Include="../../src/Haven.Android/RoutedKeyboardAiExecutor.cs" Link="Production/RoutedKeyboardAiExecutor.cs" />
+    <Compile Include="../../src/Haven.Android/HavenKeyboardAiController.cs" Link="Production/HavenKeyboardAiController.cs" />
+    <ProjectReference Include="../../../9to1 Workspace/shared/src/Haven.Application/Haven.Application.csproj" />
+    <ProjectReference Include="../../../9to1 Models/Dulche Alpha/Dulche.Runtime.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <PackageReference Include="coverlet.collector"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

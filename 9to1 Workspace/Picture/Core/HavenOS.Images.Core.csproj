@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>HavenOS.Images.Core</AssemblyName>
+    <RootNamespace>HavenOS.Images</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests/**;Source\**\*</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../framework/CUI/Runtime/CakeOS.Cui.Runtime.csproj" />
+    <Compile Include="../*.cs" Exclude="../Program.cs;../App.axaml.cs;../MainWindow.axaml.cs;../ImageMetadataWindow.cs" />
+    <EmbeddedResource Include="../UI/PictureImport.cui" LogicalName="HavenOS.Images.UI.PictureImport.cui" />
+    <EmbeddedResource Include="../UI/PicturePngExport.cui" LogicalName="HavenOS.Images.UI.PicturePngExport.cui" />
+    <ProjectReference Include="../../../framework/CUI/Core/CakeOS.Cui.Core.csproj" />
+    <EmbeddedResource Include="../UI/PictureWorkspace.cui" LogicalName="HavenOS.Images.UI.PictureWorkspace.cui" />
+    <ProjectReference Include="../../Canvas/HavenOS.Canvas.csproj" />
+    <ProjectReference Include="../../shared/src/Haven.Application/Haven.Application.csproj" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="TagLibSharp" VersionOverride="2.3.0" />
+  </ItemGroup>
+</Project>

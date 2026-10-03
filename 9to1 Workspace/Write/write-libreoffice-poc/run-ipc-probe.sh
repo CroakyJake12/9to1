@@ -11,6 +11,7 @@ client only sees the narrow allow-listed protocol.
 
 Environment overrides:
   LO_PROGRAM_PATH   LibreOffice program directory (default /usr/lib/libreoffice/program)
+  LO_LANGTAG_DATA_PATH isolated liblangtag data directory (optional)
   ENGINE_BINARY     prebuilt helper executable
   CLIENT_BINARY     prebuilt validation client executable
   IPC_WORK_DIR      disposable helper work directory (default under /tmp)

@@ -11,7 +11,8 @@ static string FindRepositoryRoot()
     var current = new DirectoryInfo(Directory.GetCurrentDirectory());
     while (current is not null)
     {
-        if (File.Exists(Path.Combine(current.FullName, "apps", "Data", "workers", "calc_worker.py")))
+        if (File.Exists(Path.Combine(current.FullName, "apps", "Data", "workers", "calc_worker.py")) ||
+            File.Exists(Path.Combine(current.FullName, "9to1 Workspace", "Data", "workers", "calc_worker.py")))
             return current.FullName;
         current = current.Parent;
     }
@@ -29,6 +30,9 @@ static async Task ConvertCsvToOdsAsync(string csvPath, string outputDirectory)
         UseShellExecute = false,
         CreateNoWindow = true,
     };
+    // Each fixture owns its LibreOffice profile; never reuse or mutate the user profile.
+    var profile = Path.Combine(outputDirectory, "fixture-profile-" + Guid.NewGuid().ToString("N"));
+    startInfo.ArgumentList.Add("-env:UserInstallation=" + new Uri(profile + Path.DirectorySeparatorChar).AbsoluteUri);
     startInfo.ArgumentList.Add("--headless");
     startInfo.ArgumentList.Add("--convert-to");
     startInfo.ArgumentList.Add("ods");
@@ -57,7 +61,11 @@ static async Task ConvertCsvToOdsAsync(string csvPath, string outputDirectory)
 
 var root = FindRepositoryRoot();
 var python = Environment.GetEnvironmentVariable("HAVEN_DATA_PYTHON") ?? "python3";
-var calcWorker = Path.Combine(root, "apps", "Data", "workers", "calc_worker.py");
+var calcWorker = new[]
+{
+    Path.Combine(root, "9to1 Workspace", "Data", "workers", "calc_worker.py"),
+    Path.Combine(root, "apps", "Data", "workers", "calc_worker.py"),
+}.First(File.Exists);
 var temporaryRoot = Path.Combine(Path.GetTempPath(), $"haven-data-validation-runtime-{Guid.NewGuid():N}");
 Directory.CreateDirectory(temporaryRoot);
 

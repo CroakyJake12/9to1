@@ -8,27 +8,34 @@ pub mod ffi;
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::path::Path;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
+use std::sync::Arc;
+use slotmap::{Key, KeyData};
+#[cfg(test)]
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
-use nalgebra::Vector2;
+use parry2d_f64::math::Vector2;
 use rnote_compose::penevent::PenEvent;
 use rnote_compose::penpath::Element;
 use rnote_compose::style::smooth::SmoothOptions;
 use rnote_compose::utils::{add_xml_header, wrap_svg_root};
 use rnote_compose::builders::ShapeBuilderType;
-use rnote_compose::Color;
+use rnote_compose::{Color, Transformable};
+use rnote_compose::shapes::Shapeable;
 use rnote_engine::engine::export::{DocExportFormat, DocExportPrefs};
+use rnote_engine::engine::import::XoppImportPrefs;
 use rnote_engine::engine::{EngineConfig, EngineConfigShared};
 use rnote_engine::engine::EngineSnapshot;
 use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
 use rnote_engine::pens::pensconfig::eraserconfig::{EraserConfig, EraserStyle};
 use rnote_engine::pens::{PenMode, PenStyle};
 use rnote_engine::Engine;
+use rnote_engine::strokes::Content;
 
 /// One normalized CakeOS/HUI pointer sample in Canvas document coordinates.
 ///
-/// Tilt remains in the CakeOS boundary because Rnote 0.14.2 only accepts position
+/// Tilt remains in the Canvas boundary because Rnote 0.15 only accepts position
 /// and pressure in its core `Element` type. Keeping tilt here prevents a lossy
 /// public API if the engine is extended later.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -436,6 +443,190 @@ impl HeadlessCanvasEngine {
         self.stroke_active
     }
 
+    /// Stable donor keys in the actual persisted snapshot. Trashed strokes are
+    /// excluded by the donor's take_snapshot; keys survive save/reopen.
+    pub fn stroke_keys(&self) -> Vec<u64> {
+        let mut keys = self.engine.take_snapshot().stroke_components.keys()
+            .map(|key| key.data().as_ffi()).collect::<Vec<_>>();
+        keys.sort_unstable();
+        keys
+    }
+
+    /// Run genuine SplitColliding on a detached donor, returning its exact
+    /// native snapshot and finite, lossless fragment materialization receipt.
+    /// Original owner state is never changed, including all refusal paths.
+    pub async fn split_erase_candidate(&self, samples: &[CanvasPointerSample], width: f64) -> Result<(Vec<u8>, Vec<u8>)> {
+        if self.stroke_active { anyhow::bail!("cannot split during an active stroke"); }
+        if samples.len() < 2 || samples.len() > 1_000_000 || samples.iter().any(|s|
+            !s.x.is_finite() || !s.y.is_finite() || !s.pressure.is_finite() || !(0.0..=1.0).contains(&s.pressure) ||
+            !s.tilt_x.is_finite() || !s.tilt_y.is_finite()) {
+            anyhow::bail!("split gesture samples exceed finite bounded contract");
+        }
+        if !width.is_finite() || !(EraserConfig::WIDTH_MIN..=EraserConfig::WIDTH_MAX).contains(&width) {
+            anyhow::bail!("split eraser width must be within actual donor bounds");
+        }
+        let before = self.engine.take_snapshot();
+        if before.stroke_components.len() > 16_384 { anyhow::bail!("split materialization exceeds retained entity budget"); }
+        let before_order = self.rendered_stroke_keys()?;
+        let mut candidate = Self::from_rnote(self.save_rnote().await?).await?;
+        candidate.set_eraser(width, true)?;
+        candidate.set_tool(CanvasTool::Eraser)?;
+        candidate.begin_stroke(samples[0])?;
+        for sample in &samples[1..samples.len()-1] { candidate.update_stroke(*sample)?; }
+        candidate.end_stroke(samples[samples.len()-1])?;
+        let after = candidate.engine.take_snapshot();
+        if after.stroke_components.len() > 16_384 { anyhow::bail!("split generated too many entities"); }
+        let after_order = candidate.rendered_stroke_keys()?;
+        let removed = before.stroke_components.keys().filter(|key| !after.stroke_components.contains_key(*key)).collect::<Vec<_>>();
+        let mut modified = Vec::new();
+        for (key, stroke) in after.stroke_components.iter() {
+            if let Some(old) = before.stroke_components.get(key) {
+                // Any serialization failure refuses the detached candidate;
+                // it must never silently classify changed donor content as unchanged.
+                if serde_json::to_value(old)? != serde_json::to_value(stroke)? { modified.push(key); }
+            }
+        }
+        let created = after.stroke_components.keys().filter(|key| !before.stroke_components.contains_key(*key)).collect::<Vec<_>>();
+        if removed.len() + modified.len() + created.len() > 1024 { anyhow::bail!("split transaction exceeds 1024 affected entities"); }
+        let mut parents = removed.clone(); parents.extend(modified.iter().copied());
+        let mut receipt_changes = Vec::new();
+        let mut comparison_budget = 4_000_000usize;
+        for key in modified.iter().chain(created.iter()).copied() {
+            let rnote_engine::strokes::Stroke::BrushStroke(fragment) = after.stroke_components[key].as_ref() else {
+                anyhow::bail!("split materialization requires actual brushstroke path geometry");
+            };
+            let layer = after.chrono_components.get(key).context("fragment layer missing")?.layer;
+            let candidates = if before.stroke_components.contains_key(key) { vec![key] } else { parents.clone() };
+            let mut matches = Vec::new();
+            for parent_key in candidates {
+                let rnote_engine::strokes::Stroke::BrushStroke(parent) = before.stroke_components[parent_key].as_ref() else { continue; };
+                if before.chrono_components.get(parent_key).context("source layer missing")?.layer != layer ||
+                    serde_json::to_value(&parent.style)? != serde_json::to_value(&fragment.style)? { continue; }
+                let offsets = exact_subpath_offsets(&parent.path, &fragment.path, &mut comparison_budget)?;
+                if !offsets.is_empty() { matches.push((parent_key, offsets)); }
+            }
+            if matches.len() != 1 { anyhow::bail!("split fragment does not have one provable original native parent"); }
+            let (source_key, offsets) = matches.pop().unwrap();
+            receipt_changes.push(serde_json::json!({"nativeKey":key.data().as_ffi(), "sourceNativeKey":source_key.data().as_ffi(),
+                "isNew":!before.stroke_components.contains_key(key), "matchingSourceSegmentOffsets":offsets,
+                "path":&fragment.path, "style":&fragment.style, "layer":layer}));
+        }
+        let before_layers = before.stroke_components.keys().map(|key| {
+            let layer = before.chrono_components.get(key).context("source chronology missing")?.layer;
+            Ok(serde_json::json!({"nativeKey":key.data().as_ffi(), "layer":layer}))
+        }).collect::<Result<Vec<_>>>()?;
+        let receipt = serde_json::json!({"schemaVersion":1, "beforeRenderKeys":before_order, "beforeLayers":before_layers,
+            "afterRenderKeys":after_order, "removedKeys":removed.iter().map(|key| key.data().as_ffi()).collect::<Vec<_>>(),
+            "changes":receipt_changes, "geometry":"exact-retained-donor-penpath", "samplesRole":"original-input-provenance-not-fragment-polyline"});
+        let receipt_bytes = serde_json::to_vec(&receipt)?;
+        if receipt_bytes.len() > 64 * 1024 * 1024 { anyhow::bail!("split materialization receipt exceeds byte budget"); }
+        Ok((candidate.save_rnote().await?, receipt_bytes))
+    }
+
+    /// Exact retained render chronology for canonical/native order validation.
+    pub fn rendered_stroke_keys(&self) -> Result<Vec<u64>> {
+        if self.stroke_active { anyhow::bail!("cannot resolve render order during an active stroke"); }
+        let snapshot = self.engine.take_snapshot();
+        if snapshot.stroke_components.len() > 1_000_000 { anyhow::bail!("render order exceeds entity budget"); }
+        let mut ordered = Vec::with_capacity(snapshot.stroke_components.len());
+        for key in snapshot.stroke_components.keys() {
+            let chrono = snapshot.chrono_components.get(key).context("retained donor chronology is missing")?;
+            ordered.push((key, chrono));
+        }
+        ordered.sort_unstable_by(|(_, a), (_, b)| a.layer.cmp(&b.layer).then_with(|| a.cmp(b)));
+        if ordered.windows(2).any(|pair| pair[0].1 == pair[1].1) {
+            anyhow::bail!("retained donor render order is ambiguous");
+        }
+        Ok(ordered.into_iter().map(|(key, _)| key.data().as_ffi()).collect())
+    }
+
+    /// Read-only Quick eraser target using the donor's own hitboxes and render
+    /// chronology. Equal chronology on two hit entities is ambiguous in the
+    /// donor's unstable sort, so it is refused rather than picking a slot key.
+    pub fn quick_erase_target(&self, x: f64, y: f64) -> Result<Option<u64>> {
+        if self.stroke_active { anyhow::bail!("cannot resolve Quick erase during an active stroke"); }
+        if !x.is_finite() || !y.is_finite() { anyhow::bail!("Quick erase coordinates must be finite"); }
+        let snapshot = self.engine.take_snapshot();
+        if snapshot.stroke_components.len() > 1_000_000 { anyhow::bail!("Quick erase snapshot exceeds entity budget"); }
+        let coord = Vector2::new(x, y);
+        let mut hits = Vec::new();
+        for (key, stroke) in snapshot.stroke_components.iter() {
+            let chrono = snapshot.chrono_components.get(key)
+                .context("Quick erase requires retained donor chronology for every entity")?;
+            let hitboxes = stroke.hitboxes();
+            if hitboxes.iter().any(|hitbox| !hitbox.mins.is_finite() || !hitbox.maxs.is_finite()) {
+                anyhow::bail!("Quick erase donor hitbox is not finite");
+            }
+            if hitboxes.into_iter().any(|hitbox| hitbox.contains_local_point(coord)) {
+                hits.push((key, chrono));
+            }
+        }
+        // ChronoComponent's derived Ord places time before layer. The actual
+        // donor render comparator explicitly places layer first; match that.
+        hits.sort_unstable_by(|(_, a), (_, b)| a.layer.cmp(&b.layer).then_with(|| a.cmp(b)));
+        let Some((key, top)) = hits.last() else { return Ok(None); };
+        if hits.len() > 1 && hits[hits.len() - 2].1 == *top {
+            anyhow::bail!("Quick erase render order is ambiguous");
+        }
+        Ok(Some(key.data().as_ffi()))
+    }
+
+    /// Export exactly the selected native entities without exporting unrelated
+    /// Canvas content or source document/camera settings. The donor's original
+    /// strokes, paths, styles and chronology remain structured and editable.
+    pub async fn selected_strokes_rnote(&self, keys: &[u64]) -> Result<Vec<u8>> {
+        if self.stroke_active { anyhow::bail!("cannot export a selection during an active stroke"); }
+        if keys.is_empty() || keys.len() > 1_000_000 { anyhow::bail!("native selection must contain 1..=1000000 keys"); }
+        let selected = keys.iter().map(|value| rnote_engine::store::StrokeKey::from(KeyData::from_ffi(*value)))
+            .collect::<HashSet<_>>();
+        if selected.len() != keys.len() { anyhow::bail!("native selection keys must be unique"); }
+        let mut snapshot = self.engine.take_snapshot();
+        if selected.iter().any(|key| !snapshot.stroke_components.contains_key(*key)) {
+            anyhow::bail!("native selection key is not present in the current persisted snapshot");
+        }
+        Arc::make_mut(&mut snapshot.stroke_components).retain(|key, _| selected.contains(&key));
+        Arc::make_mut(&mut snapshot.chrono_components).retain(|key, _| selected.contains(&key));
+        snapshot.document = Default::default();
+        snapshot.camera = Default::default();
+        Self::from_snapshot(snapshot).save_rnote().await
+    }
+
+    /// Remove the exact persisted donor entity, preserving surviving slot keys,
+    /// chronology, document and camera. Canonical history owns this snapshot edit.
+    pub fn delete_stroke(&mut self, key: u64) -> Result<()> {
+        if self.stroke_active { anyhow::bail!("cannot delete during an active stroke"); }
+        let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(key));
+        let mut snapshot = self.engine.take_snapshot();
+        if !snapshot.stroke_components.contains_key(key) {
+            anyhow::bail!("native stroke key is not present in the current snapshot");
+        }
+        Arc::make_mut(&mut snapshot.stroke_components).remove(key);
+        Arc::make_mut(&mut snapshot.chrono_components).remove(key);
+        let _ = self.engine.load_snapshot(snapshot);
+        Ok(())
+    }
+
+    /// Apply the donor's own structured stroke translation, never a rendered
+    /// image transform or a reconstruction from sampled canonical geometry.
+    pub fn translate_stroke(&mut self, key: u64, delta_x: f64, delta_y: f64) -> Result<()> {
+        if self.stroke_active { anyhow::bail!("cannot translate during an active stroke"); }
+        if !delta_x.is_finite() || !delta_y.is_finite() {
+            anyhow::bail!("native stroke translation must be finite");
+        }
+        let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(key));
+        let mut snapshot = self.engine.take_snapshot();
+        let stroke = Arc::make_mut(&mut snapshot.stroke_components).get_mut(key)
+            .context("native stroke key is not present in the current snapshot")?;
+        Arc::make_mut(stroke).translate(Vector2::new(delta_x, delta_y));
+        let bounds = stroke.bounds();
+        if !bounds.mins.is_finite() || !bounds.maxs.is_finite() {
+            anyhow::bail!("translated donor geometry exceeds finite coordinates");
+        }
+        Arc::make_mut(stroke).update_geometry();
+        let _ = self.engine.load_snapshot(snapshot);
+        Ok(())
+    }
+
     pub fn can_undo(&self) -> bool {
         self.engine.can_undo()
     }
@@ -651,6 +842,26 @@ impl HeadlessCanvasEngine {
         let snapshot = EngineSnapshot::load_from_rnote_bytes(bytes)
             .await
             .context("Rnote snapshot load failed")?;
+        Ok(Self::from_snapshot(snapshot))
+    }
+
+    /// Import Xournal++ through the controlled Rnote engine, preserving its
+    /// editable stroke/image/text snapshot rather than flattening to a bitmap.
+    pub async fn from_xopp(bytes: Vec<u8>, dpi: f64) -> Result<Self> {
+        if !dpi.is_finite() || !(1.0..=2400.0).contains(&dpi) {
+            anyhow::bail!("Xopp DPI must be finite and within 1..=2400");
+        }
+        let snapshot = EngineSnapshot::load_from_xopp_bytes(bytes, XoppImportPrefs { dpi })
+            .await
+            .context("Rnote Xopp import failed")?;
+        // Normalize once at import to the donor's persisted precision. A preview
+        // must represent the committed snapshot, including donor DPI rounding,
+        // rather than displaying geometry that changes after the first reopen.
+        let imported = Self::from_snapshot(snapshot);
+        Self::from_rnote(imported.save_rnote().await?).await
+    }
+
+    fn from_snapshot(snapshot: EngineSnapshot) -> Self {
         let mut engine = Engine::default();
         let config = EngineConfigShared::from(EngineConfig::default());
         let _ = engine.install_config(&config, None);
@@ -669,7 +880,7 @@ impl HeadlessCanvasEngine {
             config,
         };
         canvas.configure_tool();
-        Ok(canvas)
+        canvas
     }
 
     pub async fn from_rnote_file(path: impl AsRef<Path>) -> Result<Self> {
@@ -685,10 +896,72 @@ impl HeadlessCanvasEngine {
     }
 }
 
+fn exact_subpath_offsets(parent: &rnote_compose::PenPath, fragment: &rnote_compose::PenPath,
+    budget: &mut usize) -> Result<Vec<usize>> {
+    if fragment.segments.is_empty() || fragment.segments.len() > parent.segments.len() { return Ok(vec![]); }
+    let start = serde_json::to_value(fragment.start)?;
+    let segments = fragment.segments.iter().map(serde_json::to_value).collect::<std::result::Result<Vec<_>, _>>()?;
+    let mut offsets = Vec::new();
+    for offset in 0..=parent.segments.len()-fragment.segments.len() {
+        if *budget == 0 { anyhow::bail!("split exact lineage comparison budget exceeded"); } *budget -= 1;
+        let source_start = if offset == 0 { parent.start } else { parent.segments[offset-1].end() };
+        if serde_json::to_value(source_start)? != start { continue; }
+        let mut matches = true;
+        for (source, fragment) in parent.segments[offset..offset+segments.len()].iter().zip(segments.iter()) {
+            if *budget == 0 { anyhow::bail!("split exact lineage comparison budget exceeded"); } *budget -= 1;
+            if serde_json::to_value(source)? != *fragment { matches = false; break; }
+        }
+        if matches { offsets.push(offset); }
+    }
+    Ok(offsets)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use futures::executor::block_on;
+
+    fn stable_svg(bytes: &[u8]) -> String {
+        let mut svg = String::from_utf8(bytes.to_vec()).unwrap();
+        let mut ids = Vec::new();
+        let mut tail = svg.as_str();
+        while let Some(index) = tail.find("id=\"") {
+            tail = &tail[index + 4..];
+            let end = tail.find('"').unwrap();
+            ids.push(tail[..end].to_owned());
+            tail = &tail[end + 1..];
+        }
+        // Export-generated SVG resource IDs are random and have no document
+        // identity semantics. Preserve/reference their topology while comparing
+        // every path, colour, geometry and remaining serialized attribute.
+        for (index, id) in ids.into_iter().enumerate() {
+            svg = svg.replace(&format!("id=\"{id}\""), &format!("id=\"resource-{index}\""));
+            svg = svg.replace(&format!("#{id}"), &format!("#resource-{index}"));
+        }
+        svg
+    }
+
+    #[test]
+    fn controlled_donor_imports_editable_xopp_and_round_trips_rendering() {
+        block_on(async {
+            use flate2::{Compression, write::GzEncoder};
+            use std::io::Write;
+            let xml = r##"<?xml version="1.0"?><xournal creator="Canvas donor bridge" fileversion="4"><title>Imported handwriting</title><page width="595" height="842"><background type="solid" color="#ffffffff" style="plain"/><layer><stroke tool="pen" color="#000000ff" width="2">10 20 30 40 50 35</stroke></layer></page></xournal>"##;
+            let mut gzip = GzEncoder::new(Vec::new(), Compression::default());
+            gzip.write_all(xml.as_bytes()).unwrap();
+            let canvas = HeadlessCanvasEngine::from_xopp(gzip.finish().unwrap(), 96.0).await.unwrap();
+            let before = canvas.render_frame().await.unwrap();
+            assert!(before.bytes.len() > 200);
+            let native = canvas.save_rnote().await.unwrap();
+            let restored = HeadlessCanvasEngine::from_rnote(native).await.unwrap();
+            let after = restored.render_frame().await.unwrap();
+            assert_eq!(before.bounds, after.bounds);
+            assert_eq!(stable_svg(&before.bytes), stable_svg(&after.bytes));
+            assert!(restored.debug_state_json().unwrap().contains("brushstroke"));
+            assert!(HeadlessCanvasEngine::from_xopp(vec![1, 2, 3], 96.0).await.is_err());
+            assert!(HeadlessCanvasEngine::from_xopp(vec![1], f64::NAN).await.is_err());
+        });
+    }
 
     fn sample_stroke() -> [CanvasPointerSample; 5] {
         [
@@ -698,6 +971,67 @@ mod tests {
             CanvasPointerSample::new(235.0, 190.0, 0.90),
             CanvasPointerSample::new(280.0, 220.0, 0.55),
         ]
+    }
+
+    #[test]
+    fn selected_native_export_preserves_keys_and_original_paths_without_unselected_entities() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            let first = sample_stroke();
+            canvas.begin_stroke(first[0]).unwrap();
+            canvas.update_stroke(first[1]).unwrap();
+            canvas.end_stroke(first[2]).unwrap();
+            let first_key = canvas.stroke_keys()[0];
+            canvas.begin_stroke(CanvasPointerSample::new(900.0, 950.0, 0.3)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(930.0, 980.0, 0.7)).unwrap();
+            assert_eq!(canvas.stroke_keys().len(), 2);
+            let reopened = HeadlessCanvasEngine::from_rnote(canvas.save_rnote().await.unwrap()).await.unwrap();
+            assert_eq!(canvas.stroke_keys(), reopened.stroke_keys());
+            let selected = HeadlessCanvasEngine::from_rnote(reopened.selected_strokes_rnote(&[first_key]).await.unwrap()).await.unwrap();
+            assert_eq!(selected.stroke_keys(), vec![first_key]);
+            let original = reopened.engine.take_snapshot();
+            let exported = selected.engine.take_snapshot();
+            let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(first_key));
+            assert_eq!(serde_json::to_value(original.stroke_components.get(key).unwrap()).unwrap(),
+                       serde_json::to_value(exported.stroke_components.get(key).unwrap()).unwrap());
+            assert!(canvas.selected_strokes_rnote(&[]).await.is_err());
+            assert!(canvas.selected_strokes_rnote(&[first_key, first_key]).await.is_err());
+            assert!(canvas.selected_strokes_rnote(&[u64::MAX]).await.is_err());
+            assert_eq!(canvas.stroke_keys().len(), 2); // read-only export
+        });
+    }
+
+    #[test]
+    fn keyed_mutations_use_donor_geometry_preserve_survivors_and_reject_without_side_effects() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            canvas.begin_stroke(CanvasPointerSample::new(10.0, 20.0, 0.2)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(40.0, 60.0, 0.7)).unwrap();
+            let first = canvas.stroke_keys()[0];
+            canvas.begin_stroke(CanvasPointerSample::new(500.0, 600.0, 0.4)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(540.0, 660.0, 0.8)).unwrap();
+            let second = *canvas.stroke_keys().iter().find(|key| **key != first).unwrap();
+            let original = canvas.engine.take_snapshot();
+            let first_key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(first));
+            let second_key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(second));
+            let first_bounds = original.stroke_components[first_key].bounds();
+            let untouched = serde_json::to_value(&original.stroke_components[second_key]).unwrap();
+            canvas.translate_stroke(first, 100.0, 200.0).unwrap();
+            let moved = canvas.engine.take_snapshot();
+            let moved_bounds = moved.stroke_components[first_key].bounds();
+            assert_eq!(first_bounds.mins + Vector2::new(100.0, 200.0), moved_bounds.mins);
+            assert_eq!(first_bounds.maxs + Vector2::new(100.0, 200.0), moved_bounds.maxs);
+            assert_eq!(untouched, serde_json::to_value(&moved.stroke_components[second_key]).unwrap());
+            let before_failure = serde_json::to_value(&moved).unwrap();
+            assert!(canvas.translate_stroke(first, f64::NAN, 0.0).is_err());
+            assert!(canvas.delete_stroke(u64::MAX).is_err());
+            assert_eq!(before_failure, serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+            canvas.delete_stroke(first).unwrap();
+            assert_eq!(canvas.stroke_keys(), vec![second]);
+            let reopened = HeadlessCanvasEngine::from_rnote(canvas.save_rnote().await.unwrap()).await.unwrap();
+            assert_eq!(reopened.stroke_keys(), vec![second]);
+            assert_eq!(untouched, serde_json::to_value(&reopened.engine.take_snapshot().stroke_components[second_key]).unwrap());
+        });
     }
 
     fn trashed_stroke_count(canvas: &HeadlessCanvasEngine) -> usize {
@@ -917,4 +1251,88 @@ mod tests {
             let _ = fs::remove_dir_all(root);
         });
     }
+    #[test]
+    fn quick_hit_uses_real_hitboxes_layer_first_order_and_refuses_ambiguous_chronology_read_only() {
+        block_on(async {
+            let mut canvas = HeadlessCanvasEngine::new();
+            canvas.begin_stroke(CanvasPointerSample::new(100.0, 100.0, 0.4)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(300.0, 100.0, 0.8)).unwrap();
+            let first = canvas.stroke_keys()[0];
+            canvas.begin_stroke(CanvasPointerSample::new(100.0, 100.0, 0.7)).unwrap();
+            canvas.end_stroke(CanvasPointerSample::new(300.0, 100.0, 0.5)).unwrap();
+            let last = *canvas.stroke_keys().iter().find(|key| **key != first).unwrap();
+            let before = serde_json::to_value(canvas.engine.take_snapshot()).unwrap();
+            assert_eq!(canvas.quick_erase_target(200.0, 100.0).unwrap(), Some(last));
+            assert_eq!(canvas.quick_erase_target(200.0, 300.0).unwrap(), None);
+            assert!(canvas.quick_erase_target(f64::NAN, 100.0).is_err());
+            assert_eq!(before, serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+            let mut snapshot = canvas.engine.take_snapshot();
+            let first_key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(first));
+            let last_key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(last));
+            // Earlier user-layer ink must stay above later highlighter ink.
+            Arc::make_mut(Arc::make_mut(&mut snapshot.chrono_components).get_mut(last_key).unwrap()).layer =
+                rnote_engine::store::chrono_comp::StrokeLayer::Highlighter;
+            let _ = canvas.engine.load_snapshot(snapshot);
+            assert_eq!(canvas.quick_erase_target(200.0, 100.0).unwrap(), Some(first));
+            let mut snapshot = canvas.engine.take_snapshot();
+            let original = snapshot.chrono_components[first_key].clone();
+            *Arc::make_mut(&mut snapshot.chrono_components).get_mut(last_key).unwrap() = original;
+            let _ = canvas.engine.load_snapshot(snapshot);
+            let ambiguous = serde_json::to_value(canvas.engine.take_snapshot()).unwrap();
+            assert!(canvas.quick_erase_target(200.0, 100.0).is_err());
+            assert_eq!(ambiguous, serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+        });
+    }
+    #[test]
+    fn genuine_split_materializes_exact_mixed_curve_fragments_and_original_pressure_style_identity() {
+        block_on(async {
+            use rnote_compose::penpath::Segment;
+            use rnote_engine::strokes::{BrushStroke, Stroke};
+            let mut canvas = HeadlessCanvasEngine::new();
+            canvas.draw_stroke(&[CanvasPointerSample::new(0.0,0.0,0.1), CanvasPointerSample::new(160.0,0.0,0.9)]).unwrap();
+            let key_u64 = canvas.stroke_keys()[0];
+            let key = rnote_engine::store::StrokeKey::from(KeyData::from_ffi(key_u64));
+            let e = |x, pressure| Element::new(Vector2::new(x,0.0),pressure);
+            let path = rnote_compose::PenPath::new_w_segments(e(0.0,0.1), vec![
+                Segment::LineTo { end:e(20.0,0.2) },
+                Segment::QuadBezTo { cp:Vector2::new(30.0,8.0), end:e(40.0,0.3) },
+                Segment::CubBezTo { cp1:Vector2::new(45.0,-8.0), cp2:Vector2::new(55.0,8.0), end:e(60.0,0.4) },
+                Segment::LineTo { end:e(80.0,0.5) },
+                Segment::LineTo { end:e(100.0,0.6) },
+                Segment::QuadBezTo { cp:Vector2::new(110.0,8.0), end:e(120.0,0.7) },
+                Segment::CubBezTo { cp1:Vector2::new(125.0,-8.0), cp2:Vector2::new(135.0,8.0), end:e(140.0,0.8) },
+                Segment::LineTo { end:e(160.0,0.9) },
+            ]);
+            let mut snapshot = canvas.engine.take_snapshot();
+            let Stroke::BrushStroke(brush) = snapshot.stroke_components[key].as_ref() else { panic!("genuine source is not a brushstroke"); };
+            let style = brush.style.clone();
+            *Arc::make_mut(&mut snapshot.stroke_components).get_mut(key).unwrap() = Arc::new(Stroke::BrushStroke(BrushStroke::from_penpath(path.clone(),style.clone())));
+            let _ = canvas.engine.load_snapshot(snapshot);
+            let original = serde_json::to_value(canvas.engine.take_snapshot()).unwrap();
+            // Genuine typed donor factory bytes, no fake polyline/control sampling.
+            let fixture = std::env::temp_dir().join("split-parent-mixed-curves.rnote");
+            std::fs::write(&fixture,canvas.save_rnote().await.unwrap()).unwrap();
+            let (native, receipt) = canvas.split_erase_candidate(&[
+                CanvasPointerSample::new(80.0,0.0,0.5),CanvasPointerSample::new(80.0,0.0,0.5)],1.0).await.unwrap();
+            let receipt: serde_json::Value = serde_json::from_slice(&receipt).unwrap();
+            assert_eq!(receipt["changes"].as_array().unwrap().len(),2);
+            assert!(receipt["removedKeys"].as_array().unwrap().is_empty());
+            let restored = HeadlessCanvasEngine::from_rnote(native).await.unwrap();
+            assert_eq!(restored.stroke_keys().len(),2);
+            assert!(restored.stroke_keys().contains(&key_u64));
+            for change in receipt["changes"].as_array().unwrap() {
+                assert_eq!(change["sourceNativeKey"].as_u64(),Some(key_u64));
+                assert_eq!(change["style"],serde_json::to_value(&style).unwrap());
+                let fragment: rnote_compose::PenPath = serde_json::from_value(change["path"].clone()).unwrap();
+                let offsets = exact_subpath_offsets(&path,&fragment,&mut 4_000_000usize).unwrap();
+                assert!(!offsets.is_empty());
+                assert!(fragment.segments.iter().any(|segment| matches!(segment,Segment::QuadBezTo { .. })));
+                assert!(fragment.segments.iter().any(|segment| matches!(segment,Segment::CubBezTo { .. })));
+            }
+            assert_eq!(original,serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+            assert!(canvas.split_erase_candidate(&[CanvasPointerSample::new(80.0,0.0,0.5);2],f64::NAN).await.is_err());
+            assert_eq!(original,serde_json::to_value(canvas.engine.take_snapshot()).unwrap());
+        });
+    }
+
 }

@@ -16,4 +16,7 @@
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
     <PackageReference Include="coverlet.collector"><PrivateAssets>all</PrivateAssets></PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fixtures/CanvasSchema1Native13.9to1c" LogicalName="Haven.Core.Tests.Fixtures.CanvasSchema1Native13.9to1c" />
+  </ItemGroup>
 </Project>

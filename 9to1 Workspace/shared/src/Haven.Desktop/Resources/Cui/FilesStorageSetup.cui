@@ -1,0 +1,19 @@
+<Cui>
+  <StackPanel margin="24" max-width="760">
+    <TextBlock text="Files storage" font-size="26" font-weight="SemiBold" />
+    <TextBlock text="Files uses the folder you choose as your private local workspace. Your apps share its canonical folders." text-wrapping="Wrap" />
+    <TextBlock id="files-storage-status" text="{Binding Status}" text-wrapping="Wrap" margin="0,12,0,12" />
+    <TextBlock text="{Binding Location}" text-wrapping="Wrap" />
+    <Button id="files-storage-choose" action="ChooseFolder" content="Set up Files in an empty folder" is-visible="{Binding CanConfigure}" min-height="44" />
+    <StackPanel is-visible="{Binding NeedsImport}" margin="0,12,0,0">
+      <TextBlock text="This existing Files store needs explicit ownership approval in Home. Existing files are preserved." text-wrapping="Wrap" />
+      <Button action="RequestOwnership" content="Request ownership import" min-height="44" />
+    </StackPanel>
+    <StackPanel is-visible="{Binding CanCompleteImport}" margin="0,12,0,0">
+      <TextBlock text="Review the request in Home, then finish the import in this window." text-wrapping="Wrap" />
+      <Button action="ReviewPermissions" content="Review in Home" min-height="44" />
+      <Button action="CompleteOwnership" content="Finish approved ownership import" min-height="44" />
+    </StackPanel>
+    <Button action="Refresh" content="Refresh storage status" min-height="44" margin="0,12,0,0" />
+  </StackPanel>
+</Cui>

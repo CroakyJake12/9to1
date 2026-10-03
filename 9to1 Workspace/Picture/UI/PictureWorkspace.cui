@@ -1,0 +1,41 @@
+<Cui id="9to1.Picture.Workspace" version="1">
+  <Grid id="picture-shell" rows="Auto,*,Auto" accessible-name="Picture editing workspace">
+    <WrapPanel id="picture-edit-controls" orientation="Horizontal">
+      <Button id="picture-open" action="9to1.Picture.Open" is-enabled="{Binding CanOpen}" content="Open" accessible-name="Open Picture asset through Files" />
+      <TextBlock id="picture-title" text="{Binding DisplayName}" accessible-name="Picture document name" />
+      <Button id="picture-rotate" action="9to1.Picture.Rotate" is-enabled="{Binding CanRotate}" content="Rotate clockwise" accessible-name="Rotate Picture clockwise by ninety degrees" />
+      <Button id="picture-flip" action="9to1.Picture.FlipHorizontal" is-enabled="{Binding CanFlip}" content="Flip horizontally" accessible-name="Flip Picture horizontally" />
+      <Button id="picture-flip-vertical" action="9to1.Picture.FlipVertical" is-enabled="{Binding CanFlipVertical}" content="Flip vertically" accessible-name="Flip Picture vertically as a non-destructive editable operation" />
+      <Button id="picture-crop" action="9to1.Picture.Crop" is-enabled="{Binding CanCrop}" content="Crop" accessible-name="Crop Picture non-destructively" />
+      <Button id="picture-resize" action="9to1.Picture.Resize" is-enabled="{Binding CanResize}" content="Resize" accessible-name="Resize Picture non-destructively" />
+      <Button id="picture-undo" action="9to1.Picture.History.Undo" is-enabled="{Binding CanUndo}" content="Undo" accessible-name="Undo Picture document operation" />
+      <Button id="picture-redo" action="9to1.Picture.History.Redo" is-enabled="{Binding CanRedo}" content="Redo" accessible-name="Redo Picture document operation" />
+      <Button id="picture-save" action="9to1.Picture.Save" is-enabled="{Binding CanSave}" content="Save" accessible-name="Save editable Picture revision through Files" />
+      <Button id="picture-play" action="9to1.Picture.Animation.Play" is-enabled="{Binding CanPlay}" content="Play" accessible-name="Play original animation" />
+      <Button id="picture-pause" action="9to1.Picture.Animation.Pause" is-enabled="{Binding CanPause}" content="Pause" accessible-name="Pause original animation" />
+      <Button id="picture-next-frame" action="9to1.Picture.Animation.NextFrame" is-enabled="{Binding CanAdvanceFrames}" content="Next frame" accessible-name="Show next animation frame without editing the Picture document" />
+      <Button id="picture-information" action="9to1.Picture.Information" is-enabled="{Binding CanShowInformation}" content="Information" accessible-name="Show image information" />
+      <Button id="picture-save-copy" action="9to1.Picture.SaveCopy" is-enabled="{Binding CanSaveCopy}" content="Save a Copy" accessible-name="Save the current editable Picture as a new Files asset" />
+      <Button id="picture-export" action="9to1.Picture.Export" is-enabled="{Binding CanExport}" content="Export" accessible-name="Export Picture as a separate asset" />
+      <Button id="picture-show-original" action="9to1.Picture.View.ShowOriginal" is-enabled="{Binding CanCompare}" content="Show original" accessible-name="Compare original source frame without changing editable operations" />
+      <Button id="picture-show-edited" action="9to1.Picture.View.ShowEdited" is-enabled="{Binding CanCompare}" content="Show edited" accessible-name="Show current editable Picture composition" />
+      <Button id="picture-view-zoomin" action="9to1.Picture.View.ZoomIn" is-enabled="{Binding CanView}" content="Zoom in" accessible-name="Zoom in in Picture preview without editing the document" />
+      <Button id="picture-view-zoomout" action="9to1.Picture.View.ZoomOut" is-enabled="{Binding CanView}" content="Zoom out" accessible-name="Zoom out in Picture preview without editing the document" />
+      <Button id="picture-view-fitview" action="9to1.Picture.View.FitView" is-enabled="{Binding CanView}" content="Fit view" accessible-name="Fit view in Picture preview without editing the document" />
+      <Button id="picture-view-panleft" action="9to1.Picture.View.PanLeft" is-enabled="{Binding CanView}" content="Pan left" accessible-name="Pan left in Picture preview without editing the document" />
+      <Button id="picture-view-panright" action="9to1.Picture.View.PanRight" is-enabled="{Binding CanView}" content="Pan right" accessible-name="Pan right in Picture preview without editing the document" />
+      <Button id="picture-view-panup" action="9to1.Picture.View.PanUp" is-enabled="{Binding CanView}" content="Pan up" accessible-name="Pan up in Picture preview without editing the document" />
+      <Button id="picture-view-pandown" action="9to1.Picture.View.PanDown" is-enabled="{Binding CanView}" content="Pan down" accessible-name="Pan down in Picture preview without editing the document" />
+    </WrapPanel>
+    <PictureRasterSurface id="picture-surface" grid-row="1" accessible-name="Picture image composition surface" />
+    <StackPanel id="picture-status" grid-row="2" spacing="4">
+      <ScrollViewer id="picture-information-scroll" is-visible="{Binding InformationVisible}" max-height="180"><TextBlock id="picture-information-summary" text="{Binding InformationSummary}" text-wrapping="Wrap" /></ScrollViewer>
+      <TextBlock id="picture-animation-status" text="{Binding AnimationSummary}" accessible-name="Picture animation frame timing" />
+      <TextBlock id="picture-viewport-status" text="{Binding ViewportSummary}" accessible-name="Picture preview zoom and pan" />
+      <TextBlock id="picture-geometry" text="{Binding GeometrySummary}" accessible-name="Picture canvas dimensions" />
+      <TextBlock id="picture-storage-status" text="{Binding PersistenceStatus}" accessible-name="Picture persistence state" />
+      <TextBlock id="picture-history-status" text="{Binding HistoryStatus}" text-wrapping="Wrap" accessible-name="Picture retained history" />
+      <TextBlock id="picture-capability-status" text="{Binding CapabilityStatus}" accessible-name="Picture platform capabilities" />
+    </StackPanel>
+  </Grid>
+</Cui>

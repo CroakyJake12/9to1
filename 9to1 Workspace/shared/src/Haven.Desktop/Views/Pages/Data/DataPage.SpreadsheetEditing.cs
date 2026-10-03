@@ -76,10 +76,21 @@ public sealed partial class DataPage
     {
         var sheet = CurrentSheet; var surface = SpreadsheetSurface(); if (Workbook is null || sheet is null || surface is null) return;
         var range = EffectiveSpreadsheetRange(sheet, surface); if (!ValidateCommandRange(range, "create a table")) return;
+        var overlaps = Workbook.Tables.Where(table => table.SheetId == sheet.Id && RangesOverlap(table.Range, range)).ToList();
+        if (overlaps.Any(table => table.RecordIdentityVersion != 0)) { _route.SetStatus("This range already contains a canonical table. Remove it explicitly before creating another."); return; }
+        var exact = overlaps.FirstOrDefault(table => table.Range.StartRow == range.StartRow && table.Range.EndRow == range.EndRow
+            && table.Range.StartColumn == range.StartColumn && table.Range.EndColumn == range.EndColumn);
+        if (overlaps.Count != 0 && (overlaps.Count != 1 || exact is null))
+        { _route.SetStatus("This selection overlaps an existing table. Remove that table explicitly or select its complete range."); return; }
+        var suffix = Workbook.Tables.Count + 1; var name = exact?.Name ?? $"Table{suffix}";
+        while (exact is null && Workbook.Tables.Any(table => table.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) name = $"Table{++suffix}";
+        var candidate = exact is null ? new DataTableDefinition { SheetId = sheet.Id, Name = name, Range = ToCoreRange(range), HasHeaders = range.RowCount > 1 } : CloneTableDefinition(exact);
+        // Prepare explicit legacy promotion without replacing its TableID or changing the live aggregate before undo capture.
+        var preparation = new DataWorkbook { Sheets = [new DataSheet { Id = sheet.Id }], Tables = Workbook.Tables.Where(table => !ReferenceEquals(table, exact)).ToList() };
+        try { DataTableIdentity.Initialize(preparation, candidate); }
+        catch (InvalidOperationException error) { _route.SetStatus(error.Message); return; }
         CaptureSpreadsheetUndo();
-        Workbook.Tables.RemoveAll(table => table.SheetId == sheet.Id && RangesOverlap(table.Range, range));
-        var suffix = Workbook.Tables.Count + 1; var name = $"Table{suffix}"; while (Workbook.Tables.Any(table => table.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) name = $"Table{++suffix}";
-        Workbook.Tables.Add(new DataTableDefinition { SheetId = sheet.Id, Name = name, Range = ToCoreRange(range), HasHeaders = range.RowCount > 1 });
+        Workbook.Tables.RemoveAll(table => overlaps.Contains(table)); Workbook.Tables.Add(candidate);
         DataSpreadsheetTableMetadata.Write(sheet.Metadata, null);
         MarkDirty(); RenderCurrent(); _route.SetStatus($"Table {name} created · {Address(range.StartRow, range.StartColumn)}:{Address(range.EndRow, range.EndColumn)}.");
     }
@@ -117,6 +128,8 @@ public sealed partial class DataPage
         var table = CurrentTableDefinition(sheet, surface); var tableRange = table is not null && table.Range.StartRow == range.StartRow && table.Range.EndRow == range.EndRow && table.Range.StartColumn == range.StartColumn && table.Range.EndColumn == range.EndColumn;
         var hasHeaders = tableRange && table!.HasHeaders; var firstDataRow = range.StartRow + (hasHeaders ? 1 : 0); if (firstDataRow >= range.EndRow) { _route.SetStatus("The selected range needs at least two data rows to sort."); return; }
         var sortColumn = Math.Clamp(surface.ActiveColumn, range.StartColumn, range.EndColumn);
+        try { DataTableIdentity.ValidateSort(sheet, ToCoreRange(range), hasHeaders); }
+        catch (InvalidOperationException error) { _route.SetStatus(error.Message); return; }
         var activity = BeginDataActivity("Sort spreadsheet range", $"Sorting {Address(range.StartRow, range.StartColumn)}:{Address(range.EndRow, range.EndColumn)} by {ColumnNameForTools(sortColumn)}.");
         CaptureSpreadsheetUndo(); DataSpreadsheetOperations.SortRange(sheet, ToCoreRange(range), sortColumn, descending: !ascending, hasHeader: hasHeaders);
         if (tableRange) { table!.SortColumn = sortColumn; table.SortDescending = !ascending; }
@@ -183,7 +196,7 @@ public sealed partial class DataPage
     }
 
     private static DataCell CloneCell(DataCell cell) => new() { Row = cell.Row, Column = cell.Column, Kind = cell.Kind, Value = cell.Value, Formula = cell.Formula, Metadata = new Dictionary<string, string>(cell.Metadata, StringComparer.Ordinal) };
-    private static DataTableDefinition CloneTableDefinition(DataTableDefinition value) => new() { Id = value.Id, SheetId = value.SheetId, Name = value.Name, Range = value.Range.Clone(), HasHeaders = value.HasHeaders, SortColumn = value.SortColumn, SortDescending = value.SortDescending, Filters = value.Filters.Select(filter => new DataTableFilter { Column = filter.Column, Operator = filter.Operator, Value = filter.Value }).ToList(), Metadata = new Dictionary<string, string>(value.Metadata, StringComparer.Ordinal) };
+    private static DataTableDefinition CloneTableDefinition(DataTableDefinition value) => new() { Id = value.Id, SheetId = value.SheetId, Name = value.Name, Range = value.Range.Clone(), HasHeaders = value.HasHeaders, RecordIdentityVersion = value.RecordIdentityVersion, Fields = value.Fields.ToList(), Records = value.Records.ToList(), SortColumn = value.SortColumn, SortDescending = value.SortDescending, Filters = value.Filters.Select(filter => new DataTableFilter { Column = filter.Column, Operator = filter.Operator, Value = filter.Value }).ToList(), Metadata = new Dictionary<string, string>(value.Metadata, StringComparer.Ordinal) };
     private static DataValidationRule CloneValidationRule(DataValidationRule value) => new() { Id = value.Id, SheetId = value.SheetId, Range = value.Range.Clone(), Kind = value.Kind, AllowBlank = value.AllowBlank, AllowedValues = value.AllowedValues.ToList(), Minimum = value.Minimum, Maximum = value.Maximum, InputMessage = value.InputMessage, ErrorMessage = value.ErrorMessage };
     private static DataChartDefinition CloneChartDefinition(DataChartDefinition value) => new() { Id = value.Id, SheetId = value.SheetId, Type = value.Type, SourceRange = value.SourceRange.Clone(), Title = value.Title, XAxisTitle = value.XAxisTitle, YAxisTitle = value.YAxisTitle, ShowLegend = value.ShowLegend, FirstRowIsHeaders = value.FirstRowIsHeaders, CategoryColumn = value.CategoryColumn, SeriesColumns = value.SeriesColumns.ToList(), Metadata = new Dictionary<string, string>(value.Metadata, StringComparer.Ordinal) };
     private static void TrimOldest(Stack<DataSheetEditSnapshot> stack) { var keep = stack.Reverse().Skip(1).ToArray(); stack.Clear(); foreach (var item in keep) stack.Push(item); }

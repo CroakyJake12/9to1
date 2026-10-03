@@ -1,0 +1,39 @@
+<Cui>
+  <StackPanel margin="20" max-width="760">
+    <TextBlock text="Shelf library" font-size="26" />
+    <TextBox id="shelf-search" text="{Binding Search, Mode=TwoWay}" accessible-name="Search Shelf names, tags and target metadata" />
+    <TextBlock id="shelf-search-summary" text="{Binding SearchSummary}" />
+    <TextBlock id="shelf-library" text="{Binding Library}" text-wrapping="Wrap" />
+    <TextBox id="shelf-name" text="{Binding Name, Mode=TwoWay}" />
+    <TextBox id="shelf-address" text="{Binding Address, Mode=TwoWay}" />
+    <Button id="shelf-review" action="Review" content="Review web target" />
+    <TextBlock text="{Binding Requests}" text-wrapping="Wrap" />
+    <TextBox id="shelf-request" text="{Binding SelectedRequest, Mode=TwoWay}" />
+    <Button id="shelf-home" action="Home" content="Review in Home" />
+    <Button id="shelf-apply" action="Apply" content="Apply approved request or recover outcome" />
+    <Button id="shelf-finish" action="Finish" content="Finish audit" />
+    <Button id="shelf-reload" action="Reload" content="Reload library" />
+    <TextBlock text="{Binding Status}" text-wrapping="Wrap" />
+    <TextBlock text="Collections" font-size="20" />
+    <TextBlock text="{Binding Collections}" text-wrapping="Wrap" />
+    <TextBlock text="{Binding Memberships}" text-wrapping="Wrap" />
+    <TextBox id="shelf-collection-name" text="{Binding CollectionName, Mode=TwoWay}" accessible-name="Collection name" />
+    <TextBox id="shelf-smart-tags" text="{Binding SmartTags, Mode=TwoWay}" accessible-name="Required smart collection tags separated by commas" />
+    <ComboBox id="shelf-smart-kind" items-source="{Binding SmartKinds}" selected-index="{Binding SmartKindIndex, Mode=TwoWay}" accessible-name="Smart collection target kind" />
+    <CheckBox id="shelf-smart-favourites" is-checked="{Binding SmartFavourites, Mode=TwoWay}" content="Only favourite items" />
+    <CheckBox id="shelf-smart-offline" is-checked="{Binding SmartOffline, Mode=TwoWay}" content="Only items tagged offline" />
+    <Button id="shelf-review-smart" action="ReviewSmartCollection" content="Review smart collection" />
+    <ComboBox id="shelf-smart-collection" items-source="{Binding SmartCollectionNames}" selected-index="{Binding SelectedSmartCollectionIndex, Mode=TwoWay}" accessible-name="Filter displayed items by smart collection" />
+    <Button id="shelf-review-collection" action="ReviewCollection" content="Review manual collection" />
+    <ComboBox id="shelf-membership-collection" items-source="{Binding CollectionNames}" selected-index="{Binding SelectedCollectionIndex, Mode=TwoWay}" accessible-name="Collection for this item" />
+    <ComboBox id="shelf-membership-item" items-source="{Binding ItemNames}" selected-index="{Binding SelectedItemIndex, Mode=TwoWay}" accessible-name="Item to add to collection" />
+    <TextBlock text="Organise selected item" font-size="20" />
+    <TextBox id="shelf-edit-name" text="{Binding EditName, Mode=TwoWay}" accessible-name="Selected item name" />
+    <TextBox id="shelf-edit-tags" text="{Binding EditTags, Mode=TwoWay}" accessible-name="Tags separated by commas" />
+    <CheckBox id="shelf-edit-favourite" is-checked="{Binding EditFavourite, Mode=TwoWay}" content="Pin selected item as a favourite" />
+    <TextBox id="shelf-edit-order" text="{Binding EditOrder, Mode=TwoWay}" accessible-name="Selected item order" />
+    <ComboBox id="shelf-edit-behaviour" items-source="{Binding EditBehaviourNames}" selected-index="{Binding EditBehaviourIndex, Mode=TwoWay}" accessible-name="Selected item launch behaviour" />
+    <Button id="shelf-review-edit" action="ReviewEditItem" content="Review pin, tags and order" />
+    <Button id="shelf-review-membership" action="ReviewMembership" content="Review collection membership" />
+  </StackPanel>
+</Cui>

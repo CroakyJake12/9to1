@@ -16,6 +16,42 @@ namespace Haven.Core.Tests;
 /// </summary>
 public sealed class ComputerToolRuntimeTests
 {
+    [Fact]
+    public async Task Missing_explicit_invocation_or_ineligible_target_never_dispatches()
+    {
+        var tools = new RecordingComputerTools();
+        foreach (var request in new ComputerUseRequest?[]
+        {
+            null,
+            TestComputerUseAdmission.Request() with { Invocations = null! },
+            TestComputerUseAdmission.Request() with { Invocations = [null!] },
+            TestComputerUseAdmission.Request() with { Invocations = [] },
+            TestComputerUseAdmission.Request() with { TargetAppId = "unclassified-app" },
+            TestComputerUseAdmission.Request() with { Invocations = TestComputerUseAdmission.Request().Invocations.Select(token =>
+                token.Resource.Kind == NineToOne.Cui.AI.InvocationKind.App ? token with
+                { Resource = token.Resource with { Classification = NineToOne.Cui.AI.AppClassification.Game } } : token).ToArray() }
+        })
+        {
+            using var pass = TestComputerUseAdmission.Runtime(tools).CreatePass(request);
+            Assert.False((await pass.ExecuteAsync(Call("computer_launch_app", new { name = "notepad" }), CancellationToken.None)).Activity.Succeeded);
+        }
+        Assert.Null(tools.LaunchedName);
+        Assert.Equal(0, tools.WindowListCalls);
+    }
+
+    [Fact]
+    public async Task Actual_backend_target_must_match_the_approved_canonical_app()
+    {
+        var tools = new RecordingComputerTools();
+        var request = TestComputerUseAdmission.Request();
+        request = request with { TargetAppId = "different-app", Invocations = request.Invocations.Select(token =>
+            token.Resource.Kind == NineToOne.Cui.AI.InvocationKind.App ? token with
+            { Resource = token.Resource with { CanonicalId = "different-app" } } : token).ToArray() };
+        using var pass = TestComputerUseAdmission.Runtime(tools).CreatePass(request);
+        Assert.False((await pass.ExecuteAsync(Call("computer_launch_app", new { name = "notepad" }), CancellationToken.None)).Activity.Succeeded);
+        Assert.Null(tools.LaunchedName);
+    }
+
     /// <summary>
     /// Performs the direct launch request executes without a workspace step owned by this component.
     /// </summary>
@@ -23,7 +59,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task DirectLaunchRequestExecutesWithoutAWorkspace()
     {
         var service = new RecordingComputerTools();
-        var pass = new ComputerToolRuntime(service).CreatePass();
+        var pass = TestComputerUseAdmission.Runtime(service).CreatePass(TestComputerUseAdmission.Request());
         var call = pass.TryCreateBootstrapCall("open notepad");
 
         Assert.NotNull(call);
@@ -41,7 +77,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task DesktopMutationsAutomaticallyInspectBetweenActions()
     {
         var tools = new RecordingComputerTools();
-        var pass = new ComputerToolRuntime(tools).CreatePass();
+        var pass = TestComputerUseAdmission.Runtime(tools).CreatePass(TestComputerUseAdmission.Request());
         var first = pass.TryCreateBootstrapCall("open notepad")!;
         var second = pass.TryCreateBootstrapCall("open calculator")!;
 
@@ -70,7 +106,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task ActivityPreviewIsBoundedWhileFullSnapshotRemainsAvailableToModel()
     {
         var fullSnapshot = new string('x', 900);
-        var pass = new ComputerToolRuntime(new RecordingComputerTools { SnapshotOutput = fullSnapshot }).CreatePass();
+        var pass = TestComputerUseAdmission.Runtime(new RecordingComputerTools { SnapshotOutput = fullSnapshot }).CreatePass(TestComputerUseAdmission.Request());
 
         var result = await pass.ExecuteAsync(Call("computer_snapshot", new { }), CancellationToken.None);
 
@@ -102,7 +138,7 @@ public sealed class ComputerToolRuntimeTests
     public async Task ComputerClickPublishesVirtualCursorWithoutOwningPhysicalPointerState()
     {
         using var controller = new ComputerUseSessionController();
-        using var pass = new ComputerToolRuntime(new RecordingComputerTools(), controller).CreatePass();
+        using var pass = TestComputerUseAdmission.Runtime(new RecordingComputerTools(), controller).CreatePass(TestComputerUseAdmission.Request());
 
         var result = await pass.ExecuteAsync(Call("computer_click", new
         {
@@ -134,6 +170,9 @@ public sealed class ComputerToolRuntimeTests
     /// </summary>
     private sealed class RecordingComputerTools : IComputerToolService
     {
+        public bool IsSupported => true;
+        public ValueTask<bool> VerifyTargetAsync(string canonicalAppId, string toolName, System.Text.Json.JsonElement arguments,
+            CancellationToken cancellationToken) => ValueTask.FromResult(canonicalAppId == "fixture.native-app");
         /// <summary>
         /// Gets or updates snapshot output, the bindable or domain state represented by this property.
         /// </summary>

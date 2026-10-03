@@ -34,7 +34,7 @@ except Exception as exc:  # pragma: no cover - runtime dependency gate
 
 
 # Parsed statement types, rather than leading-keyword heuristics, are the
-# authority for whether a query is eligible for this read-only execution path.
+# eligibility filter; the engine read-only connection is the mutation authority.
 # DuckDB SELECT expressions can still mutate sequence state or invoke SQL
 # dynamically, so those capabilities are denied explicitly as well.
 READ_ONLY_STATEMENT_TYPES = {"SELECT", "EXPLAIN"}
@@ -63,6 +63,7 @@ class DuckDbRuntime:
     def __init__(self) -> None:
         self.connection = None
         self.path = None
+        self.read_only = False
 
     def open(self, database_path: str) -> dict:
         if self.connection is not None:
@@ -72,7 +73,13 @@ class DuckDbRuntime:
 
         full = str(Path(database_path).expanduser().resolve())
         Path(full).parent.mkdir(parents=True, exist_ok=True)
-        connection = duckdb.connect(full)
+        self.connection = self._create_connection(full, False)
+        self.path = full
+        self.read_only = False
+        return {"ok": True}
+
+    def _create_connection(self, full: str, read_only: bool):
+        connection = duckdb.connect(full, read_only=read_only)
         try:
             memory_limit = os.environ.get("HAVEN_DATA_DUCKDB_MEMORY_LIMIT", "512MB").strip()
             if not MEMORY_LIMIT.fullmatch(memory_limit):
@@ -95,14 +102,24 @@ class DuckDbRuntime:
             connection.close()
             raise
 
-        self.connection = connection
-        self.path = full
-        return {"ok": True}
+        return connection
 
     def _conn(self):
         if self.connection is None:
             raise RuntimeError("No DuckDB database is open.")
         return self.connection
+
+    def _connection_mode(self, read_only: bool):
+        self._conn()
+        if self.read_only != read_only:
+            # DuckDB cannot mix read-only and writable connections to one file in
+            # the same process. Close before switching; failure leaves no usable
+            # connection, never a writable fallback for user SQL.
+            self.connection.close()
+            self.connection = None
+            self.connection = self._create_connection(self.path, read_only)
+            self.read_only = read_only
+        return self._conn()
 
     def replace_table(self, table: dict) -> dict:
         if not isinstance(table, dict):
@@ -133,7 +150,7 @@ class DuckDbRuntime:
                 raise ValueError("Every published row must contain exactly one value per column.")
             rows.append(["" if value is None else str(value) for value in supplied])
 
-        connection = self._conn()
+        connection = self._connection_mode(False)
         quoted_name = _quote_identifier(name)
         definitions = ", ".join(f"{_quote_identifier(column)} VARCHAR" for column in columns)
         placeholders = ", ".join("?" for _ in columns)
@@ -168,10 +185,11 @@ class DuckDbRuntime:
             raise PermissionError("SQL uses a mutating or dynamically executing function disabled by Haven Data.")
 
     def query(self, sql: str, max_rows: int) -> dict:
+        connection = self._connection_mode(True)
         self._validate_read_only(sql)
         if max_rows < 1 or max_rows > 1000:
             raise ValueError("maxRows must be between 1 and 1000.")
-        cursor = self._conn().execute(sql)
+        cursor = connection.execute(sql)
         columns = [item[0] for item in cursor.description or []]
         fetched = cursor.fetchmany(max_rows + 1)
         truncated = len(fetched) > max_rows
@@ -187,6 +205,7 @@ class DuckDbRuntime:
             self.connection.close()
         self.connection = None
         self.path = None
+        self.read_only = False
         return {"ok": True}
 
 

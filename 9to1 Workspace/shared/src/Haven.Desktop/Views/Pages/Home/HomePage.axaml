@@ -4,11 +4,12 @@
              xmlns:controls="using:Haven.Desktop.Controls"
              x:Class="Haven.Desktop.Views.Pages.Home.HomePage">
 
-  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+  <Grid>
+  <ScrollViewer x:Name="HomeDashboardContent" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
     <Grid Margin="34,28,34,48" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="24" MaxWidth="1260" HorizontalAlignment="Stretch">
 
       <!-- Row 0: Header -->
-      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+      <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
         <StackPanel Spacing="5">
           <TextBlock x:Name="GreetingText" Classes="heading" />
           <TextBlock x:Name="DateText" Classes="soft" FontSize="15" />
@@ -17,14 +18,17 @@
             <hui:HavenAdaptiveSurface Classes="statusPill"><TextBlock x:Name="LastUpdatedText" Classes="muted" FontSize="11" /></hui:HavenAdaptiveSurface>
           </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+        <WrapPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Top">
+          <hui:HavenButton Classes="subtle" x:Name="ApprovalsButton" Content="Permissions" />
+          <hui:HavenButton Classes="subtle" x:Name="PersonalModelsButton" Content="Personal AI models" />
+          <hui:HavenButton Classes="subtle" x:Name="FilesStorageButton" Content="Files storage" />
           <hui:HavenButton Classes="subtle" x:Name="CustomizeButton">
             <StackPanel Orientation="Horizontal" Spacing="7"><controls:HavenIcon IconKey="settings" Width="16" Height="16" /><TextBlock Text="Customise" /></StackPanel>
           </hui:HavenButton>
           <hui:HavenButton Classes="icon" x:Name="RefreshButton" ToolTip.Tip="Refresh dashboard">
             <controls:HavenIcon IconKey="refresh" Width="18" Height="18" />
           </hui:HavenButton>
-        </StackPanel>
+        </WrapPanel>
       </Grid>
 
       <!-- Row 1: Quick Access Tiles -->
@@ -66,5 +70,12 @@
 
     </Grid>
   </ScrollViewer>
-
+  <Grid x:Name="HomeOwnedSurfacePanel" IsVisible="False" RowDefinitions="Auto,*" Margin="16">
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button x:Name="CloseHomeOwnedSurfaceButton" Content="Back to Home" AutomationProperties.Name="Close Home manager" />
+      <TextBlock x:Name="HomeOwnedSurfaceTitle" VerticalAlignment="Center" />
+    </StackPanel>
+    <ContentControl x:Name="HomeOwnedSurfaceHost" Grid.Row="1" Margin="0,12,0,0" />
+  </Grid>
+  </Grid>
 </UserControl>
