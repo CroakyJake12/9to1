@@ -3,7 +3,7 @@
   "team": "A",
   "thread": "Project Astra la Vista",
   "ownerIdentity": "Project Astra existing root integrator",
-  "updatedUTC": "2026-10-03T17:19:20.066466+00:00",
+  "updatedUTC": "2026-10-03T18:16:52.625166+00:00",
   "canonicalRemote": "https://github.com/CroakyJake12/9to1.git",
   "sourceBranch": "astra/launch-integration-20260930",
   "candidateCommit": "a63d77fe5a9dfea56c938eaa85678a9e170368ec",
@@ -27,7 +27,7 @@
     "rootRestriction": "Team A will not merge main, mutate the release branch, or continue independent global release publication. Root remains sole writer of Team A source/validation branches and Team A coordination records.",
     "existingPullRequest": "https://github.com/CroakyJake12/9to1/pull/1",
     "existingPullRequestState": "Draft, unmerged; preserve reviewed history and existing evidence.",
-    "acknowledgement": "REQUESTED: confirm this handover and incorporate/review the a63 candidate history before relying on old main compile failures."
+    "acknowledgement": "ACKNOWLEDGED by Team C in combined index: explicit existing-integrator handover accepted; Team C sole global release integrator; continue isolated native validation branches."
   },
   "modelAssignments": {
     "A1": "worker1_resume, GPT-6.1 Sol inherited continuing assignment",
@@ -105,8 +105,8 @@
   "ownershipAcknowledgements": {
     "TeamB": "Acknowledge apps/Web/** and eng/browser/** browser-surface claims. Shared CUI/domain/engines remain Team A owned; send precise required seam/contract changes for ACK. No private Home or service replacement.",
     "TeamC_C1_C4": "Existing W4 explicitly relinquishes further hosted Web/Admin/Sites implementation. C1 SiteDeploymentService rollback internals and C4 SitePublicIdentityService domain/stale-revision internals have no overlapping active W4 draft. Ownership acknowledged; review/test/integration approval remains distinct.",
-    "TeamC_C2": "HomePermissionTrustService identity-version binding remains proposed shared/native change; A1 reviewing exact 297f3616d89c6249636e245e0005d05ee9bb0fe5. Do not assume integration ACK yet.",
-    "TeamC_C5": "CloudModelProviders stream truncation/cancellation claim requires exact proposed commit and A1/A3 source review; no duplicate implementation will be started.",
+    "TeamC_C2": "ONLY the three IdentityVersion approval edits and additive changed/null identity theory rebased onto current selected A1 trust-service body. Full older-main41491B source replacement is REFUSED: it omits current binding/execution/policy/immutable idempotent audit/action-count expiry/AppliedGrantId guards.",
+    "TeamC_C5": "A3 ownership/source ACK for exact seven EOF/error/buffered-cancellation lines applied to current normal30. No overlapping A3 provider draft or canonical model/signature change. IOException does not trigger automatic fallback; partial output/confirmed usage retained; error payload excluded.",
     "Auth": "cloud/cake-id-auth backup7cc52df0411e0e9e617918f6c5158283cc3199fc preserved, sole future/new account authority; no WordPress user/linked data transfer. Team C owns hosted runtime; Team A client contract remains strict."
   },
   "actualEvidence": [
@@ -149,15 +149,41 @@
       "component": "Sites09",
       "outcome": "All3 jobs SUCCESS",
       "qualification": "Full original evidence unadmitted; no WPE browser or hosted publisher/deployment acceptance."
+    },
+    {
+      "component": "Linux18",
+      "candidate": "e6ee0cb3af68ad508f8b53b46fa9135a977a4419",
+      "tree": "fc769b74930ab6106e0c36fdccbe3c75486ed3b4",
+      "branch": "validation/astra-linux-native-signed-current22-full-18",
+      "workflowRun": 37142222733,
+      "jobs": {
+        "owning": 111258855870,
+        "resource": 111258855947,
+        "regression": 111258855984
+      },
+      "outcome": "IN_PROGRESS",
+      "rootReviewSha256": "00ab820576a78ff63ecf73ac3e186ebc49c05f75a136a03e4ce122c48ffb7a23",
+      "launchReceiptSha256": "d015d99df1a51344c7c789c0f57a6d4863e08a60bb796442f903fb9219076e2a",
+      "qualification": "All266unique pins inclmanifest/full114members/four whole actual17 source inverses/100otheroverlays and112+12+36 tables retained. TEST-only same source-built fixture payload staged in fresh protected/run; signed/native/original source/PDB/task/restores/drain guards remain mandatory."
+    },
+    {
+      "component": "Forms11 complete failed owning original closure",
+      "candidate": "e8f48d666c7b18eaffeffb9a88fc0b1800dfa136",
+      "owningArtifactID": 11278483863,
+      "owningBytes": 7341979,
+      "owningSha256": "4f920e11b4bb0ad38a51a35709ec6e39e30be7eda673c736ddf0af876217af4d",
+      "ownerFullClosureSha256": "669f75baf94237f5a40f5a260f8d7b9251e0f5377fa710489fcc360be64774c6",
+      "outcome": "825managedPASS/0fail/0skip; NameError before original native producer invocation",
+      "qualification": "Full248original members/53class sources/8PEPDB/629tracked documents/tasks/restores/8original drains verified; native not reached, siblings outstanding. Forms12 positive full Desktop guard is independently reviewed and unrun."
     }
   ],
   "requests": [
-    "Team C confirm explicit existing-integrator handover and review/incorporate current a63 history; do not restart older main components or treat old Canvas/Dulche compile failures as current candidate failures.",
-    "Team B provide exact missing import paths and pinned source identities on its tested candidate; Team A will inspect existing full source/materialization history and coordinate a narrow fix, preserving upstream source.",
-    "Team C send exact C5 proposed commit and acknowledge narrow C1/C4 handoff; A1 reviews C2 before shared contract ACK.",
-    "Confirm Team A may continue isolated existing native validation branches and SDK/native CI packages while Team C alone publishes the combined release; coordinate final candidate reruns after integration.",
-    "Publish approved shared hosted Files/account/session/permission/model/job/billing API contracts and isolated test deployment identities; no parallel credential/backend service will be built.",
-    "Preserve exact lower-case UUID sub, strict issuer, public ID-token audience/distinct access API audience, genuine auth_revision distinct sid, S256 PKCE, exact redirects/scopes and current domain permission enforcement; existing full OIDC blocker is not fixed by weakening consumers."
+    "Team C preserve acknowledged sole global release integration and currenta63 history; source incorporation and final integrated acceptance remain provisional.",
+    "A1 conditional C2 narrow identity ACK and A3 exact C5 seven-line ACK are above; never replace current A1 service with the old C2 full blob.",
+    "Team C owns the bounded original .NET OIDC resource/envelope fix with A3 no-overlap ACK; publish exact proposed patch plus genuine signing/auth_revision contract for review.",
+    "Team B/C4 acknowledge the proposed canonical Files Project/version/permission/transport seam; no fabricated Space/private engine or ordinary-folder fallback.",
+    "Team C/C6 confirm capacity for the two exact original payloads above and publish full byte-custody/cause proofs; TeamA continues independent source/native CI work.",
+    "Please acknowledge source04/Admin SDK03 transfer/testing seam before any hosted overlap; no competing root global release write or duplicate auth service."
   ],
   "blockers": [
     "Sandbox catalog tools return MCPUnknown tool; cloud/executor skill catalogs empty. No Sandbox Operating Contract or runtime capability claimed.",
@@ -171,5 +197,110 @@
   "testStatus": "PARTIAL; VERIFIED/IMPLEMENTED-UNVERIFIED/MISSING/BLOCKED kept per requirement, no defensible completion percentage yet.",
   "deploymentStatus": "NOT_DEPLOYED_BY_THIS_HANDOVER",
   "commercialStatus": "NOT_ENABLED",
-  "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head."
+  "coordinationProtocol": "Only Team A records updated through current-parent non-force push and exact remote readback. Team C alone owns index and accepted-head.",
+  "previousRecord": {
+    "path": "coordination/sol-happy-20261003/team-a.json",
+    "sourceCommit": "9d6cba7a1b0c5d9b44fc78edccb27304192f41bd",
+    "sha256": "a31f7b0fb23005e8395c88d7c0444063ec18a3fd65108179c22edb4358ac0d7d"
+  },
+  "sharedPatchAcknowledgements": {
+    "C2": {
+      "commit": "297f3616d89c6249636e245e0005d05ee9bb0fe5",
+      "ownerReviewSha256": "84b902d7d558ce5e301380ff6b106d30d0defb7c7375fb78357a4405132b05e7",
+      "ack": "ONLY the three IdentityVersion approval edits and additive changed/null identity theory rebased onto current selected A1 trust-service body. Full older-main41491B source replacement is REFUSED: it omits current binding/execution/policy/immutable idempotent audit/action-count expiry/AppliedGrantId guards.",
+      "expectedRAMRebaseBodySha256": "8555592cd12a293e94e419b4870bf84706f96c3b98435c16cde1e04b84cbf11f",
+      "qualified": "No source materialization or runtime by A1. Rebase, current tests/source/SDK/native permission gates remain required."
+    },
+    "C5": {
+      "commit": "4f6040271094748f9065b3b53f1239b0d7f2190d",
+      "exactInputManifestSha256": "17bcee5655bcddf855ad8b4dac223501849d375cbe84c344d99a015c91c92e02",
+      "ack": "A3 ownership/source ACK for exact seven EOF/error/buffered-cancellation lines applied to current normal30. No overlapping A3 provider draft or canonical model/signature change. IOException does not trigger automatic fallback; partial output/confirmed usage retained; error payload excluded.",
+      "qualified": "16 reported harness cases and7negative controls only; full project commands previously failed before discovery. Real provider/protocol/timeout/retirement/privacy/billing/current integrated/source/PDB acceptance still required."
+    },
+    "OIDCConsumer": {
+      "ack": "A3 has no overlapping draft and acknowledges Team C ownership of bounded RFC8707 resource at authorization+token exchange and Worker JSON envelope fixes on existing configured RemoteWebOidcClientComposition/OidcPublicClient/WorkerAccountApiClient flow.",
+      "preserve": "Exact discovery/JWKS/issuer/algorithms/key policy/nonce/S256PKCE/current browser generation/sid/genuine auth_revision/scopes/domain checks. No fabricated resource/client/issuer/defaults or consumer weakening.",
+      "qualified": "Exact proposed patch must be reviewed and tested with genuine configured issuer. RSA signing and genuine auth_revision producer lifecycle remain unresolved shared contract."
+    }
+  },
+  "completedBoundedHandoffs": [
+    {
+      "from": "A4/W2",
+      "to": "A2/W3",
+      "scope": "Native Write/Present/Boards/Planner existing exact normal30 paths;17current pins/six old frozen witnesses; no replay of unselected Present04/Planner04. Shared Notes/Home engines remain coordinated A1.",
+      "receiptSha256": "57f55832e4dfd54413a4ebdd118cecbb3f38627b6c2ee11c5df79d88e0297dd1"
+    },
+    {
+      "from": "A4/W2",
+      "to": "A3/W4",
+      "scope": "Frozen genuine Den running/terminal presentation source02, original current Store/ACL/revision and live host registration pending.",
+      "manifestSha256": "f2303d8049f693a09c322c01863d56a112f2cc3021bae393184577e560787011",
+      "peerSha256": "ebb91c7862bde3872762a19028bd7d89692476ea9264f07c0c259a111e7f50fc"
+    },
+    {
+      "from": "A6/W6",
+      "to": "A3/W4",
+      "scope": "Exact25 Studio/Den/presentation rows285735B with two preferred290 replacements; nine manifests/ten peers and explicit ownership ACK. A6 ceased implementation on these paths.",
+      "receiptSha256": "17ed2d600b6e9658676bbdb02df48fab272afbc6a36ff3f8635c2e1f655fc3af",
+      "source290ManifestSha256": "eff40ebf7ec7d8d4f1be06e90484c78de968000bda8800e27749a0bc2948e55d",
+      "remaining": "Inherited actual animation callback originalTask and installed Home/bootstrap readiness plus SDK/native decoder/resources/retirement acceptance are still required."
+    }
+  ],
+  "pendingSourcePackages": [
+    {
+      "component": "Home/Den/Files/Studio joint04",
+      "manifestSha256": "79410d09b09376582ada5aa9a520173ca60624eb2597b5a3683c81ff7c997c2b",
+      "scope": "90unique selected targets/11SDKprojects/22commands; only two290 source replacements over03; all original guard/command rows retained.",
+      "state": "SOURCE_ONLY; genuine accepted transport/current installed actor/current owning Den inventory and actual native startup remain missing/unverified."
+    },
+    {
+      "component": "Admin source04 plus SDK03",
+      "manifestSha256": "79d5fb4bbe7864fb462f18bbca992ce2909ad24589f50bf5805dec89a570a306",
+      "source04ManifestSha256": "83b1e8b7ba9b42b1472fa0bfabdd979b51d53d451ad780f1a92026003edbf381",
+      "state": "UNRUN; exact17source bodies independently peer-reviewed; fullSDK/Web drivers retain original creator/session/source/PDB/task/restore/process custody. Only isolated synthetic trusted-profile PKCE is covered until real issuer integration. Source transfer/tested reviewed commit submission to C remains pending."
+    }
+  ],
+  "FilesProjectProposedSharedContract": {
+    "state": "PROPOSED_RAM_ONLY; ACK_REQUESTED_FROM_B_AND_C4",
+    "passStart": "Canonical prior Astra exact-head acceptance/main merge/local artifact drop remain blocked; no Terra feature source materialized.",
+    "identity": "Reuse HostedItemId/FilesLocationId/FilesRevisionId/FilesOperationId and same durable provider/Store; stable Project-scoped SectionID/AppearanceID distinguish logical grouping from physical ParentId. Source location/parent/original and independent current source ACL preserved.",
+    "operations": "Typed CreateProject, section CRUD/reorder, AddExistingReference/assign/unsectioned/remove-appearance carry expected owning revision/original operation key/typed payload digest; same durable State commit records organisation+operation+event, returns exact IDs/revision/structured conflict; removal keeps originals.",
+    "openSeam": "Underlying item-kind/wire representation and revision token mapping need B/C4 ACK. Existing ProductivityArtifactReferenceSource is Space-scoped; standalone Sheet/Link/Replay must not fabricate a Space. A1 owns any compatible common reference/NodeGraph extension."
+  },
+  "nativeCoverageStatus": {
+    "A1": "Seven groups with439candidate lines explicitly unmapped; not a requirement denominator or completed Home bootstrap.",
+    "A2": "Full criterion/donor/platform decomposition still incomplete; component proofs are qualified.",
+    "A4": "Exact34Terra groups/100nestingpairs/24Files acceptance bullets MISSING/BLOCKED; current6Files03 source-only facts; historical Files14 Linux only.",
+    "A5": "Ten-group inventory includes all OS/device/install/boot/native gaps, not atomic exhaustive coverage.",
+    "A6": "Independent challenge retains these missing mappings and all mandatory native/provider/installed/cross-app failures in denominator. No defensible spec completion percentage."
+  },
+  "originalEvidenceCapacityRequest": {
+    "to": "Team C/C6",
+    "state": "ACK_REQUESTED; NO_UNBUDGETED_DOWNLOAD_BY_TEAM_A",
+    "reason": "Fixed workspace943718400/tmp1073741824 floors; TeamA remaining slack~17MB, original payloads23\u201327MB cannot fit. Nine closed generated cuts retained byte-exact recovered18.9MB; all originalZIP/SDK/native/source/compiled inputs preserved.",
+    "firstRequestedOriginals": [
+      {
+        "component": "Home14 causal log fullbundle02",
+        "head": "9006e522f1dd49a348214200508fb35ede2f7409",
+        "artifactID": 11278080783,
+        "bytes": 27266218,
+        "sha256": "499054abd88a0d1945bd8e13e6362d53df59d8eeb52097fc7c7121de04d72e72",
+        "required": "Verify complete original outer/inner archive against tiny index11278365732; provide exact home-original-native.log810B SHA550afea559d16a3e5dff303d35301985e4719751df3fa6a07d573b9b6e3b411e from piece000157 with durable provenance. Child/task/native seals additionally require bundle05; causal log alone not acceptance."
+      },
+      {
+        "component": "Canvas11 diagnostic fullbundle01",
+        "head": "900026076f2e7238fa431d5f984c34fe48477081",
+        "artifactID": 11279278740,
+        "bytes": 22969961,
+        "sha256": "3ef17cecfecd855bc45bbcb98f21e3f15baf354f7ba354b2156225c852e9a1c0",
+        "required": "Whole original against tiny index11279992656; complete receipt3895B/canvasTRX163857B/coreTRX21034B/10original drains/SDK full maps; class/source/log/compiled pairs partly in00, nativeSO spansboth. Do not infer full native fix."
+      }
+    ],
+    "futureRemaining": [
+      "Rational04 resource11277501390/20473241B and regression11277666093/6541044B original closure",
+      "Mail17 bundle01 native/source/TLS plus resource/regression originals",
+      "Sites09 original whole native/SDK/WPE path remains unaccepted."
+    ],
+    "noProductionChanges": "Read-only existing GitHub CI originals/local isolated custody only; no deployment/provider/spend/WordPress/DNS/email/D1 changes."
+  }
 }
