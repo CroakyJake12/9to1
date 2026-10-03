@@ -1,5 +1,5 @@
 """Original guarded SDK child; maintained caller and inner session custody."""
-import hashlib,json,os,pathlib,re,signal,subprocess,sys,time
+import hashlib,json,os,pathlib,re,signal,stat,subprocess,sys,time
 from astra_mail_original_caller_session import MailCallerSession
 P=pathlib.Path
 def digest(path):return hashlib.sha256(P(path).read_bytes()).hexdigest()
@@ -55,6 +55,53 @@ class JointCallerSession(MailCallerSession):
      if actual is not None and actual[3]==value[3]:return False
    return True
   except (OSError,ValueError,TypeError,AttributeError):return False
+ def write(self,drained):
+  # The unchanged owner first records its original outer and inner proofs.
+  super().write(drained)
+  if type(drained) is not bool:raise RuntimeError('Original caller drain argument must be boolean')
+  def signature(info):
+   return (info.st_dev,info.st_ino,info.st_mode,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
+  def original_record(path):
+   info=path.lstat()
+   if not stat.S_ISREG(info.st_mode) or info.st_size>1024*1024:raise RuntimeError('Original caller record must be bounded and regular')
+   data=path.read_bytes()
+   if signature(path.lstat())!=signature(info) or len(data)!=info.st_size:raise RuntimeError('Original caller record changed during admission')
+   row=json.loads(data)
+   if not isinstance(row,dict):raise RuntimeError('Original caller record object required')
+   return info,row
+  evidence=self.records/'inner-native-delegation.json'
+  info,state=original_record(evidence)
+  _,pending=original_record(self.file)
+  _,marker=original_record(self.records/'expected-managed-launch.json')
+  attempts=json.loads(json.dumps(self.innerAttempts,sort_keys=True))
+  members=json.loads(json.dumps(self.members,sort_keys=True))
+  expected_pending={'launcherPid':self.root,'launcherTuple':list(self.original),'observedMembers':members,'drained':drained}
+  expected_marker={'expectedManagedLaunch':True,'drained':True,'launcherPid':self.root,'launcherStartTicks':self.original[3]}
+  if pending!=expected_pending or type(pending.get('drained')) is not bool:raise RuntimeError('Same original outer caller proof differs')
+  if marker.get('expectedManagedLaunch') is not True or type(marker.get('drained')) is not bool:raise RuntimeError('Original outer launch marker refused')
+  if set(marker) not in ({'expectedManagedLaunch','drained'},set(expected_marker)):raise RuntimeError('Original outer launch marker fields differ')
+  if 'launcherPid' in marker and (type(marker['launcherPid']) is not int or marker['launcherPid']!=self.root or marker['launcherStartTicks']!=self.original[3]):raise RuntimeError('Original outer launch identity differs')
+  if drained and marker!=expected_marker:raise RuntimeError('Same original final outer drain not proven')
+  if set(state)!={'observedInnerAttempts','allInnerRecordedDrainsProven','qualification'} or state['observedInnerAttempts']!=attempts or type(state['allInnerRecordedDrainsProven']) is not bool or state['qualification']!='Sampled original descendant/kernel birth identity and exact inner owner records; no atomic/unobserved-escape or production authority claim':raise RuntimeError('Same original inner delegation snapshot differs')
+  proven=state['allInnerRecordedDrainsProven']
+  if drained and not proven:raise RuntimeError('Same original final inner drain not proven')
+  state['drained']=drained and proven
+  data=json.dumps(state,sort_keys=True)+'\n'
+  handle=fd=None;primary=None;cleanup=[]
+  try:
+   fd=os.open(evidence,os.O_WRONLY|os.O_NOFOLLOW)
+   if signature(os.fstat(fd))!=signature(info):raise RuntimeError('Same original delegation inode/content changed before rewrite')
+   handle=os.fdopen(fd,'w');fd=None
+   handle.seek(0);handle.truncate(0)
+   if handle.write(data)!=len(data):raise RuntimeError('Original delegation complete write refused')
+   handle.flush();os.fsync(handle.fileno())
+  except BaseException as error:primary=error
+  finally:
+   if handle is not None:collect(cleanup,handle.close)
+   if fd is not None:collect(cleanup,lambda:os.close(fd))
+  fail(primary,cleanup)
+  actual=evidence.lstat()
+  if (actual.st_dev,actual.st_ino,actual.st_mode)!=(info.st_dev,info.st_ino,info.st_mode) or evidence.read_bytes()!=data.encode():raise RuntimeError('Same original delegation readback differs')
 def run_sdk(root,out,records,expected_commit,manifest,manifest_sha):
  root=P(root);out=P(out);records=P(records);cut_path=root/manifest
  if manifest!='.github/validation/astra-desktop-visible-cut.json' or digest(cut_path)!=manifest_sha:

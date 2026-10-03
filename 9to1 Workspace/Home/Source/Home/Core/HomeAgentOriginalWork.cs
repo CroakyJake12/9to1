@@ -15,7 +15,7 @@ public sealed class HomeAgentOriginalWork : IAsyncDisposable
             if (errors.Count == 1) ExceptionDispatchInfo.Capture(errors[0]).Throw();
             if (errors.Count > 1) throw new AggregateException("Original Agent work and cleanup failed.", errors);
         }
-        private sealed class Operation { internal Task Task = Task.CompletedTask; internal CancellationToken Token; }
+        private sealed class Operation { internal Task Task = Task.CompletedTask; internal CancellationToken Token; internal CancellationToken Caller { get; init; } }
         private readonly List<Operation> _originals = [];
         private Task? _close;
         private HomeNativeCoreApiSessions.AgentConnection? _connection;
@@ -30,7 +30,7 @@ public sealed class HomeAgentOriginalWork : IAsyncDisposable
                 if (_close is not null) throw new ObjectDisposedException(nameof(HomeAgentOriginalWork));
                 _originals.RemoveAll(operation => operation.Task.IsCompleted);
                 var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                var operation = new Operation();
+                var operation = new Operation { Caller = caller };
                 var sameTask = ExecuteAsync(start.Task, operation, action, caller);
                 operation.Task = sameTask; _originals.Add(operation);
                 start.SetResult();
@@ -76,7 +76,7 @@ public sealed class HomeAgentOriginalWork : IAsyncDisposable
             foreach (var original in originalTasks)
                 try { await original.Task.ConfigureAwait(false); }
                 catch (OperationCanceledException error) when (_lifetime.IsCancellationRequested &&
-                    original.Token.IsCancellationRequested && error.CancellationToken == original.Token) { }
+                    !original.Caller.IsCancellationRequested && original.Token.IsCancellationRequested && error.CancellationToken == original.Token) { }
                 catch (Exception error) { Add(errors, error); }
             if (Issuer is not null)
                 try { await Issuer.DisposeAsync().ConfigureAwait(false); } catch (Exception error) { Add(errors, error); }

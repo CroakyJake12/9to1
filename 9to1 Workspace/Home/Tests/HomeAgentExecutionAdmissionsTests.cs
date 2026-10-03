@@ -616,6 +616,66 @@ public sealed class HomeAgentExecutionAdmissionsTests
         Assert.Null(await source.ResolveCurrentAsync(f.Personal.DenId, f.Personal.Actor, f.Token));
     });
 
+    [Fact]
+    public Task Caller_cancellation_held_in_original_read_finally_survives_later_host_close() => WithFixture(async f =>
+    {
+        var admitted = await f.AdmitAsync();
+        var writer = new DenAgentExecutionStateStore(admitted.Den, "personal");
+        var run = Run(f, AgentRunState.Queued);
+        var committed = await writer.CommitAsync(new(run.AgentRunId, 0, "caller-first-original-run", Run: run), f.Token);
+        using var caller = new CancellationTokenSource();
+        f.State.HoldNextRead = true;
+        var original = f.Issuer.BindOriginalRunAsync(admitted.Context, committed.Run, caller.Token).AsTask();
+        var ownerCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration ownerWitness = default;
+        Task? close = null;
+        OperationCanceledException? originalFailure = null;
+        Exception? primary = null;
+        var cleanup = new List<Exception>();
+        try
+        {
+            ownerWitness = admitted.OriginalLifetime.Register(() => ownerCancelled.TrySetResult());
+            await f.State.ReadEntered.Task.WaitAsync(f.Token);
+            caller.Cancel();
+            await f.State.ReadCleanupEntered.Task.WaitAsync(f.Token);
+            Assert.True(caller.IsCancellationRequested);
+            Assert.False(admitted.OriginalLifetime.IsCancellationRequested);
+            Assert.False(original.IsCompleted);
+            close = f.Issuer.DisposeAsync().AsTask();
+            Assert.Same(close, f.Issuer.DisposeAsync().AsTask());
+            await ownerCancelled.Task.WaitAsync(f.Token);
+            Assert.True(admitted.OriginalLifetime.IsCancellationRequested);
+            Assert.False(f.Token.IsCancellationRequested);
+            Assert.False(original.IsCompleted);
+            Assert.False(close.IsCompleted);
+            f.State.ReleaseCleanup.TrySetResult();
+            originalFailure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => original);
+            Assert.True(originalFailure.CancellationToken.IsCancellationRequested);
+            Assert.NotEqual(caller.Token, originalFailure.CancellationToken);
+            f.ExpectedCloseFailure = originalFailure;
+            var closeFailure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => close);
+            Assert.Same(originalFailure, closeFailure);
+            Assert.True(original.IsCompleted);
+            Assert.True(close.IsCompleted);
+            Assert.Equal(HomePermissionRequestState.PartiallyCompleted,
+                (await f.Permissions.ReadRequestObservationAsync(f.Preparation!.RequestId, f.Token))!.State);
+        }
+        catch (Exception error) { primary = error; }
+        finally
+        {
+            try { f.State.ReleaseCleanup.TrySetResult(); } catch (Exception error) { Add(cleanup, error); }
+            try { await original.WaitAsync(TimeSpan.FromSeconds(20), CancellationToken.None); }
+            catch (Exception error) when (ReferenceEquals(error, originalFailure) || ReferenceEquals(error, primary)) { }
+            catch (Exception error) { Add(cleanup, error); }
+            if (close is not null)
+                try { await close.WaitAsync(TimeSpan.FromSeconds(20), CancellationToken.None); }
+                catch (Exception error) when (ReferenceEquals(error, originalFailure) || ReferenceEquals(error, primary)) { }
+                catch (Exception error) { Add(cleanup, error); }
+            try { ownerWitness.Dispose(); } catch (Exception error) { Add(cleanup, error); }
+        }
+        Rethrow(primary, cleanup);
+    });
+
     private sealed class Fixture
     {
         internal const string Objective = "Run the exact saved Agent without tool calls.";
@@ -631,6 +691,7 @@ public sealed class HomeAgentExecutionAdmissionsTests
         internal required ControlledState State;
         internal required HomePermissionTrustService Permissions;
         internal required HomeAgentExecutionAdmissions Issuer;
+        internal Exception? ExpectedCloseFailure;
         internal required ToolPolicy Tools;
         internal required Models Models;
         internal long MaximumCalls;
@@ -667,7 +728,8 @@ public sealed class HomeAgentExecutionAdmissionsTests
         var root = Path.Combine(Path.GetTempPath(), "astra-original-agent-issuer-" + Guid.NewGuid().ToString("N"));
         using var lifetime = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         HomeDenStoreEvidenceProvider? provider = null; HomeNativeSessionLease? lease = null;
-        HomeAgentExecutionAdmissions? issuer = null; Exception? primary = null; var cleanup = new List<Exception>();
+        HomeAgentExecutionAdmissions? issuer = null; Fixture? sameFixture = null;
+        Exception? primary = null; var cleanup = new List<Exception>();
         try
         {
             var home = new FileHomeCoreStateStore(Path.Combine(root, "home.json"));
@@ -704,11 +766,14 @@ public sealed class HomeAgentExecutionAdmissionsTests
                 originalAuditReaders: (sameDen, originalNamespace) => new DenAgentExecutionStateStore(sameDen, originalNamespace),
                 routes: new HomePersonalModelRoutes(profiles, routes, resources),
                 presenter: syntheticToolReview ? new SyntheticToolReview(permissions, tools) : null, tools: tools);
-            await action(new() { Root = root, Lifetime = lifetime, Home = home, Actors = actors, Provider = provider,
-                Lease = lease, Personal = personal, Definition = definition, State = state, Permissions = permissions, Issuer = issuer, Tools = tools, Models = models, MaximumCalls = maximumCalls, MaximumTime = maximumTime });
+            sameFixture = new() { Root = root, Lifetime = lifetime, Home = home, Actors = actors, Provider = provider,
+                Lease = lease, Personal = personal, Definition = definition, State = state, Permissions = permissions, Issuer = issuer, Tools = tools, Models = models, MaximumCalls = maximumCalls, MaximumTime = maximumTime };
+            await action(sameFixture);
         }
         catch (Exception error) { primary = error; }
-        try { if (issuer is not null) await issuer.DisposeAsync(); } catch (Exception error) { Add(cleanup, error); }
+        try { if (issuer is not null) await issuer.DisposeAsync(); }
+        catch (Exception error) when (sameFixture?.ExpectedCloseFailure is { } expected && ReferenceEquals(error, expected)) { }
+        catch (Exception error) { Add(cleanup, error); }
         try { lease?.Dispose(); } catch (Exception error) { Add(cleanup, error); }
         try { if (provider is not null) await provider.DisposeAsync(); } catch (Exception error) { Add(cleanup, error); }
         try { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); } catch (Exception error) { Add(cleanup, error); }

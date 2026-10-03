@@ -1,6 +1,6 @@
 """Additive whole joint SDK gate; old native cohorts remain independently mandatory."""
 import argparse, base64, hashlib, importlib.util, json, os, pathlib, re, shutil
-import signal, stat, subprocess, sys, time, types
+import signal, stat, struct, subprocess, sys, time, types, zlib
 
 sys.dont_write_bytecode = True
 P = pathlib.Path
@@ -45,6 +45,115 @@ def load_module(path, name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def physical_symbols(target, debug_type, parser):
+    """Bind symbols to this original physical PE and the evaluated producer."""
+    if target.is_symlink() or not target.is_file():
+        raise RuntimeError('Original physical PE must be regular')
+    image = target.read_bytes()
+
+    def bounds(offset, amount):
+        if offset < 0 or amount < 0 or offset > len(image) or amount > len(image) - offset:
+            raise RuntimeError('Original PE symbol range outside complete image')
+
+    bounds(0, 64)
+    if image[:2] != b'MZ': raise RuntimeError('Original PE DOS signature refused')
+    pe = struct.unpack_from('<I', image, 60)[0]
+    bounds(pe, 24)
+    if pe < 64 or image[pe:pe + 4] != b'PE\0\0':
+        raise RuntimeError('Original PE signature refused')
+    sections = struct.unpack_from('<H', image, pe + 6)[0]
+    optional_size = struct.unpack_from('<H', image, pe + 20)[0]
+    optional = pe + 24
+    bounds(optional, optional_size)
+    if optional_size < 2: raise RuntimeError('Original PE optional header missing')
+    magic = struct.unpack_from('<H', image, optional)[0]
+    if magic not in (0x10b, 0x20b): raise RuntimeError('Original PE optional header kind refused')
+    directories = 96 if magic == 0x10b else 112
+    if optional_size < directories + 56 or not sections:
+        raise RuntimeError('Original PE debug directory/header missing')
+    if struct.unpack_from('<I', image, optional + directories - 4)[0] < 7:
+        raise RuntimeError('Original PE debug directory absent')
+    headers = struct.unpack_from('<I', image, optional + 60)[0]
+    bounds(0, headers)
+    section_table = optional + optional_size
+    bounds(section_table, sections * 40)
+
+    def rva_offset(value, amount):
+        matches = []
+        if value < headers and amount <= headers - value:
+            bounds(value, amount); matches.append(value)
+        for index in range(sections):
+            row = section_table + index * 40
+            virtual_size, address, raw_size, raw = struct.unpack_from('<IIII', image, row + 8)
+            delta = value - address
+            if 0 <= delta < max(virtual_size, raw_size) and delta <= raw_size and amount <= raw_size - delta:
+                offset = raw + delta
+                bounds(offset, amount); matches.append(offset)
+        if len(matches) != 1: raise RuntimeError('Original PE debug RVA missing/ambiguous')
+        return matches[0]
+
+    debug_rva, debug_size = struct.unpack_from('<II', image, optional + directories + 48)
+    if not debug_rva or not debug_size or debug_size % 28:
+        raise RuntimeError('Original PE debug directory absent/malformed')
+    debug_at = rva_offset(debug_rva, debug_size)
+    embedded = []
+    for index in range(debug_size // 28):
+        row = debug_at + index * 28
+        kind, amount, address, pointer = struct.unpack_from('<IIII', image, row + 12)
+        bounds(pointer, amount)
+        if address and rva_offset(address, amount) != pointer:
+            raise RuntimeError('Original PE debug RVA/file pointer differ')
+        if kind == 17:
+            major, minor = struct.unpack_from('<HH', image, row + 8)
+            if major < 0x0100 or minor != 0x0100:
+                raise RuntimeError('Original embedded portable PDB version refused')
+            embedded.append((row, amount, address, pointer))
+    producer = str(debug_type).strip().lower()
+    sidecar = target.with_suffix('.pdb')
+    physical = [{'path': str(target), 'bytes': len(image), 'sha256': hashlib.sha256(image).hexdigest()}]
+    if producer == 'embedded':
+        if len(embedded) != 1:
+            raise RuntimeError('Evaluated embedded producer requires exactly one original MPDB record')
+        row, amount, address, pointer = embedded[0]
+        if amount <= 8 or image[pointer:pointer + 4] != b'MPDB':
+            raise RuntimeError('Original embedded portable PDB header refused')
+        expanded_size = struct.unpack_from('<I', image, pointer + 4)[0]
+        if not 0 < expanded_size <= MAX_EVIDENCE:
+            raise RuntimeError('Original embedded PDB advertised expansion bound refused')
+        compressed = image[pointer + 8:pointer + amount]
+        decoder = zlib.decompressobj(-15)
+        symbols = decoder.decompress(compressed, expanded_size + 1)
+        if len(symbols) != expanded_size or not decoder.eof or decoder.unused_data or decoder.unconsumed_tail:
+            raise RuntimeError('Original embedded PDB exact bounded deflate stream refused')
+        if sidecar.exists() or sidecar.is_symlink():
+            raise RuntimeError('Evaluated embedded producer has a conflicting external symbol path')
+        pair = [target]
+        storage = {'kind': 'embedded-portable-pdb', 'evaluatedDebugType': debug_type,
+            'originalDebugDirectoryFileOffset': debug_at, 'originalDebugDirectoryBytes': debug_size,
+            'originalDebugRecordFileOffset': row,
+            'originalEmbeddedMajorVersion': struct.unpack_from('<H', image, row + 8)[0],
+            'originalEmbeddedMinorVersion': struct.unpack_from('<H', image, row + 10)[0],
+            'originalRecordType': 17, 'originalRecordFileOffset': pointer,
+            'originalRecordRva': address, 'originalRecordBytes': amount,
+            'codec': 'MPDB/raw-deflate', 'advertisedExpandedBytes': expanded_size,
+            'compressedBytes': len(compressed), 'compressedSha256': hashlib.sha256(compressed).hexdigest(),
+            'qualification': 'Symbols are decoded only from the SAME retained complete original PE. No external PDB path is fabricated; offsets, codec, bounds and hashes permit independent lossless replay.'}
+    elif producer in ('portable', 'full', 'pdbonly'):
+        if embedded or sidecar.is_symlink() or not sidecar.is_file():
+            raise RuntimeError('Evaluated external producer requires the original regular external PDB pair')
+        symbols = sidecar.read_bytes()
+        pair = [target, sidecar]
+        physical.append({'path': str(sidecar), 'bytes': len(symbols), 'sha256': hashlib.sha256(symbols).hexdigest()})
+        storage = {'kind': 'external-portable-pdb', 'evaluatedDebugType': debug_type}
+    else:
+        raise RuntimeError('Evaluated original symbol producer missing/unsupported')
+    identity = parser.assert_actual_pair(image, symbols)
+    documents = parser.pdb_documents(symbols)
+    storage.update({'physicalFiles': physical, 'portablePdbBytes': len(symbols),
+        'portablePdbSha256': hashlib.sha256(symbols).hexdigest(), 'identity': identity})
+    return pair, identity, documents, storage
 
 
 def main():
@@ -410,7 +519,7 @@ def main():
             command(phase + '-build-source-tasks', ['dotnet', 'build', TASK_PROJECT, '--no-restore', '--disable-build-servers', *host_props])
             def query(project, props, label, items=False):
                 argv = ['dotnet', 'msbuild', project, '-nologo', *props,
-                    '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,IsTestProject,OutputType']
+                    '-getProperty:MSBuildProjectFullPath,MSBuildProjectName,AssemblyName,TargetPath,OutputPath,Configuration,TargetFramework,ProjectAssetsFile,MSBuildProjectExtensionsPath,AvaloniaBuildTasksLocation,IsTestProject,OutputType,DebugType']
                 if items: argv.append('-getItem:Compile,ProjectReference')
                 return json.loads(command(phase + '-evaluate-' + label, argv))
             task_evaluated = query(TASK_PROJECT, host_props, 'source-tasks', True)
@@ -472,11 +581,10 @@ def main():
                         raise RuntimeError('Actual compiled project/configuration mismatch')
                     if P(values['AvaloniaBuildTasksLocation']).resolve() != task_target:
                         raise RuntimeError('Actual original consumer build-task location differs')
-                    target = P(values['TargetPath']).resolve(); pair = [target, target.with_suffix('.pdb')]
-                    if not target.is_relative_to(root) or any(file.is_symlink() or not file.is_file() for file in pair):
-                        raise RuntimeError('Complete actual first-party project physical PE/PDB missing: ' + project)
-                    identity = pdb.assert_actual_pair(pair[0].read_bytes(), pair[1].read_bytes())
-                    documents = pdb.pdb_documents(pair[1].read_bytes())
+                    target = P(values['TargetPath']).resolve()
+                    if not target.is_relative_to(root):
+                        raise RuntimeError('Complete actual first-party project physical PE outside root: ' + project)
+                    pair, identity, documents, symbol_storage = physical_symbols(target, values['DebugType'], pdb)
                     inputs = []
                     for item in evaluated.get('Items', {}).get('Compile', []):
                         source = P(item.get('FullPath', ''))
@@ -512,9 +620,13 @@ def main():
                         source_pin = None if relative in paths else retained(source, out / phase / 'original-generated-or-materialized-sources')
                         proof_docs.append({'document': name_in_pdb, 'source': relative, 'retainedOriginalSource': source_pin, **row})
                     if not inputs or not proof_docs: raise RuntimeError('Actual complete source/PDB evidence empty')
+                    original_pairs = [retained(file, out / phase / 'compiled') for file in pair]
+                    retained_identity = [{'path': str(root / row['path']), 'bytes': row['bytes'], 'sha256': row['sha256']} for row in original_pairs]
+                    if retained_identity != symbol_storage['physicalFiles']:
+                        raise RuntimeError('Retained original physical PE/symbol bytes differ from parsed originals')
                     compiled.append({'suite': suite['name'], 'project': project, 'evaluated': evaluated,
-                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'pairs': [retained(file, out / phase / 'compiled') for file in pair],
-                        'compileInputs': inputs, 'allPdbDocuments': proof_docs})
+                        'physicalAssembly': values['AssemblyName'], 'identity': identity, 'pairs': original_pairs,
+                        'symbolStorage': symbol_storage, 'compileInputs': inputs, 'allPdbDocuments': proof_docs})
                 suite_evaluated = query(suite['project'], [*managed_props, '-p:TargetFramework=net10.0'], name + '-entry')
                 values = suite_evaluated['Properties']
                 is_test = str(values.get('IsTestProject','')).lower() == 'true'

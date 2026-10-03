@@ -74,6 +74,79 @@ public sealed class HomeAgentOriginalConnectionDrainTests
             Throw(primary, failures);
         });
 
+    [Fact]
+    public Task Caller_cancellation_in_same_Core_connection_survives_later_original_Work_close() =>
+        WithRigAsync(async rig =>
+        {
+            using var caller = new CancellationTokenSource();
+            var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var cleanup = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var ownerCancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var ownerLifetime = rig.Work.Lifetime;
+            CancellationTokenRegistration ownerWitness = default;
+            CancellationToken originalOuter = default;
+            OperationCanceledException? originalInner = null;
+            OperationCanceledException? observed = null;
+            Task? close = null;
+            var original = rig.Work.RunAsync(outer =>
+            {
+                originalOuter = outer;
+                return rig.Connection.RunAsync<bool>(async inner =>
+                {
+                    entered.TrySetResult();
+                    try { await Task.Delay(Timeout.InfiniteTimeSpan, inner); }
+                    catch (OperationCanceledException error) { originalInner = error; throw; }
+                    finally { cleanup.TrySetResult(); await release.Task.ConfigureAwait(false); }
+                    return true;
+                }, outer);
+            }, caller.Token);
+            Exception? primary = null; List<Exception> failures = [];
+            try
+            {
+                ownerWitness = ownerLifetime.Register(() => ownerCancelled.TrySetResult());
+                await entered.Task.WaitAsync(rig.Token);
+                caller.Cancel();
+                await cleanup.Task.WaitAsync(rig.Token);
+                Assert.True(caller.IsCancellationRequested);
+                Assert.False(ownerLifetime.IsCancellationRequested);
+                Assert.False(original.IsCompleted);
+                close = rig.Work.CloseAsync();
+                Assert.Same(close, rig.Work.CloseAsync());
+                await ownerCancelled.Task.WaitAsync(rig.Token);
+                Assert.True(ownerLifetime.IsCancellationRequested);
+                Assert.False(rig.Token.IsCancellationRequested);
+                Assert.False(original.IsCompleted);
+                Assert.False(close.IsCompleted);
+                release.TrySetResult();
+                observed = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => original);
+                Assert.Equal(originalOuter, observed.CancellationToken);
+                Assert.NotEqual(caller.Token, observed.CancellationToken);
+                Assert.True(originalOuter.IsCancellationRequested);
+                Assert.Same(originalInner, observed.InnerException);
+                rig.ExpectedWorkCloseFailure = observed;
+                var closeFailure = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => close);
+                Assert.Same(observed, closeFailure);
+                Assert.True(original.IsCompleted);
+                Assert.True(close.IsCompleted);
+            }
+            catch (Exception error) { primary = error; }
+            finally
+            {
+                Attempt(failures, () => release.TrySetResult());
+                Attempt(failures, caller.Cancel);
+                try { await original.WaitAsync(TimeSpan.FromSeconds(20), CancellationToken.None); }
+                catch (Exception error) when (ReferenceEquals(error, observed) || ReferenceEquals(error, primary)) { }
+                catch (Exception error) { Add(failures, error); }
+                if (close is not null)
+                    try { await close.WaitAsync(TimeSpan.FromSeconds(20), CancellationToken.None); }
+                    catch (Exception error) when (ReferenceEquals(error, observed) || ReferenceEquals(error, primary)) { }
+                    catch (Exception error) { Add(failures, error); }
+                Attempt(failures, ownerWitness.Dispose);
+            }
+            Throw(primary, failures);
+        });
+
     [Theory]
     [InlineData("default")]
     [InlineData("foreign")]
@@ -135,6 +208,7 @@ public sealed class HomeAgentOriginalConnectionDrainTests
         internal HomeNativeCoreApiSessions.Session Session { get; private set; } = null!;
         internal HomeNativeCoreApiSessions.AgentConnection Connection { get; private set; } = null!;
         internal HomeAgentOriginalWork Work { get; } = new();
+        internal Exception? ExpectedWorkCloseFailure;
         internal CancellationToken Token => Bound.Token;
         internal async Task OpenAsync()
         {
@@ -159,7 +233,9 @@ public sealed class HomeAgentOriginalConnectionDrainTests
         {
             List<Exception> failures = [];
             Attempt(failures, Bound.Cancel); Attempt(failures, _connectionLifetime.Cancel);
-            try { await Work.CloseAsync(); } catch (Exception error) { Add(failures, error); }
+            try { await Work.CloseAsync(); }
+            catch (Exception error) when (ReferenceEquals(error, ExpectedWorkCloseFailure)) { }
+            catch (Exception error) { Add(failures, error); }
             if (Session is not null)
                 try { await Session.DisposeAsync(); } catch (Exception error) { Add(failures, error); }
             if (Sessions is not null)

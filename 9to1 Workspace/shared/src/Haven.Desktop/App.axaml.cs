@@ -68,10 +68,13 @@ public sealed partial class App : Avalonia.Application
     public override void OnFrameworkInitializationCompleted()
     {
         var collection = new ServiceCollection();
+        IServiceProvider? originalHomePromptProvider = null;
         collection.AddHavenInfrastructure();
         collection.AddHavenPlannerInfrastructure();
         collection.AddHavenDesktopCallServices();
-        collection.AddSingleton<HavenOS.Home.Core.IHomeApprovalPromptPresenter>(provider => new NativeHomeApprovalPromptPresenter(provider));
+        // DI factories receive a scope; the native presenter must retain the SAME owning App provider.
+        collection.AddSingleton<HavenOS.Home.Core.IHomeApprovalPromptPresenter>(_ => new NativeHomeApprovalPromptPresenter(
+            originalHomePromptProvider ?? throw new InvalidOperationException("The original Home prompt provider is not constructed.")));
         collection.AddSingleton<SpaceRegistry>();
         collection.AddFilesNativeHost();
         collection.AddHavenFormsPublication(new HavenOS.Forms.FormNativePublicationValidator());
@@ -196,6 +199,7 @@ public sealed partial class App : Avalonia.Application
             ValidateOnBuild = true,
             ValidateScopes = true
         });
+        originalHomePromptProvider = _services;
         Services = _services;
         _services.GetRequiredService<ComputerUseOverlayCoordinator>();
         Subscribe.EventBus = _services.GetRequiredService<HavenEventBus>();

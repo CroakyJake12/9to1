@@ -47,8 +47,8 @@ public sealed class HomeAgentExecutionHost(HomeNativeCoreApiSessions originalCor
                     await connection.DemandCurrentAsync(ct).ConfigureAwait(false);
                     if (personal.Actor != connection.Actor || personal.DenId != reference.DenId) throw Refused();
                     var issuer = new HomeAgentExecutionAdmissions(factory, actors, connection, permissions,
-                        composer.CreateRunReader(personal.Den, reference.NamespaceId), models, resources,
-                        work.Lifetime, composer.CreateRunReader, routes, presenter, originalTools());
+                        _composer.CreateRunReader(personal.Den, reference.NamespaceId), models, resources,
+                        work.Lifetime, _composer.CreateRunReader, routes, presenter, originalTools());
                     work.Issuer = issuer;
                     reserved.Prepared = await issuer.PrepareAsync(reference, objective, ct).ConfigureAwait(false);
                     return reserved;

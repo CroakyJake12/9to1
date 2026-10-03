@@ -638,7 +638,7 @@ public sealed class HomeAgentExecutionAdmissions : IAgentPermissionBroker, IChat
         var policy = string.IsNullOrWhiteSpace(invocation.Prepared.Definition.ModelPolicyJson) ? new AgentModelPolicy(true) :
             JsonSerializer.Deserialize<AgentModelPolicy>(invocation.Prepared.Definition.ModelPolicyJson, DenJson.Options) ?? throw Refused();
         var required = new HashSet<ToolCapability> { ToolCapability.Text };
-        foreach (var value in policy.RequiredCapabilities ?? [])
+        foreach (var value in policy.RequiredCapabilities ?? FrozenSet<string>.Empty)
             if (!Enum.TryParse<ToolCapability>(value, false, out var capability) || !Enum.IsDefined(capability) || capability.ToString() != value) return null;
             else required.Add(capability);
         var observations = await _models.GetModelsAsync(new ModelCataloguePolicy(AllowLocal: true, AllowRemote: false), token).ConfigureAwait(false);
@@ -782,6 +782,7 @@ public sealed class HomeAgentExecutionAdmissions : IAgentPermissionBroker, IChat
     {
         internal Task Task { get; set; } = Task.CompletedTask;
         internal CancellationToken OwnedToken;
+        internal CancellationToken Caller { get; init; }
     }
     private Task<T> RunAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken caller, bool originalSettlement = false)
     {
@@ -792,7 +793,7 @@ public sealed class HomeAgentExecutionAdmissions : IAgentPermissionBroker, IChat
             if (_closing) throw new ObjectDisposedException(nameof(HomeAgentExecutionAdmissions));
             foreach (var completed in _operations.Where(item => item.Value.Task.IsCompleted).Select(item => item.Key).ToArray())
                 _operations.Remove(completed);
-            var operation = new Operation();
+            var operation = new Operation { Caller = caller };
             original = RunOriginalOperationAsync(start.Task, operation, action, caller, originalSettlement);
             operation.Task = original;
             _operations.Add(Guid.NewGuid(), operation);
@@ -853,7 +854,7 @@ public sealed class HomeAgentExecutionAdmissions : IAgentPermissionBroker, IChat
         {
             try { await original.Task.ConfigureAwait(false); }
             catch (OperationCanceledException error) when (_hostLifetime.IsCancellationRequested &&
-                original.OwnedToken.IsCancellationRequested && error.CancellationToken == original.OwnedToken) { }
+                !original.Caller.IsCancellationRequested && original.OwnedToken.IsCancellationRequested && error.CancellationToken == original.OwnedToken) { }
             catch (Exception error) { AddFailure(errors, error); }
         }
         // Work admission is closed and every original body/cleanup has settled before private

@@ -54,7 +54,7 @@ public sealed class DenAgentRuntimeValidator(DulcheDen den, string namespaceId,
                 diagnostics.Add(new("UsageMeasurementUnavailable", "budget",
                     "The current Chat stream has no authoritative token/cost usage for enforcing this finite allowance."));
             var required = new HashSet<ToolCapability> { ToolCapability.Text };
-            foreach (var value in policy.RequiredCapabilities ?? [])
+            foreach (var value in policy.RequiredCapabilities ?? new HashSet<string>(StringComparer.Ordinal))
                 if (!Enum.TryParse<ToolCapability>(value, false, out var capability) || !Enum.IsDefined(capability) || capability.ToString() != value)
                     diagnostics.Add(new("UnknownModelCapability", value, "The required model feature is not an exact canonical ToolCapability."));
                 else required.Add(capability);
