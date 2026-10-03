@@ -93,8 +93,9 @@ checks passed 22/22 route tests and 28/28 account tests; the original account pr
 also confirm both repairs. Closure evidence is in [browser-review-update/](browser-review-update/).
 Original failure evidence remains in [final/](final/). This browser source depends
 on provisional Astra `a63d77f`, including shared CUI theme/font helpers absent from
-this branch. Incorporation, owning shared-source acknowledgement, published WASM
-artifacts and actual mounted-browser/provider acceptance remain pending.
+this branch. Team A1 subsequently acknowledged the maintained CUI font/theme API
+and exact Runtime dependency. Incorporating provisional shared source, published
+WASM artifacts and actual mounted-browser/provider acceptance remain pending.
 
 Team A acknowledged narrowly scoped Home identity and provider-stream edits and
 ownership of configured OIDC resource/response-envelope repairs. Home's isolated

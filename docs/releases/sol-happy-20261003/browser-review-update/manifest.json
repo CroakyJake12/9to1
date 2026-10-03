@@ -84,5 +84,10 @@
     "b-adapter-fixed-input-probe.mjs": "account-original-probes.mjs"
   },
   "aliasExplanation": "Independent review files preserve original bytes and original local basenames/paths; this mapping identifies the exact copied, hash-verified packaged artifacts.",
-  "independentPackagingReview": "C6 reviewed staged documentation/evidence at parent67e1419: six new artifacts tracked/hashes match; original19 unchanged; source ancestry and bounded closure claims verified. Alias mapping added to resolve preserved original basenames."
+  "independentPackagingReview": "C6 reviewed staged documentation/evidence at parent67e1419: six new artifacts tracked/hashes match; original19 unchanged; source ancestry and bounded closure claims verified. Alias mapping added to resolve preserved original basenames.",
+  "sharedApiOwnerAcknowledgement": {
+    "coordinationCommit": "5f945e3c18657ab8da8dd3f301c7da16e8521d7e",
+    "scope": "A1 ACK actuala63 CuiNativeHost.ConfigureFonts/InitialisePrimitiveTheme and exact Runtime dependency",
+    "qualification": "Source API ownership only; no browser build/WASM/ABI/mounted/provider acceptance or installed Home readiness"
+  }
 }
