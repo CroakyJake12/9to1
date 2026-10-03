@@ -1,0 +1,285 @@
+{
+  "deliveryHead": "eecadfc7463c944bcc6f9788075c293ab14120f9",
+  "receivingHead": "b15efce71eb0d778e0be50a1b996a9fcba05049c",
+  "baselineRegressionHead": "3b9452e1bc506e3f58797071b1eb3dac6a8a98e5",
+  "keyProposalHead": "2ee0365b7175a8b8dcf8160bc74185c9c887a5d9",
+  "driverProposalHead": "a93987b6d5286fed4e10bbdfda16f8f0cf763a6d",
+  "sdk": "10.0.401",
+  "workflowSdk": "10.0.301",
+  "fullOriginalDriver": "REFUSED_AT_TOOLCHAIN_EXECV_BARE_DOTNET_NO_BUILD_SUITE_PDB",
+  "runs": {
+    "before": {
+      "commands": [
+        {
+          "argv": [
+            "/workspace/.tools/dotnet/dotnet",
+            "build",
+            "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+            "--disable-build-servers",
+            "-m:1",
+            "-nr:false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseArtifactsOutput=true",
+            "-p:ArtifactsPath=/workspace/team-c/c3-admin-key-proposal/artifacts/accounts-partial",
+            "-p:IncludeProjectNameInArtifactsPaths=true",
+            "-p:Configuration=Debug"
+          ],
+          "exitCode": 0,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 48278,
+            "launcherStartTicks": "1162070"
+          }
+        },
+        {
+          "argv": [
+            "/workspace/.tools/dotnet/dotnet",
+            "/workspace/team-c/c3-admin-key-proposal/artifacts/accounts-partial/bin/Accounts.Specs/debug/Accounts.Specs.dll"
+          ],
+          "exitCode": -6,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 48508,
+            "launcherStartTicks": "1162840"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-before/build.log",
+          "bytes": 1285,
+          "sha256": "bd0bc4915b7ec12c35115f37229360f8e9fbbf0cdebe5abd64fc646767abaeb5"
+        },
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-before/run.log",
+          "bytes": 1623,
+          "sha256": "4ed967ab0f9f3f67f0e84c76901d76a35c8dc4851b0f7d3ef226b4b0fb9678f6"
+        }
+      ],
+      "allSealsDrained": true,
+      "allCleanupErrors": 0,
+      "qualification": "Actual full maintained Accounts.Specs project and assembly; partial gate, not owning Web/full Debug Release acceptance"
+    },
+    "after": {
+      "commands": [
+        {
+          "argv": [
+            "/workspace/.tools/dotnet/dotnet",
+            "build",
+            "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+            "--disable-build-servers",
+            "-m:1",
+            "-nr:false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseArtifactsOutput=true",
+            "-p:ArtifactsPath=/workspace/team-c/c3-admin-key-proposal/artifacts/accounts-partial",
+            "-p:IncludeProjectNameInArtifactsPaths=true",
+            "-p:Configuration=Debug"
+          ],
+          "exitCode": 0,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 48552,
+            "launcherStartTicks": "1164284"
+          }
+        },
+        {
+          "argv": [
+            "/workspace/.tools/dotnet/dotnet",
+            "/workspace/team-c/c3-admin-key-proposal/artifacts/accounts-partial/bin/Accounts.Specs/debug/Accounts.Specs.dll"
+          ],
+          "exitCode": 0,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 48628,
+            "launcherStartTicks": "1164902"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-after/build.log",
+          "bytes": 430,
+          "sha256": "aca1ff99a5d91c105d403fe004d265bf6a967bd8c771546a387d8cd7d43a96b5"
+        },
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-after/run.log",
+          "bytes": 554,
+          "sha256": "02ab8e1b64cab2db5b61bff455c2b93ae205dbc2159132faa2cf7f8be7381a03"
+        }
+      ],
+      "allSealsDrained": true,
+      "allCleanupErrors": 0,
+      "qualification": "Actual full maintained Accounts.Specs project and assembly; partial gate, not owning Web/full Debug Release acceptance"
+    },
+    "before-retained": {
+      "commands": [
+        {
+          "argv": [
+            "/workspace/.tools/dotnet/dotnet",
+            "build",
+            "9to1 Workspace/Accounts/Tests/Accounts.Specs.csproj",
+            "--disable-build-servers",
+            "-m:1",
+            "-nr:false",
+            "-p:UseSharedCompilation=false",
+            "-p:UseArtifactsOutput=true",
+            "-p:ArtifactsPath=/workspace/team-c/c3-admin-key-before/artifacts/accounts-partial",
+            "-p:IncludeProjectNameInArtifactsPaths=true",
+            "-p:Configuration=Debug"
+          ],
+          "exitCode": 0,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 48949,
+            "launcherStartTicks": "1174135"
+          }
+        },
+        {
+          "argv": [
+            "/workspace/.tools/dotnet/dotnet",
+            "/workspace/team-c/c3-admin-key-before/artifacts/accounts-partial/bin/Accounts.Specs/debug/Accounts.Specs.dll"
+          ],
+          "exitCode": -6,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 49011,
+            "launcherStartTicks": "1174748"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-before-retained/build.log",
+          "bytes": 607,
+          "sha256": "21cdba41d5a3f4b02fa1eefdf288a8ccd01fe13dcb48fc7008dcb3e666a90182"
+        },
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-before-retained/run.log",
+          "bytes": 1609,
+          "sha256": "b7d47bad7d771add753ffdf2d00c6175ed99aaad6e08d9c97a295c115267401e"
+        }
+      ],
+      "allSealsDrained": true,
+      "allCleanupErrors": 0,
+      "qualification": "Actual full maintained Accounts.Specs project and assembly; partial gate, not owning Web/full Debug Release acceptance"
+    },
+    "driver-guard": {
+      "commands": [
+        {
+          "argv": [
+            "dotnet",
+            "--info"
+          ],
+          "exitCode": 0,
+          "primary": null,
+          "cleanup": [],
+          "seal": {
+            "expectedManagedLaunch": true,
+            "drained": true,
+            "launcherPid": 49559,
+            "launcherStartTicks": "1183399"
+          }
+        }
+      ],
+      "logs": [
+        {
+          "path": "/workspace/team-c/evidence/c3/admin-sdk03/accounts-driver-guard/toolchain.log",
+          "bytes": 1376,
+          "sha256": "7260dd6965a9f7028a8d3b40f7222dcdbd462f1200eeeb553b42ea5afd19045b"
+        }
+      ],
+      "allSealsDrained": true,
+      "allCleanupErrors": 0,
+      "qualification": "Guard-only test"
+    }
+  },
+  "retentionQualification": "First before output was overwritten by after build; raw first failure retained. Exact baseline regression-only commit rerun in separate detached worktree before-retained preserves all actual compiled outputs and complete physical source/PDB proof. A source/PDB inventory assertion initially expected2copies but actual3copies includes library duplicate; all3 retained/verified. No original assertion weakened.",
+  "runtimeLimits": [
+    "No full corrected owning driver execution",
+    "No Web HTTP regression execution for key input",
+    "No actual HTTPS remote issuer/provider acceptance",
+    "No native UI/global release acceptance",
+    "SDK version parity not established"
+  ],
+  "testCountQualification": "No total unit/discovery count claimed. New original fixture executes 4 operations x4 controls; original scenarios/markers retained.",
+  "correctedFullDriverAttempt": {
+    "head": "640f63e08f83a2da6a28e3f370199438d0430003",
+    "status": "ACTUAL_WHOLE_SDK_WEB_REFUSED_OR_FAILED",
+    "exitCode": 1,
+    "commandsExecuted": 27,
+    "commandsExitedZero": 27,
+    "sessionSealsDrained": 26,
+    "failedCustodyCommand": {
+      "argv": [
+        "dotnet",
+        "build",
+        "9to1 Workspace/Web/Tests/Web.Specs.csproj",
+        "--no-restore",
+        "--disable-build-servers",
+        "-m:1",
+        "-nr:false",
+        "-p:UseSharedCompilation=false",
+        "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+        "-p:EnableWindowsTargeting=true",
+        "-p:Configuration=Debug",
+        "-p:UseArtifactsOutput=true",
+        "-p:ArtifactsPath=/workspace/team-c/c3-admin-driver-validation/artifacts/root14-managed-build",
+        "-p:IncludeProjectNameInArtifactsPaths=true",
+        "-p:RuntimeIdentifier=linux-x64",
+        "-p:RuntimeIdentifiers=linux-x64",
+        "-p:SelfContained=false",
+        "-p:AvaloniaBuildTasksLocation=/workspace/team-c/c3-admin-driver-validation/artifacts/root14-host-build-tasks/bin/Avalonia.Build.Tasks/debug/Avalonia.Build.Tasks.dll",
+        "-p:TargetFramework=net10.0"
+      ],
+      "cleanupTypes": [
+        "RuntimeError",
+        "RuntimeError"
+      ],
+      "creatorPidfdCaptured": true,
+      "exitCode": 0,
+      "extraEnvironment": {},
+      "log": "logs/debug-build-web.log",
+      "logBytes": 9101,
+      "logSha256": "eff2f4235fc9f2fc952c004c15019cab3beae3205ff87e79e049d371f0028d3b",
+      "name": "debug-build-web",
+      "originalSessionCaptured": true,
+      "primaryType": null,
+      "seal": {
+        "classification": "Original SDK metadata/build or complete console harness process",
+        "drained": false,
+        "expectedManagedLaunch": true
+      },
+      "seconds": 166.07220509500075
+    },
+    "completeConfigurations": [],
+    "suitesExecuted": 0,
+    "fullDriverPdbPhaseReached": false,
+    "retainedPhysicalOutputFiles": 2328,
+    "retainedPhysicalOutputBytes": 496209837,
+    "orphanZombieStat": "52449 (MSBuild) Z 1 51587 51587 0 -1 4227340 75334 0 0 0 517 21 0 0 20 0 1 0 1237845 0 0 18446744073709551615 0 0 0 0 0 0 0 16781312 148734 0 0 0 17 2 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
+    "qualification": "Physical Debug outputs retained after original drain refusal; no reinterpretation as full source/PDB/runtime acceptance. Evidence output retention external to original driver256MiB bound; original failure receipt/budget unchanged."
+  },
+  "independentReviews": {
+    "C1": "Bounded key source every-diff-line ACK; full corrected receiving cut9453blobs22links3deps ACK",
+    "C5": "Exactsoleexecv\u2192execvp bytes ACK; all31keytestadditionlines/sourcefix ACK; independently physicalDLL/PDB identities/all59documenthashes in before-retained and after verified; no independent rerun or fullacceptance"
+  }
+}
