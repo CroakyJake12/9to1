@@ -7,6 +7,24 @@ namespace HavenOS.Home.Tests;
 
 public sealed class HomeNativeWidgetRegistryTests
 {
+    [Fact]
+    public void Surface_rejects_large_raw_values_before_copying_and_detaches_accepted_data()
+    {
+        var reference = new HomeNativeWidgetReference("clock", Guid.NewGuid(), "signed", "clock", "revision1");
+        using var small = JsonDocument.Parse("{\"value\":\"original\"}");
+        var accepted = HomeNativeWidgetSurface.Capture(reference, "clock.surface.v1", "<Text />",
+            new Dictionary<string, JsonElement> { ["value"] = small.RootElement.GetProperty("value") });
+        using var large = JsonDocument.Parse(JsonSerializer.Serialize(new string('x', 4 * 1024 * 1024)));
+        var input = new Dictionary<string, JsonElement> { ["value"] = large.RootElement };
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        Assert.Throws<InvalidDataException>(() => HomeNativeWidgetSurface.Capture(reference,
+            "clock.surface.v1", "<Text />", input));
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        Assert.True(allocated < 1024 * 1024, $"Rejected raw data allocated {allocated} bytes during capture.");
+        small.Dispose();
+        Assert.Equal("original", accepted.Data["value"].GetString());
+    }
+
     private static readonly HomeNativeObservedPeer Observed = new(123, "unix-euid:1000");
     private static HomeNativeWidgetDefinition Definition() => new("clock", "revision1", "Clock", new(1, 1), new(2, 2),
         new(4, 4), "clock.configuration.v1", "clock.surface.v1", HomeNativeWidgetUpdateMode.Event, null,
@@ -181,6 +199,127 @@ public sealed class HomeNativeWidgetRegistryTests
         Assert.Null(await capture);
     }
 
+    [Fact]
+    public async Task Actual_Home_original_actor_retirement_denies_before_any_controlled_owner_resource_or_endpoint_observation()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "widget-original-home-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var path = Path.Combine(root, "home.json"); var ct = TestContext.Current.CancellationToken;
+        try
+        {
+            var home = new FileHomeCoreStateStore(path); var actors = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+            var original = (await actors.GetCurrentAsync(ct))!; var verifier = new Verifier(); var resolver = new Resolver();
+            var endpoint = new RuntimeEndpoint(); var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [resolver]));
+            using var registered = await registry.RegisterRuntimeAsync(Observed, [Definition()], endpoint, ct); Assert.NotNull(registered);
+            var reference = Assert.Single(await registry.ListForActorAsync(original, ct)).Reference;
+            await ReplaceActualProfileAsync(home, ct); var before = await File.ReadAllBytesAsync(path, ct);
+            var ownerCalls = verifier.Calls; var resourceCalls = resolver.Calls;
+            Assert.Null(await registry.ResolveForActorAsync(reference, original, ct));
+            Assert.Empty(await registry.ListForActorAsync(original, ct));
+            Assert.Null(await registry.CaptureAsync(reference, original, new(2, 2), 200, 150, ct));
+            Assert.Equal(ownerCalls, verifier.Calls); Assert.Equal(resourceCalls, resolver.Calls); Assert.Equal(0, endpoint.Calls);
+            Assert.Equal(before, await File.ReadAllBytesAsync(path, ct));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Actual_Home_actor_change_during_controlled_owner_verification_cannot_read_resources_or_rebind_original_definition()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "widget-original-home-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var path = Path.Combine(root, "home.json"); var ct = TestContext.Current.CancellationToken;
+        try
+        {
+            var home = new FileHomeCoreStateStore(path); var actors = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+            var original = (await actors.GetCurrentAsync(ct))!; var verifier = new Verifier(); var resolver = new Resolver();
+            var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [resolver]));
+            using var registered = await registry.RegisterAsync(Observed, [Definition()], ct); Assert.NotNull(registered);
+            var reference = Assert.Single(await registry.ListForActorAsync(original, ct)).Reference; var resourceCalls = resolver.Calls;
+            verifier.OnVerify = () => { verifier.OnVerify = null; ReplaceActualProfileAsync(home, ct).GetAwaiter().GetResult(); };
+            Assert.Null(await registry.ResolveForActorAsync(reference, original, ct));
+            Assert.Equal(resourceCalls, resolver.Calls);
+            var changed = await actors.GetCurrentAsync(ct); Assert.NotEqual(original, changed);
+            Assert.Null(await registry.ResolveForActorAsync(reference, changed!, ct)); // The original entry cannot be adopted by the replacement profile.
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Original_registration_actor_is_checked_before_verifier_and_cannot_rebind_after_retirement()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "widget-register-original-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var path = Path.Combine(root, "home.json"); var ct = TestContext.Current.CancellationToken;
+        try
+        {
+            var home = new FileHomeCoreStateStore(path); var actors = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+            var original = (await actors.GetCurrentAsync(ct))!; var verifier = new Verifier(); var endpoint = new RuntimeEndpoint();
+            var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [new Resolver()]));
+            await ReplaceActualProfileAsync(home, ct); var before = await File.ReadAllBytesAsync(path, ct);
+            Assert.Null(await registry.RegisterRuntimeForActorAsync(Observed, [Definition()], endpoint, original, ct));
+            Assert.Null(await registry.RegisterForActorAsync(Observed, [Definition()], original, ct));
+            Assert.Equal(0, verifier.Calls); Assert.Equal(0, endpoint.Calls);
+            Assert.Equal(before, await File.ReadAllBytesAsync(path, ct));
+            Assert.Empty(await registry.ListAsync(ct));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Actual_profile_change_during_original_registration_verification_never_publishes_under_replacement()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "widget-register-during-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var path = Path.Combine(root, "home.json"); var ct = TestContext.Current.CancellationToken;
+        try
+        {
+            var home = new FileHomeCoreStateStore(path); var actors = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+            var original = (await actors.GetCurrentAsync(ct))!; var verifier = new Verifier(); var endpoint = new RuntimeEndpoint();
+            var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [new Resolver()]));
+            verifier.OnVerify = () => { verifier.OnVerify = null; ReplaceActualProfileAsync(home, ct).GetAwaiter().GetResult(); };
+            Assert.Null(await registry.RegisterRuntimeForActorAsync(Observed, [Definition()], endpoint, original, ct));
+            Assert.Equal(1, verifier.Calls); Assert.Equal(0, endpoint.Calls);
+            Assert.Empty(await registry.ListAsync(ct)); var replacement = (await actors.GetCurrentAsync(ct))!;
+            Assert.NotEqual(original, replacement);
+            using var admitted = await registry.RegisterRuntimeForActorAsync(Observed, [Definition()], endpoint, replacement, ct);
+            Assert.NotNull(admitted); Assert.Single(await registry.ListForActorAsync(replacement, ct));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Missing_original_peer_verifier_denies_without_legacy_observation_or_registration()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "widget-missing-original-verifier-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); var path = Path.Combine(root, "home.json"); var ct = TestContext.Current.CancellationToken;
+        try
+        {
+            var home = new FileHomeCoreStateStore(path); var actors = new HomeLocalProfileIdentity(home, new OperatingSystemPrincipalSource());
+            var original = (await actors.GetCurrentAsync(ct))!; var before = await File.ReadAllBytesAsync(path, ct);
+            var verifier = new LegacyOnlyVerifier(); var endpoint = new RuntimeEndpoint();
+            var registry = new HomeNativeWidgetRegistry(verifier, actors, new(actors, [new Resolver()]));
+            Assert.Null(await registry.RegisterRuntimeForActorAsync(Observed, [Definition()], endpoint, original, ct));
+            Assert.Null(await registry.RegisterAsync(Observed, [Definition()], ct));
+            Assert.Empty(await registry.ListForActorAsync(original, ct));
+            Assert.Equal(0, verifier.Calls); Assert.Equal(0, endpoint.Calls);
+            Assert.Equal(before, await File.ReadAllBytesAsync(path, ct));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+    private sealed class LegacyOnlyVerifier : IHomeNativeInstalledPeerVerifier
+    {
+        public int Calls;
+        public ValueTask<HomeNativeInstalledPeer?> VerifyAsync(HomeNativeObservedPeer observed, CancellationToken ct)
+        { Calls++; return ValueTask.FromResult<HomeNativeInstalledPeer?>(null); }
+    }
+
+    private static async Task ReplaceActualProfileAsync(FileHomeCoreStateStore home, CancellationToken ct)
+    {
+        var state = await home.ReadAsync(ct); Assert.True(state.IsSuccess);
+        var record = Assert.Single(state.State!.Records, record => record.RecordId == "home.local-profile");
+        var profile = record.Payload.Deserialize<HomeLocalProfile>()!;
+        var written = await home.WriteAsync(record with { Revision = record.Revision + 1,
+            Payload = JsonSerializer.SerializeToElement(profile with { ProfileId = Guid.NewGuid() }) }, record.Revision, ct);
+        Assert.True(written.IsSuccess);
+    }
+
     private sealed class RuntimeEndpoint : IHomeNativeWidgetRuntimeEndpoint
     {
         public int Calls;
@@ -204,24 +343,26 @@ public sealed class HomeNativeWidgetRegistryTests
         public AuthenticatedResourceActor Current = new("actor", "profile", null, null, "session");
         public ValueTask<AuthenticatedResourceActor?> GetCurrentAsync(CancellationToken ct) => ValueTask.FromResult<AuthenticatedResourceActor?>(Current);
     }
-    private sealed class Verifier : IHomeNativeInstalledPeerVerifier
+    private sealed class Verifier : IHomeNativeInstalledPeerOriginalActorVerifier
     {
         public HomeNativeInstalledPeer Owner = new("clock", Guid.NewGuid(), "install-r1", "exact-executable",
             new HashSet<string> { HomeNativeWidgetRegistry.ServiceId });
-        public Action? OnVerify;
+        public Action? OnVerify; public int Calls;
+        public ValueTask<HomeNativeInstalledPeer?> VerifyForActorAsync(HomeNativeObservedPeer observed,
+            AuthenticatedResourceActor expectedActor, CancellationToken ct) => VerifyAsync(observed, ct); // Controlled protocol fixture only.
         public ValueTask<HomeNativeInstalledPeer?> VerifyAsync(HomeNativeObservedPeer observed, CancellationToken ct)
         {
-            OnVerify?.Invoke();
+            Calls++; OnVerify?.Invoke();
             return ValueTask.FromResult<HomeNativeInstalledPeer?>(observed == Observed ? Owner : null);
         }
     }
     private sealed class Resolver : ICanonicalResourceAccessResolver
     {
         public string ResourceKind => "fixture.clock";
-        public bool Allowed = true; public string Revision = "r1"; public Action? OnRead;
+        public bool Allowed = true; public string Revision = "r1"; public Action? OnRead; public int Calls;
         public ValueTask<ResourceAccessDecision> EvaluateAsync(AuthenticatedResourceActor actor, string actionId, ResourceScope scope, CancellationToken ct)
         {
-            OnRead?.Invoke();
+            Calls++; OnRead?.Invoke();
             return ValueTask.FromResult(new ResourceAccessDecision(Allowed && actionId == HomeNativeWidgetRegistry.RenderActionId,
                 "fixture", actor.ActorId, Revision, actor.OrganisationId));
         }
