@@ -21,7 +21,38 @@ public static class OrganisationRoleAndJobSpecs
         RunCase(ConcurrentRoleMutationHasOneCanonicalWinner);
         RunCase(CompletedSaveRetiresPayloadWithoutReplayingOriginal);
         RunCase(ActualSerializationRetiresPayloadAfterKnownCommit);
+        RunCase(ControlCharacterKeysRefusedBeforePersistence);
+        Console.WriteLine("PASS: Admin control-character request keys rejected before persistence and restart");
         Console.WriteLine("PASS: canonical Admin roles, bounded original export jobs, current sessions and terminal custody (12 scenarios)");
+    }
+
+    private static void ControlCharacterKeysRefusedBeforePersistence(Fixture f)
+    {
+        var org = f.Current;
+        org = f.Service.CreateRole(f.Owner, f.OrgID, org.Revision, "control-key-unused-role", "Unused control-key role",
+            Set("Admin.Organisations.Get"), Set());
+        var unusedID = org.Roles.Single(role => role.Name == "Unused control-key role").RoleID;
+        var pending = f.Admit(actor => f.Service.RequestOrganisationExport(actor, f.OrgID, org.Revision,
+            "control-key-pending-export"));
+        foreach (var control in new[] { '\r', '\n', '\t', '\0' })
+        {
+            var key = "valid" + control + "key";
+            void Refused(Action original)
+            {
+                var bytes = f.StateBytes;
+                Throws<ArgumentException>(original);
+                Check(f.StateBytes.SequenceEqual(bytes), "invalid key refuses before any canonical state or audit write");
+                var restart = f.Restart();
+                Check(restart.Get(f.Owner, f.OrgID).Revision == org.Revision &&
+                    restart.GetAdminJob(f.Owner, f.OrgID, pending.JobID).State == AdminJobState.Pending &&
+                    f.StateBytes.SequenceEqual(bytes), "exact original organisation and pending job remain readable after restart");
+            }
+            Refused(() => f.Admit(actor => f.Service.UpdateRole(actor, f.OrgID, f.RoleID, org.Revision,
+                key, "Refused role name", Set("Admin.Organisations.Get"), Set())));
+            Refused(() => f.Admit(actor => f.Service.DeleteRole(actor, f.OrgID, unusedID, org.Revision, key)));
+            Refused(() => f.Admit(actor => f.Service.RequestOrganisationExport(actor, f.OrgID, org.Revision, key)));
+            Refused(() => f.Admit(actor => f.Service.CancelAdminJob(actor, f.OrgID, pending.JobID, pending.Revision, key)));
+        }
     }
 
     private static void RoleMutationReplayRestartAndDelegation(Fixture f)
