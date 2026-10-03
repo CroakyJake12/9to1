@@ -1,0 +1,36 @@
+{
+  "project": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+  "argv": [
+    "dotnet",
+    "msbuild",
+    "/home/runner/work/9to1/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj",
+    "-nologo",
+    "-m:1",
+    "-nr:false",
+    "-p:Configuration=Release",
+    "-p:TargetFramework=net10.0",
+    "-p:RuntimeIdentifier=linux-x64",
+    "-p:RuntimeIdentifiers=linux-x64",
+    "-p:SelfContained=false",
+    "-p:EnableWindowsTargeting=true",
+    "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+    "-p:UseSharedCompilation=false",
+    "-p:UseArtifactsOutput=true",
+    "-p:ArtifactsPath=/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build",
+    "-p:IncludeProjectNameInArtifactsPaths=true",
+    "-p:AvaloniaBuildTasksLocation=/home/runner/work/9to1/9to1/artifacts/canvas65-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+    "-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath"
+  ],
+  "cwd": "/home/runner/work/9to1/9to1",
+  "exitCode": 0,
+  "stdout": "{\n  \"Properties\": {\n    \"MSBuildProjectFullPath\": \"/home/runner/work/9to1/9to1/9to1 Workspace/shared/tests/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj\",\n    \"MSBuildProjectName\": \"Haven.Desktop.Tests\",\n    \"MSBuildProjectFile\": \"Haven.Desktop.Tests.csproj\",\n    \"Configuration\": \"Release\",\n    \"Platform\": \"x64\",\n    \"TargetFramework\": \"net10.0\",\n    \"RuntimeIdentifier\": \"linux-x64\",\n    \"MSBuildProjectExtensionsPath\": \"/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Haven.Desktop.Tests/\",\n    \"ProjectAssetsFile\": \"/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Haven.Desktop.Tests/project.assets.json\",\n    \"RestoreOutputPath\": \"/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Haven.Desktop.Tests/\"\n  }\n}\n",
+  "stderr": "",
+  "resolved": {
+    "extensions": "/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Haven.Desktop.Tests",
+    "assets": "/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Haven.Desktop.Tests/project.assets.json",
+    "dgspec": "/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Haven.Desktop.Tests/Haven.Desktop.Tests.csproj.nuget.dgspec.json",
+    "assetsExists": true,
+    "dgspecExists": true,
+    "authoritativeRestoredSpec": null
+  }
+}

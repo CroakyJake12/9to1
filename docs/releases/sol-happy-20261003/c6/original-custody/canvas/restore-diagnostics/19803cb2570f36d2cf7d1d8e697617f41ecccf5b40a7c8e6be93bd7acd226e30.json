@@ -1,0 +1,36 @@
+{
+  "project": "framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+  "argv": [
+    "dotnet",
+    "msbuild",
+    "/home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj",
+    "-nologo",
+    "-m:1",
+    "-nr:false",
+    "-p:Configuration=Release",
+    "-p:TargetFramework=netstandard2.0",
+    "-p:RuntimeIdentifier=linux-x64",
+    "-p:RuntimeIdentifiers=linux-x64",
+    "-p:SelfContained=false",
+    "-p:EnableWindowsTargeting=true",
+    "-p:AvsSkipBuildingLegacyTargetFrameworks=True",
+    "-p:UseSharedCompilation=false",
+    "-p:UseArtifactsOutput=true",
+    "-p:ArtifactsPath=/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build",
+    "-p:IncludeProjectNameInArtifactsPaths=true",
+    "-p:AvaloniaBuildTasksLocation=/home/runner/work/9to1/9to1/artifacts/canvas65-host-build-tasks/bin/Avalonia.Build.Tasks/release/Avalonia.Build.Tasks.dll",
+    "-getProperty:MSBuildProjectFullPath,MSBuildProjectName,MSBuildProjectFile,Configuration,Platform,TargetFramework,RuntimeIdentifier,MSBuildProjectExtensionsPath,ProjectAssetsFile,RestoreOutputPath"
+  ],
+  "cwd": "/home/runner/work/9to1/9to1",
+  "exitCode": 0,
+  "stdout": "{\n  \"Properties\": {\n    \"MSBuildProjectFullPath\": \"/home/runner/work/9to1/9to1/framework/CUI/vendor/Avalonia/src/tools/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj\",\n    \"MSBuildProjectName\": \"Avalonia.Analyzers.CSharp\",\n    \"MSBuildProjectFile\": \"Avalonia.Analyzers.CSharp.csproj\",\n    \"Configuration\": \"Release\",\n    \"Platform\": \"AnyCPU\",\n    \"TargetFramework\": \"netstandard2.0\",\n    \"RuntimeIdentifier\": \"linux-x64\",\n    \"MSBuildProjectExtensionsPath\": \"/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Avalonia.Analyzers.CSharp/\",\n    \"ProjectAssetsFile\": \"/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Avalonia.Analyzers.CSharp/project.assets.json\",\n    \"RestoreOutputPath\": \"/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Avalonia.Analyzers.CSharp/\"\n  }\n}\n",
+  "stderr": "",
+  "resolved": {
+    "extensions": "/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Avalonia.Analyzers.CSharp",
+    "assets": "/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Avalonia.Analyzers.CSharp/project.assets.json",
+    "dgspec": "/home/runner/work/9to1/9to1/artifacts/canvas65-managed-build/obj/Avalonia.Analyzers.CSharp/Avalonia.Analyzers.CSharp.csproj.nuget.dgspec.json",
+    "assetsExists": true,
+    "dgspecExists": true,
+    "authoritativeRestoredSpec": null
+  }
+}
