@@ -182,8 +182,8 @@ The full maintained Accounts assembly passes with the original checks and 16
 new operation/control cases, while the exact original-source regression fails.
 Actual before/fixed outputs and source/PDB proofs are retained. This is bounded
 local Accounts evidence, with no Web HTTP, provider or whole-product acceptance.
-The key and launcher fixes remain isolated proposals awaiting source-owner
-acknowledgement and integration. Installed SDK 10.0.401 differs from the workflow's
+The key and launcher fixes now have exact qualified source-owner acknowledgement,
+with original peer bytes and source hashes verified; integration remains pending. Installed SDK 10.0.401 differs from the workflow's
 10.0.301. The separately reviewed owned-child reaping correction then passed all
 33 commands and strict drains in [attempt 3](evidence/c3-admin-attempt3/README.md).
 That run entered the original source/PDB phase and refused the actual build-task
@@ -205,7 +205,11 @@ It then refused the legitimate Avalonia.Base generated-output directory, which
 the new tooling guard incorrectly required beneath a configuration-specific
 intermediate directory. Its actual project declares generated files under the
 same isolated per-project base directory. Web and Release remain NOT_RUN; a
-bounded path-provenance correction is being reviewed. No empty-input exemption,
+path-provenance correction passed ten independent controls with all 2,480
+outputs unchanged. The next complete receiving map at `4472a4fd` is verified,
+but root has issued no execution pin: fresh owner review identifies two
+exception-preservation/acquisition-cleanup issues in the subreaper helper and
+its controls. Those are being corrected in isolation. No empty-input exemption,
 invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
@@ -251,8 +255,9 @@ absent from Chromium's accessibility tree. The [independent headless followup](c
 materialized the exact maintained dependencies and repeated the same compiled
 eight-check harness: the canonical layout fails all eight; the two-line grouping
 proposal passes all eight. Five actual PE/PDB pairs and 543 document hashes match.
-Owner source adoption and mounted proposal/browser acceptance remain pending;
-mouse success and headless layout do not close the accessibility failures.
+A1 now gives exact qualified source-owner acknowledgement for the two-line
+authoring proposal, with nine source pins checked. Source adoption and mounted
+proposal/browser acceptance remain pending; mouse success and headless layout do not close the accessibility failures.
 
 New delivered browser source `43669e20` and serialization followup `8b4f2a0c`
 received bounded [online/privacy boundary review](C5-team-b-browser-boundary-review.md)
@@ -264,6 +269,18 @@ NOT_RUN. Those newer runtime results are not independently reproduced here. The
 actual input race involves deferred shared-CUI writeback and requires A1 review;
 browser focus remains B-owned and retained Write measurement remains A2-owned.
 Historical 83 results above remain tied to their original bytes.
+
+The [account cleanup review](../../../handoff/team-c/browser-account-review/README.md)
+reproduces a throwing-cancellation defect on exact `8b4f2a0c`: disposal aborts
+before clearing account/profile/private drafts in that disposed instance. C1
+independently repeats the expected failing source-linked control; there is no
+cross-account disclosure or live-provider claim. The 33 Node controls separately
+pass. B owns the exception-safe cleanup correction and configured browser
+composition: the published source supplies no account client or sign-in callback.
+Actual maintained public discovery/JWKS responses also lack required CORS for
+the HTTPS fixture client; C2 is testing a path-specific backend correction with
+unchanged provider login-cookie/CSRF and token/session checks. These are concrete
+local owner seams, with no inference that staging prevents independent work.
 
 The reusable maintained Worker fixture is now source-bound at
 `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on
@@ -316,13 +333,22 @@ no production authority or deadline. The [bounded owner map](semantic/c4-lunar-e
 records 25 action/test groups as NOT_RUN, with no full atomic denominator or old
 runtime relabelling. LE-12 requires versioned owner schemas before consumers.
 
+Final atomic revision `AHj4eMRlJQKiuc-c9PE2iy5Ef4mCKdyedYC1ztwlD4EgT_JxTSbeQAbVokwk0F-OqzTH9xvLygcjKhDRAuLvjKfuDAUPmN44bQSAJSNnFNI`
+has byte-identical full text to the 21:04 snapshot: 1,383,780 bytes with SHA-256
+`a48cf720b257d16aca1feed8d8a95915759b78cf8a2d2d91fd82b0d31977914c`.
+The [continuity receipt](specification-update-2104/final-revision-continuity.json)
+records both revisions without inferring why the revision changed.
+
 The [usage and placement catalogue review](semantic/c5-le06-le07-owner-catalogue.md)
 binds actual allocation, accounting, quota and metric declarations. These do not
 yet supply the acknowledged operation combining paid entitlement, strictly more
 than 10,000,000,000 allocated bytes, separate storage reservation, revocation and
 transfer/local-copy preservation. That dependent hook remains blocked; no private
-ledger or guessed policy was created. Files mutation custody also still requires
-the owner-defined async session/store lease contract.
+ledger or guessed policy was created. The [A4 Files source successor](semantic/c4-files-folder-a4-source-successor.md)
+clears guarded-overload/source-delivery holds, preserving conditional B wire ACK.
+Files mutation custody still requires the owner-defined async current-session
+lifetime, lease order and read/publication authority. All twelve transport
+procedures remain NOT_RUN.
 
 These clause counts are not requirement counts. The prior hosted scoped maps
 contain 228 semantic records and zero VERIFIED results; they overlap inherited
