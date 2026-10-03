@@ -28,7 +28,7 @@ for n, text in enumerate(source.decode().splitlines(), 1):
     rows.append(dict(id=f"SRC-L{n:05}", source_line=n, source_text=text,
         source_sha256=hashlib.sha256(source).hexdigest(), source_revision=revision["revisionId"],
         section_context=section, normative_levels=levels, tags=tags,
-        requirement_state="BLOCKED", blocker="Unmapped source clause; semantic decomposition and behavioural evidence pending",
+        requirement_state=None, coverage_state="UNMAPPED", blocker="Unmapped source clause; semantic decomposition and behavioural evidence pending",
         owner=owner, ownership_confirmed=False, platforms=[], platform_mapping="UNMAPPED",
         tests=[], test_mapping="UNMAPPED", applicability="UNRESOLVED-INCLUDED",
         exception_basis=None, semantic_review="PENDING"))
@@ -39,7 +39,8 @@ summary=dict(source_revision=revision["revisionId"], source_sha256=hashlib.sha25
     normative_keyword_clauses=sum(bool(x["normative_levels"]) for x in rows),
     nonkeyword_clauses=sum(not x["normative_levels"] for x in rows),
     acceptance_tagged_clauses=sum("acceptance" in x["tags"] for x in rows),
-    states={"VERIFIED":0,"IMPLEMENTED-UNVERIFIED":0,"MISSING":0,"BLOCKED":len(rows)},
+    states={"VERIFIED":0,"IMPLEMENTED-UNVERIFIED":0,"MISSING":0,"BLOCKED":0},
+    classified_requirement_gates=0, unresolved_source_clauses=len(rows),
     unmapped_clauses=len(rows), semantic_review_complete=False,
     warning="Source-clause superset, not a fully decomposed requirement/platform denominator. All list items, examples and table cells retained; no exclusions inferred.")
 (out/"coverage-summary.json").write_text(json.dumps(summary, indent=2)+"\n")

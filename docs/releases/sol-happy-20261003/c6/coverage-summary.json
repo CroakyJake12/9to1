@@ -10,8 +10,10 @@
     "VERIFIED": 0,
     "IMPLEMENTED-UNVERIFIED": 0,
     "MISSING": 0,
-    "BLOCKED": 8344
+    "BLOCKED": 0
   },
+  "classified_requirement_gates": 0,
+  "unresolved_source_clauses": 8344,
   "unmapped_clauses": 8344,
   "semantic_review_complete": false,
   "warning": "Source-clause superset, not a fully decomposed requirement/platform denominator. All list items, examples and table cells retained; no exclusions inferred."
