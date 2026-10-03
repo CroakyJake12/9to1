@@ -192,7 +192,7 @@
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WindowsMonologueOriginalPlaybackTests.cs",
       "namespace": "Haven.Desktop.Tests",
       "class": "WindowsMonologueOriginalPlaybackTests",
-      "sha256": "e6c6b3a6490a74b8334b24f0d2a2148f7eaaf1db5139aec49b033b4577700a83"
+      "sha256": "5dde0a486d183deae1d881042b8313941e0fe0770719d5c26465eda1a2322466"
     }
   ],
   "dependencyPins": [
@@ -270,7 +270,7 @@
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs",
-      "sha256": "68c07ce282c416810455db044f3ea34c2dc7e083eed71a9948049ef6b00e3129"
+      "sha256": "809afa5f6ba560bb03b69fed6b1647ad05322bb4fab439cd4b8523fe3612d295"
     }
   ],
   "ownerManifestSha256": "0779190329b06619c9d89d51348b267291970752d832ad29930ad4a158a0c8f6",

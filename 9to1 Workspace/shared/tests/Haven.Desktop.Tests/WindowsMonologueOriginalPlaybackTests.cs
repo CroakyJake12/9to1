@@ -39,6 +39,15 @@ public sealed class WindowsMonologueOriginalPlaybackTests
             var originalId = original.PlaybackId; var bytes = await File.ReadAllBytesAsync(Path.Combine(root, "settings.json"), ct);
             using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(ct);
             store.HoldNext = true; pending = original.PauseAsync(cancellation.Token);
+            // A real native failure/refusal before CAS must be observed directly;
+            // waiting only for the physical writer would hide it behind the deadline.
+            await Task.WhenAny(store.Entered.Task, pending).WaitAsync(ct);
+            if (!store.Entered.Task.IsCompleted)
+            {
+                if (original.Completion.IsCompleted) await original.Completion;
+                var early = await pending;
+                throw new InvalidOperationException("The original pause completed before entering physical CAS: " + early.Error?.Message);
+            }
             await store.Entered.Task.WaitAsync(ct);
             var acknowledged = original.PendingCheckpoint; Assert.NotNull(acknowledged);
             Assert.Equal(originalId, acknowledged!.PlaybackId); Assert.True(acknowledged.IsPaused);

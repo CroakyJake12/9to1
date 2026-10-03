@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "618bfa815bf160bc98cc0ace91af412731ba120d",
-  "programTree": "553ff65df3d03c04166d77b28bcd40f9bab5a209",
+  "baselineCommit": "b92f24bd180a76e662838d6f561c01803ad4b46b",
+  "programTree": "54a2bdb24c69defd62aee9b7e14e2c6d74160011",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
@@ -71,9 +71,9 @@
     {
       "path": ".github/scripts/astra-windows-installed-voice-preflight.ps1",
       "mode": "100644",
-      "object": "4ea85a6602773f435c01b8d7db8a92f9b81ea9a0",
-      "bytes": 966,
-      "sha256": "8f7c992a2ea702739d05926e0a1a1d54147afdc6ecd83d3dd01040068050ad80"
+      "object": "aabbb0d9c1a5c5af441da6666949bbc8b1c2c0ae",
+      "bytes": 2132,
+      "sha256": "48b9ee2204f5161710c2a66b6f8ff770cc17ad9b0027ec49357bbc0fe15cc29d"
     },
     {
       "path": ".github/scripts/haven-android-smoke.sh",
@@ -85,9 +85,9 @@
     {
       "path": ".github/validation/astra-models-vision-owning-classes.json",
       "mode": "100644",
-      "object": "3ff083f54d65c27ec3e55e4ae9788b4ee33efae8",
+      "object": "3560fe5e9ec61918de38dcae2bcb37348a80dad5",
       "bytes": 13370,
-      "sha256": "ad7b6675715dbdca84979d351da89fadb3e908d025ca8a277e20f7a069341795"
+      "sha256": "ad24fb218b4abe65f73eca4e2a877b3c1472fb5cd87f7e6ee8cbfb4ab34b23bd"
     },
     {
       "path": ".github/validation/astra-models-vision-regression-classes.json",
@@ -33405,9 +33405,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/WindowsNaturalSpeechOutputService.cs",
       "mode": "100644",
-      "object": "7b02436634a886e41087e15b9bd5910e8813c912",
-      "bytes": 21895,
-      "sha256": "68c07ce282c416810455db044f3ea34c2dc7e083eed71a9948049ef6b00e3129"
+      "object": "8ddad7a64cc6b2db663d758c4d8e8da37c13ec89",
+      "bytes": 22373,
+      "sha256": "809afa5f6ba560bb03b69fed6b1647ad05322bb4fab439cd4b8523fe3612d295"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/WorkspaceSessionCoordinator.cs",
@@ -40636,9 +40636,9 @@
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WindowsMonologueOriginalPlaybackTests.cs",
       "mode": "100644",
-      "object": "952da494dee71a866ee8558a7d870d9fb5aa8234",
-      "bytes": 7247,
-      "sha256": "e6c6b3a6490a74b8334b24f0d2a2148f7eaaf1db5139aec49b033b4577700a83"
+      "object": "38de1401f38c47c44c7f3a11a3585f5fbcd432f0",
+      "bytes": 7831,
+      "sha256": "5dde0a486d183deae1d881042b8313941e0fe0770719d5c26465eda1a2322466"
     },
     {
       "path": "9to1 Workspace/shared/tests/Haven.Desktop.Tests/WindowsOriginalSpeechContinuationTests.cs",
@@ -65704,7 +65704,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-models-vision-cut.json",
-  "limits": "Fresh current20 24-owner source composition preserving all current outside owned paths. Retains accepted21 Models/Vision/Monologue whole classes and all requested actual Call/controller/repository families, deduplicated by source declaration. Whole prior regression/resource checks retained with current20 source hashes. Portable net10.0 denies HAVEN_WINDOWS_DESKTOP after actual SDK query; dedicated actual Windows SDK/installed voice lane with conditional test-project symbol and whole four speech probes plus physical playback probe remains mandatory and separate. No conditional-exclusion audio claim, cloud production change, default host activation or historical tree replay. All source/restore-before-after/compiled/task/PDB/zeroSkip guards inherited; full fresh three jobs required. Dedicated actual Windows2025 win-x64 owning lane retains all five prior Core/Home/Infrastructure/Desktop/Application cohorts and adds both whole native classes/five exact Passed methods. Actual Windows target/symbol/sourcebuilt tasks/compiled DLL PDB/restore beforeafter/voice inventory mandatory. Linux portable05 and complete current regression/resource remain independently mandatory, tables preserved here without claiming execution. Exact corrected receipt issuer selected. No fake voice, skip, audio-output ACK or installed-user grant. Workflow branch admits exactly one Windows job; original Ubuntu models-prefix job unchanged. Exact maintained Files/Picture multipart splitter byte-identical, all original Windows evidence payloads retained in <=26MiB stored inner bundles and index, each outer upload below connector32MiB bound, bounded12parts; no payload/source/test change. Original01 preserved unselected. Exact actual Windows02 failed before runtime at strict cut SHA admission. Disposable Windows runner Git core.autocrlf=false/core.eol=lf BEFORE checkout preserves exact immutable Git/cut bytes, no digest normalization or source guard relaxation. Postcheckout actual raw SHA/Gitblob/config diagnostics retained before unchanged runner. Products/32ownclasses/native5/script/helper/voice/multipart unchanged. Portable05 actual9Desktop failures remain separate source diagnosis; this metadata diagnostic does not infer native or broader runtime success. Exact actual Mono05 ninefail source corrections:4peer-cleared files only, real requested activationCAS before unchanged nativeStart; genuine page setup observation; bothwholefixtures retain original Fact-entry token across dispatcher. ReceiptIssuer ac2d unchanged, allold30portable/32Windows plus12/36 classes preserved; owningtable solely2testsourceSHA repins. Windows adds retained03 byte-checkout metadata to avoid separate known-failing startup rerun. Requested activation is not Playing/audio/progress ACK; fresh full runtime mandatory. Actual Windows04 failed before tests because PATH Bash selected WSL without distributions. Sole runner metadata correction binds absolute Bash/cygpath from actual Git installation, retaining exact source script and all32 whole classes/native5/voice/restore/compiled/PDB/zero-skip guards. No product changes or runtime acceptance. Actual Windows05 installedvoices/Gitbash/hosttasks passed then Core sharedartifact graph lost net10.0 assets. Genuine exact percohort main +netstandard analyzer force-evaluate restore immediatelybefore ownbuild, full original output/helper/query/compiled/task/beforeafter package guards unchanged. SAMEtwo positivefixture activationCAS corrections explicitly selectedApplication+actualWindowsphysical, alloldnative5/32classes/12/36/source startup4/ac2d/rawbytecheckout retained. No fakeassets or guardexemption/native success inference.",
+  "limits": "Actual Windows11 b92/run37076164385 failed four original MediaFailed speech cases plus fifth original CAS-entry timeout. Diagnostic12 adds actual MediaPlayer Error/ExtendedErrorCode/HResult/inner exception preservation, read-only installed audio device/service/endpoint inventory, and exact original pending pause vs physical CAS-entry observation before unchanged positive assertions/deadline/finally. Full32 owning classes/native5 exact methods/current12reg36resource tables retained; genuine Windows TFM/symbol/native producer/copied DLL+PDB/source-built task/compiled/source/restores/raw LF/GitBash/native voice/multipart guards unchanged. Dedicated Windows owning selected once; separate portable/regression/resource acceptance remains mandatory, preserved tables do not mean those jobs ran here. No audio repair/voice substitution/playback retry/service start/device installation/fake audio/native skip or audible ACK inferred. Current22 normal/index guards exact; root alone constructs/runs.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/worker4-monologue-root18-full-owning-gate02/manifest.json",
@@ -65801,6 +65801,22 @@
     {
       "path": "/workspace/astra-source/worker1-windows09-original-terminal-cause-source02-metadata/manifest.json",
       "sha256": "7b2ee937abf95f7043af7e7c45d06c8600c2e58611923fffd8219c0ac3a48736"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-monologue-windows09-actual-terminal-diagnostic-corrective11-source-pin/manifest.json",
+      "sha256": "a782a5886bc8985fa096f6ed557224ddd97b021c2a29fbae1281391fd34c6cde"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-windows11-media-failure-extended-diagnostic-source02-actual-pause-outcome/manifest.json",
+      "sha256": "ad0d85880ad1a8d7d0556d5c3f3effb36e806cb617eca0a21f1757dd061c2fb9"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-resume-windows11-whole-original-diagnosis01.json",
+      "sha256": "e28e105270db9c1b39072368679d5f173b60872d01c2102adba80cca604b7dd6"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-windows11-extended-diagnostic-source02-peer02.json",
+      "sha256": "bc076c3f48bdcca722d1c771dee1f25a73c115b300c037467a21b65ca7d6e22b"
     }
   ],
   "sharedCakeIdContract": null

@@ -417,9 +417,17 @@ public sealed class WindowsNaturalSpeechOutputService : ISpeechOutputService, IC
         /// <summary>
         /// Handles the failed event raised by the UI or runtime.
         /// </summary>
-        private void OnFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args) =>
+        private void OnFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+        {
+            // The native error text can be empty. Preserve its actual error category,
+            // extended HRESULT and exception instead of discarding the terminal cause.
+            var extended = args.ExtendedErrorCode;
+            var code = extended is null ? "unavailable" : "0x" + extended.HResult.ToString(
+                "X8", System.Globalization.CultureInfo.InvariantCulture);
             Completion.TrySetException(new InvalidOperationException(
-                "Windows speech playback failed: " + args.ErrorMessage));
+                "Windows speech playback failed (" + args.Error + ", HRESULT " + code + "): " + args.ErrorMessage,
+                extended));
+        }
 
         /// <summary>
         /// Performs the dispose step owned by this component.
