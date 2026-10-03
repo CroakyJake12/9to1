@@ -52,6 +52,8 @@ public sealed class NativeRnoteUserLayerDocumentTests
         var state=JsonNode.Parse(artifact.DocumentSettings.Properties["9to1.Canvas.RnoteState"].GetRawText())!.AsObject();
         state["NativeLayerRanks"]![layer.ToString("D")]=0;
         artifact.DocumentSettings.Properties["9to1.Canvas.RnoteState"]=JsonSerializer.SerializeToElement(state);
+        Assert.Throws<CanvasArtifactFormatException>(()=>CanvasArtifactCodec.Serialize(artifact));
+        artifact.SemanticHistory=null; // Reach the same native rank refusal with a controlled older history-free envelope.
         Assert.Throws<InvalidDataException>(()=>CanvasRnoteDocument.Open(CanvasArtifactCodec.Serialize(artifact)));
         Assert.Equal(bytes,document.Serialize());Assert.Equal(frame,Stable(document.Render().Svg));
         using var original=CanvasRnoteDocument.Open(bytes);Assert.Equal(frame,Stable(original.Render().Svg));

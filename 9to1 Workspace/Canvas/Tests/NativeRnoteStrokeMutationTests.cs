@@ -2,11 +2,14 @@ using Haven.Application;
 using System.IO.Compression;
 using System.Text.Json;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace HavenOS.Apps.Canvas.Tests;
 
 public sealed class NativeRnoteStrokeMutationTests
 {
+    private readonly ITestOutputHelper _diagnostics;
+    public NativeRnoteStrokeMutationTests(ITestOutputHelper diagnostics)=>_diagnostics=diagnostics;
     [Fact]
     public void Keyed_edits_preserve_other_native_entities_and_reject_invalid_edits_without_changes()
     {
@@ -18,10 +21,24 @@ public sealed class NativeRnoteStrokeMutationTests
         var second = Assert.Single(engine.ReadStrokeKeys().Where(key => key != first));
         var untouched = engine.ExportSelectedStrokes([second]);
         var firstBefore = engine.ExportSelectedStrokes([first]);
+        var beforeTranslation=System.Diagnostics.Stopwatch.GetTimestamp();
         engine.TranslateStroke(first, 100, 200);
-        Assert.False(SameNative(firstBefore, engine.ExportSelectedStrokes([first])));
+        var movedAt=System.Diagnostics.Stopwatch.GetTimestamp();var firstMoved=engine.ExportSelectedStrokes([first]);
+        Assert.False(SameNative(firstBefore, firstMoved));
         engine.TranslateStroke(first, -100, -200);
-        Assert.True(SameNative(firstBefore, engine.ExportSelectedStrokes([first])));
+        var restoredAt=System.Diagnostics.Stopwatch.GetTimestamp();var firstRestored=engine.ExportSelectedStrokes([first]);
+        try{Assert.True(SameNative(firstBefore, firstRestored));}
+        catch(Exception primary)
+        {
+            try
+            {
+                _diagnostics.WriteLine("FAILURE_ONLY actual native translation snapshots; managed call timestamps are not donor event times: "+
+                    JsonSerializer.Serialize(new{beforeTranslation,movedAt,restoredAt,frequency=System.Diagnostics.Stopwatch.Frequency}));
+                ReportNativeNumbers("original",firstBefore);ReportNativeNumbers("moved",firstMoved);ReportNativeNumbers("restored",firstRestored);
+            }
+            catch(Exception diagnostic){if(!ReferenceEquals(primary,diagnostic))throw new AggregateException(primary,diagnostic);}
+            throw;
+        }
         using var reopened = RnoteCanvasEngine.Open(engine.Save());
         Assert.Equal(engine.ReadStrokeKeys().ToArray(), reopened.ReadStrokeKeys().ToArray());
         Assert.True(SameNative(untouched, reopened.ExportSelectedStrokes([second])));
@@ -68,6 +85,30 @@ public sealed class NativeRnoteStrokeMutationTests
         using var restarted = CanvasRnoteDocument.Open(document.Serialize());
         Assert.Equal(second, Assert.Single(restarted.Snapshot.Pages[0].Strokes).StrokeId);
         Assert.True(SameNative(untouched, restarted.ExportCanonicalStrokeSelection([second], restarted.Snapshot.RevisionId)));
+    }
+
+    private void ReportNativeNumbers(string phase,byte[] original)
+    {
+        _diagnostics.WriteLine("FAILURE_ONLY "+phase+" captured-native-bytes="+original.Length+" sha256="+
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(original)));
+        using var stream=new GZipStream(new MemoryStream(original),CompressionMode.Decompress);
+        using var document=JsonDocument.Parse(stream);var count=0;
+        void Visit(JsonElement value,string path)
+        {
+            if(count>=4096)return;
+            if(value.ValueKind==JsonValueKind.Number)
+            {
+                count++;var number=value.GetDouble();
+                _diagnostics.WriteLine(JsonSerializer.Serialize(new{phase,path,raw=value.GetRawText(),
+                    value=number.ToString("R",System.Globalization.CultureInfo.InvariantCulture),
+                    binary64=unchecked((ulong)BitConverter.DoubleToInt64Bits(number)).ToString("X16")}));
+            }
+            else if(value.ValueKind==JsonValueKind.Object)foreach(var item in value.EnumerateObject())Visit(item.Value,path+"."+item.Name);
+            else if(value.ValueKind==JsonValueKind.Array){var index=0;foreach(var item in value.EnumerateArray())Visit(item,path+"["+(index++)+"]");}
+        }
+        Visit(document.RootElement,"$");
+        _diagnostics.WriteLine("FAILURE_ONLY "+phase+" whole-JSON="+document.RootElement.GetRawText()+" numericRows="+count+
+            " numericRowLimit=4096; limit reach is incomplete numeric coverage.");
     }
     private static bool SameNative(byte[] left, byte[] right)
     {

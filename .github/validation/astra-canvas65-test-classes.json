@@ -64,7 +64,7 @@
       "path": "9to1 Workspace/Canvas/Tests/NativeRnoteJourneyTests.cs",
       "class": "NativeRnoteJourneyTests",
       "namespace": "HavenOS.Apps.Canvas.Tests",
-      "sha256": "b35ff5a267cf5e64b713e83e8c724e76cdc84d430a07bcfd3581a287c115f05d"
+      "sha256": "8963431a374ba0afa0829fded1eeffa7f36ffd6b47f72bf6d3124faefc962f89"
     },
     {
       "path": "9to1 Workspace/Canvas/Tests/NativeRnoteQuickEraserTests.cs",
@@ -130,7 +130,7 @@
       "path": "9to1 Workspace/Canvas/Tests/NativeRnoteUserLayerDocumentTests.cs",
       "namespace": "HavenOS.Apps.Canvas.Tests",
       "class": "NativeRnoteUserLayerDocumentTests",
-      "sha256": "1dce61bd6d137aece9d04f72588e8500650bd93ca87ebc7873554f5a36d220de"
+      "sha256": "fd3e5eca5e8a2f610fe29e1ab2b19d448f092b4f2becb5e4f082be793704dd53"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasNativeLayerSelectorTests.cs",
@@ -142,7 +142,7 @@
       "path": "9to1 Workspace/Canvas/Tests/CanvasFilesFinalAuthorityTests.cs",
       "namespace": "HavenOS.Apps.Canvas.Tests",
       "class": "CanvasFilesFinalAuthorityTests",
-      "sha256": "868534ac5ac5e968002ded1fac96f61fcc4f285ae581c625cc34f34816695d90"
+      "sha256": "e2ae3a4e1544e6a3ff435b4b4194752fdb161006f9c2f7b5a6ac580b2c7d80a7"
     },
     {
       "path": "9to1 Workspace/Canvas/NativeUI.Tests/CanvasOriginalLayerAttemptTests.cs",

@@ -3,12 +3,15 @@ using System.Text;
 using System.Xml.Linq;
 using Haven.Application;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace HavenOS.Apps.Canvas.Tests;
 
 /// <summary>Requires the actual controlled-donor native bridge, never a fixture substitute.</summary>
 public sealed class NativeRnoteJourneyTests
 {
+    private readonly ITestOutputHelper _diagnostics;
+    public NativeRnoteJourneyTests(ITestOutputHelper diagnostics)=>_diagnostics=diagnostics;
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -78,19 +81,23 @@ public sealed class NativeRnoteJourneyTests
         var points = new[] { new RnotePointerSample(15, 25, 0.2), new RnotePointerSample(45, 65, 0.7) };
         var changing = new ChangingSamples(points);
         using var actual = CanvasRnoteDocument.Create();
+        var canonicalBegin=System.Diagnostics.Stopwatch.GetTimestamp();
         actual.DrawStroke(changing, actual.Snapshot.RevisionId);
+        var canonicalEnd=System.Diagnostics.Stopwatch.GetTimestamp();
         Assert.Equal(1, changing.Enumerations);
         var retained = Assert.Single(actual.Snapshot.Pages[0].Strokes).Samples;
         Assert.Equal(points.Select(point => point.X), retained.Select(point => point.X));
         Assert.Equal(points.Select(point => point.Pressure), retained.Select(point => point.Pressure));
-        AssertDonorCapturedEndpoints(actual.ExportRnote(), points);
+        AssertDonorCapturedEndpoints(actual.ExportRnote(), points,"canonical DrawStroke",canonicalBegin,canonicalEnd);
         using var reopened = CanvasRnoteDocument.Open(actual.Serialize());
         Assert.Equal(StableSvg(actual.Render().Svg), StableSvg(reopened.Render().Svg));
         using var publicEngine = RnoteCanvasEngine.Create();
         var direct = new ChangingSamples(points);
+        var directBegin=System.Diagnostics.Stopwatch.GetTimestamp();
         publicEngine.DrawStroke(direct);
+        var directEnd=System.Diagnostics.Stopwatch.GetTimestamp();
         Assert.Equal(1, direct.Enumerations);
-        AssertDonorCapturedEndpoints(publicEngine.Save(), points);
+        AssertDonorCapturedEndpoints(publicEngine.Save(), points,"public native DrawStroke",directBegin,directEnd);
     }
 
     [Fact]
@@ -146,7 +153,7 @@ public sealed class NativeRnoteJourneyTests
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private static void AssertDonorCapturedEndpoints(byte[] rnote, RnotePointerSample[] expected)
+    private void AssertDonorCapturedEndpoints(byte[] rnote, RnotePointerSample[] expected,string phase,long beforeCall,long afterCall)
     {
         using var source = new MemoryStream(rnote);
         using var gzip = new GZipStream(source, CompressionMode.Decompress);
@@ -174,7 +181,25 @@ public sealed class NativeRnoteJourneyTests
         var end = generated[^1];
         Assert.True(Math.Abs(end.GetProperty("pos")[0].GetDouble() - expected[^1].X) < Math.Abs(end.GetProperty("pos")[0].GetDouble() - expected[0].X));
         Assert.True(Math.Abs(end.GetProperty("pos")[1].GetDouble() - expected[^1].Y) < Math.Abs(end.GetProperty("pos")[1].GetDouble() - expected[0].Y));
+        try
+        {
         Assert.Equal(expected[^1].Pressure, end.GetProperty("pressure").GetDouble());
+        }
+        catch(Exception primary)
+        {
+            try
+            {
+                _diagnostics.WriteLine("FAILURE_ONLY same captured input/native path; managed before/after are not donor event timing: "+
+                    System.Text.Json.JsonSerializer.Serialize(new{phase,beforeCall,afterCall,frequency=System.Diagnostics.Stopwatch.Frequency,
+                        input=expected,capturedBytes=rnote.Length,sha256=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(rnote)),
+                        actualPath=path.GetRawText(),expectedPressure=expected[^1].Pressure.ToString("R",System.Globalization.CultureInfo.InvariantCulture),
+                        expectedPressureBits=unchecked((ulong)BitConverter.DoubleToInt64Bits(expected[^1].Pressure)).ToString("X16"),
+                        capturedPressure=end.GetProperty("pressure").GetDouble().ToString("R",System.Globalization.CultureInfo.InvariantCulture),
+                        capturedPressureBits=unchecked((ulong)BitConverter.DoubleToInt64Bits(end.GetProperty("pressure").GetDouble())).ToString("X16")}));
+            }
+            catch(Exception diagnostic){if(!ReferenceEquals(primary,diagnostic))throw new AggregateException(primary,diagnostic);}
+            throw;
+        }
     }
 
     [Fact]
