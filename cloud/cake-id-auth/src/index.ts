@@ -71,7 +71,7 @@ export async function fetchRequest(request: Request, env: Env, ctx: ExecutionCon
     }
     return new Response(null, { status: 204, headers: publicCors });
   }
-  if (publicMethod === "POST" && request.method === "POST" && request.headers.has("origin") &&
+  if (publicMethod === "POST" && request.method === "POST" && request.headers.has("origin") && request.headers.get("origin") !== url.origin &&
       !publicCors!.has("access-control-allow-origin")) {
     return addCors(json({ error: "origin_not_allowed" }, 403), publicCors!);
   }
