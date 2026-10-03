@@ -45,7 +45,7 @@
     "Jacob local delivery destination/tooling unverified",
     "Team A/B current source reconciliation, shared patch acknowledgement and exact final integrated acceptance pending",
     "All deployed SH12 journeys NOT-RUN; exact full mandatory/native/donor/platform/product acceptance and global semantic denominator incomplete",
-    "LatestLE text unchanged atfinalatomicrevision;25boundedgroups NOT_RUN, denominator incomplete. ExactownerAPIcatalogues/currentasyncsession/store/read/publication contracts remain beforedependents. AdminSDK5 115all0/drains and2Debugsuites but pathgateREFUSED; next4472map valid, rootSDK6pinNOTISSUED while A-held cleanup/error paths corrected. Browser83 original independent results retained; new8b source reviews find disposedprivate-data retention and unconfiguredclient/signin, pluspublicCORS repairactive; current AX/Wave/focus input failures remain. Full installed/provider/SH13commercial/PCgates open."
+    "Latest LE full text remains byte-identical at final revision; semantic denominator incomplete and25 bounded groups NOT_RUN. Owner API catalogues, async session/store/read/publication contracts remain. Fresh corrected9b29 SDK6 isolated attempt RUNNING after root pin; shared adoption and final outcomes separate. Reviewed public OAuth source adopted with117+27+222 pass, but B configured client/sign-in/disposal/input/focus and full browser/AX/Wave acceptance remain open. Installed/provider/SH13 commercial/PC gates remain open."
   ],
   "specification": {
     "documentId": "1TJx-TNQTHI5hhriRG4ipRjG65ud1ZmPAIYWAsC63kIg",
@@ -69,7 +69,7 @@
     "normalCI": "6 workflows / 13 jobs SUCCESS independently read back from GitHub; not full product acceptance",
     "diffFromMain": "1568 files;161150 insertions;4067 deletions; preserve history, no blind wholesale merge"
   },
-  "candidateHead": "509001d9222076a47ab847dd6f197f0a919bcb4a",
+  "candidateHead": "e70c36f1f74f47f7ef430998b07ce006b723894a",
   "candidatePullRequest": "https://github.com/CroakyJake12/9to1/pull/3",
   "browserFixReview": {
     "head": "830f747b70df07797c586f6124890fa5028452b2",
@@ -91,8 +91,8 @@
     "runtimeEvidence": "release5be7afdf:c6/browser83-runtime/review.json"
   },
   "browserFixture": {
-    "source": "aedc29ec3a0a960e1ded36c0443f1efda4fcf36d",
-    "state": "READY FOR EACH RECEIVER OWN LOCAL FIXTURE LAUNCH ONLY: C1 exact all-lines ACK, independent9/9 real kernel controls and actual Workerd/D1 bootstrap exit0; strict5 kernel child reaps/ECHILD/originalbirth disappearance, secrets removed, ports released. Original unsupported production launcher failure retained; actual browser journeys unrun.",
-    "evidence": "dc1d60eec2bb4edcdce2ba5b04883d711e692678 on fixture branch; exact source remains aedc29ec. Also release dafeb2049f44883070dcd023d27c95319899d9a7:handoff/team-c/browser-fixture/{README.md,evidence.json} with successful and failed original logs."
+    "source": "27aa37abb0462869d2b1cb1aa5ee1371b8b13415",
+    "state": "Ready for each receiver own local fixture and reviewed public OAuth transport. Final117+27+222 local actual Workerd/D1 pass; C1 independent27; strict cleanup. B configured browser journey and disposal remain owner dependencies.",
+    "evidence": "Release e70c36f1f74f47f7ef430998b07ce006b723894a:handoff/team-c/public-client-cors and public-oauth-adoption.json"
   }
 }
