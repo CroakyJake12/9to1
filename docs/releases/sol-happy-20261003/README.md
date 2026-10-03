@@ -199,9 +199,14 @@ a genuine generated source document in its PDB. Web execution and Release remain
 unrun. The independently reviewed post-target metadata proposal collects genuine
 SDK compiler inputs without invoking CoreCompile or changing any of the 2,480
 existing output files. Five controls pass, including the retained wrong-order
-negative. A fresh externally pinned full attempt 5 is running at `8189d31a`; its
-result is pending. No empty-input exemption, invented source or source-hash waiver
-was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
+negative. Fresh externally pinned attempt 5 at `8189d31a` passed all 115 commands
+and strict drains and repeated the original Debug Accounts and OrgPools suites.
+It then refused the legitimate Avalonia.Base generated-output directory, which
+the new tooling guard incorrectly required beneath a configuration-specific
+intermediate directory. Its actual project declares generated files under the
+same isolated per-project base directory. Web and Release remain NOT_RUN; a
+bounded path-provenance correction is being reviewed. No empty-input exemption,
+invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
 Requested original native CI bytes are retained under [c6/original-custody/](c6/original-custody/).
@@ -248,6 +253,17 @@ eight-check harness: the canonical layout fails all eight; the two-line grouping
 proposal passes all eight. Five actual PE/PDB pairs and 543 document hashes match.
 Owner source adoption and mounted proposal/browser acceptance remain pending;
 mouse success and headless layout do not close the accessibility failures.
+
+New delivered browser source `43669e20` and serialization followup `8b4f2a0c`
+received bounded [online/privacy boundary review](C5-team-b-browser-boundary-review.md)
+and [ownership triage](c1-browser-continuation-owner-triage.md). No new C5-scope
+online authority bypass or off-device Wave upload was found; source adoption and
+actual configured account integration remain held. Team B reports five structural
+accessibility passes, a 40-Tab focus trap and Wave two passes/one failure/eleven
+NOT_RUN. Those newer runtime results are not independently reproduced here. The
+actual input race involves deferred shared-CUI writeback and requires A1 review;
+browser focus remains B-owned and retained Write measurement remains A2-owned.
+Historical 83 results above remain tied to their original bytes.
 
 The reusable maintained Worker fixture is now source-bound at
 `aedc29ec3a0a960e1ded36c0443f1efda4fcf36d` on
