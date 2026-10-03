@@ -1,7 +1,7 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "7a50ce232460405e7201e09af85095458ed9ea3c",
-  "programTree": "3f987c131561d7453a096c87248abfa401eb0cca",
+  "baselineCommit": "5adb9b461590751d93442bbd7731f685530fe893",
+  "programTree": "f9773ca427990a52b7af9c7a9f5cca51e8c256f0",
   "currentNormalCommit": "7fd9ebb809530b067ea7958ce9d0c06bb8d6f7b0",
   "kind": "corrective",
   "files": [
@@ -32,6 +32,20 @@
       "object": "7351de1cbb921610c6258b72ac9a5d8b92f37dd0",
       "bytes": 5574,
       "sha256": "6cff06f04078b3a22f8e9f91c2b3243f93b2576dddc1f07d901ac4c864334994"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-traffic-run.py",
+      "mode": "100644",
+      "object": "e973d5b832ff6fe17ba211703169d82d7e13ecb1",
+      "bytes": 7606,
+      "sha256": "affc03beb69379c307f4802ad4fd57db610c25af679165fec7302572dbd08ee8"
+    },
+    {
+      "path": ".github/scripts/astra-cake-auth-traffic-state.py",
+      "mode": "100644",
+      "object": "05291b644a816ab9e9e25d294b3df17e12f0027a",
+      "bytes": 5599,
+      "sha256": "03862f51553c27445d79c2b28d680d6e690f712baf547fad7b2fd7daa9555904"
     },
     {
       "path": ".github/scripts/astra-cake-id-local-runtime.py",
@@ -211,9 +225,9 @@
     {
       "path": ".github/workflows/haven-chat-model-ci.yml",
       "mode": "100644",
-      "object": "014f8d338e81aceee22fcd78d85c5d2a2af19f65",
-      "bytes": 4118,
-      "sha256": "23661288fef3cad51b4064b0165cb49502d9fa3c1e6a3ce01cbe0c2f7f36cdca"
+      "object": "b19469a75471953d7fd87177068de44345f7735b",
+      "bytes": 5194,
+      "sha256": "2f69682775e812279b794642592c19c32fce949c0f632654a9309985b6cec96a"
     },
     {
       "path": ".github/workflows/havenos-linux-package.yml",
@@ -41761,6 +41775,13 @@
       "sha256": "c4bc80f6a8ae8c82b35da8aa507725b0c8363cb9fc1fa7e1feca6dc66cbbf90c"
     },
     {
+      "path": "cloud/cake-id-auth/tests/login-traffic-browser-phase.mjs",
+      "mode": "100644",
+      "object": "db68aacd2821d264ab9132e8ecdeee04e6c7bec6",
+      "bytes": 13249,
+      "sha256": "4cc2ede9457dcb89b27eb4d7f03a0a9535101feeeeada15ab6114f5872028210"
+    },
+    {
       "path": "cloud/cake-id-auth/tests/login-traffic-browser.mjs",
       "mode": "100644",
       "object": "d06d041d46fa707874967f5f0850a920f0d9c8ab",
@@ -65508,7 +65529,7 @@
     }
   ],
   "selfManifestPath": ".github/validation/astra-cake-id-local-runtime-cut.json",
-  "limits": "Independent synthetic local Wrangler/D1 700 sequential requests and genuine pinned Playwright browser duplicate-submit. Exact29 proposed owner files retained untouched from actual7a50 parent; original full6command OIDC job still required and expected known IDtoken failure cannot be converted to overall auth acceptance. First4bootstrap plus independent fixture in separatejob; no cloud/deploy/existingusertransfer/billedCPU/credentialcostcounter/concurrency/nativeHTTPS/.NETclaim. Exact introduced private state identity plus verified sampled pidfd session drain required before cleanup; rawvars/D1/receipt/keys/tokens excluded artifacts.",
+  "limits": "Explicit additional traffic-only synthetic local Wrangler/D1 phase: exact700 sequential requests/eight wrong accepted/692 actual429s including correct final password/no sessions/same-store restart1800s durable lock. Auth29 owner inputs and actual25 combined fixture/state/runner unchanged; original6 OIDC and originalcombinedBrowser remain selected mandatory failures unchanged. No browser dependencies/install/launch in this traffic phase and never a browser success claim. Exact full tracked source/Git guards, real auth dependency inventory before/after, fresh private state inode/device/hash receipt and strict original sampled pidfd session drain before cleanup retained. No cloud/deploy/existingusertransfer/CPU/billing cap/.NETHTTPS/email/overall auth acceptance.",
   "inputManifests": [
     {
       "path": "/workspace/astra-source/root-cake-id-auth-owner-input109/immutable-owner-source-map-verified111.json",
@@ -65657,6 +65678,18 @@
     {
       "path": "/workspace/astra-source/worker4-cake-auth-independent-full-caller-package03-auth-dependency-closure/manifest.json",
       "sha256": "38b54ce94b2042376ac91181e4841d4e34d1fbdd7e06f51f6d8e0e803db01bb6"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-cake-auth-independent-full-caller-package04-two-required-jobs/manifest.json",
+      "sha256": "3dbc9501018610fcbc261ecc9e691f4d576d1f4ce0296134a61f2b7e0d16ce2f"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth-direct-traffic-browser-fixture07-additive-traffic-phase02-explicit-browser-boundary/manifest.json",
+      "sha256": "dd9893a9498bef458b29eb55dc3b73f4a2847cbc38bd0f604fced79a8e2d3e33"
+    },
+    {
+      "path": "/workspace/astra-source/worker3-cake-auth25-independent-original-installer-failure-review01.json",
+      "sha256": "bcbbc2af8d3eccd67aa145d541f59b5c41d920d2fb1cbe58480f682f9274d6ea"
     }
   ],
   "sharedCakeIdContract": null

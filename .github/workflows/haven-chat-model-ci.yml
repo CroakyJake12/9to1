@@ -116,3 +116,32 @@ jobs:
           path: artifacts/cake-auth-independent/
           if-no-files-found: error
           retention-days: 14
+
+  independent-auth-traffic-only:
+    if: startsWith(github.ref, 'refs/heads/validation/astra-cake-id-local-runtime25-independent-auth-traffic26')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Execute first four bootstrap commands and independent actual700 D1 phase
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          EXPECTED_MANIFEST_SHA: ${{ inputs.cut_manifest_sha256 }}
+        run: python3 .github/scripts/astra-cake-auth-traffic-run.py
+      - name: Retain bounded sanitized traffic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-cake-auth-traffic26-${{ github.sha }}
+          path: artifacts/cake-auth-traffic26/
+          if-no-files-found: error
+          retention-days: 14
