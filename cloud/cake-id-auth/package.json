@@ -1,0 +1,27 @@
+{
+  "name": "@cake/cake-id-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local-first shared CAKE ID Cloudflare Worker and D1 auth runtime",
+  "scripts": {
+    "build:ui": "node scripts/build-ui.mjs",
+    "schema:generate": "node scripts/generate-schema.mjs",
+    "schema:validate": "node scripts/validate-schema.mjs",
+    "dev:local": "wrangler dev --local --config wrangler.local.jsonc",
+    "test:password-runtime": "node tests/password-runtime.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/integration.mjs"
+  },
+  "dependencies": {
+    "@better-auth/oauth-provider": "1.7.7",
+    "better-auth": "1.7.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "esbuild": "0.28.1",
+    "jose": "6.2.12",
+    "typescript": "5.9.3",
+    "wrangler": "4.146.0"
+  }
+}
