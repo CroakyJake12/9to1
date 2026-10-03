@@ -221,8 +221,15 @@ because its tracked Directory.Build.props explicitly selects a project-local
 owner directory rather than the SDK default artifact directory. Web and Release
 remain NOT_RUN; no full configuration completed. The
 [original SDK6 evidence](evidence/c3-admin-sdk-attempt6/README.md) retains that
-refusal and all provenance. A separate source-bound tooling correction is under
-review; no global shared-source adoption or new owner acknowledgement is inferred. No empty-input exemption,
+refusal and all provenance. The exact source-bound Sites correction passes 17 independent controls and ten
+prior controls, with all 3,060 outputs unchanged. A subsequent owner-identified
+symbol-persistence path now preserves original body and same-handle close errors;
+four independent controls and prior symbol/Sites controls pass. Original failures
+remain retained. Root and C1 verify the fresh `d30253dd` complete cut, all 23
+original/received mappings and six controls. The
+[SDK7 external issuance](evidence/c3-admin-sdk07-issuance/issuance.json) authorizes
+only isolated full validation, now in progress. No global shared-source adoption
+or new whole-owner acknowledgement is inferred. No empty-input exemption,
 invented source or source-hash waiver was introduced. [Metadata evidence](evidence/c3-admin-compile-metadata/README.md)
 and [independent review](C5-compile-metadata-proposal-peer-review.md) retain scope.
 
@@ -279,8 +286,13 @@ online authority bypass or off-device Wave upload was found; source adoption and
 actual configured account integration remain held. Team B reports five structural
 accessibility passes, a 40-Tab focus trap and Wave two passes/one failure/eleven
 NOT_RUN. Those newer runtime results are not independently reproduced here. The
-actual input race involves deferred shared-CUI writeback and requires A1 review;
-browser focus remains B-owned and retained Write measurement remains A2-owned.
+actual input race involves deferred shared-CUI writeback. Exact A1 source-owner
+ACK now permits the one-line TextChanged-to-TextChanging correction; C4 verifies
+all 11 delivered members, 19 runtime pins, three API pins and the whole inverse.
+The unchanged original probe is canonical 2/8 versus proposed 8/8; C4 performs
+no rerun. Fresh browser/Wave and framework/SDK acceptance remain pending, as
+recorded in the [owner receipt](semantic/c4-cui-textchanging-owner-receipt.md).
+Browser focus remains B-owned and retained Write measurement remains A2-owned.
 Historical 83 results above remain tied to their original bytes.
 
 The [account cleanup review](../../../handoff/team-c/browser-account-review/README.md)
