@@ -1,0 +1,206 @@
+[
+  {
+    "path": "original-manifest.json",
+    "bytes": 147121,
+    "sha256": "2ec2759784da70b4f2c16a57b456a12989ab5319b3d1c0f9930b9cb9a52e1147",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/manifest.json"
+  },
+  {
+    "path": "admission.json",
+    "bytes": 1372,
+    "sha256": "4fffde000a25c89b89fe0a70cee88f529c46def4607f69f5819857af1ce94fc6",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/admission.json"
+  },
+  {
+    "path": "raw/canvas-adapter-after.json",
+    "bytes": 3802,
+    "sha256": "ad27e9a0e64ff834c58293b2f6c5c3c47e7bca36f5d2ac401fbbd1418d0a3f71",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/canvas-adapter-after.json"
+  },
+  {
+    "path": "raw/canvas-adapter-before.json",
+    "bytes": 3802,
+    "sha256": "ad27e9a0e64ff834c58293b2f6c5c3c47e7bca36f5d2ac401fbbd1418d0a3f71",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/canvas-adapter-before.json"
+  },
+  {
+    "path": "raw/canvas-build.log",
+    "bytes": 2009,
+    "sha256": "7ab0ba9e49ba78f000ba25416e9905f60a33eee7eb8da2253b52276457f231c0",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/canvas-build.log"
+  },
+  {
+    "path": "raw/canvas-discovered-cases.json",
+    "bytes": 15158,
+    "sha256": "4c703d4d188976a76533d7556989998fd611019974ef87631d92f6f52bb5823c",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/canvas-discovered-cases.json"
+  },
+  {
+    "path": "raw/canvas-discovery.log",
+    "bytes": 13880,
+    "sha256": "cfa0d455f8743c08eacf05b4152d74868259256b645084652c5bd658982f447a",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/canvas-discovery.log"
+  },
+  {
+    "path": "raw/canvas.log",
+    "bytes": 46849,
+    "sha256": "9c38a04d79027589cb3cea924f375e40c74be43be9a219dfc512d95b73977eca",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/canvas.log"
+  },
+  {
+    "path": "raw/cargo-build.log",
+    "bytes": 16579,
+    "sha256": "3b85cb649ecb903f65f773154dcbef177404135fdaf58c259a71e0bf64c630ee",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/cargo-build.log"
+  },
+  {
+    "path": "raw/cargo-test.log",
+    "bytes": 2453,
+    "sha256": "68b49b9676fc98451bf6376fd8073c5f97f3dcc381d216f22ffc9a287fd3d908",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/cargo-test.log"
+  },
+  {
+    "path": "raw/core-adapter-after.json",
+    "bytes": 3798,
+    "sha256": "fb94b5d226c6cc07d99f24e8ed12eb215dce6287b1222b62f488594748eef648",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/core-adapter-after.json"
+  },
+  {
+    "path": "raw/core-adapter-before.json",
+    "bytes": 3798,
+    "sha256": "fb94b5d226c6cc07d99f24e8ed12eb215dce6287b1222b62f488594748eef648",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/core-adapter-before.json"
+  },
+  {
+    "path": "raw/core-build.log",
+    "bytes": 1452,
+    "sha256": "3339bcdc78b4844c7873dcd120e874ed55787c702a29bcbeff89bfb55e21f5b8",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/core-build.log"
+  },
+  {
+    "path": "raw/core-discovered-cases.json",
+    "bytes": 3085,
+    "sha256": "461d365ba6dd9597395bcc36213f396ea7a0314a223c01019022cc3b69c3051a",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/core-discovered-cases.json"
+  },
+  {
+    "path": "raw/core-discovery.log",
+    "bytes": 1877,
+    "sha256": "a67125d24091b36a67b9ce6a392ddb3899046468dfd1d5eae51baee17fde3b83",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/core-discovery.log"
+  },
+  {
+    "path": "raw/core.log",
+    "bytes": 421,
+    "sha256": "d72631cafaf31b7a69d1b2037ae9f033a09b91925598c026874c7f6d94d6fdc3",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/core.log"
+  },
+  {
+    "path": "raw/files-build.log",
+    "bytes": 505,
+    "sha256": "f8ef3a5af14fa4fe0e101b155d11131b7ddab7e798cc276725ec786167738796",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/files-build.log"
+  },
+  {
+    "path": "raw/files.log",
+    "bytes": 104,
+    "sha256": "420c8bb9c7eb011957021bcbd7ddc6b3c767dd633c2d65c9d168ee70ace69687",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/files.log"
+  },
+  {
+    "path": "raw/native-load-probe.py",
+    "bytes": 941,
+    "sha256": "0e4122dc85195bfe0b634967fd0062f3f996fa27f542714106a1027ee50f8444",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-load-probe.py"
+  },
+  {
+    "path": "raw/native-loaded-identity.log",
+    "bytes": 33667,
+    "sha256": "94c63b292b8c2b9bc935ab78b146dc710f0d9fdcb743acb58e23030448f6f952",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-loaded-identity.log"
+  },
+  {
+    "path": "raw/native-needed.log",
+    "bytes": 3581,
+    "sha256": "87d7f280d6edc4340ce697d424ec480db488988d342bc4da3209738cdee53e64",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-needed.log"
+  },
+  {
+    "path": "raw/native-session-drain/canvas/21796-pending.json",
+    "bytes": 255,
+    "sha256": "89748f3fbafca951d6264d5c42d212a3cec16167698d3998fdbf53425e8027f3",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/canvas/21796-pending.json"
+  },
+  {
+    "path": "raw/native-session-drain/canvas/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "46905a79d6ada8ab996cf95950bd8c6edfc7e75098d45a2787ff7c37059ecaf5",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/canvas/expected-managed-launch.json"
+  },
+  {
+    "path": "raw/native-session-drain/canvas-discovery/21723-pending.json",
+    "bytes": 255,
+    "sha256": "c3e48be97872b3bdf284020d2fc6b85376df6c8032451fb85ec0f09e7e108967",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/canvas-discovery/21723-pending.json"
+  },
+  {
+    "path": "raw/native-session-drain/canvas-discovery/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "af642b95bc1e4b1f0130909122523041b4ab60efe399bcd8fd184974c0623ed4",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/canvas-discovery/expected-managed-launch.json"
+  },
+  {
+    "path": "raw/native-session-drain/core/21122-pending.json",
+    "bytes": 255,
+    "sha256": "b408817225966f1e2059cb72676012c265f7a538eb0fc15e011d9e1bd92676a7",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/core/21122-pending.json"
+  },
+  {
+    "path": "raw/native-session-drain/core/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "b220c6deecb48b63128d77fdb370e12d6478c0df1165c9ccbee54f070969c721",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/core/expected-managed-launch.json"
+  },
+  {
+    "path": "raw/native-session-drain/core-discovery/21050-pending.json",
+    "bytes": 255,
+    "sha256": "d69a8a5799264efa4ae827650dda89d0eb96483f5edbd1c570e05a2fd3f30779",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/core-discovery/21050-pending.json"
+  },
+  {
+    "path": "raw/native-session-drain/core-discovery/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "3ec31e139f3fffa3db9e900adc723767e2200e7380217ac6a7420fbf80a38dc3",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/core-discovery/expected-managed-launch.json"
+  },
+  {
+    "path": "raw/native-session-drain/files/20474-pending.json",
+    "bytes": 349,
+    "sha256": "a51207558d90d8dd84548b75f3e05e83d729bed900b65dea3cf3eb0567c4931d",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/files/20474-pending.json"
+  },
+  {
+    "path": "raw/native-session-drain/files/expected-managed-launch.json",
+    "bytes": 103,
+    "sha256": "e75da3bc825a9c0b6f4771976c94dea44ed79ba31e569b526537f899e2b95ec2",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/native-session-drain/files/expected-managed-launch.json"
+  },
+  {
+    "path": "raw/receipt.json",
+    "bytes": 3895,
+    "sha256": "1f8305cf430bb580e5b5257b180bcca147edfc5068830aa26cdce4c2b7353a82",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/receipt.json"
+  },
+  {
+    "path": "raw/trx/canvas.trx",
+    "bytes": 250153,
+    "sha256": "d09ec57ce32d2df0dc4ca70c2449eb7cdc0863f6bf51ee44d2483210d86c59a5",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/trx/canvas.trx"
+  },
+  {
+    "path": "raw/trx/core.trx",
+    "bytes": 21034,
+    "sha256": "8072c90a2f67b48c0a788cf5536e63233ca8718ff59f0274b25ffd000004fcda",
+    "originalPath": "/workspace/team-c/evidence/c6/canvas03-custody/originals/trx/core.trx"
+  }
+]
