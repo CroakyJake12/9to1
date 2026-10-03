@@ -127,7 +127,7 @@ async function updateProfile(request: Request, env: Env, accountId: string): Pro
   const patch: Partial<Record<ProfileField, string | null>> = {};
 
   for (const [apiField, value] of entries) {
-    const column = profileFieldMap[apiField];
+    const column = Object.hasOwn(profileFieldMap, apiField) ? profileFieldMap[apiField] : undefined;
     if (!column) return json({ error: "invalid_profile" }, 400);
     if (value === null && column !== "name" && column !== "username") {
       patch[column] = null;
@@ -147,10 +147,10 @@ async function updateProfile(request: Request, env: Env, accountId: string): Pro
   }
 
   if (patch.username !== undefined) {
-    const reserved = await env.DB.prepare("SELECT 1 FROM cake_reserved_usernames WHERE username = ? COLLATE NOCASE LIMIT 1")
+    const reserved = await env.DB.prepare("SELECT ownerUserId FROM cake_reserved_usernames WHERE username = ? COLLATE NOCASE LIMIT 1")
       .bind(patch.username)
-      .first();
-    if (reserved) return json({ error: "username_unavailable" }, 409);
+      .first<{ ownerUserId: string | null }>();
+    if (reserved && reserved.ownerUserId !== accountId) return json({ error: "username_unavailable" }, 409);
     const duplicate = await env.DB.prepare("SELECT 1 FROM user WHERE username = ? COLLATE NOCASE AND id <> ? LIMIT 1")
       .bind(patch.username, accountId)
       .first();
