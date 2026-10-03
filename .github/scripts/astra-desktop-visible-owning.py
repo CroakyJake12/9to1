@@ -267,3 +267,9 @@ for name,project,filter_value in checks:
 verify()
 
 assert_native_unchanged()
+
+# A separate original native Desktop producer follows every unchanged mandatory cohort.
+sys.dont_write_bytecode=True
+homeNativeSpec=importlib.util.spec_from_file_location("home_original_native_probe",root/".github/scripts/astra-home-original-native-probe.py")
+homeNative=importlib.util.module_from_spec(homeNativeSpec);homeNativeSpec.loader.exec_module(homeNative)
+homeNative.run(root,out,cutPaths,digest,command_base,verify,taskTarget,assert_task_unchanged,assert_native_unchanged)

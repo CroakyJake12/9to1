@@ -48,8 +48,9 @@ def verify(root, out, target, suite, cut_paths, digest):
     retained.mkdir(parents=True, exist_ok=False)
     records = []
     for assembly, paths in assemblies.items():
-        dll = target.parent / (assembly + '.dll')
-        pdb = target.parent / (assembly + '.pdb')
+        physical_assembly = 'Haven' if assembly == 'Haven.Desktop' else assembly
+        dll = target.parent / (physical_assembly + '.dll')
+        pdb = target.parent / (physical_assembly + '.pdb')
         if any(not file.is_file() or file.is_symlink() for file in (dll, pdb)):
             raise ValueError('Missing actual compiled Home pair: ' + assembly)
         dll_bytes, pdb_bytes = dll.read_bytes(), pdb.read_bytes()
@@ -73,7 +74,7 @@ def verify(root, out, target, suite, cut_paths, digest):
             shutil.copyfile(file, destination)
             if digest(destination) != digest(file):
                 raise ValueError('Retained original Home pair differs')
-        records.append({'assembly': assembly, 'dllSha256': digest(dll), 'pdbSha256': digest(pdb),
+        records.append({'assembly': assembly, 'physicalAssembly': physical_assembly, 'dllSha256': digest(dll), 'pdbSha256': digest(pdb),
                         'identity': pair, 'sources': source_records})
     (retained / 'receipt.json').write_text(json.dumps({
         'status': 'ACTUAL_COMPLETE_REVIEWED_SOURCE_DOCUMENTS_MATCH_COMPILED_PAIRS',

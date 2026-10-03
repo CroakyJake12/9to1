@@ -1,5 +1,5 @@
 {
-  "status": "PRIVATE_HOME_COMPLETE_CURRENT_METHOD_MAPPING_UNEXECUTED",
+  "status": "Private current28 Home211 complete-method mapping: every prior tuple and original TRX pin preserved, two exact accepted Inbox methods added to mandatory mail-full Passed execution; this joined milestone unexecuted.",
   "originalTRX": [
     {
       "path": "trx/ai.trx",
@@ -3242,6 +3242,14 @@
       {
         "fullClass": "HavenOS.Mail.Tests.MailKitSubmissionValidationTests",
         "method": "Attachment_draft_is_refused_before_credentials_or_connection_instead_of_sending_without_files"
+      },
+      {
+        "fullClass": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests",
+        "method": "Actual_TLS_existing_flags_and_expunge_reconcile_without_rehydrating_cached_body_or_overwriting_pending_local_edit"
+      },
+      {
+        "fullClass": "HavenOS.Mail.Tests.MailKitInboxReconciliationTests",
+        "method": "Actual_TLS_warm_cursor_recovers_removed_cache_and_held_original_batch_refuses_intervening_canonical_edit"
       }
     ],
     "runtime": [

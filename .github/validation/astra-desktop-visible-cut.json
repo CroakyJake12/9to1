@@ -1,8 +1,8 @@
 {
   "status": "FROZEN_COMPLETE_HOSTED_PROOF_PENDING",
-  "baselineCommit": "c6cb55f5f5ef6fbbbd55f8d18969b1e891c84c75",
-  "programTree": "23e65f602d3786c5d03cb046781b5082d8a137fb",
-  "currentNormalCommit": "3441a6b94e484ba1105063d66f497094cf4ca909",
+  "baselineCommit": "eabc8ff699a8b22d1430c2c624c9dc5021082b67",
+  "programTree": "487163874a434cc47961ca172cc7c89669ca8c93",
+  "currentNormalCommit": "24531d46f2179096e53556070f61edaa47c93955",
   "kind": "corrective",
   "files": [
     {
@@ -29,9 +29,9 @@
     {
       "path": ".github/scripts/astra-desktop-visible-owning.py",
       "mode": "100644",
-      "object": "bc8111e36241a5f75e2541b7466fbdd9f506fbf9",
-      "bytes": 35485,
-      "sha256": "9547926b1dc0cf36e8b9dd101f15fb00543c7a898c17c083725d4a6d986b2343"
+      "object": "bdffe408e14515f59511a84ae65d6a0f1b82e3f6",
+      "bytes": 35969,
+      "sha256": "7596a660d030ffd397291c5315cbfa7b7688f82b05ffabb085ccc62f255579aa"
     },
     {
       "path": ".github/scripts/astra-desktop-visible-regression.py",
@@ -76,6 +76,27 @@
       "sha256": "6f1f105817e7cead42b2cc9ad2d9b3e7038a785163ccb5ef7fa61cb5eb2480a8"
     },
     {
+      "path": ".github/scripts/astra-home-original-native-compiled-sources.py",
+      "mode": "100644",
+      "object": "69aef0926b3b1d3318a9ccb27768322c61f239c9",
+      "bytes": 4027,
+      "sha256": "115fdff51a42367a7b8747fa9eff7e94c8a82a2a5938c2e3a2967bab40b16bb1"
+    },
+    {
+      "path": ".github/scripts/astra-home-original-native-probe.py",
+      "mode": "100644",
+      "object": "43225b4660e5329c83eb3fd7ef1e040431ee5897",
+      "bytes": 20773,
+      "sha256": "8cc24f1ba179bda4e8ffcc4c59ae6969dd7d5319aa0be6b8ca63063be7095148"
+    },
+    {
+      "path": ".github/scripts/astra-home-original-native-restore-evidence.py",
+      "mode": "100644",
+      "object": "be4899677c6fc683870853720a713c7d8c5190b1",
+      "bytes": 9539,
+      "sha256": "1930941a25ed7b35ebe86db13ea7daa37b196f780c38bd87943e84a6b0b79ab9"
+    },
+    {
       "path": ".github/scripts/astra-home-portable-pdb.py",
       "mode": "100644",
       "object": "a9e335f25dc1cc3936ff0952a46f79c4aa6f7b64",
@@ -85,9 +106,9 @@
     {
       "path": ".github/scripts/astra-home-prompt-compiled-sources.py",
       "mode": "100644",
-      "object": "a11652ac7d7d525c5f7b1bd1a44e178ced2cfe24",
-      "bytes": 4354,
-      "sha256": "054885f82bb00a80d1a729d41c5b6dce5dd756df84311f3d0325487a084dd31c"
+      "object": "2e264971aa8dba2c7f7bc38ff412e8a3e6596fb7",
+      "bytes": 4492,
+      "sha256": "2fd9467cfa71be3f88ce960f4dae13dd61fc7d13bb936c25f41dda31c1161277"
     },
     {
       "path": ".github/scripts/astra-mail-local-crl-server.py",
@@ -104,11 +125,18 @@
       "sha256": "aa69116192607dd907383c0f6d4c5bd4251f46ba41eae1057dbf65b28a8526fd"
     },
     {
+      "path": ".github/scripts/astra-native-probe-profile.py",
+      "mode": "100644",
+      "object": "c464fbe2553fae3a3be98928caf59e7645ad1003",
+      "bytes": 2260,
+      "sha256": "970be7dafe6f19f47f5e094a1f59d6d4ab3f5bd45f542a425914b383df2cd6d7"
+    },
+    {
       "path": ".github/scripts/astra-sites-compiled-sources.py",
       "mode": "100644",
-      "object": "0102b3a52308d3aeb748dbb8c3f6153d700c81a8",
-      "bytes": 3430,
-      "sha256": "1009df6b42db2b4bca1af968daf2db5e895c15968725c1b88e07897e1d53d9dc"
+      "object": "e1a15c4e95152eb2a396ac8784df6984440faa27",
+      "bytes": 3556,
+      "sha256": "2ca73bef21b47af09eba8138b8f89c212e7928976ce0a666be8844588a6b98ce"
     },
     {
       "path": ".github/scripts/astra_mail_original_caller_session.py",
@@ -134,9 +162,9 @@
     {
       "path": ".github/validation/astra-desktop-visible-owning-classes.json",
       "mode": "100644",
-      "object": "bc8efd89d4b04a3b162533ac86f30ff78e5982cf",
-      "bytes": 105404,
-      "sha256": "09fa211f76e43327e2f22ab5f9fee0f271e14f55faa0750239cce022587af04d"
+      "object": "44191506a612e83e9c9faa504585ae4e951d2ab5",
+      "bytes": 105992,
+      "sha256": "bcb667d5bdf6df6b03789e46783ef68e04c9cee2558a35f51025799490c2d384"
     },
     {
       "path": ".github/validation/astra-desktop-visible-regression-classes.json",
@@ -153,6 +181,13 @@
       "sha256": "c1eb701b989e85eb46e79b8c5dee5f2052629cba341b7ac2f55fe192efa91a55"
     },
     {
+      "path": ".github/validation/astra-home-native-probe.targets",
+      "mode": "100644",
+      "object": "17a0c8de87c71df1d4bd78ca1e42d2ee80819bf8",
+      "bytes": 772,
+      "sha256": "3cbac8d0db43c0056834198a4380ba459cd47d0885a7f9f95b9301734cf7c434"
+    },
+    {
       "path": ".github/validation/astra-home-resource-expected-case-methods.json",
       "mode": "100644",
       "object": "acfae1b27b1b676c5468c1ddf6eecb9ff99486c5",
@@ -162,9 +197,9 @@
     {
       "path": ".github/validation/astra-mail-expected-case-methods.json",
       "mode": "100644",
-      "object": "dbf1ea6c26d10a48168381ffc9302db7d82400d6",
-      "bytes": 178068,
-      "sha256": "cb6b94358edf35dd5a92173e45dd9ee4db385d0d3b8478a9fddaa729ee508513"
+      "object": "3a893feba4765c7687fe3806e6bcdf4b9f686a68",
+      "bytes": 178670,
+      "sha256": "fdd54a021417c6a17cd567aeec3edabecb3f33f8298cd76cecb16a3d9d2fe8c9"
     },
     {
       "path": ".github/validation/picture-bwrap-upstream-abi4.profile",
@@ -24487,16 +24522,16 @@
     {
       "path": "9to1 Workspace/Mail/Providers/MailKitImapSmtpProvider.cs",
       "mode": "100644",
-      "object": "4c09beb83e955567ee60c26a8aa12b7897b01387",
-      "bytes": 21260,
-      "sha256": "904101d7d62f40879bde24682d90dbc55a5e70c8e9314ca9aea5099e949e1990"
+      "object": "03c3c221985185c30dcff5d7d674b2576995f490",
+      "bytes": 24270,
+      "sha256": "0d16249681e399f362a70eecb72e81d0f40a7e0a94fe1f999c5be9ddfe8e14e7"
     },
     {
       "path": "9to1 Workspace/Mail/Providers/MailProviderContracts.cs",
       "mode": "100644",
-      "object": "ce224297e2b09b672d031b57c97d31afdb2ab564",
-      "bytes": 1820,
-      "sha256": "2a2c63141d78f9749e5055262fafa6d9209c4b7bc2048b2ccd9610d5b1d70de2"
+      "object": "3b2e00945ca8b55f9980b50150b5066234d6341c",
+      "bytes": 2650,
+      "sha256": "c85f5af76b193dea519dbb80dbdd844af0bb0769983e2ee09002792d16e9c9af"
     },
     {
       "path": "9to1 Workspace/Mail/README.md",
@@ -24508,9 +24543,9 @@
     {
       "path": "9to1 Workspace/Mail/Services/MailDomainService.cs",
       "mode": "100644",
-      "object": "65bcc0873ab071c90d6965859ee147b5f9888d2d",
-      "bytes": 38519,
-      "sha256": "91bf2a0e8898abc7277d3ff03a51c87006c924e3cff6fbde2d3e6f94031481a5"
+      "object": "1d3ccc93c9cbca5374f1717d3089f4ef38ff6b1a",
+      "bytes": 48046,
+      "sha256": "2c0fdc2b726f17d20a6f1fd55a8a69c560d0db0cd9cb7980d99677e719e9f76e"
     },
     {
       "path": "9to1 Workspace/Mail/Services/MailHtmlSanitizer.cs",
@@ -24553,6 +24588,13 @@
       "object": "5e3848bd93ec412f2f4ae647cd63ae793b1a9add",
       "bytes": 13408,
       "sha256": "9bc21b52d83be2e1fe42eb726ef1ceeb854e553e463c403b0adfb3a9e6e9f8e4"
+    },
+    {
+      "path": "9to1 Workspace/Mail/Tests/MailKitInboxReconciliationTests.cs",
+      "mode": "100644",
+      "object": "a5d0fb2ca89d47bd9deab1c71f216d4173a60e41",
+      "bytes": 28386,
+      "sha256": "0aa041edddd73959c54416b33bebc6276bb2ba704f1a45b3b153c164dae926a8"
     },
     {
       "path": "9to1 Workspace/Mail/Tests/MailKitTransportTests.cs",
@@ -25404,9 +25446,9 @@
     {
       "path": "9to1 Workspace/Sites/Application/SiteAuthoringService.cs",
       "mode": "100644",
-      "object": "298647be5d33c32268b6ef20c494f17c6d56fd46",
-      "bytes": 9127,
-      "sha256": "61b33ac84e4b6cb73782e9c25164b2101bd0b890e9408d0494a5686eef3fba1f"
+      "object": "aafed7b6923bfaded3d81ee28bb6c6109cc41b5c",
+      "bytes": 9125,
+      "sha256": "27d3807af5e20c75310f72fcd39a6ac116982c823485a8b91f56b41e36a4c40a"
     },
     {
       "path": "9to1 Workspace/Sites/Application/SiteContentSelectionAuthoringService.cs",
@@ -31249,9 +31291,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/App.axaml.cs",
       "mode": "100644",
-      "object": "92865e14e2cd54216cf06753ed328d258aed4aff",
-      "bytes": 23931,
-      "sha256": "f31dfcaaea03d18ef5f2f54f3ca73a74b33a50bd280a71ab29eccdc48844d3dc"
+      "object": "fbb3f79b2cb04d1d57ac82759c7fae9e9e9e2323",
+      "bytes": 24477,
+      "sha256": "7ccc1b7c9a1d7a53a42e3a899861a8b3c202e9e5be602ca487a69a3d5567cb0c"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Assets/Fonts/Montserrat-Italic-VariableFont_wght.ttf",
@@ -32204,6 +32246,27 @@
       "object": "976411aa8733438d23e11dc4e9ddb6ce9b8e9567",
       "bytes": 3427,
       "sha256": "578386ad293a81699b371ed609db6ebb9259571eb4a2e5165c9a5cff0e841225"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Diagnostics/HomePromptNativeActivationProbe.cs",
+      "mode": "100644",
+      "object": "c93e1897257958d60a7e76d96b0b8ef3ad51e1c2",
+      "bytes": 10629,
+      "sha256": "1aa9b9d49d3569429a1e626515be9010b6dc37438945a801afc0330ba048f909"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Diagnostics/NativeProbeOriginalDesktopShutdown.cs",
+      "mode": "100644",
+      "object": "5c0e5256f5fab4ffbd8569f2e6cd87dcabf23cce",
+      "bytes": 2803,
+      "sha256": "78ef5b02cda28be38280eccca3c1d7c237786f5b30289437059868569fc6304a"
+    },
+    {
+      "path": "9to1 Workspace/shared/src/Haven.Desktop/Diagnostics/NativeProbeProfileWitness.cs",
+      "mode": "100644",
+      "object": "8db17c731d455151d8ae0a6621b7ab93f4ab07c7",
+      "bytes": 8367,
+      "sha256": "866d425d3ae7019857d34e6d3d1ef59872b3be107eda4e89e2811bd1a75f50be"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/DynamicUI/AgentCatalogCard.hui",
@@ -33461,9 +33524,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/NativeHomeApprovalPromptPresenter.cs",
       "mode": "100644",
-      "object": "570c8adb17e49dd1309c7e30d4487a1d2fc08f85",
-      "bytes": 2817,
-      "sha256": "a6caed673368cd30958ef0b47795c02245757242ba3a5027577cc42221e0ba7a"
+      "object": "bc46d763a93f75a4a68a848cb615cb79d3a357cd",
+      "bytes": 2826,
+      "sha256": "5d7e5b61fa47310d6aa34c98334e1618e452bb4b0786db077f8f4fef601f9eca"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Services/NotesDictationController.cs",
@@ -34994,9 +35057,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/HomePage.ApprovalNavigation.cs",
       "mode": "100644",
-      "object": "fda4eed3363b37bf185eb20a3e021d01e7bd702e",
-      "bytes": 3338,
-      "sha256": "7c324d68f72efc2230ae52fa40bec345b1488d3e6c9a1e6967bb6635b9e0370e"
+      "object": "ad4ac6dcfe8d010fce588c5572c9429ead7b0f3f",
+      "bytes": 3832,
+      "sha256": "fd7e65649516487c79225a1b798aec0e929c7768295bd50eef7b748d0406aa78"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Home/HomePage.axaml",
@@ -35701,9 +35764,9 @@
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Sites/NativeSitesPage.cs",
       "mode": "100644",
-      "object": "fe593d737df7bb56a0d9d6ac1281da634041c20b",
-      "bytes": 17098,
-      "sha256": "33cf2173d9cebf7ee34a91b4181ae28f00313f3d3269ef713c4282299124fcc9"
+      "object": "ed974a3a7db72ee62da074128436caefdc226407",
+      "bytes": 17130,
+      "sha256": "5feab97a2ea02d3e4f168efe48909fa4f0d65206836ab2e587afa56eb65cda85"
     },
     {
       "path": "9to1 Workspace/shared/src/Haven.Desktop/Views/Pages/Sites/SitesHavenScene.cs",
@@ -42456,9 +42519,9 @@
     {
       "path": "docs/ASTRA-WORKING-LEDGER.md",
       "mode": "100644",
-      "object": "be93cbec5ad2e020481fb2ae1aefa1cd9c160b8f",
-      "bytes": 75777,
-      "sha256": "b73caffcbc73640e037f04b21cac0d24a0c859ade535972934927cfceab7d84d"
+      "object": "ba2a3b1399763ee75f76c245dbe51854cd838af1",
+      "bytes": 76644,
+      "sha256": "c512eee1aba42bec711824e41150f8d71e2defdf7cd1087f72fd1bc07668e50b"
     },
     {
       "path": "docs/CONSOLIDATION.md",
@@ -66174,7 +66237,19 @@
     "Joined unaccepted exact Home prompt02/API01/host200 predecessor plus every canonical Sites8/preview1/consumer1 class=>210 owning,44 resource,12 regression. No old source/action/assertion/method/native/TLS/drain/restore/task/PDB guard removed.",
     "Sites.Tests unfiltered independent restore/build/compiled target closure and PE/PDB exact full Sites producer/test documents required; actual mounted native consumer emits14 real CUI/canonical/Home cases. Recording HTML adapter verifies issued canonical output; actual native browser DOM/visible human prompt/classic lifecycle remain unverified.",
     "Retained preview and component draft/error state are bound to full original actor/authentication/folder/project/source/page and current read permission. No cache grant, no model/free/local/access/pricing policy change, no shared credential/Worker authority edit or deployment.",
-    "Root seeds a dedicated corrective branch from the successful Mail11 c6 candidate, then alone reviews/constructs/pushes/dispatches. This package is source-only; existing full Mail acceptance does not imply joined Home/Sites runtime acceptance."
+    "Root seeds a dedicated corrective branch from the successful Mail11 c6 candidate, then alone reviews/constructs/pushes/dispatches. This package is source-only; existing full Mail acceptance does not imply joined Home/Sites runtime acceptance.",
+    "Actual full Sites210 three-family failure reviewed: missing canonical IActivatablePage namespace in NativeSitesPage; all available originals retained and same full210/44/12 acceptance required.",
+    "Minimal corrective03 imports only that namespace and selects independently reviewed Home/Sites physical Haven.dll/Haven.pdb producer lookup; logical source identity/all full PE/PDB/source/copy guards remain. Every other product/source/class/method/runtime/TLS/native/Java/CRL/task/restore/drain/workflow byte comes from exact actual eabc failure.",
+    "This is an unexecuted full corrective candidate. Native browser DOM/classic visible lifecycle and full joined Home/Sites acceptance remain unproven until the actual whole cohorts pass.",
+    "This distinct corrective branch is seeded by root to exact actual Sites210 eabc. All original210/44/12 tuples/classes/source/task/native/TLS/Java/CRL/policy/profile drains remain mandatory; original successful Mail11 does not imply this joined/native milestone acceptance.",
+    "Native Home observation uses actual separately restored/built original Haven.Desktop.csproj net10.0/linux-x64/Release under Xvfb; StartupObject/symbol scoped only to Desktop, seven canonical netstandard tools retain own framework, original source-built host task required.",
+    "Conditional validation probes observe the actual Configure<App>/classic MainWindow/shared presenter/local OS actor/visible exact pending CUI without grant/decision/trust/execution. Same original App callback Task must already settle after classic loop; caught primary and actual finally/task faults both refuse and survive. Program.Main bootstrap and unrelated detached callbacks remain outside this bounded milestone.",
+    "The actual native producer requires real direct-child/session/group/birth/maps/managed/Skia bytes and current original root/data/config/cache/haven/witness fds through actual session drain. Fresh profile retained on both success and refusal. Marker/process exit never grants native/callback/profile cleanup or original session drain success.",
+    "Every original independent post-launch restore/output/source-built task/native/source guard is attempted even on primary launch/drain failure and all failures retained. Partial original session initialization and independent launcher fd failures retain original drain attempts.",
+    "Only NativeSitesPage canonical namespace, App exact same-task shutdown factor and HomePage exact original linked cancellation provenance enter semantic product delta from actual failed Sites base; conditional probe/profile/shutdown source and all new native caller/targets/restore/compiled helpers remain validation-only. No production/cloud/auth/account/billing/provider activity.",
+    "HomePage normalizes only exact original linked-lifetime OCE when both original linked and actual supplied review tokens are requested, retaining original as InnerException. Observer waives only requested exact supplied-token cancellation. Unrelated/default token and deactivation-only cancellation remain original failures; every independent original cleanup still runs. Actual closest12 is managed provenance evidence only; native original210/44/12/profile/session/callback acceptance remains mandatory.",
+    "Exact actual Sites03 presenter CS0234 corrected solely with Avalonia.Application.Current. Two same namespace Home macro-on references proactively qualified; these are preventive/unreached and not observed native errors. Entire original presenter/probe bodies invert exactly, all App/profile/shutdown/permission/approval/cancellation/finally/drain actions unchanged. Corrected distinct-unrequested token tiny12 proof source08/W5 is pinned. Actual full3 Sites originals owned by Worker4, actual wholeHome native acceptance still mandatory.",
+    "Current28 accepted IMAP four products are exact original d657/normal28 bytes overlaid onto the unchanged actual eabc corrective seed; entire owning210 class rows and all old method/TRX entries retained plus actual Inbox class/two required Passed methods (211/44/12). Resource/regression and all caller/helper/native/TLS/CRL/Java/task/restore/profile/session/shutdown/drain bodies unchanged. Current28 runtime ledger is selected exactly as validation-only; historical semantic-base ledger remains disclosed. Sites Reachable visibility is the exact one-modifier pure traversal correction for two observed CS0117 errors, with no mutation/permission body change. No constructor/ref/build/run or native acceptance inferred."
   ],
   "inputManifests": [
     {
@@ -66396,6 +66471,152 @@
     {
       "path": "/workspace/astra-source/checkpoint26-publication-local.json",
       "sha256": "3f37533c2d4fbb384287dfbfe81f1b757fd240c5ba11aca2f3c7fa335ffaeb10"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites-home-current27-full-native-caller-package02-current-home-ledger/manifest.json",
+      "sha256": "c4a1feea5eca50ab1a8e218b3df2239b1e39dada56dacfb699d928a57fc395fd"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites210-full-three-original-failure-closure01/receipt.json",
+      "sha256": "9b9354f8d8aec3168d4748ef8df7d16082a3bc7c57520ca0f769dc50b9ef66aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-compiled-pair-physical-name-source01/manifest.json",
+      "sha256": "2de151e2cd79621c67ef1848b1e5992d2c4ab953c3cb97253c472aed8394e699"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites-compiled-pair-physical-name-source01/manifest.json",
+      "sha256": "4fe133a0d72f983ba0a206b1163e6ee59a9d8c8ec631e5ee2c02356fe1bc3baf"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-home-sites-physical-pair-source-peer179.json",
+      "sha256": "be508fd534bf362d37a3868324996c1cce07a46b140cb9aac2bd817d3b54a151"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites210-lifecycle-namespace-corrective-source07/manifest.json",
+      "sha256": "df5038d3e6efa483fdc8b8cde171e56129915b195651cc3cf9aefca064520208"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites210-actual-compiler-and-physical-pair-full-corrective-package03/manifest.json",
+      "bytes": 15855,
+      "sha256": "7d542e4d527fd2b9d8a7110c879eb45f3303286575060aed459b9730b4ef3e14"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites210-corrective03-full-source-preservation-peer01.json",
+      "bytes": 27560,
+      "sha256": "9502a7cf4745af4f5dca4117519b350c586c644e75d7b1f3c2c05e7e269893ff"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-native-classic-activation-probe-source06-original-shutdown-failures/manifest.json",
+      "bytes": 11095,
+      "sha256": "1ffd60415469b9d31059ccbf4c22c0262e02d0bb7389fd747855478e53708c48"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-home-native-observer06-exact-shutdown-failure-source-peer01.json",
+      "bytes": 12801,
+      "sha256": "2a70cf2e61689198c451524609777d6bda59ddbce0e64778c462655ef15fd1c6"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-original-native-caller-source02-independent-original-failure-drains/manifest.json",
+      "bytes": 11053,
+      "sha256": "85555f3891242b134f8cc8eacd04b2a3e606a61866b99b4fbcaa86e019136732"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-home-original-native-caller02-three-lifecycle-corrections-source-peer01.json",
+      "bytes": 11108,
+      "sha256": "4bcb775a964634c18d6ab3197b4f4620d73445a84e5bf0cf1a445479ff2c4a85"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package01/manifest.json",
+      "bytes": 22468,
+      "sha256": "5bbf54125ad9a6c9047a8af1bbbbc04a33cae744e1eb9ce764edc2e3e9357268"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-native-classic-activation-probe-source07-exact-review-cancellation-provenance/manifest.json",
+      "bytes": 15862,
+      "sha256": "ca14b83b0891dc613e90912db59d09956402bd0605afe51f905b6ebf212f0331"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-home-original-native-full01-metadata-custody-peer01.json",
+      "bytes": 6298,
+      "sha256": "213bfdaf3dc8044baa2a1f9d982750fc85126db164b301ee701da2b279eab9fb"
+    },
+    {
+      "path": "/workspace/astra-source/worker6-home-original-native-full01-source-pdb-producer-tables-peer186.json",
+      "bytes": 11578,
+      "sha256": "5dc7e244bdf3657ff8788ba92fb6608352cabe6c0068c8cf09708ecf667db357"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package02-exact-review-cancellation-provenance/manifest.json",
+      "bytes": 25453,
+      "sha256": "a735f97d4fc804b9654d1db571f5e892ed4a502820a3a17768316f1fa4ed7ea7"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package03-complete-semantic-product-set/manifest.json",
+      "bytes": 26007,
+      "sha256": "00a297a7d6ce4255e53e835189a8c6dbad18effd1a4ffa8126b816f87386426e"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package04-canonical-cut-self-manifest/manifest.json",
+      "bytes": 26345,
+      "sha256": "c31fbb13818140c0f9904c57c240c152ba4717f9d4aefa56d866a56d9ab96888"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-native-classic-activation-probe-source09-explicit-original-Avalonia-application/manifest.json",
+      "bytes": 22551,
+      "sha256": "81b627f09732edda5707a63f32c8974ceeef78ac9f0e645e5d4021e495adb755"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites03-actual-home-application-binder-source01/manifest.json",
+      "bytes": 4726,
+      "sha256": "f8211fe928bcd0443322eb01c5116d6e75f99e80b0ae5774af06170cd4c80f96"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-home07-full04-metadata-provenance-preservation-peer01.json",
+      "bytes": 2644,
+      "sha256": "2494449380197f0cc313d5dac6fb379af3cdfaea2e8bf483559ae4f17926b941"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-home-native-observer07-exact-review-cancellation-source-peer01.json",
+      "bytes": 14783,
+      "sha256": "03a0337d1d39b0181e8dca3901b60feced67a90f438e01f2e04c5070d6ae67ec"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-home-native-observer08-distinct-unrequested-test-proof-peer01.json",
+      "bytes": 12260,
+      "sha256": "0db880fccaa864ad2d336c88ce895b44fca215525ee529c486fa10d428bc69aa"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-home-current27-original-native-full-caller-package05-actual-presenter-binder/manifest.json",
+      "sha256": "eeacbce4907e866683469a827665b2149e49557fa7019f1887b87c2ddd8c2fe1"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-home09-full05-binder-metadata-preservation-peer01.json",
+      "sha256": "8e9e24f3477ddeeb09c89d1b3add356d9b8d9606887145eb8747bec3328c1fbc"
+    },
+    {
+      "path": "/workspace/astra-source/worker5-home-native-source09-exact-application-binder-peer01.json",
+      "sha256": "61cefbab48f16d07ab1a8e1ac68e905bf838e6458d953492ca3b15ead31e1fff"
+    },
+    {
+      "path": "/workspace/astra-source/checkpoint28-publication-local.json",
+      "sha256": "1aa5f2709c8686cee25c2c90fa31eb6fe54ccc2de509aff4bb606f6add281c6b"
+    },
+    {
+      "path": "/workspace/astra-source/worker2-imap16-accepted-four-source-home211-union-inventory01.json",
+      "sha256": "5cabec421f7a979304839cfe986d405eeff5208430860248307e2f73eb424330"
+    },
+    {
+      "path": "/workspace/astra-source/root-imap16-full-three-original-replay524.json",
+      "sha256": "34168156bbe2a02a3c46b470658af0d3770cd3c7243c81e535dfc65de52e8c1c"
+    },
+    {
+      "path": "/workspace/astra-source/worker4-sites03-actual-canonical-reachability-visibility-source08/manifest.json",
+      "sha256": "0224a64e00abd17c5aac0f31475785b2d99e71b93374aba3363d5fe1041abe12"
+    },
+    {
+      "path": "/workspace/astra-source/worker1-sites03-reachable-source08-canonical-traversal-api-peer01.json",
+      "sha256": "c1ece82eea167d2eb385a4947b38e862c0f7f06a41c15505626491abb3b03f72"
     }
   ],
   "sharedCakeIdContract": null

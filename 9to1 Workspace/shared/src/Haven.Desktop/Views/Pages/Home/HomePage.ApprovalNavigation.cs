@@ -48,6 +48,13 @@ public sealed partial class HomePage
             }
             lifetime.Token.ThrowIfCancellationRequested();
         }
+        catch (OperationCanceledException error) when (error.CancellationToken == lifetime.Token &&
+            lifetime.IsCancellationRequested && cancellationToken.IsCancellationRequested)
+        {
+            // Bind this exact original linked cancellation to the supplied caller token;
+            // retain the original exception and never normalize unrelated/deactivation cancellation.
+            throw new OperationCanceledException(error.Message, error, cancellationToken);
+        }
         finally
         {
             if (ReferenceEquals(_inlineApprovalClosed, closed)) _inlineApprovalClosed = null;
